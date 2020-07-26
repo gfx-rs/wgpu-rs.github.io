@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/6182495/wgpu-core/src/device/life.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>life.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/11b3a95/wgpu-core/src/device/life.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>life.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -863,12 +863,12 @@
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">buffers</span>.<span class="ident">is_empty</span>() <span class="op">||</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">images</span>.<span class="ident">is_empty</span>() {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">heaps</span> <span class="op">=</span> <span class="ident">heaps_mutex</span>.<span class="ident">lock</span>();
             <span class="kw">for</span> (<span class="ident">raw</span>, <span class="ident">memory</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">buffers</span>.<span class="ident">drain</span>(..) {
-                <span class="ident">log</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Buffer {:?} is destroyed with memory {:?}&quot;</span>, <span class="ident">raw</span>, <span class="ident">memory</span>);
+                <span class="ident">tracing</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Buffer {:?} is destroyed with memory {:?}&quot;</span>, <span class="ident">raw</span>, <span class="ident">memory</span>);
                 <span class="ident">device</span>.<span class="ident">destroy_buffer</span>(<span class="ident">raw</span>);
                 <span class="ident">heaps</span>.<span class="ident">free</span>(<span class="ident">device</span>, <span class="ident">memory</span>);
             }
             <span class="kw">for</span> (<span class="ident">raw</span>, <span class="ident">memory</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">images</span>.<span class="ident">drain</span>(..) {
-                <span class="ident">log</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Image {:?} is destroyed with memory {:?}&quot;</span>, <span class="ident">raw</span>, <span class="ident">memory</span>);
+                <span class="ident">tracing</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Image {:?} is destroyed with memory {:?}&quot;</span>, <span class="ident">raw</span>, <span class="ident">memory</span>);
                 <span class="ident">device</span>.<span class="ident">destroy_image</span>(<span class="ident">raw</span>);
                 <span class="ident">heaps</span>.<span class="ident">free</span>(<span class="ident">device</span>, <span class="ident">memory</span>);
             }
@@ -1000,7 +1000,7 @@
 
     <span class="kw">fn</span> <span class="ident">wait_idle</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>::<span class="ident">Device</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">WaitIdleError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">active</span>.<span class="ident">is_empty</span>() {
-            <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Waiting for IDLE...&quot;</span>);
+            <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Waiting for IDLE...&quot;</span>);
             <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="kw">unsafe</span> {
                 <span class="ident">device</span>.<span class="ident">wait_for_fences</span>(
                     <span class="self">self</span>.<span class="ident">active</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">fence</span>),
@@ -1008,7 +1008,7 @@
                     <span class="ident">CLEANUP_WAIT_MS</span> <span class="op">*</span> <span class="number">1_000_000</span>,
                 )<span class="question-mark">?</span>
             };
-            <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;...Done&quot;</span>);
+            <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;...Done&quot;</span>);
 
             <span class="kw">if</span> <span class="ident">status</span> <span class="op">==</span> <span class="bool-val">false</span> {
                 <span class="comment">// We timed out while waiting for the fences</span>
@@ -1041,7 +1041,7 @@
         };
 
         <span class="kw">for</span> <span class="ident">a</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">active</span>.<span class="ident">drain</span>(..<span class="ident">done_count</span>) {
-            <span class="ident">log</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Active submission {} is done&quot;</span>, <span class="ident">a</span>.<span class="ident">index</span>);
+            <span class="ident">tracing</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Active submission {} is done&quot;</span>, <span class="ident">a</span>.<span class="ident">index</span>);
             <span class="self">self</span>.<span class="ident">free_resources</span>.<span class="ident">extend</span>(<span class="ident">a</span>.<span class="ident">last_resources</span>);
             <span class="self">self</span>.<span class="ident">ready_to_map</span>.<span class="ident">extend</span>(<span class="ident">a</span>.<span class="ident">mapped</span>);
             <span class="kw">unsafe</span> {
@@ -1197,7 +1197,7 @@
                     <span class="ident">trace</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">DestroyBuffer</span>(<span class="ident">id</span>)));
                     <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">free_id</span>(<span class="ident">id</span>);
                     <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">guard</span>.<span class="ident">remove</span>(<span class="ident">id</span>).<span class="ident">unwrap</span>();
-                    <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Buffer {:?} is detached&quot;</span>, <span class="ident">id</span>);
+                    <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Buffer {:?} is detached&quot;</span>, <span class="ident">id</span>);
 
                     <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
                     <span class="self">self</span>.<span class="ident">active</span>
@@ -1311,7 +1311,7 @@
             <span class="kw">let</span> <span class="ident">buf</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">buffer_guard</span>[<span class="ident">resource_id</span>];
 
             <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">buf</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
-            <span class="ident">log</span>::<span class="macro">trace</span><span class="macro">!</span>(
+            <span class="ident">tracing</span>::<span class="macro">trace</span><span class="macro">!</span>(
                 <span class="string">&quot;Mapping of {:?} at submission {:?} gets assigned to active {:?}&quot;</span>,
                 <span class="ident">resource_id</span>,
                 <span class="ident">submit_index</span>,
@@ -1381,7 +1381,7 @@
             .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">&gt;&gt;</span>();
 
         <span class="kw">if</span> <span class="op">!</span><span class="ident">remove_list</span>.<span class="ident">is_empty</span>() {
-            <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Free framebuffers {:?}&quot;</span>, <span class="ident">remove_list</span>);
+            <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Free framebuffers {:?}&quot;</span>, <span class="ident">remove_list</span>);
             <span class="kw">for</span> (<span class="kw-2">ref</span> <span class="ident">key</span>, <span class="ident">submit_index</span>) <span class="kw">in</span> <span class="ident">remove_list</span> {
                 <span class="kw">let</span> <span class="ident">framebuffer</span> <span class="op">=</span> <span class="ident">framebuffers</span>.<span class="ident">remove</span>(<span class="ident">key</span>).<span class="ident">unwrap</span>();
                 <span class="self">self</span>.<span class="ident">active</span>
@@ -1413,7 +1413,7 @@
             <span class="kw">if</span> <span class="ident">buffer</span>.<span class="ident">life_guard</span>.<span class="ident">ref_count</span>.<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="ident">trackers</span>.<span class="ident">buffers</span>.<span class="ident">remove_abandoned</span>(<span class="ident">buffer_id</span>)
             {
                 <span class="ident">buffer</span>.<span class="ident">map_state</span> <span class="op">=</span> <span class="ident">resource</span>::<span class="ident">BufferMapState</span>::<span class="ident">Idle</span>;
-                <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Mapping request is dropped because the buffer is destroyed.&quot;</span>);
+                <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Mapping request is dropped because the buffer is destroyed.&quot;</span>);
                 <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">free_id</span>(<span class="ident">buffer_id</span>);
                 <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">buffer_guard</span>.<span class="ident">remove</span>(<span class="ident">buffer_id</span>).<span class="ident">unwrap</span>();
                 <span class="self">self</span>.<span class="ident">free_resources</span>
@@ -1428,7 +1428,7 @@
                     <span class="kw">_</span> <span class="op">=&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;No pending mapping.&quot;</span>),
                 };
                 <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">mapping</span>.<span class="ident">sub_range</span>.<span class="ident">size</span>.<span class="ident">map_or</span>(<span class="bool-val">true</span>, <span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="op">!=</span> <span class="number">0</span>) {
-                    <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Buffer {:?} map state -&gt; Active&quot;</span>, <span class="ident">buffer_id</span>);
+                    <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Buffer {:?} map state -&gt; Active&quot;</span>, <span class="ident">buffer_id</span>);
                     <span class="kw">let</span> <span class="ident">host</span> <span class="op">=</span> <span class="ident">mapping</span>.<span class="ident">op</span>.<span class="ident">host</span>;
                     <span class="kw">match</span> <span class="kw">super</span>::<span class="ident">map_buffer</span>(<span class="ident">raw</span>, <span class="ident">buffer</span>, <span class="ident">mapping</span>.<span class="ident">sub_range</span>.<span class="ident">clone</span>(), <span class="ident">host</span>) {
                         <span class="prelude-val">Ok</span>(<span class="ident">ptr</span>) <span class="op">=&gt;</span> {
@@ -1440,7 +1440,7 @@
                             <span class="ident">resource</span>::<span class="ident">BufferMapAsyncStatus</span>::<span class="ident">Success</span>
                         }
                         <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=&gt;</span> {
-                            <span class="ident">log</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Mapping failed {:?}&quot;</span>, <span class="ident">e</span>);
+                            <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Mapping failed {:?}&quot;</span>, <span class="ident">e</span>);
                             <span class="ident">resource</span>::<span class="ident">BufferMapAsyncStatus</span>::<span class="ident">Error</span>
                         }
                     }

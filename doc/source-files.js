@@ -69,13 +69,13 @@ sourcesIndex["thread_local"] = {"name":"","files":["cached.rs","lib.rs","thread_
 sourcesIndex["time"] = {"name":"","files":["display.rs","duration.rs","lib.rs","parse.rs","sys.rs"]};
 sourcesIndex["tracing"] = {"name":"","files":["dispatcher.rs","field.rs","level_filters.rs","lib.rs","macros.rs","span.rs","stdlib.rs","subscriber.rs"]};
 sourcesIndex["tracing_core"] = {"name":"","files":["callsite.rs","dispatcher.rs","event.rs","field.rs","lib.rs","metadata.rs","parent.rs","span.rs","stdlib.rs","subscriber.rs"]};
-sourcesIndex["tracing_log"] = {"name":"","files":["lib.rs","log_tracer.rs"]};
+sourcesIndex["tracing_log"] = {"name":"","files":["lib.rs","log_tracer.rs","trace_logger.rs"]};
 sourcesIndex["tracing_serde"] = {"name":"","files":["fields.rs","lib.rs"]};
 sourcesIndex["tracing_subscriber"] = {"name":"","dirs":[{"name":"field","files":["debug.rs","delimited.rs","display.rs","mod.rs"]},{"name":"filter","dirs":[{"name":"env","files":["directive.rs","field.rs","mod.rs"]}],"files":["level.rs","mod.rs"]},{"name":"fmt","dirs":[{"name":"format","files":["json.rs","mod.rs"]},{"name":"time","files":["mod.rs"]}],"files":["fmt_layer.rs","mod.rs","writer.rs"]},{"name":"registry","files":["extensions.rs","mod.rs","sharded.rs","stack.rs"]}],"files":["layer.rs","lib.rs","prelude.rs","reload.rs","sync.rs","thread.rs","util.rs"]};
 sourcesIndex["typed_arena"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["unicode_xid"] = {"name":"","files":["lib.rs","tables.rs"]};
 sourcesIndex["wgpu"] = {"name":"","dirs":[{"name":"backend","files":["direct.rs","mod.rs","native_gpu_future.rs"]},{"name":"util","files":["belt.rs","mod.rs"]}],"files":["lib.rs","macros.rs"]};
-sourcesIndex["wgpu_core"] = {"name":"","dirs":[{"name":"command","files":["allocator.rs","bind.rs","bundle.rs","compute.rs","mod.rs","render.rs","transfer.rs"]},{"name":"device","files":["life.rs","mod.rs","queue.rs","trace.rs"]},{"name":"logging","files":["mod.rs","subscriber.rs"]},{"name":"track","files":["buffer.rs","mod.rs","range.rs","texture.rs"]}],"files":["binding_model.rs","conv.rs","hub.rs","id.rs","instance.rs","lib.rs","macros.rs","pipeline.rs","power.rs","resource.rs","swap_chain.rs","validation.rs"]};
+sourcesIndex["wgpu_core"] = {"name":"","dirs":[{"name":"command","files":["allocator.rs","bind.rs","bundle.rs","compute.rs","mod.rs","render.rs","transfer.rs"]},{"name":"device","files":["life.rs","mod.rs","queue.rs","trace.rs"]},{"name":"logging","dirs":[{"name":"subscriber","files":["chrome.rs","fmt_layer.rs"]}],"files":["mod.rs","subscriber.rs"]},{"name":"track","files":["buffer.rs","mod.rs","range.rs","texture.rs"]}],"files":["binding_model.rs","conv.rs","hub.rs","id.rs","instance.rs","lib.rs","macros.rs","pipeline.rs","power.rs","resource.rs","swap_chain.rs","validation.rs"]};
 sourcesIndex["wgpu_types"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["x11"] = {"name":"","files":["dpms.rs","glx.rs","internal.rs","keysym.rs","lib.rs","link.rs","xcursor.rs","xf86vmode.rs","xfixes.rs","xft.rs","xinerama.rs","xinput.rs","xinput2.rs","xlib.rs","xlib_xcb.rs","xmd.rs","xmu.rs","xrandr.rs","xrecord.rs","xrender.rs","xss.rs","xt.rs","xtest.rs"]};
 createSourceSidebar();
