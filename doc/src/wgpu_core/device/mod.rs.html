@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/11b3a95/wgpu-core/src/device/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/5bd24d5/wgpu-core/src/device/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -3129,6 +3129,12 @@
 <span id="3129">3129</span>
 <span id="3130">3130</span>
 <span id="3131">3131</span>
+<span id="3132">3132</span>
+<span id="3133">3133</span>
+<span id="3134">3134</span>
+<span id="3135">3135</span>
+<span id="3136">3136</span>
+<span id="3137">3137</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -4562,13 +4568,19 @@
             }
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">count_validator</span> <span class="op">=</span> <span class="ident">binding_model</span>::<span class="ident">BindingTypeMaxCountValidator</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="ident">pipeline_layout</span> <span class="op">=</span> {
+        <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">count_validator</span> <span class="op">=</span> <span class="ident">binding_model</span>::<span class="ident">BindingTypeMaxCountValidator</span>::<span class="ident">default</span>();
             <span class="kw">let</span> (<span class="ident">bind_group_layout_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">bind_group_layouts</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+
+            <span class="comment">// validate total resource counts</span>
             <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">id</span> <span class="kw">in</span> <span class="ident">desc</span>.<span class="ident">bind_group_layouts</span>.<span class="ident">iter</span>() {
                 <span class="kw">let</span> <span class="ident">bind_group_layout</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bind_group_layout_guard</span>[<span class="ident">id</span>];
                 <span class="ident">count_validator</span>.<span class="ident">merge</span>(<span class="kw-2">&amp;</span><span class="ident">bind_group_layout</span>.<span class="ident">count_validator</span>);
             }
+            <span class="ident">count_validator</span>
+                .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">limits</span>)
+                .<span class="ident">map_err</span>(<span class="ident">CreatePipelineLayoutError</span>::<span class="ident">TooManyBindings</span>)<span class="question-mark">?</span>;
+
             <span class="kw">let</span> <span class="ident">descriptor_set_layouts</span> <span class="op">=</span> <span class="ident">desc</span>
                 .<span class="ident">bind_group_layouts</span>
                 .<span class="ident">iter</span>()
@@ -4577,35 +4589,29 @@
                 .<span class="ident">push_constant_ranges</span>
                 .<span class="ident">iter</span>()
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">pc</span><span class="op">|</span> (<span class="ident">conv</span>::<span class="ident">map_shader_stage_flags</span>(<span class="ident">pc</span>.<span class="ident">stages</span>), <span class="ident">pc</span>.<span class="ident">range</span>.<span class="ident">clone</span>()));
-            <span class="kw">unsafe</span> {
-                <span class="ident">device</span>
-                    .<span class="ident">raw</span>
-                    .<span class="ident">create_pipeline_layout</span>(<span class="ident">descriptor_set_layouts</span>, <span class="ident">push_constants</span>)
-                    .<span class="ident">or</span>(<span class="prelude-val">Err</span>(<span class="ident">binding_model</span>::<span class="ident">CreatePipelineLayoutError</span>::<span class="ident">OutOfMemory</span>))<span class="question-mark">?</span>
-            }
-        };
-        <span class="ident">count_validator</span>
-            .<span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">limits</span>)
-            .<span class="ident">map_err</span>(<span class="ident">CreatePipelineLayoutError</span>::<span class="ident">TooManyBindings</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">binding_model</span>::<span class="ident">PipelineLayout</span> {
-            <span class="ident">raw</span>: <span class="ident">pipeline_layout</span>,
-            <span class="ident">device_id</span>: <span class="ident">Stored</span> {
-                <span class="ident">value</span>: <span class="ident">device_id</span>,
-                <span class="ident">ref_count</span>: <span class="ident">device</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>(),
-            },
-            <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>::<span class="ident">new</span>(),
-            <span class="ident">bind_group_layout_ids</span>: {
-                <span class="kw">let</span> (<span class="ident">bind_group_layout_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">bind_group_layouts</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
-                <span class="ident">desc</span>.<span class="ident">bind_group_layouts</span>
+            <span class="ident">binding_model</span>::<span class="ident">PipelineLayout</span> {
+                <span class="ident">raw</span>: <span class="kw">unsafe</span> {
+                    <span class="ident">device</span>
+                        .<span class="ident">raw</span>
+                        .<span class="ident">create_pipeline_layout</span>(<span class="ident">descriptor_set_layouts</span>, <span class="ident">push_constants</span>)
+                        .<span class="ident">or</span>(<span class="prelude-val">Err</span>(<span class="ident">binding_model</span>::<span class="ident">CreatePipelineLayoutError</span>::<span class="ident">OutOfMemory</span>))<span class="question-mark">?</span>
+                },
+                <span class="ident">device_id</span>: <span class="ident">Stored</span> {
+                    <span class="ident">value</span>: <span class="ident">device_id</span>,
+                    <span class="ident">ref_count</span>: <span class="ident">device</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>(),
+                },
+                <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>::<span class="ident">new</span>(),
+                <span class="ident">bind_group_layout_ids</span>: <span class="ident">desc</span>
+                    .<span class="ident">bind_group_layouts</span>
                     .<span class="ident">iter</span>()
                     .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">id</span><span class="op">|</span> {
                         <span class="ident">bind_group_layout_guard</span>[<span class="ident">id</span>].<span class="ident">multi_ref_count</span>.<span class="ident">inc</span>();
                         <span class="ident">id</span>
                     })
-                    .<span class="ident">collect</span>()
-            },
-            <span class="ident">push_constant_ranges</span>: <span class="ident">desc</span>.<span class="ident">push_constant_ranges</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>(),
+                    .<span class="ident">collect</span>(),
+                <span class="ident">push_constant_ranges</span>: <span class="ident">desc</span>.<span class="ident">push_constant_ranges</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>(),
+            }
         };
 
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">hub</span>
@@ -5297,6 +5303,12 @@
                 .<span class="ident">init</span>((<span class="ident">vb_state</span>.<span class="ident">stride</span>, <span class="ident">vb_state</span>.<span class="ident">step_mode</span>));
             <span class="kw">if</span> <span class="ident">vb_state</span>.<span class="ident">attributes</span>.<span class="ident">is_empty</span>() {
                 <span class="kw">continue</span>;
+            }
+            <span class="kw">if</span> <span class="ident">vb_state</span>.<span class="ident">stride</span> <span class="op">%</span> <span class="ident">wgt</span>::<span class="ident">VERTEX_STRIDE_ALIGNMENT</span> <span class="op">!=</span> <span class="number">0</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">pipeline</span>::<span class="ident">RenderPipelineError</span>::<span class="ident">UnalignedVertexStride</span> {
+                    <span class="ident">index</span>: <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>,
+                    <span class="ident">stride</span>: <span class="ident">vb_state</span>.<span class="ident">stride</span>,
+                });
             }
             <span class="ident">vertex_buffers</span>.<span class="ident">alloc</span>().<span class="ident">init</span>(<span class="ident">hal</span>::<span class="ident">pso</span>::<span class="ident">VertexBufferDesc</span> {
                 <span class="ident">binding</span>: <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>,
@@ -6202,7 +6214,7 @@
     <span class="ident">NotMapped</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;not enough memory left&quot;</span>)]</span>
     <span class="ident">OutOfMemory</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;buffer map range is not aligned to {}&quot;</span>, <span class="ident">wgt</span>::<span class="ident">COPY_BUFFER_ALIGNMENT</span>)]</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;buffer map range does not respect `COPY_BUFFER_ALIGNMENT`&quot;</span>)]</span>
     <span class="ident">UnalignedRange</span>,
 }
 
