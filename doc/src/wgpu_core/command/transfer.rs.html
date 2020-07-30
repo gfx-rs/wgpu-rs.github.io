@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/9929b87/wgpu-core/src/command/transfer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transfer.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/9e4839e/wgpu-core/src/command/transfer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transfer.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -595,6 +595,22 @@
 <span id="595">595</span>
 <span id="596">596</span>
 <span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -642,6 +658,10 @@
     <span class="ident">UnalignedCopyWidth</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;copy height is not a multiple of block height&quot;</span>)]</span>
     <span class="ident">UnalignedCopyHeight</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;copy origin&#39;s x component is not a multiple of block width&quot;</span>)]</span>
+    <span class="ident">UnalignedCopyOriginX</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;copy origin&#39;s y component is not a multiple of block height&quot;</span>)]</span>
+    <span class="ident">UnalignedCopyOriginY</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;bytes per row does not respect `COPY_BYTES_PER_ROW_ALIGNMENT`&quot;</span>)]</span>
     <span class="ident">UnalignedBytesPerRow</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;number of rows per image is not a multiple of block height&quot;</span>)]</span>
@@ -701,8 +721,9 @@
 <span class="doccomment">/// Function copied with minor modifications from webgpu standard https://gpuweb.github.io/gpuweb/#valid-texture-copy-range</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">validate_linear_texture_data</span>(
     <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident">TextureDataLayout</span>,
+    <span class="ident">format</span>: <span class="ident">wgt</span>::<span class="ident">TextureFormat</span>,
     <span class="ident">buffer_size</span>: <span class="ident">BufferAddress</span>,
-    <span class="ident">bytes_per_texel</span>: <span class="ident">BufferAddress</span>,
+    <span class="ident">bytes_per_block</span>: <span class="ident">BufferAddress</span>,
     <span class="ident">copy_size</span>: <span class="kw-2">&amp;</span><span class="ident">Extent3d</span>,
 ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span> {
     <span class="comment">// Convert all inputs to BufferAddress (u64) to prevent overflow issues</span>
@@ -714,10 +735,10 @@
     <span class="kw">let</span> <span class="ident">rows_per_image</span> <span class="op">=</span> <span class="ident">layout</span>.<span class="ident">rows_per_image</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>;
     <span class="kw">let</span> <span class="ident">bytes_per_row</span> <span class="op">=</span> <span class="ident">layout</span>.<span class="ident">bytes_per_row</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>;
 
-    <span class="comment">// TODO: Once compressed textures are supported, these needs to be fixed</span>
-    <span class="kw">let</span> <span class="ident">block_width</span>: <span class="ident">BufferAddress</span> <span class="op">=</span> <span class="number">1</span>;
-    <span class="kw">let</span> <span class="ident">block_height</span>: <span class="ident">BufferAddress</span> <span class="op">=</span> <span class="number">1</span>;
-    <span class="kw">let</span> <span class="ident">block_size</span> <span class="op">=</span> <span class="ident">bytes_per_texel</span>;
+    <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="ident">block_height</span>) <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">texture_block_size</span>(<span class="ident">format</span>);
+    <span class="kw">let</span> <span class="ident">block_width</span> <span class="op">=</span> <span class="ident">block_width</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>;
+    <span class="kw">let</span> <span class="ident">block_height</span> <span class="op">=</span> <span class="ident">block_height</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>;
+    <span class="kw">let</span> <span class="ident">block_size</span> <span class="op">=</span> <span class="ident">bytes_per_block</span>;
 
     <span class="kw">if</span> <span class="ident">copy_width</span> <span class="op">%</span> <span class="ident">block_width</span> <span class="op">!=</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedCopyWidth</span>);
@@ -766,12 +787,11 @@
 <span class="doccomment">/// Function copied with minor modifications from webgpu standard https://gpuweb.github.io/gpuweb/#valid-texture-copy-range</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">validate_texture_copy_range</span>(
     <span class="ident">texture_copy_view</span>: <span class="kw-2">&amp;</span><span class="ident">TextureCopyView</span>,
+    <span class="ident">texture_format</span>: <span class="ident">wgt</span>::<span class="ident">TextureFormat</span>,
     <span class="ident">texture_dimension</span>: <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Kind</span>,
     <span class="ident">copy_size</span>: <span class="kw-2">&amp;</span><span class="ident">Extent3d</span>,
 ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span> {
-    <span class="comment">// TODO: Once compressed textures are supported, these needs to be fixed</span>
-    <span class="kw">let</span> <span class="ident">block_width</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span>;
-    <span class="kw">let</span> <span class="ident">block_height</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span>;
+    <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="ident">block_height</span>) <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">texture_block_size</span>(<span class="ident">texture_format</span>);
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">extent</span> <span class="op">=</span> <span class="ident">texture_dimension</span>.<span class="ident">level_extent</span>(<span class="ident">texture_copy_view</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">u8</span>);
     <span class="kw">match</span> <span class="ident">texture_dimension</span> {
@@ -799,6 +819,12 @@
         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">BufferOverrun</span>);
     }
 
+    <span class="kw">if</span> <span class="ident">texture_copy_view</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="op">%</span> <span class="ident">block_width</span> <span class="op">!=</span> <span class="number">0</span> {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedCopyOriginX</span>);
+    }
+    <span class="kw">if</span> <span class="ident">texture_copy_view</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="op">%</span> <span class="ident">block_height</span> <span class="op">!=</span> <span class="number">0</span> {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedCopyOriginY</span>);
+    }
     <span class="kw">if</span> <span class="ident">copy_size</span>.<span class="ident">width</span> <span class="op">%</span> <span class="ident">block_width</span> <span class="op">!=</span> <span class="number">0</span> {
         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedCopyWidth</span>);
     }
@@ -957,26 +983,29 @@
         <span class="kw">let</span> <span class="ident">dst_barriers</span> <span class="op">=</span> <span class="ident">dst_pending</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">dst_texture</span>));
 
         <span class="kw">let</span> <span class="ident">bytes_per_row_alignment</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">COPY_BYTES_PER_ROW_ALIGNMENT</span>;
-        <span class="kw">let</span> <span class="ident">bytes_per_texel</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">map_texture_format</span>(<span class="ident">dst_texture</span>.<span class="ident">format</span>, <span class="ident">cmb</span>.<span class="ident">private_features</span>)
+        <span class="kw">let</span> <span class="ident">bytes_per_block</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">map_texture_format</span>(<span class="ident">dst_texture</span>.<span class="ident">format</span>, <span class="ident">cmb</span>.<span class="ident">private_features</span>)
             .<span class="ident">surface_desc</span>()
             .<span class="ident">bits</span> <span class="kw">as</span> <span class="ident">u32</span>
             <span class="op">/</span> <span class="ident">BITS_PER_BYTE</span>;
         <span class="kw">let</span> <span class="ident">src_bytes_per_row</span> <span class="op">=</span> <span class="ident">source</span>.<span class="ident">layout</span>.<span class="ident">bytes_per_row</span>;
-        <span class="kw">if</span> <span class="ident">bytes_per_row_alignment</span> <span class="op">%</span> <span class="ident">bytes_per_texel</span> <span class="op">!=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">bytes_per_row_alignment</span> <span class="op">%</span> <span class="ident">bytes_per_block</span> <span class="op">!=</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedBytesPerRow</span>);
         }
         <span class="kw">if</span> <span class="ident">src_bytes_per_row</span> <span class="op">%</span> <span class="ident">bytes_per_row_alignment</span> <span class="op">!=</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedBytesPerRow</span>);
         }
-        <span class="ident">validate_texture_copy_range</span>(<span class="ident">destination</span>, <span class="ident">dst_texture</span>.<span class="ident">kind</span>, <span class="ident">copy_size</span>)<span class="question-mark">?</span>;
+        <span class="ident">validate_texture_copy_range</span>(<span class="ident">destination</span>, <span class="ident">dst_texture</span>.<span class="ident">format</span>, <span class="ident">dst_texture</span>.<span class="ident">kind</span>, <span class="ident">copy_size</span>)<span class="question-mark">?</span>;
         <span class="ident">validate_linear_texture_data</span>(
             <span class="kw-2">&amp;</span><span class="ident">source</span>.<span class="ident">layout</span>,
+            <span class="ident">dst_texture</span>.<span class="ident">format</span>,
             <span class="ident">src_buffer</span>.<span class="ident">size</span>,
-            <span class="ident">bytes_per_texel</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>,
+            <span class="ident">bytes_per_block</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>,
             <span class="ident">copy_size</span>,
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">buffer_width</span> <span class="op">=</span> <span class="ident">source</span>.<span class="ident">layout</span>.<span class="ident">bytes_per_row</span> <span class="op">/</span> <span class="ident">bytes_per_texel</span>;
+        <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">texture_block_size</span>(<span class="ident">dst_texture</span>.<span class="ident">format</span>);
+
+        <span class="kw">let</span> <span class="ident">buffer_width</span> <span class="op">=</span> (<span class="ident">source</span>.<span class="ident">layout</span>.<span class="ident">bytes_per_row</span> <span class="op">/</span> <span class="ident">bytes_per_block</span>) <span class="op">*</span> <span class="ident">block_width</span>;
         <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">BufferImageCopy</span> {
             <span class="ident">buffer_offset</span>: <span class="ident">source</span>.<span class="ident">layout</span>.<span class="ident">offset</span>,
             <span class="ident">buffer_width</span>,
@@ -1057,26 +1086,29 @@
         <span class="kw">let</span> <span class="ident">dst_barrier</span> <span class="op">=</span> <span class="ident">dst_barriers</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">dst_buffer</span>));
 
         <span class="kw">let</span> <span class="ident">bytes_per_row_alignment</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">COPY_BYTES_PER_ROW_ALIGNMENT</span>;
-        <span class="kw">let</span> <span class="ident">bytes_per_texel</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">map_texture_format</span>(<span class="ident">src_texture</span>.<span class="ident">format</span>, <span class="ident">cmb</span>.<span class="ident">private_features</span>)
+        <span class="kw">let</span> <span class="ident">bytes_per_block</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">map_texture_format</span>(<span class="ident">src_texture</span>.<span class="ident">format</span>, <span class="ident">cmb</span>.<span class="ident">private_features</span>)
             .<span class="ident">surface_desc</span>()
             .<span class="ident">bits</span> <span class="kw">as</span> <span class="ident">u32</span>
             <span class="op">/</span> <span class="ident">BITS_PER_BYTE</span>;
         <span class="kw">let</span> <span class="ident">dst_bytes_per_row</span> <span class="op">=</span> <span class="ident">destination</span>.<span class="ident">layout</span>.<span class="ident">bytes_per_row</span>;
-        <span class="kw">if</span> <span class="ident">bytes_per_row_alignment</span> <span class="op">%</span> <span class="ident">bytes_per_texel</span> <span class="op">!=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">bytes_per_row_alignment</span> <span class="op">%</span> <span class="ident">bytes_per_block</span> <span class="op">!=</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedBytesPerRow</span>);
         }
         <span class="kw">if</span> <span class="ident">dst_bytes_per_row</span> <span class="op">%</span> <span class="ident">bytes_per_row_alignment</span> <span class="op">!=</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedBytesPerRow</span>);
         }
-        <span class="ident">validate_texture_copy_range</span>(<span class="ident">source</span>, <span class="ident">src_texture</span>.<span class="ident">kind</span>, <span class="ident">copy_size</span>)<span class="question-mark">?</span>;
+        <span class="ident">validate_texture_copy_range</span>(<span class="ident">source</span>, <span class="ident">src_texture</span>.<span class="ident">format</span>, <span class="ident">src_texture</span>.<span class="ident">kind</span>, <span class="ident">copy_size</span>)<span class="question-mark">?</span>;
         <span class="ident">validate_linear_texture_data</span>(
             <span class="kw-2">&amp;</span><span class="ident">destination</span>.<span class="ident">layout</span>,
+            <span class="ident">src_texture</span>.<span class="ident">format</span>,
             <span class="ident">dst_buffer</span>.<span class="ident">size</span>,
-            <span class="ident">bytes_per_texel</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>,
+            <span class="ident">bytes_per_block</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>,
             <span class="ident">copy_size</span>,
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">buffer_width</span> <span class="op">=</span> <span class="ident">destination</span>.<span class="ident">layout</span>.<span class="ident">bytes_per_row</span> <span class="op">/</span> <span class="ident">bytes_per_texel</span>;
+        <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">texture_block_size</span>(<span class="ident">src_texture</span>.<span class="ident">format</span>);
+
+        <span class="kw">let</span> <span class="ident">buffer_width</span> <span class="op">=</span> (<span class="ident">destination</span>.<span class="ident">layout</span>.<span class="ident">bytes_per_row</span> <span class="op">/</span> <span class="ident">bytes_per_block</span>) <span class="op">*</span> <span class="ident">block_width</span>;
         <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">BufferImageCopy</span> {
             <span class="ident">buffer_offset</span>: <span class="ident">destination</span>.<span class="ident">layout</span>.<span class="ident">offset</span>,
             <span class="ident">buffer_width</span>,
@@ -1165,8 +1197,8 @@
         }
         <span class="ident">barriers</span>.<span class="ident">extend</span>(<span class="ident">dst_pending</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">dst_texture</span>)));
 
-        <span class="ident">validate_texture_copy_range</span>(<span class="ident">source</span>, <span class="ident">src_texture</span>.<span class="ident">kind</span>, <span class="ident">copy_size</span>)<span class="question-mark">?</span>;
-        <span class="ident">validate_texture_copy_range</span>(<span class="ident">destination</span>, <span class="ident">dst_texture</span>.<span class="ident">kind</span>, <span class="ident">copy_size</span>)<span class="question-mark">?</span>;
+        <span class="ident">validate_texture_copy_range</span>(<span class="ident">source</span>, <span class="ident">src_texture</span>.<span class="ident">format</span>, <span class="ident">src_texture</span>.<span class="ident">kind</span>, <span class="ident">copy_size</span>)<span class="question-mark">?</span>;
+        <span class="ident">validate_texture_copy_range</span>(<span class="ident">destination</span>, <span class="ident">dst_texture</span>.<span class="ident">format</span>, <span class="ident">dst_texture</span>.<span class="ident">kind</span>, <span class="ident">copy_size</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">ImageCopy</span> {
             <span class="ident">src_subresource</span>: <span class="ident">src_layers</span>,
