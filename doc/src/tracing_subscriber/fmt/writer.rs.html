@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-f1e60147b9cdaa30/tracing-subscriber-0.2.9/src/fmt/writer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>writer.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../tracing_subscriber/index.html'><div class='logo-container'><img src='https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo.svg' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-f1e60147b9cdaa30/tracing-subscriber-0.2.10/src/fmt/writer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>writer.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../tracing_subscriber/index.html'><div class='logo-container'><img src='https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo.svg' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -118,6 +118,8 @@
 <span id="118">118</span>
 <span id="119">119</span>
 <span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Abstractions for creating [`io::Write`] instances.</span>
 <span class="doccomment">//!</span>
@@ -127,14 +129,15 @@
 
 <span class="doccomment">/// A type that can create [`io::Write`] instances.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// `MakeWriter` is used by [`FmtSubscriber`] to print formatted text representations of</span>
+<span class="doccomment">/// `MakeWriter` is used by [`fmt::Subscriber`] or [`fmt::Layer`] to print formatted text representations of</span>
 <span class="doccomment">/// [`Event`]s.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// This trait is already implemented for function pointers and immutably-borrowing closures that</span>
 <span class="doccomment">/// return an instance of [`io::Write`], such as [`io::stdout`] and [`io::stderr`].</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`io::Write`]: https://doc.rust-lang.org/std/io/trait.Write.html</span>
-<span class="doccomment">/// [`FmtSubscriber`]: ../struct.Subscriber.html</span>
+<span class="doccomment">/// [`fmt::Subscriber`]: ../../fmt/struct.Subscriber.html</span>
+<span class="doccomment">/// [`fmt::Layer`]: ../../fmt/struct.Layer.html</span>
 <span class="doccomment">/// [`Event`]: https://docs.rs/tracing-core/0.1.5/tracing_core/event/struct.Event.html</span>
 <span class="doccomment">/// [`io::stdout`]: https://doc.rust-lang.org/std/io/fn.stdout.html</span>
 <span class="doccomment">/// [`io::stderr`]: https://doc.rust-lang.org/std/io/fn.stderr.html</span>
@@ -149,13 +152,14 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Implementer notes</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [`FmtSubscriber`] will call this method each time an event is recorded. Ensure any state</span>
+    <span class="doccomment">/// [`fmt::Layer`] or [`fmt::Subscriber`] will call this method each time an event is recorded. Ensure any state</span>
     <span class="doccomment">/// that must be saved across writes is not lost when the [`Writer`] instance is dropped. If</span>
     <span class="doccomment">/// creating a [`io::Write`] instance is expensive, be sure to cache it when implementing</span>
     <span class="doccomment">/// [`MakeWriter`] to improve performance.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`Writer`]: #associatedtype.Writer</span>
-    <span class="doccomment">/// [`FmtSubscriber`]: ../struct.Subscriber.html</span>
+    <span class="doccomment">/// [`fmt::Layer`]: ../../fmt/struct.Layer.html</span>
+    <span class="doccomment">/// [`fmt::Subscriber`]: ../../fmt/struct.Subscriber.html</span>
     <span class="doccomment">/// [`io::Write`]: https://doc.rust-lang.org/std/io/trait.Write.html</span>
     <span class="doccomment">/// [`MakeWriter`]: trait.MakeWriter.html</span>
     <span class="kw">fn</span> <span class="ident">make_writer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="self">Self</span>::<span class="ident">Writer</span>;
