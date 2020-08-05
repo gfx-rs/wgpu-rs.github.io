@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/b352093/wgpu-core/src/validation.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>validation.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../wgpu_core/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/78546f4/wgpu-core/src/validation.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>validation.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../wgpu_core/index.html'><div class='logo-container'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -758,6 +758,7 @@
 <span id="758">758</span>
 <span id="759">759</span>
 <span id="760">760</span>
+<span id="761">761</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -845,6 +846,8 @@
 <span class="doccomment">/// Errors produced when validating a programmable stage of a pipeline.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">StageError</span> {
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;shader module is invalid&quot;</span>)]</span>
+    <span class="ident">InvalidModule</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;unable to find an entry point matching the {0:?} execution model&quot;</span>)]</span>
     <span class="ident">MissingEntryPoint</span>(<span class="ident">naga</span>::<span class="ident">ShaderStage</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;error matching global binding at index {binding} in set {set} against the pipeline layout: {error}&quot;</span>)]</span>
@@ -870,12 +873,12 @@
     <span class="kw">use</span> <span class="ident">naga</span>::<span class="ident">TypeInner</span> <span class="kw">as</span> <span class="ident">Ti</span>;
     <span class="comment">//TODO: take alignment into account!</span>
     <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">handle</span>].<span class="ident">inner</span> {
-        <span class="ident">Ti</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>: <span class="kw">_</span>, <span class="ident">width</span> } <span class="op">=&gt;</span> <span class="ident">width</span> <span class="kw">as</span> <span class="ident">wgt</span>::<span class="ident">BufferAddress</span> <span class="op">/</span> <span class="number">8</span>,
+        <span class="ident">Ti</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>: <span class="kw">_</span>, <span class="ident">width</span> } <span class="op">=&gt;</span> <span class="ident">width</span> <span class="kw">as</span> <span class="ident">wgt</span>::<span class="ident">BufferAddress</span>,
         <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>,
             <span class="ident">kind</span>: <span class="kw">_</span>,
             <span class="ident">width</span>,
-        } <span class="op">=&gt;</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">wgt</span>::<span class="ident">BufferAddress</span> <span class="op">*</span> <span class="ident">width</span> <span class="kw">as</span> <span class="ident">wgt</span>::<span class="ident">BufferAddress</span> <span class="op">/</span> <span class="number">8</span>,
+        } <span class="op">=&gt;</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">wgt</span>::<span class="ident">BufferAddress</span> <span class="op">*</span> <span class="ident">width</span> <span class="kw">as</span> <span class="ident">wgt</span>::<span class="ident">BufferAddress</span>,
         <span class="ident">Ti</span>::<span class="ident">Matrix</span> {
             <span class="ident">rows</span>,
             <span class="ident">columns</span>,
@@ -883,7 +886,6 @@
             <span class="ident">width</span>,
         } <span class="op">=&gt;</span> {
             <span class="ident">rows</span> <span class="kw">as</span> <span class="ident">wgt</span>::<span class="ident">BufferAddress</span> <span class="op">*</span> <span class="ident">columns</span> <span class="kw">as</span> <span class="ident">wgt</span>::<span class="ident">BufferAddress</span> <span class="op">*</span> <span class="ident">width</span> <span class="kw">as</span> <span class="ident">wgt</span>::<span class="ident">BufferAddress</span>
-                <span class="op">/</span> <span class="number">8</span>
         }
         <span class="ident">Ti</span>::<span class="ident">Pointer</span> { .. } <span class="op">=&gt;</span> <span class="number">4</span>,
         <span class="ident">Ti</span>::<span class="ident">Array</span> {
@@ -1133,129 +1135,129 @@
         <span class="ident">Vf</span>::<span class="ident">Uchar2</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Uchar4</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Char2</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Char4</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Uchar2Norm</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Uchar4Norm</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Char2Norm</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Char4Norm</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Ushort2</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Ushort4</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Short2</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Short4</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Ushort2Norm</span> <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Short2Norm</span> <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Half2</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Ushort4Norm</span> <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Short4Norm</span> <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Half4</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Float</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Scalar</span> {
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Float2</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Float3</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Tri</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Float4</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Uint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Scalar</span> {
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Uint2</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Uint3</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Tri</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Uint4</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Int</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Scalar</span> {
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Int2</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Int3</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Tri</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Vf</span>::<span class="ident">Int4</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">naga</span>::<span class="ident">VectorSize</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
     }
 }
@@ -1267,69 +1269,69 @@
     <span class="kw">match</span> <span class="ident">format</span> {
         <span class="ident">Tf</span>::<span class="ident">R8Unorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">R8Snorm</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Scalar</span> {
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">R8Uint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Scalar</span> {
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">R8Sint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Scalar</span> {
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">R16Uint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Scalar</span> {
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">R16Sint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Scalar</span> {
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">R16Float</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Scalar</span> {
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rg8Unorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rg8Snorm</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rg8Uint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rg8Sint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">R32Uint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Scalar</span> {
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">R32Sint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Scalar</span> {
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">R32Float</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Scalar</span> {
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rg16Uint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rg16Sint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rg16Float</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rgba8Unorm</span>
         <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rgba8UnormSrgb</span>
@@ -1338,72 +1340,72 @@
         <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bgra8UnormSrgb</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rgba8Uint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rgba8Sint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rgb10a2Unorm</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">10</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rg11b10Float</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Tri</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">11</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rg32Uint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rg32Sint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rg32Float</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rgba16Uint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rgba16Sint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rgba16Float</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">16</span>,
+            <span class="ident">width</span>: <span class="number">2</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rgba32Uint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rgba32Sint</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Rgba32Float</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">32</span>,
+            <span class="ident">width</span>: <span class="number">4</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Depth32Float</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Depth24Plus</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Depth24PlusStencil8</span> <span class="op">=&gt;</span> {
             <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unexpected depth format&quot;</span>)
@@ -1418,21 +1420,21 @@
         <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bc7RgbaUnormSrgb</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Quad</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Bc4RUnorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bc4RSnorm</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Scalar</span> {
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Bc5RgUnorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bc5RgSnorm</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Bi</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
         <span class="ident">Tf</span>::<span class="ident">Bc6hRgbUfloat</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bc6hRgbSfloat</span> <span class="op">=&gt;</span> <span class="ident">Ti</span>::<span class="ident">Vector</span> {
             <span class="ident">size</span>: <span class="ident">Vs</span>::<span class="ident">Tri</span>,
             <span class="ident">kind</span>: <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">width</span>: <span class="number">8</span>,
+            <span class="ident">width</span>: <span class="number">1</span>,
         },
     }
 }
