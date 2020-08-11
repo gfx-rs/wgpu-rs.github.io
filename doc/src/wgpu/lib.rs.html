@@ -2312,6 +2312,43 @@
 <span id="2312">2312</span>
 <span id="2313">2313</span>
 <span id="2314">2314</span>
+<span id="2315">2315</span>
+<span id="2316">2316</span>
+<span id="2317">2317</span>
+<span id="2318">2318</span>
+<span id="2319">2319</span>
+<span id="2320">2320</span>
+<span id="2321">2321</span>
+<span id="2322">2322</span>
+<span id="2323">2323</span>
+<span id="2324">2324</span>
+<span id="2325">2325</span>
+<span id="2326">2326</span>
+<span id="2327">2327</span>
+<span id="2328">2328</span>
+<span id="2329">2329</span>
+<span id="2330">2330</span>
+<span id="2331">2331</span>
+<span id="2332">2332</span>
+<span id="2333">2333</span>
+<span id="2334">2334</span>
+<span id="2335">2335</span>
+<span id="2336">2336</span>
+<span id="2337">2337</span>
+<span id="2338">2338</span>
+<span id="2339">2339</span>
+<span id="2340">2340</span>
+<span id="2341">2341</span>
+<span id="2342">2342</span>
+<span id="2343">2343</span>
+<span id="2344">2344</span>
+<span id="2345">2345</span>
+<span id="2346">2346</span>
+<span id="2347">2347</span>
+<span id="2348">2348</span>
+<span id="2349">2349</span>
+<span id="2350">2350</span>
+<span id="2351">2351</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).</span>
 <span class="doccomment">//!</span>
@@ -2620,6 +2657,17 @@
     <span class="kw">fn</span> <span class="ident">render_bundle_drop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">render_bundle</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">RenderBundleId</span>);
     <span class="kw">fn</span> <span class="ident">compute_pipeline_drop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pipeline</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">ComputePipelineId</span>);
     <span class="kw">fn</span> <span class="ident">render_pipeline_drop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pipeline</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">RenderPipelineId</span>);
+
+    <span class="kw">fn</span> <span class="ident">compute_pipeline_get_bind_group_layout</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">pipeline</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">ComputePipelineId</span>,
+        <span class="ident">index</span>: <span class="ident">u32</span>,
+    ) <span class="op">-&gt;</span> <span class="self">Self</span>::<span class="ident">BindGroupLayoutId</span>;
+    <span class="kw">fn</span> <span class="ident">render_pipeline_get_bind_group_layout</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">pipeline</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">RenderPipelineId</span>,
+        <span class="ident">index</span>: <span class="ident">u32</span>,
+    ) <span class="op">-&gt;</span> <span class="self">Self</span>::<span class="ident">BindGroupLayoutId</span>;
 
     <span class="kw">fn</span> <span class="ident">command_encoder_copy_buffer_to_buffer</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -2997,6 +3045,19 @@
     }
 }
 
+<span class="kw">impl</span> <span class="ident">RenderPipeline</span> {
+    <span class="doccomment">/// Get an object representing the bind group layout at a given index.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_bind_group_layout</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">u32</span>) <span class="op">-&gt;</span> <span class="ident">BindGroupLayout</span> {
+        <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">context</span>);
+        <span class="ident">BindGroupLayout</span> {
+            <span class="ident">context</span>,
+            <span class="ident">id</span>: <span class="self">self</span>
+                .<span class="ident">context</span>
+                .<span class="ident">render_pipeline_get_bind_group_layout</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>, <span class="ident">index</span>),
+        }
+    }
+}
+
 <span class="doccomment">/// Handle to a compute pipeline.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// A `ComputePipeline` object represents a compute pipeline and its single shader stage.</span>
@@ -3011,6 +3072,19 @@
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">if</span> <span class="op">!</span><span class="ident">thread</span>::<span class="ident">panicking</span>() {
             <span class="self">self</span>.<span class="ident">context</span>.<span class="ident">compute_pipeline_drop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>);
+        }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">ComputePipeline</span> {
+    <span class="doccomment">/// Get an object representing the bind group layout at a given index.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_bind_group_layout</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">u32</span>) <span class="op">-&gt;</span> <span class="ident">BindGroupLayout</span> {
+        <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">context</span>);
+        <span class="ident">BindGroupLayout</span> {
+            <span class="ident">context</span>,
+            <span class="ident">id</span>: <span class="self">self</span>
+                .<span class="ident">context</span>
+                .<span class="ident">compute_pipeline_get_bind_group_layout</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>, <span class="ident">index</span>),
         }
     }
 }

@@ -1,5 +1,4 @@
 (function() {var implementors = {};
-implementors["aho_corasick"] = [{"text":"impl Error for Error","synthetic":false,"types":[]}];
 implementors["arrayvec"] = [{"text":"impl&lt;T:&nbsp;Any&gt; Error for CapacityError&lt;T&gt;","synthetic":false,"types":[]}];
 implementors["ash"] = [{"text":"impl Error for InstanceError","synthetic":false,"types":[]},{"text":"impl Error for LoadingError","synthetic":false,"types":[]},{"text":"impl Error for Result","synthetic":false,"types":[]}];
 implementors["base64"] = [{"text":"impl Error for DecodeError","synthetic":false,"types":[]}];
