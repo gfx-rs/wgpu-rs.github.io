@@ -2549,7 +2549,6 @@
 <span id="2548">2548</span>
 <span id="2549">2549</span>
 <span id="2550">2550</span>
-<span id="2551">2551</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).</span>
 <span class="doccomment">//!</span>
@@ -2591,10 +2590,10 @@
     <span class="ident">DepthStencilStateDescriptor</span>, <span class="ident">DeviceDescriptor</span>, <span class="ident">DynamicOffset</span>, <span class="ident">Extent3d</span>, <span class="ident">Features</span>, <span class="ident">FilterMode</span>,
     <span class="ident">FrontFace</span>, <span class="ident">IndexFormat</span>, <span class="ident">InputStepMode</span>, <span class="ident">Limits</span>, <span class="ident">Origin3d</span>, <span class="ident">PowerPreference</span>, <span class="ident">PresentMode</span>,
     <span class="ident">PrimitiveTopology</span>, <span class="ident">PushConstantRange</span>, <span class="ident">RasterizationStateDescriptor</span>, <span class="ident">ShaderLocation</span>,
-    <span class="ident">ShaderStage</span>, <span class="ident">StencilOperation</span>, <span class="ident">StencilStateFaceDescriptor</span>, <span class="ident">SwapChainDescriptor</span>,
-    <span class="ident">SwapChainStatus</span>, <span class="ident">TextureAspect</span>, <span class="ident">TextureComponentType</span>, <span class="ident">TextureDataLayout</span>, <span class="ident">TextureDimension</span>,
-    <span class="ident">TextureFormat</span>, <span class="ident">TextureUsage</span>, <span class="ident">TextureViewDimension</span>, <span class="ident">VertexAttributeDescriptor</span>, <span class="ident">VertexFormat</span>,
-    <span class="ident">BIND_BUFFER_ALIGNMENT</span>, <span class="ident">COPY_BUFFER_ALIGNMENT</span>, <span class="ident">COPY_BYTES_PER_ROW_ALIGNMENT</span>,
+    <span class="ident">ShaderStage</span>, <span class="ident">StencilOperation</span>, <span class="ident">StencilStateDescriptor</span>, <span class="ident">StencilStateFaceDescriptor</span>,
+    <span class="ident">SwapChainDescriptor</span>, <span class="ident">SwapChainStatus</span>, <span class="ident">TextureAspect</span>, <span class="ident">TextureComponentType</span>, <span class="ident">TextureDataLayout</span>,
+    <span class="ident">TextureDimension</span>, <span class="ident">TextureFormat</span>, <span class="ident">TextureUsage</span>, <span class="ident">TextureViewDimension</span>, <span class="ident">VertexAttributeDescriptor</span>,
+    <span class="ident">VertexFormat</span>, <span class="ident">BIND_BUFFER_ALIGNMENT</span>, <span class="ident">COPY_BUFFER_ALIGNMENT</span>, <span class="ident">COPY_BYTES_PER_ROW_ALIGNMENT</span>,
     <span class="ident">PUSH_CONSTANT_ALIGNMENT</span>,
 };
 
@@ -2844,7 +2843,7 @@
     <span class="kw">fn</span> <span class="ident">texture_create_view</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">texture</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">TextureId</span>,
-        <span class="ident">desc</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">TextureViewDescriptor</span><span class="op">&gt;</span>,
+        <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">TextureViewDescriptor</span>,
     ) <span class="op">-&gt;</span> <span class="self">Self</span>::<span class="ident">TextureViewId</span>;
     <span class="kw">fn</span> <span class="ident">texture_drop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">texture</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">TextureId</span>);
     <span class="kw">fn</span> <span class="ident">texture_view_drop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">texture_view</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">TextureViewId</span>);
@@ -3389,7 +3388,7 @@
 
 <span class="doccomment">/// Resource that can be bound to a pipeline.</span>
 <span class="attribute">#[<span class="ident">non_exhaustive</span>]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BindingResource</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Binding is backed by a buffer.</span>
     <span class="doccomment">///</span>
@@ -3529,15 +3528,15 @@
 }
 
 <span class="doccomment">/// Describes a [`TextureView`].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureViewDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Debug label of the texture view. This will show up in graphics debuggers for easy identification.</span>
     <span class="kw">pub</span> <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Format of the texture view. At this time, it must be the same as the underlying format of the texture.</span>
-    <span class="kw">pub</span> <span class="ident">format</span>: <span class="ident">TextureFormat</span>,
+    <span class="kw">pub</span> <span class="ident">format</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TextureFormat</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The dimension of the texture view. For 1D textures, this must be `1D`. For 2D textures it must be one of</span>
     <span class="doccomment">/// `D2`, `D2Array`, `Cube`, and `CubeArray`. For 3D textures it must be `3D`</span>
-    <span class="kw">pub</span> <span class="ident">dimension</span>: <span class="ident">TextureViewDimension</span>,
+    <span class="kw">pub</span> <span class="ident">dimension</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TextureViewDimension</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Aspect of the texture. Color textures must be [`TextureAspect::All`].</span>
     <span class="kw">pub</span> <span class="ident">aspect</span>: <span class="ident">TextureAspect</span>,
     <span class="doccomment">/// Base mip level.</span>
@@ -3559,6 +3558,8 @@
 <span class="doccomment">/// A `PipelineLayoutDescriptor` can be used to create a pipeline layout.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PipelineLayoutDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Debug label of the pipeline layout. This will show up in graphics debuggers for easy identification.</span>
+    <span class="kw">pub</span> <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Bind groups that this pipeline uses. The first entry will provide all the bindings for</span>
     <span class="doccomment">/// &quot;set = 0&quot;, second entry will provide all the bindings for &quot;set = 1&quot; etc.</span>
     <span class="kw">pub</span> <span class="ident">bind_group_layouts</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BindGroupLayout</span>],
@@ -3600,7 +3601,7 @@
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">SamplerDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">label</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">label</span>: <span class="prelude-val">None</span>,
             <span class="ident">address_mode_u</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">address_mode_v</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">address_mode_w</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
@@ -3609,18 +3610,24 @@
             <span class="ident">mipmap_filter</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
             <span class="ident">lod_min_clamp</span>: <span class="number">0.0</span>,
             <span class="ident">lod_max_clamp</span>: <span class="ident">std</span>::<span class="ident">f32</span>::<span class="ident">MAX</span>,
-            <span class="ident">compare</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
-            <span class="ident">anisotropy_clamp</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="ident">compare</span>: <span class="prelude-val">None</span>,
+            <span class="ident">anisotropy_clamp</span>: <span class="prelude-val">None</span>,
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">wgt</span>::<span class="ident">BindGroupEntry</span> <span class="kw">as</span> <span class="ident">BindGroupEntryBase</span>;
 <span class="doccomment">/// Bindable resource and the slot to bind it to.</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BindGroupEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BindGroupEntryBase</span><span class="op">&lt;</span><span class="ident">BindingResource</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;&gt;</span>;
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroupEntry</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Slot for which binding provides resource. Corresponds to an entry of the same</span>
+    <span class="doccomment">/// binding index in the [`BindGroupLayoutDescriptor`].</span>
+    <span class="kw">pub</span> <span class="ident">binding</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// Resource to attach to the binding</span>
+    <span class="kw">pub</span> <span class="ident">resource</span>: <span class="ident">BindingResource</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+}
 
 <span class="doccomment">/// Describes a group of bindings and the resources to be bound.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroupDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Debug label of the bind group. This will show up in graphics debuggers for easy identification.</span>
     <span class="kw">pub</span> <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span><span class="op">&gt;</span>,
@@ -4285,16 +4292,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_view</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">TextureViewDescriptor</span>) <span class="op">-&gt;</span> <span class="ident">TextureView</span> {
         <span class="ident">TextureView</span> {
             <span class="ident">context</span>: <span class="ident">Arc</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">context</span>),
-            <span class="ident">id</span>: <span class="ident">Context</span>::<span class="ident">texture_create_view</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>, <span class="prelude-val">Some</span>(<span class="ident">desc</span>)),
-            <span class="ident">owned</span>: <span class="bool-val">true</span>,
-        }
-    }
-
-    <span class="doccomment">/// Creates the default view of this whole texture. This is likely what you want.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_default_view</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">TextureView</span> {
-        <span class="ident">TextureView</span> {
-            <span class="ident">context</span>: <span class="ident">Arc</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">context</span>),
-            <span class="ident">id</span>: <span class="ident">Context</span>::<span class="ident">texture_create_view</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>, <span class="prelude-val">None</span>),
+            <span class="ident">id</span>: <span class="ident">Context</span>::<span class="ident">texture_create_view</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>, <span class="ident">desc</span>),
             <span class="ident">owned</span>: <span class="bool-val">true</span>,
         }
     }
