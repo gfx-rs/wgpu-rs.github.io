@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/gfx-hal-0.5.3/src/pso/specialization.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>specialization.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../gfx_hal/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/gfx-hal-0.6.0/src/pso/specialization.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>specialization.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../gfx_hal/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -131,21 +131,14 @@
 <span id="130">130</span>
 <span id="131">131</span>
 <span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Pipeline specialization types.</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow</span>::<span class="ident">Cow</span>, <span class="ident">ops</span>::<span class="ident">Range</span>, <span class="ident">slice</span>};
 
-<span class="doccomment">/// Specialization constant for pipelines.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Specialization constants allow for easy configuration of</span>
-<span class="doccomment">/// multiple similar pipelines. For example, there may be a</span>
-<span class="doccomment">/// boolean exposed to the shader that switches the specularity on/off</span>
-<span class="doccomment">/// provided via a specialization constant.</span>
-<span class="doccomment">/// That would produce separate PSO&#39;s for the &quot;on&quot; and &quot;off&quot; states</span>
-<span class="doccomment">/// but they share most of the internal stuff and are fast to produce.</span>
-<span class="doccomment">/// More importantly, they are fast to execute, since the driver</span>
-<span class="doccomment">/// can optimize out the branch on that other PSO creation.</span>
+<span class="doccomment">/// Description of a specialization constant for the pipeline.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SpecializationConstant</span> {
     <span class="doccomment">/// Constant identifier in shader source.</span>
@@ -154,12 +147,22 @@
     <span class="kw">pub</span> <span class="ident">range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u16</span><span class="op">&gt;</span>,
 }
 
-<span class="doccomment">/// Specialization information structure.</span>
+<span class="doccomment">/// Information required for pipeline specialization.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Specialization allows for easy configuration of multiple similar pipelines.</span>
+<span class="doccomment">/// For example, there may be a boolean exposed to the shader that switches</span>
+<span class="doccomment">/// the [specularity](https://en.wikipedia.org/wiki/Specularity) on/off,</span>
+<span class="doccomment">/// provided via a [specialization constant][SpecializationConstant].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// That would produce separate PSO&#39;s for the &quot;on&quot; and &quot;off&quot; states</span>
+<span class="doccomment">/// but they share most of the internal stuff and are fast to produce.</span>
+<span class="doccomment">/// More importantly, they are fast to execute, since the driver</span>
+<span class="doccomment">/// can optimize out the branch on that other PSO creation.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Specialization</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Constant array.</span>
+    <span class="doccomment">/// Array of descriptors of specialization constants to override.</span>
     <span class="kw">pub</span> <span class="ident">constants</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, [<span class="ident">SpecializationConstant</span>]<span class="op">&gt;</span>,
-    <span class="doccomment">/// Raw data.</span>
+    <span class="doccomment">/// Raw data of the specialization constants</span>
     <span class="kw">pub</span> <span class="ident">data</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, [<span class="ident">u8</span>]<span class="op">&gt;</span>,
 }
 
@@ -229,17 +232,18 @@
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u16</span>;
         <span class="ident">storage</span>.<span class="ident">data</span>.<span class="ident">extend_from_slice</span>(<span class="kw">unsafe</span> {
             <span class="comment">// Inspecting bytes is always safe.</span>
-            <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">head</span>.<span class="number">1</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">H</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>, <span class="ident">size</span>)
+            <span class="kw">let</span> <span class="ident">head_ptr</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">H</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">head</span>.<span class="number">1</span>;
+            <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">head_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>, <span class="ident">size</span>)
         });
         <span class="ident">storage</span>.<span class="ident">constants</span>.<span class="ident">push</span>(<span class="ident">SpecializationConstant</span> {
             <span class="ident">id</span>: <span class="self">self</span>.<span class="ident">head</span>.<span class="number">0</span>,
-            <span class="ident">range</span>: <span class="ident">offset</span> .. <span class="ident">offset</span> <span class="op">+</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u16</span>,
+            <span class="ident">range</span>: <span class="ident">offset</span>..<span class="ident">offset</span> <span class="op">+</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u16</span>,
         });
         <span class="self">self</span>.<span class="ident">tail</span>.<span class="ident">fold</span>(<span class="ident">storage</span>)
     }
 }
 
-<span class="doccomment">/// Macro for specifying list of specialization constatns for `EntryPoint`.</span>
+<span class="doccomment">/// Macro for specifying list of specialization constants for `EntryPoint`.</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">spec_const_list</span> {
     (@ $(,)<span class="question-mark">?</span>) <span class="op">=&gt;</span> {

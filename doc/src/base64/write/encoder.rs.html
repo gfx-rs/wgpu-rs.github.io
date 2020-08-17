@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/base64-0.10.1/src/write/encoder.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>encoder.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../base64/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/base64-0.12.3/src/write/encoder.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>encoder.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../base64/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -355,10 +355,12 @@
 <span id="354">354</span>
 <span id="355">355</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">encode</span>::<span class="ident">encode_to_slice</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">io</span>::{<span class="ident">ErrorKind</span>, <span class="prelude-ty">Result</span>, <span class="ident">Write</span>};
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">cmp</span>, <span class="ident">fmt</span>};
-<span class="kw">use</span> {<span class="ident">encode_config_slice</span>, <span class="ident">Config</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">encode</span>::<span class="ident">encode_to_slice</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">encode_config_slice</span>, <span class="ident">Config</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{
+    <span class="ident">cmp</span>, <span class="ident">fmt</span>,
+    <span class="ident">io</span>::{<span class="ident">ErrorKind</span>, <span class="prelude-ty">Result</span>, <span class="ident">Write</span>},
+};
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">BUF_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1024</span>;
 <span class="doccomment">/// The most bytes whose encoding will fit in `BUF_SIZE`</span>
@@ -510,7 +512,7 @@
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">w</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">output</span>[..<span class="ident">current_output_len</span>]);
         <span class="self">self</span>.<span class="ident">panicked</span> <span class="op">=</span> <span class="bool-val">false</span>;
 
-        <span class="kw">return</span> <span class="ident">res</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">consumed</span><span class="op">|</span> {
+        <span class="ident">res</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">consumed</span><span class="op">|</span> {
             <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">consumed</span> <span class="op">&lt;=</span> <span class="ident">current_output_len</span>);
 
             <span class="kw">if</span> <span class="ident">consumed</span> <span class="op">&lt;</span> <span class="ident">current_output_len</span> {
@@ -522,9 +524,7 @@
             } <span class="kw">else</span> {
                 <span class="self">self</span>.<span class="ident">output_occupied_len</span> <span class="op">=</span> <span class="number">0</span>;
             }
-
-            ()
-        });
+        })
     }
 
     <span class="doccomment">/// Write all buffered encoded output. If this returns `Ok`, `self.output_occupied_len` is `0`.</span>
@@ -589,10 +589,10 @@
         <span class="comment">// before reading any input, write any leftover encoded output from last time</span>
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">output_occupied_len</span> <span class="op">&gt;</span> <span class="number">0</span> {
             <span class="kw">let</span> <span class="ident">current_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">output_occupied_len</span>;
-            <span class="kw">return</span> <span class="self">self</span>.<span class="ident">write_to_delegate</span>(<span class="ident">current_len</span>)
+            <span class="kw">return</span> <span class="self">self</span>
+                .<span class="ident">write_to_delegate</span>(<span class="ident">current_len</span>)
                 <span class="comment">// did not read any input</span>
-                .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="number">0</span>)
-
+                .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="number">0</span>);
         }
 
         <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="number">0</span>, <span class="self">self</span>.<span class="ident">output_occupied_len</span>);
@@ -639,7 +639,7 @@
                 <span class="comment">// and don&#39;t read more than can be encoded</span>
                 <span class="ident">max_input_len</span> <span class="op">=</span> <span class="ident">MAX_INPUT_LEN</span> <span class="op">-</span> <span class="ident">MIN_ENCODE_CHUNK_SIZE</span>;
 
-                <span class="comment">// fall through to normal encoding</span>
+            <span class="comment">// fall through to normal encoding</span>
             } <span class="kw">else</span> {
                 <span class="comment">// `extra` and `input` are non empty, but `|extra| + |input| &lt; 3`, so there must be</span>
                 <span class="comment">// 1 byte in each.</span>
@@ -686,7 +686,7 @@
             <span class="comment">// no matter whether we wrote the full encoded buffer or not, we consumed the same</span>
             <span class="comment">// input</span>
             .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">extra_input_read_len</span> <span class="op">+</span> <span class="ident">input_chunks_to_encode_len</span>)
-            .<span class="ident">map_err</span>( <span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
                 <span class="comment">// in case we filled and encoded `extra`, reset extra_len</span>
                 <span class="self">self</span>.<span class="ident">extra_input_occupied_len</span> <span class="op">=</span> <span class="ident">orig_extra_len</span>;
 

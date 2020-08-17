@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/7e8b51b/wgpu-core/src/command/transfer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transfer.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/096c570/wgpu-core/src/command/transfer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transfer.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -664,6 +664,7 @@
     <span class="ident">id</span>::{<span class="ident">BufferId</span>, <span class="ident">CommandEncoderId</span>, <span class="ident">TextureId</span>},
     <span class="ident">resource</span>::{<span class="ident">BufferUse</span>, <span class="ident">Texture</span>, <span class="ident">TextureUse</span>},
     <span class="ident">span</span>,
+    <span class="ident">track</span>::<span class="ident">TextureSelector</span>,
 };
 
 <span class="kw">use</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">CommandBuffer</span> <span class="kw">as</span> <span class="kw">_</span>;
@@ -734,7 +735,7 @@
 ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>
     (
         <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">SubresourceLayers</span>,
-        <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">SubresourceRange</span>,
+        <span class="ident">TextureSelector</span>,
         <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Offset</span>,
     ),
     <span class="ident">TransferError</span>,
@@ -742,7 +743,7 @@
     <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="ident">texture_guard</span>
         .<span class="ident">get</span>(<span class="ident">view</span>.<span class="ident">texture</span>)
         .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TransferError</span>::<span class="ident">InvalidTexture</span>(<span class="ident">view</span>.<span class="ident">texture</span>))<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">aspects</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">full_range</span>.<span class="ident">aspects</span>;
+
     <span class="kw">let</span> <span class="ident">level</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Level</span>;
     <span class="kw">let</span> (<span class="ident">layer</span>, <span class="ident">layer_count</span>, <span class="ident">z</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">texture</span>.<span class="ident">dimension</span> {
         <span class="ident">wgt</span>::<span class="ident">TextureDimension</span>::<span class="ident">D1</span> <span class="op">|</span> <span class="ident">wgt</span>::<span class="ident">TextureDimension</span>::<span class="ident">D2</span> <span class="op">=&gt;</span> (
@@ -754,16 +755,15 @@
     };
 
     <span class="comment">// TODO: Can&#39;t satisfy clippy here unless we modify</span>
-    <span class="comment">// `hal::image::SubresourceRange` in gfx to use `std::ops::RangeBounds`.</span>
+    <span class="comment">// `TextureSelector` to use `std::ops::RangeBounds`.</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">range_plus_one</span>)]</span>
     <span class="prelude-val">Ok</span>((
         <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">SubresourceLayers</span> {
-            <span class="ident">aspects</span>,
-            <span class="ident">level</span>: <span class="ident">view</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Level</span>,
+            <span class="ident">aspects</span>: <span class="ident">texture</span>.<span class="ident">aspects</span>,
+            <span class="ident">level</span>,
             <span class="ident">layers</span>: <span class="ident">layer</span>..<span class="ident">layer</span> <span class="op">+</span> <span class="ident">layer_count</span>,
         },
-        <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">SubresourceRange</span> {
-            <span class="ident">aspects</span>,
+        <span class="ident">TextureSelector</span> {
             <span class="ident">levels</span>: <span class="ident">level</span>..<span class="ident">level</span> <span class="op">+</span> <span class="number">1</span>,
             <span class="ident">layers</span>: <span class="ident">layer</span>..<span class="ident">layer</span> <span class="op">+</span> <span class="ident">layer_count</span>,
         },
@@ -1001,7 +1001,7 @@
         <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer</span>::<span class="ident">get_encoder</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">command_encoder_id</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> (<span class="ident">buffer_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> (<span class="ident">texture_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
-        <span class="kw">let</span> (<span class="ident">dst_layers</span>, <span class="ident">dst_range</span>, <span class="ident">dst_offset</span>) <span class="op">=</span>
+        <span class="kw">let</span> (<span class="ident">dst_layers</span>, <span class="ident">dst_selector</span>, <span class="ident">dst_offset</span>) <span class="op">=</span>
             <span class="ident">texture_copy_view_to_hal</span>(<span class="ident">destination</span>, <span class="ident">copy_size</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>)<span class="question-mark">?</span>;
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
@@ -1035,7 +1035,7 @@
             .<span class="ident">use_replace</span>(
                 <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>,
                 <span class="ident">destination</span>.<span class="ident">texture</span>,
-                <span class="ident">dst_range</span>,
+                <span class="ident">dst_selector</span>,
                 <span class="ident">TextureUse</span>::<span class="ident">COPY_DST</span>,
             )
             .<span class="ident">unwrap</span>();
@@ -1108,7 +1108,7 @@
         <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer</span>::<span class="ident">get_encoder</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">command_encoder_id</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> (<span class="ident">buffer_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> (<span class="ident">texture_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
-        <span class="kw">let</span> (<span class="ident">src_layers</span>, <span class="ident">src_range</span>, <span class="ident">src_offset</span>) <span class="op">=</span>
+        <span class="kw">let</span> (<span class="ident">src_layers</span>, <span class="ident">src_selector</span>, <span class="ident">src_offset</span>) <span class="op">=</span>
             <span class="ident">texture_copy_view_to_hal</span>(<span class="ident">source</span>, <span class="ident">copy_size</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>)<span class="question-mark">?</span>;
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
@@ -1132,7 +1132,7 @@
             .<span class="ident">use_replace</span>(
                 <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>,
                 <span class="ident">source</span>.<span class="ident">texture</span>,
-                <span class="ident">src_range</span>,
+                <span class="ident">src_selector</span>,
                 <span class="ident">TextureUse</span>::<span class="ident">COPY_SRC</span>,
             )
             .<span class="ident">unwrap</span>();
@@ -1219,9 +1219,9 @@
         <span class="comment">// we can&#39;t hold both src_pending and dst_pending in scope because they</span>
         <span class="comment">// borrow the buffer tracker mutably...</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">barriers</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-        <span class="kw">let</span> (<span class="ident">src_layers</span>, <span class="ident">src_range</span>, <span class="ident">src_offset</span>) <span class="op">=</span>
+        <span class="kw">let</span> (<span class="ident">src_layers</span>, <span class="ident">src_selector</span>, <span class="ident">src_offset</span>) <span class="op">=</span>
             <span class="ident">texture_copy_view_to_hal</span>(<span class="ident">source</span>, <span class="ident">copy_size</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> (<span class="ident">dst_layers</span>, <span class="ident">dst_range</span>, <span class="ident">dst_offset</span>) <span class="op">=</span>
+        <span class="kw">let</span> (<span class="ident">dst_layers</span>, <span class="ident">dst_selector</span>, <span class="ident">dst_offset</span>) <span class="op">=</span>
             <span class="ident">texture_copy_view_to_hal</span>(<span class="ident">destination</span>, <span class="ident">copy_size</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>)<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="ident">src_layers</span>.<span class="ident">aspects</span> <span class="op">!=</span> <span class="ident">dst_layers</span>.<span class="ident">aspects</span> {
             <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">MismatchedAspects</span>)<span class="question-mark">?</span>
@@ -1248,7 +1248,7 @@
             .<span class="ident">use_replace</span>(
                 <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>,
                 <span class="ident">source</span>.<span class="ident">texture</span>,
-                <span class="ident">src_range</span>,
+                <span class="ident">src_selector</span>,
                 <span class="ident">TextureUse</span>::<span class="ident">COPY_SRC</span>,
             )
             .<span class="ident">unwrap</span>();
@@ -1263,7 +1263,7 @@
             .<span class="ident">use_replace</span>(
                 <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>,
                 <span class="ident">destination</span>.<span class="ident">texture</span>,
-                <span class="ident">dst_range</span>,
+                <span class="ident">dst_selector</span>,
                 <span class="ident">TextureUse</span>::<span class="ident">COPY_DST</span>,
             )
             .<span class="ident">unwrap</span>();

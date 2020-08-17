@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/gfx-hal-0.5.3/src/adapter.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>adapter.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_hal/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/gfx-hal-0.6.0/src/adapter.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>adapter.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_hal/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -162,27 +162,29 @@
 <span id="161">161</span>
 <span id="162">162</span>
 <span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! Physical devices and adapters.</span>
+<span class="doccomment">//! Physical graphics devices.</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! The `PhysicalDevice` trait specifies the API a backend must provide for dealing with</span>
-<span class="doccomment">//! and querying a physical device, such as a particular GPU.  An `Adapter` is a struct</span>
-<span class="doccomment">//! containing a `PhysicalDevice` and metadata for a particular GPU, generally created</span>
-<span class="doccomment">//! from an `Instance` of that backend.  `adapter.open_with(...)` will return a `Device`</span>
-<span class="doccomment">//! that has the properties specified.</span>
+<span class="doccomment">//! The [`PhysicalDevice`][PhysicalDevice] trait specifies the API a backend</span>
+<span class="doccomment">//! must provide for dealing with and querying a physical device, such as</span>
+<span class="doccomment">//! a particular GPU.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! An [adapter][Adapter] is a struct containing a physical device and metadata</span>
+<span class="doccomment">//! for a particular GPU, generally created from an [instance][crate::Instance]</span>
+<span class="doccomment">//! of that [backend][crate::Backend].</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">any</span>::<span class="ident">Any</span>, <span class="ident">fmt</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">device</span>,
-    <span class="ident">format</span>,
-    <span class="ident">image</span>,
-    <span class="ident">memory</span>,
+    <span class="ident">device</span>, <span class="ident">format</span>, <span class="ident">image</span>, <span class="ident">memory</span>,
     <span class="ident">queue</span>::{<span class="ident">QueueGroup</span>, <span class="ident">QueuePriority</span>},
-    <span class="ident">Backend</span>,
-    <span class="ident">Features</span>,
-    <span class="ident">Hints</span>,
-    <span class="ident">Limits</span>,
+    <span class="ident">Backend</span>, <span class="ident">Features</span>, <span class="ident">Hints</span>, <span class="ident">Limits</span>,
 };
 
 <span class="doccomment">/// A description for a single chunk of memory in a heap.</span>
@@ -207,22 +209,31 @@
     <span class="kw">pub</span> <span class="ident">memory_heaps</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
 }
 
-<span class="doccomment">/// Represents a combination of a logical device and the</span>
-<span class="doccomment">/// hardware queues it provides.</span>
+<span class="doccomment">/// Represents a combination of a [logical device][crate::device::Device] and the</span>
+<span class="doccomment">/// [hardware queues][QueueGroup] it provides.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// This structure is typically created using an `Adapter`.</span>
+<span class="doccomment">/// This structure is typically created from an [adapter][crate::adapter::Adapter].</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Gpu</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">Backend</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Logical device for a given backend.</span>
+    <span class="doccomment">/// [Logical device][crate::device::Device] for a given backend.</span>
     <span class="kw">pub</span> <span class="ident">device</span>: <span class="ident">B</span>::<span class="ident">Device</span>,
-    <span class="doccomment">/// The command queues that the device provides.</span>
+    <span class="doccomment">/// The [command queues][crate::queue::CommandQueue] that the device provides.</span>
     <span class="kw">pub</span> <span class="ident">queue_groups</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">QueueGroup</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;&gt;</span>,
 }
 
 <span class="doccomment">/// Represents a physical device (such as a GPU) capable of supporting the given backend.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PhysicalDevice</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">Backend</span><span class="op">&gt;</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Any</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
-    <span class="doccomment">/// Create a new logical device with the requested features. If `requested_features` is</span>
-    <span class="doccomment">/// empty (e.g. through `Features::empty()`) then only the core features are supported.</span>
+    <span class="doccomment">/// Create a new [logical device][crate::device::Device] with the requested features.</span>
+    <span class="doccomment">/// If `requested_features` is [empty][crate::Features::empty], then only</span>
+    <span class="doccomment">/// the core features are supported.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// * `families` - which [queue families][crate::queue::family::QueueFamily]</span>
+    <span class="doccomment">///   to create queues from. The implementation may allocate more processing time to</span>
+    <span class="doccomment">///   the queues with higher [priority][QueuePriority].</span>
+    <span class="doccomment">/// * `requested_features` - device features to enable. Must be a subset of</span>
+    <span class="doccomment">///   the [features][PhysicalDevice::features] supported by this device.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Errors</span>
     <span class="doccomment">///</span>
@@ -281,7 +292,7 @@
     }
 }
 
-<span class="doccomment">/// Supported physical device types</span>
+<span class="doccomment">/// The type of a physical graphics device</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DeviceType</span> {
@@ -293,37 +304,38 @@
     <span class="ident">DiscreteGpu</span> <span class="op">=</span> <span class="number">2</span>,
     <span class="doccomment">/// Virtual / Hosted</span>
     <span class="ident">VirtualGpu</span> <span class="op">=</span> <span class="number">3</span>,
-    <span class="doccomment">/// Cpu / Software Rendering</span>
+    <span class="doccomment">/// CPU / Software Rendering</span>
     <span class="ident">Cpu</span> <span class="op">=</span> <span class="number">4</span>,
 }
 
-<span class="doccomment">/// Metadata about a backend adapter.</span>
+<span class="doccomment">/// Metadata about a backend [adapter][Adapter].</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AdapterInfo</span> {
     <span class="doccomment">/// Adapter name</span>
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// Vendor PCI id of the adapter</span>
+    <span class="doccomment">/// PCI ID of the device vendor</span>
     <span class="kw">pub</span> <span class="ident">vendor</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// PCI id of the adapter</span>
+    <span class="doccomment">/// PCI ID of the device</span>
     <span class="kw">pub</span> <span class="ident">device</span>: <span class="ident">usize</span>,
     <span class="doccomment">/// Type of device</span>
     <span class="kw">pub</span> <span class="ident">device_type</span>: <span class="ident">DeviceType</span>,
 }
 
-<span class="doccomment">/// The list of `Adapter` instances is obtained by calling `Instance::enumerate_adapters()`.</span>
+<span class="doccomment">/// Information about a graphics device, supported by the backend.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Given an `Adapter` a `Gpu` can be constructed by calling `PhysicalDevice::open()` on its</span>
-<span class="doccomment">/// `physical_device` field. However, if only a single queue family is needed or if no</span>
-<span class="doccomment">/// additional device features are required, then the `Adapter::open_with` convenience method</span>
-<span class="doccomment">/// can be used instead.</span>
+<span class="doccomment">/// The list of available adapters is obtained by calling</span>
+<span class="doccomment">/// [`Instance::enumerate_adapters`][crate::Instance::enumerate_adapters].</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// To create a [`Gpu`][Gpu] from this type you can use the [`open`](PhysicalDevice::open)</span>
+<span class="doccomment">/// method on its [`physical_device`][Adapter::physical_device] field.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Adapter</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">Backend</span><span class="op">&gt;</span> {
     <span class="doccomment">/// General information about this adapter.</span>
     <span class="kw">pub</span> <span class="ident">info</span>: <span class="ident">AdapterInfo</span>,
-    <span class="doccomment">/// Actual physical device.</span>
+    <span class="doccomment">/// Actual [physical device][PhysicalDevice].</span>
     <span class="kw">pub</span> <span class="ident">physical_device</span>: <span class="ident">B</span>::<span class="ident">PhysicalDevice</span>,
-    <span class="doccomment">/// Queue families supported by this adapter.</span>
+    <span class="doccomment">/// [Queue families][crate::queue::family::QueueFamily] supported by this adapter.</span>
     <span class="kw">pub</span> <span class="ident">queue_families</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">QueueFamily</span><span class="op">&gt;</span>,
 }
 </pre></div>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/gfx-hal-0.5.3/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_hal/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/gfx-hal-0.6.0/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_hal/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -972,12 +972,36 @@
 <span id="971">971</span>
 <span id="972">972</span>
 <span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
+<span id="978">978</span>
+<span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
+<span id="982">982</span>
+<span id="983">983</span>
+<span id="984">984</span>
+<span id="985">985</span>
+<span id="986">986</span>
+<span id="987">987</span>
+<span id="988">988</span>
+<span id="989">989</span>
+<span id="990">990</span>
+<span id="991">991</span>
+<span id="992">992</span>
+<span id="993">993</span>
+<span id="994">994</span>
+<span id="995">995</span>
+<span id="996">996</span>
+<span id="997">997</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! Logical device</span>
+<span class="doccomment">//! Logical graphics device.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! # Device</span>
 <span class="doccomment">//!</span>
-<span class="doccomment">//! This module exposes the `Device` trait, which provides methods for creating</span>
+<span class="doccomment">//! This module exposes the [`Device`][Device] trait, which provides methods for creating</span>
 <span class="doccomment">//! and managing graphics resources such as buffers, images and memory.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! The `Adapter` and `Device` types are very similar to the Vulkan concept of</span>
@@ -992,9 +1016,7 @@
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">iter</span>};
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">buffer</span>,
-    <span class="ident">format</span>,
-    <span class="ident">image</span>,
+    <span class="ident">buffer</span>, <span class="ident">format</span>, <span class="ident">image</span>,
     <span class="ident">memory</span>::{<span class="ident">Requirements</span>, <span class="ident">Segment</span>},
     <span class="ident">pass</span>,
     <span class="ident">pool</span>::<span class="ident">CommandPoolCreateFlags</span>,
@@ -1002,9 +1024,7 @@
     <span class="ident">pso</span>::<span class="ident">DescriptorPoolCreateFlags</span>,
     <span class="ident">query</span>,
     <span class="ident">queue</span>::<span class="ident">QueueFamilyId</span>,
-    <span class="ident">window</span>::{<span class="self">self</span>, <span class="ident">SwapchainConfig</span>},
-    <span class="ident">Backend</span>,
-    <span class="ident">MemoryTypeId</span>,
+    <span class="ident">Backend</span>, <span class="ident">MemoryTypeId</span>,
 };
 
 <span class="doccomment">/// Error occurred caused device to be lost.</span>
@@ -1212,6 +1232,8 @@
     <span class="ident">OutOfBounds</span>,
     <span class="doccomment">/// Failed to allocate an appropriately sized contiguous virtual address range</span>
     <span class="ident">MappingFailed</span>,
+    <span class="doccomment">/// Memory is not CPU visible</span>
+    <span class="ident">Access</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">OutOfMemory</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MapError</span> {
@@ -1225,7 +1247,11 @@
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident">MapError</span>::<span class="ident">OutOfMemory</span>(<span class="ident">err</span>) <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">fmt</span>, <span class="string">&quot;Failed to map memory: {}&quot;</span>, <span class="ident">err</span>),
             <span class="ident">MapError</span>::<span class="ident">OutOfBounds</span> <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">fmt</span>, <span class="string">&quot;Failed to map memory: Requested range is outside the resource&quot;</span>),
-            <span class="ident">MapError</span>::<span class="ident">MappingFailed</span> <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">fmt</span>, <span class="string">&quot;Failed to map memory: Unable to allocate an appropriately sized contiguous virtual address range&quot;</span>),
+            <span class="ident">MapError</span>::<span class="ident">MappingFailed</span> <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(
+                <span class="ident">fmt</span>,
+                <span class="string">&quot;Failed to map memory: Unable to allocate an appropriately sized contiguous virtual address range&quot;</span>
+            ),
+            <span class="ident">MapError</span>::<span class="ident">Access</span> <span class="op">=&gt;</span> <span class="macro">write</span><span class="macro">!</span>(<span class="ident">fmt</span>, <span class="string">&quot;Failed to map memory: Memory is not CPU visible&quot;</span>),
         }
     }
 }
@@ -1302,7 +1328,7 @@
     <span class="doccomment">/// The shader has a mismatch of interface (e.g missing push constants).</span>
     <span class="ident">InterfaceMismatch</span>(<span class="ident">String</span>),
     <span class="doccomment">/// The shader stage is not supported.</span>
-    <span class="ident">UnsupportedStage</span>(<span class="ident">pso</span>::<span class="ident">Stage</span>),
+    <span class="ident">UnsupportedStage</span>(<span class="ident">pso</span>::<span class="ident">ShaderStageFlags</span>),
     <span class="doccomment">/// Out of either host or device memory.</span>
     <span class="ident">OutOfMemory</span>(<span class="ident">OutOfMemory</span>),
 }
@@ -1342,15 +1368,14 @@
     }
 }
 
-<span class="doccomment">/// # Overview</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// A `Device` is responsible for creating and managing resources for the physical device</span>
-<span class="doccomment">/// it was created from.</span>
+<span class="doccomment">/// Logical device handle, responsible for creating and managing resources</span>
+<span class="doccomment">/// for the physical device it was created from.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// ## Resource Construction and Handling</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// This device structure can then be used to create and manage different resources, like buffers,</span>
-<span class="doccomment">/// shader programs and textures. See the individual methods for more information.</span>
+<span class="doccomment">/// This device structure can then be used to create and manage different resources,</span>
+<span class="doccomment">/// like [buffers][Device::create_buffer], [shader modules][Device::create_shader_module]</span>
+<span class="doccomment">/// and [images][Device::create_image]. See the individual methods for more information.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// ## Mutability</span>
 <span class="doccomment">///</span>
@@ -1380,9 +1405,10 @@
     <span class="doccomment">/// Free device memory</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">free_memory</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">memory</span>: <span class="ident">B</span>::<span class="ident">Memory</span>);
 
-    <span class="doccomment">/// Create a new command pool for a given queue family.</span>
+    <span class="doccomment">/// Create a new [command pool][crate::pool::CommandPool] for a given queue family.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// *Note*: the family has to be associated by one as the `Gpu::queue_groups`.</span>
+    <span class="doccomment">/// *Note*: the family has to be associated with one of [the queue groups</span>
+    <span class="doccomment">/// of this device][crate::adapter::Gpu::queue_groups].</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_command_pool</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">family</span>: <span class="ident">QueueFamilyId</span>,
@@ -1392,11 +1418,18 @@
     <span class="doccomment">/// Destroy a command pool.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_command_pool</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pool</span>: <span class="ident">B</span>::<span class="ident">CommandPool</span>);
 
-    <span class="doccomment">/// Create a render pass with the given attachments and subpasses.</span>
+    <span class="doccomment">/// Create a [render pass][crate::pass] with the given attachments and subpasses.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// A *render pass* represents a collection of attachments, subpasses, and dependencies between</span>
-    <span class="doccomment">/// the subpasses, and describes how the attachments are used over the course of the subpasses.</span>
     <span class="doccomment">/// The use of a render pass in a command buffer is a *render pass* instance.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// * `attachments` - [image attachments][crate::pass::Attachment] to be used in</span>
+    <span class="doccomment">///   this render pass. Usually you need at least one attachment, to be used as output.</span>
+    <span class="doccomment">/// * `subpasses` - [subpasses][crate::pass::SubpassDesc] to use.</span>
+    <span class="doccomment">///   You need to use at least one subpass.</span>
+    <span class="doccomment">/// * `dependencies` - [dependencies between subpasses][crate::pass::SubpassDependency].</span>
+    <span class="doccomment">///   Can be empty.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_render_pass</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">IA</span>, <span class="ident">IS</span>, <span class="ident">ID</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">attachments</span>: <span class="ident">IA</span>,
@@ -1406,12 +1439,15 @@
     <span class="kw">where</span>
         <span class="ident">IA</span>: <span class="ident">IntoIterator</span>,
         <span class="ident">IA</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">pass</span>::<span class="ident">Attachment</span><span class="op">&gt;</span>,
+        <span class="ident">IA</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
         <span class="ident">IS</span>: <span class="ident">IntoIterator</span>,
         <span class="ident">IS</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">pass</span>::<span class="ident">SubpassDesc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;&gt;</span>,
+        <span class="ident">IS</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
         <span class="ident">ID</span>: <span class="ident">IntoIterator</span>,
-        <span class="ident">ID</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">pass</span>::<span class="ident">SubpassDependency</span><span class="op">&gt;</span>;
+        <span class="ident">ID</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">pass</span>::<span class="ident">SubpassDependency</span><span class="op">&gt;</span>,
+        <span class="ident">ID</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>;
 
-    <span class="doccomment">/// Destroy a `RenderPass`.</span>
+    <span class="doccomment">/// Destroys a *render pass* created by this device.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_render_pass</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">rp</span>: <span class="ident">B</span>::<span class="ident">RenderPass</span>);
 
     <span class="doccomment">/// Create a new pipeline layout object.</span>
@@ -1438,8 +1474,10 @@
     <span class="kw">where</span>
         <span class="ident">IS</span>: <span class="ident">IntoIterator</span>,
         <span class="ident">IS</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">DescriptorSetLayout</span><span class="op">&gt;</span>,
+        <span class="ident">IS</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
         <span class="ident">IR</span>: <span class="ident">IntoIterator</span>,
-        <span class="ident">IR</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span>(<span class="ident">pso</span>::<span class="ident">ShaderStageFlags</span>, <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>)<span class="op">&gt;</span>;
+        <span class="ident">IR</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span>(<span class="ident">pso</span>::<span class="ident">ShaderStageFlags</span>, <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
+        <span class="ident">IR</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>;
 
     <span class="doccomment">/// Destroy a pipeline layout object</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_pipeline_layout</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">layout</span>: <span class="ident">B</span>::<span class="ident">PipelineLayout</span>);
@@ -1464,19 +1502,28 @@
     ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">OutOfMemory</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">I</span>: <span class="ident">IntoIterator</span>,
-        <span class="ident">I</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">PipelineCache</span><span class="op">&gt;</span>;
+        <span class="ident">I</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">PipelineCache</span><span class="op">&gt;</span>,
+        <span class="ident">I</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>;
 
     <span class="doccomment">/// Destroy a pipeline cache object.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_pipeline_cache</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cache</span>: <span class="ident">B</span>::<span class="ident">PipelineCache</span>);
 
     <span class="doccomment">/// Create a graphics pipeline.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// * `desc` - the [description][crate::pso::GraphicsPipelineDesc] of</span>
+    <span class="doccomment">///   the graphics pipeline to create.</span>
+    <span class="doccomment">/// * `cache` - the pipeline cache,</span>
+    <span class="doccomment">///   [obtained from this device][Device::create_pipeline_cache],</span>
+    <span class="doccomment">///   used for faster PSO creation.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_graphics_pipeline</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">pso</span>::<span class="ident">GraphicsPipelineDesc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span>,
         <span class="ident">cache</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">B</span>::<span class="ident">PipelineCache</span><span class="op">&gt;</span>,
     ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">GraphicsPipeline</span>, <span class="ident">pso</span>::<span class="ident">CreationError</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// Create graphics pipelines.</span>
+    <span class="doccomment">/// Create multiple graphics pipelines.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_graphics_pipelines</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">descs</span>: <span class="ident">I</span>,
@@ -1547,10 +1594,12 @@
     <span class="doccomment">/// which references the framebuffer, has finished execution.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_framebuffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buf</span>: <span class="ident">B</span>::<span class="ident">Framebuffer</span>);
 
-    <span class="doccomment">/// Create a new shader module object through the SPIR-V binary data.</span>
+    <span class="doccomment">/// Create a new shader module object from the SPIR-V binary data.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Once a shader module has been created, any entry points it contains can be used in pipeline</span>
-    <span class="doccomment">/// shader stages as described in *Compute Pipelines* and *Graphics Pipelines*.</span>
+    <span class="doccomment">/// Once a shader module has been created, any [entry points][crate::pso::EntryPoint]</span>
+    <span class="doccomment">/// it contains can be used in pipeline shader stages of</span>
+    <span class="doccomment">/// [compute pipelines][crate::pso::ComputePipelineDesc] and</span>
+    <span class="doccomment">/// [graphics pipelines][crate::pso::GraphicsPipelineDesc].</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_shader_module</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">spirv_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>],
@@ -1670,7 +1719,8 @@
     ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">DescriptorPool</span>, <span class="ident">OutOfMemory</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">I</span>: <span class="ident">IntoIterator</span>,
-        <span class="ident">I</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">pso</span>::<span class="ident">DescriptorRangeDesc</span><span class="op">&gt;</span>;
+        <span class="ident">I</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">pso</span>::<span class="ident">DescriptorRangeDesc</span><span class="op">&gt;</span>,
+        <span class="ident">I</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>;
 
     <span class="doccomment">/// Destroy a descriptor pool object</span>
     <span class="doccomment">///</span>
@@ -1694,7 +1744,8 @@
         <span class="ident">I</span>: <span class="ident">IntoIterator</span>,
         <span class="ident">I</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">pso</span>::<span class="ident">DescriptorSetLayoutBinding</span><span class="op">&gt;</span>,
         <span class="ident">J</span>: <span class="ident">IntoIterator</span>,
-        <span class="ident">J</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">Sampler</span><span class="op">&gt;</span>;
+        <span class="ident">J</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">Sampler</span><span class="op">&gt;</span>,
+        <span class="ident">J</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>;
 
     <span class="doccomment">/// Destroy a descriptor set layout object</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_descriptor_set_layout</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">layout</span>: <span class="ident">B</span>::<span class="ident">DescriptorSetLayout</span>);
@@ -1710,7 +1761,8 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">copy_descriptor_sets</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">copy_iter</span>: <span class="ident">I</span>)
     <span class="kw">where</span>
         <span class="ident">I</span>: <span class="ident">IntoIterator</span>,
-        <span class="ident">I</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">pso</span>::<span class="ident">DescriptorSetCopy</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;&gt;</span>;
+        <span class="ident">I</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">pso</span>::<span class="ident">DescriptorSetCopy</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;&gt;</span>,
+        <span class="ident">I</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>;
 
     <span class="doccomment">/// Map a memory object into application address space</span>
     <span class="doccomment">///</span>
@@ -1732,31 +1784,46 @@
     <span class="doccomment">/// Unmap a memory object once host access to it is no longer needed by the application</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">unmap_memory</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>::<span class="ident">Memory</span>);
 
-    <span class="doccomment">/// Create a new semaphore object</span>
+    <span class="doccomment">/// Create a new semaphore object.</span>
     <span class="kw">fn</span> <span class="ident">create_semaphore</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">Semaphore</span>, <span class="ident">OutOfMemory</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// Destroy a semaphore object</span>
+    <span class="doccomment">/// Destroy a semaphore object.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_semaphore</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">semaphore</span>: <span class="ident">B</span>::<span class="ident">Semaphore</span>);
 
-    <span class="doccomment">/// Create a new fence object</span>
+    <span class="doccomment">/// Create a new fence object.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Fences are a synchronization primitive that **can** be used to insert a dependency from</span>
-    <span class="doccomment">/// a queue to the host. Fences have two states - signaled and unsignaled. A fence **can** be</span>
-    <span class="doccomment">/// signaled as part of the execution of a *queue submission* command. Fences **can** be unsignaled</span>
-    <span class="doccomment">/// on the host with *reset_fences*. Fences **can** be waited on by the host with the</span>
-    <span class="doccomment">/// *wait_for_fences* command, and the current state **can** be queried with *get_fence_status*.</span>
+    <span class="doccomment">/// a queue to the host.</span>
+    <span class="doccomment">/// Fences have two states - signaled and unsignaled.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// A fence **can** be signaled as part of the execution of a</span>
+    <span class="doccomment">/// [queue submission][crate::queue::CommandQueue::submit] command.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Fences **can** be unsignaled on the host with</span>
+    <span class="doccomment">/// [`reset_fences`][Device::reset_fences].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Fences **can** be waited on by the host with the</span>
+    <span class="doccomment">/// [`wait_for_fences`][Device::wait_for_fences] command.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// A fence&#39;s current state **can** be queried with</span>
+    <span class="doccomment">/// [`get_fence_status`][Device::get_fence_status].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Arguments</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// * `signaled` - the fence will be in its signaled state.</span>
     <span class="kw">fn</span> <span class="ident">create_fence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">signaled</span>: <span class="ident">bool</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">Fence</span>, <span class="ident">OutOfMemory</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// Resets a given fence to its original, unsignaled state.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">reset_fence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fence</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>::<span class="ident">Fence</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">OutOfMemory</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">reset_fences</span>(<span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">fence</span>))
     }
 
-    <span class="doccomment">///</span>
+    <span class="doccomment">/// Resets multiple fences to their original states.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">reset_fences</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fences</span>: <span class="ident">I</span>) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">OutOfMemory</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">I</span>: <span class="ident">IntoIterator</span>,
         <span class="ident">I</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">Fence</span><span class="op">&gt;</span>,
+        <span class="ident">I</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
     {
         <span class="kw">for</span> <span class="ident">fence</span> <span class="kw">in</span> <span class="ident">fences</span> {
             <span class="self">self</span>.<span class="ident">reset_fence</span>(<span class="ident">fence</span>.<span class="ident">borrow</span>())<span class="question-mark">?</span>;
@@ -1785,6 +1852,7 @@
     <span class="kw">where</span>
         <span class="ident">I</span>: <span class="ident">IntoIterator</span>,
         <span class="ident">I</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">Fence</span><span class="op">&gt;</span>,
+        <span class="ident">I</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
     {
         <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">thread</span>, <span class="ident">time</span>};
         <span class="kw">fn</span> <span class="ident">to_ns</span>(<span class="ident">duration</span>: <span class="ident">time</span>::<span class="ident">Duration</span>) <span class="op">-&gt;</span> <span class="ident">u64</span> {
@@ -1871,43 +1939,6 @@
         <span class="ident">flags</span>: <span class="ident">query</span>::<span class="ident">ResultFlags</span>,
     ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">OomOrDeviceLost</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// Create a new swapchain from a surface and a queue family, optionally providing the old</span>
-    <span class="doccomment">/// swapchain to aid in resource reuse and rendering continuity.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// *Note*: The number of exposed images in the back buffer might differ</span>
-    <span class="doccomment">/// from number of internally used buffers.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The queue family _must_ support surface presentation.</span>
-    <span class="doccomment">/// This can be checked by calling [`supports_queue_family`](trait.Surface.html#tymethod.supports_queue_family)</span>
-    <span class="doccomment">/// on this surface.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Examples</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```no_run</span>
-    <span class="doccomment">/// # extern crate gfx_backend_empty as empty;</span>
-    <span class="doccomment">/// # extern crate gfx_hal;</span>
-    <span class="doccomment">/// # fn main() {</span>
-    <span class="doccomment">/// use gfx_hal::{prelude::*, format::Format, window::SwapchainConfig};</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # let mut surface: empty::Surface = return;</span>
-    <span class="doccomment">/// # let device: empty::Device = return;</span>
-    <span class="doccomment">/// # unsafe {</span>
-    <span class="doccomment">/// let swapchain_config = SwapchainConfig::new(100, 100, Format::Rgba8Srgb, 2);</span>
-    <span class="doccomment">/// device.create_swapchain(&amp;mut surface, swapchain_config, None);</span>
-    <span class="doccomment">/// # }}</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_swapchain</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">B</span>::<span class="ident">Surface</span>,
-        <span class="ident">config</span>: <span class="ident">SwapchainConfig</span>,
-        <span class="ident">old_swapchain</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">Swapchain</span><span class="op">&gt;</span>,
-    ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">B</span>::<span class="ident">Swapchain</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">Image</span><span class="op">&gt;</span>), <span class="ident">window</span>::<span class="ident">CreationError</span><span class="op">&gt;</span>;
-
-    <span class="doccomment">///</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_swapchain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">swapchain</span>: <span class="ident">B</span>::<span class="ident">Swapchain</span>);
-
     <span class="doccomment">/// Wait for all queues associated with this device to idle.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Host access to all queues needs to be **externally** sycnhronized!</span>
@@ -1943,6 +1974,23 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_descriptor_set_layout_name</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">descriptor_set_layout</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">B</span>::<span class="ident">DescriptorSetLayout</span>,
+        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+    );
+    <span class="doccomment">/// Associate a name with a pipeline layout, for easier debugging in external tools or with</span>
+    <span class="doccomment">/// validation layers that can print a friendly name when referring to objects in error messages</span>
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_pipeline_layout_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pipeline_layout</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">B</span>::<span class="ident">PipelineLayout</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>);
+    <span class="doccomment">/// Associate a name with a compute pipeline, for easier debugging in external tools or with</span>
+    <span class="doccomment">/// validation layers that can print a friendly name when referring to objects in error messages</span>
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_compute_pipeline_name</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">compute_pipeline</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">B</span>::<span class="ident">ComputePipeline</span>,
+        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+    );
+    <span class="doccomment">/// Associate a name with a graphics pipeline, for easier debugging in external tools or with</span>
+    <span class="doccomment">/// validation layers that can print a friendly name when referring to objects in error messages</span>
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_graphics_pipeline_name</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">graphics_pipeline</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">B</span>::<span class="ident">GraphicsPipeline</span>,
         <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
     );
 }
