@@ -146,14 +146,13 @@
 <span id="145">145</span>
 <span id="146">146</span>
 <span id="147">147</span>
-<span id="148">148</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">Buffer</span>, <span class="ident">BufferAddress</span>, <span class="ident">BufferDescriptor</span>, <span class="ident">BufferSize</span>, <span class="ident">BufferUsage</span>, <span class="ident">BufferViewMut</span>, <span class="ident">CommandBuffer</span>,
-    <span class="ident">CommandEncoder</span>, <span class="ident">CommandEncoderDescriptor</span>, <span class="ident">Device</span>, <span class="ident">MapMode</span>,
+    <span class="ident">Buffer</span>, <span class="ident">BufferAddress</span>, <span class="ident">BufferDescriptor</span>, <span class="ident">BufferSize</span>, <span class="ident">BufferUsage</span>, <span class="ident">BufferViewMut</span>,
+    <span class="ident">CommandEncoder</span>, <span class="ident">Device</span>, <span class="ident">MapMode</span>,
 };
 <span class="kw">use</span> <span class="ident">futures</span>::{<span class="ident">future</span>::<span class="ident">join_all</span>, <span class="ident">FutureExt</span>};
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">future</span>::<span class="ident">Future</span>, <span class="ident">mem</span>, <span class="ident">sync</span>::<span class="ident">mpsc</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">future</span>::<span class="ident">Future</span>, <span class="ident">sync</span>::<span class="ident">mpsc</span>};
 
 <span class="kw">struct</span> <span class="ident">Chunk</span> {
     <span class="ident">buffer</span>: <span class="ident">Buffer</span>,
@@ -166,9 +165,14 @@
 <span class="doccomment">/// Internally it uses a ring-buffer of staging buffers that are sub-allocated.</span>
 <span class="doccomment">/// It has an advantage over `Queue.write_buffer` in a way that it returns a mutable slice,</span>
 <span class="doccomment">/// which you can fill to avoid an extra data copy.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Using a staging belt is slightly complicated, and generally goes as follows:</span>
+<span class="doccomment">/// - Write to buffers that need writing to using `write_buffer`.</span>
+<span class="doccomment">/// - Call `finish`.</span>
+<span class="doccomment">/// - Submit all command encoders used with `write_buffer`.</span>
+<span class="doccomment">/// - Call `recall`</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StagingBelt</span> {
     <span class="ident">chunk_size</span>: <span class="ident">BufferAddress</span>,
-    <span class="ident">encoder</span>: <span class="ident">CommandEncoder</span>,
     <span class="doccomment">/// Chunks that we are actively using for pending transfers at this moment.</span>
     <span class="ident">active_chunks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Chunk</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Chunks that have scheduled transfers already.</span>
@@ -185,11 +189,10 @@
     <span class="doccomment">/// The `chunk_size` is the unit of internal buffer allocation.</span>
     <span class="doccomment">/// It&#39;s better when it&#39;s big, but ideally still 1-4 times less than</span>
     <span class="doccomment">/// the total amount of data uploaded per submission.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">chunk_size</span>: <span class="ident">BufferAddress</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">Device</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">chunk_size</span>: <span class="ident">BufferAddress</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> (<span class="ident">sender</span>, <span class="ident">receiver</span>) <span class="op">=</span> <span class="ident">mpsc</span>::<span class="ident">channel</span>();
         <span class="ident">StagingBelt</span> {
             <span class="ident">chunk_size</span>,
-            <span class="ident">encoder</span>: <span class="ident">device</span>.<span class="ident">create_command_encoder</span>(<span class="kw-2">&amp;</span><span class="ident">CommandEncoderDescriptor</span>::<span class="ident">default</span>()),
             <span class="ident">active_chunks</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
             <span class="ident">closed_chunks</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
             <span class="ident">free_chunks</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
@@ -201,9 +204,11 @@
     <span class="doccomment">/// Allocate the staging belt slice of `size` to be uploaded into the `target` buffer</span>
     <span class="doccomment">/// at the specified offset.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// The upload will only really be scheduled at the next `StagingBelt::flush` call.</span>
+    <span class="doccomment">/// The upload will be placed into the provided command encoder. This encoder</span>
+    <span class="doccomment">/// must be submitted after `finish` is called and before `recall` is called.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_buffer</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">encoder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">CommandEncoder</span>,
         <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="ident">Buffer</span>,
         <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
         <span class="ident">size</span>: <span class="ident">BufferSize</span>,
@@ -237,8 +242,7 @@
             }
         };
 
-        <span class="self">self</span>.<span class="ident">encoder</span>
-            .<span class="ident">copy_buffer_to_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">chunk</span>.<span class="ident">buffer</span>, <span class="ident">chunk</span>.<span class="ident">offset</span>, <span class="ident">target</span>, <span class="ident">offset</span>, <span class="ident">size</span>.<span class="ident">get</span>());
+        <span class="ident">encoder</span>.<span class="ident">copy_buffer_to_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">chunk</span>.<span class="ident">buffer</span>, <span class="ident">chunk</span>.<span class="ident">offset</span>, <span class="ident">target</span>, <span class="ident">offset</span>, <span class="ident">size</span>.<span class="ident">get</span>());
         <span class="kw">let</span> <span class="ident">old_offset</span> <span class="op">=</span> <span class="ident">chunk</span>.<span class="ident">offset</span>;
         <span class="ident">chunk</span>.<span class="ident">offset</span> <span class="op">+=</span> <span class="ident">size</span>.<span class="ident">get</span>();
         <span class="kw">let</span> <span class="ident">remainder</span> <span class="op">=</span> <span class="ident">chunk</span>.<span class="ident">offset</span> <span class="op">%</span> <span class="kw">crate</span>::<span class="ident">COPY_BUFFER_ALIGNMENT</span>;
@@ -255,29 +259,23 @@
             .<span class="ident">get_mapped_range_mut</span>()
     }
 
-    <span class="doccomment">/// Produce a command buffer with all the accumulated transfers.</span>
+    <span class="doccomment">/// Prepare currently mapped buffers for use in a submission.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// At this point, all the partially used staging buffers are closed until</span>
     <span class="doccomment">/// the GPU is done copying the data from them.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">Device</span>) <span class="op">-&gt;</span> <span class="ident">CommandBuffer</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>))]</span>
-        <span class="ident">wgc</span>::<span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">DEBUG</span>, <span class="string">&quot;Flushing chunks&quot;</span>);
+        <span class="ident">wgc</span>::<span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">DEBUG</span>, <span class="string">&quot;Finishing chunks&quot;</span>);
 
         <span class="kw">for</span> <span class="ident">chunk</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">active_chunks</span>.<span class="ident">drain</span>(..) {
             <span class="ident">chunk</span>.<span class="ident">buffer</span>.<span class="ident">unmap</span>();
             <span class="self">self</span>.<span class="ident">closed_chunks</span>.<span class="ident">push</span>(<span class="ident">chunk</span>);
         }
-
-        <span class="ident">mem</span>::<span class="ident">replace</span>(
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">encoder</span>,
-            <span class="ident">device</span>.<span class="ident">create_command_encoder</span>(<span class="kw-2">&amp;</span><span class="ident">CommandEncoderDescriptor</span>::<span class="ident">default</span>()),
-        )
-        .<span class="ident">finish</span>()
     }
 
-    <span class="doccomment">/// Recall all of the closed buffers back for re-usal.</span>
+    <span class="doccomment">/// Recall all of the closed buffers back to be reused.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// This has to be called after the command buffer produced by `flush` is submitted!</span>
+    <span class="doccomment">/// This has to be called after the command encoders written to `write_buffer` are submitted!</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recall</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw">impl</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> ()<span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> {
         <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">chunk</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">receiver</span>.<span class="ident">try_recv</span>() {
             <span class="ident">chunk</span>.<span class="ident">offset</span> <span class="op">=</span> <span class="number">0</span>;
