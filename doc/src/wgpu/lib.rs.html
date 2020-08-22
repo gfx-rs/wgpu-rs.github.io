@@ -2553,6 +2553,23 @@
 <span id="2552">2552</span>
 <span id="2553">2553</span>
 <span id="2554">2554</span>
+<span id="2555">2555</span>
+<span id="2556">2556</span>
+<span id="2557">2557</span>
+<span id="2558">2558</span>
+<span id="2559">2559</span>
+<span id="2560">2560</span>
+<span id="2561">2561</span>
+<span id="2562">2562</span>
+<span id="2563">2563</span>
+<span id="2564">2564</span>
+<span id="2565">2565</span>
+<span id="2566">2566</span>
+<span id="2567">2567</span>
+<span id="2568">2568</span>
+<span id="2569">2569</span>
+<span id="2570">2570</span>
+<span id="2571">2571</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).</span>
 <span class="doccomment">//!</span>
@@ -3398,7 +3415,15 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Corresponds to [`BindingType::UniformBuffer`] and [`BindingType::StorageBuffer`]</span>
     <span class="doccomment">/// with [`BindGroupLayoutEntry::count`] set to None.</span>
-    <span class="ident">Buffer</span>(<span class="ident">BufferSlice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="ident">Buffer</span> {
+        <span class="doccomment">/// The buffer to bind.</span>
+        <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Buffer</span>,
+        <span class="doccomment">/// Base offset of the buffer. For bindings with `dynamic == true`, this offset</span>
+        <span class="doccomment">/// will be added to the dynamic offset provided in [`RenderPass::set_bind_group`].</span>
+        <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
+        <span class="doccomment">/// Size of the binding, or `None` for using the rest of the buffer.</span>
+        <span class="ident">size</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BufferSize</span><span class="op">&gt;</span>,
+    },
     <span class="doccomment">/// Binding is a sampler.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Corresponds to [`BindingType::Sampler`] with [`BindGroupLayoutEntry::count`] set to None.</span>
@@ -4202,6 +4227,15 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Buffer</span> {
+    <span class="doccomment">/// Return the binding view of the entire buffer.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_entire_binding</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="ident">BindingResource</span> {
+        <span class="ident">BindingResource</span>::<span class="ident">Buffer</span> {
+            <span class="ident">buffer</span>: <span class="self">self</span>,
+            <span class="ident">offset</span>: <span class="number">0</span>,
+            <span class="ident">size</span>: <span class="prelude-val">None</span>,
+        }
+    }
+
     <span class="doccomment">/// Use only a portion of this Buffer for a given operation. Choosing a range with no end</span>
     <span class="doccomment">/// will use the rest of the buffer. Using a totally unbounded range will use the entire buffer.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">slice</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">RangeBounds</span><span class="op">&lt;</span><span class="ident">BufferAddress</span><span class="op">&gt;&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">bounds</span>: <span class="ident">S</span>) <span class="op">-&gt;</span> <span class="ident">BufferSlice</span> {
