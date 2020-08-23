@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-core-0.1.14/src/subscriber.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>subscriber.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../tracing_core/index.html'><div class='logo-container'><img src='https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo.svg' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/tracing-core-0.1.15/src/subscriber.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>subscriber.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../tracing_core/index.html'><div class='logo-container'><img src='https://raw.githubusercontent.com/tokio-rs/tracing/master/assets/logo.svg' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -569,15 +569,6 @@
 <span id="568">568</span>
 <span id="569">569</span>
 <span id="570">570</span>
-<span id="571">571</span>
-<span id="572">572</span>
-<span id="573">573</span>
-<span id="574">574</span>
-<span id="575">575</span>
-<span id="576">576</span>
-<span id="577">577</span>
-<span id="578">578</span>
-<span id="579">579</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Subscribers collect and record trace data.</span>
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">span</span>, <span class="ident">Event</span>, <span class="ident">LevelFilter</span>, <span class="ident">Metadata</span>};
@@ -1137,24 +1128,15 @@
 
     <span class="doccomment">/// Returns the common interest between these two Interests.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// The common interest is defined as the least restrictive, so if one</span>
-    <span class="doccomment">/// interest is `never` and the other is `always` the common interest is</span>
-    <span class="doccomment">/// `always`.</span>
+    <span class="doccomment">/// If both interests are the same, this propagates that interest.</span>
+    <span class="doccomment">/// Otherwise, if they differ, the result must always be</span>
+    <span class="doccomment">/// `Interest::sometimes` --- if the two subscribers differ in opinion, we</span>
+    <span class="doccomment">/// will have to ask the current subscriber what it thinks, no matter what.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">and</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">Interest</span>) <span class="op">-&gt;</span> <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">rhs</span>.<span class="number">0</span> {
-            <span class="comment">// If the added interest is `never()`, don&#39;t change anything —</span>
-            <span class="comment">// either a different subscriber added a higher interest, which we</span>
-            <span class="comment">// want to preserve, or the interest is 0 anyway (as it&#39;s</span>
-            <span class="comment">// initialized to 0).</span>
-            <span class="ident">InterestKind</span>::<span class="ident">Never</span> <span class="op">=&gt;</span> <span class="self">self</span>,
-            <span class="comment">// If the interest is `sometimes()`, that overwrites a `never()`</span>
-            <span class="comment">// interest, but doesn&#39;t downgrade an `always()` interest.</span>
-            <span class="ident">InterestKind</span>::<span class="ident">Sometimes</span> <span class="kw">if</span> <span class="self">self</span>.<span class="number">0</span> <span class="op">==</span> <span class="ident">InterestKind</span>::<span class="ident">Never</span> <span class="op">=&gt;</span> <span class="ident">rhs</span>,
-            <span class="comment">// If the interest is `always()`, we overwrite the current interest,</span>
-            <span class="comment">// as always() is the highest interest level and should take</span>
-            <span class="comment">// precedent.</span>
-            <span class="ident">InterestKind</span>::<span class="ident">Always</span> <span class="op">=&gt;</span> <span class="ident">rhs</span>,
-            <span class="kw">_</span> <span class="op">=&gt;</span> <span class="self">self</span>,
+        <span class="kw">if</span> <span class="self">self</span>.<span class="number">0</span> <span class="op">==</span> <span class="ident">rhs</span>.<span class="number">0</span> {
+            <span class="self">self</span>
+        } <span class="kw">else</span> {
+            <span class="ident">Interest</span>::<span class="ident">sometimes</span>()
         }
     }
 }

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/wgpu-core-0.6.0/src/device/queue.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>queue.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/0bb6bb8/wgpu-core/src/device/queue.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>queue.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -658,6 +658,18 @@
 <span id="657">657</span>
 <span id="658">658</span>
 <span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -668,7 +680,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">command</span>::{
         <span class="ident">texture_copy_view_to_hal</span>, <span class="ident">validate_linear_texture_data</span>, <span class="ident">validate_texture_copy_range</span>,
-        <span class="ident">CommandAllocator</span>, <span class="ident">CommandBuffer</span>, <span class="ident">TextureCopyView</span>, <span class="ident">TransferError</span>, <span class="ident">BITS_PER_BYTE</span>,
+        <span class="ident">CommandAllocator</span>, <span class="ident">CommandBuffer</span>, <span class="ident">CopySide</span>, <span class="ident">TextureCopyView</span>, <span class="ident">TransferError</span>, <span class="ident">BITS_PER_BYTE</span>,
     },
     <span class="ident">conv</span>,
     <span class="ident">device</span>::{<span class="ident">DeviceError</span>, <span class="ident">WaitIdleError</span>},
@@ -885,7 +897,12 @@
             <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedBufferOffset</span>(<span class="ident">buffer_offset</span>))<span class="question-mark">?</span>
         }
         <span class="kw">if</span> <span class="ident">buffer_offset</span> <span class="op">+</span> <span class="ident">data_size</span> <span class="op">&gt;</span> <span class="ident">dst</span>.<span class="ident">size</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">BufferOverrun</span>)<span class="question-mark">?</span>
+            <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">BufferOverrun</span> {
+                <span class="ident">start_offset</span>: <span class="ident">buffer_offset</span>,
+                <span class="ident">end_offset</span>: <span class="ident">buffer_offset</span> <span class="op">+</span> <span class="ident">data_size</span>,
+                <span class="ident">buffer_size</span>: <span class="ident">dst</span>.<span class="ident">size</span>,
+                <span class="ident">side</span>: <span class="ident">CopySide</span>::<span class="ident">Destination</span>,
+            })<span class="question-mark">?</span>
         }
 
         <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">BufferCopy</span> {
@@ -964,6 +981,7 @@
             <span class="ident">data_layout</span>,
             <span class="ident">texture_format</span>,
             <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">wgt</span>::<span class="ident">BufferAddress</span>,
+            <span class="ident">CopySide</span>::<span class="ident">Source</span>,
             <span class="ident">bytes_per_block</span> <span class="kw">as</span> <span class="ident">wgt</span>::<span class="ident">BufferAddress</span>,
             <span class="ident">size</span>,
         )<span class="question-mark">?</span>;
@@ -998,7 +1016,13 @@
         <span class="kw">if</span> <span class="op">!</span><span class="ident">dst</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">wgt</span>::<span class="ident">TextureUsage</span>::<span class="ident">COPY_DST</span>) {
             <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">MissingCopyDstUsageFlag</span>)<span class="question-mark">?</span>
         }
-        <span class="ident">validate_texture_copy_range</span>(<span class="ident">destination</span>, <span class="ident">dst</span>.<span class="ident">format</span>, <span class="ident">dst</span>.<span class="ident">kind</span>, <span class="ident">size</span>)<span class="question-mark">?</span>;
+        <span class="ident">validate_texture_copy_range</span>(
+            <span class="ident">destination</span>,
+            <span class="ident">dst</span>.<span class="ident">format</span>,
+            <span class="ident">dst</span>.<span class="ident">kind</span>,
+            <span class="ident">CopySide</span>::<span class="ident">Destination</span>,
+            <span class="ident">size</span>,
+        )<span class="question-mark">?</span>;
         <span class="ident">dst</span>.<span class="ident">life_guard</span>.<span class="ident">use_at</span>(<span class="ident">device</span>.<span class="ident">active_submission_index</span> <span class="op">+</span> <span class="number">1</span>);
 
         {
