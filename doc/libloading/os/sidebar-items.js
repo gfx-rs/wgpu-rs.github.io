@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["unix","UNIX implementation of dynamic library loading."],["windows","Windows implementation of dynamic library loading."]]});
+initSidebarItems({"mod":[["unix","UNIX implementation of dynamic library loading."]]});
