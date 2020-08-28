@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/0bb6bb8/wgpu-core/src/command/transfer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transfer.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/bba8272/wgpu-core/src/command/transfer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transfer.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -736,6 +736,18 @@
 <span id="735">735</span>
 <span id="736">736</span>
 <span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -749,7 +761,7 @@
     <span class="ident">device</span>::{<span class="ident">all_buffer_stages</span>, <span class="ident">all_image_stages</span>},
     <span class="ident">hub</span>::{<span class="ident">GfxBackend</span>, <span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>::{<span class="ident">BufferId</span>, <span class="ident">CommandEncoderId</span>, <span class="ident">TextureId</span>},
-    <span class="ident">resource</span>::{<span class="ident">BufferUse</span>, <span class="ident">Texture</span>, <span class="ident">TextureUse</span>},
+    <span class="ident">resource</span>::{<span class="ident">BufferUse</span>, <span class="ident">Texture</span>, <span class="ident">TextureErrorDimension</span>, <span class="ident">TextureUse</span>},
     <span class="ident">span</span>,
     <span class="ident">track</span>::<span class="ident">TextureSelector</span>,
 };
@@ -771,13 +783,6 @@
     <span class="ident">Destination</span>,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TextureErrorDimension</span> {
-    <span class="ident">X</span>,
-    <span class="ident">Y</span>,
-    <span class="ident">Z</span>,
-}
-
 <span class="doccomment">/// Error encountered while attempting a data transfer.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TransferError</span> {
@@ -785,6 +790,8 @@
     <span class="ident">InvalidBuffer</span>(<span class="ident">BufferId</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;texture {0:?} is invalid&quot;</span>)]</span>
     <span class="ident">InvalidTexture</span>(<span class="ident">TextureId</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Source and destination cannot be the same buffer&quot;</span>)]</span>
+    <span class="ident">SameSourceDestinationBuffer</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;source buffer/texture is missing the `COPY_SRC` usage flag&quot;</span>)]</span>
     <span class="ident">MissingCopySrcUsageFlag</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;destination buffer/texture is missing the `COPY_DST` usage flag&quot;</span>)]</span>
@@ -828,6 +835,10 @@
     <span class="ident">InvalidRowsPerImage</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;source and destination layers have different aspects&quot;</span>)]</span>
     <span class="ident">MismatchedAspects</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;copying from textures with format {0:?} is forbidden&quot;</span>)]</span>
+    <span class="ident">CopyFromForbiddenTextureFormat</span>(<span class="ident">wgt</span>::<span class="ident">TextureFormat</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;copying to textures with format {0:?} is forbidden&quot;</span>)]</span>
+    <span class="ident">CopyToForbiddenTextureFormat</span>(<span class="ident">wgt</span>::<span class="ident">TextureFormat</span>),
 }
 
 <span class="doccomment">/// Error encountered while attempting to do a copy on a command encoder.</span>
@@ -1041,6 +1052,9 @@
     ) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CopyError</span><span class="op">&gt;</span> {
         <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;CommandEncoder::copy_buffer_to_buffer&quot;</span>);
 
+        <span class="kw">if</span> <span class="ident">source</span> <span class="op">==</span> <span class="ident">destination</span> {
+            <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">SameSourceDestinationBuffer</span>)<span class="question-mark">?</span>
+        }
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
 
@@ -1061,11 +1075,6 @@
                 <span class="ident">size</span>,
             }),
             <span class="prelude-val">None</span> <span class="op">=&gt;</span> (),
-        }
-
-        <span class="kw">if</span> <span class="ident">size</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="ident">tracing</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Ignoring copy_buffer_to_buffer of size 0&quot;</span>);
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
         }
 
         <span class="kw">let</span> (<span class="ident">src_buffer</span>, <span class="ident">src_pending</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>
@@ -1115,6 +1124,11 @@
                 <span class="ident">buffer_size</span>: <span class="ident">dst_buffer</span>.<span class="ident">size</span>,
                 <span class="ident">side</span>: <span class="ident">CopySide</span>::<span class="ident">Destination</span>,
             })<span class="question-mark">?</span>
+        }
+
+        <span class="kw">if</span> <span class="ident">size</span> <span class="op">==</span> <span class="number">0</span> {
+            <span class="ident">tracing</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Ignoring copy_buffer_to_buffer of size 0&quot;</span>);
+            <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
         }
 
         <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">BufferCopy</span> {
@@ -1221,6 +1235,11 @@
         )<span class="question-mark">?</span>;
 
         <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">texture_block_size</span>(<span class="ident">dst_texture</span>.<span class="ident">format</span>);
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">conv</span>::<span class="ident">is_valid_copy_dst_texture_format</span>(<span class="ident">dst_texture</span>.<span class="ident">format</span>) {
+            <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">CopyToForbiddenTextureFormat</span>(
+                <span class="ident">dst_texture</span>.<span class="ident">format</span>,
+            ))<span class="question-mark">?</span>
+        }
 
         <span class="kw">let</span> <span class="ident">buffer_width</span> <span class="op">=</span> (<span class="ident">source</span>.<span class="ident">layout</span>.<span class="ident">bytes_per_row</span> <span class="op">/</span> <span class="ident">bytes_per_block</span>) <span class="op">*</span> <span class="ident">block_width</span>;
         <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">BufferImageCopy</span> {
@@ -1335,6 +1354,11 @@
         )<span class="question-mark">?</span>;
 
         <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">texture_block_size</span>(<span class="ident">src_texture</span>.<span class="ident">format</span>);
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">conv</span>::<span class="ident">is_valid_copy_src_texture_format</span>(<span class="ident">src_texture</span>.<span class="ident">format</span>) {
+            <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">CopyFromForbiddenTextureFormat</span>(
+                <span class="ident">src_texture</span>.<span class="ident">format</span>,
+            ))<span class="question-mark">?</span>
+        }
 
         <span class="kw">let</span> <span class="ident">buffer_width</span> <span class="op">=</span> (<span class="ident">destination</span>.<span class="ident">layout</span>.<span class="ident">bytes_per_row</span> <span class="op">/</span> <span class="ident">bytes_per_block</span>) <span class="op">*</span> <span class="ident">block_width</span>;
         <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">BufferImageCopy</span> {

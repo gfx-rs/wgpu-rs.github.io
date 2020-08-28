@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/0bb6bb8/wgpu-core/src/command/draw.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>draw.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/bba8272/wgpu-core/src/command/draw.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>draw.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -175,6 +175,10 @@
 <span id="174">174</span>
 <span id="175">175</span>
 <span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -237,8 +241,8 @@
     <span class="ident">InvalidDynamicOffsetCount</span> { <span class="ident">actual</span>: <span class="ident">usize</span>, <span class="ident">expected</span>: <span class="ident">usize</span> },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;render pipeline {0:?} is invalid&quot;</span>)]</span>
     <span class="ident">InvalidPipeline</span>(<span class="ident">id</span>::<span class="ident">RenderPipelineId</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;render pipeline output formats and sample counts do not match render pass attachment formats&quot;</span>)]</span>
-    <span class="ident">IncompatiblePipeline</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;render pipeline is incompatible, {0}&quot;</span>)]</span>
+    <span class="ident">IncompatiblePipeline</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="kw">crate</span>::<span class="ident">device</span>::<span class="ident">RenderPassCompatibilityError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;pipeline is not compatible with the depth-stencil read-only render pass&quot;</span>)]</span>
     <span class="ident">IncompatibleReadOnlyDepthStencil</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;buffer {0:?} is in error {1:?}&quot;</span>)]</span>
@@ -249,6 +253,10 @@
     <span class="ident">MissingTextureUsage</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">MissingTextureUsageError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">PushConstants</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">PushConstantUploadError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid Viewport parameters&quot;</span>)]</span>
+    <span class="ident">InvalidViewport</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid ScissorRect parameters&quot;</span>)]</span>
+    <span class="ident">InvalidScissorRect</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>

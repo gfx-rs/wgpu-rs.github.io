@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["SUPPORTED_CAPABILITIES",""],["SUPPORTED_EXTENSIONS",""],["SUPPORTED_EXT_SETS",""]],"enum":[["Error",""],["ModuleState",""]],"fn":[["parse_u8_slice",""]],"struct":[["Parser",""],["SamplingFlags","Flags describing sampling method."]]});
+initSidebarItems({"constant":[["SUPPORTED_CAPABILITIES",""],["SUPPORTED_EXTENSIONS",""],["SUPPORTED_EXT_SETS",""]],"enum":[["ModuleState",""]],"fn":[["parse_u8_slice",""]],"struct":[["Assignment",""],["Instruction",""],["Parser",""],["SamplingFlags","Flags describing sampling method."]]});
