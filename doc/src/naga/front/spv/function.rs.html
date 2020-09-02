@@ -188,7 +188,7 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Terminator</span> {
     <span class="doccomment">///</span>
     <span class="ident">Return</span> {
-        <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;&gt;</span>,
+        <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     },
     <span class="doccomment">///</span>
     <span class="ident">Branch</span> { <span class="ident">target_id</span>: <span class="ident">BlockId</span> },
@@ -221,11 +221,11 @@
     <span class="ident">Unreachable</span>,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_function</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">u32</span><span class="op">&gt;&gt;</span>(
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_function</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span>(
     <span class="ident">parser</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">super</span>::<span class="ident">Parser</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>,
     <span class="ident">inst</span>: <span class="ident">Instruction</span>,
     <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">crate</span>::<span class="ident">Module</span>,
-) <span class="op">-&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="ident">parser</span>.<span class="ident">switch</span>(<span class="ident">ModuleState</span>::<span class="ident">Function</span>, <span class="ident">inst</span>.<span class="ident">op</span>)<span class="question-mark">?</span>;
     <span class="ident">inst</span>.<span class="ident">expect</span>(<span class="number">5</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">result_type</span> <span class="op">=</span> <span class="ident">parser</span>.<span class="ident">next</span>()<span class="question-mark">?</span>;
@@ -234,7 +234,7 @@
     <span class="kw">let</span> <span class="ident">fun_type</span> <span class="op">=</span> <span class="ident">parser</span>.<span class="ident">next</span>()<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fun</span> <span class="op">=</span> {
         <span class="kw">let</span> <span class="ident">ft</span> <span class="op">=</span> <span class="ident">parser</span>.<span class="ident">lookup_function_type</span>.<span class="ident">lookup</span>(<span class="ident">fun_type</span>)<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">ft</span>.<span class="ident">return_type_id</span> <span class="op">!=</span> <span class="ident">result_type</span> {
+        <span class="kw">if</span> <span class="ident">ft</span>.<span class="ident">return_type_id</span> <span class="op">!</span><span class="op">=</span> <span class="ident">result_type</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">WrongFunctionResultType</span>(<span class="ident">result_type</span>));
         }
         <span class="kw">crate</span>::<span class="ident">Function</span> {
@@ -258,7 +258,7 @@
             <span class="ident">Instruction</span> {
                 <span class="ident">op</span>: <span class="ident">spirv</span>::<span class="ident">Op</span>::<span class="ident">FunctionParameter</span>,
                 <span class="ident">wc</span>: <span class="number">3</span>,
-            } <span class="op">=&gt;</span> {
+            } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">type_id</span> <span class="op">=</span> <span class="ident">parser</span>.<span class="ident">next</span>()<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">parser</span>.<span class="ident">next</span>()<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">fun</span>
@@ -270,7 +270,7 @@
                 <span class="comment">//Note: we redo the lookup in order to work around `parser` borrowing</span>
 
                 <span class="kw">if</span> <span class="ident">type_id</span>
-                    <span class="op">!=</span> <span class="ident">parser</span>
+                    <span class="op">!</span><span class="op">=</span> <span class="ident">parser</span>
                         .<span class="ident">lookup_function_type</span>
                         .<span class="ident">lookup</span>(<span class="ident">fun_type</span>)<span class="question-mark">?</span>
                         .<span class="ident">parameter_type_ids</span>[<span class="ident">i</span>]
@@ -280,7 +280,7 @@
                 <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">parser</span>.<span class="ident">lookup_type</span>.<span class="ident">lookup</span>(<span class="ident">type_id</span>)<span class="question-mark">?</span>.<span class="ident">handle</span>;
                 <span class="ident">fun</span>.<span class="ident">parameter_types</span>.<span class="ident">push</span>(<span class="ident">ty</span>);
             }
-            <span class="ident">Instruction</span> { <span class="ident">op</span>, .. } <span class="op">=&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidParameter</span>(<span class="ident">op</span>)),
+            <span class="ident">Instruction</span> { <span class="ident">op</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">InvalidParameter</span>(<span class="ident">op</span>)),
         }
     }
 
@@ -293,7 +293,7 @@
         <span class="kw">let</span> <span class="ident">fun_inst</span> <span class="op">=</span> <span class="ident">parser</span>.<span class="ident">next_inst</span>()<span class="question-mark">?</span>;
         <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;\t\t{:?}&quot;</span>, <span class="ident">fun_inst</span>.<span class="ident">op</span>);
         <span class="kw">match</span> <span class="ident">fun_inst</span>.<span class="ident">op</span> {
-            <span class="ident">spirv</span>::<span class="ident">Op</span>::<span class="ident">Label</span> <span class="op">=&gt;</span> {
+            <span class="ident">spirv</span>::<span class="ident">Op</span>::<span class="ident">Label</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">// Read the label ID</span>
                 <span class="ident">fun_inst</span>.<span class="ident">expect</span>(<span class="number">2</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">block_id</span> <span class="op">=</span> <span class="ident">parser</span>.<span class="ident">next</span>()<span class="question-mark">?</span>;
@@ -310,11 +310,11 @@
 
                 <span class="ident">flow_graph</span>.<span class="ident">add_node</span>(<span class="ident">node</span>);
             }
-            <span class="ident">spirv</span>::<span class="ident">Op</span>::<span class="ident">FunctionEnd</span> <span class="op">=&gt;</span> {
+            <span class="ident">spirv</span>::<span class="ident">Op</span>::<span class="ident">FunctionEnd</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">fun_inst</span>.<span class="ident">expect</span>(<span class="number">1</span>)<span class="question-mark">?</span>;
                 <span class="kw">break</span>;
             }
-            <span class="kw">_</span> <span class="op">=&gt;</span> {
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">UnsupportedInstruction</span>(<span class="ident">parser</span>.<span class="ident">state</span>, <span class="ident">fun_inst</span>.<span class="ident">op</span>));
             }
         }

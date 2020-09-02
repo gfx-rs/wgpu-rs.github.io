@@ -192,12 +192,12 @@
 }
 
 <span class="kw">struct</span> <span class="ident">Registry</span> {
-    <span class="ident">callsites</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw">dyn</span> <span class="ident">Callsite</span><span class="op">&gt;</span>,
+    <span class="ident">callsites</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">dyn</span> <span class="ident">Callsite</span><span class="op">&gt;</span>,
     <span class="ident">dispatchers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">dispatcher</span>::<span class="ident">Registrar</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Registry</span> {
-    <span class="kw">fn</span> <span class="ident">rebuild_callsite_interest</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">callsite</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw">dyn</span> <span class="ident">Callsite</span>) {
+    <span class="kw">fn</span> <span class="ident">rebuild_callsite_interest</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">callsite</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">dyn</span> <span class="ident">Callsite</span>) {
         <span class="kw">let</span> <span class="ident">meta</span> <span class="op">=</span> <span class="ident">callsite</span>.<span class="ident">metadata</span>();
 
         <span class="comment">// Iterate over the subscribers in the registry, and — if they are</span>
@@ -255,7 +255,7 @@
     <span class="doccomment">/// Returns the [metadata] associated with the callsite.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [metadata]: ../metadata/struct.Metadata.html</span>
-    <span class="kw">fn</span> <span class="ident">metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Metadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Metadata</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>;
 }
 
 <span class="doccomment">/// Uniquely identifies a [`Callsite`]</span>
@@ -274,7 +274,7 @@
     <span class="doccomment">/// the `Callsite::id` function instead.</span>
     <span class="comment">// TODO: When `Callsite::id` is a const fn, this need no longer be `pub`.</span>
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-    <span class="kw">pub</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw">dyn</span> <span class="ident">Callsite</span>,
+    <span class="kw">pub</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">dyn</span> <span class="ident">Callsite</span>,
 );
 
 <span class="doccomment">/// Clear and reregister interest on every [`Callsite`]</span>
@@ -304,7 +304,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// This should be called once per callsite after the callsite has been</span>
 <span class="doccomment">/// constructed.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">register</span>(<span class="ident">callsite</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw">dyn</span> <span class="ident">Callsite</span>) {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">register</span>(<span class="ident">callsite</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">dyn</span> <span class="ident">Callsite</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">registry</span> <span class="op">=</span> <span class="ident">REGISTRY</span>.<span class="ident">lock</span>().<span class="ident">unwrap</span>();
     <span class="ident">registry</span>.<span class="ident">rebuild_callsite_interest</span>(<span class="ident">callsite</span>);
     <span class="ident">registry</span>.<span class="ident">callsites</span>.<span class="ident">push</span>(<span class="ident">callsite</span>);
@@ -319,15 +319,15 @@
 <span class="comment">// ===== impl Identifier =====</span>
 
 <span class="kw">impl</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">Identifier</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Identifier</span>) <span class="op">-&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="number">0</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> () <span class="op">==</span> <span class="ident">other</span>.<span class="number">0</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> ()
+    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="ident">Identifier</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="number">0</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> () <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="number">0</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> ()
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Eq</span> <span class="kw">for</span> <span class="ident">Identifier</span> {}
 
 <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Identifier</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
         <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;Identifier({:p})&quot;</span>, <span class="self">self</span>.<span class="number">0</span>)
     }
 }
@@ -337,7 +337,7 @@
     <span class="kw">where</span>
         <span class="ident">H</span>: <span class="ident">Hasher</span>,
     {
-        (<span class="self">self</span>.<span class="number">0</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">dyn</span> <span class="ident">Callsite</span>).<span class="ident">hash</span>(<span class="ident">state</span>)
+        (<span class="self">self</span>.<span class="number">0</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">dyn</span> <span class="ident">Callsite</span>).<span class="ident">hash</span>(<span class="ident">state</span>)
     }
 }
 </pre></div>
