@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/ron-0.6.1/src/parse.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>parse.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../ron/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/ron-0.6.2/src/parse.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>parse.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="shortcut icon" href="../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../ron/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -870,6 +870,67 @@
 <span id="869">869</span>
 <span id="870">870</span>
 <span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
+<span id="910">910</span>
+<span id="911">911</span>
+<span id="912">912</span>
+<span id="913">913</span>
+<span id="914">914</span>
+<span id="915">915</span>
+<span id="916">916</span>
+<span id="917">917</span>
+<span id="918">918</span>
+<span id="919">919</span>
+<span id="920">920</span>
+<span id="921">921</span>
+<span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
+<span id="926">926</span>
+<span id="927">927</span>
+<span id="928">928</span>
+<span id="929">929</span>
+<span id="930">930</span>
+<span id="931">931</span>
+<span id="932">932</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">char</span>::<span class="ident">from_u32</span> <span class="kw">as</span> <span class="ident">char_from_u32</span>,
@@ -882,11 +943,75 @@
     <span class="ident">extensions</span>::<span class="ident">Extensions</span>,
 };
 
-<span class="kw">const</span> <span class="ident">DIGITS</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="string">b&quot;0123456789ABCDEFabcdef_&quot;</span>;
-<span class="kw">const</span> <span class="ident">FLOAT_CHARS</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="string">b&quot;0123456789.+-eE&quot;</span>;
-<span class="kw">const</span> <span class="ident">IDENT_FIRST</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="string">b&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_&quot;</span>;
-<span class="kw">const</span> <span class="ident">IDENT_CHAR</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="string">b&quot;ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789&quot;</span>;
-<span class="kw">const</span> <span class="ident">WHITE_SPACE</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] <span class="op">=</span> <span class="string">b&quot;\n\t\r &quot;</span>;
+<span class="comment">// We have the following char categories.</span>
+<span class="kw">const</span> <span class="ident">INT_CHAR</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">0</span>; <span class="comment">// [0-9A-Fa-f_]</span>
+<span class="kw">const</span> <span class="ident">FLOAT_CHAR</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>; <span class="comment">// [0-9\.Ee+-]</span>
+<span class="kw">const</span> <span class="ident">IDENT_FIRST_CHAR</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>; <span class="comment">// [A-Za-z_]</span>
+<span class="kw">const</span> <span class="ident">IDENT_OTHER_CHAR</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>; <span class="comment">// [A-Za-z_0-9]</span>
+<span class="kw">const</span> <span class="ident">WHITESPACE_CHAR</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>; <span class="comment">// [\n\t\r ]</span>
+
+<span class="comment">// We encode each char as belonging to some number of these categories.</span>
+<span class="kw">const</span> <span class="ident">DIGIT</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="ident">INT_CHAR</span> <span class="op">|</span> <span class="ident">FLOAT_CHAR</span> <span class="op">|</span> <span class="ident">IDENT_OTHER_CHAR</span>; <span class="comment">// [0-9]</span>
+<span class="kw">const</span> <span class="ident">ABCDF</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="ident">INT_CHAR</span> <span class="op">|</span> <span class="ident">IDENT_FIRST_CHAR</span> <span class="op">|</span> <span class="ident">IDENT_OTHER_CHAR</span>; <span class="comment">// [ABCDFabcdf]</span>
+<span class="kw">const</span> <span class="ident">UNDER</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="ident">INT_CHAR</span> <span class="op">|</span> <span class="ident">IDENT_FIRST_CHAR</span> <span class="op">|</span> <span class="ident">IDENT_OTHER_CHAR</span>; <span class="comment">// [_]</span>
+<span class="kw">const</span> <span class="ident">E____</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="ident">INT_CHAR</span> <span class="op">|</span> <span class="ident">FLOAT_CHAR</span> <span class="op">|</span> <span class="ident">IDENT_FIRST_CHAR</span> <span class="op">|</span> <span class="ident">IDENT_OTHER_CHAR</span>; <span class="comment">// [Ee]</span>
+<span class="kw">const</span> <span class="ident">G2Z__</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="ident">IDENT_FIRST_CHAR</span> <span class="op">|</span> <span class="ident">IDENT_OTHER_CHAR</span>; <span class="comment">// [G-Zg-z]</span>
+<span class="kw">const</span> <span class="ident">PUNCT</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="ident">FLOAT_CHAR</span>; <span class="comment">// [\.+-]</span>
+<span class="kw">const</span> <span class="ident">WS___</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="ident">WHITESPACE_CHAR</span>; <span class="comment">// [\t\n\r ]</span>
+<span class="kw">const</span> <span class="ident">_____</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0</span>; <span class="comment">// everything else</span>
+
+<span class="comment">// Table of encodings, for fast predicates. (Non-ASCII and special chars are</span>
+<span class="comment">// shown with &#39;·&#39; in the comment.)</span>
+<span class="attribute">#[<span class="ident">rustfmt</span>::<span class="ident">skip</span>]</span>
+<span class="kw">const</span> <span class="ident">ENCODINGS</span>: [<span class="ident">u8</span>; <span class="number">256</span>] <span class="op">=</span> [
+<span class="comment">/*                     0      1      2      3      4      5      6      7      8      9    */</span>
+<span class="comment">/*   0+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">WS___</span>,
+<span class="comment">/*  10+: ·········· */</span> <span class="ident">WS___</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">WS___</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/*  20+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/*  30+: ·· !&quot;#$%&amp;&#39; */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">WS___</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/*  40+: ()*+,-./01 */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">PUNCT</span>, <span class="ident">_____</span>, <span class="ident">PUNCT</span>, <span class="ident">PUNCT</span>, <span class="ident">_____</span>, <span class="ident">DIGIT</span>, <span class="ident">DIGIT</span>,
+<span class="comment">/*  50+: 23456789:; */</span> <span class="ident">DIGIT</span>, <span class="ident">DIGIT</span>, <span class="ident">DIGIT</span>, <span class="ident">DIGIT</span>, <span class="ident">DIGIT</span>, <span class="ident">DIGIT</span>, <span class="ident">DIGIT</span>, <span class="ident">DIGIT</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/*  60+: &lt;=&gt;?@ABCDE */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">ABCDF</span>, <span class="ident">ABCDF</span>, <span class="ident">ABCDF</span>, <span class="ident">ABCDF</span>, <span class="ident">E____</span>,
+<span class="comment">/*  70+: FGHIJKLMNO */</span> <span class="ident">ABCDF</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>,
+<span class="comment">/*  80+: PQRSTUVWZY */</span> <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>,
+<span class="comment">/*  90+: Z[\]^_`abc */</span> <span class="ident">G2Z__</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">UNDER</span>, <span class="ident">_____</span>, <span class="ident">ABCDF</span>, <span class="ident">ABCDF</span>, <span class="ident">ABCDF</span>,
+<span class="comment">/* 100+: defghijklm */</span> <span class="ident">ABCDF</span>, <span class="ident">E____</span>, <span class="ident">ABCDF</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>,
+<span class="comment">/* 110+: nopqrstuvw */</span> <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>,
+<span class="comment">/* 120+: xyz{|}~··· */</span> <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">G2Z__</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/* 130+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/* 140+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/* 150+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/* 160+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/* 170+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/* 180+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/* 190+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/* 200+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/* 210+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/* 220+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/* 230+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/* 240+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>,
+<span class="comment">/* 250+: ·········· */</span> <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>, <span class="ident">_____</span>
+];
+
+<span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_int_char</span>(<span class="ident">c</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="ident">ENCODINGS</span>[<span class="ident">c</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">&amp;</span> <span class="ident">INT_CHAR</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>
+}
+
+<span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_float_char</span>(<span class="ident">c</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="ident">ENCODINGS</span>[<span class="ident">c</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">&amp;</span> <span class="ident">FLOAT_CHAR</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>
+}
+
+<span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_ident_first_char</span>(<span class="ident">c</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="ident">ENCODINGS</span>[<span class="ident">c</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">&amp;</span> <span class="ident">IDENT_FIRST_CHAR</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>
+}
+
+<span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_ident_other_char</span>(<span class="ident">c</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="ident">ENCODINGS</span>[<span class="ident">c</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">&amp;</span> <span class="ident">IDENT_OTHER_CHAR</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>
+}
+
+<span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_whitespace_char</span>(<span class="ident">c</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="ident">ENCODINGS</span>[<span class="ident">c</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">&amp;</span> <span class="ident">WHITESPACE_CHAR</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>
+}
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AnyNum</span> {
@@ -977,7 +1102,7 @@
             <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">advance</span>(<span class="number">2</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">num_bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_bytes_contained_in</span>(<span class="ident">DIGITS</span>);
+        <span class="kw">let</span> <span class="ident">num_bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_bytes_contained_in</span>(<span class="ident">is_int_char</span>);
 
         <span class="kw">if</span> <span class="ident">num_bytes</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="self">self</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedInteger</span>);
@@ -1185,13 +1310,13 @@
     <span class="doccomment">/// Only returns true if the char after `ident` cannot belong</span>
     <span class="doccomment">/// to an identifier.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">check_ident</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ident</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">test_for</span>(<span class="ident">ident</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">check_ident_char</span>(<span class="ident">ident</span>.<span class="ident">len</span>())
+        <span class="self">self</span>.<span class="ident">test_for</span>(<span class="ident">ident</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">check_ident_other_char</span>(<span class="ident">ident</span>.<span class="ident">len</span>())
     }
 
-    <span class="kw">fn</span> <span class="ident">check_ident_char</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">check_ident_other_char</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">bytes</span>
             .<span class="ident">get</span>(<span class="ident">index</span>)
-            .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">IDENT_CHAR</span>.<span class="ident">contains</span>(<span class="ident">b</span>))
+            .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">b</span><span class="op">|</span> <span class="ident">is_ident_other_char</span>(<span class="ident">b</span>))
     }
 
     <span class="doccomment">/// Should only be used on a working copy</span>
@@ -1295,14 +1420,14 @@
             <span class="kw">let</span> <span class="ident">comma</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">comma</span>()<span class="question-mark">?</span>;
 
             <span class="comment">// If we have no comma but another item, return an error</span>
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">comma</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">check_ident_char</span>(<span class="number">0</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">comma</span> <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">check_ident_other_char</span>(<span class="number">0</span>) {
                 <span class="kw">return</span> <span class="self">self</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedComma</span>);
             }
 
             <span class="comment">// If there&#39;s no comma, assume the list ended.</span>
             <span class="comment">// If there is, it might be a trailing one, thus we only</span>
             <span class="comment">// continue the loop if we get an ident char.</span>
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">comma</span> <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">check_ident_char</span>(<span class="number">0</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">comma</span> <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">check_ident_other_char</span>(<span class="number">0</span>) {
                 <span class="kw">break</span>;
             }
         }
@@ -1326,7 +1451,7 @@
             }
         }
 
-        <span class="kw">let</span> <span class="ident">num_bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_bytes_contained_in</span>(<span class="ident">FLOAT_CHARS</span>);
+        <span class="kw">let</span> <span class="ident">num_bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_bytes_contained_in</span>(<span class="ident">is_float_char</span>);
 
         <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">from_utf8_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bytes</span>[<span class="number">0</span>..<span class="ident">num_bytes</span>]) };
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">FromStr</span>::<span class="ident">from_str</span>(<span class="ident">s</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">error</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedFloat</span>));
@@ -1346,7 +1471,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">identifier_len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">peek_or_eof</span>()<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">IDENT_FIRST</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">next</span>) {
+        <span class="kw">if</span> <span class="ident">is_ident_first_char</span>(<span class="ident">next</span>) {
             <span class="comment">// If the next two bytes signify the start of a raw string literal,</span>
             <span class="comment">// return an error.</span>
             <span class="kw">if</span> <span class="ident">next</span> <span class="op">=</span><span class="op">=</span> <span class="string">b&#39;r&#39;</span> {
@@ -1359,7 +1484,7 @@
                 }
             }
 
-            <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_bytes_contained_in</span>(<span class="ident">IDENT_CHAR</span>);
+            <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_bytes_contained_in</span>(<span class="ident">is_ident_other_char</span>);
 
             <span class="prelude-val">Ok</span>(<span class="ident">bytes</span>)
         } <span class="kw">else</span> {
@@ -1367,11 +1492,8 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_bytes_contained_in</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">allowed</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">bytes</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">take_while</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">allowed</span>.<span class="ident">contains</span>(<span class="ident">b</span>))
-            .<span class="ident">count</span>()
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_bytes_contained_in</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">allowed</span>: <span class="kw">fn</span>(<span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+        <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">iter</span>().<span class="ident">take_while</span>(<span class="op">|</span><span class="op">&amp;&amp;</span><span class="ident">b</span><span class="op">|</span> <span class="ident">allowed</span>(<span class="ident">b</span>)).<span class="ident">count</span>()
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">next_bytes_is_float</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
@@ -1384,13 +1506,13 @@
                 .<span class="ident">bytes</span>
                 .<span class="ident">iter</span>()
                 .<span class="ident">skip</span>(<span class="ident">skip</span>)
-                .<span class="ident">take_while</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">FLOAT_CHARS</span>.<span class="ident">contains</span>(<span class="ident">b</span>))
+                .<span class="ident">take_while</span>(<span class="op">|</span><span class="op">&amp;&amp;</span><span class="ident">b</span><span class="op">|</span> <span class="ident">is_float_char</span>(<span class="ident">b</span>))
                 .<span class="ident">count</span>();
             <span class="kw">let</span> <span class="ident">ilen</span> <span class="op">=</span> <span class="self">self</span>
                 .<span class="ident">bytes</span>
                 .<span class="ident">iter</span>()
                 .<span class="ident">skip</span>(<span class="ident">skip</span>)
-                .<span class="ident">take_while</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">DIGITS</span>.<span class="ident">contains</span>(<span class="ident">b</span>))
+                .<span class="ident">take_while</span>(<span class="op">|</span><span class="op">&amp;&amp;</span><span class="ident">b</span><span class="op">|</span> <span class="ident">is_int_char</span>(<span class="ident">b</span>))
                 .<span class="ident">count</span>();
             <span class="ident">flen</span> <span class="op">&gt;</span> <span class="ident">ilen</span>
         } <span class="kw">else</span> {
@@ -1399,7 +1521,7 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">skip_ws</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">while</span> <span class="self">self</span>.<span class="ident">peek</span>().<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">WHITE_SPACE</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">c</span>)) {
+        <span class="kw">while</span> <span class="self">self</span>.<span class="ident">peek</span>().<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">is_whitespace_char</span>(<span class="ident">c</span>)) {
             <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">advance_single</span>();
         }
 
@@ -1722,8 +1844,8 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Position</span> {
-    <span class="kw">pub</span> <span class="ident">col</span>: <span class="ident">usize</span>,
     <span class="kw">pub</span> <span class="ident">line</span>: <span class="ident">usize</span>,
+    <span class="kw">pub</span> <span class="ident">col</span>: <span class="ident">usize</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Position</span> {
