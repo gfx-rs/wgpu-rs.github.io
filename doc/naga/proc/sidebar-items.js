@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["ResolveError",""],["ValidationError",""]],"fn":[["check_constant_types",""]],"struct":[["Typifier",""],["UnexpectedConstantTypeError",""],["Validator",""]]});
+initSidebarItems({"enum":[["ResolveError",""],["ValidationError",""]],"fn":[["check_constant_type",""]],"struct":[["Interface",""],["Typifier",""],["Validator",""]],"trait":[["Visitor",""]]});
