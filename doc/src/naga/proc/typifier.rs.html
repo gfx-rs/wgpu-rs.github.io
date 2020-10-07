@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/b278e10/src/proc/typifier.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>typifier.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/aa35110/src/proc/typifier.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>typifier.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
@@ -307,13 +309,105 @@
 <span id="306">306</span>
 <span id="307">307</span>
 <span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arena</span>::{<span class="ident">Arena</span>, <span class="ident">Handle</span>};
 
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="kw">enum</span> <span class="ident">Resolution</span> {
+    <span class="ident">Handle</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>),
+    <span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>),
+}
+
+<span class="comment">// Clone is only implemented for numeric variants of `TypeInner`.</span>
+<span class="kw">impl</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">Resolution</span> {
+    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+            <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">handle</span>),
+            <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw-2">ref</span> <span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">match</span> <span class="kw-2">*</span><span class="ident">v</span> {
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> }
+                }
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">size</span>, <span class="ident">kind</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">size</span>, <span class="ident">kind</span>, <span class="ident">width</span> }
+                }
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
+                    <span class="ident">rows</span>,
+                    <span class="ident">columns</span>,
+                    <span class="ident">width</span>,
+                } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
+                    <span class="ident">rows</span>,
+                    <span class="ident">columns</span>,
+                    <span class="ident">width</span>,
+                },
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unepxected clone type: {:?}&quot;</span>, <span class="ident">v</span>),
+            }),
+        }
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Typifier</span> {
-    <span class="ident">types</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">resolutions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Resolution</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
@@ -328,125 +422,148 @@
     <span class="ident">TypeNotFound</span>,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">Resolution</span> {
-    <span class="ident">Handle</span>(<span class="kw">crate</span>::<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>),
-    <span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>),
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ResolveContext</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Constant</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">global_vars</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">GlobalVariable</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">local_vars</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">LocalVariable</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">functions</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Function</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">parameter_types</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>],
 }
 
 <span class="kw">impl</span> <span class="ident">Typifier</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">Typifier</span> { <span class="ident">types</span>: <span class="ident">Vec</span>::<span class="ident">new</span>() }
+        <span class="ident">Typifier</span> {
+            <span class="ident">resolutions</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
+        }
     }
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">too_many_arguments</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+        <span class="self">self</span>.<span class="ident">resolutions</span>.<span class="ident">clear</span>()
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>,
+        <span class="ident">expr_handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
+        <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span> {
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">expr_handle</span>.<span class="ident">index</span>()] {
+            <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">ty_handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">types</span>[<span class="ident">ty_handle</span>].<span class="ident">inner</span>,
+            <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw-2">ref</span> <span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">inner</span>,
+        }
+    }
+
     <span class="kw">fn</span> <span class="ident">resolve_impl</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">expr</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">Expression</span>,
-        <span class="ident">arena</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>,
-        <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Constant</span><span class="op">&gt;</span>,
-        <span class="ident">global_vars</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">GlobalVariable</span><span class="op">&gt;</span>,
-        <span class="ident">local_vars</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">LocalVariable</span><span class="op">&gt;</span>,
-        <span class="ident">functions</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Function</span><span class="op">&gt;</span>,
-        <span class="ident">parameter_types</span>: <span class="kw-2">&amp;</span>[<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>],
+        <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>,
+        <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">ResolveContext</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Resolution</span>, <span class="ident">ResolveError</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="kw-2">*</span><span class="ident">expr</span> {
-            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Access</span> { <span class="ident">base</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">arena</span>[<span class="self">self</span>.<span class="ident">types</span>[<span class="ident">base</span>.<span class="ident">index</span>()]].<span class="ident">inner</span> {
+            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Access</span> { <span class="ident">base</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">base</span>, <span class="ident">types</span>) {
                 <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Array</span> { <span class="ident">base</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">base</span>),
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
+                    <span class="ident">size</span>: <span class="kw">_</span>,
+                    <span class="ident">kind</span>,
+                    <span class="ident">width</span>,
+                } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> }),
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
+                    <span class="ident">rows</span>: <span class="ident">size</span>,
+                    <span class="ident">columns</span>: <span class="kw">_</span>,
+                    <span class="ident">width</span>,
+                } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
+                    <span class="ident">size</span>,
+                    <span class="ident">kind</span>: <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
+                    <span class="ident">width</span>,
+                }),
                 <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Can&#39;t access into {:?}&quot;</span>, <span class="ident">other</span>),
             },
-            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">AccessIndex</span> { <span class="ident">base</span>, <span class="ident">index</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="ident">arena</span>[<span class="self">self</span>.<span class="ident">types</span>[<span class="ident">base</span>.<span class="ident">index</span>()]].<span class="ident">inner</span> {
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">size</span>, <span class="ident">kind</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">if</span> <span class="ident">index</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u32</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">InvalidAccessIndex</span>);
-                        }
-                        <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> })
+            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">AccessIndex</span> { <span class="ident">base</span>, <span class="ident">index</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">base</span>, <span class="ident">types</span>) {
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">size</span>, <span class="ident">kind</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">if</span> <span class="ident">index</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u32</span> {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">InvalidAccessIndex</span>);
                     }
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
-                        <span class="ident">columns</span>,
-                        <span class="ident">rows</span>,
-                        <span class="ident">kind</span>,
-                        <span class="ident">width</span>,
-                    } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">if</span> <span class="ident">index</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">columns</span> <span class="kw">as</span> <span class="ident">u32</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">InvalidAccessIndex</span>);
-                        }
-                        <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
-                            <span class="ident">size</span>: <span class="ident">rows</span>,
-                            <span class="ident">kind</span>,
-                            <span class="ident">width</span>,
-                        })
-                    }
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Array</span> { <span class="ident">base</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">base</span>),
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Struct</span> { <span class="kw-2">ref</span> <span class="ident">members</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">member</span> <span class="op">=</span> <span class="ident">members</span>
-                            .<span class="ident">get</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>)
-                            .<span class="ident">ok_or</span>(<span class="ident">ResolveError</span>::<span class="ident">InvalidAccessIndex</span>)<span class="question-mark">?</span>;
-                        <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">member</span>.<span class="ident">ty</span>)
-                    }
-                    <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Can&#39;t access into {:?}&quot;</span>, <span class="ident">other</span>),
+                    <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> })
                 }
-            }
-            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Constant</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">constants</span>[<span class="ident">h</span>].<span class="ident">ty</span>),
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
+                    <span class="ident">columns</span>,
+                    <span class="ident">rows</span>,
+                    <span class="ident">width</span>,
+                } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">if</span> <span class="ident">index</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">columns</span> <span class="kw">as</span> <span class="ident">u32</span> {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">InvalidAccessIndex</span>);
+                    }
+                    <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
+                        <span class="ident">size</span>: <span class="ident">rows</span>,
+                        <span class="ident">kind</span>: <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
+                        <span class="ident">width</span>,
+                    })
+                }
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Array</span> { <span class="ident">base</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">base</span>),
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Struct</span> { <span class="kw-2">ref</span> <span class="ident">members</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">member</span> <span class="op">=</span> <span class="ident">members</span>
+                        .<span class="ident">get</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>)
+                        .<span class="ident">ok_or</span>(<span class="ident">ResolveError</span>::<span class="ident">InvalidAccessIndex</span>)<span class="question-mark">?</span>;
+                    <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">member</span>.<span class="ident">ty</span>)
+                }
+                <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Can&#39;t access into {:?}&quot;</span>, <span class="ident">other</span>),
+            },
+            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Constant</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">ctx</span>.<span class="ident">constants</span>[<span class="ident">h</span>].<span class="ident">ty</span>),
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Compose</span> { <span class="ident">ty</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">ty</span>),
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">FunctionParameter</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">parameter_types</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>])
+                <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">ctx</span>.<span class="ident">parameter_types</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>])
             }
-            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">GlobalVariable</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">global_vars</span>[<span class="ident">h</span>].<span class="ident">ty</span>),
-            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">LocalVariable</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">local_vars</span>[<span class="ident">h</span>].<span class="ident">ty</span>),
+            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">GlobalVariable</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">ctx</span>.<span class="ident">global_vars</span>[<span class="ident">h</span>].<span class="ident">ty</span>),
+            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">LocalVariable</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">ctx</span>.<span class="ident">local_vars</span>[<span class="ident">h</span>].<span class="ident">ty</span>),
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Load</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">ImageSample</span> { <span class="ident">image</span>, .. }
-            <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">ImageLoad</span> { <span class="ident">image</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">image_ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">types</span>[<span class="ident">image</span>.<span class="ident">index</span>()];
-                <span class="kw">match</span> <span class="ident">arena</span>[<span class="ident">image_ty</span>].<span class="ident">inner</span> {
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Image</span> {
+            <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">ImageLoad</span> { <span class="ident">image</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">image</span>, <span class="ident">types</span>) {
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Image</span> { <span class="ident">class</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">match</span> <span class="ident">class</span> {
+                    <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Depth</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> {
+                        <span class="ident">kind</span>: <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
+                        <span class="ident">width</span>: <span class="number">4</span>,
+                    },
+                    <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Sampled</span> { <span class="ident">kind</span>, <span class="ident">multi</span>: <span class="kw">_</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
                         <span class="ident">kind</span>,
-                        <span class="ident">class</span>: <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Depth</span>,
-                        ..
-                    } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span>: <span class="number">4</span> }),
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Image</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
-                            <span class="ident">kind</span>,
-                            <span class="ident">width</span>: <span class="number">4</span>,
-                            <span class="ident">size</span>: <span class="kw">crate</span>::<span class="ident">VectorSize</span>::<span class="ident">Quad</span>,
-                        })
-                    }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
-                }
-            }
-            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Unary</span> { <span class="ident">expr</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="self">self</span>.<span class="ident">types</span>[<span class="ident">expr</span>.<span class="ident">index</span>()]),
+                        <span class="ident">width</span>: <span class="number">4</span>,
+                        <span class="ident">size</span>: <span class="kw">crate</span>::<span class="ident">VectorSize</span>::<span class="ident">Quad</span>,
+                    },
+                    <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Storage</span>(<span class="ident">format</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
+                        <span class="ident">kind</span>: <span class="ident">format</span>.<span class="ident">into</span>(),
+                        <span class="ident">width</span>: <span class="number">4</span>,
+                        <span class="ident">size</span>: <span class="kw">crate</span>::<span class="ident">VectorSize</span>::<span class="ident">Quad</span>,
+                    },
+                }),
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+            },
+            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Unary</span> { <span class="ident">expr</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">expr</span>.<span class="ident">index</span>()].<span class="ident">clone</span>(),
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Binary</span> { <span class="ident">op</span>, <span class="ident">left</span>, <span class="ident">right</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">op</span> {
                 <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">Add</span>
                 <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">Subtract</span>
                 <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">Divide</span>
-                <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">Modulo</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="self">self</span>.<span class="ident">types</span>[<span class="ident">left</span>.<span class="ident">index</span>()]),
+                <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">Modulo</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">left</span>.<span class="ident">index</span>()].<span class="ident">clone</span>(),
                 <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">Multiply</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">ty_left</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">types</span>[<span class="ident">left</span>.<span class="ident">index</span>()];
-                    <span class="kw">let</span> <span class="ident">ty_right</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">types</span>[<span class="ident">right</span>.<span class="ident">index</span>()];
+                    <span class="kw">let</span> <span class="ident">ty_left</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get</span>(<span class="ident">left</span>, <span class="ident">types</span>);
+                    <span class="kw">let</span> <span class="ident">ty_right</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get</span>(<span class="ident">right</span>, <span class="ident">types</span>);
                     <span class="kw">if</span> <span class="ident">ty_left</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ty_right</span> {
-                        <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">ty_left</span>)
-                    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { .. } <span class="op">=</span> <span class="ident">arena</span>[<span class="ident">ty_right</span>].<span class="ident">inner</span> {
-                        <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">ty_left</span>)
-                    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { .. } <span class="op">=</span> <span class="ident">arena</span>[<span class="ident">ty_left</span>].<span class="ident">inner</span> {
-                        <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">ty_right</span>)
-                    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
-                        <span class="ident">columns</span>,
-                        <span class="ident">kind</span>,
-                        <span class="ident">width</span>,
-                        ..
-                    } <span class="op">=</span> <span class="ident">arena</span>[<span class="ident">ty_left</span>].<span class="ident">inner</span>
-                    {
-                        <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
-                            <span class="ident">size</span>: <span class="ident">columns</span>,
-                            <span class="ident">kind</span>,
-                            <span class="ident">width</span>,
-                        })
+                        <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">left</span>.<span class="ident">index</span>()].<span class="ident">clone</span>()
+                    } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { .. } <span class="op">=</span> <span class="kw-2">*</span><span class="ident">ty_right</span> {
+                        <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">left</span>.<span class="ident">index</span>()].<span class="ident">clone</span>()
                     } <span class="kw">else</span> {
-                        <span class="macro">panic</span><span class="macro">!</span>(
-                            <span class="string">&quot;Incompatible arguments {:?} x {:?}&quot;</span>,
-                            <span class="ident">arena</span>[<span class="ident">ty_left</span>], <span class="ident">arena</span>[<span class="ident">ty_right</span>]
-                        );
+                        <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">ty_left</span> {
+                            <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">right</span>.<span class="ident">index</span>()].<span class="ident">clone</span>()
+                            }
+                            <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
+                                <span class="ident">columns</span>,
+                                <span class="ident">rows</span>: <span class="kw">_</span>,
+                                <span class="ident">width</span>,
+                            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
+                                <span class="ident">size</span>: <span class="ident">columns</span>,
+                                <span class="ident">kind</span>: <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
+                                <span class="ident">width</span>,
+                            }),
+                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Incompatible arguments {:?} x {:?}&quot;</span>, <span class="ident">ty_left</span>, <span class="ident">ty_right</span>),
+                        }
                     }
                 }
                 <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">Equal</span>
@@ -456,129 +573,130 @@
                 <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">Greater</span>
                 <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">GreaterEqual</span>
                 <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">LogicalAnd</span>
-                <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">LogicalOr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="self">self</span>.<span class="ident">types</span>[<span class="ident">left</span>.<span class="ident">index</span>()]),
+                <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">LogicalOr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">left</span>.<span class="ident">index</span>()].<span class="ident">clone</span>(),
                 <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">And</span>
                 <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">ExclusiveOr</span>
                 <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">InclusiveOr</span>
                 <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">ShiftLeftLogical</span>
                 <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">ShiftRightLogical</span>
                 <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">ShiftRightArithmetic</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="self">self</span>.<span class="ident">types</span>[<span class="ident">left</span>.<span class="ident">index</span>()])
+                    <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">left</span>.<span class="ident">index</span>()].<span class="ident">clone</span>()
                 }
             },
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Intrinsic</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
-            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Transpose</span>(<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">ty_handle</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">types</span>[<span class="ident">expr</span>.<span class="ident">index</span>()];
-                <span class="kw">match</span> <span class="ident">arena</span>[<span class="ident">ty_handle</span>].<span class="ident">inner</span> {
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
-                        <span class="ident">columns</span>,
-                        <span class="ident">rows</span>,
-                        <span class="ident">kind</span>,
-                        <span class="ident">width</span>,
-                    } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
-                        <span class="ident">columns</span>: <span class="ident">rows</span>,
-                        <span class="ident">rows</span>: <span class="ident">columns</span>,
-                        <span class="ident">kind</span>,
-                        <span class="ident">width</span>,
-                    }),
-                    <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;incompatible transpose of {:?}&quot;</span>, <span class="ident">other</span>),
-                }
-            }
-            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">DotProduct</span>(<span class="ident">left_expr</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">left_ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">types</span>[<span class="ident">left_expr</span>.<span class="ident">index</span>()];
-                <span class="kw">match</span> <span class="ident">arena</span>[<span class="ident">left_ty</span>].<span class="ident">inner</span> {
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
-                        <span class="ident">kind</span>,
-                        <span class="ident">size</span>: <span class="kw">_</span>,
-                        <span class="ident">width</span>,
-                    } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> }),
-                    <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;incompatible dot of {:?}&quot;</span>, <span class="ident">other</span>),
-                }
-            }
+            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Transpose</span>(<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">expr</span>, <span class="ident">types</span>) {
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
+                    <span class="ident">columns</span>,
+                    <span class="ident">rows</span>,
+                    <span class="ident">width</span>,
+                } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
+                    <span class="ident">columns</span>: <span class="ident">rows</span>,
+                    <span class="ident">rows</span>: <span class="ident">columns</span>,
+                    <span class="ident">width</span>,
+                }),
+                <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;incompatible transpose of {:?}&quot;</span>, <span class="ident">other</span>),
+            },
+            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">DotProduct</span>(<span class="ident">left_expr</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">left_expr</span>, <span class="ident">types</span>) {
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
+                    <span class="ident">kind</span>,
+                    <span class="ident">size</span>: <span class="kw">_</span>,
+                    <span class="ident">width</span>,
+                } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> }),
+                <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;incompatible dot of {:?}&quot;</span>, <span class="ident">other</span>),
+            },
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">CrossProduct</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">As</span> {
                 <span class="ident">expr</span>,
                 <span class="ident">kind</span>,
                 <span class="ident">convert</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">ty_handle</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">types</span>[<span class="ident">expr</span>.<span class="ident">index</span>()];
-                <span class="kw">match</span> <span class="ident">arena</span>[<span class="ident">ty_handle</span>].<span class="ident">inner</span> {
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>: <span class="kw">_</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> })
-                    }
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
-                        <span class="ident">kind</span>: <span class="kw">_</span>,
-                        <span class="ident">size</span>,
-                        <span class="ident">width</span>,
-                    } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">kind</span>, <span class="ident">size</span>, <span class="ident">width</span> }),
-                    <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;incompatible as of {:?}&quot;</span>, <span class="ident">other</span>),
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">expr</span>, <span class="ident">types</span>) {
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>: <span class="kw">_</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> })
                 }
-            }
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
+                    <span class="ident">kind</span>: <span class="kw">_</span>,
+                    <span class="ident">size</span>,
+                    <span class="ident">width</span>,
+                } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">kind</span>, <span class="ident">size</span>, <span class="ident">width</span> }),
+                <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;incompatible as of {:?}&quot;</span>, <span class="ident">other</span>),
+            },
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Derivative</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Call</span> {
                 <span class="ident">origin</span>: <span class="kw">crate</span>::<span class="ident">FunctionOrigin</span>::<span class="ident">External</span>(<span class="kw-2">ref</span> <span class="ident">name</span>),
                 <span class="kw-2">ref</span> <span class="ident">arguments</span>,
             } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">name</span>.<span class="ident">as_str</span>() {
-                <span class="string">&quot;distance&quot;</span> <span class="op">|</span> <span class="string">&quot;length&quot;</span> <span class="op">|</span> <span class="string">&quot;dot&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">ty_handle</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">types</span>[<span class="ident">arguments</span>[<span class="number">0</span>].<span class="ident">index</span>()];
-                    <span class="kw">match</span> <span class="ident">arena</span>[<span class="ident">ty_handle</span>].<span class="ident">inner</span> {
-                        <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">kind</span>, <span class="ident">width</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> })
-                        }
-                        <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unexpected argument {:?}&quot;</span>, <span class="ident">other</span>),
+                <span class="string">&quot;distance&quot;</span> <span class="op">|</span> <span class="string">&quot;length&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">arguments</span>[<span class="number">0</span>], <span class="ident">types</span>) {
+                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">kind</span>, <span class="ident">width</span>, .. }
+                    <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> })
                     }
-                }
-                <span class="string">&quot;normalize&quot;</span> <span class="op">|</span> <span class="string">&quot;fclamp&quot;</span> <span class="op">|</span> <span class="string">&quot;max&quot;</span> <span class="op">|</span> <span class="string">&quot;reflect&quot;</span> <span class="op">|</span> <span class="string">&quot;pow&quot;</span> <span class="op">|</span> <span class="string">&quot;clamp&quot;</span> <span class="op">|</span> <span class="string">&quot;mix&quot;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="self">self</span>.<span class="ident">types</span>[<span class="ident">arguments</span>[<span class="number">0</span>].<span class="ident">index</span>()])
-                }
+                    <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unexpected argument {:?} on {}&quot;</span>, <span class="ident">other</span>, <span class="ident">name</span>),
+                },
+                <span class="string">&quot;dot&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">arguments</span>[<span class="number">0</span>], <span class="ident">types</span>) {
+                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">kind</span>, <span class="ident">width</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> })
+                    }
+                    <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unexpected argument {:?} on {}&quot;</span>, <span class="ident">other</span>, <span class="ident">name</span>),
+                },
+                <span class="comment">//Note: `cross` is here too, we still need to figure out what to do with it</span>
+                <span class="string">&quot;abs&quot;</span> <span class="op">|</span> <span class="string">&quot;atan2&quot;</span> <span class="op">|</span> <span class="string">&quot;cos&quot;</span> <span class="op">|</span> <span class="string">&quot;sin&quot;</span> <span class="op">|</span> <span class="string">&quot;floor&quot;</span> <span class="op">|</span> <span class="string">&quot;inverse&quot;</span> <span class="op">|</span> <span class="string">&quot;normalize&quot;</span> <span class="op">|</span> <span class="string">&quot;min&quot;</span>
+                <span class="op">|</span> <span class="string">&quot;max&quot;</span> <span class="op">|</span> <span class="string">&quot;reflect&quot;</span> <span class="op">|</span> <span class="string">&quot;pow&quot;</span> <span class="op">|</span> <span class="string">&quot;clamp&quot;</span> <span class="op">|</span> <span class="string">&quot;fclamp&quot;</span> <span class="op">|</span> <span class="string">&quot;mix&quot;</span> <span class="op">|</span> <span class="string">&quot;step&quot;</span>
+                <span class="op">|</span> <span class="string">&quot;smoothstep&quot;</span> <span class="op">|</span> <span class="string">&quot;cross&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">arguments</span>[<span class="number">0</span>].<span class="ident">index</span>()].<span class="ident">clone</span>(),
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">FunctionNotDefined</span> { <span class="ident">name</span>: <span class="ident">name</span>.<span class="ident">clone</span>() }),
             },
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Call</span> {
                 <span class="ident">origin</span>: <span class="kw">crate</span>::<span class="ident">FunctionOrigin</span>::<span class="ident">Local</span>(<span class="ident">handle</span>),
                 <span class="ident">arguments</span>: <span class="kw">_</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">functions</span>[<span class="ident">handle</span>]
+                <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">functions</span>[<span class="ident">handle</span>]
                     .<span class="ident">return_type</span>
                     .<span class="ident">ok_or</span>(<span class="ident">ResolveError</span>::<span class="ident">FunctionReturnsVoid</span>)<span class="question-mark">?</span>;
                 <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">ty</span>)
             }
+            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">ArrayLength</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> {
+                <span class="ident">kind</span>: <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>,
+                <span class="ident">width</span>: <span class="number">4</span>,
+            }),
         })
     }
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">too_many_arguments</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resolve</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">grow</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">expr_handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
         <span class="ident">expressions</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
-        <span class="ident">arena</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>,
-        <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Constant</span><span class="op">&gt;</span>,
-        <span class="ident">global_vars</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">GlobalVariable</span><span class="op">&gt;</span>,
-        <span class="ident">local_vars</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">LocalVariable</span><span class="op">&gt;</span>,
-        <span class="ident">functions</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Function</span><span class="op">&gt;</span>,
-        <span class="ident">parameter_types</span>: <span class="kw-2">&amp;</span>[<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>, <span class="ident">ResolveError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">types</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="ident">expr_handle</span>.<span class="ident">index</span>() {
-            <span class="kw">for</span> (<span class="ident">eh</span>, <span class="ident">expr</span>) <span class="kw">in</span> <span class="ident">expressions</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="self">self</span>.<span class="ident">types</span>.<span class="ident">len</span>()) {
-                <span class="kw">let</span> <span class="ident">resolution</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">resolve_impl</span>(
-                    <span class="ident">expr</span>,
-                    <span class="ident">arena</span>,
-                    <span class="ident">constants</span>,
-                    <span class="ident">global_vars</span>,
-                    <span class="ident">local_vars</span>,
-                    <span class="ident">functions</span>,
-                    <span class="ident">parameter_types</span>,
-                )<span class="question-mark">?</span>;
+        <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>,
+        <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">ResolveContext</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ResolveError</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">resolutions</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="ident">expr_handle</span>.<span class="ident">index</span>() {
+            <span class="kw">for</span> (<span class="ident">eh</span>, <span class="ident">expr</span>) <span class="kw">in</span> <span class="ident">expressions</span>.<span class="ident">iter</span>().<span class="ident">skip</span>(<span class="self">self</span>.<span class="ident">resolutions</span>.<span class="ident">len</span>()) {
+                <span class="kw">let</span> <span class="ident">resolution</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">resolve_impl</span>(<span class="ident">expr</span>, <span class="ident">types</span>, <span class="ident">ctx</span>)<span class="question-mark">?</span>;
                 <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Resolving {:?} = {:?} : {:?}&quot;</span>, <span class="ident">eh</span>, <span class="ident">expr</span>, <span class="ident">resolution</span>);
-                <span class="self">self</span>.<span class="ident">types</span>.<span class="ident">push</span>(<span class="kw">match</span> <span class="ident">resolution</span> {
+
+                <span class="kw">let</span> <span class="ident">ty_handle</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">resolution</span> {
                     <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">h</span>,
-                    <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">arena</span>
+                    <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">types</span>
                         .<span class="ident">fetch_if_or_append</span>(<span class="kw">crate</span>::<span class="ident">Type</span> { <span class="ident">name</span>: <span class="prelude-val">None</span>, <span class="ident">inner</span> }, <span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> {
                             <span class="ident">a</span>.<span class="ident">inner</span> <span class="op">=</span><span class="op">=</span> <span class="ident">b</span>.<span class="ident">inner</span>
                         }),
-                });
+                };
+                <span class="self">self</span>.<span class="ident">resolutions</span>.<span class="ident">push</span>(<span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">ty_handle</span>));
             }
         }
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">types</span>[<span class="ident">expr_handle</span>.<span class="ident">index</span>()])
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resolve_all</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">expressions</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
+        <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>,
+        <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="ident">ResolveContext</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ResolveError</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">clear</span>();
+        <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">expr</span>) <span class="kw">in</span> <span class="ident">expressions</span>.<span class="ident">iter</span>() {
+            <span class="kw">let</span> <span class="ident">resolution</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">resolve_impl</span>(<span class="ident">expr</span>, <span class="ident">types</span>, <span class="ident">ctx</span>)<span class="question-mark">?</span>;
+            <span class="self">self</span>.<span class="ident">resolutions</span>.<span class="ident">push</span>(<span class="ident">resolution</span>);
+        }
+        <span class="prelude-val">Ok</span>(())
     }
 }
 

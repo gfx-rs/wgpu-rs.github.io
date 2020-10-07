@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["MaybeOwned",""]],"mod":[["msl","Metal Shading Language (MSL) backend"],["spv",""]],"type":[["BorrowType",""]]});
+initSidebarItems({"mod":[["spv",""]]});

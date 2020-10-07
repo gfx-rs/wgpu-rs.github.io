@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/43adcbc/wgpu-core/src/command/bundle.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>bundle.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/8059c03/wgpu-core/src/command/bundle.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>bundle.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
@@ -1142,7 +1144,6 @@
 <span id="1141">1141</span>
 <span id="1142">1142</span>
 <span id="1143">1143</span>
-<span id="1144">1144</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1193,7 +1194,7 @@
     <span class="ident">id</span>,
     <span class="ident">resource</span>::<span class="ident">BufferUse</span>,
     <span class="ident">span</span>,
-    <span class="ident">track</span>::<span class="ident">TrackerSet</span>,
+    <span class="ident">track</span>::{<span class="ident">TrackerSet</span>, <span class="ident">UsageConflict</span>},
     <span class="ident">validation</span>::<span class="ident">check_buffer_usage</span>,
     <span class="ident">Label</span>, <span class="ident">LifeGuard</span>, <span class="ident">RefCount</span>, <span class="ident">Stored</span>, <span class="ident">MAX_BIND_GROUPS</span>,
 };
@@ -1239,7 +1240,7 @@
         <span class="ident">base</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BasePass</span><span class="op">&lt;</span><span class="ident">RenderCommand</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">CreateRenderBundleError</span><span class="op">&gt;</span> {
         <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;RenderBundleEncoder::new&quot;</span>);
-        <span class="prelude-val">Ok</span>(<span class="ident">RenderBundleEncoder</span> {
+        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
             <span class="ident">base</span>: <span class="ident">base</span>.<span class="ident">unwrap_or_else</span>(<span class="ident">BasePass</span>::<span class="ident">new</span>),
             <span class="ident">parent_id</span>,
             <span class="ident">context</span>: <span class="ident">RenderPassContext</span> {
@@ -1476,7 +1477,7 @@
 
 <span class="kw">impl</span> <span class="ident">IndexState</span> {
     <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">IndexState</span> {
+        <span class="self">Self</span> {
             <span class="ident">buffer</span>: <span class="prelude-val">None</span>,
             <span class="ident">format</span>: <span class="ident">wgt</span>::<span class="ident">IndexFormat</span>::<span class="ident">default</span>(),
             <span class="ident">range</span>: <span class="number">0</span>..<span class="number">0</span>,
@@ -1531,7 +1532,7 @@
 
 <span class="kw">impl</span> <span class="ident">VertexState</span> {
     <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">VertexState</span> {
+        <span class="self">Self</span> {
             <span class="ident">buffer</span>: <span class="prelude-val">None</span>,
             <span class="ident">range</span>: <span class="number">0</span>..<span class="number">0</span>,
             <span class="ident">stride</span>: <span class="number">0</span>,
@@ -1570,7 +1571,7 @@
 
 <span class="kw">impl</span> <span class="ident">BindState</span> {
     <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">BindState</span> {
+        <span class="self">Self</span> {
             <span class="ident">bind_group</span>: <span class="prelude-val">None</span>,
             <span class="ident">dynamic_offsets</span>: <span class="number">0</span>..<span class="number">0</span>,
             <span class="ident">is_dirty</span>: <span class="bool-val">false</span>,
@@ -1776,6 +1777,8 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">RenderCommand</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">RenderCommandError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">ResourceUsageConflict</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">UsageConflict</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">Draw</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">DrawError</span>),
 }
 
@@ -1856,7 +1859,7 @@
                         }
 
                         <span class="ident">state</span>.<span class="ident">set_bind_group</span>(<span class="ident">index</span>, <span class="ident">bind_group_id</span>, <span class="ident">bind_group</span>.<span class="ident">layout_id</span>, <span class="ident">offsets</span>);
-                        <span class="ident">state</span>.<span class="ident">trackers</span>.<span class="ident">merge_extend</span>(<span class="kw-2">&amp;</span><span class="ident">bind_group</span>.<span class="ident">used</span>);
+                        <span class="ident">state</span>.<span class="ident">trackers</span>.<span class="ident">merge_extend</span>(<span class="kw-2">&amp;</span><span class="ident">bind_group</span>.<span class="ident">used</span>)<span class="question-mark">?</span>;
                     }
                     <span class="ident">RenderCommand</span>::<span class="ident">SetPipeline</span>(<span class="ident">pipeline_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">pipeline</span> <span class="op">=</span> <span class="ident">state</span>
@@ -2075,19 +2078,16 @@
             .<span class="ident">register_identity</span>(<span class="ident">id_in</span>, <span class="ident">render_bundle</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
-        <span class="kw">match</span> <span class="ident">device</span>.<span class="ident">trace</span> {
-            <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">trace</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">device</span>::<span class="ident">trace</span>;
-                <span class="kw">let</span> (<span class="ident">bundle_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">render_bundles</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
-                <span class="kw">let</span> <span class="ident">bundle</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bundle_guard</span>[<span class="ident">id</span>];
-                <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">as_ref</span>());
-                <span class="ident">trace</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">CreateRenderBundle</span> {
-                    <span class="ident">id</span>: <span class="ident">id</span>.<span class="number">0</span>,
-                    <span class="ident">desc</span>: <span class="ident">trace</span>::<span class="ident">new_render_bundle_encoder_descriptor</span>(<span class="ident">label</span>, <span class="kw-2">&amp;</span><span class="ident">bundle</span>.<span class="ident">context</span>),
-                    <span class="ident">base</span>: <span class="ident">BasePass</span>::<span class="ident">from_ref</span>(<span class="ident">bundle</span>.<span class="ident">base</span>.<span class="ident">as_ref</span>()),
-                });
-            }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">trace</span>) <span class="op">=</span> <span class="ident">device</span>.<span class="ident">trace</span> {
+            <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">device</span>::<span class="ident">trace</span>;
+            <span class="kw">let</span> (<span class="ident">bundle_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">render_bundles</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+            <span class="kw">let</span> <span class="ident">bundle</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bundle_guard</span>[<span class="ident">id</span>];
+            <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">as_ref</span>());
+            <span class="ident">trace</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">CreateRenderBundle</span> {
+                <span class="ident">id</span>: <span class="ident">id</span>.<span class="number">0</span>,
+                <span class="ident">desc</span>: <span class="ident">trace</span>::<span class="ident">new_render_bundle_encoder_descriptor</span>(<span class="ident">label</span>, <span class="kw-2">&amp;</span><span class="ident">bundle</span>.<span class="ident">context</span>),
+                <span class="ident">base</span>: <span class="ident">BasePass</span>::<span class="ident">from_ref</span>(<span class="ident">bundle</span>.<span class="ident">base</span>.<span class="ident">as_ref</span>()),
+            });
         }
 
         <span class="ident">device</span>

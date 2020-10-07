@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-util-0.3.5/src/stream/stream/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="shortcut icon" href="../../../../favicon.ico"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../futures_util/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/futures-util-0.3.6/src/stream/stream/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
+<link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../futures_util/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
@@ -1379,13 +1381,20 @@
 <span id="1378">1378</span>
 <span id="1379">1379</span>
 <span id="1380">1380</span>
+<span id="1381">1381</span>
+<span id="1382">1382</span>
+<span id="1383">1383</span>
+<span id="1384">1384</span>
+<span id="1385">1385</span>
+<span id="1386">1386</span>
+<span id="1387">1387</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Streams</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! This module contains a number of functions for working with `Stream`s,</span>
 <span class="doccomment">//! including the `StreamExt` trait which adds methods to `Stream` types.</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">future</span>::<span class="ident">Either</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">future</span>::{<span class="ident">assert_future</span>, <span class="ident">Either</span>};
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;alloc&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">boxed</span>::<span class="ident">Box</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">pin</span>::<span class="ident">Pin</span>;
@@ -1430,7 +1439,7 @@
 <span class="kw">mod</span> <span class="ident">flatten</span>;
 
 <span class="macro">delegate_all</span><span class="macro">!</span>(
-    <span class="doccomment">/// Stream for the [`inspect`](StreamExt::inspect) method.</span>
+    <span class="doccomment">/// Stream for the [`flatten`](StreamExt::flatten) method.</span>
     <span class="ident">Flatten</span><span class="op">&lt;</span><span class="ident">St</span><span class="op">&gt;</span>(
         <span class="ident">flatten</span>::<span class="ident">Flatten</span><span class="op">&lt;</span><span class="ident">St</span>, <span class="ident">St</span>::<span class="ident">Item</span><span class="op">&gt;</span>
     ): <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Sink</span> <span class="op">+</span> <span class="ident">Stream</span> <span class="op">+</span> <span class="ident">FusedStream</span> <span class="op">+</span> <span class="ident">AccessInner</span>[<span class="ident">St</span>, (.)] <span class="op">+</span> <span class="ident">New</span>[<span class="op">|</span><span class="ident">x</span>: <span class="ident">St</span><span class="op">|</span> <span class="ident">flatten</span>::<span class="ident">Flatten</span>::<span class="ident">new</span>(<span class="ident">x</span>)]
@@ -1447,6 +1456,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sink&quot;</span>)]</span>
 <span class="macro">delegate_all</span><span class="macro">!</span>(
     <span class="doccomment">/// Future for the [`forward`](super::StreamExt::forward) method.</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sink&quot;</span>)))]</span>
     <span class="ident">Forward</span><span class="op">&lt;</span><span class="ident">St</span>, <span class="ident">Si</span><span class="op">&gt;</span>(
         <span class="ident">forward</span>::<span class="ident">Forward</span><span class="op">&lt;</span><span class="ident">St</span>, <span class="ident">Si</span>, <span class="ident">St</span>::<span class="prelude-val">Ok</span><span class="op">&gt;</span>
     ): <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Future</span> <span class="op">+</span> <span class="ident">FusedFuture</span> <span class="op">+</span> <span class="ident">New</span>[<span class="op">|</span><span class="ident">x</span>: <span class="ident">St</span>, <span class="ident">y</span>: <span class="ident">Si</span><span class="op">|</span> <span class="ident">forward</span>::<span class="ident">Forward</span>::<span class="ident">new</span>(<span class="ident">x</span>, <span class="ident">y</span>)]
@@ -1559,9 +1569,11 @@
     <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">for_each_concurrent</span>::<span class="ident">ForEachConcurrent</span>;
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sink&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sink&quot;</span>)))]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;alloc&quot;</span>)]</span>
     <span class="kw">mod</span> <span class="ident">split</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sink&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sink&quot;</span>)))]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;alloc&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unreachable_pub</span>)]</span> <span class="comment">// https://github.com/rust-lang/rust/issues/57411</span>
     <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">split</span>::{<span class="ident">SplitStream</span>, <span class="ident">SplitSink</span>, <span class="ident">ReuniteError</span>};
@@ -1572,6 +1584,7 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unreachable_pub</span>)]</span> <span class="comment">// https://github.com/rust-lang/rust/issues/57411</span>
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">catch_unwind</span>::<span class="ident">CatchUnwind</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">stream</span>::<span class="ident">assert_stream</span>;
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span> <span class="ident">StreamExt</span> <span class="kw">for</span> <span class="ident">T</span> <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">Stream</span> {}
 
@@ -1605,7 +1618,7 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Unpin</span>,
     {
-        <span class="ident">Next</span>::<span class="ident">new</span>(<span class="self">self</span>)
+        <span class="ident">assert_future</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Next</span>::<span class="ident">new</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Converts this stream into a future of `(next_item, tail_of_stream)`.</span>
@@ -1640,7 +1653,7 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Unpin</span>,
     {
-        <span class="ident">StreamFuture</span>::<span class="ident">new</span>(<span class="self">self</span>)
+        <span class="ident">assert_future</span>::<span class="op">&lt;</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span>, <span class="self">Self</span>), <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">StreamFuture</span>::<span class="ident">new</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Maps this stream&#39;s items to a different type, returning a new stream of</span>
@@ -1671,7 +1684,7 @@
         <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="self">Self</span>::<span class="ident">Item</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Map</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="ident">T</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Map</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>))
     }
 
     <span class="doccomment">/// Creates a stream which gives the current iteration count as well as</span>
@@ -1688,7 +1701,7 @@
     <span class="doccomment">/// # Overflow Behavior</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The method does no guarding against overflows, so enumerating more than</span>
-    <span class="doccomment">/// [`usize::max_value()`] elements either produces the wrong result or panics. If</span>
+    <span class="doccomment">/// [`prim@usize::max_value()`] elements either produces the wrong result or panics. If</span>
     <span class="doccomment">/// debug assertions are enabled, a panic is guaranteed.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
@@ -1716,7 +1729,7 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Enumerate</span>::<span class="ident">new</span>(<span class="self">self</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="self">Self</span>::<span class="ident">Item</span>), <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Enumerate</span>::<span class="ident">new</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Filters the values produced by this stream according to the provided</span>
@@ -1751,7 +1764,7 @@
         <span class="ident">Fut</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">bool</span><span class="op">&gt;</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Filter</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Filter</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>))
     }
 
     <span class="doccomment">/// Filters the values produced by this stream while simultaneously mapping</span>
@@ -1785,7 +1798,7 @@
         <span class="ident">Fut</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">FilterMap</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="ident">T</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">FilterMap</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>))
     }
 
     <span class="doccomment">/// Computes from this stream&#39;s items new items of a different type using</span>
@@ -1816,7 +1829,7 @@
         <span class="ident">Fut</span>: <span class="ident">Future</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Then</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="ident">Fut</span>::<span class="ident">Output</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Then</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>))
     }
 
     <span class="doccomment">/// Transforms a stream into a collection, returning a</span>
@@ -1848,7 +1861,7 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Collect</span>::<span class="ident">new</span>(<span class="self">self</span>)
+        <span class="ident">assert_future</span>::<span class="op">&lt;</span><span class="ident">C</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Collect</span>::<span class="ident">new</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Concatenate all items of a stream into a single extendable</span>
@@ -1888,7 +1901,7 @@
         <span class="self">Self</span>: <span class="ident">Sized</span>,
         <span class="self">Self</span>::<span class="ident">Item</span>: <span class="ident">Extend</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span> <span class="kw">as</span> <span class="ident">Stream</span><span class="op">&gt;</span>::<span class="ident">Item</span> <span class="kw">as</span> <span class="ident">IntoIterator</span><span class="op">&gt;</span>::<span class="ident">Item</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">IntoIterator</span> <span class="op">+</span> <span class="ident">Default</span>,
     {
-        <span class="ident">Concat</span>::<span class="ident">new</span>(<span class="self">self</span>)
+        <span class="ident">assert_future</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Concat</span>::<span class="ident">new</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Execute an accumulating asynchronous computation over a stream,</span>
@@ -1917,7 +1930,7 @@
         <span class="ident">Fut</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Fold</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>, <span class="ident">init</span>)
+        <span class="ident">assert_future</span>::<span class="op">&lt;</span><span class="ident">T</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Fold</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>, <span class="ident">init</span>))
     }
 
     <span class="doccomment">/// Flattens a stream of streams into just one continuous stream.</span>
@@ -1956,7 +1969,7 @@
         <span class="self">Self</span>::<span class="ident">Item</span>: <span class="ident">Stream</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Flatten</span>::<span class="ident">new</span>(<span class="self">self</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span> <span class="kw">as</span> <span class="ident">Stream</span><span class="op">&gt;</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Flatten</span>::<span class="ident">new</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Maps a stream like [`StreamExt::map`] but flattens nested `Stream`s.</span>
@@ -1993,7 +2006,7 @@
         <span class="ident">FlatMap</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>)
     }
 
-    <span class="doccomment">/// Combinator similar to [`StreamExt::fold`] that holds internal state </span>
+    <span class="doccomment">/// Combinator similar to [`StreamExt::fold`] that holds internal state</span>
     <span class="doccomment">/// and produces a new stream.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Accepts initial state and closure which will be applied to each element</span>
@@ -2054,7 +2067,7 @@
         <span class="ident">Fut</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">bool</span><span class="op">&gt;</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">SkipWhile</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">SkipWhile</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>))
     }
 
     <span class="doccomment">/// Take elements from this stream while the provided asynchronous predicate</span>
@@ -2084,7 +2097,7 @@
         <span class="ident">Fut</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="ident">bool</span><span class="op">&gt;</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">TakeWhile</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">TakeWhile</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>))
     }
 
     <span class="doccomment">/// Take elements from this stream until the provided future resolves.</span>
@@ -2170,7 +2183,7 @@
         <span class="ident">Fut</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> ()<span class="op">&gt;</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">ForEach</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>)
+        <span class="ident">assert_future</span>::<span class="op">&lt;</span>(), <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">ForEach</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>))
     }
 
     <span class="doccomment">/// Runs this stream to completion, executing the provided asynchronous</span>
@@ -2230,7 +2243,7 @@
         <span class="ident">Fut</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> ()<span class="op">&gt;</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">ForEachConcurrent</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">limit</span>.<span class="ident">into</span>(), <span class="ident">f</span>)
+        <span class="ident">assert_future</span>::<span class="op">&lt;</span>(), <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">ForEachConcurrent</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">limit</span>.<span class="ident">into</span>(), <span class="ident">f</span>))
     }
 
     <span class="doccomment">/// Creates a new stream of at most `n` items of the underlying stream.</span>
@@ -2253,7 +2266,7 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Take</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">n</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Take</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">n</span>))
     }
 
     <span class="doccomment">/// Creates a new stream which skips `n` items of the underlying stream.</span>
@@ -2276,7 +2289,7 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Skip</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">n</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Skip</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">n</span>))
     }
 
     <span class="doccomment">/// Fuse a stream such that [`poll_next`](Stream::poll_next) will never</span>
@@ -2322,7 +2335,7 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Fuse</span>::<span class="ident">new</span>(<span class="self">self</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Fuse</span>::<span class="ident">new</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Borrows a stream, rather than consuming it.</span>
@@ -2400,7 +2413,7 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span> <span class="op">+</span> <span class="ident">std</span>::<span class="ident">panic</span>::<span class="ident">UnwindSafe</span>,
     {
-        <span class="ident">CatchUnwind</span>::<span class="ident">new</span>(<span class="self">self</span>)
+        <span class="ident">assert_stream</span>(<span class="ident">CatchUnwind</span>::<span class="ident">new</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Wrap the stream in a Box, pinning it.</span>
@@ -2412,7 +2425,7 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;a</span>,
     {
-        <span class="ident">Box</span>::<span class="ident">pin</span>(<span class="self">self</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Box</span>::<span class="ident">pin</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Wrap the stream in a Box, pinning it.</span>
@@ -2426,7 +2439,7 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span> <span class="op">+</span> <span class="lifetime">&#39;a</span>,
     {
-        <span class="ident">Box</span>::<span class="ident">pin</span>(<span class="self">self</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Box</span>::<span class="ident">pin</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// An adaptor for creating a buffered list of pending futures.</span>
@@ -2448,7 +2461,7 @@
         <span class="self">Self</span>::<span class="ident">Item</span>: <span class="ident">Future</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Buffered</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">n</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span> <span class="kw">as</span> <span class="ident">Future</span><span class="op">&gt;</span>::<span class="ident">Output</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Buffered</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">n</span>))
     }
 
     <span class="doccomment">/// An adaptor for creating a buffered list of pending futures (unordered).</span>
@@ -2493,7 +2506,7 @@
         <span class="self">Self</span>::<span class="ident">Item</span>: <span class="ident">Future</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">BufferUnordered</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">n</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span> <span class="kw">as</span> <span class="ident">Future</span><span class="op">&gt;</span>::<span class="ident">Output</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">BufferUnordered</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">n</span>))
     }
 
     <span class="doccomment">/// An adapter for zipping two streams together.</span>
@@ -2523,7 +2536,7 @@
         <span class="ident">St</span>: <span class="ident">Stream</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Zip</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">other</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span>(<span class="self">Self</span>::<span class="ident">Item</span>, <span class="ident">St</span>::<span class="ident">Item</span>), <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Zip</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">other</span>))
     }
 
     <span class="doccomment">/// Adapter for chaining two streams.</span>
@@ -2554,7 +2567,7 @@
         <span class="ident">St</span>: <span class="ident">Stream</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Chain</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">other</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Chain</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">other</span>))
     }
 
     <span class="doccomment">/// Creates a new stream which exposes a `peek` method.</span>
@@ -2564,7 +2577,7 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Peekable</span>::<span class="ident">new</span>(<span class="self">self</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Peekable</span>::<span class="ident">new</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// An adaptor for chunking up items of the stream inside a vector.</span>
@@ -2590,7 +2603,7 @@
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Chunks</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">capacity</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="ident">alloc</span>::<span class="ident">vec</span>::<span class="ident">Vec</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Chunks</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">capacity</span>))
     }
 
     <span class="doccomment">/// An adaptor for chunking up ready items of the stream inside a vector.</span>
@@ -2630,6 +2643,7 @@
     <span class="doccomment">/// (for example, via `forward(&amp;mut sink)` inside an `async` fn/block) in</span>
     <span class="doccomment">/// order to preserve access to the `Sink`.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sink&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sink&quot;</span>)))]</span>
     <span class="kw">fn</span> <span class="ident">forward</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">sink</span>: <span class="ident">S</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Forward</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">S</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">S</span>: <span class="ident">Sink</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="prelude-val">Ok</span>, <span class="ident">Error</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span>,
@@ -2648,13 +2662,15 @@
     <span class="doccomment">/// This method is only available when the `std` or `alloc` feature of this</span>
     <span class="doccomment">/// library is activated, and it is activated by default.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sink&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">docsrs</span>, <span class="ident">doc</span>(<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;sink&quot;</span>)))]</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;cfg-target-has-atomic&quot;</span>, <span class="ident">cfg</span>(<span class="ident">target_has_atomic</span> <span class="op">=</span> <span class="string">&quot;ptr&quot;</span>))]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;alloc&quot;</span>)]</span>
     <span class="kw">fn</span> <span class="ident">split</span><span class="op">&lt;</span><span class="ident">Item</span><span class="op">&gt;</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">SplitSink</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Item</span><span class="op">&gt;</span>, <span class="ident">SplitStream</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>)
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sink</span><span class="op">&lt;</span><span class="ident">Item</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Sized</span>,
     {
-        <span class="ident">split</span>::<span class="ident">split</span>(<span class="self">self</span>)
+        <span class="kw">let</span> (<span class="ident">sink</span>, <span class="ident">stream</span>) <span class="op">=</span> <span class="ident">split</span>::<span class="ident">split</span>(<span class="self">self</span>);
+        (<span class="ident">sink</span>, <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">stream</span>))
     }
 
     <span class="doccomment">/// Do something with each item of this stream, afterwards passing it on.</span>
@@ -2667,7 +2683,7 @@
         <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Item</span>),
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Inspect</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Inspect</span>::<span class="ident">new</span>(<span class="self">self</span>, <span class="ident">f</span>))
     }
 
     <span class="doccomment">/// Wrap this stream in an `Either` stream, making it the left-hand variant</span>
@@ -2680,7 +2696,7 @@
         <span class="ident">B</span>: <span class="ident">Stream</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Either</span>::<span class="ident">Left</span>(<span class="self">self</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Either</span>::<span class="ident">Left</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// Wrap this stream in an `Either` stream, making it the right-hand variant</span>
@@ -2693,7 +2709,7 @@
         <span class="ident">B</span>: <span class="ident">Stream</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">Item</span><span class="op">&gt;</span>,
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
-        <span class="ident">Either</span>::<span class="ident">Right</span>(<span class="self">self</span>)
+        <span class="ident">assert_stream</span>::<span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Item</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="ident">Either</span>::<span class="ident">Right</span>(<span class="self">self</span>))
     }
 
     <span class="doccomment">/// A convenience method for calling [`Stream::poll_next`] on [`Unpin`]</span>
