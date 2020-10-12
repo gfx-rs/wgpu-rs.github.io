@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libloading-0.6.3/src/os/unix/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/libloading-0.6.4/src/os/unix/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../libloading/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -405,6 +405,23 @@
 <span id="402">402</span>
 <span id="403">403</span>
 <span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">// A hack for docs.rs to build documentation that has both windows and linux documentation in the</span>
 <span class="comment">// same rustdoc build visible.</span>
@@ -628,10 +645,25 @@
     <span class="doccomment">/// care about, consider using the [`Library::get_singlethreaded`] call.</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">symbol</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Symbol</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>, <span class="kw">crate</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">mtsafe_dlerror</span>)]</span>
-        { <span class="self">self</span>.<span class="ident">get_singlethreaded</span>(<span class="ident">symbol</span>) }
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">mtsafe_dlerror</span>))]</span>
-        { <span class="self">self</span>.<span class="ident">get_impl</span>(<span class="ident">symbol</span>, <span class="op">|</span><span class="op">|</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">DlSymUnknown</span>)) }
+        <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">cfg_if</span>;
+        <span class="ident">cfg_if</span>::<span class="macro">cfg_if</span><span class="macro">!</span> {
+            <span class="comment">// These targets are known to have MT-safe `dlerror`.</span>
+            <span class="kw">if</span> <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(
+                <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;linux&quot;</span>,
+                <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>,
+                <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;openbsd&quot;</span>,
+                <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>,
+                <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>,
+                <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;solaris&quot;</span>,
+                <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;illumos&quot;</span>,
+                <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;redox&quot;</span>,
+                <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;fuchsia&quot;</span>
+            ))]</span> {
+                <span class="self">self</span>.<span class="ident">get_singlethreaded</span>(<span class="ident">symbol</span>)
+            } <span class="kw">else</span> {
+                <span class="self">self</span>.<span class="ident">get_impl</span>(<span class="ident">symbol</span>, <span class="op">|</span><span class="op">|</span> <span class="prelude-val">Err</span>(<span class="kw">crate</span>::<span class="ident">Error</span>::<span class="ident">DlSymUnknown</span>))
+            }
+        }
     }
 
     <span class="doccomment">/// Get a pointer to function or static variable by symbol name.</span>
@@ -795,6 +827,8 @@
 }
 
 <span class="comment">// Platform specific things</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;linux&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>), <span class="ident">link</span>(<span class="ident">name</span><span class="op">=</span><span class="string">&quot;dl&quot;</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;freebsd&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;dragonfly&quot;</span>), <span class="ident">link</span>(<span class="ident">name</span><span class="op">=</span><span class="string">&quot;c&quot;</span>))]</span>
 <span class="kw">extern</span> {
     <span class="kw">fn</span> <span class="ident">dlopen</span>(<span class="ident">filename</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw</span>::<span class="ident">c_char</span>, <span class="ident">flags</span>: <span class="ident">raw</span>::<span class="ident">c_int</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw</span>::<span class="ident">c_void</span>;
     <span class="kw">fn</span> <span class="ident">dlclose</span>(<span class="ident">handle</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw</span>::<span class="ident">c_void</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">raw</span>::<span class="ident">c_int</span>;

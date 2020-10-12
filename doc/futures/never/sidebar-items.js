@@ -1,1 +1,1 @@
-initSidebarItems({"type":[["Never","A type with no possible values."]]});
+initSidebarItems({"type":[["Never",""]]});

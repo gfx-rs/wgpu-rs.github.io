@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/8059c03/wgpu-core/src/command/bundle.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>bundle.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/44a41dc/wgpu-core/src/command/bundle.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>bundle.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -1144,6 +1144,53 @@
 <span id="1141">1141</span>
 <span id="1142">1142</span>
 <span id="1143">1143</span>
+<span id="1144">1144</span>
+<span id="1145">1145</span>
+<span id="1146">1146</span>
+<span id="1147">1147</span>
+<span id="1148">1148</span>
+<span id="1149">1149</span>
+<span id="1150">1150</span>
+<span id="1151">1151</span>
+<span id="1152">1152</span>
+<span id="1153">1153</span>
+<span id="1154">1154</span>
+<span id="1155">1155</span>
+<span id="1156">1156</span>
+<span id="1157">1157</span>
+<span id="1158">1158</span>
+<span id="1159">1159</span>
+<span id="1160">1160</span>
+<span id="1161">1161</span>
+<span id="1162">1162</span>
+<span id="1163">1163</span>
+<span id="1164">1164</span>
+<span id="1165">1165</span>
+<span id="1166">1166</span>
+<span id="1167">1167</span>
+<span id="1168">1168</span>
+<span id="1169">1169</span>
+<span id="1170">1170</span>
+<span id="1171">1171</span>
+<span id="1172">1172</span>
+<span id="1173">1173</span>
+<span id="1174">1174</span>
+<span id="1175">1175</span>
+<span id="1176">1176</span>
+<span id="1177">1177</span>
+<span id="1178">1178</span>
+<span id="1179">1179</span>
+<span id="1180">1180</span>
+<span id="1181">1181</span>
+<span id="1182">1182</span>
+<span id="1183">1183</span>
+<span id="1184">1184</span>
+<span id="1185">1185</span>
+<span id="1186">1186</span>
+<span id="1187">1187</span>
+<span id="1188">1188</span>
+<span id="1189">1189</span>
+<span id="1190">1190</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1272,6 +1319,13 @@
     <span class="ident">InvalidSampleCount</span>(<span class="ident">u32</span>),
 }
 
+<span class="doccomment">/// Error type returned from `RenderBundleEncoder::new` if the sample count is invalid.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ExecutionError</span> {
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;buffer {0:?} is destroyed&quot;</span>)]</span>
+    <span class="ident">DestroyedBuffer</span>(<span class="ident">id</span>::<span class="ident">BufferId</span>),
+}
+
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">RenderBundleDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">RenderBundleDescriptor</span><span class="op">&lt;</span><span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
 <span class="comment">//Note: here, `RenderBundle` is just wrapping a raw stream of render commands.</span>
@@ -1298,8 +1352,9 @@
     <span class="doccomment">/// However the point of this function is to be lighter, since we already had</span>
     <span class="doccomment">/// a chance to go through the commands in `render_bundle_encoder_finish`.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Note that the function isn&#39;t expected to fail.</span>
+    <span class="doccomment">/// Note that the function isn&#39;t expected to fail, generally.</span>
     <span class="doccomment">/// All the validation has already been done by this point.</span>
+    <span class="doccomment">/// The only failure condition is if some of the used buffers are destroyed.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">execute</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">cmd_buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">B</span>::<span class="ident">CommandBuffer</span>,
@@ -1310,7 +1365,7 @@
         <span class="ident">bind_group_guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">binding_model</span>::<span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">id</span>::<span class="ident">BindGroupId</span><span class="op">&gt;</span>,
         <span class="ident">pipeline_guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">pipeline</span>::<span class="ident">RenderPipeline</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">id</span>::<span class="ident">RenderPipelineId</span><span class="op">&gt;</span>,
         <span class="ident">buffer_guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">resource</span>::<span class="ident">Buffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">id</span>::<span class="ident">BufferId</span><span class="op">&gt;</span>,
-    ) {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ExecutionError</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">CommandBuffer</span> <span class="kw">as</span> <span class="kw">_</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">offsets</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">base</span>.<span class="ident">dynamic_offsets</span>.<span class="ident">as_slice</span>();
@@ -1344,9 +1399,14 @@
                     <span class="ident">offset</span>,
                     <span class="ident">size</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">buffer_guard</span>.<span class="ident">get</span>(<span class="ident">buffer_id</span>).<span class="ident">unwrap</span>();
+                    <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">buffer</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">buffer_guard</span>
+                        .<span class="ident">get</span>(<span class="ident">buffer_id</span>)
+                        .<span class="ident">unwrap</span>()
+                        .<span class="ident">raw</span>
+                        .<span class="ident">as_ref</span>()
+                        .<span class="ident">ok_or</span>(<span class="ident">ExecutionError</span>::<span class="ident">DestroyedBuffer</span>(<span class="ident">buffer_id</span>))<span class="question-mark">?</span>;
                     <span class="kw">let</span> <span class="ident">view</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">buffer</span>::<span class="ident">IndexBufferView</span> {
-                        <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident">buffer</span>.<span class="ident">raw</span>,
+                        <span class="ident">buffer</span>,
                         <span class="ident">range</span>: <span class="ident">hal</span>::<span class="ident">buffer</span>::<span class="ident">SubRange</span> {
                             <span class="ident">offset</span>,
                             <span class="ident">size</span>: <span class="ident">size</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">get</span>()),
@@ -1362,12 +1422,17 @@
                     <span class="ident">offset</span>,
                     <span class="ident">size</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">buffer_guard</span>.<span class="ident">get</span>(<span class="ident">buffer_id</span>).<span class="ident">unwrap</span>();
+                    <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">buffer</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">buffer_guard</span>
+                        .<span class="ident">get</span>(<span class="ident">buffer_id</span>)
+                        .<span class="ident">unwrap</span>()
+                        .<span class="ident">raw</span>
+                        .<span class="ident">as_ref</span>()
+                        .<span class="ident">ok_or</span>(<span class="ident">ExecutionError</span>::<span class="ident">DestroyedBuffer</span>(<span class="ident">buffer_id</span>))<span class="question-mark">?</span>;
                     <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">buffer</span>::<span class="ident">SubRange</span> {
                         <span class="ident">offset</span>,
                         <span class="ident">size</span>: <span class="ident">size</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">get</span>()),
                     };
-                    <span class="ident">cmd_buf</span>.<span class="ident">bind_vertex_buffers</span>(<span class="ident">slot</span>, <span class="ident">iter</span>::<span class="ident">once</span>((<span class="kw-2">&amp;</span><span class="ident">buffer</span>.<span class="ident">raw</span>, <span class="ident">range</span>)));
+                    <span class="ident">cmd_buf</span>.<span class="ident">bind_vertex_buffers</span>(<span class="ident">slot</span>, <span class="ident">iter</span>::<span class="ident">once</span>((<span class="ident">buffer</span>, <span class="ident">range</span>)));
                 }
                 <span class="ident">RenderCommand</span>::<span class="ident">SetPushConstant</span> {
                     <span class="ident">stages</span>,
@@ -1379,7 +1444,8 @@
                     <span class="kw">let</span> <span class="ident">pipeline_layout</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">pipeline_layout_guard</span>[<span class="ident">pipeline_layout_id</span>];
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">values_offset</span>) <span class="op">=</span> <span class="ident">values_offset</span> {
-                        <span class="kw">let</span> <span class="ident">values_end_offset</span> <span class="op">=</span> (<span class="ident">values_offset</span> <span class="op">+</span> <span class="ident">size_bytes</span> <span class="op">/</span> <span class="number">4</span>) <span class="kw">as</span> <span class="ident">usize</span>;
+                        <span class="kw">let</span> <span class="ident">values_end_offset</span> <span class="op">=</span>
+                            (<span class="ident">values_offset</span> <span class="op">+</span> <span class="ident">size_bytes</span> <span class="op">/</span> <span class="ident">wgt</span>::<span class="ident">PUSH_CONSTANT_ALIGNMENT</span>) <span class="kw">as</span> <span class="ident">usize</span>;
                         <span class="kw">let</span> <span class="ident">data_slice</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">base</span>.<span class="ident">push_constant_data</span>
                             [(<span class="ident">values_offset</span> <span class="kw">as</span> <span class="ident">usize</span>)..<span class="ident">values_end_offset</span>];
 
@@ -1434,8 +1500,13 @@
                     <span class="ident">count</span>: <span class="prelude-val">None</span>,
                     <span class="ident">indexed</span>: <span class="bool-val">false</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">buffer_guard</span>.<span class="ident">get</span>(<span class="ident">buffer_id</span>).<span class="ident">unwrap</span>();
-                    <span class="ident">cmd_buf</span>.<span class="ident">draw_indirect</span>(<span class="kw-2">&amp;</span><span class="ident">buffer</span>.<span class="ident">raw</span>, <span class="ident">offset</span>, <span class="number">1</span>, <span class="number">0</span>);
+                    <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">buffer</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">buffer_guard</span>
+                        .<span class="ident">get</span>(<span class="ident">buffer_id</span>)
+                        .<span class="ident">unwrap</span>()
+                        .<span class="ident">raw</span>
+                        .<span class="ident">as_ref</span>()
+                        .<span class="ident">ok_or</span>(<span class="ident">ExecutionError</span>::<span class="ident">DestroyedBuffer</span>(<span class="ident">buffer_id</span>))<span class="question-mark">?</span>;
+                    <span class="ident">cmd_buf</span>.<span class="ident">draw_indirect</span>(<span class="ident">buffer</span>, <span class="ident">offset</span>, <span class="number">1</span>, <span class="number">0</span>);
                 }
                 <span class="ident">RenderCommand</span>::<span class="ident">MultiDrawIndirect</span> {
                     <span class="ident">buffer_id</span>,
@@ -1443,8 +1514,13 @@
                     <span class="ident">count</span>: <span class="prelude-val">None</span>,
                     <span class="ident">indexed</span>: <span class="bool-val">true</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">buffer_guard</span>.<span class="ident">get</span>(<span class="ident">buffer_id</span>).<span class="ident">unwrap</span>();
-                    <span class="ident">cmd_buf</span>.<span class="ident">draw_indexed_indirect</span>(<span class="kw-2">&amp;</span><span class="ident">buffer</span>.<span class="ident">raw</span>, <span class="ident">offset</span>, <span class="number">1</span>, <span class="number">0</span>);
+                    <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">buffer</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">buffer_guard</span>
+                        .<span class="ident">get</span>(<span class="ident">buffer_id</span>)
+                        .<span class="ident">unwrap</span>()
+                        .<span class="ident">raw</span>
+                        .<span class="ident">as_ref</span>()
+                        .<span class="ident">ok_or</span>(<span class="ident">ExecutionError</span>::<span class="ident">DestroyedBuffer</span>(<span class="ident">buffer_id</span>))<span class="question-mark">?</span>;
+                    <span class="ident">cmd_buf</span>.<span class="ident">draw_indexed_indirect</span>(<span class="ident">buffer</span>, <span class="ident">offset</span>, <span class="number">1</span>, <span class="number">0</span>);
                 }
                 <span class="ident">RenderCommand</span>::<span class="ident">MultiDrawIndirect</span> { .. }
                 <span class="op">|</span> <span class="ident">RenderCommand</span>::<span class="ident">MultiDrawIndirectCount</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
@@ -1458,6 +1534,8 @@
                 <span class="op">|</span> <span class="ident">RenderCommand</span>::<span class="ident">SetScissor</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
             }
         }
+
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
@@ -2182,14 +2260,30 @@
         <span class="ident">stages</span>: <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>,
         <span class="ident">offset</span>: <span class="ident">u32</span>,
         <span class="ident">size_bytes</span>: <span class="ident">u32</span>,
-        <span class="ident">data</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u32</span>,
+        <span class="ident">data</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>,
     ) {
         <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">DEBUG</span>, <span class="string">&quot;RenderBundle::set_push_constants&quot;</span>);
-        <span class="kw">let</span> <span class="ident">data_slice</span> <span class="op">=</span> <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">data</span>, (<span class="ident">size_bytes</span> <span class="op">/</span> <span class="number">4</span>) <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="macro">assert_eq</span><span class="macro">!</span>(
+            <span class="ident">offset</span> <span class="op">&amp;</span> (<span class="ident">wgt</span>::<span class="ident">PUSH_CONSTANT_ALIGNMENT</span> <span class="op">-</span> <span class="number">1</span>),
+            <span class="number">0</span>,
+            <span class="string">&quot;Push constant offset must be aligned to 4 bytes.&quot;</span>
+        );
+        <span class="macro">assert_eq</span><span class="macro">!</span>(
+            <span class="ident">size_bytes</span> <span class="op">&amp;</span> (<span class="ident">wgt</span>::<span class="ident">PUSH_CONSTANT_ALIGNMENT</span> <span class="op">-</span> <span class="number">1</span>),
+            <span class="number">0</span>,
+            <span class="string">&quot;Push constant size must be aligned to 4 bytes.&quot;</span>
+        );
+        <span class="kw">let</span> <span class="ident">data_slice</span> <span class="op">=</span> <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">data</span>, <span class="ident">size_bytes</span> <span class="kw">as</span> <span class="ident">usize</span>);
         <span class="kw">let</span> <span class="ident">value_offset</span> <span class="op">=</span> <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">push_constant_data</span>.<span class="ident">len</span>().<span class="ident">try_into</span>().<span class="ident">expect</span>(
             <span class="string">&quot;Ran out of push constant space. Don&#39;t set 4gb of push constants per RenderBundle.&quot;</span>,
         );
-        <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">push_constant_data</span>.<span class="ident">extend_from_slice</span>(<span class="ident">data_slice</span>);
+
+        <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">push_constant_data</span>.<span class="ident">extend</span>(
+            <span class="ident">data_slice</span>
+                .<span class="ident">chunks_exact</span>(<span class="ident">wgt</span>::<span class="ident">PUSH_CONSTANT_ALIGNMENT</span> <span class="kw">as</span> <span class="ident">usize</span>)
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">arr</span><span class="op">|</span> <span class="ident">u32</span>::<span class="ident">from_ne_bytes</span>([<span class="ident">arr</span>[<span class="number">0</span>], <span class="ident">arr</span>[<span class="number">1</span>], <span class="ident">arr</span>[<span class="number">2</span>], <span class="ident">arr</span>[<span class="number">3</span>]])),
+        );
+
         <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">RenderCommand</span>::<span class="ident">SetPushConstant</span> {
             <span class="ident">stages</span>,
             <span class="ident">offset</span>,

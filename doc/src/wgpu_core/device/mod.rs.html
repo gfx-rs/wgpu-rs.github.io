@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/8059c03/wgpu-core/src/device/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/44a41dc/wgpu-core/src/device/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -3787,6 +3787,161 @@
 <span id="3784">3784</span>
 <span id="3785">3785</span>
 <span id="3786">3786</span>
+<span id="3787">3787</span>
+<span id="3788">3788</span>
+<span id="3789">3789</span>
+<span id="3790">3790</span>
+<span id="3791">3791</span>
+<span id="3792">3792</span>
+<span id="3793">3793</span>
+<span id="3794">3794</span>
+<span id="3795">3795</span>
+<span id="3796">3796</span>
+<span id="3797">3797</span>
+<span id="3798">3798</span>
+<span id="3799">3799</span>
+<span id="3800">3800</span>
+<span id="3801">3801</span>
+<span id="3802">3802</span>
+<span id="3803">3803</span>
+<span id="3804">3804</span>
+<span id="3805">3805</span>
+<span id="3806">3806</span>
+<span id="3807">3807</span>
+<span id="3808">3808</span>
+<span id="3809">3809</span>
+<span id="3810">3810</span>
+<span id="3811">3811</span>
+<span id="3812">3812</span>
+<span id="3813">3813</span>
+<span id="3814">3814</span>
+<span id="3815">3815</span>
+<span id="3816">3816</span>
+<span id="3817">3817</span>
+<span id="3818">3818</span>
+<span id="3819">3819</span>
+<span id="3820">3820</span>
+<span id="3821">3821</span>
+<span id="3822">3822</span>
+<span id="3823">3823</span>
+<span id="3824">3824</span>
+<span id="3825">3825</span>
+<span id="3826">3826</span>
+<span id="3827">3827</span>
+<span id="3828">3828</span>
+<span id="3829">3829</span>
+<span id="3830">3830</span>
+<span id="3831">3831</span>
+<span id="3832">3832</span>
+<span id="3833">3833</span>
+<span id="3834">3834</span>
+<span id="3835">3835</span>
+<span id="3836">3836</span>
+<span id="3837">3837</span>
+<span id="3838">3838</span>
+<span id="3839">3839</span>
+<span id="3840">3840</span>
+<span id="3841">3841</span>
+<span id="3842">3842</span>
+<span id="3843">3843</span>
+<span id="3844">3844</span>
+<span id="3845">3845</span>
+<span id="3846">3846</span>
+<span id="3847">3847</span>
+<span id="3848">3848</span>
+<span id="3849">3849</span>
+<span id="3850">3850</span>
+<span id="3851">3851</span>
+<span id="3852">3852</span>
+<span id="3853">3853</span>
+<span id="3854">3854</span>
+<span id="3855">3855</span>
+<span id="3856">3856</span>
+<span id="3857">3857</span>
+<span id="3858">3858</span>
+<span id="3859">3859</span>
+<span id="3860">3860</span>
+<span id="3861">3861</span>
+<span id="3862">3862</span>
+<span id="3863">3863</span>
+<span id="3864">3864</span>
+<span id="3865">3865</span>
+<span id="3866">3866</span>
+<span id="3867">3867</span>
+<span id="3868">3868</span>
+<span id="3869">3869</span>
+<span id="3870">3870</span>
+<span id="3871">3871</span>
+<span id="3872">3872</span>
+<span id="3873">3873</span>
+<span id="3874">3874</span>
+<span id="3875">3875</span>
+<span id="3876">3876</span>
+<span id="3877">3877</span>
+<span id="3878">3878</span>
+<span id="3879">3879</span>
+<span id="3880">3880</span>
+<span id="3881">3881</span>
+<span id="3882">3882</span>
+<span id="3883">3883</span>
+<span id="3884">3884</span>
+<span id="3885">3885</span>
+<span id="3886">3886</span>
+<span id="3887">3887</span>
+<span id="3888">3888</span>
+<span id="3889">3889</span>
+<span id="3890">3890</span>
+<span id="3891">3891</span>
+<span id="3892">3892</span>
+<span id="3893">3893</span>
+<span id="3894">3894</span>
+<span id="3895">3895</span>
+<span id="3896">3896</span>
+<span id="3897">3897</span>
+<span id="3898">3898</span>
+<span id="3899">3899</span>
+<span id="3900">3900</span>
+<span id="3901">3901</span>
+<span id="3902">3902</span>
+<span id="3903">3903</span>
+<span id="3904">3904</span>
+<span id="3905">3905</span>
+<span id="3906">3906</span>
+<span id="3907">3907</span>
+<span id="3908">3908</span>
+<span id="3909">3909</span>
+<span id="3910">3910</span>
+<span id="3911">3911</span>
+<span id="3912">3912</span>
+<span id="3913">3913</span>
+<span id="3914">3914</span>
+<span id="3915">3915</span>
+<span id="3916">3916</span>
+<span id="3917">3917</span>
+<span id="3918">3918</span>
+<span id="3919">3919</span>
+<span id="3920">3920</span>
+<span id="3921">3921</span>
+<span id="3922">3922</span>
+<span id="3923">3923</span>
+<span id="3924">3924</span>
+<span id="3925">3925</span>
+<span id="3926">3926</span>
+<span id="3927">3927</span>
+<span id="3928">3928</span>
+<span id="3929">3929</span>
+<span id="3930">3930</span>
+<span id="3931">3931</span>
+<span id="3932">3932</span>
+<span id="3933">3933</span>
+<span id="3934">3934</span>
+<span id="3935">3935</span>
+<span id="3936">3936</span>
+<span id="3937">3937</span>
+<span id="3938">3938</span>
+<span id="3939">3939</span>
+<span id="3940">3940</span>
+<span id="3941">3941</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -3954,12 +4109,16 @@
     <span class="ident">sub_range</span>: <span class="ident">hal</span>::<span class="ident">buffer</span>::<span class="ident">SubRange</span>,
     <span class="ident">kind</span>: <span class="ident">HostMap</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ptr</span>::<span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">resource</span>::<span class="ident">BufferAccessError</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> (<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">memory</span>) <span class="op">=</span> <span class="ident">buffer</span>
+        .<span class="ident">raw</span>
+        .<span class="ident">as_mut</span>()
+        .<span class="ident">ok_or</span>(<span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">Destroyed</span>)<span class="question-mark">?</span>;
     <span class="kw">let</span> (<span class="ident">ptr</span>, <span class="ident">segment</span>, <span class="ident">needs_sync</span>) <span class="op">=</span> {
         <span class="kw">let</span> <span class="ident">segment</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">memory</span>::<span class="ident">Segment</span> {
             <span class="ident">offset</span>: <span class="ident">sub_range</span>.<span class="ident">offset</span>,
             <span class="ident">size</span>: <span class="ident">sub_range</span>.<span class="ident">size</span>,
         };
-        <span class="kw">let</span> <span class="ident">mapped</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">memory</span>.<span class="ident">map</span>(<span class="ident">raw</span>, <span class="ident">segment</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">mapped</span> <span class="op">=</span> <span class="ident">memory</span>.<span class="ident">map</span>(<span class="ident">raw</span>, <span class="ident">segment</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">mr</span> <span class="op">=</span> <span class="ident">mapped</span>.<span class="ident">range</span>();
         <span class="kw">let</span> <span class="ident">segment</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">memory</span>::<span class="ident">Segment</span> {
             <span class="ident">offset</span>: <span class="ident">mr</span>.<span class="ident">start</span>,
@@ -3970,7 +4129,7 @@
 
     <span class="ident">buffer</span>.<span class="ident">sync_mapped_writes</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">kind</span> {
         <span class="ident">HostMap</span>::<span class="ident">Read</span> <span class="kw">if</span> <span class="ident">needs_sync</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> {
-            <span class="ident">raw</span>.<span class="ident">invalidate_mapped_memory_ranges</span>(<span class="ident">iter</span>::<span class="ident">once</span>((<span class="ident">buffer</span>.<span class="ident">memory</span>.<span class="ident">memory</span>(), <span class="ident">segment</span>)))
+            <span class="ident">raw</span>.<span class="ident">invalidate_mapped_memory_ranges</span>(<span class="ident">iter</span>::<span class="ident">once</span>((<span class="ident">memory</span>.<span class="ident">memory</span>(), <span class="ident">segment</span>)))
                 .<span class="ident">or</span>(<span class="prelude-val">Err</span>(<span class="ident">DeviceError</span>::<span class="ident">OutOfMemory</span>))<span class="question-mark">?</span>;
             <span class="prelude-val">None</span>
         },
@@ -3984,9 +4143,13 @@
     <span class="ident">raw</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>::<span class="ident">Device</span>,
     <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">resource</span>::<span class="ident">Buffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">resource</span>::<span class="ident">BufferAccessError</span><span class="op">&gt;</span> {
+    <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="ident">memory</span>) <span class="op">=</span> <span class="ident">buffer</span>
+        .<span class="ident">raw</span>
+        .<span class="ident">as_ref</span>()
+        .<span class="ident">ok_or</span>(<span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">Destroyed</span>)<span class="question-mark">?</span>;
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">segment</span>) <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">sync_mapped_writes</span>.<span class="ident">take</span>() {
         <span class="kw">unsafe</span> {
-            <span class="ident">raw</span>.<span class="ident">flush_mapped_memory_ranges</span>(<span class="ident">iter</span>::<span class="ident">once</span>((<span class="ident">buffer</span>.<span class="ident">memory</span>.<span class="ident">memory</span>(), <span class="ident">segment</span>)))
+            <span class="ident">raw</span>.<span class="ident">flush_mapped_memory_ranges</span>(<span class="ident">iter</span>::<span class="ident">once</span>((<span class="ident">memory</span>.<span class="ident">memory</span>(), <span class="ident">segment</span>)))
                 .<span class="ident">or</span>(<span class="prelude-val">Err</span>(<span class="ident">DeviceError</span>::<span class="ident">OutOfMemory</span>))<span class="question-mark">?</span>;
         }
     }
@@ -4271,13 +4434,12 @@
         .<span class="ident">map_err</span>(<span class="ident">DeviceError</span>::<span class="ident">from_bind</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="ident">resource</span>::<span class="ident">Buffer</span> {
-            <span class="ident">raw</span>: <span class="ident">buffer</span>,
+            <span class="ident">raw</span>: <span class="prelude-val">Some</span>((<span class="ident">buffer</span>, <span class="ident">memory</span>)),
             <span class="ident">device_id</span>: <span class="ident">Stored</span> {
                 <span class="ident">value</span>: <span class="ident">id</span>::<span class="ident">Valid</span>(<span class="ident">self_id</span>),
                 <span class="ident">ref_count</span>: <span class="self">self</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>(),
             },
             <span class="ident">usage</span>: <span class="ident">desc</span>.<span class="ident">usage</span>,
-            <span class="ident">memory</span>,
             <span class="ident">size</span>: <span class="ident">desc</span>.<span class="ident">size</span>,
             <span class="ident">full_range</span>: (),
             <span class="ident">sync_mapped_writes</span>: <span class="prelude-val">None</span>,
@@ -4369,7 +4531,7 @@
         .<span class="ident">map_err</span>(<span class="ident">DeviceError</span>::<span class="ident">from_bind</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="ident">resource</span>::<span class="ident">Texture</span> {
-            <span class="ident">raw</span>: <span class="ident">image</span>,
+            <span class="ident">raw</span>: <span class="prelude-val">Some</span>((<span class="ident">image</span>, <span class="ident">memory</span>)),
             <span class="ident">device_id</span>: <span class="ident">Stored</span> {
                 <span class="ident">value</span>: <span class="ident">id</span>::<span class="ident">Valid</span>(<span class="ident">self_id</span>),
                 <span class="ident">ref_count</span>: <span class="self">self</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>(),
@@ -4383,7 +4545,6 @@
                 <span class="ident">levels</span>: <span class="number">0</span>..<span class="ident">desc</span>.<span class="ident">mip_level_count</span> <span class="kw">as</span> <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Level</span>,
                 <span class="ident">layers</span>: <span class="number">0</span>..<span class="ident">kind</span>.<span class="ident">num_layers</span>(),
             },
-            <span class="ident">memory</span>,
             <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>::<span class="ident">new</span>(),
         })
     }
@@ -4662,16 +4823,20 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">destroy_buffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buffer</span>: <span class="ident">resource</span>::<span class="ident">Buffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>) {
-        <span class="kw">unsafe</span> {
-            <span class="self">self</span>.<span class="ident">mem_allocator</span>.<span class="ident">lock</span>().<span class="ident">free</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>, <span class="ident">buffer</span>.<span class="ident">memory</span>);
-            <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">destroy_buffer</span>(<span class="ident">buffer</span>.<span class="ident">raw</span>);
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">raw</span>, <span class="ident">memory</span>)) <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">raw</span> {
+            <span class="kw">unsafe</span> {
+                <span class="self">self</span>.<span class="ident">mem_allocator</span>.<span class="ident">lock</span>().<span class="ident">free</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>, <span class="ident">memory</span>);
+                <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">destroy_buffer</span>(<span class="ident">raw</span>);
+            }
         }
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">destroy_texture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">texture</span>: <span class="ident">resource</span>::<span class="ident">Texture</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>) {
-        <span class="kw">unsafe</span> {
-            <span class="self">self</span>.<span class="ident">mem_allocator</span>.<span class="ident">lock</span>().<span class="ident">free</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>, <span class="ident">texture</span>.<span class="ident">memory</span>);
-            <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">destroy_image</span>(<span class="ident">texture</span>.<span class="ident">raw</span>);
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">raw</span>, <span class="ident">memory</span>)) <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">raw</span> {
+            <span class="kw">unsafe</span> {
+                <span class="self">self</span>.<span class="ident">mem_allocator</span>.<span class="ident">lock</span>().<span class="ident">free</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>, <span class="ident">memory</span>);
+                <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">destroy_image</span>(<span class="ident">raw</span>);
+            }
         }
     }
 
@@ -4822,7 +4987,7 @@
             <span class="ident">resource</span>::<span class="ident">BufferUse</span>::<span class="ident">MAP_WRITE</span>
         } <span class="kw">else</span> {
             <span class="comment">// buffer needs staging area for initialization only</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stage</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">create_buffer</span>(
+            <span class="kw">let</span> <span class="ident">stage</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">create_buffer</span>(
                 <span class="ident">device_id</span>,
                 <span class="kw-2">&amp;</span><span class="ident">wgt</span>::<span class="ident">BufferDescriptor</span> {
                     <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="ident">Cow</span>::<span class="ident">Borrowed</span>(<span class="string">&quot;&lt;init_buffer&gt;&quot;</span>)),
@@ -4832,15 +4997,15 @@
                 },
                 <span class="ident">gfx_memory</span>::<span class="ident">Kind</span>::<span class="ident">Linear</span>,
             )<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">mapped</span> <span class="op">=</span> <span class="ident">stage</span>
-                .<span class="ident">memory</span>
+            <span class="kw">let</span> (<span class="ident">stage_buffer</span>, <span class="kw-2">mut</span> <span class="ident">stage_memory</span>) <span class="op">=</span> <span class="ident">stage</span>.<span class="ident">raw</span>.<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">mapped</span> <span class="op">=</span> <span class="ident">stage_memory</span>
                 .<span class="ident">map</span>(<span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">raw</span>, <span class="ident">hal</span>::<span class="ident">memory</span>::<span class="ident">Segment</span>::<span class="ident">ALL</span>)
                 .<span class="ident">map_err</span>(<span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">from</span>)<span class="question-mark">?</span>;
             <span class="ident">buffer</span>.<span class="ident">map_state</span> <span class="op">=</span> <span class="ident">resource</span>::<span class="ident">BufferMapState</span>::<span class="ident">Init</span> {
                 <span class="ident">ptr</span>: <span class="ident">mapped</span>.<span class="ident">ptr</span>(),
                 <span class="ident">needs_flush</span>: <span class="op">!</span><span class="ident">mapped</span>.<span class="ident">is_coherent</span>(),
-                <span class="ident">stage_buffer</span>: <span class="ident">stage</span>.<span class="ident">raw</span>,
-                <span class="ident">stage_memory</span>: <span class="ident">stage</span>.<span class="ident">memory</span>,
+                <span class="ident">stage_buffer</span>,
+                <span class="ident">stage_memory</span>,
             };
             <span class="ident">resource</span>::<span class="ident">BufferUse</span>::<span class="ident">COPY_DST</span>
         };
@@ -4908,7 +5073,7 @@
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">DeviceError</span>::<span class="ident">Invalid</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">buffer_guard</span>
             .<span class="ident">get_mut</span>(<span class="ident">buffer_id</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">InvalidBuffer</span>)<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">Invalid</span>)<span class="question-mark">?</span>;
         <span class="ident">check_buffer_usage</span>(<span class="ident">buffer</span>.<span class="ident">usage</span>, <span class="ident">wgt</span>::<span class="ident">BufferUsage</span>::<span class="ident">MAP_WRITE</span>)<span class="question-mark">?</span>;
         <span class="comment">//assert!(buffer isn&#39;t used by the GPU);</span>
 
@@ -4962,7 +5127,7 @@
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">DeviceError</span>::<span class="ident">Invalid</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">buffer_guard</span>
             .<span class="ident">get_mut</span>(<span class="ident">buffer_id</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">InvalidBuffer</span>)<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">Invalid</span>)<span class="question-mark">?</span>;
         <span class="ident">check_buffer_usage</span>(<span class="ident">buffer</span>.<span class="ident">usage</span>, <span class="ident">wgt</span>::<span class="ident">BufferUsage</span>::<span class="ident">MAP_READ</span>)<span class="question-mark">?</span>;
         <span class="comment">//assert!(buffer isn&#39;t used by the GPU);</span>
 
@@ -4991,7 +5156,53 @@
             .<span class="ident">register_error</span>(<span class="ident">id_in</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Token</span>::<span class="ident">root</span>())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">buffer_drop</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buffer_id</span>: <span class="ident">id</span>::<span class="ident">BufferId</span>, <span class="ident">now</span>: <span class="ident">bool</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">buffer_destroy</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">buffer_id</span>: <span class="ident">id</span>::<span class="ident">BufferId</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">resource</span>::<span class="ident">DestroyError</span><span class="op">&gt;</span> {
+        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Buffer::destroy&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
+
+        <span class="comment">//TODO: lock pending writes separately, keep the device read-only</span>
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+
+        <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Buffer {:?} is destroyed&quot;</span>, <span class="ident">buffer_id</span>);
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">buffer_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+        <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">buffer_guard</span>
+            .<span class="ident">get_mut</span>(<span class="ident">buffer_id</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">resource</span>::<span class="ident">DestroyError</span>::<span class="ident">Invalid</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">device_guard</span>[<span class="ident">buffer</span>.<span class="ident">device_id</span>.<span class="ident">value</span>];
+
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">trace</span>) <span class="op">=</span> <span class="ident">device</span>.<span class="ident">trace</span> {
+            <span class="ident">trace</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">FreeBuffer</span>(<span class="ident">buffer_id</span>));
+        }
+
+        <span class="kw">let</span> (<span class="ident">raw</span>, <span class="ident">memory</span>) <span class="op">=</span> <span class="ident">buffer</span>
+            .<span class="ident">raw</span>
+            .<span class="ident">take</span>()
+            .<span class="ident">ok_or</span>(<span class="ident">resource</span>::<span class="ident">DestroyError</span>::<span class="ident">AlreadyDestroyed</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">temp</span> <span class="op">=</span> <span class="ident">queue</span>::<span class="ident">TempResource</span>::<span class="ident">Buffer</span>(<span class="ident">raw</span>);
+
+        <span class="kw">if</span> <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">dst_buffers</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">buffer_id</span>) {
+            <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">temp_resources</span>.<span class="ident">push</span>((<span class="ident">temp</span>, <span class="ident">memory</span>));
+        } <span class="kw">else</span> {
+            <span class="kw">let</span> <span class="ident">last_submit_index</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
+            <span class="ident">drop</span>(<span class="ident">buffer_guard</span>);
+            <span class="ident">device</span>.<span class="ident">lock_life</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>).<span class="ident">schedule_resource_destruction</span>(
+                <span class="ident">temp</span>,
+                <span class="ident">memory</span>,
+                <span class="ident">last_submit_index</span>,
+            );
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">buffer_drop</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buffer_id</span>: <span class="ident">id</span>::<span class="ident">BufferId</span>, <span class="ident">wait</span>: <span class="ident">bool</span>) {
         <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Buffer::drop&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
@@ -5016,25 +5227,26 @@
 
         <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">device_guard</span>[<span class="ident">device_id</span>];
-        <span class="kw">if</span> <span class="ident">now</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">life_lock</span> <span class="op">=</span> <span class="ident">device_guard</span>[<span class="ident">device_id</span>].<span class="ident">lock_life</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+
+        <span class="kw">if</span> <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">dst_buffers</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">buffer_id</span>) {
+            <span class="ident">life_lock</span>.<span class="ident">future_suspected_buffers</span>.<span class="ident">push</span>(<span class="ident">Stored</span> {
+                <span class="ident">value</span>: <span class="ident">id</span>::<span class="ident">Valid</span>(<span class="ident">buffer_id</span>),
+                <span class="ident">ref_count</span>,
+            });
+        } <span class="kw">else</span> {
             <span class="ident">drop</span>(<span class="ident">ref_count</span>);
-            <span class="ident">device</span>
-                .<span class="ident">lock_life</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>)
+            <span class="ident">life_lock</span>
                 .<span class="ident">suspected_resources</span>
                 .<span class="ident">buffers</span>
                 .<span class="ident">push</span>(<span class="ident">id</span>::<span class="ident">Valid</span>(<span class="ident">buffer_id</span>));
+        }
+
+        <span class="kw">if</span> <span class="ident">wait</span> {
             <span class="kw">match</span> <span class="ident">device</span>.<span class="ident">wait_for_submit</span>(<span class="ident">last_submit_index</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>) {
                 <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> (),
                 <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Failed to wait for buffer {:?}: {:?}&quot;</span>, <span class="ident">buffer_id</span>, <span class="ident">e</span>),
             }
-        } <span class="kw">else</span> {
-            <span class="ident">device</span>
-                .<span class="ident">lock_life</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>)
-                .<span class="ident">future_suspected_buffers</span>
-                .<span class="ident">push</span>(<span class="ident">Stored</span> {
-                    <span class="ident">value</span>: <span class="ident">id</span>::<span class="ident">Valid</span>(<span class="ident">buffer_id</span>),
-                    <span class="ident">ref_count</span>,
-                });
         }
     }
 
@@ -5091,19 +5303,67 @@
             .<span class="ident">register_error</span>(<span class="ident">id_in</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Token</span>::<span class="ident">root</span>())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">texture_drop</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">texture_id</span>: <span class="ident">id</span>::<span class="ident">TextureId</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">texture_destroy</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">texture_id</span>: <span class="ident">id</span>::<span class="ident">TextureId</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">resource</span>::<span class="ident">DestroyError</span><span class="op">&gt;</span> {
+        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Texture::destroy&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
+
+        <span class="comment">//TODO: lock pending writes separately, keep the device read-only</span>
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+
+        <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Buffer {:?} is destroyed&quot;</span>, <span class="ident">texture_id</span>);
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">texture_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+        <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="ident">texture_guard</span>
+            .<span class="ident">get_mut</span>(<span class="ident">texture_id</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">resource</span>::<span class="ident">DestroyError</span>::<span class="ident">Invalid</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">device_guard</span>[<span class="ident">texture</span>.<span class="ident">device_id</span>.<span class="ident">value</span>];
+
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">trace</span>) <span class="op">=</span> <span class="ident">device</span>.<span class="ident">trace</span> {
+            <span class="ident">trace</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">FreeTexture</span>(<span class="ident">texture_id</span>));
+        }
+
+        <span class="kw">let</span> (<span class="ident">raw</span>, <span class="ident">memory</span>) <span class="op">=</span> <span class="ident">texture</span>
+            .<span class="ident">raw</span>
+            .<span class="ident">take</span>()
+            .<span class="ident">ok_or</span>(<span class="ident">resource</span>::<span class="ident">DestroyError</span>::<span class="ident">AlreadyDestroyed</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">temp</span> <span class="op">=</span> <span class="ident">queue</span>::<span class="ident">TempResource</span>::<span class="ident">Image</span>(<span class="ident">raw</span>);
+
+        <span class="kw">if</span> <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">dst_textures</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">texture_id</span>) {
+            <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">temp_resources</span>.<span class="ident">push</span>((<span class="ident">temp</span>, <span class="ident">memory</span>));
+        } <span class="kw">else</span> {
+            <span class="kw">let</span> <span class="ident">last_submit_index</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
+            <span class="ident">drop</span>(<span class="ident">texture_guard</span>);
+            <span class="ident">device</span>.<span class="ident">lock_life</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>).<span class="ident">schedule_resource_destruction</span>(
+                <span class="ident">temp</span>,
+                <span class="ident">memory</span>,
+                <span class="ident">last_submit_index</span>,
+            );
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">texture_drop</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">texture_id</span>: <span class="ident">id</span>::<span class="ident">TextureId</span>, <span class="ident">wait</span>: <span class="ident">bool</span>) {
         <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Texture::drop&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
 
-        <span class="kw">let</span> (<span class="ident">ref_count</span>, <span class="ident">device_id</span>) <span class="op">=</span> {
+        <span class="kw">let</span> (<span class="ident">ref_count</span>, <span class="ident">last_submit_index</span>, <span class="ident">device_id</span>) <span class="op">=</span> {
             <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">texture_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
             <span class="kw">match</span> <span class="ident">texture_guard</span>.<span class="ident">get_mut</span>(<span class="ident">texture_id</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">texture</span>) <span class="op">=</span><span class="op">&gt;</span> (
-                    <span class="ident">texture</span>.<span class="ident">life_guard</span>.<span class="ident">ref_count</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>(),
-                    <span class="ident">texture</span>.<span class="ident">device_id</span>.<span class="ident">value</span>,
-                ),
+                <span class="prelude-val">Ok</span>(<span class="ident">texture</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">ref_count</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">life_guard</span>.<span class="ident">ref_count</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>();
+                    <span class="kw">let</span> <span class="ident">last_submit_index</span> <span class="op">=</span>
+                        <span class="ident">texture</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
+                    (<span class="ident">ref_count</span>, <span class="ident">last_submit_index</span>, <span class="ident">texture</span>.<span class="ident">device_id</span>.<span class="ident">value</span>)
+                }
                 <span class="prelude-val">Err</span>(<span class="ident">InvalidId</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">hub</span>.<span class="ident">textures</span>
                         .<span class="ident">unregister_locked</span>(<span class="ident">texture_id</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">texture_guard</span>);
@@ -5113,13 +5373,28 @@
         };
 
         <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
-        <span class="ident">device_guard</span>[<span class="ident">device_id</span>]
-            .<span class="ident">lock_life</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>)
-            .<span class="ident">future_suspected_textures</span>
-            .<span class="ident">push</span>(<span class="ident">Stored</span> {
+        <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">device_guard</span>[<span class="ident">device_id</span>];
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">life_lock</span> <span class="op">=</span> <span class="ident">device_guard</span>[<span class="ident">device_id</span>].<span class="ident">lock_life</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+
+        <span class="kw">if</span> <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">dst_textures</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">texture_id</span>) {
+            <span class="ident">life_lock</span>.<span class="ident">future_suspected_textures</span>.<span class="ident">push</span>(<span class="ident">Stored</span> {
                 <span class="ident">value</span>: <span class="ident">id</span>::<span class="ident">Valid</span>(<span class="ident">texture_id</span>),
                 <span class="ident">ref_count</span>,
             });
+        } <span class="kw">else</span> {
+            <span class="ident">drop</span>(<span class="ident">ref_count</span>);
+            <span class="ident">life_lock</span>
+                .<span class="ident">suspected_resources</span>
+                .<span class="ident">textures</span>
+                .<span class="ident">push</span>(<span class="ident">id</span>::<span class="ident">Valid</span>(<span class="ident">texture_id</span>));
+        }
+
+        <span class="kw">if</span> <span class="ident">wait</span> {
+            <span class="kw">match</span> <span class="ident">device</span>.<span class="ident">wait_for_submit</span>(<span class="ident">last_submit_index</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>) {
+                <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> (),
+                <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Failed to wait for texture {:?}: {:?}&quot;</span>, <span class="ident">texture_id</span>, <span class="ident">e</span>),
+            }
+        }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">texture_create_view</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
@@ -5138,6 +5413,10 @@
         <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="ident">texture_guard</span>
             .<span class="ident">get</span>(<span class="ident">texture_id</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">resource</span>::<span class="ident">CreateTextureViewError</span>::<span class="ident">InvalidTexture</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">texture_raw</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">texture</span>
+            .<span class="ident">raw</span>
+            .<span class="ident">as_ref</span>()
+            .<span class="ident">ok_or</span>(<span class="ident">resource</span>::<span class="ident">CreateTextureViewError</span>::<span class="ident">InvalidTexture</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">device_guard</span>[<span class="ident">texture</span>.<span class="ident">device_id</span>.<span class="ident">value</span>];
 
         <span class="kw">let</span> <span class="ident">view_kind</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">dimension</span> {
@@ -5194,7 +5473,7 @@
             <span class="ident">device</span>
                 .<span class="ident">raw</span>
                 .<span class="ident">create_image_view</span>(
-                    <span class="kw-2">&amp;</span><span class="ident">texture</span>.<span class="ident">raw</span>,
+                    <span class="ident">texture_raw</span>,
                     <span class="ident">view_kind</span>,
                     <span class="ident">conv</span>::<span class="ident">map_texture_format</span>(<span class="ident">format</span>, <span class="ident">device</span>.<span class="ident">private_features</span>),
                     <span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Swizzle</span>::<span class="ident">NO</span>,
@@ -5796,8 +6075,13 @@
                         <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">used</span>
                             .<span class="ident">buffers</span>
                             .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">bb</span>.<span class="ident">buffer_id</span>, (), <span class="ident">internal_use</span>)
-                            .<span class="ident">unwrap</span>();
+                            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">CreateBindGroupError</span>::<span class="ident">InvalidBuffer</span>(<span class="ident">bb</span>.<span class="ident">buffer_id</span>))<span class="question-mark">?</span>;
                         <span class="ident">check_buffer_usage</span>(<span class="ident">buffer</span>.<span class="ident">usage</span>, <span class="ident">pub_usage</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">buffer_raw</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">buffer</span>
+                            .<span class="ident">raw</span>
+                            .<span class="ident">as_ref</span>()
+                            .<span class="ident">ok_or</span>(<span class="ident">CreateBindGroupError</span>::<span class="ident">InvalidBuffer</span>(<span class="ident">bb</span>.<span class="ident">buffer_id</span>))<span class="question-mark">?</span>;
+
                         <span class="kw">let</span> (<span class="ident">bind_size</span>, <span class="ident">bind_end</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">bb</span>.<span class="ident">size</span> {
                             <span class="prelude-val">Some</span>(<span class="ident">size</span>) <span class="op">=</span><span class="op">&gt;</span> {
                                 <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">bb</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">size</span>.<span class="ident">get</span>();
@@ -5839,7 +6123,7 @@
                             <span class="ident">offset</span>: <span class="ident">bb</span>.<span class="ident">offset</span>,
                             <span class="ident">size</span>: <span class="prelude-val">Some</span>(<span class="ident">bind_size</span>),
                         };
-                        <span class="ident">SmallVec</span>::<span class="ident">from</span>([<span class="ident">hal</span>::<span class="ident">pso</span>::<span class="ident">Descriptor</span>::<span class="ident">Buffer</span>(<span class="kw-2">&amp;</span><span class="ident">buffer</span>.<span class="ident">raw</span>, <span class="ident">sub_range</span>)])
+                        <span class="ident">SmallVec</span>::<span class="ident">from</span>([<span class="ident">hal</span>::<span class="ident">pso</span>::<span class="ident">Descriptor</span>::<span class="ident">Buffer</span>(<span class="ident">buffer_raw</span>, <span class="ident">sub_range</span>)])
                     }
                     <span class="ident">Br</span>::<span class="ident">Sampler</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">match</span> <span class="ident">decl</span>.<span class="ident">ty</span> {
@@ -5847,7 +6131,7 @@
                                 <span class="kw">let</span> <span class="ident">sampler</span> <span class="op">=</span> <span class="ident">used</span>
                                     .<span class="ident">samplers</span>
                                     .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">sampler_guard</span>, <span class="ident">id</span>, (), ())
-                                    .<span class="ident">unwrap</span>();
+                                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">CreateBindGroupError</span>::<span class="ident">InvalidSampler</span>(<span class="ident">id</span>))<span class="question-mark">?</span>;
 
                                 <span class="comment">// Check the actual sampler to also (not) be a comparison sampler</span>
                                 <span class="kw">if</span> <span class="ident">sampler</span>.<span class="ident">comparison</span> <span class="op">!</span><span class="op">=</span> <span class="ident">comparison</span> {
@@ -5869,7 +6153,7 @@
                         <span class="kw">let</span> <span class="ident">view</span> <span class="op">=</span> <span class="ident">used</span>
                             .<span class="ident">views</span>
                             .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_view_guard</span>, <span class="ident">id</span>, (), ())
-                            .<span class="ident">unwrap</span>();
+                            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">CreateBindGroupError</span>::<span class="ident">InvalidTextureView</span>(<span class="ident">id</span>))<span class="question-mark">?</span>;
                         <span class="kw">let</span> (<span class="ident">pub_usage</span>, <span class="ident">internal_use</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">decl</span>.<span class="ident">ty</span> {
                             <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">SampledTexture</span> { .. } <span class="op">=</span><span class="op">&gt;</span> (
                                 <span class="ident">wgt</span>::<span class="ident">TextureUsage</span>::<span class="ident">SAMPLED</span>,
@@ -5958,7 +6242,7 @@
                                 <span class="kw">let</span> <span class="ident">view</span> <span class="op">=</span> <span class="ident">used</span>
                                     .<span class="ident">views</span>
                                     .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_view_guard</span>, <span class="ident">id</span>, (), ())
-                                    .<span class="ident">unwrap</span>();
+                                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">CreateBindGroupError</span>::<span class="ident">InvalidTextureView</span>(<span class="ident">id</span>))<span class="question-mark">?</span>;
                                 <span class="kw">match</span> <span class="ident">view</span>.<span class="ident">inner</span> {
                                     <span class="ident">resource</span>::<span class="ident">TextureViewInner</span>::<span class="ident">Native</span> {
                                         <span class="kw-2">ref</span> <span class="ident">raw</span>,
@@ -6016,19 +6300,40 @@
                 }
             }
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">start_binding</span>) <span class="op">=</span> <span class="ident">write_map</span>.<span class="ident">keys</span>().<span class="ident">next</span>().<span class="ident">cloned</span>() {
-                <span class="kw">let</span> <span class="ident">descriptors</span> <span class="op">=</span> <span class="ident">write_map</span>
-                    .<span class="ident">into_iter</span>()
-                    .<span class="ident">flat_map</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">list</span>)<span class="op">|</span> <span class="ident">list</span>)
-                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-                <span class="kw">let</span> <span class="ident">write</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">pso</span>::<span class="ident">DescriptorSetWrite</span> {
-                    <span class="ident">set</span>: <span class="ident">desc_set</span>.<span class="ident">raw</span>(),
-                    <span class="ident">binding</span>: <span class="ident">start_binding</span>,
-                    <span class="ident">array_offset</span>: <span class="number">0</span>,
-                    <span class="ident">descriptors</span>,
-                };
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">write_map</span>.<span class="ident">is_empty</span>() {
+                <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">PartialEq</span>)]</span>
+                <span class="kw">enum</span> <span class="ident">DescriptorType</span> {
+                    <span class="ident">Buffer</span>,
+                    <span class="ident">Sampler</span>,
+                    <span class="ident">TextureView</span>,
+                }
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">writes</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">hal</span>::<span class="ident">pso</span>::<span class="ident">DescriptorSetWrite</span><span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="kw">_</span>; <span class="number">1</span>]<span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">new</span>();
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prev_stages</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>::<span class="ident">empty</span>();
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prev_ty</span> <span class="op">=</span> <span class="ident">DescriptorType</span>::<span class="ident">Buffer</span>;
+                <span class="kw">for</span> (<span class="ident">binding</span>, <span class="ident">list</span>) <span class="kw">in</span> <span class="ident">write_map</span> {
+                    <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bind_group_layout</span>.<span class="ident">entries</span>[<span class="kw-2">&amp;</span><span class="ident">binding</span>];
+                    <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">layout</span>.<span class="ident">ty</span> {
+                        <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">UniformBuffer</span> { .. }
+                        <span class="op">|</span> <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">StorageBuffer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DescriptorType</span>::<span class="ident">Buffer</span>,
+                        <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">Sampler</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DescriptorType</span>::<span class="ident">Sampler</span>,
+                        <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">SampledTexture</span> { .. }
+                        <span class="op">|</span> <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">StorageTexture</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DescriptorType</span>::<span class="ident">TextureView</span>,
+                    };
+                    <span class="kw">if</span> <span class="ident">layout</span>.<span class="ident">visibility</span> <span class="op">=</span><span class="op">=</span> <span class="ident">prev_stages</span> <span class="op">&amp;&amp;</span> <span class="ident">ty</span> <span class="op">=</span><span class="op">=</span> <span class="ident">prev_ty</span> {
+                        <span class="ident">writes</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>().<span class="ident">descriptors</span>.<span class="ident">extend</span>(<span class="ident">list</span>);
+                    } <span class="kw">else</span> {
+                        <span class="ident">prev_stages</span> <span class="op">=</span> <span class="ident">layout</span>.<span class="ident">visibility</span>;
+                        <span class="ident">prev_ty</span> <span class="op">=</span> <span class="ident">ty</span>;
+                        <span class="ident">writes</span>.<span class="ident">push</span>(<span class="ident">hal</span>::<span class="ident">pso</span>::<span class="ident">DescriptorSetWrite</span> {
+                            <span class="ident">set</span>: <span class="ident">desc_set</span>.<span class="ident">raw</span>(),
+                            <span class="ident">binding</span>,
+                            <span class="ident">array_offset</span>: <span class="number">0</span>,
+                            <span class="ident">descriptors</span>: <span class="ident">list</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>(),
+                        });
+                    }
+                }
                 <span class="kw">unsafe</span> {
-                    <span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">write_descriptor_sets</span>(<span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">write</span>));
+                    <span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">write_descriptor_sets</span>(<span class="ident">writes</span>);
                 }
             }
             <span class="ident">desc_set</span>
@@ -7388,7 +7693,7 @@
             <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">buffer_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
             <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">buffer_guard</span>
                 .<span class="ident">get_mut</span>(<span class="ident">buffer_id</span>)
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">InvalidBuffer</span>)<span class="question-mark">?</span>;
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">Invalid</span>)<span class="question-mark">?</span>;
 
             <span class="ident">check_buffer_usage</span>(<span class="ident">buffer</span>.<span class="ident">usage</span>, <span class="ident">pub_usage</span>)<span class="question-mark">?</span>;
             <span class="ident">buffer</span>.<span class="ident">map_state</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">buffer</span>.<span class="ident">map_state</span> {
@@ -7443,7 +7748,7 @@
         <span class="kw">let</span> (<span class="ident">buffer_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">buffer_guard</span>
             .<span class="ident">get</span>(<span class="ident">buffer_id</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">InvalidBuffer</span>)<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">Invalid</span>)<span class="question-mark">?</span>;
 
         <span class="kw">match</span> <span class="ident">buffer</span>.<span class="ident">map_state</span> {
             <span class="ident">resource</span>::<span class="ident">BufferMapState</span>::<span class="ident">Init</span> { <span class="ident">ptr</span>, .. }
@@ -7469,7 +7774,7 @@
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">buffer_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">buffer_guard</span>
             .<span class="ident">get_mut</span>(<span class="ident">buffer_id</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">InvalidBuffer</span>)<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">Invalid</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">device_guard</span>[<span class="ident">buffer</span>.<span class="ident">device_id</span>.<span class="ident">value</span>];
 
         <span class="ident">tracing</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Buffer {:?} map state -&gt; Idle&quot;</span>, <span class="ident">buffer_id</span>);
@@ -7509,6 +7814,11 @@
                     };
                 }
 
+                <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">buf_raw</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">buffer</span>
+                    .<span class="ident">raw</span>
+                    .<span class="ident">as_ref</span>()
+                    .<span class="ident">ok_or</span>(<span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">Destroyed</span>)<span class="question-mark">?</span>;
+
                 <span class="ident">buffer</span>.<span class="ident">life_guard</span>.<span class="ident">use_at</span>(<span class="ident">device</span>.<span class="ident">active_submission_index</span> <span class="op">+</span> <span class="number">1</span>);
                 <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">BufferCopy</span> {
                     <span class="ident">src</span>: <span class="number">0</span>,
@@ -7523,7 +7833,7 @@
                 };
                 <span class="kw">let</span> <span class="ident">transition_dst</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">memory</span>::<span class="ident">Barrier</span>::<span class="ident">Buffer</span> {
                     <span class="ident">states</span>: <span class="ident">hal</span>::<span class="ident">buffer</span>::<span class="ident">Access</span>::<span class="ident">empty</span>()..<span class="ident">hal</span>::<span class="ident">buffer</span>::<span class="ident">Access</span>::<span class="ident">TRANSFER_WRITE</span>,
-                    <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="ident">buffer</span>.<span class="ident">raw</span>,
+                    <span class="ident">target</span>: <span class="ident">buf_raw</span>,
                     <span class="ident">range</span>: <span class="ident">hal</span>::<span class="ident">buffer</span>::<span class="ident">SubRange</span>::<span class="ident">WHOLE</span>,
                     <span class="ident">families</span>: <span class="prelude-val">None</span>,
                 };
@@ -7535,12 +7845,12 @@
                         <span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">transition_src</span>).<span class="ident">chain</span>(<span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">transition_dst</span>)),
                     );
                     <span class="kw">if</span> <span class="ident">buffer</span>.<span class="ident">size</span> <span class="op">&gt;</span> <span class="number">0</span> {
-                        <span class="ident">cmdbuf</span>.<span class="ident">copy_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">stage_buffer</span>, <span class="kw-2">&amp;</span><span class="ident">buffer</span>.<span class="ident">raw</span>, <span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">region</span>));
+                        <span class="ident">cmdbuf</span>.<span class="ident">copy_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">stage_buffer</span>, <span class="ident">buf_raw</span>, <span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">region</span>));
                     }
                 }
                 <span class="ident">device</span>
                     .<span class="ident">pending_writes</span>
-                    .<span class="ident">consume_temp</span>(<span class="ident">stage_buffer</span>, <span class="ident">stage_memory</span>);
+                    .<span class="ident">consume_temp</span>(<span class="ident">queue</span>::<span class="ident">TempResource</span>::<span class="ident">Buffer</span>(<span class="ident">stage_buffer</span>), <span class="ident">stage_memory</span>);
             }
             <span class="ident">resource</span>::<span class="ident">BufferMapState</span>::<span class="ident">Idle</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">resource</span>::<span class="ident">BufferAccessError</span>::<span class="ident">NotMapped</span>);

@@ -57,6 +57,7 @@ sourcesIndex["syn"] = {"name":"","dirs":[{"name":"gen","files":["clone.rs","debu
 sourcesIndex["thiserror"] = {"name":"","files":["aserror.rs","display.rs","lib.rs"]};
 sourcesIndex["thiserror_impl"] = {"name":"","files":["ast.rs","attr.rs","expand.rs","fmt.rs","lib.rs","prop.rs","valid.rs"]};
 sourcesIndex["tracing"] = {"name":"","files":["dispatcher.rs","field.rs","instrument.rs","level_filters.rs","lib.rs","macros.rs","span.rs","stdlib.rs","subscriber.rs"]};
+sourcesIndex["tracing_attributes"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["tracing_core"] = {"name":"","files":["callsite.rs","dispatcher.rs","event.rs","field.rs","lib.rs","metadata.rs","parent.rs","span.rs","stdlib.rs","subscriber.rs"]};
 sourcesIndex["typed_arena"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["unicode_xid"] = {"name":"","files":["lib.rs","tables.rs"]};
