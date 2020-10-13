@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Empty",""],["Vulkan",""]]});
+initSidebarItems({"enum":[["Empty","Dummy backend."],["Vulkan",""]]});
