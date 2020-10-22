@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source to the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/gfx-backend-vulkan-0.6.3/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs.html -- source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/gfx-backend-vulkan-0.6.5/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_vulkan/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -2434,6 +2434,22 @@
 <span id="2431">2431</span>
 <span id="2432">2432</span>
 <span id="2433">2433</span>
+<span id="2434">2434</span>
+<span id="2435">2435</span>
+<span id="2436">2436</span>
+<span id="2437">2437</span>
+<span id="2438">2438</span>
+<span id="2439">2439</span>
+<span id="2440">2440</span>
+<span id="2441">2441</span>
+<span id="2442">2442</span>
+<span id="2443">2443</span>
+<span id="2444">2444</span>
+<span id="2445">2445</span>
+<span id="2446">2446</span>
+<span id="2447">2447</span>
+<span id="2448">2448</span>
+<span id="2449">2449</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">arrayvec</span>::<span class="ident">ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">ash</span>::<span class="ident">extensions</span>::<span class="ident">khr</span>;
@@ -4066,12 +4082,12 @@
         <span class="kw">let</span> <span class="ident">immutable_samplers</span> <span class="op">=</span> <span class="ident">immutable_sampler_iter</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">is</span><span class="op">|</span> <span class="ident">is</span>.<span class="ident">borrow</span>().<span class="number">0</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sampler_offset</span> <span class="op">=</span> <span class="number">0</span>;
 
-        <span class="kw">let</span> <span class="ident">bindings</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(
-            <span class="ident">binding_iter</span>
-                .<span class="ident">into_iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">borrow</span>().<span class="ident">clone</span>())
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
-        );
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bindings</span> <span class="op">=</span> <span class="ident">binding_iter</span>
+            .<span class="ident">into_iter</span>()
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">borrow</span>().<span class="ident">clone</span>())
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+        <span class="comment">// Sorting will come handy in `write_descriptor_sets`.</span>
+        <span class="ident">bindings</span>.<span class="ident">sort_by_key</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">binding</span>);
 
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_it</span>::<span class="ident">inplace_or_alloc_array</span>(<span class="ident">immutable_samplers</span>.<span class="ident">len</span>(), <span class="op">|</span><span class="ident">uninit_guard</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">immutable_samplers</span> <span class="op">=</span> <span class="ident">uninit_guard</span>.<span class="ident">init_with_iter</span>(<span class="ident">immutable_samplers</span>);
@@ -4111,7 +4127,7 @@
         <span class="kw">match</span> <span class="ident">result</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">layout</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">DescriptorSetLayout</span> {
                 <span class="ident">raw</span>: <span class="ident">layout</span>,
-                <span class="ident">bindings</span>,
+                <span class="ident">bindings</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">bindings</span>),
             }),
             <span class="prelude-val">Err</span>(<span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_OUT_OF_HOST_MEMORY</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">OutOfMemory</span>::<span class="ident">Host</span>.<span class="ident">into</span>()),
             <span class="prelude-val">Err</span>(<span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_OUT_OF_DEVICE_MEMORY</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">OutOfMemory</span>::<span class="ident">Device</span>.<span class="ident">into</span>()),
@@ -4125,33 +4141,56 @@
         <span class="ident">J</span>: <span class="ident">IntoIterator</span>,
         <span class="ident">J</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">pso</span>::<span class="ident">Descriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">raw_writes</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">raw_writes</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">vk</span>::<span class="ident">WriteDescriptorSet</span><span class="op">&gt;</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">image_infos</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer_infos</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">texel_buffer_views</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
 
         <span class="kw">for</span> <span class="ident">sw</span> <span class="kw">in</span> <span class="ident">write_iter</span> {
-            <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">sw</span>
+            <span class="comment">// gfx-hal allows the type and stages to be different between the descriptor</span>
+            <span class="comment">// in a single write, while Vulkan requires them to be the same.</span>
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_type</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">DescriptorType</span>::<span class="ident">SAMPLER</span>;
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_stages</span> <span class="op">=</span> <span class="ident">pso</span>::<span class="ident">ShaderStageFlags</span>::<span class="ident">empty</span>();
+
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">binding_pos</span> <span class="op">=</span> <span class="ident">sw</span>
                 .<span class="ident">set</span>
                 .<span class="ident">bindings</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">find</span>(<span class="op">|</span><span class="ident">lb</span><span class="op">|</span> <span class="ident">lb</span>.<span class="ident">binding</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sw</span>.<span class="ident">binding</span>)
+                .<span class="ident">binary_search_by_key</span>(<span class="kw-2">&amp;</span><span class="ident">sw</span>.<span class="ident">binding</span>, <span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">binding</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;Descriptor set writes don&#39;t match the set layout!&quot;</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">WriteDescriptorSet</span> {
-                <span class="ident">s_type</span>: <span class="ident">vk</span>::<span class="ident">StructureType</span>::<span class="ident">WRITE_DESCRIPTOR_SET</span>,
-                <span class="ident">p_next</span>: <span class="ident">ptr</span>::<span class="ident">null</span>(),
-                <span class="ident">dst_set</span>: <span class="ident">sw</span>.<span class="ident">set</span>.<span class="ident">raw</span>,
-                <span class="ident">dst_binding</span>: <span class="ident">sw</span>.<span class="ident">binding</span>,
-                <span class="ident">dst_array_element</span>: <span class="ident">sw</span>.<span class="ident">array_offset</span> <span class="kw">as</span> <span class="kw">_</span>,
-                <span class="ident">descriptor_count</span>: <span class="number">0</span>,
-                <span class="ident">descriptor_type</span>: <span class="ident">conv</span>::<span class="ident">map_descriptor_type</span>(<span class="ident">layout</span>.<span class="ident">ty</span>),
-                <span class="ident">p_image_info</span>: <span class="ident">ptr</span>::<span class="ident">null</span>(),
-                <span class="ident">p_buffer_info</span>: <span class="ident">ptr</span>::<span class="ident">null</span>(),
-                <span class="ident">p_texel_buffer_view</span>: <span class="ident">ptr</span>::<span class="ident">null</span>(),
-            };
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">array_offset</span> <span class="op">=</span> <span class="ident">sw</span>.<span class="ident">array_offset</span>;
 
             <span class="kw">for</span> <span class="ident">descriptor</span> <span class="kw">in</span> <span class="ident">sw</span>.<span class="ident">descriptors</span> {
-                <span class="ident">raw</span>.<span class="ident">descriptor_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                <span class="kw">let</span> <span class="ident">layout_binding</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">sw</span>.<span class="ident">set</span>.<span class="ident">bindings</span>[<span class="ident">binding_pos</span>];
+                <span class="ident">array_offset</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                <span class="kw">if</span> <span class="ident">array_offset</span> <span class="op">=</span><span class="op">=</span> <span class="ident">layout_binding</span>.<span class="ident">count</span> {
+                    <span class="ident">array_offset</span> <span class="op">=</span> <span class="number">0</span>;
+                    <span class="ident">binding_pos</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                }
+
+                <span class="kw">let</span> <span class="ident">descriptor_type</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">map_descriptor_type</span>(<span class="ident">layout_binding</span>.<span class="ident">ty</span>);
+                <span class="kw">if</span> <span class="ident">descriptor_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">last_type</span> <span class="op">&amp;&amp;</span> <span class="ident">layout_binding</span>.<span class="ident">stage_flags</span> <span class="op">=</span><span class="op">=</span> <span class="ident">last_stages</span> {
+                    <span class="ident">raw_writes</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>().<span class="ident">descriptor_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                } <span class="kw">else</span> {
+                    <span class="ident">last_type</span> <span class="op">=</span> <span class="ident">descriptor_type</span>;
+                    <span class="ident">last_stages</span> <span class="op">=</span> <span class="ident">layout_binding</span>.<span class="ident">stage_flags</span>;
+                    <span class="ident">raw_writes</span>.<span class="ident">push</span>(<span class="ident">vk</span>::<span class="ident">WriteDescriptorSet</span> {
+                        <span class="ident">s_type</span>: <span class="ident">vk</span>::<span class="ident">StructureType</span>::<span class="ident">WRITE_DESCRIPTOR_SET</span>,
+                        <span class="ident">p_next</span>: <span class="ident">ptr</span>::<span class="ident">null</span>(),
+                        <span class="ident">dst_set</span>: <span class="ident">sw</span>.<span class="ident">set</span>.<span class="ident">raw</span>,
+                        <span class="ident">dst_binding</span>: <span class="ident">layout_binding</span>.<span class="ident">binding</span>,
+                        <span class="ident">dst_array_element</span>: <span class="kw">if</span> <span class="ident">layout_binding</span>.<span class="ident">binding</span> <span class="op">=</span><span class="op">=</span> <span class="ident">sw</span>.<span class="ident">binding</span> {
+                            <span class="ident">sw</span>.<span class="ident">array_offset</span> <span class="kw">as</span> <span class="kw">_</span>
+                        } <span class="kw">else</span> {
+                            <span class="number">0</span>
+                        },
+                        <span class="ident">descriptor_count</span>: <span class="number">1</span>,
+                        <span class="ident">descriptor_type</span>,
+                        <span class="ident">p_image_info</span>: <span class="ident">image_infos</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
+                        <span class="ident">p_buffer_info</span>: <span class="ident">buffer_infos</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
+                        <span class="ident">p_texel_buffer_view</span>: <span class="ident">texel_buffer_views</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
+                    });
+                }
+
                 <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">descriptor</span>.<span class="ident">borrow</span>() {
                     <span class="ident">pso</span>::<span class="ident">Descriptor</span>::<span class="ident">Sampler</span>(<span class="ident">sampler</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">image_infos</span>.<span class="ident">push</span>(<span class="ident">vk</span>::<span class="ident">DescriptorImageInfo</span> {
@@ -4186,14 +4225,9 @@
                     }
                 }
             }
-
-            <span class="ident">raw</span>.<span class="ident">p_image_info</span> <span class="op">=</span> <span class="ident">image_infos</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
-            <span class="ident">raw</span>.<span class="ident">p_buffer_info</span> <span class="op">=</span> <span class="ident">buffer_infos</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
-            <span class="ident">raw</span>.<span class="ident">p_texel_buffer_view</span> <span class="op">=</span> <span class="ident">texel_buffer_views</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
-            <span class="ident">raw_writes</span>.<span class="ident">push</span>(<span class="ident">raw</span>);
         }
 
-        <span class="comment">// Patch the pointers now that we have all the storage allocated</span>
+        <span class="comment">// Patch the pointers now that we have all the storage allocated.</span>
         <span class="kw">for</span> <span class="ident">raw</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">raw_writes</span> {
             <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vk</span>::<span class="ident">DescriptorType</span> <span class="kw">as</span> <span class="ident">Dt</span>;
             <span class="kw">match</span> <span class="ident">raw</span>.<span class="ident">descriptor_type</span> {
@@ -4204,14 +4238,13 @@
                 <span class="op">|</span> <span class="ident">Dt</span>::<span class="ident">INPUT_ATTACHMENT</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">raw</span>.<span class="ident">p_buffer_info</span> <span class="op">=</span> <span class="ident">ptr</span>::<span class="ident">null</span>();
                     <span class="ident">raw</span>.<span class="ident">p_texel_buffer_view</span> <span class="op">=</span> <span class="ident">ptr</span>::<span class="ident">null</span>();
-                    <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">raw</span>.<span class="ident">p_image_info</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">-</span> <span class="ident">raw</span>.<span class="ident">descriptor_count</span> <span class="kw">as</span> <span class="ident">usize</span>;
-                    <span class="ident">raw</span>.<span class="ident">p_image_info</span> <span class="op">=</span> <span class="ident">image_infos</span>[<span class="ident">base</span>..].<span class="ident">as_ptr</span>();
+                    <span class="ident">raw</span>.<span class="ident">p_image_info</span> <span class="op">=</span> <span class="ident">image_infos</span>[<span class="ident">raw</span>.<span class="ident">p_image_info</span> <span class="kw">as</span> <span class="ident">usize</span>..].<span class="ident">as_ptr</span>();
                 }
                 <span class="ident">Dt</span>::<span class="ident">UNIFORM_TEXEL_BUFFER</span> <span class="op">|</span> <span class="ident">Dt</span>::<span class="ident">STORAGE_TEXEL_BUFFER</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">raw</span>.<span class="ident">p_buffer_info</span> <span class="op">=</span> <span class="ident">ptr</span>::<span class="ident">null</span>();
                     <span class="ident">raw</span>.<span class="ident">p_image_info</span> <span class="op">=</span> <span class="ident">ptr</span>::<span class="ident">null</span>();
-                    <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">raw</span>.<span class="ident">p_texel_buffer_view</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">-</span> <span class="ident">raw</span>.<span class="ident">descriptor_count</span> <span class="kw">as</span> <span class="ident">usize</span>;
-                    <span class="ident">raw</span>.<span class="ident">p_texel_buffer_view</span> <span class="op">=</span> <span class="ident">texel_buffer_views</span>[<span class="ident">base</span>..].<span class="ident">as_ptr</span>();
+                    <span class="ident">raw</span>.<span class="ident">p_texel_buffer_view</span> <span class="op">=</span>
+                        <span class="ident">texel_buffer_views</span>[<span class="ident">raw</span>.<span class="ident">p_texel_buffer_view</span> <span class="kw">as</span> <span class="ident">usize</span>..].<span class="ident">as_ptr</span>();
                 }
                 <span class="ident">Dt</span>::<span class="ident">UNIFORM_BUFFER</span>
                 <span class="op">|</span> <span class="ident">Dt</span>::<span class="ident">STORAGE_BUFFER</span>
@@ -4219,8 +4252,7 @@
                 <span class="op">|</span> <span class="ident">Dt</span>::<span class="ident">UNIFORM_BUFFER_DYNAMIC</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">raw</span>.<span class="ident">p_image_info</span> <span class="op">=</span> <span class="ident">ptr</span>::<span class="ident">null</span>();
                     <span class="ident">raw</span>.<span class="ident">p_texel_buffer_view</span> <span class="op">=</span> <span class="ident">ptr</span>::<span class="ident">null</span>();
-                    <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">raw</span>.<span class="ident">p_buffer_info</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">-</span> <span class="ident">raw</span>.<span class="ident">descriptor_count</span> <span class="kw">as</span> <span class="ident">usize</span>;
-                    <span class="ident">raw</span>.<span class="ident">p_buffer_info</span> <span class="op">=</span> <span class="ident">buffer_infos</span>[<span class="ident">base</span>..].<span class="ident">as_ptr</span>();
+                    <span class="ident">raw</span>.<span class="ident">p_buffer_info</span> <span class="op">=</span> <span class="ident">buffer_infos</span>[<span class="ident">raw</span>.<span class="ident">p_buffer_info</span> <span class="kw">as</span> <span class="ident">usize</span>..].<span class="ident">as_ptr</span>();
                 }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;unknown descriptor type&quot;</span>),
             }
