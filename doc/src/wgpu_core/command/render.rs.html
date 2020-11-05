@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/7ac706f/wgpu-core/src/command/render.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>render.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/99ff41b/wgpu-core/src/command/render.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>render.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -1973,6 +1973,31 @@
 <span id="1970">1970</span>
 <span id="1971">1971</span>
 <span id="1972">1972</span>
+<span id="1973">1973</span>
+<span id="1974">1974</span>
+<span id="1975">1975</span>
+<span id="1976">1976</span>
+<span id="1977">1977</span>
+<span id="1978">1978</span>
+<span id="1979">1979</span>
+<span id="1980">1980</span>
+<span id="1981">1981</span>
+<span id="1982">1982</span>
+<span id="1983">1983</span>
+<span id="1984">1984</span>
+<span id="1985">1985</span>
+<span id="1986">1986</span>
+<span id="1987">1987</span>
+<span id="1988">1988</span>
+<span id="1989">1989</span>
+<span id="1990">1990</span>
+<span id="1991">1991</span>
+<span id="1992">1992</span>
+<span id="1993">1993</span>
+<span id="1994">1994</span>
+<span id="1995">1995</span>
+<span id="1996">1996</span>
+<span id="1997">1997</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1983,7 +2008,7 @@
     <span class="ident">command</span>::{
         <span class="ident">bind</span>::{<span class="ident">Binder</span>, <span class="ident">LayoutChange</span>},
         <span class="ident">BasePass</span>, <span class="ident">BasePassRef</span>, <span class="ident">CommandBuffer</span>, <span class="ident">CommandEncoderError</span>, <span class="ident">DrawError</span>, <span class="ident">ExecutionError</span>,
-        <span class="ident">RenderCommand</span>, <span class="ident">RenderCommandError</span>,
+        <span class="ident">RenderCommand</span>, <span class="ident">RenderCommandError</span>, <span class="ident">StateChange</span>,
     },
     <span class="ident">conv</span>,
     <span class="ident">device</span>::{
@@ -2139,6 +2164,15 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parent_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">id</span>::<span class="ident">CommandEncoderId</span> {
         <span class="self">self</span>.<span class="ident">parent_id</span>
     }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_command</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">device</span>::<span class="ident">trace</span>::<span class="ident">Command</span> {
+        <span class="kw">crate</span>::<span class="ident">device</span>::<span class="ident">trace</span>::<span class="ident">Command</span>::<span class="ident">RunRenderPass</span> {
+            <span class="ident">base</span>: <span class="self">self</span>.<span class="ident">base</span>,
+            <span class="ident">target_colors</span>: <span class="self">self</span>.<span class="ident">color_targets</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>(),
+            <span class="ident">target_depth_stencil</span>: <span class="self">self</span>.<span class="ident">depth_stencil_target</span>,
+        }
+    }
 }
 
 <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">RenderPass</span> {
@@ -2245,10 +2279,11 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">State</span> {
+    <span class="ident">pipeline_flags</span>: <span class="ident">PipelineFlags</span>,
     <span class="ident">binder</span>: <span class="ident">Binder</span>,
     <span class="ident">blend_color</span>: <span class="ident">OptionalState</span>,
-    <span class="ident">stencil_reference</span>: <span class="ident">OptionalState</span>,
-    <span class="ident">pipeline</span>: <span class="ident">OptionalState</span>,
+    <span class="ident">stencil_reference</span>: <span class="ident">u32</span>,
+    <span class="ident">pipeline</span>: <span class="ident">StateChange</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">RenderPipelineId</span><span class="op">&gt;</span>,
     <span class="ident">index</span>: <span class="ident">IndexState</span>,
     <span class="ident">vertex</span>: <span class="ident">VertexState</span>,
     <span class="ident">debug_scope_depth</span>: <span class="ident">u32</span>,
@@ -2264,14 +2299,11 @@
                 <span class="ident">index</span>: <span class="ident">bind_mask</span>.<span class="ident">trailing_zeros</span>(),
             });
         }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">pipeline</span> <span class="op">=</span><span class="op">=</span> <span class="ident">OptionalState</span>::<span class="ident">Required</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">pipeline</span>.<span class="ident">is_unset</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DrawError</span>::<span class="ident">MissingPipeline</span>);
         }
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">blend_color</span> <span class="op">=</span><span class="op">=</span> <span class="ident">OptionalState</span>::<span class="ident">Required</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DrawError</span>::<span class="ident">MissingBlendColor</span>);
-        }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">stencil_reference</span> <span class="op">=</span><span class="op">=</span> <span class="ident">OptionalState</span>::<span class="ident">Required</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DrawError</span>::<span class="ident">MissingStencilReference</span>);
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -2279,7 +2311,7 @@
     <span class="doccomment">/// Reset the `RenderBundle`-related states.</span>
     <span class="kw">fn</span> <span class="ident">reset_bundle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">binder</span>.<span class="ident">reset</span>();
-        <span class="self">self</span>.<span class="ident">pipeline</span> <span class="op">=</span> <span class="ident">OptionalState</span>::<span class="ident">Required</span>;
+        <span class="self">self</span>.<span class="ident">pipeline</span>.<span class="ident">reset</span>();
         <span class="self">self</span>.<span class="ident">index</span>.<span class="ident">reset</span>();
         <span class="self">self</span>.<span class="ident">vertex</span>.<span class="ident">reset</span>();
     }
@@ -2919,10 +2951,11 @@
         };
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">State</span> {
+            <span class="ident">pipeline_flags</span>: <span class="ident">PipelineFlags</span>::<span class="ident">empty</span>(),
             <span class="ident">binder</span>: <span class="ident">Binder</span>::<span class="ident">new</span>(<span class="ident">cmd_buf</span>.<span class="ident">limits</span>.<span class="ident">max_bind_groups</span>),
             <span class="ident">blend_color</span>: <span class="ident">OptionalState</span>::<span class="ident">Unused</span>,
-            <span class="ident">stencil_reference</span>: <span class="ident">OptionalState</span>::<span class="ident">Unused</span>,
-            <span class="ident">pipeline</span>: <span class="ident">OptionalState</span>::<span class="ident">Required</span>,
+            <span class="ident">stencil_reference</span>: <span class="number">0</span>,
+            <span class="ident">pipeline</span>: <span class="ident">StateChange</span>::<span class="ident">new</span>(),
             <span class="ident">index</span>: <span class="ident">IndexState</span>::<span class="ident">default</span>(),
             <span class="ident">vertex</span>: <span class="ident">VertexState</span>::<span class="ident">default</span>(),
             <span class="ident">debug_scope_depth</span>: <span class="number">0</span>,
@@ -2985,7 +3018,10 @@
                     };
                 }
                 <span class="ident">RenderCommand</span>::<span class="ident">SetPipeline</span>(<span class="ident">pipeline_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">state</span>.<span class="ident">pipeline</span> <span class="op">=</span> <span class="ident">OptionalState</span>::<span class="ident">Set</span>;
+                    <span class="kw">if</span> <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">set_and_check_redundant</span>(<span class="ident">pipeline_id</span>) {
+                        <span class="kw">continue</span>;
+                    }
+
                     <span class="kw">let</span> <span class="ident">pipeline</span> <span class="op">=</span> <span class="ident">trackers</span>
                         .<span class="ident">render_pipes</span>
                         .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">pipeline_guard</span>, <span class="ident">pipeline_id</span>, (), ())
@@ -2994,6 +3030,8 @@
                     <span class="ident">context</span>
                         .<span class="ident">check_compatible</span>(<span class="kw-2">&amp;</span><span class="ident">pipeline</span>.<span class="ident">pass_context</span>)
                         .<span class="ident">map_err</span>(<span class="ident">RenderCommandError</span>::<span class="ident">IncompatiblePipeline</span>)<span class="question-mark">?</span>;
+
+                    <span class="ident">state</span>.<span class="ident">pipeline_flags</span> <span class="op">=</span> <span class="ident">pipeline</span>.<span class="ident">flags</span>;
 
                     <span class="kw">if</span> <span class="ident">pipeline</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">PipelineFlags</span>::<span class="ident">WRITES_DEPTH_STENCIL</span>)
                         <span class="op">&amp;&amp;</span> <span class="ident">is_ds_read_only</span>
@@ -3004,12 +3042,18 @@
                     <span class="ident">state</span>
                         .<span class="ident">blend_color</span>
                         .<span class="ident">require</span>(<span class="ident">pipeline</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">PipelineFlags</span>::<span class="ident">BLEND_COLOR</span>));
-                    <span class="ident">state</span>
-                        .<span class="ident">stencil_reference</span>
-                        .<span class="ident">require</span>(<span class="ident">pipeline</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">PipelineFlags</span>::<span class="ident">STENCIL_REFERENCE</span>));
 
                     <span class="kw">unsafe</span> {
                         <span class="ident">raw</span>.<span class="ident">bind_graphics_pipeline</span>(<span class="kw-2">&amp;</span><span class="ident">pipeline</span>.<span class="ident">raw</span>);
+                    }
+
+                    <span class="kw">if</span> <span class="ident">pipeline</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">PipelineFlags</span>::<span class="ident">STENCIL_REFERENCE</span>) {
+                        <span class="kw">unsafe</span> {
+                            <span class="ident">raw</span>.<span class="ident">set_stencil_reference</span>(
+                                <span class="ident">hal</span>::<span class="ident">pso</span>::<span class="ident">Face</span>::<span class="ident">all</span>(),
+                                <span class="ident">state</span>.<span class="ident">stencil_reference</span>,
+                            );
+                        }
                     }
 
                     <span class="comment">// Rebind resource</span>
@@ -3184,9 +3228,14 @@
                     }
                 }
                 <span class="ident">RenderCommand</span>::<span class="ident">SetStencilReference</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">state</span>.<span class="ident">stencil_reference</span> <span class="op">=</span> <span class="ident">OptionalState</span>::<span class="ident">Set</span>;
-                    <span class="kw">unsafe</span> {
-                        <span class="ident">raw</span>.<span class="ident">set_stencil_reference</span>(<span class="ident">hal</span>::<span class="ident">pso</span>::<span class="ident">Face</span>::<span class="ident">all</span>(), <span class="ident">value</span>);
+                    <span class="ident">state</span>.<span class="ident">stencil_reference</span> <span class="op">=</span> <span class="ident">value</span>;
+                    <span class="kw">if</span> <span class="ident">state</span>
+                        .<span class="ident">pipeline_flags</span>
+                        .<span class="ident">contains</span>(<span class="ident">PipelineFlags</span>::<span class="ident">STENCIL_REFERENCE</span>)
+                    {
+                        <span class="kw">unsafe</span> {
+                            <span class="ident">raw</span>.<span class="ident">set_stencil_reference</span>(<span class="ident">hal</span>::<span class="ident">pso</span>::<span class="ident">Face</span>::<span class="ident">all</span>(), <span class="ident">value</span>);
+                        }
                     }
                 }
                 <span class="ident">RenderCommand</span>::<span class="ident">SetViewport</span> {
@@ -3501,6 +3550,7 @@
                     <span class="kw">unsafe</span> {
                         <span class="ident">raw</span>.<span class="ident">insert_debug_marker</span>(<span class="ident">label</span>, <span class="ident">color</span>);
                     }
+                    <span class="ident">base</span>.<span class="ident">string_data</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">base</span>.<span class="ident">string_data</span>[<span class="ident">len</span>..];
                 }
                 <span class="ident">RenderCommand</span>::<span class="ident">ExecuteBundle</span>(<span class="ident">bundle_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">bundle</span> <span class="op">=</span> <span class="ident">trackers</span>

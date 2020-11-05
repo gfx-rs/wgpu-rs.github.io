@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/7ac706f/wgpu-core/src/resource.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>resource.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/99ff41b/wgpu-core/src/resource.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>resource.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -436,6 +436,20 @@
 <span id="433">433</span>
 <span id="434">434</span>
 <span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -756,12 +770,26 @@
     <span class="ident">InvalidTexture</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;not enough memory left&quot;</span>)]</span>
     <span class="ident">OutOfMemory</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid texture view dimension `{view:?}` with texture of dimension `{image:?}`&quot;</span>)]</span>
+    <span class="ident">InvalidTextureViewDimension</span> {
+        <span class="ident">view</span>: <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>,
+        <span class="ident">image</span>: <span class="ident">wgt</span>::<span class="ident">TextureDimension</span>,
+    },
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid texture depth `{depth}` for texture view of dimension `Cubemap`. Cubemap views must use images of size 6.&quot;</span>)]</span>
+    <span class="ident">InvalidCubemapTextureDepth</span> { <span class="ident">depth</span>: <span class="ident">u16</span> },
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Invalid texture depth `{depth}` for texture view of dimension `CubemapArray`. Cubemap views must use images with sizes which are a multiple of 6.&quot;</span>)]</span>
+    <span class="ident">InvalidCubemapArrayTextureDepth</span> { <span class="ident">depth</span>: <span class="ident">u16</span> },
     <span class="attribute">#[<span class="ident">error</span>(
         <span class="string">&quot;TextureView mip level count + base mip level {requested} must be &lt;= Texture mip level count {total}&quot;</span>
     )]</span>
-    <span class="ident">InvalidMipLevelCount</span> { <span class="ident">requested</span>: <span class="ident">u32</span>, <span class="ident">total</span>: <span class="ident">u8</span> },
+    <span class="ident">TooManyMipLevels</span> { <span class="ident">requested</span>: <span class="ident">u32</span>, <span class="ident">total</span>: <span class="ident">u8</span> },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;TextureView array layer count + base array layer {requested} must be &lt;= Texture depth/array layer count {total}&quot;</span>)]</span>
-    <span class="ident">InvalidArrayLayerCount</span> { <span class="ident">requested</span>: <span class="ident">u32</span>, <span class="ident">total</span>: <span class="ident">u16</span> },
+    <span class="ident">TooManyArrayLayers</span> { <span class="ident">requested</span>: <span class="ident">u32</span>, <span class="ident">total</span>: <span class="ident">u16</span> },
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Requested array layer count {requested} is not valid for the target view dimension {dim:?}&quot;</span>)]</span>
+    <span class="ident">InvalidArrayLayerCount</span> {
+        <span class="ident">requested</span>: <span class="ident">u32</span>,
+        <span class="ident">dim</span>: <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>,
+    },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Aspect {requested:?} is not in the source texture ({total:?})&quot;</span>)]</span>
     <span class="ident">InvalidAspect</span> {
         <span class="ident">requested</span>: <span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Aspects</span>,
