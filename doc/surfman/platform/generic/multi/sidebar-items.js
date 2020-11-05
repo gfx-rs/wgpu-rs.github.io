@@ -1,0 +1,1 @@
+initSidebarItems({"mod":[["connection","A connection abstraction that allows the choice of backends dynamically."],["context","A context abstraction that allows the choice of backends dynamically."],["device","A device abstraction that allows the choice of backends dynamically."],["surface","A surface abstraction that allows the choice of backends dynamically."]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["REQ_DESTROY_SINCE","The minimal object version supporting this request"],["REQ_IMPORT_SINCE","The minimal object version supporting this request"]],"enum":[["Event",""],["Request",""]],"struct":[["ZxdgImporterV1",""]],"trait":[["RequestsTrait",""]]});

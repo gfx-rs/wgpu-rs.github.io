@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Error","Various errors that methods can produce."],["WindowingApiError","Abstraction of the errors that EGL, CGL, GLX, CGL, etc. return."]]});

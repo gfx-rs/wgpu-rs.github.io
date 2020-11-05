@@ -1,0 +1,1 @@
+initSidebarItems({"static":[["zxdg_decoration_manager_v1_interface",""],["zxdg_decoration_manager_v1_requests",""],["zxdg_toplevel_decoration_v1_events",""],["zxdg_toplevel_decoration_v1_interface",""],["zxdg_toplevel_decoration_v1_requests",""]]});

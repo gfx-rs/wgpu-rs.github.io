@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["validate_hidpi_factor","Checks that the DPI factor is a normal positive `f64`."]],"struct":[["LogicalPosition","A position represented in logical pixels."],["LogicalSize","A size represented in logical pixels."],["PhysicalPosition","A position represented in physical pixels."],["PhysicalSize","A size represented in physical pixels."]]});

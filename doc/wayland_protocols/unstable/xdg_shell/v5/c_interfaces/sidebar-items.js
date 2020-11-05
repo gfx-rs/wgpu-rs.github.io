@@ -1,0 +1,1 @@
+initSidebarItems({"static":[["wl_output_interface",""],["wl_seat_interface",""],["wl_surface_interface",""],["xdg_popup_events",""],["xdg_popup_interface",""],["xdg_popup_requests",""],["xdg_shell_events",""],["xdg_shell_interface",""],["xdg_shell_requests",""],["xdg_surface_events",""],["xdg_surface_interface",""],["xdg_surface_requests",""]]});

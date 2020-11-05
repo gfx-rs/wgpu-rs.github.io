@@ -1,0 +1,1 @@
+initSidebarItems({"type":[["Context","Represents an OpenGL rendering context."],["ContextDescriptor","Information needed to create a context. Some APIs call this a \"config\" or a \"pixel format\"."],["NativeContext","Either a Wayland or an X11 native context"]]});

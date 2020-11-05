@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["EVT_FENCED_RELEASE_SINCE","The minimal object version supporting this event"],["EVT_IMMEDIATE_RELEASE_SINCE","The minimal object version supporting this event"]],"enum":[["Event",""],["Request",""]],"struct":[["ZwpLinuxBufferReleaseV1",""]],"trait":[["RequestsTrait",""]]});

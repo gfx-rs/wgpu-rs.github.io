@@ -1,0 +1,1 @@
+initSidebarItems({"static":[["zwlr_input_inhibit_manager_v1_interface",""],["zwlr_input_inhibit_manager_v1_requests",""],["zwlr_input_inhibitor_v1_interface",""],["zwlr_input_inhibitor_v1_requests",""]]});

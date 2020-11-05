@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ShaderModel","A HLSL shader model version."],["Target","A HLSL target."]],"struct":[["CompilerOptions","HLSL compiler options."],["CompilerVertexOptions",""],["RootConstant",""]]});

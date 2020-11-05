@@ -1,0 +1,1 @@
+initSidebarItems({"static":[["wl_surface_interface",""],["zwp_linux_buffer_release_v1_events",""],["zwp_linux_buffer_release_v1_interface",""],["zwp_linux_explicit_synchronization_v1_interface",""],["zwp_linux_explicit_synchronization_v1_requests",""],["zwp_linux_surface_synchronization_v1_interface",""],["zwp_linux_surface_synchronization_v1_requests",""]]});

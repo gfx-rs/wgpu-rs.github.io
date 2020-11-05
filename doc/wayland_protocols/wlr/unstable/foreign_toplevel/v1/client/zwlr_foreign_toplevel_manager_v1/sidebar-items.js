@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["EVT_FINISHED_SINCE","The minimal object version supporting this event"],["EVT_TOPLEVEL_SINCE","The minimal object version supporting this event"],["REQ_STOP_SINCE","The minimal object version supporting this request"]],"enum":[["Event",""],["Request",""]],"struct":[["ZwlrForeignToplevelManagerV1",""]],"trait":[["RequestsTrait",""]]});

@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Adapter","Represents a hardware display adapter that can be used for rendering (including the CPU)."],["Device","A thread-local handle to a device."],["NativeDevice","Represents a native platform-specific device."]]});

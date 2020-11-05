@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["REQ_DESTROY_SINCE","The minimal object version supporting this request"],["REQ_GET_SYNCHRONIZATION_SINCE","The minimal object version supporting this request"]],"enum":[["Error",""],["Event",""],["Request",""]],"struct":[["ZwpLinuxExplicitSynchronizationV1",""]],"trait":[["RequestsTrait",""]]});

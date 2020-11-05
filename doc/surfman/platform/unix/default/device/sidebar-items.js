@@ -1,0 +1,1 @@
+initSidebarItems({"type":[["Adapter","Represents a hardware display adapter that can be used for rendering (including the CPU)."],["Device","A thread-local handle to a device."],["NativeDevice","Either a Wayland or an X11 native device"]]});

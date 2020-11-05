@@ -1,0 +1,1 @@
+initSidebarItems({"static":[["wl_seat_interface",""],["wl_surface_interface",""],["zwp_keyboard_shortcuts_inhibit_manager_v1_interface",""],["zwp_keyboard_shortcuts_inhibit_manager_v1_requests",""],["zwp_keyboard_shortcuts_inhibitor_v1_events",""],["zwp_keyboard_shortcuts_inhibitor_v1_interface",""],["zwp_keyboard_shortcuts_inhibitor_v1_requests",""]]});

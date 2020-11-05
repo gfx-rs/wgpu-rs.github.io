@@ -1,0 +1,1 @@
+initSidebarItems({"static":[["wl_output_interface",""],["zwlr_export_dmabuf_frame_v1_events",""],["zwlr_export_dmabuf_frame_v1_interface",""],["zwlr_export_dmabuf_frame_v1_requests",""],["zwlr_export_dmabuf_manager_v1_interface",""],["zwlr_export_dmabuf_manager_v1_requests",""]]});

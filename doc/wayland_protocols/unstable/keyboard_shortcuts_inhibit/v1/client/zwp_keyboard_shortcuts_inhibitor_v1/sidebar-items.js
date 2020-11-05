@@ -1,0 +1,1 @@
+initSidebarItems({"constant":[["EVT_ACTIVE_SINCE","The minimal object version supporting this event"],["EVT_INACTIVE_SINCE","The minimal object version supporting this event"],["REQ_DESTROY_SINCE","The minimal object version supporting this request"]],"enum":[["Event",""],["Request",""]],"struct":[["ZwpKeyboardShortcutsInhibitorV1",""]],"trait":[["RequestsTrait",""]]});
