@@ -1,6 +1,6 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/gfx-backend-gl-0.6.0/src/queue.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>queue.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/gfx-backend-gl-0.6.1/src/queue.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>queue.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_gl/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_gl/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
@@ -1245,6 +1245,12 @@
 <span id="1242">1242</span>
 <span id="1243">1243</span>
 <span id="1244">1244</span>
+<span id="1245">1245</span>
+<span id="1246">1246</span>
+<span id="1247">1247</span>
+<span id="1248">1248</span>
+<span id="1249">1249</span>
+<span id="1250">1250</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">command</span> <span class="kw">as</span> <span class="ident">com</span>, <span class="ident">device</span>, <span class="ident">info</span>::<span class="ident">LegacyFeatures</span>, <span class="ident">native</span>, <span class="ident">state</span>, <span class="ident">Backend</span>, <span class="ident">Device</span>, <span class="ident">GlContext</span>, <span class="ident">Share</span>,
@@ -1435,8 +1441,10 @@
         <span class="kw">let</span> <span class="ident">extent</span> <span class="op">=</span> <span class="ident">swapchain</span>.<span class="ident">extent</span>;
 
         <span class="comment">// Wait for rendering to finish</span>
-        <span class="kw">unsafe</span> {
-            <span class="ident">gl</span>.<span class="ident">wait_sync</span>(<span class="self">self</span>.<span class="ident">presentation_fence</span>.<span class="ident">unwrap</span>(), <span class="number">0</span>, <span class="ident">glow</span>::<span class="ident">TIMEOUT_IGNORED</span>);
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">fence</span>) <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">presentation_fence</span> {
+            <span class="kw">unsafe</span> {
+                <span class="ident">gl</span>.<span class="ident">wait_sync</span>(<span class="ident">fence</span>, <span class="number">0</span>, <span class="ident">glow</span>::<span class="ident">TIMEOUT_IGNORED</span>);
+            }
         }
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">wgl</span>)]</span>
@@ -2443,12 +2451,16 @@
 
         <span class="comment">// Create a fence used to synchronize the finish of the rendering and</span>
         <span class="comment">// the blit used to present on the surface.</span>
-        <span class="self">self</span>.<span class="ident">presentation_fence</span> <span class="op">=</span> <span class="ident">Starc</span>::<span class="ident">new</span>(<span class="prelude-val">Some</span>(
-            <span class="self">self</span>.<span class="ident">share</span>
-                .<span class="ident">context</span>
-                .<span class="ident">fence_sync</span>(<span class="ident">glow</span>::<span class="ident">SYNC_GPU_COMMANDS_COMPLETE</span>, <span class="number">0</span>)
-                .<span class="ident">unwrap</span>(),
-        ));
+        <span class="self">self</span>.<span class="ident">presentation_fence</span> <span class="op">=</span> <span class="ident">Starc</span>::<span class="ident">new</span>(<span class="kw">if</span> <span class="self">self</span>.<span class="ident">share</span>.<span class="ident">private_caps</span>.<span class="ident">sync</span> {
+            <span class="prelude-val">Some</span>(
+                <span class="self">self</span>.<span class="ident">share</span>
+                    .<span class="ident">context</span>
+                    .<span class="ident">fence_sync</span>(<span class="ident">glow</span>::<span class="ident">SYNC_GPU_COMMANDS_COMPLETE</span>, <span class="number">0</span>)
+                    .<span class="ident">unwrap</span>(),
+            )
+        } <span class="kw">else</span> {
+            <span class="prelude-val">None</span>
+        });
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">fence</span>) <span class="op">=</span> <span class="ident">fence</span> {
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">share</span>.<span class="ident">private_caps</span>.<span class="ident">sync</span> {
