@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/aa35110/src/proc/validator.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>validator.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/4d4e1cd/src/proc/validator.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>validator.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -407,6 +407,89 @@
 <span id="404">404</span>
 <span id="405">405</span>
 <span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">typifier</span>::{<span class="ident">ResolveContext</span>, <span class="ident">ResolveError</span>, <span class="ident">Typifier</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arena</span>::{<span class="ident">Arena</span>, <span class="ident">Handle</span>};
@@ -431,12 +514,23 @@
     <span class="ident">InvalidType</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Interpolation is not valid&quot;</span>)]</span>
     <span class="ident">InvalidInterpolation</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Storage access flags are invalid&quot;</span>)]</span>
-    <span class="ident">InvalidStorageAccess</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Storage access {seen:?} exceed the allowed {allowed:?}&quot;</span>)]</span>
+    <span class="ident">InvalidStorageAccess</span> {
+        <span class="ident">allowed</span>: <span class="kw">crate</span>::<span class="ident">StorageAccess</span>,
+        <span class="ident">seen</span>: <span class="kw">crate</span>::<span class="ident">StorageAccess</span>,
+    },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Binding decoration is missing or not applicable&quot;</span>)]</span>
     <span class="ident">InvalidBinding</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Binding is out of range&quot;</span>)]</span>
     <span class="ident">OutOfRangeBinding</span>,
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">thiserror</span>::<span class="ident">Error</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">LocalVariableError</span> {
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Initializer is not a constant expression&quot;</span>)]</span>
+    <span class="ident">InitializerConst</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Initializer doesn&#39;t match the variable type&quot;</span>)]</span>
+    <span class="ident">InitializerType</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">thiserror</span>::<span class="ident">Error</span>)]</span>
@@ -445,6 +539,12 @@
     <span class="ident">Resolve</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">ResolveError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;There are instructions after `return`/`break`/`continue`&quot;</span>)]</span>
     <span class="ident">InvalidControlFlowExitTail</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Local variable {handle:?} &#39;{name}&#39; is invalid: {error:?}&quot;</span>)]</span>
+    <span class="ident">LocalVariable</span> {
+        <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">LocalVariable</span><span class="op">&gt;</span>,
+        <span class="ident">name</span>: <span class="ident">String</span>,
+        <span class="ident">error</span>: <span class="ident">LocalVariableError</span>,
+    },
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">thiserror</span>::<span class="ident">Error</span>)]</span>
@@ -473,8 +573,14 @@
     <span class="ident">InvalidTypeWidth</span>(<span class="kw">crate</span>::<span class="ident">ScalarKind</span>, <span class="kw">crate</span>::<span class="ident">Bytes</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The type handle {0:?} can not be resolved&quot;</span>)]</span>
     <span class="ident">UnresolvedType</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Global variable {0:?} is invalid: {1:?}&quot;</span>)]</span>
-    <span class="ident">GlobalVariable</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">GlobalVariable</span><span class="op">&gt;</span>, <span class="ident">GlobalVariableError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The constant {0:?} can not be used for an array size&quot;</span>)]</span>
+    <span class="ident">InvalidArraySizeConstant</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Constant</span><span class="op">&gt;</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Global variable {handle:?} &#39;{name}&#39; is invalid: {error:?}&quot;</span>)]</span>
+    <span class="ident">GlobalVariable</span> {
+        <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">GlobalVariable</span><span class="op">&gt;</span>,
+        <span class="ident">name</span>: <span class="ident">String</span>,
+        <span class="ident">error</span>: <span class="ident">GlobalVariableError</span>,
+    },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Function {0:?} is invalid: {1:?}&quot;</span>)]</span>
     <span class="ident">Function</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Function</span><span class="op">&gt;</span>, <span class="ident">FunctionError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Entry point {name} at {stage:?} is invalid: {error:?}&quot;</span>)]</span>
@@ -483,6 +589,43 @@
         <span class="ident">name</span>: <span class="ident">String</span>,
         <span class="ident">error</span>: <span class="ident">EntryPointError</span>,
     },
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Module is corrupted&quot;</span>)]</span>
+    <span class="ident">Corrupted</span>,
+}
+
+<span class="kw">impl</span> <span class="kw">crate</span>::<span class="ident">GlobalVariable</span> {
+    <span class="kw">fn</span> <span class="ident">forbid_interpolation</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GlobalVariableError</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">interpolation</span> {
+            <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">InvalidInterpolation</span>),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
+        }
+    }
+
+    <span class="kw">fn</span> <span class="ident">check_resource</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GlobalVariableError</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">binding</span> {
+            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">BuiltIn</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> {} <span class="comment">// validated per entry point</span>
+            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">Resource</span> { <span class="ident">group</span>, <span class="ident">binding</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">group</span> <span class="op">&gt;</span> <span class="ident">MAX_BIND_GROUPS</span> <span class="op">|</span><span class="op">|</span> <span class="ident">binding</span> <span class="op">&gt;</span> <span class="ident">MAX_BIND_INDICES</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">OutOfRangeBinding</span>);
+                }
+            }
+            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">Location</span>(<span class="kw">_</span>)) <span class="op">|</span> <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">InvalidBinding</span>)
+            }
+        }
+        <span class="self">self</span>.<span class="ident">forbid_interpolation</span>()
+    }
+}
+
+<span class="kw">fn</span> <span class="ident">storage_usage</span>(<span class="ident">access</span>: <span class="kw">crate</span>::<span class="ident">StorageAccess</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">GlobalUse</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage_usage</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">empty</span>();
+    <span class="kw">if</span> <span class="ident">access</span>.<span class="ident">contains</span>(<span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">LOAD</span>) {
+        <span class="ident">storage_usage</span> <span class="op">|</span><span class="op">=</span> <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">LOAD</span>;
+    }
+    <span class="kw">if</span> <span class="ident">access</span>.<span class="ident">contains</span>(<span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">STORE</span>) {
+        <span class="ident">storage_usage</span> <span class="op">|</span><span class="op">=</span> <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">STORE</span>;
+    }
+    <span class="ident">storage_usage</span>
 }
 
 <span class="kw">impl</span> <span class="ident">Validator</span> {
@@ -499,15 +642,13 @@
         <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GlobalVariableError</span><span class="op">&gt;</span> {
         <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;var {:?}&quot;</span>, <span class="ident">var</span>);
-        <span class="kw">let</span> <span class="ident">is_storage</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">class</span> {
+        <span class="kw">let</span> <span class="ident">allowed_storage_access</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">class</span> {
             <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Function</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">InvalidUsage</span>),
             <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Input</span> <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Output</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">binding</span> {
                     <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">BuiltIn</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="comment">// validated per entry point</span>
-                        <span class="kw">if</span> <span class="ident">var</span>.<span class="ident">interpolation</span>.<span class="ident">is_some</span>() {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">InvalidInterpolation</span>);
-                        }
+                        <span class="ident">var</span>.<span class="ident">forbid_interpolation</span>()<span class="question-mark">?</span>
                     }
                     <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">Location</span>(<span class="ident">loc</span>)) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">if</span> <span class="ident">loc</span> <span class="op">&gt;</span> <span class="ident">MAX_LOCATIONS</span> {
@@ -527,58 +668,70 @@
                         <span class="kw">match</span> <span class="ident">types</span>[<span class="ident">var</span>.<span class="ident">ty</span>].<span class="ident">inner</span> {
                             <span class="comment">//TODO: check the member types</span>
                             <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Struct</span> { <span class="ident">members</span>: <span class="kw">_</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="kw">if</span> <span class="ident">var</span>.<span class="ident">interpolation</span>.<span class="ident">is_some</span>() {
-                                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">InvalidInterpolation</span>);
-                                }
+                                <span class="ident">var</span>.<span class="ident">forbid_interpolation</span>()<span class="question-mark">?</span>
                             }
                             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">InvalidType</span>),
                         }
                     }
                 }
-                <span class="bool-val">false</span>
+                <span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">empty</span>()
             }
-            <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Constant</span>
-            <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">StorageBuffer</span>
-            <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Uniform</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">binding</span> {
-                    <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">BuiltIn</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> {} <span class="comment">// validated per entry point</span>
-                    <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">Resource</span> { <span class="ident">group</span>, <span class="ident">binding</span> }) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">if</span> <span class="ident">group</span> <span class="op">&gt;</span> <span class="ident">MAX_BIND_GROUPS</span> <span class="op">|</span><span class="op">|</span> <span class="ident">binding</span> <span class="op">&gt;</span> <span class="ident">MAX_BIND_INDICES</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">OutOfRangeBinding</span>);
-                        }
-                    }
-                    <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">Location</span>(<span class="kw">_</span>)) <span class="op">|</span> <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">InvalidBinding</span>)
-                    }
-                }
-                <span class="kw">if</span> <span class="ident">var</span>.<span class="ident">interpolation</span>.<span class="ident">is_some</span>() {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">InvalidInterpolation</span>);
-                }
-                <span class="comment">//TODO: prevent `Uniform` storage class with `STORE` access</span>
+            <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Storage</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">var</span>.<span class="ident">check_resource</span>()<span class="question-mark">?</span>;
+                <span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">all</span>()
+            }
+            <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Uniform</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">var</span>.<span class="ident">check_resource</span>()<span class="question-mark">?</span>;
+                <span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">empty</span>()
+            }
+            <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Handle</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">var</span>.<span class="ident">check_resource</span>()<span class="question-mark">?</span>;
                 <span class="kw">match</span> <span class="ident">types</span>[<span class="ident">var</span>.<span class="ident">ty</span>].<span class="ident">inner</span> {
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Struct</span> { .. }
-                    <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Image</span> {
+                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Image</span> {
                         <span class="ident">class</span>: <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Storage</span>(<span class="kw">_</span>),
                         ..
-                    } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                    } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">all</span>(),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">empty</span>(),
                 }
             }
             <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Private</span> <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">WorkGroup</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="ident">var</span>.<span class="ident">binding</span>.<span class="ident">is_some</span>() {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">InvalidBinding</span>);
                 }
-                <span class="kw">if</span> <span class="ident">var</span>.<span class="ident">interpolation</span>.<span class="ident">is_some</span>() {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">InvalidInterpolation</span>);
-                }
-                <span class="bool-val">false</span>
+                <span class="ident">var</span>.<span class="ident">forbid_interpolation</span>()<span class="question-mark">?</span>;
+                <span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">empty</span>()
+            }
+            <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">PushConstant</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="comment">//TODO</span>
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">InvalidStorageAccess</span> {
+                    <span class="ident">allowed</span>: <span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">empty</span>(),
+                    <span class="ident">seen</span>: <span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">empty</span>(),
+                });
             }
         };
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">is_storage</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">var</span>.<span class="ident">storage_access</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">InvalidStorageAccess</span>);
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">allowed_storage_access</span>.<span class="ident">contains</span>(<span class="ident">var</span>.<span class="ident">storage_access</span>) {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">InvalidStorageAccess</span> {
+                <span class="ident">allowed</span>: <span class="ident">allowed_storage_access</span>,
+                <span class="ident">seen</span>: <span class="ident">var</span>.<span class="ident">storage_access</span>,
+            });
         }
 
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn</span> <span class="ident">validate_local_var</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">var</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">LocalVariable</span>,
+        <span class="ident">_fun</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">Function</span>,
+        <span class="ident">_types</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">LocalVariableError</span><span class="op">&gt;</span> {
+        <span class="ident">log</span>::<span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;var {:?}&quot;</span>, <span class="ident">var</span>);
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">_expr_handle</span>) <span class="op">=</span> <span class="ident">var</span>.<span class="ident">init</span> {
+            <span class="kw">if</span> <span class="bool-val">false</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">LocalVariableError</span>::<span class="ident">InitializerConst</span>);
+            }
+        }
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -592,10 +745,19 @@
             <span class="ident">global_vars</span>: <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">global_variables</span>,
             <span class="ident">local_vars</span>: <span class="kw-2">&amp;</span><span class="ident">fun</span>.<span class="ident">local_variables</span>,
             <span class="ident">functions</span>: <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">functions</span>,
-            <span class="ident">parameter_types</span>: <span class="kw-2">&amp;</span><span class="ident">fun</span>.<span class="ident">parameter_types</span>,
+            <span class="ident">arguments</span>: <span class="kw-2">&amp;</span><span class="ident">fun</span>.<span class="ident">arguments</span>,
         };
         <span class="self">self</span>.<span class="ident">typifier</span>
             .<span class="ident">resolve_all</span>(<span class="kw-2">&amp;</span><span class="ident">fun</span>.<span class="ident">expressions</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">types</span>, <span class="kw-2">&amp;</span><span class="ident">resolve_ctx</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">for</span> (<span class="ident">var_handle</span>, <span class="ident">var</span>) <span class="kw">in</span> <span class="ident">fun</span>.<span class="ident">local_variables</span>.<span class="ident">iter</span>() {
+            <span class="self">self</span>.<span class="ident">validate_local_var</span>(<span class="ident">var</span>, <span class="ident">fun</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">types</span>)
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">error</span><span class="op">|</span> <span class="ident">FunctionError</span>::<span class="ident">LocalVariable</span> {
+                    <span class="ident">handle</span>: <span class="ident">var_handle</span>,
+                    <span class="ident">name</span>: <span class="ident">var</span>.<span class="ident">name</span>.<span class="ident">clone</span>().<span class="ident">unwrap_or_default</span>(),
+                    <span class="ident">error</span>,
+                })<span class="question-mark">?</span>;
+        }
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -636,17 +798,12 @@
                 <span class="kw">match</span> (<span class="ident">stage</span>, <span class="ident">var</span>.<span class="ident">class</span>) {
                     (<span class="kw">crate</span>::<span class="ident">ShaderStage</span>::<span class="ident">Vertex</span>, <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Output</span>)
                     <span class="op">|</span> (<span class="kw">crate</span>::<span class="ident">ShaderStage</span>::<span class="ident">Fragment</span>, <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Input</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">var</span>.<span class="ident">ty</span>].<span class="ident">inner</span> {
-                            <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, .. }
-                            <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="kw">if</span> <span class="ident">kind</span> <span class="op">!</span><span class="op">=</span> <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>
-                                    <span class="op">&amp;&amp;</span> <span class="ident">var</span>.<span class="ident">interpolation</span> <span class="op">!</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Interpolation</span>::<span class="ident">Flat</span>)
-                                {
-                                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">EntryPointError</span>::<span class="ident">InvalidIntegerInterpolation</span>);
-                                }
+                        <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">var</span>.<span class="ident">ty</span>].<span class="ident">inner</span>.<span class="ident">scalar_kind</span>() {
+                            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>) <span class="op">=</span><span class="op">&gt;</span> {}
+                            <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="kw">if</span> <span class="ident">var</span>.<span class="ident">interpolation</span> <span class="op">!</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Interpolation</span>::<span class="ident">Flat</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">EntryPointError</span>::<span class="ident">InvalidIntegerInterpolation</span>);
                             }
-                            <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
                         }
                     }
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
@@ -701,26 +858,19 @@
                     <span class="ident">location_out_mask</span> <span class="op">|</span><span class="op">=</span> <span class="ident">mask</span>;
                     <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">LOAD</span> <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">STORE</span>
                 }
-                <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Constant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">LOAD</span>,
-                <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Uniform</span> <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">StorageBuffer</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="comment">//TODO: built-in checks?</span>
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage_usage</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">empty</span>();
-                    <span class="kw">if</span> <span class="ident">var</span>.<span class="ident">storage_access</span>.<span class="ident">contains</span>(<span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">LOAD</span>) {
-                        <span class="ident">storage_usage</span> <span class="op">|</span><span class="op">=</span> <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">LOAD</span>;
-                    }
-                    <span class="kw">if</span> <span class="ident">var</span>.<span class="ident">storage_access</span>.<span class="ident">contains</span>(<span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">STORE</span>) {
-                        <span class="ident">storage_usage</span> <span class="op">|</span><span class="op">=</span> <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">STORE</span>;
-                    }
-                    <span class="kw">if</span> <span class="ident">storage_usage</span>.<span class="ident">is_empty</span>() {
-                        <span class="comment">// its a uniform buffer</span>
-                        <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">LOAD</span>
-                    } <span class="kw">else</span> {
-                        <span class="ident">storage_usage</span>
-                    }
-                }
+                <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Uniform</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">LOAD</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Storage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">storage_usage</span>(<span class="ident">var</span>.<span class="ident">storage_access</span>),
+                <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Handle</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">var</span>.<span class="ident">ty</span>].<span class="ident">inner</span> {
+                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Image</span> {
+                        <span class="ident">class</span>: <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Storage</span>(<span class="kw">_</span>),
+                        ..
+                    } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">storage_usage</span>(<span class="ident">var</span>.<span class="ident">storage_access</span>),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">LOAD</span>,
+                },
                 <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Private</span> <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">WorkGroup</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">all</span>()
                 }
+                <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">PushConstant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">LOAD</span>,
             };
             <span class="kw">if</span> <span class="op">!</span><span class="ident">allowed_usage</span>.<span class="ident">contains</span>(<span class="ident">usage</span>) {
                 <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;\tUsage error for: {:?}&quot;</span>, <span class="ident">var</span>);
@@ -774,9 +924,21 @@
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ValidationError</span>::<span class="ident">UnresolvedType</span>(<span class="ident">base</span>));
                     }
                 }
-                <span class="ident">Ti</span>::<span class="ident">Array</span> { <span class="ident">base</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Ti</span>::<span class="ident">Array</span> { <span class="ident">base</span>, <span class="ident">size</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">if</span> <span class="ident">base</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">handle</span> {
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ValidationError</span>::<span class="ident">UnresolvedType</span>(<span class="ident">base</span>));
+                    }
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span>::<span class="ident">ArraySize</span>::<span class="ident">Constant</span>(<span class="ident">const_handle</span>) <span class="op">=</span> <span class="ident">size</span> {
+                        <span class="kw">let</span> <span class="ident">constant</span> <span class="op">=</span> <span class="ident">module</span>
+                            .<span class="ident">constants</span>
+                            .<span class="ident">try_get</span>(<span class="ident">const_handle</span>)
+                            .<span class="ident">ok_or</span>(<span class="ident">ValidationError</span>::<span class="ident">Corrupted</span>)<span class="question-mark">?</span>;
+                        <span class="kw">match</span> <span class="ident">constant</span>.<span class="ident">inner</span> {
+                            <span class="kw">crate</span>::<span class="ident">ConstantInner</span>::<span class="ident">Uint</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {}
+                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ValidationError</span>::<span class="ident">InvalidArraySizeConstant</span>(<span class="ident">const_handle</span>))
+                            }
+                        }
                     }
                 }
                 <span class="ident">Ti</span>::<span class="ident">Struct</span> { <span class="kw-2">ref</span> <span class="ident">members</span> } <span class="op">=</span><span class="op">&gt;</span> {
@@ -794,7 +956,11 @@
 
         <span class="kw">for</span> (<span class="ident">var_handle</span>, <span class="ident">var</span>) <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">global_variables</span>.<span class="ident">iter</span>() {
             <span class="self">self</span>.<span class="ident">validate_global_var</span>(<span class="ident">var</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">types</span>)
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">ValidationError</span>::<span class="ident">GlobalVariable</span>(<span class="ident">var_handle</span>, <span class="ident">e</span>))<span class="question-mark">?</span>;
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">error</span><span class="op">|</span> <span class="ident">ValidationError</span>::<span class="ident">GlobalVariable</span> {
+                    <span class="ident">handle</span>: <span class="ident">var_handle</span>,
+                    <span class="ident">name</span>: <span class="ident">var</span>.<span class="ident">name</span>.<span class="ident">clone</span>().<span class="ident">unwrap_or_default</span>(),
+                    <span class="ident">error</span>,
+                })<span class="question-mark">?</span>;
         }
 
         <span class="kw">for</span> (<span class="ident">fun_handle</span>, <span class="ident">fun</span>) <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">iter</span>() {

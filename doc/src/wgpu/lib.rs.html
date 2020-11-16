@@ -2699,6 +2699,26 @@
 <span id="2696">2696</span>
 <span id="2697">2697</span>
 <span id="2698">2698</span>
+<span id="2699">2699</span>
+<span id="2700">2700</span>
+<span id="2701">2701</span>
+<span id="2702">2702</span>
+<span id="2703">2703</span>
+<span id="2704">2704</span>
+<span id="2705">2705</span>
+<span id="2706">2706</span>
+<span id="2707">2707</span>
+<span id="2708">2708</span>
+<span id="2709">2709</span>
+<span id="2710">2710</span>
+<span id="2711">2711</span>
+<span id="2712">2712</span>
+<span id="2713">2713</span>
+<span id="2714">2714</span>
+<span id="2715">2715</span>
+<span id="2716">2716</span>
+<span id="2717">2717</span>
+<span id="2718">2718</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).</span>
 <span class="doccomment">//!</span>
@@ -3004,6 +3024,8 @@
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">TextureViewDescriptor</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>::<span class="ident">TextureViewId</span>;
 
+    <span class="kw">fn</span> <span class="ident">surface_drop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">SurfaceId</span>);
+    <span class="kw">fn</span> <span class="ident">adapter_drop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">adapter</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">AdapterId</span>);
     <span class="kw">fn</span> <span class="ident">buffer_destroy</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">BufferId</span>);
     <span class="kw">fn</span> <span class="ident">buffer_drop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">BufferId</span>);
     <span class="kw">fn</span> <span class="ident">texture_destroy</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">TextureId</span>);
@@ -3134,6 +3156,14 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Adapter</span> {
     <span class="ident">context</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
     <span class="ident">id</span>: <span class="op">&lt;</span><span class="ident">C</span> <span class="kw">as</span> <span class="ident">Context</span><span class="op">&gt;</span>::<span class="ident">AdapterId</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Adapter</span> {
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">thread</span>::<span class="ident">panicking</span>() {
+            <span class="self">self</span>.<span class="ident">context</span>.<span class="ident">adapter_drop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
+        }
+    }
 }
 
 <span class="doccomment">/// Open connection to a graphics and/or compute device.</span>
@@ -3288,7 +3318,16 @@
 <span class="doccomment">/// be presented. A `Surface` may be created with the unsafe function [`Instance::create_surface`].</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Surface</span> {
+    <span class="ident">context</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
     <span class="ident">id</span>: <span class="op">&lt;</span><span class="ident">C</span> <span class="kw">as</span> <span class="ident">Context</span><span class="op">&gt;</span>::<span class="ident">SurfaceId</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Surface</span> {
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">thread</span>::<span class="ident">panicking</span>() {
+            <span class="self">self</span>.<span class="ident">context</span>.<span class="ident">surface_drop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
+        }
+    }
 }
 
 <span class="doccomment">/// Handle to a swap chain.</span>
@@ -4037,6 +4076,7 @@
         <span class="ident">window</span>: <span class="kw-2">&amp;</span><span class="ident">W</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Surface</span> {
         <span class="ident">Surface</span> {
+            <span class="ident">context</span>: <span class="ident">Arc</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">context</span>),
             <span class="ident">id</span>: <span class="ident">Context</span>::<span class="ident">instance_create_surface</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="ident">window</span>),
         }
     }
