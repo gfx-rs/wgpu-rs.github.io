@@ -22,6 +22,7 @@ implementors["proc_macro2"] = [{"text":"impl Display for TokenStream","synthetic
 implementors["ron"] = [{"text":"impl Display for Error","synthetic":false,"types":[]},{"text":"impl Display for ErrorCode","synthetic":false,"types":[]},{"text":"impl Display for Position","synthetic":false,"types":[]}];
 implementors["rusttype"] = [{"text":"impl Display for Error","synthetic":false,"types":[]}];
 implementors["serde"] = [{"text":"impl Display for Error","synthetic":false,"types":[]},{"text":"impl&lt;'a&gt; Display for Unexpected&lt;'a&gt;","synthetic":false,"types":[]},{"text":"impl&lt;'a&gt; Display for dyn Expected + 'a","synthetic":false,"types":[]}];
+implementors["smallvec"] = [{"text":"impl Display for CollectionAllocErr","synthetic":false,"types":[]}];
 implementors["spirv_cross"] = [{"text":"impl Display for ErrorCode","synthetic":false,"types":[]}];
 implementors["surfman"] = [{"text":"impl Display for SurfaceID","synthetic":false,"types":[]}];
 implementors["syn"] = [{"text":"impl Display for Lifetime","synthetic":false,"types":[]},{"text":"impl Display for LitInt","synthetic":false,"types":[]},{"text":"impl Display for LitFloat","synthetic":false,"types":[]},{"text":"impl&lt;'a&gt; Display for ParseBuffer&lt;'a&gt;","synthetic":false,"types":[]},{"text":"impl Display for Error","synthetic":false,"types":[]}];
