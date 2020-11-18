@@ -306,10 +306,10 @@
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ffi</span>::<span class="ident">XIM</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">_lock</span> <span class="op">=</span> <span class="ident">GLOBAL_LOCK</span>.<span class="ident">lock</span>();
 
-    <span class="comment">// XSetLocaleModifiers returns...</span>
-    <span class="comment">// * The current locale modifiers if it&#39;s given a NULL pointer.</span>
-    <span class="comment">// * The new locale modifiers if we succeeded in setting them.</span>
-    <span class="comment">// * NULL if the locale modifiers string is malformed.</span>
+    <span class="comment">// XSetLocaleModifiers returns...</span>
+    <span class="comment">// * The current locale modifiers if it&#39;s given a NULL pointer.</span>
+    <span class="comment">// * The new locale modifiers if we succeeded in setting them.</span>
+    <span class="comment">// * NULL if the locale modifiers string is malformed.</span>
     (<span class="ident">xconn</span>.<span class="ident">xlib</span>.<span class="ident">XSetLocaleModifiers</span>)(<span class="ident">locale_modifiers</span>.<span class="ident">as_ptr</span>());
 
     <span class="kw">let</span> <span class="ident">im</span> <span class="op">=</span> (<span class="ident">xconn</span>.<span class="ident">xlib</span>.<span class="ident">XOpenIM</span>)(
@@ -340,11 +340,11 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">InputMethodResult</span> {
-    <span class="doccomment">/// Input method used locale modifier from `XMODIFIERS` environment variable.</span>
+    <span class="doccomment">/// Input method used locale modifier from `XMODIFIERS` environment variable.</span>
     <span class="ident">XModifiers</span>(<span class="ident">InputMethod</span>),
-    <span class="doccomment">/// Input method used internal fallback locale modifier.</span>
+    <span class="doccomment">/// Input method used internal fallback locale modifier.</span>
     <span class="ident">Fallback</span>(<span class="ident">InputMethod</span>),
-    <span class="doccomment">/// Input method could not be opened using any locale modifier tried.</span>
+    <span class="doccomment">/// Input method could not be opened using any locale modifier tried.</span>
     <span class="ident">Failure</span>,
 }
 
@@ -373,12 +373,12 @@
     <span class="ident">InvalidUtf8</span>(<span class="ident">IntoStringError</span>),
 }
 
-<span class="comment">// The root window has a property named XIM_SERVERS, which contains a list of atoms represeting</span>
-<span class="comment">// the availabile XIM servers. For instance, if you&#39;re using ibus, it would contain an atom named</span>
-<span class="comment">// &quot;@server=ibus&quot;. It&#39;s possible for this property to contain multiple atoms, though presumably</span>
-<span class="comment">// rare. Note that we replace &quot;@server=&quot; with &quot;@im=&quot; in order to match the format of locale</span>
-<span class="comment">// modifiers, since we don&#39;t want a user who&#39;s looking at logs to ask &quot;am I supposed to set</span>
-<span class="comment">// XMODIFIERS to `@server=ibus`?!?&quot;</span>
+<span class="comment">// The root window has a property named XIM_SERVERS, which contains a list of atoms represeting</span>
+<span class="comment">// the availabile XIM servers. For instance, if you&#39;re using ibus, it would contain an atom named</span>
+<span class="comment">// &quot;@server=ibus&quot;. It&#39;s possible for this property to contain multiple atoms, though presumably</span>
+<span class="comment">// rare. Note that we replace &quot;@server=&quot; with &quot;@im=&quot; in order to match the format of locale</span>
+<span class="comment">// modifiers, since we don&#39;t want a user who&#39;s looking at logs to ask &quot;am I supposed to set</span>
+<span class="comment">// XMODIFIERS to `@server=ibus`?!?&quot;</span>
 <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_xim_servers</span>(<span class="ident">xconn</span>: <span class="kw-2">&amp;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">XConnection</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">GetXimServersError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">servers_atom</span> <span class="op">=</span> <span class="ident">xconn</span>.<span class="ident">get_atom_unchecked</span>(<span class="string">b&quot;XIM_SERVERS\0&quot;</span>);
 
@@ -476,21 +476,21 @@
     }
 }
 
-<span class="comment">// By logging this struct, you get a sequential listing of every locale modifier tried, where it</span>
-<span class="comment">// came from, and if it succceeded.</span>
+<span class="comment">// By logging this struct, you get a sequential listing of every locale modifier tried, where it</span>
+<span class="comment">// came from, and if it succceeded.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PotentialInputMethods</span> {
-    <span class="comment">// On correctly configured systems, the XMODIFIERS environemnt variable tells us everything we</span>
-    <span class="comment">// need to know.</span>
+    <span class="comment">// On correctly configured systems, the XMODIFIERS environemnt variable tells us everything we</span>
+    <span class="comment">// need to know.</span>
     <span class="ident">xmodifiers</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PotentialInputMethod</span><span class="op">&gt;</span>,
-    <span class="comment">// We have some standard options at our disposal that should ostensibly always work. For users</span>
-    <span class="comment">// who only need compose sequences, this ensures that the program launches without a hitch</span>
-    <span class="comment">// For users who need more sophisticated IME features, this is more or less a silent failure.</span>
-    <span class="comment">// Logging features should be added in the future to allow both audiences to be effectively</span>
-    <span class="comment">// served.</span>
+    <span class="comment">// We have some standard options at our disposal that should ostensibly always work. For users</span>
+    <span class="comment">// who only need compose sequences, this ensures that the program launches without a hitch</span>
+    <span class="comment">// For users who need more sophisticated IME features, this is more or less a silent failure.</span>
+    <span class="comment">// Logging features should be added in the future to allow both audiences to be effectively</span>
+    <span class="comment">// served.</span>
     <span class="ident">fallbacks</span>: [<span class="ident">PotentialInputMethod</span>; <span class="number">2</span>],
-    <span class="comment">// For diagnostic purposes, we include the list of XIM servers that the server reports as</span>
-    <span class="comment">// being available.</span>
+    <span class="comment">// For diagnostic purposes, we include the list of XIM servers that the server reports as</span>
+    <span class="comment">// being available.</span>
     <span class="ident">_xim_servers</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="ident">GetXimServersError</span><span class="op">&gt;</span>,
 }
 
@@ -500,34 +500,34 @@
             .<span class="ident">ok</span>()
             .<span class="ident">map</span>(<span class="ident">PotentialInputMethod</span>::<span class="ident">from_string</span>);
         <span class="ident">PotentialInputMethods</span> {
-            <span class="comment">// Since passing &quot;&quot; to XSetLocaleModifiers results in it defaulting to the value of</span>
-            <span class="comment">// XMODIFIERS, it&#39;s worth noting what happens if XMODIFIERS is also &quot;&quot;. If simply</span>
-            <span class="comment">// running the program with `XMODIFIERS=&quot;&quot; cargo run`, then assuming XMODIFIERS is</span>
-            <span class="comment">// defined in the profile (or parent environment) then that parent XMODIFIERS is used.</span>
-            <span class="comment">// If that XMODIFIERS value is also &quot;&quot; (i.e. if you ran `export XMODIFIERS=&quot;&quot;`), then</span>
-            <span class="comment">// XSetLocaleModifiers uses the default local input method. Note that defining</span>
-            <span class="comment">// XMODIFIERS as &quot;&quot; is different from XMODIFIERS not being defined at all, since in</span>
-            <span class="comment">// that case, we get `None` and end up skipping ahead to the next method.</span>
+            <span class="comment">// Since passing &quot;&quot; to XSetLocaleModifiers results in it defaulting to the value of</span>
+            <span class="comment">// XMODIFIERS, it&#39;s worth noting what happens if XMODIFIERS is also &quot;&quot;. If simply</span>
+            <span class="comment">// running the program with `XMODIFIERS=&quot;&quot; cargo run`, then assuming XMODIFIERS is</span>
+            <span class="comment">// defined in the profile (or parent environment) then that parent XMODIFIERS is used.</span>
+            <span class="comment">// If that XMODIFIERS value is also &quot;&quot; (i.e. if you ran `export XMODIFIERS=&quot;&quot;`), then</span>
+            <span class="comment">// XSetLocaleModifiers uses the default local input method. Note that defining</span>
+            <span class="comment">// XMODIFIERS as &quot;&quot; is different from XMODIFIERS not being defined at all, since in</span>
+            <span class="comment">// that case, we get `None` and end up skipping ahead to the next method.</span>
             <span class="ident">xmodifiers</span>,
             <span class="ident">fallbacks</span>: [
-                <span class="comment">// This is a standard input method that supports compose equences, which should</span>
-                <span class="comment">// always be available. `@im=none` appears to mean the same thing.</span>
+                <span class="comment">// This is a standard input method that supports compose equences, which should</span>
+                <span class="comment">// always be available. `@im=none` appears to mean the same thing.</span>
                 <span class="ident">PotentialInputMethod</span>::<span class="ident">from_str</span>(<span class="string">&quot;@im=local&quot;</span>),
-                <span class="comment">// This explicitly specifies to use the implementation-dependent default, though</span>
-                <span class="comment">// that seems to be equivalent to just using the local input method.</span>
+                <span class="comment">// This explicitly specifies to use the implementation-dependent default, though</span>
+                <span class="comment">// that seems to be equivalent to just using the local input method.</span>
                 <span class="ident">PotentialInputMethod</span>::<span class="ident">from_str</span>(<span class="string">&quot;@im=&quot;</span>),
             ],
-            <span class="comment">// The XIM_SERVERS property can have surprising values. For instance, when I exited</span>
-            <span class="comment">// ibus to run fcitx, it retained the value denoting ibus. Even more surprising is</span>
-            <span class="comment">// that the fcitx input method could only be successfully opened using &quot;@im=ibus&quot;.</span>
-            <span class="comment">// Presumably due to this quirk, it&#39;s actually possible to alternate between ibus and</span>
-            <span class="comment">// fcitx in a running application.</span>
+            <span class="comment">// The XIM_SERVERS property can have surprising values. For instance, when I exited</span>
+            <span class="comment">// ibus to run fcitx, it retained the value denoting ibus. Even more surprising is</span>
+            <span class="comment">// that the fcitx input method could only be successfully opened using &quot;@im=ibus&quot;.</span>
+            <span class="comment">// Presumably due to this quirk, it&#39;s actually possible to alternate between ibus and</span>
+            <span class="comment">// fcitx in a running application.</span>
             <span class="ident">_xim_servers</span>: <span class="kw">unsafe</span> { <span class="ident">get_xim_servers</span>(<span class="ident">xconn</span>) },
         }
     }
 
-    <span class="comment">// This resets the `successful` field of every potential input method, ensuring we have</span>
-    <span class="comment">// accurate information when this struct is re-used by the destruction/instantiation callbacks.</span>
+    <span class="comment">// This resets the `successful` field of every potential input method, ensuring we have</span>
+    <span class="comment">// accurate information when this struct is re-used by the destruction/instantiation callbacks.</span>
     <span class="kw">fn</span> <span class="ident">reset</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">input_method</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">xmodifiers</span> {
             <span class="ident">input_method</span>.<span class="ident">reset</span>();

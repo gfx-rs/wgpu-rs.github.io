@@ -86,45 +86,45 @@
     <span class="ident">ptr</span>::{<span class="ident">drop_in_place</span>, <span class="ident">write</span>},
 };
 
-<span class="doccomment">/// Guard-struct used for correctly initialize uninitialized memory and `drop` it when guard goes out of scope.</span>
-<span class="doccomment">/// Usually, you *should not* use this struct to handle your memory.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ### Safety</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If you use this struct manually, remember: `&amp;mut [MaybeUninit&lt;T&gt;]`&#39;s content will be overwriten while initialization.</span>
-<span class="doccomment">/// So it is *not safe* to apply this struct to already initialized data and it can lead to *memory leaks*.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ### Example</span>
-<span class="doccomment">/// ```rust</span>
-<span class="doccomment">/// use inplace_it::SliceMemoryGuard;</span>
-<span class="doccomment">/// use std::mem::MaybeUninit;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // Placing uninitialized memory</span>
-<span class="doccomment">/// let mut memory: [MaybeUninit&lt;usize&gt;; 100] = unsafe { MaybeUninit::uninit().assume_init() };</span>
-<span class="doccomment">/// // Initializing guard</span>
-<span class="doccomment">/// let mut memory_guard = unsafe {</span>
-<span class="doccomment">///     SliceMemoryGuard::new(</span>
-<span class="doccomment">///         // Borrowing memory</span>
-<span class="doccomment">///         &amp;mut memory,</span>
-<span class="doccomment">///         // Forwarding initializer</span>
-<span class="doccomment">///         |index| index * 2</span>
-<span class="doccomment">///     )</span>
-<span class="doccomment">/// };</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // For now, memory contains content like [0, 2, 4, 6, ..., 196, 198]</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // Using memory</span>
-<span class="doccomment">/// // Sum of [0, 2, 4, 6, ..., 196, 198] = sum of [0, 1, 2, 3, ..., 98, 99] * 2 = ( 99 * (99+1) ) / 2 * 2</span>
-<span class="doccomment">/// let sum: usize = memory_guard.iter().sum();</span>
-<span class="doccomment">/// assert_eq!(sum, 99 * 100);</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
+<span class="doccomment">/// Guard-struct used for correctly initialize uninitialized memory and `drop` it when guard goes out of scope.</span>
+<span class="doccomment">/// Usually, you *should not* use this struct to handle your memory.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ### Safety</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// If you use this struct manually, remember: `&amp;mut [MaybeUninit&lt;T&gt;]`&#39;s content will be overwriten while initialization.</span>
+<span class="doccomment">/// So it is *not safe* to apply this struct to already initialized data and it can lead to *memory leaks*.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ### Example</span>
+<span class="doccomment">/// ```rust</span>
+<span class="doccomment">/// use inplace_it::SliceMemoryGuard;</span>
+<span class="doccomment">/// use std::mem::MaybeUninit;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// // Placing uninitialized memory</span>
+<span class="doccomment">/// let mut memory: [MaybeUninit&lt;usize&gt;; 100] = unsafe { MaybeUninit::uninit().assume_init() };</span>
+<span class="doccomment">/// // Initializing guard</span>
+<span class="doccomment">/// let mut memory_guard = unsafe {</span>
+<span class="doccomment">///     SliceMemoryGuard::new(</span>
+<span class="doccomment">///         // Borrowing memory</span>
+<span class="doccomment">///         &amp;mut memory,</span>
+<span class="doccomment">///         // Forwarding initializer</span>
+<span class="doccomment">///         |index| index * 2</span>
+<span class="doccomment">///     )</span>
+<span class="doccomment">/// };</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// // For now, memory contains content like [0, 2, 4, 6, ..., 196, 198]</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// // Using memory</span>
+<span class="doccomment">/// // Sum of [0, 2, 4, 6, ..., 196, 198] = sum of [0, 1, 2, 3, ..., 98, 99] * 2 = ( 99 * (99+1) ) / 2 * 2</span>
+<span class="doccomment">/// let sum: usize = memory_guard.iter().sum();</span>
+<span class="doccomment">/// assert_eq!(sum, 99 * 100);</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SliceMemoryGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
     <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>],
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">SliceMemoryGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Initialize memory guard</span>
+    <span class="doccomment">/// Initialize memory guard</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>], <span class="kw-2">mut</span> <span class="ident">init</span>: <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">item</span>) <span class="kw">in</span> <span class="ident">memory</span>.<span class="ident">into_iter</span>().<span class="ident">enumerate</span>() {

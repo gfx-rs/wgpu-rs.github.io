@@ -334,98 +334,98 @@
 <span id="331">331</span>
 </pre><div class="example-wrap"><pre class="rust ">
 
-<span class="doccomment">//! DPI is important, so read the docs for this module if you don&#39;t want to be confused.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Originally, `winit` dealt entirely in physical pixels (excluding unintentional inconsistencies), but now all</span>
-<span class="doccomment">//! window-related functions both produce and consume logical pixels. Monitor-related functions still use physical</span>
-<span class="doccomment">//! pixels, as do any context-related functions in `glutin`.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! If you&#39;ve never heard of these terms before, then you&#39;re not alone, and this documentation will explain the</span>
-<span class="doccomment">//! concepts.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Modern screens have a defined physical resolution, most commonly 1920x1080. Indepedent of that is the amount of</span>
-<span class="doccomment">//! space the screen occupies, which is to say, the height and width in millimeters. The relationship between these two</span>
-<span class="doccomment">//! measurements is the *pixel density*. Mobile screens require a high pixel density, as they&#39;re held close to the</span>
-<span class="doccomment">//! eyes. Larger displays also require a higher pixel density, hence the growing presence of 1440p and 4K displays.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! So, this presents a problem. Let&#39;s say we want to render a square 100px button. It will occupy 100x100 of the</span>
-<span class="doccomment">//! screen&#39;s pixels, which in many cases, seems perfectly fine. However, because this size doesn&#39;t account for the</span>
-<span class="doccomment">//! screen&#39;s dimensions or pixel density, the button&#39;s size can vary quite a bit. On a 4K display, it would be unusably</span>
-<span class="doccomment">//! small.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! That&#39;s a description of what happens when the button is 100x100 *physical* pixels. Instead, let&#39;s try using 100x100</span>
-<span class="doccomment">//! *logical* pixels. To map logical pixels to physical pixels, we simply multiply by the DPI (dots per inch) factor.</span>
-<span class="doccomment">//! On a &quot;typical&quot; desktop display, the DPI factor will be 1.0, so 100x100 logical pixels equates to 100x100 physical</span>
-<span class="doccomment">//! pixels. However, a 1440p display may have a DPI factor of 1.25, so the button is rendered as 125x125 physical pixels.</span>
-<span class="doccomment">//! Ideally, the button now has approximately the same perceived size across varying displays.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Failure to account for the DPI factor can create a badly degraded user experience. Most notably, it can make users</span>
-<span class="doccomment">//! feel like they have bad eyesight, which will potentially cause them to think about growing elderly, resulting in</span>
-<span class="doccomment">//! them entering an existential panic. Once users enter that state, they will no longer be focused on your application.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! There are two ways to get the DPI factor:</span>
-<span class="doccomment">//! - You can track the [`HiDpiFactorChanged`](../enum.WindowEvent.html#variant.HiDpiFactorChanged) event of your</span>
-<span class="doccomment">//!   windows. This event is sent any time the DPI factor changes, either because the window moved to another monitor,</span>
-<span class="doccomment">//!   or because the user changed the configuration of their screen.</span>
-<span class="doccomment">//! - You can also retrieve the DPI factor of a monitor by calling</span>
-<span class="doccomment">//!   [`MonitorId::get_hidpi_factor`](../struct.MonitorId.html#method.get_hidpi_factor), or the</span>
-<span class="doccomment">//!   current DPI factor applied to a window by calling</span>
-<span class="doccomment">//!   [`Window::get_hidpi_factor`](../struct.Window.html#method.get_hidpi_factor), which is roughly equivalent</span>
-<span class="doccomment">//!   to `window.get_current_monitor().get_hidpi_factor()`.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Depending on the platform, the window&#39;s actual DPI factor may only be known after</span>
-<span class="doccomment">//! the event loop has started and your window has been drawn once. To properly handle these cases,</span>
-<span class="doccomment">//! the most robust way is to monitor the [`HiDpiFactorChanged`](../enum.WindowEvent.html#variant.HiDpiFactorChanged)</span>
-<span class="doccomment">//! event and dynamically adapt your drawing logic to follow the DPI factor.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Here&#39;s an overview of what sort of DPI factors you can expect, and where they come from:</span>
-<span class="doccomment">//! - **Windows:** On Windows 8 and 10, per-monitor scaling is readily configured by users from the display settings.</span>
-<span class="doccomment">//! While users are free to select any option they want, they&#39;re only given a selection of &quot;nice&quot; DPI factors, i.e.</span>
-<span class="doccomment">//! 1.0, 1.25, 1.5... on Windows 7, the DPI factor is global and changing it requires logging out.</span>
-<span class="doccomment">//! - **macOS:** The buzzword is &quot;retina displays&quot;, which have a DPI factor of 2.0. Otherwise, the DPI factor is 1.0.</span>
-<span class="doccomment">//! Intermediate DPI factors are never used, thus 1440p displays/etc. aren&#39;t properly supported. It&#39;s possible for any</span>
-<span class="doccomment">//! display to use that 2.0 DPI factor, given the use of the command line.</span>
-<span class="doccomment">//! - **X11:** On X11, we calcuate the DPI factor based on the millimeter dimensions provided by XRandR. This can</span>
-<span class="doccomment">//! result in a wide range of possible values, including some interesting ones like 1.0833333333333333. This can be</span>
-<span class="doccomment">//! overridden using the `WINIT_HIDPI_FACTOR` environment variable, though that&#39;s not recommended.</span>
-<span class="doccomment">//! - **Wayland:** On Wayland, DPI factors are set per-screen by the server, and are always integers (most often 1 or 2).</span>
-<span class="doccomment">//! - **iOS:** DPI factors are both constant and device-specific on iOS.</span>
-<span class="doccomment">//! - **Android:** This feature isn&#39;t yet implemented on Android, so the DPI factor will always be returned as 1.0.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The window&#39;s logical size is conserved across DPI changes, resulting in the physical size changing instead. This</span>
-<span class="doccomment">//! may be surprising on X11, but is quite standard elsewhere. Physical size changes always produce a</span>
-<span class="doccomment">//! [`Resized`](../enum.WindowEvent.html#variant.Resized) event, even on platforms where no resize actually occurs,</span>
-<span class="doccomment">//! such as macOS and Wayland. As a result, it&#39;s not necessary to separately handle</span>
-<span class="doccomment">//! [`HiDpiFactorChanged`](../enum.WindowEvent.html#variant.HiDpiFactorChanged) if you&#39;re only listening for size.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Your GPU has no awareness of the concept of logical pixels, and unless you like wasting pixel density, your</span>
-<span class="doccomment">//! framebuffer&#39;s size should be in physical pixels.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! `winit` will send [`Resized`](../enum.WindowEvent.html#variant.Resized) events whenever a window&#39;s logical size</span>
-<span class="doccomment">//! changes, and [`HiDpiFactorChanged`](../enum.WindowEvent.html#variant.HiDpiFactorChanged) events</span>
-<span class="doccomment">//! whenever the DPI factor changes. Receiving either of these events means that the physical size of your window has</span>
-<span class="doccomment">//! changed, and you should recompute it using the latest values you received for each. If the logical size and the</span>
-<span class="doccomment">//! DPI factor change simultaneously, `winit` will send both events together; thus, it&#39;s recommended to buffer</span>
-<span class="doccomment">//! these events and process them at the end of the queue.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! If you never received any [`HiDpiFactorChanged`](../enum.WindowEvent.html#variant.HiDpiFactorChanged) events,</span>
-<span class="doccomment">//! then your window&#39;s DPI factor is 1.</span>
+<span class="doccomment">//! DPI is important, so read the docs for this module if you don&#39;t want to be confused.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Originally, `winit` dealt entirely in physical pixels (excluding unintentional inconsistencies), but now all</span>
+<span class="doccomment">//! window-related functions both produce and consume logical pixels. Monitor-related functions still use physical</span>
+<span class="doccomment">//! pixels, as do any context-related functions in `glutin`.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! If you&#39;ve never heard of these terms before, then you&#39;re not alone, and this documentation will explain the</span>
+<span class="doccomment">//! concepts.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Modern screens have a defined physical resolution, most commonly 1920x1080. Indepedent of that is the amount of</span>
+<span class="doccomment">//! space the screen occupies, which is to say, the height and width in millimeters. The relationship between these two</span>
+<span class="doccomment">//! measurements is the *pixel density*. Mobile screens require a high pixel density, as they&#39;re held close to the</span>
+<span class="doccomment">//! eyes. Larger displays also require a higher pixel density, hence the growing presence of 1440p and 4K displays.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! So, this presents a problem. Let&#39;s say we want to render a square 100px button. It will occupy 100x100 of the</span>
+<span class="doccomment">//! screen&#39;s pixels, which in many cases, seems perfectly fine. However, because this size doesn&#39;t account for the</span>
+<span class="doccomment">//! screen&#39;s dimensions or pixel density, the button&#39;s size can vary quite a bit. On a 4K display, it would be unusably</span>
+<span class="doccomment">//! small.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! That&#39;s a description of what happens when the button is 100x100 *physical* pixels. Instead, let&#39;s try using 100x100</span>
+<span class="doccomment">//! *logical* pixels. To map logical pixels to physical pixels, we simply multiply by the DPI (dots per inch) factor.</span>
+<span class="doccomment">//! On a &quot;typical&quot; desktop display, the DPI factor will be 1.0, so 100x100 logical pixels equates to 100x100 physical</span>
+<span class="doccomment">//! pixels. However, a 1440p display may have a DPI factor of 1.25, so the button is rendered as 125x125 physical pixels.</span>
+<span class="doccomment">//! Ideally, the button now has approximately the same perceived size across varying displays.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Failure to account for the DPI factor can create a badly degraded user experience. Most notably, it can make users</span>
+<span class="doccomment">//! feel like they have bad eyesight, which will potentially cause them to think about growing elderly, resulting in</span>
+<span class="doccomment">//! them entering an existential panic. Once users enter that state, they will no longer be focused on your application.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! There are two ways to get the DPI factor:</span>
+<span class="doccomment">//! - You can track the [`HiDpiFactorChanged`](../enum.WindowEvent.html#variant.HiDpiFactorChanged) event of your</span>
+<span class="doccomment">//!   windows. This event is sent any time the DPI factor changes, either because the window moved to another monitor,</span>
+<span class="doccomment">//!   or because the user changed the configuration of their screen.</span>
+<span class="doccomment">//! - You can also retrieve the DPI factor of a monitor by calling</span>
+<span class="doccomment">//!   [`MonitorId::get_hidpi_factor`](../struct.MonitorId.html#method.get_hidpi_factor), or the</span>
+<span class="doccomment">//!   current DPI factor applied to a window by calling</span>
+<span class="doccomment">//!   [`Window::get_hidpi_factor`](../struct.Window.html#method.get_hidpi_factor), which is roughly equivalent</span>
+<span class="doccomment">//!   to `window.get_current_monitor().get_hidpi_factor()`.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Depending on the platform, the window&#39;s actual DPI factor may only be known after</span>
+<span class="doccomment">//! the event loop has started and your window has been drawn once. To properly handle these cases,</span>
+<span class="doccomment">//! the most robust way is to monitor the [`HiDpiFactorChanged`](../enum.WindowEvent.html#variant.HiDpiFactorChanged)</span>
+<span class="doccomment">//! event and dynamically adapt your drawing logic to follow the DPI factor.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Here&#39;s an overview of what sort of DPI factors you can expect, and where they come from:</span>
+<span class="doccomment">//! - **Windows:** On Windows 8 and 10, per-monitor scaling is readily configured by users from the display settings.</span>
+<span class="doccomment">//! While users are free to select any option they want, they&#39;re only given a selection of &quot;nice&quot; DPI factors, i.e.</span>
+<span class="doccomment">//! 1.0, 1.25, 1.5... on Windows 7, the DPI factor is global and changing it requires logging out.</span>
+<span class="doccomment">//! - **macOS:** The buzzword is &quot;retina displays&quot;, which have a DPI factor of 2.0. Otherwise, the DPI factor is 1.0.</span>
+<span class="doccomment">//! Intermediate DPI factors are never used, thus 1440p displays/etc. aren&#39;t properly supported. It&#39;s possible for any</span>
+<span class="doccomment">//! display to use that 2.0 DPI factor, given the use of the command line.</span>
+<span class="doccomment">//! - **X11:** On X11, we calcuate the DPI factor based on the millimeter dimensions provided by XRandR. This can</span>
+<span class="doccomment">//! result in a wide range of possible values, including some interesting ones like 1.0833333333333333. This can be</span>
+<span class="doccomment">//! overridden using the `WINIT_HIDPI_FACTOR` environment variable, though that&#39;s not recommended.</span>
+<span class="doccomment">//! - **Wayland:** On Wayland, DPI factors are set per-screen by the server, and are always integers (most often 1 or 2).</span>
+<span class="doccomment">//! - **iOS:** DPI factors are both constant and device-specific on iOS.</span>
+<span class="doccomment">//! - **Android:** This feature isn&#39;t yet implemented on Android, so the DPI factor will always be returned as 1.0.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The window&#39;s logical size is conserved across DPI changes, resulting in the physical size changing instead. This</span>
+<span class="doccomment">//! may be surprising on X11, but is quite standard elsewhere. Physical size changes always produce a</span>
+<span class="doccomment">//! [`Resized`](../enum.WindowEvent.html#variant.Resized) event, even on platforms where no resize actually occurs,</span>
+<span class="doccomment">//! such as macOS and Wayland. As a result, it&#39;s not necessary to separately handle</span>
+<span class="doccomment">//! [`HiDpiFactorChanged`](../enum.WindowEvent.html#variant.HiDpiFactorChanged) if you&#39;re only listening for size.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Your GPU has no awareness of the concept of logical pixels, and unless you like wasting pixel density, your</span>
+<span class="doccomment">//! framebuffer&#39;s size should be in physical pixels.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! `winit` will send [`Resized`](../enum.WindowEvent.html#variant.Resized) events whenever a window&#39;s logical size</span>
+<span class="doccomment">//! changes, and [`HiDpiFactorChanged`](../enum.WindowEvent.html#variant.HiDpiFactorChanged) events</span>
+<span class="doccomment">//! whenever the DPI factor changes. Receiving either of these events means that the physical size of your window has</span>
+<span class="doccomment">//! changed, and you should recompute it using the latest values you received for each. If the logical size and the</span>
+<span class="doccomment">//! DPI factor change simultaneously, `winit` will send both events together; thus, it&#39;s recommended to buffer</span>
+<span class="doccomment">//! these events and process them at the end of the queue.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! If you never received any [`HiDpiFactorChanged`](../enum.WindowEvent.html#variant.HiDpiFactorChanged) events,</span>
+<span class="doccomment">//! then your window&#39;s DPI factor is 1.</span>
 
-<span class="doccomment">/// Checks that the DPI factor is a normal positive `f64`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// All functions that take a DPI factor assert that this will return `true`. If you&#39;re sourcing DPI factors from</span>
-<span class="doccomment">/// anywhere other than winit, it&#39;s recommended to validate them using this function before passing them to winit;</span>
-<span class="doccomment">/// otherwise, you risk panics.</span>
+<span class="doccomment">/// Checks that the DPI factor is a normal positive `f64`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// All functions that take a DPI factor assert that this will return `true`. If you&#39;re sourcing DPI factors from</span>
+<span class="doccomment">/// anywhere other than winit, it&#39;s recommended to validate them using this function before passing them to winit;</span>
+<span class="doccomment">/// otherwise, you risk panics.</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate_hidpi_factor</span>(<span class="ident">dpi_factor</span>: <span class="ident">f64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="ident">dpi_factor</span>.<span class="ident">is_sign_positive</span>() <span class="op">&amp;&amp;</span> <span class="ident">dpi_factor</span>.<span class="ident">is_normal</span>()
 }
 
-<span class="doccomment">/// A position represented in logical pixels.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The position is stored as floats, so please be careful. Casting floats to integers truncates the fractional part,</span>
-<span class="doccomment">/// which can cause noticable issues. To help with that, an `Into&lt;(i32, i32)&gt;` implementation is provided which</span>
-<span class="doccomment">/// does the rounding for you.</span>
+<span class="doccomment">/// A position represented in logical pixels.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The position is stored as floats, so please be careful. Casting floats to integers truncates the fractional part,</span>
+<span class="doccomment">/// which can cause noticable issues. To help with that, an `Into&lt;(i32, i32)&gt;` implementation is provided which</span>
+<span class="doccomment">/// does the rounding for you.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LogicalPosition</span> {
@@ -475,18 +475,18 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span>(<span class="ident">i32</span>, <span class="ident">i32</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">LogicalPosition</span> {
-    <span class="doccomment">/// Note that this rounds instead of truncating.</span>
+    <span class="doccomment">/// Note that this rounds instead of truncating.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">into</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">i32</span>, <span class="ident">i32</span>) {
         (<span class="self">self</span>.<span class="ident">x</span>.<span class="ident">round</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="self">self</span>.<span class="ident">y</span>.<span class="ident">round</span>() <span class="kw">as</span> <span class="kw">_</span>)
     }
 }
 
-<span class="doccomment">/// A position represented in physical pixels.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The position is stored as floats, so please be careful. Casting floats to integers truncates the fractional part,</span>
-<span class="doccomment">/// which can cause noticable issues. To help with that, an `Into&lt;(i32, i32)&gt;` implementation is provided which</span>
-<span class="doccomment">/// does the rounding for you.</span>
+<span class="doccomment">/// A position represented in physical pixels.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The position is stored as floats, so please be careful. Casting floats to integers truncates the fractional part,</span>
+<span class="doccomment">/// which can cause noticable issues. To help with that, an `Into&lt;(i32, i32)&gt;` implementation is provided which</span>
+<span class="doccomment">/// does the rounding for you.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PhysicalPosition</span> {
@@ -536,18 +536,18 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span>(<span class="ident">i32</span>, <span class="ident">i32</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PhysicalPosition</span> {
-    <span class="doccomment">/// Note that this rounds instead of truncating.</span>
+    <span class="doccomment">/// Note that this rounds instead of truncating.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">into</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">i32</span>, <span class="ident">i32</span>) {
         (<span class="self">self</span>.<span class="ident">x</span>.<span class="ident">round</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="self">self</span>.<span class="ident">y</span>.<span class="ident">round</span>() <span class="kw">as</span> <span class="kw">_</span>)
     }
 }
 
-<span class="doccomment">/// A size represented in logical pixels.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The size is stored as floats, so please be careful. Casting floats to integers truncates the fractional part,</span>
-<span class="doccomment">/// which can cause noticable issues. To help with that, an `Into&lt;(u32, u32)&gt;` implementation is provided which</span>
-<span class="doccomment">/// does the rounding for you.</span>
+<span class="doccomment">/// A size represented in logical pixels.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The size is stored as floats, so please be careful. Casting floats to integers truncates the fractional part,</span>
+<span class="doccomment">/// which can cause noticable issues. To help with that, an `Into&lt;(u32, u32)&gt;` implementation is provided which</span>
+<span class="doccomment">/// does the rounding for you.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LogicalSize</span> {
@@ -597,18 +597,18 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">LogicalSize</span> {
-    <span class="doccomment">/// Note that this rounds instead of truncating.</span>
+    <span class="doccomment">/// Note that this rounds instead of truncating.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">into</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">u32</span>, <span class="ident">u32</span>) {
         (<span class="self">self</span>.<span class="ident">width</span>.<span class="ident">round</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="self">self</span>.<span class="ident">height</span>.<span class="ident">round</span>() <span class="kw">as</span> <span class="kw">_</span>)
     }
 }
 
-<span class="doccomment">/// A size represented in physical pixels.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The size is stored as floats, so please be careful. Casting floats to integers truncates the fractional part,</span>
-<span class="doccomment">/// which can cause noticable issues. To help with that, an `Into&lt;(u32, u32)&gt;` implementation is provided which</span>
-<span class="doccomment">/// does the rounding for you.</span>
+<span class="doccomment">/// A size represented in physical pixels.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The size is stored as floats, so please be careful. Casting floats to integers truncates the fractional part,</span>
+<span class="doccomment">/// which can cause noticable issues. To help with that, an `Into&lt;(u32, u32)&gt;` implementation is provided which</span>
+<span class="doccomment">/// does the rounding for you.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>, <span class="ident">Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PhysicalSize</span> {
@@ -658,7 +658,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Into</span><span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>)<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PhysicalSize</span> {
-    <span class="doccomment">/// Note that this rounds instead of truncating.</span>
+    <span class="doccomment">/// Note that this rounds instead of truncating.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">into</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">u32</span>, <span class="ident">u32</span>) {
         (<span class="self">self</span>.<span class="ident">width</span>.<span class="ident">round</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="self">self</span>.<span class="ident">height</span>.<span class="ident">round</span>() <span class="kw">as</span> <span class="kw">_</span>)

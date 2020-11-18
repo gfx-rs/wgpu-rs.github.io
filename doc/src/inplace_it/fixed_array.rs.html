@@ -330,12 +330,12 @@
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">guards</span>::<span class="ident">UninitializedSliceMemoryGuard</span>;
 <span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">MaybeUninit</span>;
 
-<span class="doccomment">/// This trait is a extended copy of unstable</span>
-<span class="doccomment">/// [core::array::FixedSizeArray](core::array::FixedSizeArray).</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This is not a perfect solution. Inheritance from `AsRef&lt;[T]&gt; + AsMut&lt;[T]&gt;` would be preferable.</span>
-<span class="doccomment">/// But until we cannot implement `std` traits for `std` types so that inheritance limits us</span>
-<span class="doccomment">/// and we cannot use `[T; n]` where `n &gt; 32`.</span>
+<span class="doccomment">/// This trait is a extended copy of unstable</span>
+<span class="doccomment">/// [core::array::FixedSizeArray](core::array::FixedSizeArray).</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This is not a perfect solution. Inheritance from `AsRef&lt;[T]&gt; + AsMut&lt;[T]&gt;` would be preferable.</span>
+<span class="doccomment">/// But until we cannot implement `std` traits for `std` types so that inheritance limits us</span>
+<span class="doccomment">/// and we cannot use `[T; n]` where `n &gt; 32`.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">FixedArray</span> {
     <span class="kw">type</span> <span class="ident">Item</span>;
     <span class="kw">const</span> <span class="ident">LEN</span>: <span class="ident">usize</span>;
@@ -393,43 +393,43 @@
     <span class="number">3840</span>, <span class="number">3872</span>, <span class="number">3904</span>, <span class="number">3936</span>, <span class="number">3968</span>, <span class="number">4000</span>, <span class="number">4032</span>, <span class="number">4064</span>, <span class="number">4096</span>
 );
 
-<span class="doccomment">/// `try_inplace_array` trying to place an array of `T` on the stack and pass the guard of memory into the</span>
-<span class="doccomment">/// `consumer` closure. `consumer`&#39;s result will be returned as `Ok(result)`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If the result of array of `T` is more than 4096 then `Err(consumer)` will be returned.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Sometimes size of allocated array might be more than requested. For sizes larger than 32,</span>
-<span class="doccomment">/// the following formula is used: `roundUp(size/32)*32`. This is a simplification that used</span>
-<span class="doccomment">/// for keeping code short, simple and able to optimize.</span>
-<span class="doccomment">/// For example, for requested 50 item `[T; 64]` will be allocated.</span>
-<span class="doccomment">/// For 120 items - `[T; 128]` and so on.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Note that rounding size up is working for fixed-sized arrays only. If function decides to</span>
-<span class="doccomment">/// allocate a vector then its size will be equal to requested.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Examples</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```rust</span>
-<span class="doccomment">/// use inplace_it::{</span>
-<span class="doccomment">///     try_inplace_array,</span>
-<span class="doccomment">///     UninitializedSliceMemoryGuard,</span>
-<span class="doccomment">/// };</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// let sum = try_inplace_array(100, |uninit_guard: UninitializedSliceMemoryGuard&lt;u16&gt;| {</span>
-<span class="doccomment">///     assert_eq!(uninit_guard.len(), 128);</span>
-<span class="doccomment">///     // For now, our memory is placed/allocated but uninitialized.</span>
-<span class="doccomment">///     // Let&#39;s initialize it!</span>
-<span class="doccomment">///     let guard = uninit_guard.init(|index| index as u16 * 2);</span>
-<span class="doccomment">///     // For now, memory contains content like [0, 2, 4, 6, ..., 252, 254]</span>
-<span class="doccomment">///     let sum: u16 = guard.iter().sum();</span>
-<span class="doccomment">///     sum</span>
-<span class="doccomment">/// });</span>
-<span class="doccomment">/// // Sum of [0, 2, 4, 6, ..., 252, 254] = sum of [0, 1, 2, 3, ..., 126, 127] * 2 = ( 127 * (127+1) ) / 2 * 2</span>
-<span class="doccomment">/// match sum {</span>
-<span class="doccomment">///     Ok(sum) =&gt; assert_eq!(sum, 127 * 128),</span>
-<span class="doccomment">///     Err(_) =&gt; unreachable!(&quot;Placing fails&quot;),</span>
-<span class="doccomment">/// };</span>
-<span class="doccomment">/// ```</span>
+<span class="doccomment">/// `try_inplace_array` trying to place an array of `T` on the stack and pass the guard of memory into the</span>
+<span class="doccomment">/// `consumer` closure. `consumer`&#39;s result will be returned as `Ok(result)`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// If the result of array of `T` is more than 4096 then `Err(consumer)` will be returned.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Sometimes size of allocated array might be more than requested. For sizes larger than 32,</span>
+<span class="doccomment">/// the following formula is used: `roundUp(size/32)*32`. This is a simplification that used</span>
+<span class="doccomment">/// for keeping code short, simple and able to optimize.</span>
+<span class="doccomment">/// For example, for requested 50 item `[T; 64]` will be allocated.</span>
+<span class="doccomment">/// For 120 items - `[T; 128]` and so on.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Note that rounding size up is working for fixed-sized arrays only. If function decides to</span>
+<span class="doccomment">/// allocate a vector then its size will be equal to requested.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// # Examples</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```rust</span>
+<span class="doccomment">/// use inplace_it::{</span>
+<span class="doccomment">///     try_inplace_array,</span>
+<span class="doccomment">///     UninitializedSliceMemoryGuard,</span>
+<span class="doccomment">/// };</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// let sum = try_inplace_array(100, |uninit_guard: UninitializedSliceMemoryGuard&lt;u16&gt;| {</span>
+<span class="doccomment">///     assert_eq!(uninit_guard.len(), 128);</span>
+<span class="doccomment">///     // For now, our memory is placed/allocated but uninitialized.</span>
+<span class="doccomment">///     // Let&#39;s initialize it!</span>
+<span class="doccomment">///     let guard = uninit_guard.init(|index| index as u16 * 2);</span>
+<span class="doccomment">///     // For now, memory contains content like [0, 2, 4, 6, ..., 252, 254]</span>
+<span class="doccomment">///     let sum: u16 = guard.iter().sum();</span>
+<span class="doccomment">///     sum</span>
+<span class="doccomment">/// });</span>
+<span class="doccomment">/// // Sum of [0, 2, 4, 6, ..., 252, 254] = sum of [0, 1, 2, 3, ..., 126, 127] * 2 = ( 127 * (127+1) ) / 2 * 2</span>
+<span class="doccomment">/// match sum {</span>
+<span class="doccomment">///     Ok(sum) =&gt; assert_eq!(sum, 127 * 128),</span>
+<span class="doccomment">///     Err(_) =&gt; unreachable!(&quot;Placing fails&quot;),</span>
+<span class="doccomment">/// };</span>
+<span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_inplace_array</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">R</span>, <span class="ident">Consumer</span><span class="op">&gt;</span>(<span class="ident">size</span>: <span class="ident">usize</span>, <span class="ident">consumer</span>: <span class="ident">Consumer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">Consumer</span><span class="op">&gt;</span>
     <span class="kw">where</span> <span class="ident">Consumer</span>: <span class="ident">FnOnce</span>(<span class="ident">UninitializedSliceMemoryGuard</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">R</span>
 {

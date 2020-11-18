@@ -194,15 +194,15 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">PIXEL_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">Pixel</span><span class="op">&gt;</span>();
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="doccomment">/// An error produced when using `Icon::from_rgba` with invalid arguments.</span>
+<span class="doccomment">/// An error produced when using `Icon::from_rgba` with invalid arguments.</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BadIcon</span> {
-    <span class="doccomment">/// Produced when the length of the `rgba` argument isn&#39;t divisible by 4, thus `rgba` can&#39;t be</span>
-    <span class="doccomment">/// safely interpreted as 32bpp RGBA pixels.</span>
+    <span class="doccomment">/// Produced when the length of the `rgba` argument isn&#39;t divisible by 4, thus `rgba` can&#39;t be</span>
+    <span class="doccomment">/// safely interpreted as 32bpp RGBA pixels.</span>
     <span class="ident">ByteCountNotDivisibleBy4</span> {
         <span class="ident">byte_count</span>: <span class="ident">usize</span>,
     },
-    <span class="doccomment">/// Produced when the number of pixels (`rgba.len() / 4`) isn&#39;t equal to `width * height`.</span>
-    <span class="doccomment">/// At least one of your arguments is incorrect.</span>
+    <span class="doccomment">/// Produced when the number of pixels (`rgba.len() / 4`) isn&#39;t equal to `width * height`.</span>
+    <span class="doccomment">/// At least one of your arguments is incorrect.</span>
     <span class="ident">DimensionsVsPixelCount</span> {
         <span class="ident">width</span>: <span class="ident">u32</span>,
         <span class="ident">height</span>: <span class="ident">u32</span>,
@@ -243,11 +243,11 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="doccomment">/// An icon used for the window titlebar, taskbar, etc.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Enabling the `icon_loading` feature provides you with several convenience methods for creating</span>
-<span class="doccomment">/// an `Icon` from any format supported by the [image](https://github.com/PistonDevelopers/image)</span>
-<span class="doccomment">/// crate.</span>
+<span class="doccomment">/// An icon used for the window titlebar, taskbar, etc.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Enabling the `icon_loading` feature provides you with several convenience methods for creating</span>
+<span class="doccomment">/// an `Icon` from any format supported by the [image](https://github.com/PistonDevelopers/image)</span>
+<span class="doccomment">/// crate.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Icon</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">rgba</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">width</span>: <span class="ident">u32</span>,
@@ -255,10 +255,10 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Icon</span> {
-    <span class="doccomment">/// Creates an `Icon` from 32bpp RGBA data.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The length of `rgba` must be divisible by 4, and `width * height` must equal</span>
-    <span class="doccomment">/// `rgba.len() / 4`. Otherwise, this will return a `BadIcon` error.</span>
+    <span class="doccomment">/// Creates an `Icon` from 32bpp RGBA data.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The length of `rgba` must be divisible by 4, and `width * height` must equal</span>
+    <span class="doccomment">/// `rgba.len() / 4`. Otherwise, this will return a `BadIcon` error.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_rgba</span>(<span class="ident">rgba</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">BadIcon</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">rgba</span>.<span class="ident">len</span>() <span class="op">%</span> <span class="ident">PIXEL_SIZE</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BadIcon</span>::<span class="ident">ByteCountNotDivisibleBy4</span> { <span class="ident">byte_count</span>: <span class="ident">rgba</span>.<span class="ident">len</span>() });
@@ -277,17 +277,17 @@
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;icon_loading&quot;</span>)]</span>
-    <span class="doccomment">/// Loads an `Icon` from the path of an image on the filesystem.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Requires the `icon_loading` feature.</span>
+    <span class="doccomment">/// Loads an `Icon` from the path of an image on the filesystem.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Requires the `icon_loading` feature.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_path</span><span class="op">&lt;</span><span class="ident">P</span>: <span class="ident">AsRef</span><span class="op">&lt;</span><span class="ident">Path</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">path</span>: <span class="ident">P</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">image</span>::<span class="ident">ImageResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">image</span>::<span class="ident">open</span>(<span class="ident">path</span>).<span class="ident">map</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;icon_loading&quot;</span>)]</span>
-    <span class="doccomment">/// Loads an `Icon` from anything implementing `BufRead` and `Seek`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Requires the `icon_loading` feature.</span>
+    <span class="doccomment">/// Loads an `Icon` from anything implementing `BufRead` and `Seek`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Requires the `icon_loading` feature.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_reader</span><span class="op">&lt;</span><span class="ident">R</span>: <span class="ident">BufRead</span> <span class="op">+</span> <span class="ident">Seek</span><span class="op">&gt;</span>(
         <span class="ident">reader</span>: <span class="ident">R</span>,
         <span class="ident">format</span>: <span class="ident">image</span>::<span class="ident">ImageFormat</span>,
@@ -296,18 +296,18 @@
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;icon_loading&quot;</span>)]</span>
-    <span class="doccomment">/// Loads an `Icon` from the unprocessed bytes of an image file.</span>
-    <span class="doccomment">/// Uses heuristics to determine format.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Requires the `icon_loading` feature.</span>
+    <span class="doccomment">/// Loads an `Icon` from the unprocessed bytes of an image file.</span>
+    <span class="doccomment">/// Uses heuristics to determine format.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Requires the `icon_loading` feature.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">image</span>::<span class="ident">ImageResult</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">image</span>::<span class="ident">load_from_memory</span>(<span class="ident">bytes</span>).<span class="ident">map</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;icon_loading&quot;</span>)]</span>
-    <span class="doccomment">/// Loads an `Icon` from the unprocessed bytes of an image.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Requires the `icon_loading` feature.</span>
+    <span class="doccomment">/// Loads an `Icon` from the unprocessed bytes of an image.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Requires the `icon_loading` feature.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes_with_format</span>(
         <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
         <span class="ident">format</span>: <span class="ident">image</span>::<span class="ident">ImageFormat</span>,
@@ -317,7 +317,7 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;icon_loading&quot;</span>)]</span>
-<span class="doccomment">/// Requires the `icon_loading` feature.</span>
+<span class="doccomment">/// Requires the `icon_loading` feature.</span>
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">image</span>::<span class="ident">DynamicImage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Icon</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">image</span>: <span class="ident">image</span>::<span class="ident">DynamicImage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">use</span> <span class="ident">image</span>::{<span class="ident">GenericImageView</span>, <span class="ident">Pixel</span>};
@@ -331,7 +331,7 @@
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;icon_loading&quot;</span>)]</span>
-<span class="doccomment">/// Requires the `icon_loading` feature.</span>
+<span class="doccomment">/// Requires the `icon_loading` feature.</span>
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">image</span>::<span class="ident">RgbaImage</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Icon</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">buf</span>: <span class="ident">image</span>::<span class="ident">RgbaImage</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> (<span class="ident">width</span>, <span class="ident">height</span>) <span class="op">=</span> <span class="ident">buf</span>.<span class="ident">dimensions</span>();

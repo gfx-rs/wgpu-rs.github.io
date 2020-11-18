@@ -1584,8 +1584,8 @@
     <span class="ident">xi2ext</span>: <span class="ident">XExtension</span>,
     <span class="ident">pending_wakeup</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">AtomicBool</span><span class="op">&gt;</span>,
     <span class="ident">root</span>: <span class="ident">ffi</span>::<span class="ident">Window</span>,
-    <span class="comment">// A dummy, `InputOnly` window that we can use to receive wakeup events and interrupt blocking</span>
-    <span class="comment">// `XNextEvent` calls.</span>
+    <span class="comment">// A dummy, `InputOnly` window that we can use to receive wakeup events and interrupt blocking</span>
+    <span class="comment">// `XNextEvent` calls.</span>
     <span class="ident">wakeup_dummy_window</span>: <span class="ident">ffi</span>::<span class="ident">Window</span>,
 }
 
@@ -1606,8 +1606,8 @@
             .<span class="ident">expect</span>(<span class="string">&quot;Failed to call XInternAtoms when initializing drag and drop&quot;</span>);
 
         <span class="kw">let</span> (<span class="ident">ime_sender</span>, <span class="ident">ime_receiver</span>) <span class="op">=</span> <span class="ident">mpsc</span>::<span class="ident">channel</span>();
-        <span class="comment">// Input methods will open successfully without setting the locale, but it won&#39;t be</span>
-        <span class="comment">// possible to actually commit pre-edit sequences.</span>
+        <span class="comment">// Input methods will open successfully without setting the locale, but it won&#39;t be</span>
+        <span class="comment">// possible to actually commit pre-edit sequences.</span>
         <span class="kw">unsafe</span> { <span class="ident">setlocale</span>(<span class="ident">LC_CTYPE</span>, <span class="string">b&quot;\0&quot;</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>); }
         <span class="kw">let</span> <span class="ident">ime</span> <span class="op">=</span> <span class="ident">RefCell</span>::<span class="ident">new</span>({
             <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Ime</span>::<span class="ident">new</span>(<span class="ident">Arc</span>::<span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="ident">xconn</span>));
@@ -1688,8 +1688,8 @@
             <span class="ident">wakeup_dummy_window</span>,
         };
 
-        <span class="comment">// Register for device hotplug events</span>
-        <span class="comment">// (The request buffer is flushed during `init_device`)</span>
+        <span class="comment">// Register for device hotplug events</span>
+        <span class="comment">// (The request buffer is flushed during `init_device`)</span>
         <span class="ident">result</span>.<span class="ident">xconn</span>.<span class="ident">select_xinput_events</span>(
             <span class="ident">root</span>,
             <span class="ident">ffi</span>::<span class="ident">XIAllDevices</span>,
@@ -1701,7 +1701,7 @@
         <span class="ident">result</span>
     }
 
-    <span class="doccomment">/// Returns the `XConnection` of this events loop.</span>
+    <span class="doccomment">/// Returns the `XConnection` of this events loop.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">x_connection</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">XConnection</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">xconn</span>
@@ -1716,17 +1716,17 @@
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">poll_one_event</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">event_ptr</span> : <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ffi</span>::<span class="ident">XEvent</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="comment">// This function is used to poll and remove a single event</span>
-        <span class="comment">// from the Xlib event queue in a non-blocking, atomic way.</span>
-        <span class="comment">// XCheckIfEvent is non-blocking and removes events from queue.</span>
-        <span class="comment">// XNextEvent can&#39;t be used because it blocks while holding the</span>
-        <span class="comment">// global Xlib mutex.</span>
-        <span class="comment">// XPeekEvent does not remove events from the queue.</span>
+        <span class="comment">// This function is used to poll and remove a single event</span>
+        <span class="comment">// from the Xlib event queue in a non-blocking, atomic way.</span>
+        <span class="comment">// XCheckIfEvent is non-blocking and removes events from queue.</span>
+        <span class="comment">// XNextEvent can&#39;t be used because it blocks while holding the</span>
+        <span class="comment">// global Xlib mutex.</span>
+        <span class="comment">// XPeekEvent does not remove events from the queue.</span>
         <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">predicate</span>(
             <span class="ident">_display</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ffi</span>::<span class="ident">Display</span>,
             <span class="ident">_event</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ffi</span>::<span class="ident">XEvent</span>,
             <span class="ident">_arg</span> : <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">c_char</span>)  <span class="op">-</span><span class="op">&gt;</span> <span class="ident">c_int</span> {
-            <span class="comment">// This predicate always returns &quot;true&quot; (1) to accept all events</span>
+            <span class="comment">// This predicate always returns &quot;true&quot; (1) to accept all events</span>
             <span class="number">1</span>
         }
 
@@ -1740,32 +1740,32 @@
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">wait_for_input</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="comment">// XNextEvent can not be used in multi-threaded applications</span>
-        <span class="comment">// because it is blocking for input while holding the global</span>
-        <span class="comment">// Xlib mutex.</span>
-        <span class="comment">// To work around this issue, first flush the X11 display, then</span>
-        <span class="comment">// use select(2) to wait for input to arrive</span>
+        <span class="comment">// XNextEvent can not be used in multi-threaded applications</span>
+        <span class="comment">// because it is blocking for input while holding the global</span>
+        <span class="comment">// Xlib mutex.</span>
+        <span class="comment">// To work around this issue, first flush the X11 display, then</span>
+        <span class="comment">// use select(2) to wait for input to arrive</span>
         <span class="kw">loop</span> {
-            <span class="comment">// First use XFlush to flush any buffered x11 requests</span>
+            <span class="comment">// First use XFlush to flush any buffered x11 requests</span>
             (<span class="self">self</span>.<span class="ident">xconn</span>.<span class="ident">xlib</span>.<span class="ident">XFlush</span>)(<span class="self">self</span>.<span class="ident">xconn</span>.<span class="ident">display</span>);
 
-            <span class="comment">// Then use select(2) to wait for input data</span>
+            <span class="comment">// Then use select(2) to wait for input data</span>
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fds</span> : <span class="ident">fd_set</span> <span class="op">=</span> <span class="ident">mem</span>::<span class="ident">uninitialized</span>();
             <span class="ident">FD_ZERO</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fds</span>);
             <span class="ident">FD_SET</span>(<span class="self">self</span>.<span class="ident">xconn</span>.<span class="ident">x11_fd</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fds</span>);
             <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">select</span>(
                 <span class="self">self</span>.<span class="ident">xconn</span>.<span class="ident">x11_fd</span> <span class="op">+</span> <span class="number">1</span>,
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fds</span>, <span class="comment">// read fds</span>
-                <span class="ident">std</span>::<span class="ident">ptr</span>::<span class="ident">null_mut</span>(), <span class="comment">// write fds</span>
-                <span class="ident">std</span>::<span class="ident">ptr</span>::<span class="ident">null_mut</span>(), <span class="comment">// except fds (could be used to detect errors)</span>
-                <span class="ident">std</span>::<span class="ident">ptr</span>::<span class="ident">null_mut</span>()); <span class="comment">// timeout</span>
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fds</span>, <span class="comment">// read fds</span>
+                <span class="ident">std</span>::<span class="ident">ptr</span>::<span class="ident">null_mut</span>(), <span class="comment">// write fds</span>
+                <span class="ident">std</span>::<span class="ident">ptr</span>::<span class="ident">null_mut</span>(), <span class="comment">// except fds (could be used to detect errors)</span>
+                <span class="ident">std</span>::<span class="ident">ptr</span>::<span class="ident">null_mut</span>()); <span class="comment">// timeout</span>
 
             <span class="kw">if</span> <span class="ident">err</span> <span class="op">&lt;</span> <span class="number">0</span> {
                 <span class="kw">let</span> <span class="ident">errno_ptr</span> <span class="op">=</span> <span class="ident">__errno_location</span>();
                 <span class="kw">let</span> <span class="ident">errno</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">errno_ptr</span>;
 
                 <span class="kw">if</span> <span class="ident">errno</span> <span class="op">=</span><span class="op">=</span> <span class="ident">EINTR</span> {
-                    <span class="comment">// try again if errno is EINTR</span>
+                    <span class="comment">// try again if errno is EINTR</span>
                     <span class="kw">continue</span>;
                 }
 
@@ -1784,7 +1784,7 @@
     {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">xev</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">mem</span>::<span class="ident">uninitialized</span>() };
         <span class="kw">loop</span> {
-            <span class="comment">// Get next event</span>
+            <span class="comment">// Get next event</span>
             <span class="kw">unsafe</span> {
                 <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">poll_one_event</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">xev</span>) {
                     <span class="kw">break</span>;
@@ -1802,14 +1802,14 @@
         <span class="kw">loop</span> {
             <span class="kw">unsafe</span> {
                 <span class="kw">while</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">poll_one_event</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">xev</span>) {
-                    <span class="comment">// block until input is available</span>
+                    <span class="comment">// block until input is available</span>
                     <span class="self">self</span>.<span class="ident">wait_for_input</span>();
                 }
             };
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">control_flow</span> <span class="op">=</span> <span class="ident">ControlFlow</span>::<span class="ident">Continue</span>;
 
-            <span class="comment">// Track whether or not `Break` was returned when processing the event.</span>
+            <span class="comment">// Track whether or not `Break` was returned when processing the event.</span>
             {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cb</span> <span class="op">=</span> <span class="op">|</span><span class="ident">event</span><span class="op">|</span> {
                     <span class="kw">if</span> <span class="kw">let</span> <span class="ident">ControlFlow</span>::<span class="ident">Break</span> <span class="op">=</span> <span class="ident">callback</span>(<span class="ident">event</span>) {
@@ -1829,10 +1829,10 @@
     <span class="kw">fn</span> <span class="ident">process_event</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">xev</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ffi</span>::<span class="ident">XEvent</span>, <span class="kw-2">mut</span> <span class="ident">callback</span>: <span class="ident">F</span>)
         <span class="kw">where</span> <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="ident">Event</span>)
     {
-        <span class="comment">// XFilterEvent tells us when an event has been discarded by the input method.</span>
-        <span class="comment">// Specifically, this involves all of the KeyPress events in compose/pre-edit sequences,</span>
-        <span class="comment">// along with an extra copy of the KeyRelease events. This also prevents backspace and</span>
-        <span class="comment">// arrow keys from being detected twice.</span>
+        <span class="comment">// XFilterEvent tells us when an event has been discarded by the input method.</span>
+        <span class="comment">// Specifically, this involves all of the KeyPress events in compose/pre-edit sequences,</span>
+        <span class="comment">// along with an extra copy of the KeyRelease events. This also prevents backspace and</span>
+        <span class="comment">// arrow keys from being detected twice.</span>
         <span class="kw">if</span> <span class="ident">ffi</span>::<span class="ident">True</span> <span class="op">=</span><span class="op">=</span> <span class="kw">unsafe</span> { (<span class="self">self</span>.<span class="ident">xconn</span>.<span class="ident">xlib</span>.<span class="ident">XFilterEvent</span>)(
             <span class="ident">xev</span>,
             { <span class="kw">let</span> <span class="ident">xev</span>: <span class="kw-2">&amp;</span><span class="ident">ffi</span>::<span class="ident">XAnyEvent</span> <span class="op">=</span> <span class="ident">xev</span>.<span class="ident">as_ref</span>(); <span class="ident">xev</span>.<span class="ident">window</span> }
@@ -1872,30 +1872,30 @@
                         <span class="self">self</span>.<span class="ident">dnd</span>.<span class="ident">type_list</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">more_types</span>);
                     }
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">client_msg</span>.<span class="ident">message_type</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">dnd</span>.<span class="ident">atoms</span>.<span class="ident">position</span> {
-                    <span class="comment">// This event occurs every time the mouse moves while a file&#39;s being dragged</span>
-                    <span class="comment">// over our window. We emit HoveredFile in response; while the macOS backend</span>
-                    <span class="comment">// does that upon a drag entering, XDND doesn&#39;t have access to the actual drop</span>
-                    <span class="comment">// data until this event. For parity with other platforms, we only emit</span>
-                    <span class="comment">// `HoveredFile` the first time, though if winit&#39;s API is later extended to</span>
-                    <span class="comment">// supply position updates with `HoveredFile` or another event, implementing</span>
-                    <span class="comment">// that here would be trivial.</span>
+                    <span class="comment">// This event occurs every time the mouse moves while a file&#39;s being dragged</span>
+                    <span class="comment">// over our window. We emit HoveredFile in response; while the macOS backend</span>
+                    <span class="comment">// does that upon a drag entering, XDND doesn&#39;t have access to the actual drop</span>
+                    <span class="comment">// data until this event. For parity with other platforms, we only emit</span>
+                    <span class="comment">// `HoveredFile` the first time, though if winit&#39;s API is later extended to</span>
+                    <span class="comment">// supply position updates with `HoveredFile` or another event, implementing</span>
+                    <span class="comment">// that here would be trivial.</span>
 
                     <span class="kw">let</span> <span class="ident">source_window</span> <span class="op">=</span> <span class="ident">client_msg</span>.<span class="ident">data</span>.<span class="ident">get_long</span>(<span class="number">0</span>) <span class="kw">as</span> <span class="ident">c_ulong</span>;
 
-                    <span class="comment">// Equivalent to `(x &lt;&lt; shift) | y`</span>
-                    <span class="comment">// where `shift = mem::size_of::&lt;c_short&gt;() * 8`</span>
-                    <span class="comment">// Note that coordinates are in &quot;desktop space&quot;, not &quot;window space&quot;</span>
-                    <span class="comment">// (in X11 parlance, they&#39;re root window coordinates)</span>
-                    <span class="comment">//let packed_coordinates = client_msg.data.get_long(2);</span>
-                    <span class="comment">//let shift = mem::size_of::&lt;libc::c_short&gt;() * 8;</span>
-                    <span class="comment">//let x = packed_coordinates &gt;&gt; shift;</span>
-                    <span class="comment">//let y = packed_coordinates &amp; !(x &lt;&lt; shift);</span>
+                    <span class="comment">// Equivalent to `(x &lt;&lt; shift) | y`</span>
+                    <span class="comment">// where `shift = mem::size_of::&lt;c_short&gt;() * 8`</span>
+                    <span class="comment">// Note that coordinates are in &quot;desktop space&quot;, not &quot;window space&quot;</span>
+                    <span class="comment">// (in X11 parlance, they&#39;re root window coordinates)</span>
+                    <span class="comment">//let packed_coordinates = client_msg.data.get_long(2);</span>
+                    <span class="comment">//let shift = mem::size_of::&lt;libc::c_short&gt;() * 8;</span>
+                    <span class="comment">//let x = packed_coordinates &gt;&gt; shift;</span>
+                    <span class="comment">//let y = packed_coordinates &amp; !(x &lt;&lt; shift);</span>
 
-                    <span class="comment">// By our own state flow, `version` should never be `None` at this point.</span>
+                    <span class="comment">// By our own state flow, `version` should never be `None` at this point.</span>
                     <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">dnd</span>.<span class="ident">version</span>.<span class="ident">unwrap_or</span>(<span class="number">5</span>);
 
-                    <span class="comment">// Action is specified in versions 2 and up, though we don&#39;t need it anyway.</span>
-                    <span class="comment">//let action = client_msg.data.get_long(4);</span>
+                    <span class="comment">// Action is specified in versions 2 and up, though we don&#39;t need it anyway.</span>
+                    <span class="comment">//let action = client_msg.data.get_long(4);</span>
 
                     <span class="kw">let</span> <span class="ident">accepted</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">type_list</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">dnd</span>.<span class="ident">type_list</span> {
                         <span class="ident">type_list</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">dnd</span>.<span class="ident">atoms</span>.<span class="ident">uri_list</span>)
@@ -1910,10 +1910,10 @@
                                 <span class="kw">let</span> <span class="ident">time</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">1</span> {
                                     <span class="ident">client_msg</span>.<span class="ident">data</span>.<span class="ident">get_long</span>(<span class="number">3</span>) <span class="kw">as</span> <span class="ident">c_ulong</span>
                                 } <span class="kw">else</span> {
-                                    <span class="comment">// In version 0, time isn&#39;t specified</span>
+                                    <span class="comment">// In version 0, time isn&#39;t specified</span>
                                     <span class="ident">ffi</span>::<span class="ident">CurrentTime</span>
                                 };
-                                <span class="comment">// This results in the `SelectionNotify` event below</span>
+                                <span class="comment">// This results in the `SelectionNotify` event below</span>
                                 <span class="self">self</span>.<span class="ident">dnd</span>.<span class="ident">convert_selection</span>(<span class="ident">window</span>, <span class="ident">time</span>);
                             }
                             <span class="self">self</span>.<span class="ident">dnd</span>.<span class="ident">send_status</span>(<span class="ident">window</span>, <span class="ident">source_window</span>, <span class="ident">DndState</span>::<span class="ident">Accepted</span>)
@@ -1938,8 +1938,8 @@
                         }
                         (<span class="ident">source_window</span>, <span class="ident">DndState</span>::<span class="ident">Accepted</span>)
                     } <span class="kw">else</span> {
-                        <span class="comment">// `source_window` won&#39;t be part of our DND state if we already rejected the drop in our</span>
-                        <span class="comment">// `XdndPosition` handler.</span>
+                        <span class="comment">// `source_window` won&#39;t be part of our DND state if we already rejected the drop in our</span>
+                        <span class="comment">// `XdndPosition` handler.</span>
                         <span class="kw">let</span> <span class="ident">source_window</span> <span class="op">=</span> <span class="ident">client_msg</span>.<span class="ident">data</span>.<span class="ident">get_long</span>(<span class="number">0</span>) <span class="kw">as</span> <span class="ident">c_ulong</span>;
                         (<span class="ident">source_window</span>, <span class="ident">DndState</span>::<span class="ident">Rejected</span>)
                     };
@@ -1969,7 +1969,7 @@
                 <span class="kw">if</span> <span class="ident">xsel</span>.<span class="ident">property</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">dnd</span>.<span class="ident">atoms</span>.<span class="ident">selection</span> {
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="prelude-val">None</span>;
 
-                    <span class="comment">// This is where we receive data from drag and drop</span>
+                    <span class="comment">// This is where we receive data from drag and drop</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">data</span>) <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">dnd</span>.<span class="ident">read_data</span>(<span class="ident">window</span>) } {
                         <span class="kw">let</span> <span class="ident">parse_result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">dnd</span>.<span class="ident">parse_data</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">data</span>);
                         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="kw-2">ref</span> <span class="ident">path_list</span>) <span class="op">=</span> <span class="ident">parse_result</span> {
@@ -1998,20 +1998,20 @@
                 <span class="kw">let</span> <span class="ident">xev</span>: <span class="kw-2">&amp;</span><span class="ident">ffi</span>::<span class="ident">XConfigureEvent</span> <span class="op">=</span> <span class="ident">xev</span>.<span class="ident">as_ref</span>();
                 <span class="kw">let</span> <span class="ident">xwindow</span> <span class="op">=</span> <span class="ident">xev</span>.<span class="ident">window</span>;
                 <span class="kw">let</span> <span class="ident">events</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">with_window</span>(<span class="ident">xwindow</span>, <span class="op">|</span><span class="ident">window</span><span class="op">|</span> {
-                    <span class="comment">// So apparently...</span>
-                    <span class="comment">// `XSendEvent` (synthetic `ConfigureNotify`) -&gt; position relative to root</span>
-                    <span class="comment">// `XConfigureNotify` (real `ConfigureNotify`) -&gt; position relative to parent</span>
-                    <span class="comment">// https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.5</span>
-                    <span class="comment">// We don&#39;t want to send `Moved` when this is false, since then every `Resized`</span>
-                    <span class="comment">// (whether the window moved or not) is accompanied by an extraneous `Moved` event</span>
-                    <span class="comment">// that has a position relative to the parent window.</span>
+                    <span class="comment">// So apparently...</span>
+                    <span class="comment">// `XSendEvent` (synthetic `ConfigureNotify`) -&gt; position relative to root</span>
+                    <span class="comment">// `XConfigureNotify` (real `ConfigureNotify`) -&gt; position relative to parent</span>
+                    <span class="comment">// https://tronche.com/gui/x/icccm/sec-4.html#s-4.1.5</span>
+                    <span class="comment">// We don&#39;t want to send `Moved` when this is false, since then every `Resized`</span>
+                    <span class="comment">// (whether the window moved or not) is accompanied by an extraneous `Moved` event</span>
+                    <span class="comment">// that has a position relative to the parent window.</span>
                     <span class="kw">let</span> <span class="ident">is_synthetic</span> <span class="op">=</span> <span class="ident">xev</span>.<span class="ident">send_event</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">True</span>;
 
-                    <span class="comment">// These are both in physical space.</span>
+                    <span class="comment">// These are both in physical space.</span>
                     <span class="kw">let</span> <span class="ident">new_inner_size</span> <span class="op">=</span> (<span class="ident">xev</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">xev</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">u32</span>);
                     <span class="kw">let</span> <span class="ident">new_inner_position</span> <span class="op">=</span> (<span class="ident">xev</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>, <span class="ident">xev</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>);
 
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">monitor</span> <span class="op">=</span> <span class="ident">window</span>.<span class="ident">get_current_monitor</span>(); <span class="comment">// This must be done *before* locking!</span>
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">monitor</span> <span class="op">=</span> <span class="ident">window</span>.<span class="ident">get_current_monitor</span>(); <span class="comment">// This must be done *before* locking!</span>
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">shared_state_lock</span> <span class="op">=</span> <span class="ident">window</span>.<span class="ident">shared_state</span>.<span class="ident">lock</span>();
 
                     <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">resized</span>, <span class="ident">moved</span>) <span class="op">=</span> {
@@ -2019,14 +2019,14 @@
                         <span class="kw">let</span> <span class="ident">moved</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_synthetic</span> {
                             <span class="ident">util</span>::<span class="ident">maybe_change</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">shared_state_lock</span>.<span class="ident">inner_position</span>, <span class="ident">new_inner_position</span>)
                         } <span class="kw">else</span> {
-                            <span class="comment">// Detect when frame extents change.</span>
-                            <span class="comment">// Since this isn&#39;t synthetic, as per the notes above, this position is relative to the</span>
-                            <span class="comment">// parent window.</span>
+                            <span class="comment">// Detect when frame extents change.</span>
+                            <span class="comment">// Since this isn&#39;t synthetic, as per the notes above, this position is relative to the</span>
+                            <span class="comment">// parent window.</span>
                             <span class="kw">let</span> <span class="ident">rel_parent</span> <span class="op">=</span> <span class="ident">new_inner_position</span>;
                             <span class="kw">if</span> <span class="ident">util</span>::<span class="ident">maybe_change</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">shared_state_lock</span>.<span class="ident">inner_position_rel_parent</span>, <span class="ident">rel_parent</span>) {
-                                <span class="comment">// This ensures we process the next `Moved`.</span>
+                                <span class="comment">// This ensures we process the next `Moved`.</span>
                                 <span class="ident">shared_state_lock</span>.<span class="ident">inner_position</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-                                <span class="comment">// Extra insurance against stale frame extents.</span>
+                                <span class="comment">// Extra insurance against stale frame extents.</span>
                                 <span class="ident">shared_state_lock</span>.<span class="ident">frame_extents</span> <span class="op">=</span> <span class="prelude-val">None</span>;
                             }
                             <span class="bool-val">false</span>
@@ -2037,7 +2037,7 @@
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">events</span> <span class="op">=</span> <span class="ident">Events</span>::<span class="ident">default</span>();
 
                     <span class="kw">let</span> <span class="ident">new_outer_position</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">moved</span> <span class="op">|</span><span class="op">|</span> <span class="ident">shared_state_lock</span>.<span class="ident">position</span>.<span class="ident">is_none</span>() {
-                        <span class="comment">// We need to convert client area position to window position.</span>
+                        <span class="comment">// We need to convert client area position to window position.</span>
                         <span class="kw">let</span> <span class="ident">frame_extents</span> <span class="op">=</span> <span class="ident">shared_state_lock</span>.<span class="ident">frame_extents</span>
                             .<span class="ident">as_ref</span>()
                             .<span class="ident">cloned</span>()
@@ -2058,8 +2058,8 @@
                     };
 
                     <span class="kw">if</span> <span class="ident">is_synthetic</span> {
-                        <span class="comment">// If we don&#39;t use the existing adjusted value when available, then the user can screw up the</span>
-                        <span class="comment">// resizing by dragging across monitors *without* dropping the window.</span>
+                        <span class="comment">// If we don&#39;t use the existing adjusted value when available, then the user can screw up the</span>
+                        <span class="comment">// resizing by dragging across monitors *without* dropping the window.</span>
                         <span class="kw">let</span> (<span class="ident">width</span>, <span class="ident">height</span>) <span class="op">=</span> <span class="ident">shared_state_lock</span>.<span class="ident">dpi_adjusted</span>
                             .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="op">|</span> (<span class="ident">xev</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">f64</span>, <span class="ident">xev</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">f64</span>));
                         <span class="kw">let</span> <span class="ident">last_hidpi_factor</span> <span class="op">=</span> <span class="ident">shared_state_lock</span>.<span class="ident">guessed_dpi</span>
@@ -2087,20 +2087,20 @@
                             );
                             <span class="ident">flusher</span>.<span class="ident">queue</span>();
                             <span class="ident">shared_state_lock</span>.<span class="ident">dpi_adjusted</span> <span class="op">=</span> <span class="prelude-val">Some</span>((<span class="ident">new_width</span>, <span class="ident">new_height</span>));
-                            <span class="comment">// if the DPI factor changed, force a resize event to ensure the logical</span>
-                            <span class="comment">// size is computed with the right DPI factor</span>
+                            <span class="comment">// if the DPI factor changed, force a resize event to ensure the logical</span>
+                            <span class="comment">// size is computed with the right DPI factor</span>
                             <span class="ident">resized</span> <span class="op">=</span> <span class="bool-val">true</span>;
                         }
                     }
 
-                    <span class="comment">// This is a hack to ensure that the DPI adjusted resize is actually applied on all WMs. KWin</span>
-                    <span class="comment">// doesn&#39;t need this, but Xfwm does. The hack should not be run on other WMs, since tiling</span>
-                    <span class="comment">// WMs constrain the window size, making the resize fail. This would cause an endless stream of</span>
-                    <span class="comment">// XResizeWindow requests, making Xorg, the winit client, and the WM consume 100% of CPU.</span>
+                    <span class="comment">// This is a hack to ensure that the DPI adjusted resize is actually applied on all WMs. KWin</span>
+                    <span class="comment">// doesn&#39;t need this, but Xfwm does. The hack should not be run on other WMs, since tiling</span>
+                    <span class="comment">// WMs constrain the window size, making the resize fail. This would cause an endless stream of</span>
+                    <span class="comment">// XResizeWindow requests, making Xorg, the winit client, and the WM consume 100% of CPU.</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">adjusted_size</span>) <span class="op">=</span> <span class="ident">shared_state_lock</span>.<span class="ident">dpi_adjusted</span> {
                         <span class="kw">let</span> <span class="ident">rounded_size</span> <span class="op">=</span> (<span class="ident">adjusted_size</span>.<span class="number">0</span>.<span class="ident">round</span>() <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">adjusted_size</span>.<span class="number">1</span>.<span class="ident">round</span>() <span class="kw">as</span> <span class="ident">u32</span>);
                         <span class="kw">if</span> <span class="ident">new_inner_size</span> <span class="op">=</span><span class="op">=</span> <span class="ident">rounded_size</span> <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="ident">util</span>::<span class="ident">wm_name_is_one_of</span>(<span class="kw-2">&amp;</span>[<span class="string">&quot;Xfwm4&quot;</span>]) {
-                            <span class="comment">// When this finally happens, the event will not be synthetic.</span>
+                            <span class="comment">// When this finally happens, the event will not be synthetic.</span>
                             <span class="ident">shared_state_lock</span>.<span class="ident">dpi_adjusted</span> <span class="op">=</span> <span class="prelude-val">None</span>;
                         } <span class="kw">else</span> {
                             <span class="kw">unsafe</span> {
@@ -2139,11 +2139,11 @@
             <span class="ident">ffi</span>::<span class="ident">ReparentNotify</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">xev</span>: <span class="kw-2">&amp;</span><span class="ident">ffi</span>::<span class="ident">XReparentEvent</span> <span class="op">=</span> <span class="ident">xev</span>.<span class="ident">as_ref</span>();
 
-                <span class="comment">// This is generally a reliable way to detect when the window manager&#39;s been</span>
-                <span class="comment">// replaced, though this event is only fired by reparenting window managers</span>
-                <span class="comment">// (which is almost all of them). Failing to correctly update WM info doesn&#39;t</span>
-                <span class="comment">// really have much impact, since on the WMs affected (xmonad, dwm, etc.) the only</span>
-                <span class="comment">// effect is that we waste some time trying to query unsupported properties.</span>
+                <span class="comment">// This is generally a reliable way to detect when the window manager&#39;s been</span>
+                <span class="comment">// replaced, though this event is only fired by reparenting window managers</span>
+                <span class="comment">// (which is almost all of them). Failing to correctly update WM info doesn&#39;t</span>
+                <span class="comment">// really have much impact, since on the WMs affected (xmonad, dwm, etc.) the only</span>
+                <span class="comment">// effect is that we waste some time trying to query unsupported properties.</span>
                 <span class="self">self</span>.<span class="ident">xconn</span>.<span class="ident">update_cached_wm_info</span>(<span class="self">self</span>.<span class="ident">root</span>);
 
                 <span class="self">self</span>.<span class="ident">with_window</span>(<span class="ident">xev</span>.<span class="ident">window</span>, <span class="op">|</span><span class="ident">window</span><span class="op">|</span> {
@@ -2157,12 +2157,12 @@
                 <span class="kw">let</span> <span class="ident">window</span> <span class="op">=</span> <span class="ident">xev</span>.<span class="ident">window</span>;
                 <span class="kw">let</span> <span class="ident">window_id</span> <span class="op">=</span> <span class="ident">mkwid</span>(<span class="ident">window</span>);
 
-                <span class="comment">// In the event that the window&#39;s been destroyed without being dropped first, we</span>
-                <span class="comment">// cleanup again here.</span>
+                <span class="comment">// In the event that the window&#39;s been destroyed without being dropped first, we</span>
+                <span class="comment">// cleanup again here.</span>
                 <span class="self">self</span>.<span class="ident">windows</span>.<span class="ident">borrow_mut</span>().<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">WindowId</span>(<span class="ident">window</span>));
 
-                <span class="comment">// Since all XIM stuff needs to happen from the same thread, we destroy the input</span>
-                <span class="comment">// context here instead of when dropping the window.</span>
+                <span class="comment">// Since all XIM stuff needs to happen from the same thread, we destroy the input</span>
+                <span class="comment">// context here instead of when dropping the window.</span>
                 <span class="self">self</span>.<span class="ident">ime</span>
                     .<span class="ident">borrow_mut</span>()
                     .<span class="ident">remove_context</span>(<span class="ident">window</span>)
@@ -2183,7 +2183,7 @@
             <span class="ident">ffi</span>::<span class="ident">KeyPress</span> <span class="op">|</span> <span class="ident">ffi</span>::<span class="ident">KeyRelease</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">use</span> <span class="ident">events</span>::<span class="ident">ElementState</span>::{<span class="ident">Pressed</span>, <span class="ident">Released</span>};
 
-                <span class="comment">// Note that in compose/pre-edit sequences, this will always be Released.</span>
+                <span class="comment">// Note that in compose/pre-edit sequences, this will always be Released.</span>
                 <span class="kw">let</span> <span class="ident">state</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">xev</span>.<span class="ident">get_type</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">KeyPress</span> {
                     <span class="ident">Pressed</span>
                 } <span class="kw">else</span> {
@@ -2195,13 +2195,13 @@
                 <span class="kw">let</span> <span class="ident">window</span> <span class="op">=</span> <span class="ident">xkev</span>.<span class="ident">window</span>;
                 <span class="kw">let</span> <span class="ident">window_id</span> <span class="op">=</span> <span class="ident">mkwid</span>(<span class="ident">window</span>);
 
-                <span class="comment">// Standard virtual core keyboard ID. XInput2 needs to be used to get a reliable</span>
-                <span class="comment">// value, though this should only be an issue under multiseat configurations.</span>
+                <span class="comment">// Standard virtual core keyboard ID. XInput2 needs to be used to get a reliable</span>
+                <span class="comment">// value, though this should only be an issue under multiseat configurations.</span>
                 <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="ident">util</span>::<span class="ident">VIRTUAL_CORE_KEYBOARD</span>;
                 <span class="kw">let</span> <span class="ident">device_id</span> <span class="op">=</span> <span class="ident">mkdid</span>(<span class="ident">device</span>);
 
-                <span class="comment">// When a compose sequence or IME pre-edit is finished, it ends in a KeyPress with</span>
-                <span class="comment">// a keycode of 0.</span>
+                <span class="comment">// When a compose sequence or IME pre-edit is finished, it ends in a KeyPress with</span>
+                <span class="comment">// a keycode of 0.</span>
                 <span class="kw">if</span> <span class="ident">xkev</span>.<span class="ident">keycode</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
                     <span class="kw">let</span> <span class="ident">modifiers</span> <span class="op">=</span> <span class="ident">ModifiersState</span> {
                         <span class="ident">alt</span>: <span class="ident">xkev</span>.<span class="ident">state</span> <span class="op">&amp;</span> <span class="ident">ffi</span>::<span class="ident">Mod1Mask</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
@@ -2274,7 +2274,7 @@
                         <span class="kw">let</span> <span class="ident">window_id</span> <span class="op">=</span> <span class="ident">mkwid</span>(<span class="ident">xev</span>.<span class="ident">event</span>);
                         <span class="kw">let</span> <span class="ident">device_id</span> <span class="op">=</span> <span class="ident">mkdid</span>(<span class="ident">xev</span>.<span class="ident">deviceid</span>);
                         <span class="kw">if</span> (<span class="ident">xev</span>.<span class="ident">flags</span> <span class="op">&amp;</span> <span class="ident">ffi</span>::<span class="ident">XIPointerEmulated</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                            <span class="comment">// Deliver multi-touch events instead of emulated mouse events.</span>
+                            <span class="comment">// Deliver multi-touch events instead of emulated mouse events.</span>
                             <span class="kw">let</span> <span class="ident">return_now</span> <span class="op">=</span> <span class="self">self</span>
                                 .<span class="ident">with_window</span>(<span class="ident">xev</span>.<span class="ident">event</span>, <span class="op">|</span><span class="ident">window</span><span class="op">|</span> <span class="ident">window</span>.<span class="ident">multitouch</span>)
                                 .<span class="ident">unwrap_or</span>(<span class="bool-val">true</span>);
@@ -2317,9 +2317,9 @@
                                 },
                             }),
 
-                            <span class="comment">// Suppress emulated scroll wheel clicks, since we handle the real motion events for those.</span>
-                            <span class="comment">// In practice, even clicky scroll wheels appear to be reported by evdev (and XInput2 in</span>
-                            <span class="comment">// turn) as axis motion, so we don&#39;t otherwise special-case these button presses.</span>
+                            <span class="comment">// Suppress emulated scroll wheel clicks, since we handle the real motion events for those.</span>
+                            <span class="comment">// In practice, even clicky scroll wheels appear to be reported by evdev (and XInput2 in</span>
+                            <span class="comment">// turn) as axis motion, so we don&#39;t otherwise special-case these button presses.</span>
                             <span class="number">4</span> <span class="op">|</span> <span class="number">5</span> <span class="op">|</span> <span class="number">6</span> <span class="op">|</span> <span class="number">7</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">if</span> <span class="ident">xev</span>.<span class="ident">flags</span> <span class="op">&amp;</span> <span class="ident">ffi</span>::<span class="ident">XIPointerEmulated</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
                                 <span class="ident">callback</span>(<span class="ident">Event</span>::<span class="ident">WindowEvent</span> {
                                     <span class="ident">window_id</span>,
@@ -2385,7 +2385,7 @@
                             <span class="kw">return</span>;
                         }
 
-                        <span class="comment">// More gymnastics, for self.devices</span>
+                        <span class="comment">// More gymnastics, for self.devices</span>
                         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">events</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
                         {
                             <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">xev</span>.<span class="ident">valuators</span>.<span class="ident">mask</span>, <span class="ident">xev</span>.<span class="ident">valuators</span>.<span class="ident">mask_len</span> <span class="kw">as</span> <span class="ident">usize</span>) };
@@ -2408,7 +2408,7 @@
                                                 <span class="ident">device_id</span>,
                                                 <span class="ident">delta</span>: <span class="kw">match</span> <span class="ident">info</span>.<span class="ident">orientation</span> {
                                                     <span class="ident">ScrollOrientation</span>::<span class="ident">Horizontal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LineDelta</span>(<span class="ident">delta</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="number">0.0</span>),
-                                                    <span class="comment">// X11 vertical scroll coordinates are opposite to winit&#39;s</span>
+                                                    <span class="comment">// X11 vertical scroll coordinates are opposite to winit&#39;s</span>
                                                     <span class="ident">ScrollOrientation</span>::<span class="ident">Vertical</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LineDelta</span>(<span class="number">0.0</span>, <span class="op">-</span><span class="ident">delta</span> <span class="kw">as</span> <span class="ident">f32</span>),
                                                 },
                                                 <span class="ident">phase</span>: <span class="ident">TouchPhase</span>::<span class="ident">Moved</span>,
@@ -2444,10 +2444,10 @@
                             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">devices</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">devices</span>.<span class="ident">borrow_mut</span>();
                             <span class="kw">for</span> <span class="ident">device_info</span> <span class="kw">in</span> <span class="ident">all_info</span>.<span class="ident">iter</span>() {
                                 <span class="kw">if</span> <span class="ident">device_info</span>.<span class="ident">deviceid</span> <span class="op">=</span><span class="op">=</span> <span class="ident">xev</span>.<span class="ident">sourceid</span>
-                                <span class="comment">// This is needed for resetting to work correctly on i3, and</span>
-                                <span class="comment">// presumably some other WMs. On those, `XI_Enter` doesn&#39;t include</span>
-                                <span class="comment">// the physical device ID, so both `sourceid` and `deviceid` are</span>
-                                <span class="comment">// the virtual device.</span>
+                                <span class="comment">// This is needed for resetting to work correctly on i3, and</span>
+                                <span class="comment">// presumably some other WMs. On those, `XI_Enter` doesn&#39;t include</span>
+                                <span class="comment">// the physical device ID, so both `sourceid` and `deviceid` are</span>
+                                <span class="comment">// the virtual device.</span>
                                 <span class="op">|</span><span class="op">|</span> <span class="ident">device_info</span>.<span class="ident">attachment</span> <span class="op">=</span><span class="op">=</span> <span class="ident">xev</span>.<span class="ident">sourceid</span> {
                                     <span class="kw">let</span> <span class="ident">device_id</span> <span class="op">=</span> <span class="ident">DeviceId</span>(<span class="ident">device_info</span>.<span class="ident">deviceid</span>);
                                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">device</span>) <span class="op">=</span> <span class="ident">devices</span>.<span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="ident">device_id</span>) {
@@ -2469,13 +2469,13 @@
                                 <span class="ident">dpi_factor</span>,
                             );
 
-                            <span class="comment">// The mods field on this event isn&#39;t actually populated, so query the</span>
-                            <span class="comment">// pointer device. In the future, we can likely remove this round-trip by</span>
-                            <span class="comment">// relying on `Xkb` for modifier values.</span>
-                            <span class="comment">//</span>
-                            <span class="comment">// This needs to only be done after confirming the window still exists,</span>
-                            <span class="comment">// since otherwise we risk getting a `BadWindow` error if the window was</span>
-                            <span class="comment">// dropped with queued events.</span>
+                            <span class="comment">// The mods field on this event isn&#39;t actually populated, so query the</span>
+                            <span class="comment">// pointer device. In the future, we can likely remove this round-trip by</span>
+                            <span class="comment">// relying on `Xkb` for modifier values.</span>
+                            <span class="comment">//</span>
+                            <span class="comment">// This needs to only be done after confirming the window still exists,</span>
+                            <span class="comment">// since otherwise we risk getting a `BadWindow` error if the window was</span>
+                            <span class="comment">// dropped with queued events.</span>
                             <span class="kw">let</span> <span class="ident">modifiers</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">xconn</span>
                                 .<span class="ident">query_pointer</span>(<span class="ident">xev</span>.<span class="ident">event</span>, <span class="ident">xev</span>.<span class="ident">deviceid</span>)
                                 .<span class="ident">expect</span>(<span class="string">&quot;Failed to query pointer device&quot;</span>)
@@ -2494,8 +2494,8 @@
                     <span class="ident">ffi</span>::<span class="ident">XI_Leave</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">xev</span>: <span class="kw-2">&amp;</span><span class="ident">ffi</span>::<span class="ident">XILeaveEvent</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">xev</span>.<span class="ident">data</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>) };
 
-                        <span class="comment">// Leave, FocusIn, and FocusOut can be received by a window that&#39;s already</span>
-                        <span class="comment">// been destroyed, which the user presumably doesn&#39;t want to deal with.</span>
+                        <span class="comment">// Leave, FocusIn, and FocusOut can be received by a window that&#39;s already</span>
+                        <span class="comment">// been destroyed, which the user presumably doesn&#39;t want to deal with.</span>
                         <span class="kw">let</span> <span class="ident">window_closed</span> <span class="op">=</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">window_exists</span>(<span class="ident">xev</span>.<span class="ident">event</span>);
                         <span class="kw">if</span> <span class="op">!</span><span class="ident">window_closed</span> {
                             <span class="ident">callback</span>(<span class="ident">Event</span>::<span class="ident">WindowEvent</span> {
@@ -2522,8 +2522,8 @@
 
                         <span class="ident">callback</span>(<span class="ident">Event</span>::<span class="ident">WindowEvent</span> { <span class="ident">window_id</span>, <span class="ident">event</span>: <span class="ident">Focused</span>(<span class="bool-val">true</span>) });
 
-                        <span class="comment">// The deviceid for this event is for a keyboard instead of a pointer,</span>
-                        <span class="comment">// so we have to do a little extra work.</span>
+                        <span class="comment">// The deviceid for this event is for a keyboard instead of a pointer,</span>
+                        <span class="comment">// so we have to do a little extra work.</span>
                         <span class="kw">let</span> <span class="ident">pointer_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">devices</span>
                             .<span class="ident">borrow</span>()
                             .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">DeviceId</span>(<span class="ident">xev</span>.<span class="ident">deviceid</span>))
@@ -2610,8 +2610,8 @@
                         <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">xev</span>.<span class="ident">valuators</span>.<span class="ident">mask_len</span><span class="kw-2">*</span><span class="number">8</span> {
                             <span class="kw">if</span> <span class="ident">ffi</span>::<span class="ident">XIMaskIsSet</span>(<span class="ident">mask</span>, <span class="ident">i</span>) {
                                 <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">*</span><span class="ident">value</span> };
-                                <span class="comment">// We assume that every XInput2 device with analog axes is a pointing device emitting</span>
-                                <span class="comment">// relative coordinates.</span>
+                                <span class="comment">// We assume that every XInput2 device with analog axes is a pointing device emitting</span>
+                                <span class="comment">// relative coordinates.</span>
                                 <span class="kw">match</span> <span class="ident">i</span> {
                                     <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">mouse_delta</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">x</span>,
                                     <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">mouse_delta</span>.<span class="number">1</span> <span class="op">=</span> <span class="ident">x</span>,
@@ -2669,11 +2669,11 @@
                                 <span class="ident">scancode</span>,
                                 <span class="ident">virtual_keycode</span>,
                                 <span class="ident">state</span>,
-                                <span class="comment">// So, in an ideal world we can use libxkbcommon to get modifiers.</span>
-                                <span class="comment">// However, libxkbcommon-x11 isn&#39;t as commonly installed as one</span>
-                                <span class="comment">// would hope. We can still use the Xkb extension to get</span>
-                                <span class="comment">// comprehensive keyboard state updates, but interpreting that</span>
-                                <span class="comment">// info manually is going to be involved.</span>
+                                <span class="comment">// So, in an ideal world we can use libxkbcommon to get modifiers.</span>
+                                <span class="comment">// However, libxkbcommon-x11 isn&#39;t as commonly installed as one</span>
+                                <span class="comment">// would hope. We can still use the Xkb extension to get</span>
+                                <span class="comment">// comprehensive keyboard state updates, but interpreting that</span>
+                                <span class="comment">// info manually is going to be involved.</span>
                                 <span class="ident">modifiers</span>: <span class="ident">ModifiersState</span>::<span class="ident">default</span>(),
                             }),
                         });
@@ -2698,7 +2698,7 @@
             },
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="ident">event_type</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">randr_event_offset</span> {
-                    <span class="comment">// In the future, it would be quite easy to emit monitor hotplug events.</span>
+                    <span class="comment">// In the future, it would be quite easy to emit monitor hotplug events.</span>
                     <span class="kw">let</span> <span class="ident">prev_list</span> <span class="op">=</span> <span class="ident">monitor</span>::<span class="ident">invalidate_cached_monitor_list</span>();
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">prev_list</span>) <span class="op">=</span> <span class="ident">prev_list</span> {
                         <span class="kw">let</span> <span class="ident">new_list</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">xconn</span>.<span class="ident">get_available_monitors</span>();
@@ -2710,7 +2710,7 @@
                                     <span class="kw">if</span> <span class="ident">new_monitor</span>.<span class="ident">hidpi_factor</span> <span class="op">!</span><span class="op">=</span> <span class="ident">prev_monitor</span>.<span class="ident">hidpi_factor</span> {
                                         <span class="kw">for</span> (<span class="ident">window_id</span>, <span class="ident">window</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">windows</span>.<span class="ident">borrow</span>().<span class="ident">iter</span>() {
                                             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">window</span>.<span class="ident">upgrade</span>() {
-                                                <span class="comment">// Check if the window is on this monitor</span>
+                                                <span class="comment">// Check if the window is on this monitor</span>
                                                 <span class="kw">let</span> <span class="ident">monitor</span> <span class="op">=</span> <span class="ident">window</span>.<span class="ident">get_current_monitor</span>();
                                                 <span class="kw">if</span> <span class="ident">monitor</span>.<span class="ident">name</span> <span class="op">=</span><span class="op">=</span> <span class="ident">new_monitor</span>.<span class="ident">name</span> {
                                                     <span class="ident">callback</span>(<span class="ident">Event</span>::<span class="ident">WindowEvent</span> {
@@ -2773,7 +2773,7 @@
             })
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">window</span><span class="op">|</span> <span class="ident">callback</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">window</span>));
         <span class="kw">if</span> <span class="ident">deleted</span> {
-            <span class="comment">// Garbage collection</span>
+            <span class="comment">// Garbage collection</span>
             <span class="self">self</span>.<span class="ident">windows</span>.<span class="ident">borrow_mut</span>().<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">window_id</span>);
         }
         <span class="ident">result</span>
@@ -2786,7 +2786,7 @@
 
 <span class="kw">impl</span> <span class="ident">EventsLoopProxy</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wakeup</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">EventsLoopClosed</span><span class="op">&gt;</span> {
-        <span class="comment">// Update the `EventsLoop`&#39;s `pending_wakeup` flag.</span>
+        <span class="comment">// Update the `EventsLoop`&#39;s `pending_wakeup` flag.</span>
         <span class="kw">let</span> <span class="ident">display</span> <span class="op">=</span> <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">pending_wakeup</span>.<span class="ident">upgrade</span>(), <span class="self">self</span>.<span class="ident">xconn</span>.<span class="ident">upgrade</span>()) {
             (<span class="prelude-val">Some</span>(<span class="ident">wakeup</span>), <span class="prelude-val">Some</span>(<span class="ident">display</span>)) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">wakeup</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">atomic</span>::<span class="ident">Ordering</span>::<span class="ident">Relaxed</span>);
@@ -2795,11 +2795,11 @@
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">EventsLoopClosed</span>),
         };
 
-        <span class="comment">// Push an event on the X event queue so that methods run_forever will advance.</span>
-        <span class="comment">//</span>
-        <span class="comment">// NOTE: This design is taken from the old `WindowProxy::wakeup` implementation. It</span>
-        <span class="comment">// assumes that X11 is thread safe. Is this true?</span>
-        <span class="comment">// (WARNING: it&#39;s probably not true)</span>
+        <span class="comment">// Push an event on the X event queue so that methods run_forever will advance.</span>
+        <span class="comment">//</span>
+        <span class="comment">// NOTE: This design is taken from the old `WindowProxy::wakeup` implementation. It</span>
+        <span class="comment">// assumes that X11 is thread safe. Is this true?</span>
+        <span class="comment">// (WARNING: it&#39;s probably not true)</span>
         <span class="ident">display</span>.<span class="ident">send_client_msg</span>(
             <span class="self">self</span>.<span class="ident">wakeup_dummy_window</span>,
             <span class="self">self</span>.<span class="ident">wakeup_dummy_window</span>,
@@ -2902,14 +2902,14 @@
         <span class="kw">let</span> <span class="ident">xconn</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">window</span>.<span class="ident">xconn</span>;
         <span class="kw">unsafe</span> {
             (<span class="ident">xconn</span>.<span class="ident">xlib</span>.<span class="ident">XDestroyWindow</span>)(<span class="ident">xconn</span>.<span class="ident">display</span>, <span class="ident">window</span>.<span class="ident">id</span>().<span class="number">0</span>);
-            <span class="comment">// If the window was somehow already destroyed, we&#39;ll get a `BadWindow` error, which we don&#39;t care about.</span>
+            <span class="comment">// If the window was somehow already destroyed, we&#39;ll get a `BadWindow` error, which we don&#39;t care about.</span>
             <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">xconn</span>.<span class="ident">check_errors</span>();
         }
     }
 }
 
-<span class="doccomment">/// XEvents of type GenericEvent store their actual data in an XGenericEventCookie data structure. This is a wrapper to</span>
-<span class="doccomment">/// extract the cookie from a GenericEvent XEvent and release the cookie data once it has been processed</span>
+<span class="doccomment">/// XEvents of type GenericEvent store their actual data in an XGenericEventCookie data structure. This is a wrapper to</span>
+<span class="doccomment">/// extract the cookie from a GenericEvent XEvent and release the cookie data once it has been processed</span>
 <span class="kw">struct</span> <span class="ident">GenericEventCookie</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">xconn</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">XConnection</span>,
     <span class="ident">cookie</span>: <span class="ident">ffi</span>::<span class="ident">XGenericEventCookie</span>
@@ -2950,8 +2950,8 @@
 <span class="kw">struct</span> <span class="ident">Device</span> {
     <span class="ident">name</span>: <span class="ident">String</span>,
     <span class="ident">scroll_axes</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">i32</span>, <span class="ident">ScrollAxis</span>)<span class="op">&gt;</span>,
-    <span class="comment">// For master devices, this is the paired device (pointer &lt;-&gt; keyboard).</span>
-    <span class="comment">// For slave devices, this is the master.</span>
+    <span class="comment">// For master devices, this is the paired device (pointer &lt;-&gt; keyboard).</span>
+    <span class="comment">// For slave devices, this is the master.</span>
     <span class="ident">attachment</span>: <span class="ident">c_int</span>,
 }
 
@@ -2974,16 +2974,16 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">scroll_axes</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
 
         <span class="kw">if</span> <span class="ident">Device</span>::<span class="ident">physical_device</span>(<span class="ident">info</span>) {
-            <span class="comment">// Register for global raw events</span>
+            <span class="comment">// Register for global raw events</span>
             <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">XI_RawMotionMask</span>
                 <span class="op">|</span> <span class="ident">ffi</span>::<span class="ident">XI_RawButtonPressMask</span>
                 <span class="op">|</span> <span class="ident">ffi</span>::<span class="ident">XI_RawButtonReleaseMask</span>
                 <span class="op">|</span> <span class="ident">ffi</span>::<span class="ident">XI_RawKeyPressMask</span>
                 <span class="op">|</span> <span class="ident">ffi</span>::<span class="ident">XI_RawKeyReleaseMask</span>;
-            <span class="comment">// The request buffer is flushed when we poll for events</span>
+            <span class="comment">// The request buffer is flushed when we poll for events</span>
             <span class="ident">el</span>.<span class="ident">xconn</span>.<span class="ident">select_xinput_events</span>(<span class="ident">el</span>.<span class="ident">root</span>, <span class="ident">info</span>.<span class="ident">deviceid</span>, <span class="ident">mask</span>).<span class="ident">queue</span>();
 
-            <span class="comment">// Identify scroll axes</span>
+            <span class="comment">// Identify scroll axes</span>
             <span class="kw">for</span> <span class="ident">class_ptr</span> <span class="kw">in</span> <span class="ident">Device</span>::<span class="ident">classes</span>(<span class="ident">info</span>) {
                 <span class="kw">let</span> <span class="ident">class</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">class_ptr</span> };
                 <span class="kw">match</span> <span class="ident">class</span>.<span class="ident">_type</span> {

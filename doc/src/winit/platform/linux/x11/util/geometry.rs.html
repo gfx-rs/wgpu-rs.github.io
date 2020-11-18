@@ -394,7 +394,7 @@
 <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> {<span class="ident">LogicalPosition</span>, <span class="ident">LogicalSize</span>};
 
-<span class="comment">// Friendly neighborhood axis-aligned rectangle</span>
+<span class="comment">// Friendly neighborhood axis-aligned rectangle</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AaRect</span> {
     <span class="ident">x</span>: <span class="ident">i64</span>,
@@ -437,19 +437,19 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Geometry</span> {
     <span class="kw">pub</span> <span class="ident">root</span>: <span class="ident">ffi</span>::<span class="ident">Window</span>,
-    <span class="comment">// If you want positions relative to the root window, use translate_coords.</span>
-    <span class="comment">// Note that the overwhelming majority of window managers are reparenting WMs, thus the window</span>
-    <span class="comment">// ID we get from window creation is for a nested window used as the window&#39;s client area. If</span>
-    <span class="comment">// you call get_geometry with that window ID, then you&#39;ll get the position of that client area</span>
-    <span class="comment">// window relative to the parent it&#39;s nested in (the frame), which isn&#39;t helpful if you want</span>
-    <span class="comment">// to know the frame position.</span>
+    <span class="comment">// If you want positions relative to the root window, use translate_coords.</span>
+    <span class="comment">// Note that the overwhelming majority of window managers are reparenting WMs, thus the window</span>
+    <span class="comment">// ID we get from window creation is for a nested window used as the window&#39;s client area. If</span>
+    <span class="comment">// you call get_geometry with that window ID, then you&#39;ll get the position of that client area</span>
+    <span class="comment">// window relative to the parent it&#39;s nested in (the frame), which isn&#39;t helpful if you want</span>
+    <span class="comment">// to know the frame position.</span>
     <span class="kw">pub</span> <span class="ident">x_rel_parent</span>: <span class="ident">c_int</span>,
     <span class="kw">pub</span> <span class="ident">y_rel_parent</span>: <span class="ident">c_int</span>,
-    <span class="comment">// In that same case, this will give you client area size.</span>
+    <span class="comment">// In that same case, this will give you client area size.</span>
     <span class="kw">pub</span> <span class="ident">width</span>: <span class="ident">c_uint</span>,
     <span class="kw">pub</span> <span class="ident">height</span>: <span class="ident">c_uint</span>,
-    <span class="comment">// xmonad and dwm were the only WMs tested that use the border return at all.</span>
-    <span class="comment">// The majority of WMs seem to simply fill it with 0 unconditionally.</span>
+    <span class="comment">// xmonad and dwm were the only WMs tested that use the border return at all.</span>
+    <span class="comment">// The majority of WMs seem to simply fill it with 0 unconditionally.</span>
     <span class="kw">pub</span> <span class="ident">border</span>: <span class="ident">c_uint</span>,
     <span class="kw">pub</span> <span class="ident">depth</span>: <span class="ident">c_uint</span>,
 }
@@ -543,7 +543,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">XConnection</span> {
-    <span class="comment">// This is adequate for get_inner_position</span>
+    <span class="comment">// This is adequate for get_inner_position</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">translate_coords</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">window</span>: <span class="ident">ffi</span>::<span class="ident">Window</span>, <span class="ident">root</span>: <span class="ident">ffi</span>::<span class="ident">Window</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TranslatedCoords</span>, <span class="ident">XError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">translated_coords</span>: <span class="ident">TranslatedCoords</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">mem</span>::<span class="ident">uninitialized</span>() };
         <span class="kw">unsafe</span> {
@@ -558,11 +558,11 @@
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">translated_coords</span>.<span class="ident">child</span>,
             );
         }
-        <span class="comment">//println!(&quot;XTranslateCoordinates coords:{:?}&quot;, translated_coords);</span>
+        <span class="comment">//println!(&quot;XTranslateCoordinates coords:{:?}&quot;, translated_coords);</span>
         <span class="self">self</span>.<span class="ident">check_errors</span>().<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">translated_coords</span>)
     }
 
-    <span class="comment">// This is adequate for get_inner_size</span>
+    <span class="comment">// This is adequate for get_inner_size</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_geometry</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">window</span>: <span class="ident">ffi</span>::<span class="ident">Window</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Geometry</span>, <span class="ident">XError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">geometry</span>: <span class="ident">Geometry</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">mem</span>::<span class="ident">uninitialized</span>() };
         <span class="kw">let</span> <span class="ident">_status</span> <span class="op">=</span> <span class="kw">unsafe</span> {
@@ -578,7 +578,7 @@
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">geometry</span>.<span class="ident">depth</span>,
             )
         };
-        <span class="comment">//println!(&quot;XGetGeometry geo:{:?}&quot;, geometry);</span>
+        <span class="comment">//println!(&quot;XGetGeometry geo:{:?}&quot;, geometry);</span>
         <span class="self">self</span>.<span class="ident">check_errors</span>().<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">geometry</span>)
     }
 
@@ -589,9 +589,9 @@
             <span class="kw">return</span> <span class="prelude-val">None</span>;
         }
 
-        <span class="comment">// Of the WMs tested, xmonad, i3, dwm, IceWM (1.3.x and earlier), and blackbox don&#39;t</span>
-        <span class="comment">// support this. As this is part of EWMH (Extended Window Manager Hints), it&#39;s likely to</span>
-        <span class="comment">// be unsupported by many smaller WMs.</span>
+        <span class="comment">// Of the WMs tested, xmonad, i3, dwm, IceWM (1.3.x and earlier), and blackbox don&#39;t</span>
+        <span class="comment">// support this. As this is part of EWMH (Extended Window Manager Hints), it&#39;s likely to</span>
+        <span class="comment">// be unsupported by many smaller WMs.</span>
         <span class="kw">let</span> <span class="ident">extents</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">c_ulong</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_property</span>(
             <span class="ident">window</span>,
             <span class="ident">extents_atom</span>,
@@ -635,7 +635,7 @@
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">children</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ffi</span>::<span class="ident">Window</span> <span class="op">=</span> <span class="ident">ptr</span>::<span class="ident">null_mut</span>();
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">nchildren</span>: <span class="ident">c_uint</span> <span class="op">=</span> <span class="ident">mem</span>::<span class="ident">uninitialized</span>();
 
-            <span class="comment">// What&#39;s filled into `parent` if `window` is the root window?</span>
+            <span class="comment">// What&#39;s filled into `parent` if `window` is the root window?</span>
             <span class="kw">let</span> <span class="ident">_status</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">xlib</span>.<span class="ident">XQueryTree</span>)(
                 <span class="self">self</span>.<span class="ident">display</span>,
                 <span class="ident">window</span>,
@@ -645,7 +645,7 @@
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">nchildren</span>,
             );
 
-            <span class="comment">// The list of children isn&#39;t used</span>
+            <span class="comment">// The list of children isn&#39;t used</span>
             <span class="kw">if</span> <span class="ident">children</span> <span class="op">!</span><span class="op">=</span> <span class="ident">ptr</span>::<span class="ident">null_mut</span>() {
                 (<span class="self">self</span>.<span class="ident">xlib</span>.<span class="ident">XFree</span>)(<span class="ident">children</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>);
             }
@@ -670,10 +670,10 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_frame_extents_heuristic</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">window</span>: <span class="ident">ffi</span>::<span class="ident">Window</span>, <span class="ident">root</span>: <span class="ident">ffi</span>::<span class="ident">Window</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FrameExtentsHeuristic</span> {
         <span class="kw">use</span> <span class="self">self</span>::<span class="ident">FrameExtentsHeuristicPath</span>::<span class="kw-2">*</span>;
 
-        <span class="comment">// Position relative to root window.</span>
-        <span class="comment">// With rare exceptions, this is the position of a nested window. Cases where the window</span>
-        <span class="comment">// isn&#39;t nested are outlined in the comments throghout this function, but in addition to</span>
-        <span class="comment">// that, fullscreen windows often aren&#39;t nested.</span>
+        <span class="comment">// Position relative to root window.</span>
+        <span class="comment">// With rare exceptions, this is the position of a nested window. Cases where the window</span>
+        <span class="comment">// isn&#39;t nested are outlined in the comments throghout this function, but in addition to</span>
+        <span class="comment">// that, fullscreen windows often aren&#39;t nested.</span>
         <span class="kw">let</span> (<span class="ident">inner_y_rel_root</span>, <span class="ident">child</span>) <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">coords</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">translate_coords</span>(<span class="ident">window</span>, <span class="ident">root</span>).<span class="ident">expect</span>(<span class="string">&quot;Failed to translate window coordinates&quot;</span>);
             (
@@ -691,49 +691,49 @@
             )
         };
 
-        <span class="comment">// The first condition is only false for un-nested windows, but isn&#39;t always false for</span>
-        <span class="comment">// un-nested windows. Mutter/Muffin/Budgie and Marco present a mysterious discrepancy:</span>
-        <span class="comment">// when y is on the range [0, 2] and if the window has been unfocused since being</span>
-        <span class="comment">// undecorated (or was undecorated upon construction), the first condition is true,</span>
-        <span class="comment">// requiring us to rely on the second condition.</span>
+        <span class="comment">// The first condition is only false for un-nested windows, but isn&#39;t always false for</span>
+        <span class="comment">// un-nested windows. Mutter/Muffin/Budgie and Marco present a mysterious discrepancy:</span>
+        <span class="comment">// when y is on the range [0, 2] and if the window has been unfocused since being</span>
+        <span class="comment">// undecorated (or was undecorated upon construction), the first condition is true,</span>
+        <span class="comment">// requiring us to rely on the second condition.</span>
         <span class="kw">let</span> <span class="ident">nested</span> <span class="op">=</span> <span class="op">!</span>(<span class="ident">window</span> <span class="op">=</span><span class="op">=</span> <span class="ident">child</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">is_top_level</span>(<span class="ident">child</span>, <span class="ident">root</span>) <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="bool-val">true</span>));
 
-        <span class="comment">// Hopefully the WM supports EWMH, allowing us to get exact info on the window frames.</span>
+        <span class="comment">// Hopefully the WM supports EWMH, allowing us to get exact info on the window frames.</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">frame_extents</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_frame_extents</span>(<span class="ident">window</span>) {
-            <span class="comment">// Mutter/Muffin/Budgie and Marco preserve their decorated frame extents when</span>
-            <span class="comment">// decorations are disabled, but since the window becomes un-nested, it&#39;s easy to</span>
-            <span class="comment">// catch.</span>
+            <span class="comment">// Mutter/Muffin/Budgie and Marco preserve their decorated frame extents when</span>
+            <span class="comment">// decorations are disabled, but since the window becomes un-nested, it&#39;s easy to</span>
+            <span class="comment">// catch.</span>
             <span class="kw">if</span> <span class="op">!</span><span class="ident">nested</span> {
                 <span class="ident">frame_extents</span> <span class="op">=</span> <span class="ident">FrameExtents</span>::<span class="ident">new</span>(<span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);
             }
 
-            <span class="comment">// The difference between the nested window&#39;s position and the outermost window&#39;s</span>
-            <span class="comment">// position is equivalent to the frame size. In most scenarios, this is equivalent to</span>
-            <span class="comment">// manually climbing the hierarchy as is done in the case below. Here&#39;s a list of</span>
-            <span class="comment">// known discrepancies:</span>
-            <span class="comment">// * Mutter/Muffin/Budgie gives decorated windows a margin of 9px (only 7px on top) in</span>
-            <span class="comment">//   addition to a 1px semi-transparent border. The margin can be easily observed by</span>
-            <span class="comment">//   using a screenshot tool to get a screenshot of a selected window, and is</span>
-            <span class="comment">//   presumably used for drawing drop shadows. Getting window geometry information</span>
-            <span class="comment">//   via hierarchy-climbing results in this margin being included in both the</span>
-            <span class="comment">//   position and outer size, so a window positioned at (0, 0) would be reported as</span>
-            <span class="comment">//   having a position (-10, -8).</span>
-            <span class="comment">// * Compiz has a drop shadow margin just like Mutter/Muffin/Budgie, though it&#39;s 10px</span>
-            <span class="comment">//   on all sides, and there&#39;s no additional border.</span>
-            <span class="comment">// * Enlightenment otherwise gets a y position equivalent to inner_y_rel_root.</span>
-            <span class="comment">//   Without decorations, there&#39;s no difference. This is presumably related to</span>
-            <span class="comment">//   Enlightenment&#39;s fairly unique concept of window position; it interprets</span>
-            <span class="comment">//   positions given to XMoveWindow as a client area position rather than a position</span>
-            <span class="comment">//   of the overall window.</span>
+            <span class="comment">// The difference between the nested window&#39;s position and the outermost window&#39;s</span>
+            <span class="comment">// position is equivalent to the frame size. In most scenarios, this is equivalent to</span>
+            <span class="comment">// manually climbing the hierarchy as is done in the case below. Here&#39;s a list of</span>
+            <span class="comment">// known discrepancies:</span>
+            <span class="comment">// * Mutter/Muffin/Budgie gives decorated windows a margin of 9px (only 7px on top) in</span>
+            <span class="comment">//   addition to a 1px semi-transparent border. The margin can be easily observed by</span>
+            <span class="comment">//   using a screenshot tool to get a screenshot of a selected window, and is</span>
+            <span class="comment">//   presumably used for drawing drop shadows. Getting window geometry information</span>
+            <span class="comment">//   via hierarchy-climbing results in this margin being included in both the</span>
+            <span class="comment">//   position and outer size, so a window positioned at (0, 0) would be reported as</span>
+            <span class="comment">//   having a position (-10, -8).</span>
+            <span class="comment">// * Compiz has a drop shadow margin just like Mutter/Muffin/Budgie, though it&#39;s 10px</span>
+            <span class="comment">//   on all sides, and there&#39;s no additional border.</span>
+            <span class="comment">// * Enlightenment otherwise gets a y position equivalent to inner_y_rel_root.</span>
+            <span class="comment">//   Without decorations, there&#39;s no difference. This is presumably related to</span>
+            <span class="comment">//   Enlightenment&#39;s fairly unique concept of window position; it interprets</span>
+            <span class="comment">//   positions given to XMoveWindow as a client area position rather than a position</span>
+            <span class="comment">//   of the overall window.</span>
 
             <span class="ident">FrameExtentsHeuristic</span> {
                 <span class="ident">frame_extents</span>,
                 <span class="ident">heuristic_path</span>: <span class="ident">Supported</span>,
             }
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">nested</span> {
-            <span class="comment">// If the position value we have is for a nested window used as the client area, we&#39;ll</span>
-            <span class="comment">// just climb up the hierarchy and get the geometry of the outermost window we&#39;re</span>
-            <span class="comment">// nested in.</span>
+            <span class="comment">// If the position value we have is for a nested window used as the client area, we&#39;ll</span>
+            <span class="comment">// just climb up the hierarchy and get the geometry of the outermost window we&#39;re</span>
+            <span class="comment">// nested in.</span>
             <span class="kw">let</span> <span class="ident">outer_window</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">climb_hierarchy</span>(<span class="ident">window</span>, <span class="ident">root</span>).<span class="ident">expect</span>(<span class="string">&quot;Failed to climb window hierarchy&quot;</span>);
             <span class="kw">let</span> (<span class="ident">outer_y</span>, <span class="ident">outer_width</span>, <span class="ident">outer_height</span>) <span class="op">=</span> {
                 <span class="kw">let</span> <span class="ident">outer_geometry</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_geometry</span>(<span class="ident">outer_window</span>).<span class="ident">expect</span>(<span class="string">&quot;Failed to get outer window geometry&quot;</span>);
@@ -744,8 +744,8 @@
                 )
             };
 
-            <span class="comment">// Since we have the geometry of the outermost window and the geometry of the client</span>
-            <span class="comment">// area, we can figure out what&#39;s in between.</span>
+            <span class="comment">// Since we have the geometry of the outermost window and the geometry of the client</span>
+            <span class="comment">// area, we can figure out what&#39;s in between.</span>
             <span class="kw">let</span> <span class="ident">diff_x</span> <span class="op">=</span> <span class="ident">outer_width</span>.<span class="ident">saturating_sub</span>(<span class="ident">width</span>);
             <span class="kw">let</span> <span class="ident">diff_y</span> <span class="op">=</span> <span class="ident">outer_height</span>.<span class="ident">saturating_sub</span>(<span class="ident">height</span>);
             <span class="kw">let</span> <span class="ident">offset_y</span> <span class="op">=</span> <span class="ident">inner_y_rel_root</span>.<span class="ident">saturating_sub</span>(<span class="ident">outer_y</span>) <span class="kw">as</span> <span class="ident">c_uint</span>;
@@ -766,8 +766,8 @@
                 <span class="ident">heuristic_path</span>: <span class="ident">UnsupportedNested</span>,
             }
         } <span class="kw">else</span> {
-            <span class="comment">// This is the case for xmonad and dwm, AKA the only WMs tested that supplied a</span>
-            <span class="comment">// border value. This is convenient, since we can use it to get an accurate frame.</span>
+            <span class="comment">// This is the case for xmonad and dwm, AKA the only WMs tested that supplied a</span>
+            <span class="comment">// border value. This is convenient, since we can use it to get an accurate frame.</span>
             <span class="kw">let</span> <span class="ident">frame_extents</span> <span class="op">=</span> <span class="ident">FrameExtents</span>::<span class="ident">from_border</span>(<span class="ident">border</span>.<span class="ident">into</span>());
             <span class="ident">FrameExtentsHeuristic</span> {
                 <span class="ident">frame_extents</span>,

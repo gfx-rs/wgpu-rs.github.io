@@ -59,55 +59,55 @@
 <span id="56">56</span>
 <span id="57">57</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! # Inplace it!</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Place small arrays on the stack with a low cost!</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The only price you should pay for this is the price of choosing</span>
-<span class="doccomment">//! a type based on the size of the requested array! This is just one `match`!</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ## What?</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! This crate is created for one purpose: allocating small arrays on the stack.</span>
-<span class="doccomment">//! The simplest way to use it is:</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```rust</span>
-<span class="doccomment">//! use inplace_it::{inplace_or_alloc_array, UninitializedSliceMemoryGuard};</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! inplace_or_alloc_array(</span>
-<span class="doccomment">//!     150, // size of needed array to allocate</span>
-<span class="doccomment">//!     |mut uninit_guard: UninitializedSliceMemoryGuard&lt;u16&gt;| { // and this is consumer of uninitialized memory</span>
-<span class="doccomment">//!         assert_eq!(160, uninit_guard.len());</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!         {</span>
-<span class="doccomment">//!             // You can borrow guard to reuse memory</span>
-<span class="doccomment">//!             let borrowed_uninit_guard = uninit_guard.borrow();</span>
-<span class="doccomment">//!             // Let&#39;s initialize memory</span>
-<span class="doccomment">//!             // Note that borrowed_uninit_guard will be consumed (destroyed to produce initialized memory guard)</span>
-<span class="doccomment">//!             let init_guard = borrowed_uninit_guard.init(|index| index as u16 + 1);</span>
-<span class="doccomment">//!             // Memory not contains elements [1, 2, ..., 160]</span>
-<span class="doccomment">//!             // Lets check it. Sum of [1, 2, ..., 160] = 12880</span>
-<span class="doccomment">//!             let sum: u16 = init_guard.iter().sum();</span>
-<span class="doccomment">//!             assert_eq!(sum, 12880);</span>
-<span class="doccomment">//!         }</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!         {</span>
-<span class="doccomment">//!             // If you don&#39;t want to reuse memory, you can init new guard directly</span>
-<span class="doccomment">//!             let init_guard = uninit_guard.init(|index| index as u16 * 2);</span>
-<span class="doccomment">//!             // Memory not contains elements [0, 2, 4, ..., 318]</span>
-<span class="doccomment">//!             // Lets check it. Sum of [0, 2, 4, ..., 318] = 25440</span>
-<span class="doccomment">//!             let sum: u16 = init_guard.iter().sum();</span>
-<span class="doccomment">//!             assert_eq!(sum, 25440);</span>
-<span class="doccomment">//!         }</span>
-<span class="doccomment">//!     }</span>
-<span class="doccomment">//! )</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ## Why?</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Because allocation on the stack (i.e. placing variables) is **MUCH FASTER** then usual</span>
-<span class="doccomment">//! allocating in the heap.</span>
-<span class="doccomment">//!</span>
+<span class="doccomment">//! # Inplace it!</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Place small arrays on the stack with a low cost!</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! The only price you should pay for this is the price of choosing</span>
+<span class="doccomment">//! a type based on the size of the requested array! This is just one `match`!</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## What?</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! This crate is created for one purpose: allocating small arrays on the stack.</span>
+<span class="doccomment">//! The simplest way to use it is:</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ```rust</span>
+<span class="doccomment">//! use inplace_it::{inplace_or_alloc_array, UninitializedSliceMemoryGuard};</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! inplace_or_alloc_array(</span>
+<span class="doccomment">//!     150, // size of needed array to allocate</span>
+<span class="doccomment">//!     |mut uninit_guard: UninitializedSliceMemoryGuard&lt;u16&gt;| { // and this is consumer of uninitialized memory</span>
+<span class="doccomment">//!         assert_eq!(160, uninit_guard.len());</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!         {</span>
+<span class="doccomment">//!             // You can borrow guard to reuse memory</span>
+<span class="doccomment">//!             let borrowed_uninit_guard = uninit_guard.borrow();</span>
+<span class="doccomment">//!             // Let&#39;s initialize memory</span>
+<span class="doccomment">//!             // Note that borrowed_uninit_guard will be consumed (destroyed to produce initialized memory guard)</span>
+<span class="doccomment">//!             let init_guard = borrowed_uninit_guard.init(|index| index as u16 + 1);</span>
+<span class="doccomment">//!             // Memory not contains elements [1, 2, ..., 160]</span>
+<span class="doccomment">//!             // Lets check it. Sum of [1, 2, ..., 160] = 12880</span>
+<span class="doccomment">//!             let sum: u16 = init_guard.iter().sum();</span>
+<span class="doccomment">//!             assert_eq!(sum, 12880);</span>
+<span class="doccomment">//!         }</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//!         {</span>
+<span class="doccomment">//!             // If you don&#39;t want to reuse memory, you can init new guard directly</span>
+<span class="doccomment">//!             let init_guard = uninit_guard.init(|index| index as u16 * 2);</span>
+<span class="doccomment">//!             // Memory not contains elements [0, 2, 4, ..., 318]</span>
+<span class="doccomment">//!             // Lets check it. Sum of [0, 2, 4, ..., 318] = 25440</span>
+<span class="doccomment">//!             let sum: u16 = init_guard.iter().sum();</span>
+<span class="doccomment">//!             assert_eq!(sum, 25440);</span>
+<span class="doccomment">//!         }</span>
+<span class="doccomment">//!     }</span>
+<span class="doccomment">//! )</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! ## Why?</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! Because allocation on the stack (i.e. placing variables) is **MUCH FASTER** then usual</span>
+<span class="doccomment">//! allocating in the heap.</span>
+<span class="doccomment">//!</span>
 
 <span class="kw">mod</span> <span class="ident">guards</span>;
 <span class="kw">mod</span> <span class="ident">fixed_array</span>;

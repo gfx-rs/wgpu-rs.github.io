@@ -175,12 +175,12 @@
 
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">ffi</span>;
 
-<span class="doccomment">/// A connection to an X server.</span>
+<span class="doccomment">/// A connection to an X server.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">XConnection</span> {
     <span class="kw">pub</span> <span class="ident">xlib</span>: <span class="ident">ffi</span>::<span class="ident">Xlib</span>,
-    <span class="doccomment">/// Exposes XRandR functions from version &lt; 1.5</span>
+    <span class="doccomment">/// Exposes XRandR functions from version &lt; 1.5</span>
     <span class="kw">pub</span> <span class="ident">xrandr</span>: <span class="ident">ffi</span>::<span class="ident">Xrandr_2_2_0</span>,
-    <span class="doccomment">/// Exposes XRandR functions from version = 1.5</span>
+    <span class="doccomment">/// Exposes XRandR functions from version = 1.5</span>
     <span class="kw">pub</span> <span class="ident">xrandr_1_5</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ffi</span>::<span class="ident">Xrandr</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">xcursor</span>: <span class="ident">ffi</span>::<span class="ident">Xcursor</span>,
     <span class="kw">pub</span> <span class="ident">xinput2</span>: <span class="ident">ffi</span>::<span class="ident">XInput2</span>,
@@ -197,7 +197,7 @@
 
 <span class="kw">impl</span> <span class="ident">XConnection</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">error_handler</span>: <span class="ident">XErrorHandler</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">XConnection</span>, <span class="ident">XNotSupported</span><span class="op">&gt;</span> {
-        <span class="comment">// opening the libraries</span>
+        <span class="comment">// opening the libraries</span>
         <span class="kw">let</span> <span class="ident">xlib</span> <span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">Xlib</span>::<span class="ident">open</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">xcursor</span> <span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">Xcursor</span>::<span class="ident">open</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">xrandr</span> <span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">Xrandr_2_2_0</span>::<span class="ident">open</span>()<span class="question-mark">?</span>;
@@ -208,7 +208,7 @@
         <span class="kw">unsafe</span> { (<span class="ident">xlib</span>.<span class="ident">XInitThreads</span>)() };
         <span class="kw">unsafe</span> { (<span class="ident">xlib</span>.<span class="ident">XSetErrorHandler</span>)(<span class="ident">error_handler</span>) };
 
-        <span class="comment">// calling XOpenDisplay</span>
+        <span class="comment">// calling XOpenDisplay</span>
         <span class="kw">let</span> <span class="ident">display</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="kw">let</span> <span class="ident">display</span> <span class="op">=</span> (<span class="ident">xlib</span>.<span class="ident">XOpenDisplay</span>)(<span class="ident">ptr</span>::<span class="ident">null</span>());
             <span class="kw">if</span> <span class="ident">display</span>.<span class="ident">is_null</span>() {
@@ -217,7 +217,7 @@
             <span class="ident">display</span>
         };
 
-        <span class="comment">// Get X11 socket file descriptor</span>
+        <span class="comment">// Get X11 socket file descriptor</span>
         <span class="kw">let</span> <span class="ident">fd</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             (<span class="ident">xlib</span>.<span class="ident">XConnectionNumber</span>)(<span class="ident">display</span>)
         };
@@ -235,7 +235,7 @@
         })
     }
 
-    <span class="doccomment">/// Checks whether an error has been triggered by the previous function calls.</span>
+    <span class="doccomment">/// Checks whether an error has been triggered by the previous function calls.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">check_errors</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">XError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">latest_error</span>.<span class="ident">lock</span>().<span class="ident">take</span>();
@@ -246,7 +246,7 @@
         }
     }
 
-    <span class="doccomment">/// Ignores any previous error.</span>
+    <span class="doccomment">/// Ignores any previous error.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ignore_error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">latest_error</span>.<span class="ident">lock</span>() <span class="op">=</span> <span class="prelude-val">None</span>;
@@ -266,7 +266,7 @@
     }
 }
 
-<span class="doccomment">/// Error triggered by xlib.</span>
+<span class="doccomment">/// Error triggered by xlib.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">XError</span> {
     <span class="kw">pub</span> <span class="ident">description</span>: <span class="ident">String</span>,
@@ -289,13 +289,13 @@
     }
 }
 
-<span class="doccomment">/// Error returned if this system doesn&#39;t have XLib or can&#39;t create an X connection.</span>
+<span class="doccomment">/// Error returned if this system doesn&#39;t have XLib or can&#39;t create an X connection.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">XNotSupported</span> {
-    <span class="doccomment">/// Failed to load one or several shared libraries.</span>
+    <span class="doccomment">/// Failed to load one or several shared libraries.</span>
     <span class="ident">LibraryOpenError</span>(<span class="ident">ffi</span>::<span class="ident">OpenError</span>),
-    <span class="doccomment">/// Connecting to the X server with `XOpenDisplay` failed.</span>
-    <span class="ident">XOpenDisplayFailed</span>,     <span class="comment">// TODO: add better message</span>
+    <span class="doccomment">/// Connecting to the X server with `XOpenDisplay` failed.</span>
+    <span class="ident">XOpenDisplayFailed</span>,     <span class="comment">// TODO: add better message</span>
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">ffi</span>::<span class="ident">OpenError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">XNotSupported</span> {

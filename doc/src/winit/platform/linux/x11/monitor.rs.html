@@ -291,9 +291,9 @@
     <span class="ident">XRRScreenResources</span>,
 };
 
-<span class="comment">// Used to test XRandR &lt; 1.5 code path. This should always be committed as false.</span>
+<span class="comment">// Used to test XRandR &lt; 1.5 code path. This should always be committed as false.</span>
 <span class="kw">const</span> <span class="ident">FORCE_RANDR_COMPAT</span>: <span class="ident">bool</span> <span class="op">=</span> <span class="bool-val">false</span>;
-<span class="comment">// Also used for testing. This should always be committed as false.</span>
+<span class="comment">// Also used for testing. This should always be committed as false.</span>
 <span class="kw">const</span> <span class="ident">DISABLE_MONITOR_LIST_CACHING</span>: <span class="ident">bool</span> <span class="op">=</span> <span class="bool-val">false</span>;
 
 <span class="macro">lazy_static</span><span class="macro">!</span> {
@@ -314,25 +314,25 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">invalidate_cached_monitor_list</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MonitorId</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="comment">// We update this lazily.</span>
+    <span class="comment">// We update this lazily.</span>
     (<span class="kw-2">*</span><span class="ident">MONITORS</span>.<span class="ident">lock</span>()).<span class="ident">take</span>()
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MonitorId</span> {
-    <span class="doccomment">/// The actual id</span>
+    <span class="doccomment">/// The actual id</span>
     <span class="ident">id</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The name of the monitor</span>
+    <span class="doccomment">/// The name of the monitor</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">name</span>: <span class="ident">String</span>,
-    <span class="doccomment">/// The size of the monitor</span>
+    <span class="doccomment">/// The size of the monitor</span>
     <span class="ident">dimensions</span>: (<span class="ident">u32</span>, <span class="ident">u32</span>),
-    <span class="doccomment">/// The position of the monitor in the X screen</span>
+    <span class="doccomment">/// The position of the monitor in the X screen</span>
     <span class="ident">position</span>: (<span class="ident">i32</span>, <span class="ident">i32</span>),
-    <span class="doccomment">/// If the monitor is the primary one</span>
+    <span class="doccomment">/// If the monitor is the primary one</span>
     <span class="ident">primary</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// The DPI scale factor</span>
+    <span class="doccomment">/// The DPI scale factor</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">hidpi_factor</span>: <span class="ident">f64</span>,
-    <span class="doccomment">/// Used to determine which windows are on this monitor</span>
+    <span class="doccomment">/// Used to determine which windows are on this monitor</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">rect</span>: <span class="ident">util</span>::<span class="ident">AaRect</span>,
 }
 
@@ -412,8 +412,8 @@
             <span class="kw">let</span> <span class="ident">resources</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">version_is_at_least</span>(<span class="number">1</span>, <span class="number">3</span>) {
                 (<span class="self">self</span>.<span class="ident">xrandr</span>.<span class="ident">XRRGetScreenResourcesCurrent</span>)(<span class="self">self</span>.<span class="ident">display</span>, <span class="ident">root</span>)
             } <span class="kw">else</span> {
-                <span class="comment">// WARNING: this function is supposedly very slow, on the order of hundreds of ms.</span>
-                <span class="comment">// Upon failure, `resources` will be null.</span>
+                <span class="comment">// WARNING: this function is supposedly very slow, on the order of hundreds of ms.</span>
+                <span class="comment">// Upon failure, `resources` will be null.</span>
                 (<span class="self">self</span>.<span class="ident">xrandr</span>.<span class="ident">XRRGetScreenResources</span>)(<span class="self">self</span>.<span class="ident">display</span>, <span class="ident">root</span>)
             };
 
@@ -425,8 +425,8 @@
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">has_primary</span> <span class="op">=</span> <span class="bool-val">false</span>;
 
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">xrandr_1_5</span>.<span class="ident">is_some</span>() <span class="op">&amp;&amp;</span> <span class="ident">version_is_at_least</span>(<span class="number">1</span>, <span class="number">5</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">FORCE_RANDR_COMPAT</span> {
-                <span class="comment">// We&#39;re in XRandR &gt;= 1.5, enumerate monitors. This supports things like MST and</span>
-                <span class="comment">// videowalls.</span>
+                <span class="comment">// We&#39;re in XRandR &gt;= 1.5, enumerate monitors. This supports things like MST and</span>
+                <span class="comment">// videowalls.</span>
                 <span class="kw">let</span> <span class="ident">xrandr_1_5</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">xrandr_1_5</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">monitor_count</span> <span class="op">=</span> <span class="number">0</span>;
                 <span class="kw">let</span> <span class="ident">monitors</span> <span class="op">=</span> (<span class="ident">xrandr_1_5</span>.<span class="ident">XRRGetMonitors</span>)(<span class="self">self</span>.<span class="ident">display</span>, <span class="ident">root</span>, <span class="number">1</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">monitor_count</span>);
@@ -446,9 +446,9 @@
                 }
                 (<span class="ident">xrandr_1_5</span>.<span class="ident">XRRFreeMonitors</span>)(<span class="ident">monitors</span>);
             } <span class="kw">else</span> {
-                <span class="comment">// We&#39;re in XRandR &lt; 1.5, enumerate CRTCs. Everything will work except MST and</span>
-                <span class="comment">// videowall setups will also show monitors that aren&#39;t in the logical groups the user</span>
-                <span class="comment">// cares about.</span>
+                <span class="comment">// We&#39;re in XRandR &lt; 1.5, enumerate CRTCs. Everything will work except MST and</span>
+                <span class="comment">// videowall setups will also show monitors that aren&#39;t in the logical groups the user</span>
+                <span class="comment">// cares about.</span>
                 <span class="kw">let</span> <span class="ident">primary</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">xrandr</span>.<span class="ident">XRRGetOutputPrimary</span>)(<span class="self">self</span>.<span class="ident">display</span>, <span class="ident">root</span>);
                 <span class="ident">available</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>((<span class="kw-2">*</span><span class="ident">resources</span>).<span class="ident">ncrtc</span> <span class="kw">as</span> <span class="ident">usize</span>);
                 <span class="kw">for</span> <span class="ident">crtc_index</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="kw-2">*</span><span class="ident">resources</span>).<span class="ident">ncrtc</span> {
@@ -471,10 +471,10 @@
                 }
             }
 
-            <span class="comment">// If no monitors were detected as being primary, we just pick one ourselves!</span>
+            <span class="comment">// If no monitors were detected as being primary, we just pick one ourselves!</span>
             <span class="kw">if</span> <span class="op">!</span><span class="ident">has_primary</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">fallback</span>) <span class="op">=</span> <span class="ident">available</span>.<span class="ident">first_mut</span>() {
-                    <span class="comment">// Setting this here will come in handy if we ever add an `is_primary` method.</span>
+                    <span class="comment">// Setting this here will come in handy if we ever add an `is_primary` method.</span>
                     <span class="ident">fallback</span>.<span class="ident">primary</span> <span class="op">=</span> <span class="bool-val">true</span>;
                 }
             }

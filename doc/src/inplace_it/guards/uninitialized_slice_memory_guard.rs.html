@@ -159,84 +159,84 @@
 };
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">guards</span>::<span class="ident">SliceMemoryGuard</span>;
 
-<span class="doccomment">/// Guard-struct used to own uninitialized memory and provide functions for initializing it.</span>
-<span class="doccomment">/// Usually, you *should not* use this struct to handle your memory.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Initializing functions spawns [SliceMemoryGuard] which will provide access to initialized memory.</span>
-<span class="doccomment">/// It also means memory can be used again after [SliceMemoryGuard] is dropped.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ### Safety</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// If you use this struct manually, remember: `&amp;mut [MaybeUninit&lt;T&gt;]`&#39;s content will be overwriten while initialization.</span>
-<span class="doccomment">/// So it is *not safe* to apply this struct to already initialized data and it can lead to *memory leaks*.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ### Example</span>
-<span class="doccomment">/// ```rust</span>
-<span class="doccomment">/// use inplace_it::UninitializedSliceMemoryGuard;</span>
-<span class="doccomment">/// use std::mem::MaybeUninit;</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // Placing uninitialized memory</span>
-<span class="doccomment">/// let mut memory: [MaybeUninit&lt;usize&gt;; 100] = unsafe { MaybeUninit::uninit().assume_init() };</span>
-<span class="doccomment">/// // Initializing guard</span>
-<span class="doccomment">/// let mut uninit_memory_guard = unsafe { UninitializedSliceMemoryGuard::new(&amp;mut memory) };</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// {</span>
-<span class="doccomment">///     // Initializing memory</span>
-<span class="doccomment">///     let mut memory_guard = uninit_memory_guard</span>
-<span class="doccomment">///         // we need to call .borrow() because out init-API consumes uninit-guard</span>
-<span class="doccomment">///         .borrow()</span>
-<span class="doccomment">///         // then passing initialize closure and the guard is ok</span>
-<span class="doccomment">///         .init(|index| index * 2);</span>
-<span class="doccomment">///     // For now, memory contains content like [0, 2, 4, 6, ..., 196, 198]</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     // Using memory</span>
-<span class="doccomment">///     // Sum of [0, 2, 4, 6, ..., 196, 198] = sum of [0, 1, 2, 3, ..., 98, 99] * 2 = ( 99 * (99+1) ) / 2 * 2</span>
-<span class="doccomment">///     let sum: usize = memory_guard.iter().sum();</span>
-<span class="doccomment">///     assert_eq!(sum, 99 * 100);</span>
-<span class="doccomment">///     // memory_guard dropped here</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// // uninit_memory_guard is available again now</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// {</span>
-<span class="doccomment">///     // Initializing memory</span>
-<span class="doccomment">///     let mut memory_guard = uninit_memory_guard.init(|index| index * index);</span>
-<span class="doccomment">///     // For now, memory contains content like [0, 1, 4, 9, ..., 9604, 9801]</span>
-<span class="doccomment">///</span>
-<span class="doccomment">///     // Using memory</span>
-<span class="doccomment">///     // Sum of [0, 1, 4, 9, ..., 9604, 9801] = 99 * (99 + 1) * (2 * 99 + 1) / 6</span>
-<span class="doccomment">///     let sum: usize = memory_guard.iter().sum();</span>
-<span class="doccomment">///     assert_eq!(sum, 99 * (99 + 1) * (2 * 99 + 1) / 6);</span>
-<span class="doccomment">///     // memory_guard dropped here</span>
-<span class="doccomment">/// }</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [SliceMemoryGuard]: struct.SliceMemoryGuard.html</span>
+<span class="doccomment">/// Guard-struct used to own uninitialized memory and provide functions for initializing it.</span>
+<span class="doccomment">/// Usually, you *should not* use this struct to handle your memory.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Initializing functions spawns [SliceMemoryGuard] which will provide access to initialized memory.</span>
+<span class="doccomment">/// It also means memory can be used again after [SliceMemoryGuard] is dropped.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ### Safety</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// If you use this struct manually, remember: `&amp;mut [MaybeUninit&lt;T&gt;]`&#39;s content will be overwriten while initialization.</span>
+<span class="doccomment">/// So it is *not safe* to apply this struct to already initialized data and it can lead to *memory leaks*.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ### Example</span>
+<span class="doccomment">/// ```rust</span>
+<span class="doccomment">/// use inplace_it::UninitializedSliceMemoryGuard;</span>
+<span class="doccomment">/// use std::mem::MaybeUninit;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// // Placing uninitialized memory</span>
+<span class="doccomment">/// let mut memory: [MaybeUninit&lt;usize&gt;; 100] = unsafe { MaybeUninit::uninit().assume_init() };</span>
+<span class="doccomment">/// // Initializing guard</span>
+<span class="doccomment">/// let mut uninit_memory_guard = unsafe { UninitializedSliceMemoryGuard::new(&amp;mut memory) };</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// {</span>
+<span class="doccomment">///     // Initializing memory</span>
+<span class="doccomment">///     let mut memory_guard = uninit_memory_guard</span>
+<span class="doccomment">///         // we need to call .borrow() because out init-API consumes uninit-guard</span>
+<span class="doccomment">///         .borrow()</span>
+<span class="doccomment">///         // then passing initialize closure and the guard is ok</span>
+<span class="doccomment">///         .init(|index| index * 2);</span>
+<span class="doccomment">///     // For now, memory contains content like [0, 2, 4, 6, ..., 196, 198]</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     // Using memory</span>
+<span class="doccomment">///     // Sum of [0, 2, 4, 6, ..., 196, 198] = sum of [0, 1, 2, 3, ..., 98, 99] * 2 = ( 99 * (99+1) ) / 2 * 2</span>
+<span class="doccomment">///     let sum: usize = memory_guard.iter().sum();</span>
+<span class="doccomment">///     assert_eq!(sum, 99 * 100);</span>
+<span class="doccomment">///     // memory_guard dropped here</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// // uninit_memory_guard is available again now</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// {</span>
+<span class="doccomment">///     // Initializing memory</span>
+<span class="doccomment">///     let mut memory_guard = uninit_memory_guard.init(|index| index * index);</span>
+<span class="doccomment">///     // For now, memory contains content like [0, 1, 4, 9, ..., 9604, 9801]</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     // Using memory</span>
+<span class="doccomment">///     // Sum of [0, 1, 4, 9, ..., 9604, 9801] = 99 * (99 + 1) * (2 * 99 + 1) / 6</span>
+<span class="doccomment">///     let sum: usize = memory_guard.iter().sum();</span>
+<span class="doccomment">///     assert_eq!(sum, 99 * (99 + 1) * (2 * 99 + 1) / 6);</span>
+<span class="doccomment">///     // memory_guard dropped here</span>
+<span class="doccomment">/// }</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [SliceMemoryGuard]: struct.SliceMemoryGuard.html</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UninitializedSliceMemoryGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
     <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>],
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">UninitializedSliceMemoryGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Initialize memory guard</span>
+    <span class="doccomment">/// Initialize memory guard</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">memory</span> }
     }
 
-    <span class="doccomment">/// Get the length of memory slice</span>
+    <span class="doccomment">/// Get the length of memory slice</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
         <span class="self">self</span>.<span class="ident">memory</span>.<span class="ident">len</span>()
     }
 
-    <span class="doccomment">/// Construct new memory guard with new bounds.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Can be used to shrink memory.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ### Panics</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Panic can be reached when given `range` is out of memory&#39;s range.</span>
+    <span class="doccomment">/// Construct new memory guard with new bounds.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Can be used to shrink memory.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ### Panics</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Panic can be reached when given `range` is out of memory&#39;s range.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">slice</span>(<span class="self">self</span>, <span class="ident">range</span>: <span class="kw">impl</span> <span class="ident">RangeBounds</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">range</span>.<span class="ident">start_bound</span>() {
@@ -254,8 +254,8 @@
         }
     }
 
-    <span class="doccomment">/// Initialize memory and make new guard of initialized memory.</span>
-    <span class="doccomment">/// Given `init` closure will be used to initialize elements of memory slice.</span>
+    <span class="doccomment">/// Initialize memory and make new guard of initialized memory.</span>
+    <span class="doccomment">/// Given `init` closure will be used to initialize elements of memory slice.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="self">self</span>, <span class="ident">init</span>: <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SliceMemoryGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">unsafe</span> {
@@ -263,13 +263,13 @@
         }
     }
 
-    <span class="doccomment">/// Initialize memory and make new guard of initialized memory.</span>
-    <span class="doccomment">/// Given `source` slice will be used to initialize elements of memory slice.</span>
-    <span class="doccomment">/// Returned guard will contain sliced memory to `source`&#39;s length.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ### Panics</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Panic can be reached when given `source`&#39;s range is out of memory&#39;s range.</span>
+    <span class="doccomment">/// Initialize memory and make new guard of initialized memory.</span>
+    <span class="doccomment">/// Given `source` slice will be used to initialize elements of memory slice.</span>
+    <span class="doccomment">/// Returned guard will contain sliced memory to `source`&#39;s length.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ### Panics</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Panic can be reached when given `source`&#39;s range is out of memory&#39;s range.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_copy_of</span>(<span class="self">self</span>, <span class="ident">source</span>: <span class="kw-2">&amp;</span>[<span class="ident">T</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SliceMemoryGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span>
         <span class="kw">where</span> <span class="ident">T</span>: <span class="ident">Clone</span>
@@ -277,20 +277,20 @@
         <span class="self">self</span>.<span class="ident">slice</span>(..<span class="ident">source</span>.<span class="ident">len</span>()).<span class="ident">init</span>(<span class="op">|</span><span class="ident">index</span><span class="op">|</span> { <span class="ident">source</span>[<span class="ident">index</span>].<span class="ident">clone</span>() })
     }
 
-    <span class="doccomment">/// Initialize memory and make new guard of initialized memory.</span>
-    <span class="doccomment">/// Given `iter` exact-size iterator will be used to initialize elements of memory slice.</span>
-    <span class="doccomment">/// Returned guard will contain sliced memory to `iter`&#39;s length.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ### Panics</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Panic can be reached when given `iter`&#39;s length is out of memory&#39;s range.</span>
+    <span class="doccomment">/// Initialize memory and make new guard of initialized memory.</span>
+    <span class="doccomment">/// Given `iter` exact-size iterator will be used to initialize elements of memory slice.</span>
+    <span class="doccomment">/// Returned guard will contain sliced memory to `iter`&#39;s length.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ### Panics</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Panic can be reached when given `iter`&#39;s length is out of memory&#39;s range.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_with_iter</span>(<span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">iter</span>: <span class="kw">impl</span> <span class="ident">ExactSizeIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SliceMemoryGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">slice</span>(..<span class="ident">iter</span>.<span class="ident">len</span>()).<span class="ident">init</span>(<span class="op">|</span><span class="ident">_index</span><span class="op">|</span> { <span class="ident">iter</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>() })
     }
 
-    <span class="doccomment">/// Create new uninit memory guard with less or equal lifetime to original guard&#39;s lifetime.</span>
-    <span class="doccomment">/// This function should be used to reuse memory because init-API consumes the guard.</span>
+    <span class="doccomment">/// Create new uninit memory guard with less or equal lifetime to original guard&#39;s lifetime.</span>
+    <span class="doccomment">/// This function should be used to reuse memory because init-API consumes the guard.</span>
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">borrow</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">UninitializedSliceMemoryGuard</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">unsafe</span> {
