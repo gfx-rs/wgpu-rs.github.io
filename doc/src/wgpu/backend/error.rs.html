@@ -305,75 +305,113 @@
 <span id="302">302</span>
 <span id="303">303</span>
 <span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">error</span>::<span class="ident">Error</span>, <span class="ident">fmt</span>::<span class="ident">Display</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">error</span>::<span class="ident">Error</span>, <span class="ident">fmt</span>};
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Context</span>;
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">format_error</span>(<span class="ident">err</span>: <span class="kw-2">&amp;</span>(<span class="kw">impl</span> <span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>), <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err_descs</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
-
-    <span class="ident">err_descs</span>.<span class="ident">push</span>(<span class="ident">fmt_pretty_any</span>(<span class="ident">err</span>, <span class="ident">context</span>));
-
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">source_opt</span> <span class="op">=</span> <span class="ident">err</span>.<span class="ident">source</span>();
-    <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">source</span>) <span class="op">=</span> <span class="ident">source_opt</span> {
-        <span class="ident">err_descs</span>.<span class="ident">push</span>(<span class="ident">fmt_pretty_any</span>(<span class="ident">source</span>, <span class="ident">context</span>));
-        <span class="ident">source_opt</span> <span class="op">=</span> <span class="ident">source</span>.<span class="ident">source</span>();
-    }
-
-    <span class="kw">let</span> <span class="ident">desc</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Validation Error\n\nCaused by:\n{}&quot;</span>, <span class="ident">err_descs</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>));
-    <span class="ident">desc</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">ContextError</span> {
+    <span class="kw">pub</span> <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
+    <span class="kw">pub</span> <span class="ident">cause</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">label_key</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
+    <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident">String</span>,
 }
 
-<span class="kw">fn</span> <span class="ident">fmt_pretty_any</span>(<span class="ident">error</span>: <span class="kw-2">&amp;</span>(<span class="ident">dyn</span> <span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>), <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="kw">super</span>::<span class="ident">direct</span>::<span class="ident">ContextError</span><span class="op">&gt;</span>() {
-        <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="ident">context</span>);
+<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">ContextError</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+        <span class="macro">write</span><span class="macro">!</span>(<span class="ident">f</span>, <span class="string">&quot;In {}&quot;</span>, <span class="self">self</span>.<span class="ident">string</span>)
     }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">RenderCommandError</span><span class="op">&gt;</span>() {
-        <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="ident">context</span>);
-    }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">binding_model</span>::<span class="ident">CreateBindGroupError</span><span class="op">&gt;</span>() {
-        <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="ident">context</span>);
-    }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">binding_model</span>::<span class="ident">CreatePipelineLayoutError</span><span class="op">&gt;</span>()
-    {
-        <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="ident">context</span>);
-    }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">ExecutionError</span><span class="op">&gt;</span>() {
-        <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="ident">context</span>);
-    }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">RenderPassErrorInner</span><span class="op">&gt;</span>() {
-        <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="ident">context</span>);
-    }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">RenderPassError</span><span class="op">&gt;</span>() {
-        <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="ident">context</span>);
-    }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">ComputePassErrorInner</span><span class="op">&gt;</span>() {
-        <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="ident">context</span>);
-    }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">ComputePassError</span><span class="op">&gt;</span>() {
-        <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="ident">context</span>);
-    }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">RenderBundleError</span><span class="op">&gt;</span>() {
-        <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="ident">context</span>);
-    }
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">TransferError</span><span class="op">&gt;</span>() {
-        <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="ident">context</span>);
-    }
-
-    <span class="comment">// default</span>
-    <span class="ident">format_error_line</span>(<span class="ident">error</span>.<span class="ident">as_display</span>())
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">format_error_line</span>(<span class="ident">err</span>: <span class="kw-2">&amp;</span><span class="ident">dyn</span> <span class="ident">Display</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+<span class="kw">impl</span> <span class="ident">Error</span> <span class="kw">for</span> <span class="ident">ContextError</span> {
+    <span class="kw">fn</span> <span class="ident">source</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>(<span class="ident">dyn</span> <span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>)<span class="op">&gt;</span> {
+        <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">cause</span>.<span class="ident">as_ref</span>())
+    }
+}
+
+<span class="kw">impl</span> <span class="kw">super</span>::<span class="ident">Context</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">format_error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">err</span>: <span class="kw-2">&amp;</span>(<span class="kw">impl</span> <span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err_descs</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="ident">err_descs</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">format_pretty_any</span>(<span class="ident">err</span>));
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">source_opt</span> <span class="op">=</span> <span class="ident">err</span>.<span class="ident">source</span>();
+        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">source</span>) <span class="op">=</span> <span class="ident">source_opt</span> {
+            <span class="ident">err_descs</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">format_pretty_any</span>(<span class="ident">source</span>));
+            <span class="ident">source_opt</span> <span class="op">=</span> <span class="ident">source</span>.<span class="ident">source</span>();
+        }
+
+        <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Validation Error\n\nCaused by:\n{}&quot;</span>, <span class="ident">err_descs</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>))
+    }
+
+    <span class="kw">fn</span> <span class="ident">format_pretty_any</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">error</span>: <span class="kw-2">&amp;</span>(<span class="ident">dyn</span> <span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">ContextError</span><span class="op">&gt;</span>() {
+            <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="self">self</span>);
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">RenderCommandError</span><span class="op">&gt;</span>() {
+            <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="self">self</span>);
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">binding_model</span>::<span class="ident">CreateBindGroupError</span><span class="op">&gt;</span>() {
+            <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="self">self</span>);
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span>
+            <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">binding_model</span>::<span class="ident">CreatePipelineLayoutError</span><span class="op">&gt;</span>()
+        {
+            <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="self">self</span>);
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">ExecutionError</span><span class="op">&gt;</span>() {
+            <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="self">self</span>);
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">RenderPassErrorInner</span><span class="op">&gt;</span>() {
+            <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="self">self</span>);
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">RenderPassError</span><span class="op">&gt;</span>() {
+            <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="self">self</span>);
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">ComputePassErrorInner</span><span class="op">&gt;</span>() {
+            <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="self">self</span>);
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">ComputePassError</span><span class="op">&gt;</span>() {
+            <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="self">self</span>);
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">RenderBundleError</span><span class="op">&gt;</span>() {
+            <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="self">self</span>);
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pretty_err</span>) <span class="op">=</span> <span class="ident">error</span>.<span class="ident">downcast_ref</span>::<span class="op">&lt;</span><span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">TransferError</span><span class="op">&gt;</span>() {
+            <span class="kw">return</span> <span class="ident">pretty_err</span>.<span class="ident">fmt_pretty</span>(<span class="self">self</span>);
+        }
+
+        <span class="comment">// default</span>
+        <span class="ident">format_error_line</span>(<span class="ident">error</span>.<span class="ident">as_display</span>())
+    }
+}
+
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">format_error_line</span>(<span class="ident">err</span>: <span class="kw-2">&amp;</span><span class="ident">dyn</span> <span class="ident">fmt</span>::<span class="ident">Display</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
     <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;    {}\n&quot;</span>, <span class="ident">err</span>)
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">format_note_line</span>(<span class="ident">note</span>: <span class="kw-2">&amp;</span><span class="ident">dyn</span> <span class="ident">Display</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">format_note_line</span>(<span class="ident">note</span>: <span class="kw-2">&amp;</span><span class="ident">dyn</span> <span class="ident">fmt</span>::<span class="ident">Display</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
     <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;      note: {}\n&quot;</span>, <span class="ident">note</span>)
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">format_label_line</span>(<span class="ident">label_key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">label_value</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">format_label_line</span>(<span class="ident">label_key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">label_value</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
     <span class="kw">if</span> <span class="ident">label_key</span>.<span class="ident">is_empty</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">label_value</span>.<span class="ident">is_empty</span>() {
         <span class="ident">String</span>::<span class="ident">new</span>()
     } <span class="kw">else</span> {
@@ -382,29 +420,29 @@
 }
 
 <span class="kw">trait</span> <span class="ident">AsDisplay</span> {
-    <span class="kw">fn</span> <span class="ident">as_display</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">dyn</span> <span class="ident">Display</span>;
+    <span class="kw">fn</span> <span class="ident">as_display</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">dyn</span> <span class="ident">fmt</span>::<span class="ident">Display</span>;
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Display</span><span class="op">&gt;</span> <span class="ident">AsDisplay</span> <span class="kw">for</span> <span class="ident">T</span> {
-    <span class="kw">fn</span> <span class="ident">as_display</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">dyn</span> <span class="ident">Display</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">fmt</span>::<span class="ident">Display</span><span class="op">&gt;</span> <span class="ident">AsDisplay</span> <span class="kw">for</span> <span class="ident">T</span> {
+    <span class="kw">fn</span> <span class="ident">as_display</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">dyn</span> <span class="ident">fmt</span>::<span class="ident">Display</span> {
         <span class="self">self</span>
     }
 }
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PrettyError</span>: <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_context</span>: <span class="kw-2">&amp;</span><span class="kw">super</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="ident">format_error_line</span>(<span class="self">self</span>.<span class="ident">as_display</span>())
     }
 }
 
-<span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="kw">super</span>::<span class="ident">direct</span>::<span class="ident">ContextError</span> {
-    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+<span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">ContextError</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_context</span>: <span class="kw-2">&amp;</span><span class="kw">super</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="ident">format_error_line</span>(<span class="self">self</span>.<span class="ident">as_display</span>()) <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">format_label_line</span>(<span class="self">self</span>.<span class="ident">label_key</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">label</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">RenderCommandError</span> {
-    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="kw">super</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">global</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">format_error_line</span>(<span class="self">self</span>);
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
@@ -426,7 +464,7 @@
     }
 }
 <span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">wgc</span>::<span class="ident">binding_model</span>::<span class="ident">CreateBindGroupError</span> {
-    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="kw">super</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">global</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">format_error_line</span>(<span class="self">self</span>);
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
@@ -449,7 +487,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">wgc</span>::<span class="ident">binding_model</span>::<span class="ident">CreatePipelineLayoutError</span> {
-    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="kw">super</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">global</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">format_error_line</span>(<span class="self">self</span>);
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
@@ -464,7 +502,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">ExecutionError</span> {
-    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="kw">super</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">global</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">format_error_line</span>(<span class="self">self</span>);
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
@@ -478,7 +516,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">RenderPassErrorInner</span> {
-    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="kw">super</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">global</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">format_error_line</span>(<span class="self">self</span>);
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
@@ -493,7 +531,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">RenderPassError</span> {
-    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="kw">super</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="comment">// This error is wrapper for the inner error,</span>
         <span class="comment">// but the scope has useful labels</span>
         <span class="ident">format_error_line</span>(<span class="self">self</span>) <span class="op">+</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">scope</span>.<span class="ident">fmt_pretty</span>(<span class="ident">context</span>)
@@ -501,14 +539,14 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">ComputePassError</span> {
-    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="kw">super</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="comment">// This error is wrapper for the inner error,</span>
         <span class="comment">// but the scope has useful labels</span>
         <span class="ident">format_error_line</span>(<span class="self">self</span>) <span class="op">+</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">scope</span>.<span class="ident">fmt_pretty</span>(<span class="ident">context</span>)
     }
 }
 <span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">RenderBundleError</span> {
-    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="kw">super</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="comment">// This error is wrapper for the inner error,</span>
         <span class="comment">// but the scope has useful labels</span>
         <span class="ident">format_error_line</span>(<span class="self">self</span>) <span class="op">+</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">scope</span>.<span class="ident">fmt_pretty</span>(<span class="ident">context</span>)
@@ -516,7 +554,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">ComputePassErrorInner</span> {
-    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="kw">super</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">global</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">format_error_line</span>(<span class="self">self</span>);
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
@@ -539,7 +577,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">TransferError</span> {
-    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="kw">super</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">global</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">format_error_line</span>(<span class="self">self</span>);
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
@@ -578,7 +616,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">wgc</span>::<span class="ident">command</span>::<span class="ident">PassErrorScope</span> {
-    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="kw">super</span>::<span class="ident">Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
         <span class="comment">// This error is not in the error chain, only notes are needed</span>
         <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">global</span>();
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
