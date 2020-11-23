@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/9d35aea/wgpu-core/src/track/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/feac96d/wgpu-core/src/track/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -587,6 +587,13 @@
 <span id="584">584</span>
 <span id="585">585</span>
 <span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -597,15 +604,12 @@
 <span class="kw">mod</span> <span class="ident">texture</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">conv</span>,
-    <span class="ident">hub</span>::<span class="ident">Storage</span>,
+    <span class="ident">conv</span>, <span class="ident">hub</span>,
     <span class="ident">id</span>::{<span class="self">self</span>, <span class="ident">TypedId</span>, <span class="ident">Valid</span>},
     <span class="ident">resource</span>, <span class="ident">Epoch</span>, <span class="ident">FastHashMap</span>, <span class="ident">Index</span>, <span class="ident">RefCount</span>,
 };
 
-<span class="kw">use</span> <span class="ident">std</span>::{
-    <span class="ident">borrow</span>::<span class="ident">Borrow</span>, <span class="ident">collections</span>::<span class="ident">hash_map</span>::<span class="ident">Entry</span>, <span class="ident">fmt</span>, <span class="ident">marker</span>::<span class="ident">PhantomData</span>, <span class="ident">ops</span>, <span class="ident">vec</span>::<span class="ident">Drain</span>,
-};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections</span>::<span class="ident">hash_map</span>::<span class="ident">Entry</span>, <span class="ident">fmt</span>, <span class="ident">marker</span>::<span class="ident">PhantomData</span>, <span class="ident">ops</span>, <span class="ident">vec</span>::<span class="ident">Drain</span>};
 <span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">buffer</span>::<span class="ident">BufferState</span>;
@@ -998,9 +1002,9 @@
     <span class="doccomment">/// the last read-only usage, if possible.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns the old usage as an error if there is a conflict.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">use_extend</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">RefCount</span><span class="op">&gt;</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">use_extend</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">hub</span>::<span class="ident">Resource</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
+        <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">hub</span>::<span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
         <span class="ident">id</span>: <span class="ident">S</span>::<span class="ident">Id</span>,
         <span class="ident">selector</span>: <span class="ident">S</span>::<span class="ident">Selector</span>,
         <span class="ident">usage</span>: <span class="ident">S</span>::<span class="ident">Usage</span>,
@@ -1008,24 +1012,34 @@
         <span class="kw">let</span> <span class="ident">item</span> <span class="op">=</span> <span class="ident">storage</span>
             .<span class="ident">get</span>(<span class="ident">id</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">UseExtendError</span>::<span class="ident">InvalidResource</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">change_extend</span>(<span class="ident">Valid</span>(<span class="ident">id</span>), <span class="ident">item</span>.<span class="ident">borrow</span>(), <span class="ident">selector</span>, <span class="ident">usage</span>)
-            .<span class="ident">map</span>(<span class="op">|</span>()<span class="op">|</span> <span class="ident">item</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">UseExtendError</span>::<span class="ident">Conflict</span>(<span class="ident">pending</span>.<span class="ident">usage</span>.<span class="ident">end</span>))
+        <span class="self">self</span>.<span class="ident">change_extend</span>(
+            <span class="ident">Valid</span>(<span class="ident">id</span>),
+            <span class="ident">item</span>.<span class="ident">life_guard</span>().<span class="ident">ref_count</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+            <span class="ident">selector</span>,
+            <span class="ident">usage</span>,
+        )
+        .<span class="ident">map</span>(<span class="op">|</span>()<span class="op">|</span> <span class="ident">item</span>)
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">UseExtendError</span>::<span class="ident">Conflict</span>(<span class="ident">pending</span>.<span class="ident">usage</span>.<span class="ident">end</span>))
     }
 
     <span class="doccomment">/// Use a given resource provided by an `Id` with the specified usage.</span>
     <span class="doccomment">/// Combines storage access by &#39;Id&#39; with the transition that replaces</span>
     <span class="doccomment">/// the last usage with a new one, returning an iterator over these</span>
     <span class="doccomment">/// transitions.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">use_replace</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">RefCount</span><span class="op">&gt;</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">use_replace</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">hub</span>::<span class="ident">Resource</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
+        <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">hub</span>::<span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
         <span class="ident">id</span>: <span class="ident">S</span>::<span class="ident">Id</span>,
         <span class="ident">selector</span>: <span class="ident">S</span>::<span class="ident">Selector</span>,
         <span class="ident">usage</span>: <span class="ident">S</span>::<span class="ident">Usage</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span>, <span class="ident">Drain</span><span class="op">&lt;</span><span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span>), <span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">item</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get</span>(<span class="ident">id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">id</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">drain</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">change_replace</span>(<span class="ident">Valid</span>(<span class="ident">id</span>), <span class="ident">item</span>.<span class="ident">borrow</span>(), <span class="ident">selector</span>, <span class="ident">usage</span>);
+        <span class="kw">let</span> <span class="ident">drain</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">change_replace</span>(
+            <span class="ident">Valid</span>(<span class="ident">id</span>),
+            <span class="ident">item</span>.<span class="ident">life_guard</span>().<span class="ident">ref_count</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+            <span class="ident">selector</span>,
+            <span class="ident">usage</span>,
+        );
         <span class="prelude-val">Ok</span>((<span class="ident">item</span>, <span class="ident">drain</span>))
     }
 }

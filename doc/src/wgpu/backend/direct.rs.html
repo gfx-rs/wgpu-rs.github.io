@@ -1641,6 +1641,24 @@
 <span id="1638">1638</span>
 <span id="1639">1639</span>
 <span id="1640">1640</span>
+<span id="1641">1641</span>
+<span id="1642">1642</span>
+<span id="1643">1643</span>
+<span id="1644">1644</span>
+<span id="1645">1645</span>
+<span id="1646">1646</span>
+<span id="1647">1647</span>
+<span id="1648">1648</span>
+<span id="1649">1649</span>
+<span id="1650">1650</span>
+<span id="1651">1651</span>
+<span id="1652">1652</span>
+<span id="1653">1653</span>
+<span id="1654">1654</span>
+<span id="1655">1655</span>
+<span id="1656">1656</span>
+<span id="1657">1657</span>
+<span id="1658">1658</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">backend</span>::<span class="ident">error</span>::<span class="ident">format_error</span>, <span class="ident">backend</span>::<span class="ident">native_gpu_future</span>, <span class="ident">BindGroupDescriptor</span>,
@@ -3063,7 +3081,10 @@
     ) {
         <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="ident">wgc</span>::<span class="macro">gfx_select</span><span class="macro">!</span>(<span class="ident">encoder</span>.<span class="ident">id</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">global</span>.<span class="ident">command_encoder_run_render_pass</span>(<span class="ident">encoder</span>.<span class="ident">id</span>, <span class="ident">pass</span>))
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">err</span>.<span class="ident">with_context</span>(<span class="string">&quot;In a RenderPass&quot;</span>, <span class="prelude-val">None</span>))
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> {
+                <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">wgc</span>::<span class="macro">gfx_select</span><span class="macro">!</span>(<span class="ident">encoder</span>.<span class="ident">id</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">global</span>.<span class="ident">command_buffer_label</span>(<span class="ident">encoder</span>.<span class="ident">id</span>));
+                <span class="ident">err</span>.<span class="ident">with_context_label_key</span>(<span class="string">&quot;In a render pass&quot;</span>, <span class="string">&quot;encoder&quot;</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>))
+            })
             .<span class="ident">unwrap_error_sink</span>(<span class="kw-2">&amp;</span><span class="ident">encoder</span>.<span class="ident">error_sink</span>, <span class="kw-2">&amp;</span><span class="self">self</span>, <span class="op">|</span><span class="op">|</span> ())
     }
 
@@ -3222,15 +3243,29 @@
 }
 
 <span class="kw">trait</span> <span class="ident">WithContextError</span>: <span class="ident">Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Sized</span> {
-    <span class="kw">fn</span> <span class="ident">with_context</span>(<span class="self">self</span>, <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ContextError</span>;
+    <span class="kw">fn</span> <span class="ident">with_context_label_key</span>(
+        <span class="self">self</span>,
+        <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+        <span class="ident">label_key</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
+        <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ContextError</span>;
+    <span class="kw">fn</span> <span class="ident">with_context</span>(<span class="self">self</span>, <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ContextError</span> {
+        <span class="self">self</span>.<span class="ident">with_context_label_key</span>(<span class="ident">string</span>, <span class="string">&quot;label&quot;</span>, <span class="ident">label</span>)
+    }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">E</span>: <span class="ident">Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span> <span class="ident">WithContextError</span> <span class="kw">for</span> <span class="ident">E</span> {
-    <span class="kw">fn</span> <span class="ident">with_context</span>(<span class="self">self</span>, <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ContextError</span> {
+    <span class="kw">fn</span> <span class="ident">with_context_label_key</span>(
+        <span class="self">self</span>,
+        <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+        <span class="ident">label_key</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
+        <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ContextError</span> {
         <span class="ident">ContextError</span> {
             <span class="ident">string</span>: <span class="ident">string</span>.<span class="ident">to_string</span>(),
             <span class="ident">cause</span>: <span class="ident">Box</span>::<span class="ident">new</span>(<span class="self">self</span>),
             <span class="ident">label</span>: <span class="ident">label</span>.<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>).<span class="ident">to_string</span>(),
+            <span class="ident">label_key</span>,
         }
     }
 }
@@ -3239,6 +3274,7 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">ContextError</span> {
     <span class="kw">pub</span> <span class="ident">string</span>: <span class="ident">String</span>,
     <span class="kw">pub</span> <span class="ident">cause</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">dyn</span> <span class="ident">Error</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">label_key</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
     <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident">String</span>,
 }
 
