@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/7c7702c/src/back/spv/writer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>writer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/96c8073/src/back/spv/writer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>writer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -1777,8 +1777,6 @@
 <span id="1774">1774</span>
 <span id="1775">1775</span>
 <span id="1776">1776</span>
-<span id="1777">1777</span>
-<span id="1778">1778</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">/*! Standard Portable Intermediate Representation (SPIR-V) backend !*/</span>
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Instruction</span>, <span class="ident">LogicalLayout</span>, <span class="ident">PhysicalLayout</span>, <span class="ident">WriterFlags</span>};
@@ -1797,8 +1795,6 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;not an image&quot;</span>)]</span>
     <span class="ident">NotImage</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;empty value&quot;</span>)]</span>
-    <span class="ident">EmptyValue</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;feature is not yet implemented&quot;</span>)]</span>
     <span class="ident">FeatureNotImplemented</span>(),
 }
 
@@ -1863,6 +1859,7 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Hash</span>, <span class="ident">Eq</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">enum</span> <span class="ident">LocalType</span> {
+    <span class="ident">Void</span>,
     <span class="ident">Scalar</span> {
         <span class="ident">kind</span>: <span class="kw">crate</span>::<span class="ident">ScalarKind</span>,
         <span class="ident">width</span>: <span class="kw">crate</span>::<span class="ident">Bytes</span>,
@@ -1949,7 +1946,7 @@
 }
 
 <span class="comment">// type alias, for success return of write_expression</span>
-<span class="kw">type</span> <span class="ident">WriteExpressionOutput</span> <span class="op">=</span> (<span class="ident">Word</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">LookupType</span><span class="op">&gt;</span>);
+<span class="kw">type</span> <span class="ident">WriteExpressionOutput</span> <span class="op">=</span> (<span class="ident">Word</span>, <span class="ident">LookupType</span>);
 
 <span class="kw">impl</span> <span class="ident">Writer</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">Header</span>, <span class="ident">writer_flags</span>: <span class="ident">WriterFlags</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
@@ -2267,6 +2264,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">generate_id</span>();
         <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">local_ty</span> {
+            <span class="ident">LocalType</span>::<span class="ident">Void</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
             <span class="ident">LocalType</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">write_scalar</span>(<span class="ident">id</span>, <span class="ident">kind</span>, <span class="ident">width</span>),
             <span class="ident">LocalType</span>::<span class="ident">Vector</span> { <span class="ident">size</span>, <span class="ident">kind</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">scalar_id</span> <span class="op">=</span>
@@ -2685,7 +2683,7 @@
                     <span class="ident">function</span>,
                 )<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">base_ty_inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_inner</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">base_lookup_ty</span>.<span class="ident">unwrap</span>());
+                <span class="kw">let</span> <span class="ident">base_ty_inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_inner</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">base_lookup_ty</span>);
 
                 <span class="kw">let</span> (<span class="ident">pointer_id</span>, <span class="ident">type_id</span>, <span class="ident">lookup_ty</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">base_ty_inner</span> {
                     <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">kind</span>, <span class="ident">width</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
@@ -2716,7 +2714,7 @@
                     <span class="ident">type_id</span>, <span class="ident">load_id</span>, <span class="ident">id</span>, <span class="prelude-val">None</span>,
                 ));
 
-                <span class="prelude-val">Ok</span>((<span class="ident">load_id</span>, <span class="prelude-val">Some</span>(<span class="ident">lookup_ty</span>)))
+                <span class="prelude-val">Ok</span>((<span class="ident">load_id</span>, <span class="ident">lookup_ty</span>))
             }
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">AccessIndex</span> { <span class="ident">base</span>, <span class="ident">index</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">generate_id</span>();
@@ -2730,7 +2728,7 @@
                     )
                     .<span class="ident">unwrap</span>();
 
-                <span class="kw">let</span> <span class="ident">base_ty_inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_inner</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">base_lookup_ty</span>.<span class="ident">unwrap</span>());
+                <span class="kw">let</span> <span class="ident">base_ty_inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_inner</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">base_lookup_ty</span>);
 
                 <span class="kw">let</span> (<span class="ident">pointer_id</span>, <span class="ident">type_id</span>, <span class="ident">lookup_ty</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">base_ty_inner</span> {
                     <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">kind</span>, <span class="ident">width</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
@@ -2780,18 +2778,18 @@
                     <span class="ident">type_id</span>, <span class="ident">load_id</span>, <span class="ident">id</span>, <span class="prelude-val">None</span>,
                 ));
 
-                <span class="prelude-val">Ok</span>((<span class="ident">load_id</span>, <span class="prelude-val">Some</span>(<span class="ident">lookup_ty</span>)))
+                <span class="prelude-val">Ok</span>((<span class="ident">load_id</span>, <span class="ident">lookup_ty</span>))
             }
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">GlobalVariable</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">global_variables</span>[<span class="ident">handle</span>];
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_global_variable_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>, <span class="ident">handle</span>);
 
-                <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="prelude-val">Some</span>(<span class="ident">LookupType</span>::<span class="ident">Handle</span>(<span class="ident">var</span>.<span class="ident">ty</span>))))
+                <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="ident">LookupType</span>::<span class="ident">Handle</span>(<span class="ident">var</span>.<span class="ident">ty</span>)))
             }
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Constant</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">constants</span>[<span class="ident">handle</span>];
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_constant_id</span>(<span class="ident">handle</span>, <span class="ident">ir_module</span>);
-                <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="prelude-val">Some</span>(<span class="ident">LookupType</span>::<span class="ident">Handle</span>(<span class="ident">var</span>.<span class="ident">ty</span>))))
+                <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="ident">LookupType</span>::<span class="ident">Handle</span>(<span class="ident">var</span>.<span class="ident">ty</span>)))
             }
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Compose</span> { <span class="ident">ty</span>, <span class="kw-2">ref</span> <span class="ident">components</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">base_type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">LookupType</span>::<span class="ident">Handle</span>(<span class="ident">ty</span>));
@@ -2812,7 +2810,7 @@
                         <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">GlobalVariable</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="kw">let</span> <span class="ident">load_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">generate_id</span>();
                             <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="kw">super</span>::<span class="ident">instructions</span>::<span class="ident">instruction_load</span>(
-                                <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">component_local_ty</span>.<span class="ident">unwrap</span>()),
+                                <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">component_local_ty</span>),
                                 <span class="ident">load_id</span>,
                                 <span class="ident">component_id</span>,
                                 <span class="prelude-val">None</span>,
@@ -2866,7 +2864,7 @@
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
                 };
 
-                <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="prelude-val">Some</span>(<span class="ident">LookupType</span>::<span class="ident">Handle</span>(<span class="ident">ty</span>))))
+                <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="ident">LookupType</span>::<span class="ident">Handle</span>(<span class="ident">ty</span>)))
             }
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Binary</span> { <span class="ident">op</span>, <span class="ident">left</span>, <span class="ident">right</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">generate_id</span>();
@@ -2887,8 +2885,8 @@
                     <span class="ident">function</span>,
                 )<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">left_lookup_ty</span> <span class="op">=</span> <span class="ident">left_lookup_ty</span>.<span class="ident">unwrap</span>();
-                <span class="kw">let</span> <span class="ident">right_lookup_ty</span> <span class="op">=</span> <span class="ident">right_lookup_ty</span>.<span class="ident">unwrap</span>();
+                <span class="kw">let</span> <span class="ident">left_lookup_ty</span> <span class="op">=</span> <span class="ident">left_lookup_ty</span>;
+                <span class="kw">let</span> <span class="ident">right_lookup_ty</span> <span class="op">=</span> <span class="ident">right_lookup_ty</span>;
 
                 <span class="kw">let</span> <span class="ident">left_ty_inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_inner</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">left_lookup_ty</span>);
                 <span class="kw">let</span> <span class="ident">right_ty_inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_inner</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">right_lookup_ty</span>);
@@ -3039,7 +3037,7 @@
                 };
 
                 <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">instruction</span>);
-                <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="prelude-val">Some</span>(<span class="ident">lookup_ty</span>)))
+                <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="ident">lookup_ty</span>))
             }
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">LocalVariable</span>(<span class="ident">variable</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">ir_function</span>.<span class="ident">local_variables</span>[<span class="ident">variable</span>];
@@ -3047,7 +3045,7 @@
                     .<span class="ident">variables</span>
                     .<span class="ident">iter</span>()
                     .<span class="ident">find</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">name</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>() <span class="op">=</span><span class="op">=</span> <span class="ident">var</span>.<span class="ident">name</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">local_var</span><span class="op">|</span> (<span class="ident">local_var</span>.<span class="ident">id</span>, <span class="prelude-val">Some</span>(<span class="ident">LookupType</span>::<span class="ident">Handle</span>(<span class="ident">var</span>.<span class="ident">ty</span>))))
+                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">local_var</span><span class="op">|</span> (<span class="ident">local_var</span>.<span class="ident">id</span>, <span class="ident">LookupType</span>::<span class="ident">Handle</span>(<span class="ident">var</span>.<span class="ident">ty</span>)))
                     .<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">UnknownLocalVariable</span>(<span class="ident">var</span>.<span class="ident">clone</span>()))
             }
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">FunctionArgument</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -3061,7 +3059,7 @@
                     <span class="ident">function</span>.<span class="ident">parameters</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">result_id</span>.<span class="ident">unwrap</span>(),
                     <span class="prelude-val">None</span>,
                 ));
-                <span class="prelude-val">Ok</span>((<span class="ident">load_id</span>, <span class="prelude-val">Some</span>(<span class="ident">LookupType</span>::<span class="ident">Handle</span>(<span class="ident">handle</span>))))
+                <span class="prelude-val">Ok</span>((<span class="ident">load_id</span>, <span class="ident">LookupType</span>::<span class="ident">Handle</span>(<span class="ident">handle</span>)))
             }
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Call</span> {
                 <span class="kw-2">ref</span> <span class="ident">origin</span>,
@@ -3086,7 +3084,7 @@
                         <span class="comment">// Store value to variable - OpStore</span>
                         <span class="comment">// Use id of variable</span>
 
-                        <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">lookup_ty</span>.<span class="ident">unwrap</span>() {
+                        <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">lookup_ty</span> {
                             <span class="ident">LookupType</span>::<span class="ident">Handle</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">handle</span>,
                             <span class="ident">LookupType</span>::<span class="ident">Local</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
                         };
@@ -3127,7 +3125,12 @@
                             <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">lookup_function</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">local_function</span>).<span class="ident">unwrap</span>(),
                             <span class="ident">argument_ids</span>.<span class="ident">as_slice</span>(),
                         ));
-                    <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="prelude-val">None</span>))
+
+                    <span class="kw">let</span> <span class="ident">result_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">origin_function</span>.<span class="ident">return_type</span> {
+                        <span class="prelude-val">Some</span>(<span class="ident">ty_handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LookupType</span>::<span class="ident">Handle</span>(<span class="ident">ty_handle</span>),
+                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LookupType</span>::<span class="ident">Local</span>(<span class="ident">LocalType</span>::<span class="ident">Void</span>),
+                    };
+                    <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="ident">result_type</span>))
                 }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">origin</span>),
             },
@@ -3148,61 +3151,57 @@
                     <span class="ident">function</span>,
                 )<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">generate_id</span>();
-                <span class="kw">let</span> <span class="ident">expr_type_inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_inner</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">expr_type</span>.<span class="ident">unwrap</span>());
+                <span class="kw">let</span> <span class="ident">expr_type_inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_inner</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">expr_type</span>);
 
-                <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">expr_type_inner</span> {
+                <span class="kw">let</span> (<span class="ident">expr_kind</span>, <span class="ident">local_type</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">expr_type_inner</span> {
                     <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> {
                         <span class="ident">kind</span>: <span class="ident">expr_kind</span>,
                         <span class="ident">width</span>,
-                    } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">kind_type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_id</span>(
-                            <span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>,
-                            <span class="ident">LookupType</span>::<span class="ident">Local</span>(<span class="ident">LocalType</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> }),
-                        );
-
-                        <span class="kw">if</span> <span class="ident">convert</span> {
-                            <span class="kw">super</span>::<span class="ident">instructions</span>::<span class="ident">instruction_bit_cast</span>(<span class="ident">kind_type_id</span>, <span class="ident">id</span>, <span class="ident">expr_id</span>)
-                        } <span class="kw">else</span> {
-                            <span class="kw">match</span> (<span class="ident">expr_kind</span>, <span class="ident">kind</span>) {
-                                (<span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>, <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                    <span class="kw">super</span>::<span class="ident">instructions</span>::<span class="ident">instruction_convert_f_to_u</span>(
-                                        <span class="ident">kind_type_id</span>,
-                                        <span class="ident">id</span>,
-                                        <span class="ident">expr_id</span>,
-                                    )
-                                }
-                                (<span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>, <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                    <span class="kw">super</span>::<span class="ident">instructions</span>::<span class="ident">instruction_convert_f_to_s</span>(
-                                        <span class="ident">kind_type_id</span>,
-                                        <span class="ident">id</span>,
-                                        <span class="ident">expr_id</span>,
-                                    )
-                                }
-                                (<span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>, <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                    <span class="kw">super</span>::<span class="ident">instructions</span>::<span class="ident">instruction_convert_s_to_f</span>(
-                                        <span class="ident">kind_type_id</span>,
-                                        <span class="ident">id</span>,
-                                        <span class="ident">expr_id</span>,
-                                    )
-                                }
-                                (<span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>, <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                    <span class="kw">super</span>::<span class="ident">instructions</span>::<span class="ident">instruction_convert_u_to_f</span>(
-                                        <span class="ident">kind_type_id</span>,
-                                        <span class="ident">id</span>,
-                                        <span class="ident">expr_id</span>,
-                                    )
-                                }
-                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
-                            }
-                        }
-                    }
+                    } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">expr_kind</span>, <span class="ident">LocalType</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> }),
+                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
+                        <span class="ident">size</span>,
+                        <span class="ident">kind</span>: <span class="ident">expr_kind</span>,
+                        <span class="ident">width</span>,
+                    } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">expr_kind</span>, <span class="ident">LocalType</span>::<span class="ident">Vector</span> { <span class="ident">size</span>, <span class="ident">kind</span>, <span class="ident">width</span> }),
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
                 };
 
+                <span class="kw">let</span> <span class="ident">lookup_type</span> <span class="op">=</span> <span class="ident">LookupType</span>::<span class="ident">Local</span>(<span class="ident">local_type</span>);
+                <span class="kw">let</span> <span class="ident">op</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">expr_kind</span>, <span class="ident">kind</span>) {
+                    <span class="kw">_</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">convert</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">Op</span>::<span class="ident">Bitcast</span>,
+                    (<span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>, <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">Op</span>::<span class="ident">ConvertFToU</span>,
+                    (<span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>, <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">Op</span>::<span class="ident">ConvertFToS</span>,
+                    (<span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>, <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">Op</span>::<span class="ident">ConvertSToF</span>,
+                    (<span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>, <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">Op</span>::<span class="ident">ConvertUToF</span>,
+                    <span class="comment">// We assume it&#39;s either an identity cast, or int-uint.</span>
+                    <span class="comment">// In both cases no SPIR-V instructions need to be generated.</span>
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ir_function</span>.<span class="ident">expressions</span>[<span class="ident">expr</span>] {
+                            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">LocalVariable</span>(<span class="kw">_</span>)
+                            <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">GlobalVariable</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="kw">let</span> <span class="ident">load_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">generate_id</span>();
+                                <span class="kw">let</span> <span class="ident">kind_type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">expr_type</span>);
+                                <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="kw">super</span>::<span class="ident">instructions</span>::<span class="ident">instruction_load</span>(
+                                    <span class="ident">kind_type_id</span>,
+                                    <span class="ident">load_id</span>,
+                                    <span class="ident">expr_id</span>,
+                                    <span class="prelude-val">None</span>,
+                                ));
+                                <span class="ident">load_id</span>
+                            }
+                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">expr_id</span>,
+                        };
+                        <span class="kw">return</span> <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="ident">lookup_type</span>));
+                    }
+                };
+
+                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">generate_id</span>();
+                <span class="kw">let</span> <span class="ident">kind_type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">lookup_type</span>);
+                <span class="kw">let</span> <span class="ident">instruction</span> <span class="op">=</span>
+                    <span class="kw">super</span>::<span class="ident">instructions</span>::<span class="ident">instruction_unary</span>(<span class="ident">op</span>, <span class="ident">kind_type_id</span>, <span class="ident">id</span>, <span class="ident">expr_id</span>);
                 <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">instruction</span>);
 
-                <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="prelude-val">None</span>))
+                <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="ident">lookup_type</span>))
             }
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">ImageSample</span> {
                 <span class="ident">image</span>,
@@ -3221,7 +3220,6 @@
                     <span class="ident">function</span>,
                 )<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">image_lookup_ty</span> <span class="op">=</span> <span class="ident">image_lookup_ty</span>.<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="ident">EmptyValue</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">image_result_type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">image_lookup_ty</span>);
                 <span class="kw">let</span> <span class="ident">image_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">image_expression</span> {
                     <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">LocalVariable</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">GlobalVariable</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -3260,8 +3258,7 @@
                     <span class="ident">function</span>,
                 )<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">sampler_result_type_id</span> <span class="op">=</span>
-                    <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">sampler_lookup_ty</span>.<span class="ident">unwrap</span>());
+                <span class="kw">let</span> <span class="ident">sampler_result_type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">sampler_lookup_ty</span>);
                 <span class="kw">let</span> <span class="ident">sampler_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">sampler_expression</span> {
                     <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">LocalVariable</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">GlobalVariable</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">load_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">generate_id</span>();
@@ -3287,7 +3284,7 @@
                 )<span class="question-mark">?</span>;
 
                 <span class="kw">let</span> <span class="ident">coordinate_result_type_id</span> <span class="op">=</span>
-                    <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">coordinate_lookup_ty</span>.<span class="ident">unwrap</span>());
+                    <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">coordinate_lookup_ty</span>);
                 <span class="kw">let</span> <span class="ident">coordinate_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">coordinate_expression</span> {
                     <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">LocalVariable</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">GlobalVariable</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">load_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">generate_id</span>();
@@ -3307,7 +3304,7 @@
                 <span class="kw">let</span> <span class="ident">image_sample_result_type</span> <span class="op">=</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Image</span> { <span class="ident">class</span>, .. } <span class="op">=</span> <span class="ident">image_type</span>.<span class="ident">inner</span> {
                         <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="number">4</span>;
-                        <span class="kw">let</span> <span class="ident">local_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">class</span> {
+                        <span class="ident">LookupType</span>::<span class="ident">Local</span>(<span class="kw">match</span> <span class="ident">class</span> {
                             <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Sampled</span> { <span class="ident">kind</span>, <span class="ident">multi</span>: <span class="kw">_</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LocalType</span>::<span class="ident">Vector</span> {
                                 <span class="ident">kind</span>,
                                 <span class="ident">width</span>,
@@ -3318,8 +3315,7 @@
                                 <span class="ident">width</span>,
                             },
                             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">BadImageClass</span>(<span class="ident">class</span>)),
-                        };
-                        <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">LookupType</span>::<span class="ident">Local</span>(<span class="ident">local_type</span>))
+                        })
                     } <span class="kw">else</span> {
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">NotImage</span>);
                     };
@@ -3334,15 +3330,17 @@
                         <span class="ident">sampler_id</span>,
                     ));
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">generate_id</span>();
+                <span class="kw">let</span> <span class="ident">image_sample_result_type_id</span> <span class="op">=</span>
+                    <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">image_sample_result_type</span>);
                 <span class="ident">block</span>
                     .<span class="ident">body</span>
                     .<span class="ident">push</span>(<span class="kw">super</span>::<span class="ident">instructions</span>::<span class="ident">instruction_image_sample_implicit_lod</span>(
-                        <span class="ident">image_sample_result_type</span>,
+                        <span class="ident">image_sample_result_type_id</span>,
                         <span class="ident">id</span>,
                         <span class="ident">sampled_image_id</span>,
                         <span class="ident">coordinate_id</span>,
                     ));
-                <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="prelude-val">None</span>))
+                <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="ident">image_sample_result_type</span>))
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">expression</span>),
         }
@@ -3385,8 +3383,7 @@
                                 <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">LocalVariable</span>(<span class="kw">_</span>)
                                 <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">GlobalVariable</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                                     <span class="kw">let</span> <span class="ident">load_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">generate_id</span>();
-                                    <span class="kw">let</span> <span class="ident">value_ty_id</span> <span class="op">=</span>
-                                        <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">lookup_ty</span>.<span class="ident">unwrap</span>());
+                                    <span class="kw">let</span> <span class="ident">value_ty_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">lookup_ty</span>);
                                     <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="kw">super</span>::<span class="ident">instructions</span>::<span class="ident">instruction_load</span>(
                                         <span class="ident">value_ty_id</span>,
                                         <span class="ident">load_id</span>,
@@ -3429,8 +3426,7 @@
                         <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">LocalVariable</span>(<span class="kw">_</span>)
                         <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">GlobalVariable</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="kw">let</span> <span class="ident">load_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">generate_id</span>();
-                            <span class="kw">let</span> <span class="ident">value_ty_id</span> <span class="op">=</span>
-                                <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">value_lookup_ty</span>.<span class="ident">unwrap</span>());
+                            <span class="kw">let</span> <span class="ident">value_ty_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">value_lookup_ty</span>);
                             <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="kw">super</span>::<span class="ident">instructions</span>::<span class="ident">instruction_load</span>(
                                 <span class="ident">value_ty_id</span>,
                                 <span class="ident">load_id</span>,
