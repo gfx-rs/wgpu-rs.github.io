@@ -148,6 +148,9 @@
 <span id="145">145</span>
 <span id="146">146</span>
 <span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">Buffer</span>, <span class="ident">BufferAddress</span>, <span class="ident">BufferDescriptor</span>, <span class="ident">BufferSize</span>, <span class="ident">BufferUsage</span>, <span class="ident">BufferViewMut</span>,
@@ -291,7 +294,10 @@
                 .<span class="ident">buffer</span>
                 .<span class="ident">slice</span>(..)
                 .<span class="ident">map_async</span>(<span class="ident">MapMode</span>::<span class="ident">Write</span>)
-                .<span class="ident">inspect</span>(<span class="kw">move</span> <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">sender</span>.<span class="ident">send</span>(<span class="ident">chunk</span>).<span class="ident">unwrap</span>())
+                .<span class="ident">inspect</span>(<span class="kw">move</span> <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
+                    <span class="comment">// The only possible error is the other side disconnecting, which is fine</span>
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">sender</span>.<span class="ident">send</span>(<span class="ident">chunk</span>);
+                })
         }))
         .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ())
     }
