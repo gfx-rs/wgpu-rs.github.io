@@ -1743,6 +1743,17 @@
 <span id="1740">1740</span>
 <span id="1741">1741</span>
 <span id="1742">1742</span>
+<span id="1743">1743</span>
+<span id="1744">1744</span>
+<span id="1745">1745</span>
+<span id="1746">1746</span>
+<span id="1747">1747</span>
+<span id="1748">1748</span>
+<span id="1749">1749</span>
+<span id="1750">1750</span>
+<span id="1751">1751</span>
+<span id="1752">1752</span>
+<span id="1753">1753</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">backend</span>::{<span class="ident">error</span>::<span class="ident">ContextError</span>, <span class="ident">native_gpu_future</span>},
@@ -2962,7 +2973,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">BufferId</span>,
         <span class="ident">sub_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">BufferAddress</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BufferMappedRange</span> {
         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">sub_range</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">sub_range</span>.<span class="ident">start</span>;
         <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">match</span> <span class="ident">wgc</span>::<span class="macro">gfx_select</span><span class="macro">!</span>(<span class="ident">buffer</span>.<span class="ident">id</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">global</span>.<span class="ident">buffer_get_mapped_range</span>(
@@ -2970,25 +2981,12 @@
             <span class="ident">sub_range</span>.<span class="ident">start</span>,
             <span class="ident">wgt</span>::<span class="ident">BufferSize</span>::<span class="ident">new</span>(<span class="ident">size</span>)
         )) {
-            <span class="prelude-val">Ok</span>(<span class="ident">ptr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">size</span> <span class="kw">as</span> <span class="ident">usize</span>) },
+            <span class="prelude-val">Ok</span>(<span class="ident">ptr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BufferMappedRange</span> {
+                <span class="ident">ptr</span>,
+                <span class="ident">size</span>: <span class="ident">size</span> <span class="kw">as</span> <span class="ident">usize</span>,
+                <span class="ident">phantom</span>: <span class="ident">PhantomData</span>,
+            },
             <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">handle_error_fatal</span>(<span class="ident">err</span>, <span class="string">&quot;Buffer::get_mapped_range&quot;</span>),
-        }
-    }
-
-    <span class="kw">fn</span> <span class="ident">buffer_get_mapped_range_mut</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">BufferId</span>,
-        <span class="ident">sub_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">BufferAddress</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>] {
-        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">sub_range</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">sub_range</span>.<span class="ident">start</span>;
-        <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-        <span class="kw">match</span> <span class="ident">wgc</span>::<span class="macro">gfx_select</span><span class="macro">!</span>(<span class="ident">buffer</span>.<span class="ident">id</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">global</span>.<span class="ident">buffer_get_mapped_range</span>(
-            <span class="ident">buffer</span>.<span class="ident">id</span>,
-            <span class="ident">sub_range</span>.<span class="ident">start</span>,
-            <span class="ident">wgt</span>::<span class="ident">BufferSize</span>::<span class="ident">new</span>(<span class="ident">size</span>)
-        )) {
-            <span class="prelude-val">Ok</span>(<span class="ident">ptr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts_mut</span>(<span class="ident">ptr</span>, <span class="ident">size</span> <span class="kw">as</span> <span class="ident">usize</span>) },
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">handle_error_fatal</span>(<span class="ident">err</span>, <span class="string">&quot;Buffer::get_mapped_range_mut&quot;</span>),
         }
     }
 
@@ -3485,6 +3483,30 @@
     <span class="macro">eprintln</span><span class="macro">!</span>(<span class="string">&quot;wgpu error: {}\n&quot;</span>, <span class="ident">err</span>);
 
     <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Handling wgpu errors as fatal by default&quot;</span>);
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferMappedRange</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="ident">ptr</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>,
+    <span class="ident">size</span>: <span class="ident">usize</span>,
+    <span class="ident">phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> ()<span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">BufferMappedRangeSlice</span> <span class="kw">for</span> <span class="ident">BufferMappedRange</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
+        <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="self">self</span>.<span class="ident">ptr</span>, <span class="self">self</span>.<span class="ident">size</span>) }
+    }
+
+    <span class="kw">fn</span> <span class="ident">slice_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>] {
+        <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts_mut</span>(<span class="self">self</span>.<span class="ident">ptr</span>, <span class="self">self</span>.<span class="ident">size</span>) }
+    }
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">BufferMappedRange</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+        <span class="comment">// Intentionally left blank so that `BufferMappedRange` still</span>
+        <span class="comment">// implements `Drop`, to match the web backend</span>
+    }
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><script>window.rootPath = "../../../";window.currentCrate = "wgpu";</script><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script><script defer src="../../../search-index.js"></script></body></html>
