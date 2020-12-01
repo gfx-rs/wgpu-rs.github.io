@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/3efba77/wgpu-core/src/device/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/67e652f/wgpu-core/src/device/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -4199,6 +4199,7 @@
 <span id="4196">4196</span>
 <span id="4197">4197</span>
 <span id="4198">4198</span>
+<span id="4199">4199</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -5191,7 +5192,7 @@
         <span class="kw">for</span> <span class="ident">binding</span> <span class="kw">in</span> <span class="ident">entry_map</span>.<span class="ident">values</span>() {
             <span class="kw">if</span> <span class="ident">binding</span>.<span class="ident">count</span>.<span class="ident">is_some</span>() {
                 <span class="kw">match</span> <span class="ident">binding</span>.<span class="ident">ty</span> {
-                    <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">SampledTexture</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">Texture</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>
                             .<span class="ident">features</span>
                             .<span class="ident">contains</span>(<span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">SAMPLED_TEXTURE_BINDING_ARRAY</span>)
@@ -5302,30 +5303,12 @@
                 .<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="ident">MissingBindingDeclaration</span>(<span class="ident">binding</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">descriptors</span>: <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="kw">_</span>; <span class="number">1</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">resource</span> {
                 <span class="ident">Br</span>::<span class="ident">Buffer</span>(<span class="kw-2">ref</span> <span class="ident">bb</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> (<span class="ident">pub_usage</span>, <span class="ident">internal_use</span>, <span class="ident">min_size</span>, <span class="ident">dynamic</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">decl</span>.<span class="ident">ty</span> {
-                        <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">UniformBuffer</span> {
-                            <span class="ident">dynamic</span>,
+                    <span class="kw">let</span> (<span class="ident">binding_ty</span>, <span class="ident">dynamic</span>, <span class="ident">min_size</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">decl</span>.<span class="ident">ty</span> {
+                        <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">Buffer</span> {
+                            <span class="ident">ty</span>,
+                            <span class="ident">has_dynamic_offset</span>,
                             <span class="ident">min_binding_size</span>,
-                        } <span class="op">=</span><span class="op">&gt;</span> (
-                            <span class="ident">wgt</span>::<span class="ident">BufferUsage</span>::<span class="ident">UNIFORM</span>,
-                            <span class="ident">resource</span>::<span class="ident">BufferUse</span>::<span class="ident">UNIFORM</span>,
-                            <span class="ident">min_binding_size</span>,
-                            <span class="ident">dynamic</span>,
-                        ),
-                        <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">StorageBuffer</span> {
-                            <span class="ident">dynamic</span>,
-                            <span class="ident">min_binding_size</span>,
-                            <span class="ident">readonly</span>,
-                        } <span class="op">=</span><span class="op">&gt;</span> (
-                            <span class="ident">wgt</span>::<span class="ident">BufferUsage</span>::<span class="ident">STORAGE</span>,
-                            <span class="kw">if</span> <span class="ident">readonly</span> {
-                                <span class="ident">resource</span>::<span class="ident">BufferUse</span>::<span class="ident">STORAGE_LOAD</span>
-                            } <span class="kw">else</span> {
-                                <span class="ident">resource</span>::<span class="ident">BufferUse</span>::<span class="ident">STORAGE_STORE</span>
-                            },
-                            <span class="ident">min_binding_size</span>,
-                            <span class="ident">dynamic</span>,
-                        ),
+                        } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ty</span>, <span class="ident">has_dynamic_offset</span>, <span class="ident">min_binding_size</span>),
                         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">WrongBindingType</span> {
                                 <span class="ident">binding</span>,
@@ -5333,6 +5316,19 @@
                                 <span class="ident">expected</span>: <span class="string">&quot;UniformBuffer, StorageBuffer or ReadonlyStorageBuffer&quot;</span>,
                             })
                         }
+                    };
+                    <span class="kw">let</span> (<span class="ident">pub_usage</span>, <span class="ident">internal_use</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">binding_ty</span> {
+                        <span class="ident">wgt</span>::<span class="ident">BufferBindingType</span>::<span class="ident">Uniform</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            (<span class="ident">wgt</span>::<span class="ident">BufferUsage</span>::<span class="ident">UNIFORM</span>, <span class="ident">resource</span>::<span class="ident">BufferUse</span>::<span class="ident">UNIFORM</span>)
+                        }
+                        <span class="ident">wgt</span>::<span class="ident">BufferBindingType</span>::<span class="ident">Storage</span> { <span class="ident">read_only</span> } <span class="op">=</span><span class="op">&gt;</span> (
+                            <span class="ident">wgt</span>::<span class="ident">BufferUsage</span>::<span class="ident">STORAGE</span>,
+                            <span class="kw">if</span> <span class="ident">read_only</span> {
+                                <span class="ident">resource</span>::<span class="ident">BufferUse</span>::<span class="ident">STORAGE_LOAD</span>
+                            } <span class="kw">else</span> {
+                                <span class="ident">resource</span>::<span class="ident">BufferUse</span>::<span class="ident">STORAGE_STORE</span>
+                            },
+                        ),
                     };
 
                     <span class="kw">if</span> <span class="ident">bb</span>.<span class="ident">offset</span> <span class="op">%</span> <span class="ident">wgt</span>::<span class="ident">BIND_BUFFER_ALIGNMENT</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
@@ -5363,7 +5359,7 @@
                         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">buffer</span>.<span class="ident">size</span> <span class="op">-</span> <span class="ident">bb</span>.<span class="ident">offset</span>, <span class="ident">buffer</span>.<span class="ident">size</span>),
                     };
 
-                    <span class="kw">if</span> <span class="ident">pub_usage</span> <span class="op">=</span><span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">BufferUsage</span>::<span class="ident">UNIFORM</span>
+                    <span class="kw">if</span> <span class="ident">binding_ty</span> <span class="op">=</span><span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">BufferBindingType</span>::<span class="ident">Uniform</span>
                         <span class="op">&amp;&amp;</span> (<span class="self">self</span>.<span class="ident">limits</span>.<span class="ident">max_uniform_buffer_binding_size</span> <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&lt;</span> <span class="ident">bind_size</span>
                     {
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">UniformBufferRangeTooLarge</span>);
@@ -5394,7 +5390,10 @@
                 }
                 <span class="ident">Br</span>::<span class="ident">Sampler</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">match</span> <span class="ident">decl</span>.<span class="ident">ty</span> {
-                        <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">Sampler</span> { <span class="ident">comparison</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">Sampler</span> {
+                            <span class="ident">filtering</span>: <span class="kw">_</span>,
+                            <span class="ident">comparison</span>,
+                        } <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="kw">let</span> <span class="ident">sampler</span> <span class="op">=</span> <span class="ident">used</span>
                                 .<span class="ident">samplers</span>
                                 .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">sampler_guard</span>, <span class="ident">id</span>, (), ())
@@ -5422,15 +5421,18 @@
                         .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_view_guard</span>, <span class="ident">id</span>, (), ())
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error</span>::<span class="ident">InvalidTextureView</span>(<span class="ident">id</span>))<span class="question-mark">?</span>;
                     <span class="kw">let</span> (<span class="ident">pub_usage</span>, <span class="ident">internal_use</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">decl</span>.<span class="ident">ty</span> {
-                        <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">SampledTexture</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">Texture</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                             (<span class="ident">wgt</span>::<span class="ident">TextureUsage</span>::<span class="ident">SAMPLED</span>, <span class="ident">resource</span>::<span class="ident">TextureUse</span>::<span class="ident">SAMPLED</span>)
                         }
-                        <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">StorageTexture</span> { <span class="ident">readonly</span>, .. } <span class="op">=</span><span class="op">&gt;</span> (
+                        <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">StorageTexture</span> { <span class="ident">access</span>, .. } <span class="op">=</span><span class="op">&gt;</span> (
                             <span class="ident">wgt</span>::<span class="ident">TextureUsage</span>::<span class="ident">STORAGE</span>,
-                            <span class="kw">if</span> <span class="ident">readonly</span> {
-                                <span class="ident">resource</span>::<span class="ident">TextureUse</span>::<span class="ident">STORAGE_LOAD</span>
-                            } <span class="kw">else</span> {
-                                <span class="ident">resource</span>::<span class="ident">TextureUse</span>::<span class="ident">STORAGE_STORE</span>
+                            <span class="kw">match</span> <span class="ident">access</span> {
+                                <span class="ident">wgt</span>::<span class="ident">StorageTextureAccess</span>::<span class="ident">ReadOnly</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="ident">resource</span>::<span class="ident">TextureUse</span>::<span class="ident">STORAGE_LOAD</span>
+                                }
+                                <span class="ident">wgt</span>::<span class="ident">StorageTextureAccess</span>::<span class="ident">WriteOnly</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="ident">resource</span>::<span class="ident">TextureUse</span>::<span class="ident">STORAGE_STORE</span>
+                                }
                             },
                         ),
                         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">WrongBindingType</span> {
@@ -5492,7 +5494,7 @@
                     }
 
                     <span class="kw">let</span> (<span class="ident">pub_usage</span>, <span class="ident">internal_use</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">decl</span>.<span class="ident">ty</span> {
-                        <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">SampledTexture</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">Texture</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                             (<span class="ident">wgt</span>::<span class="ident">TextureUsage</span>::<span class="ident">SAMPLED</span>, <span class="ident">resource</span>::<span class="ident">TextureUse</span>::<span class="ident">SAMPLED</span>)
                         }
                         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
