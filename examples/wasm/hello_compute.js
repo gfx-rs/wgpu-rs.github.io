@@ -418,9 +418,6 @@ async function init(input) {
     imports.wbg.__wbg_setPipeline_d52f18c527cc280f = function(arg0, arg1) {
         getObject(arg0).setPipeline(getObject(arg1));
     };
-    imports.wbg.__wbg_insertDebugMarker_5f465833dfb7de10 = function(arg0, arg1, arg2) {
-        getObject(arg0).insertDebugMarker(getStringFromWasm0(arg1, arg2));
-    };
     imports.wbg.__wbg_setBindGroup_f7fa3ef805b11ebc = function(arg0, arg1, arg2, arg3, arg4, arg5, arg6) {
         getObject(arg0).setBindGroup(arg1 >>> 0, getObject(arg2), getArrayU32FromWasm0(arg3, arg4), arg5, arg6 >>> 0);
     };
@@ -525,7 +522,7 @@ async function init(input) {
         var ret = wasm.memory;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper200 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper199 = function(arg0, arg1, arg2) {
         var ret = makeMutClosure(arg0, arg1, 68, __wbg_adapter_20);
         return addHeapObject(ret);
     };
