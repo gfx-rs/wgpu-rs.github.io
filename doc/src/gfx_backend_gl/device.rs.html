@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/24913bc/src/backend/gl/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/cdade9c/src/backend/gl/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_gl/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -2036,7 +2036,6 @@
 <span id="2033">2033</span>
 <span id="2034">2034</span>
 <span id="2035">2035</span>
-<span id="2036">2036</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">command</span> <span class="kw">as</span> <span class="ident">cmd</span>, <span class="ident">conv</span>,
@@ -2122,7 +2121,7 @@
             <span class="ident">ShaderStage</span>::<span class="ident">Geometry</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">glow</span>::<span class="ident">GEOMETRY_SHADER</span>,
             <span class="ident">ShaderStage</span>::<span class="ident">Fragment</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">glow</span>::<span class="ident">FRAGMENT_SHADER</span>,
             <span class="ident">ShaderStage</span>::<span class="ident">Compute</span> <span class="kw">if</span> <span class="ident">can_compute</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">glow</span>::<span class="ident">COMPUTE_SHADER</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">ShaderError</span>::<span class="ident">UnsupportedStage</span>(<span class="ident">stage</span>.<span class="ident">to_flag</span>())),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">ShaderError</span>::<span class="ident">Unsupported</span>),
         };
 
         <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">create_shader</span>(<span class="ident">target</span>) }.<span class="ident">unwrap</span>();
@@ -2937,9 +2936,8 @@
                     <span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;\tLog: {}&quot;</span>, <span class="ident">log</span>);
                 }
             } <span class="kw">else</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">pso</span>::<span class="ident">CreationError</span>::<span class="ident">Shader</span>(
-                    <span class="ident">d</span>::<span class="ident">ShaderError</span>::<span class="ident">CompilationFailed</span>(<span class="ident">log</span>),
-                ));
+                <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;\tLog: {}&quot;</span>, <span class="ident">log</span>);
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">pso</span>::<span class="ident">CreationError</span>::<span class="ident">Other</span>);
             }
 
             <span class="ident">name</span>
@@ -3193,7 +3191,7 @@
             .<span class="ident">contains</span>(<span class="ident">LegacyFeatures</span>::<span class="ident">CONSTANT_BUFFER</span>)
             <span class="op">&amp;&amp;</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">buffer</span>::<span class="ident">Usage</span>::<span class="ident">UNIFORM</span>)
         {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">buffer</span>::<span class="ident">CreationError</span>::<span class="ident">UnsupportedUsage</span> { <span class="ident">usage</span> });
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">buffer</span>::<span class="ident">CreationError</span>::<span class="ident">UnsupportedUsage</span>(<span class="ident">usage</span>));
         }
 
         <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">Buffer</span>::<span class="ident">Unbound</span> { <span class="ident">size</span>, <span class="ident">usage</span> })
@@ -3772,7 +3770,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">fence</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">Fence</span>,
         <span class="ident">timeout_ns</span>: <span class="ident">u64</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">OomOrDeviceLost</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">WaitError</span><span class="op">&gt;</span> {
         <span class="comment">// TODO:</span>
         <span class="comment">// This can be called by multiple objects wanting to ensure they have exclusive</span>
         <span class="comment">// access to a resource. How much does this call costs ? The status of the fence</span>
@@ -3820,7 +3818,7 @@
         <span class="ident">fences</span>: <span class="ident">I</span>,
         <span class="ident">wait</span>: <span class="ident">d</span>::<span class="ident">WaitFor</span>,
         <span class="ident">timeout_ns</span>: <span class="ident">u64</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">OomOrDeviceLost</span><span class="op">&gt;</span>
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">WaitError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">I</span>: <span class="ident">IntoIterator</span>,
         <span class="ident">I</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">Fence</span><span class="op">&gt;</span>,
@@ -3876,7 +3874,7 @@
         <span class="macro">unimplemented</span><span class="macro">!</span>()
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_event_status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_event</span>: <span class="kw-2">&amp;</span>()) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">OomOrDeviceLost</span><span class="op">&gt;</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_event_status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_event</span>: <span class="kw-2">&amp;</span>()) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">WaitError</span><span class="op">&gt;</span> {
         <span class="macro">unimplemented</span><span class="macro">!</span>()
     }
 
@@ -3913,7 +3911,7 @@
         <span class="ident">_data</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>],
         <span class="ident">_stride</span>: <span class="ident">buffer</span>::<span class="ident">Offset</span>,
         <span class="ident">_flags</span>: <span class="ident">query</span>::<span class="ident">ResultFlags</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">OomOrDeviceLost</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">WaitError</span><span class="op">&gt;</span> {
         <span class="macro">unimplemented</span><span class="macro">!</span>()
     }
 
