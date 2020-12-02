@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["REQ_DESTROY_SINCE","The minimal object version supporting this request"],["REQ_GET_TOPLEVEL_DECORATION_SINCE","The minimal object version supporting this request"]],"enum":[["Event",""],["Request",""]],"struct":[["ZxdgDecorationManagerV1",""]],"trait":[["RequestsTrait",""]]});

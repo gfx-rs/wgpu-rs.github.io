@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["connection","A wrapper for X11 server connections (`DISPLAY` variables)."],["context","OpenGL rendering contexts on X11 via EGL."],["device","A wrapper around X11 `EGLDisplay`s."],["surface","A surface implementation using X11 surfaces backed by TextureImage."]]});

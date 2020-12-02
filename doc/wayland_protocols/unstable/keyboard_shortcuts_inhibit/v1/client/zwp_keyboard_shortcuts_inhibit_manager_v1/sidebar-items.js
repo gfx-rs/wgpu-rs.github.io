@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["REQ_DESTROY_SINCE","The minimal object version supporting this request"],["REQ_INHIBIT_SHORTCUTS_SINCE","The minimal object version supporting this request"]],"enum":[["Error",""],["Event",""],["Request",""]],"struct":[["ZwpKeyboardShortcutsInhibitManagerV1",""]],"trait":[["RequestsTrait",""]]});

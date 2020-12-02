@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["REQ_CREATE_INHIBITOR_SINCE","The minimal object version supporting this request"],["REQ_DESTROY_SINCE","The minimal object version supporting this request"]],"enum":[["Event",""],["Request",""]],"struct":[["ZwpIdleInhibitManagerV1",""]],"trait":[["RequestsTrait",""]]});

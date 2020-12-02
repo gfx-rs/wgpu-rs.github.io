@@ -1,1 +1,0 @@
-initSidebarItems({"trait":[["Device","A thread-local handle to a device."]]});

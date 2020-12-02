@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["REQ_CREATE_REGION_SINCE","The minimal object version supporting this request"],["REQ_CREATE_SURFACE_SINCE","The minimal object version supporting this request"]],"enum":[["Event",""],["Request",""]],"struct":[["WlCompositor",""]],"trait":[["RequestsTrait",""]]});

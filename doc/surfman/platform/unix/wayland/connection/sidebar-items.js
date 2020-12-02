@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["Connection","A connection to the Wayland server."],["NativeConnection","An EGL display wrapping a Wayland display."]]});

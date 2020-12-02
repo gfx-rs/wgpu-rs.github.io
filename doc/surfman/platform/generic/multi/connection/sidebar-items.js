@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["Connection","A connection to the display server."],["NativeConnection","The native connection type."]]});

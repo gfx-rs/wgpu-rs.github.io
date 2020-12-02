@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["Device","A thread-local handle to a device."],["NativeDevice","Wraps an adapter."]]});

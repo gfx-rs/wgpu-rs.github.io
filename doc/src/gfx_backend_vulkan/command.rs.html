@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/gfx-backend-vulkan-0.6.5/src/command.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>command.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/1d14789/src/backend/vulkan/src/command.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>command.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_vulkan/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -1146,27 +1146,10 @@
 <span id="1143">1143</span>
 <span id="1144">1144</span>
 <span id="1145">1145</span>
-<span id="1146">1146</span>
-<span id="1147">1147</span>
-<span id="1148">1148</span>
-<span id="1149">1149</span>
-<span id="1150">1150</span>
-<span id="1151">1151</span>
-<span id="1152">1152</span>
-<span id="1153">1153</span>
-<span id="1154">1154</span>
-<span id="1155">1155</span>
-<span id="1156">1156</span>
-<span id="1157">1157</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">ash</span>::<span class="ident">version</span>::<span class="ident">DeviceV1_0</span>;
-<span class="kw">use</span> <span class="ident">ash</span>::<span class="ident">vk</span>;
+<span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">version</span>::<span class="ident">DeviceV1_0</span>, <span class="ident">vk</span>};
 <span class="kw">use</span> <span class="ident">smallvec</span>::<span class="ident">SmallVec</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">borrow</span>::<span class="ident">Borrow</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">CString</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Range</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">mem</span>, <span class="ident">ptr</span>, <span class="ident">slice</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow</span>::<span class="ident">Borrow</span>, <span class="ident">ffi</span>::<span class="ident">CString</span>, <span class="ident">mem</span>, <span class="ident">ops</span>::<span class="ident">Range</span>, <span class="ident">slice</span>, <span class="ident">sync</span>::<span class="ident">Arc</span>};
 
 <span class="kw">use</span> <span class="ident">inplace_it</span>::<span class="ident">inplace_or_alloc_array</span>;
 
@@ -1175,8 +1158,8 @@
     <span class="ident">buffer</span>, <span class="ident">command</span> <span class="kw">as</span> <span class="ident">com</span>,
     <span class="ident">format</span>::<span class="ident">Aspects</span>,
     <span class="ident">image</span>::{<span class="ident">Filter</span>, <span class="ident">Layout</span>, <span class="ident">SubresourceRange</span>},
-    <span class="ident">memory</span>, <span class="ident">pso</span>, <span class="ident">query</span>, <span class="ident">DrawCount</span>, <span class="ident">IndexCount</span>, <span class="ident">InstanceCount</span>, <span class="ident">TaskCount</span>, <span class="ident">VertexCount</span>, <span class="ident">VertexOffset</span>,
-    <span class="ident">WorkGroupCount</span>,
+    <span class="ident">memory</span>, <span class="ident">pso</span>, <span class="ident">query</span>, <span class="ident">DrawCount</span>, <span class="ident">IndexCount</span>, <span class="ident">IndexType</span>, <span class="ident">InstanceCount</span>, <span class="ident">TaskCount</span>, <span class="ident">VertexCount</span>,
+    <span class="ident">VertexOffset</span>, <span class="ident">WorkGroupCount</span>,
 };
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -1241,20 +1224,20 @@
     <span class="kw">for</span> <span class="ident">barrier</span> <span class="kw">in</span> <span class="ident">barriers</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">barrier</span>.<span class="ident">borrow</span>() {
             <span class="ident">memory</span>::<span class="ident">Barrier</span>::<span class="ident">AllBuffers</span>(<span class="kw-2">ref</span> <span class="ident">access</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">global</span>.<span class="ident">push</span>(<span class="ident">vk</span>::<span class="ident">MemoryBarrier</span> {
-                    <span class="ident">s_type</span>: <span class="ident">vk</span>::<span class="ident">StructureType</span>::<span class="ident">MEMORY_BARRIER</span>,
-                    <span class="ident">p_next</span>: <span class="ident">ptr</span>::<span class="ident">null</span>(),
-                    <span class="ident">src_access_mask</span>: <span class="ident">conv</span>::<span class="ident">map_buffer_access</span>(<span class="ident">access</span>.<span class="ident">start</span>),
-                    <span class="ident">dst_access_mask</span>: <span class="ident">conv</span>::<span class="ident">map_buffer_access</span>(<span class="ident">access</span>.<span class="ident">end</span>),
-                });
+                <span class="ident">global</span>.<span class="ident">push</span>(
+                    <span class="ident">vk</span>::<span class="ident">MemoryBarrier</span>::<span class="ident">builder</span>()
+                        .<span class="ident">src_access_mask</span>(<span class="ident">conv</span>::<span class="ident">map_buffer_access</span>(<span class="ident">access</span>.<span class="ident">start</span>))
+                        .<span class="ident">dst_access_mask</span>(<span class="ident">conv</span>::<span class="ident">map_buffer_access</span>(<span class="ident">access</span>.<span class="ident">end</span>))
+                        .<span class="ident">build</span>(),
+                );
             }
             <span class="ident">memory</span>::<span class="ident">Barrier</span>::<span class="ident">AllImages</span>(<span class="kw-2">ref</span> <span class="ident">access</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">global</span>.<span class="ident">push</span>(<span class="ident">vk</span>::<span class="ident">MemoryBarrier</span> {
-                    <span class="ident">s_type</span>: <span class="ident">vk</span>::<span class="ident">StructureType</span>::<span class="ident">MEMORY_BARRIER</span>,
-                    <span class="ident">p_next</span>: <span class="ident">ptr</span>::<span class="ident">null</span>(),
-                    <span class="ident">src_access_mask</span>: <span class="ident">conv</span>::<span class="ident">map_image_access</span>(<span class="ident">access</span>.<span class="ident">start</span>),
-                    <span class="ident">dst_access_mask</span>: <span class="ident">conv</span>::<span class="ident">map_image_access</span>(<span class="ident">access</span>.<span class="ident">end</span>),
-                });
+                <span class="ident">global</span>.<span class="ident">push</span>(
+                    <span class="ident">vk</span>::<span class="ident">MemoryBarrier</span>::<span class="ident">builder</span>()
+                        .<span class="ident">src_access_mask</span>(<span class="ident">conv</span>::<span class="ident">map_image_access</span>(<span class="ident">access</span>.<span class="ident">start</span>))
+                        .<span class="ident">dst_access_mask</span>(<span class="ident">conv</span>::<span class="ident">map_image_access</span>(<span class="ident">access</span>.<span class="ident">end</span>))
+                        .<span class="ident">build</span>(),
+                );
             }
             <span class="ident">memory</span>::<span class="ident">Barrier</span>::<span class="ident">Buffer</span> {
                 <span class="kw-2">ref</span> <span class="ident">states</span>,
@@ -1266,17 +1249,17 @@
                     <span class="prelude-val">Some</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">start</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">u32</span>..<span class="ident">f</span>.<span class="ident">end</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">u32</span>,
                     <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">vk</span>::<span class="ident">QUEUE_FAMILY_IGNORED</span>..<span class="ident">vk</span>::<span class="ident">QUEUE_FAMILY_IGNORED</span>,
                 };
-                <span class="ident">buffer</span>.<span class="ident">push</span>(<span class="ident">vk</span>::<span class="ident">BufferMemoryBarrier</span> {
-                    <span class="ident">s_type</span>: <span class="ident">vk</span>::<span class="ident">StructureType</span>::<span class="ident">BUFFER_MEMORY_BARRIER</span>,
-                    <span class="ident">p_next</span>: <span class="ident">ptr</span>::<span class="ident">null</span>(),
-                    <span class="ident">src_access_mask</span>: <span class="ident">conv</span>::<span class="ident">map_buffer_access</span>(<span class="ident">states</span>.<span class="ident">start</span>),
-                    <span class="ident">dst_access_mask</span>: <span class="ident">conv</span>::<span class="ident">map_buffer_access</span>(<span class="ident">states</span>.<span class="ident">end</span>),
-                    <span class="ident">src_queue_family_index</span>: <span class="ident">families</span>.<span class="ident">start</span>,
-                    <span class="ident">dst_queue_family_index</span>: <span class="ident">families</span>.<span class="ident">end</span>,
-                    <span class="ident">buffer</span>: <span class="ident">target</span>.<span class="ident">raw</span>,
-                    <span class="ident">offset</span>: <span class="ident">range</span>.<span class="ident">offset</span>,
-                    <span class="ident">size</span>: <span class="ident">range</span>.<span class="ident">size</span>.<span class="ident">unwrap_or</span>(<span class="ident">vk</span>::<span class="ident">WHOLE_SIZE</span>),
-                });
+                <span class="ident">buffer</span>.<span class="ident">push</span>(
+                    <span class="ident">vk</span>::<span class="ident">BufferMemoryBarrier</span>::<span class="ident">builder</span>()
+                        .<span class="ident">src_access_mask</span>(<span class="ident">conv</span>::<span class="ident">map_buffer_access</span>(<span class="ident">states</span>.<span class="ident">start</span>))
+                        .<span class="ident">dst_access_mask</span>(<span class="ident">conv</span>::<span class="ident">map_buffer_access</span>(<span class="ident">states</span>.<span class="ident">end</span>))
+                        .<span class="ident">src_queue_family_index</span>(<span class="ident">families</span>.<span class="ident">start</span>)
+                        .<span class="ident">dst_queue_family_index</span>(<span class="ident">families</span>.<span class="ident">end</span>)
+                        .<span class="ident">buffer</span>(<span class="ident">target</span>.<span class="ident">raw</span>)
+                        .<span class="ident">offset</span>(<span class="ident">range</span>.<span class="ident">offset</span>)
+                        .<span class="ident">size</span>(<span class="ident">range</span>.<span class="ident">size</span>.<span class="ident">unwrap_or</span>(<span class="ident">vk</span>::<span class="ident">WHOLE_SIZE</span>))
+                        .<span class="ident">build</span>(),
+                );
             }
             <span class="ident">memory</span>::<span class="ident">Barrier</span>::<span class="ident">Image</span> {
                 <span class="kw-2">ref</span> <span class="ident">states</span>,
@@ -1289,18 +1272,18 @@
                     <span class="prelude-val">Some</span>(<span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">start</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">u32</span>..<span class="ident">f</span>.<span class="ident">end</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">u32</span>,
                     <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">vk</span>::<span class="ident">QUEUE_FAMILY_IGNORED</span>..<span class="ident">vk</span>::<span class="ident">QUEUE_FAMILY_IGNORED</span>,
                 };
-                <span class="ident">image</span>.<span class="ident">push</span>(<span class="ident">vk</span>::<span class="ident">ImageMemoryBarrier</span> {
-                    <span class="ident">s_type</span>: <span class="ident">vk</span>::<span class="ident">StructureType</span>::<span class="ident">IMAGE_MEMORY_BARRIER</span>,
-                    <span class="ident">p_next</span>: <span class="ident">ptr</span>::<span class="ident">null</span>(),
-                    <span class="ident">src_access_mask</span>: <span class="ident">conv</span>::<span class="ident">map_image_access</span>(<span class="ident">states</span>.<span class="ident">start</span>.<span class="number">0</span>),
-                    <span class="ident">dst_access_mask</span>: <span class="ident">conv</span>::<span class="ident">map_image_access</span>(<span class="ident">states</span>.<span class="ident">end</span>.<span class="number">0</span>),
-                    <span class="ident">old_layout</span>: <span class="ident">conv</span>::<span class="ident">map_image_layout</span>(<span class="ident">states</span>.<span class="ident">start</span>.<span class="number">1</span>),
-                    <span class="ident">new_layout</span>: <span class="ident">conv</span>::<span class="ident">map_image_layout</span>(<span class="ident">states</span>.<span class="ident">end</span>.<span class="number">1</span>),
-                    <span class="ident">src_queue_family_index</span>: <span class="ident">families</span>.<span class="ident">start</span>,
-                    <span class="ident">dst_queue_family_index</span>: <span class="ident">families</span>.<span class="ident">end</span>,
-                    <span class="ident">image</span>: <span class="ident">target</span>.<span class="ident">raw</span>,
-                    <span class="ident">subresource_range</span>,
-                });
+                <span class="ident">image</span>.<span class="ident">push</span>(
+                    <span class="ident">vk</span>::<span class="ident">ImageMemoryBarrier</span>::<span class="ident">builder</span>()
+                        .<span class="ident">src_access_mask</span>(<span class="ident">conv</span>::<span class="ident">map_image_access</span>(<span class="ident">states</span>.<span class="ident">start</span>.<span class="number">0</span>))
+                        .<span class="ident">dst_access_mask</span>(<span class="ident">conv</span>::<span class="ident">map_image_access</span>(<span class="ident">states</span>.<span class="ident">end</span>.<span class="number">0</span>))
+                        .<span class="ident">old_layout</span>(<span class="ident">conv</span>::<span class="ident">map_image_layout</span>(<span class="ident">states</span>.<span class="ident">start</span>.<span class="number">1</span>))
+                        .<span class="ident">new_layout</span>(<span class="ident">conv</span>::<span class="ident">map_image_layout</span>(<span class="ident">states</span>.<span class="ident">end</span>.<span class="number">1</span>))
+                        .<span class="ident">src_queue_family_index</span>(<span class="ident">families</span>.<span class="ident">start</span>)
+                        .<span class="ident">dst_queue_family_index</span>(<span class="ident">families</span>.<span class="ident">end</span>)
+                        .<span class="ident">image</span>(<span class="ident">target</span>.<span class="ident">raw</span>)
+                        .<span class="ident">subresource_range</span>(<span class="ident">subresource_range</span>)
+                        .<span class="ident">build</span>(),
+                );
             }
         }
     }
@@ -1357,31 +1340,23 @@
         <span class="ident">flags</span>: <span class="ident">com</span>::<span class="ident">CommandBufferFlags</span>,
         <span class="ident">info</span>: <span class="ident">com</span>::<span class="ident">CommandBufferInheritanceInfo</span><span class="op">&lt;</span><span class="ident">Backend</span><span class="op">&gt;</span>,
     ) {
-        <span class="kw">let</span> <span class="ident">inheritance_info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">CommandBufferInheritanceInfo</span> {
-            <span class="ident">s_type</span>: <span class="ident">vk</span>::<span class="ident">StructureType</span>::<span class="ident">COMMAND_BUFFER_INHERITANCE_INFO</span>,
-            <span class="ident">p_next</span>: <span class="ident">ptr</span>::<span class="ident">null</span>(),
-            <span class="ident">render_pass</span>: <span class="ident">info</span>
-                .<span class="ident">subpass</span>
-                .<span class="ident">map_or</span>(<span class="ident">vk</span>::<span class="ident">RenderPass</span>::<span class="ident">null</span>(), <span class="op">|</span><span class="ident">subpass</span><span class="op">|</span> <span class="ident">subpass</span>.<span class="ident">main_pass</span>.<span class="ident">raw</span>),
-            <span class="ident">subpass</span>: <span class="ident">info</span>.<span class="ident">subpass</span>.<span class="ident">map_or</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">subpass</span><span class="op">|</span> <span class="ident">subpass</span>.<span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">framebuffer</span>: <span class="ident">info</span>
-                .<span class="ident">framebuffer</span>
-                .<span class="ident">map_or</span>(<span class="ident">vk</span>::<span class="ident">Framebuffer</span>::<span class="ident">null</span>(), <span class="op">|</span><span class="ident">buffer</span><span class="op">|</span> <span class="ident">buffer</span>.<span class="ident">raw</span>),
-            <span class="ident">occlusion_query_enable</span>: <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">occlusion_query_enable</span> {
-                <span class="ident">vk</span>::<span class="ident">TRUE</span>
-            } <span class="kw">else</span> {
-                <span class="ident">vk</span>::<span class="ident">FALSE</span>
-            },
-            <span class="ident">query_flags</span>: <span class="ident">conv</span>::<span class="ident">map_query_control_flags</span>(<span class="ident">info</span>.<span class="ident">occlusion_query_flags</span>),
-            <span class="ident">pipeline_statistics</span>: <span class="ident">conv</span>::<span class="ident">map_pipeline_statistics</span>(<span class="ident">info</span>.<span class="ident">pipeline_statistics</span>),
-        };
+        <span class="kw">let</span> <span class="ident">inheritance_info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">CommandBufferInheritanceInfo</span>::<span class="ident">builder</span>()
+            .<span class="ident">render_pass</span>(
+                <span class="ident">info</span>.<span class="ident">subpass</span>
+                    .<span class="ident">map_or</span>(<span class="ident">vk</span>::<span class="ident">RenderPass</span>::<span class="ident">null</span>(), <span class="op">|</span><span class="ident">subpass</span><span class="op">|</span> <span class="ident">subpass</span>.<span class="ident">main_pass</span>.<span class="ident">raw</span>),
+            )
+            .<span class="ident">subpass</span>(<span class="ident">info</span>.<span class="ident">subpass</span>.<span class="ident">map_or</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">subpass</span><span class="op">|</span> <span class="ident">subpass</span>.<span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>))
+            .<span class="ident">framebuffer</span>(
+                <span class="ident">info</span>.<span class="ident">framebuffer</span>
+                    .<span class="ident">map_or</span>(<span class="ident">vk</span>::<span class="ident">Framebuffer</span>::<span class="ident">null</span>(), <span class="op">|</span><span class="ident">buffer</span><span class="op">|</span> <span class="ident">buffer</span>.<span class="ident">raw</span>),
+            )
+            .<span class="ident">occlusion_query_enable</span>(<span class="ident">info</span>.<span class="ident">occlusion_query_enable</span>)
+            .<span class="ident">query_flags</span>(<span class="ident">conv</span>::<span class="ident">map_query_control_flags</span>(<span class="ident">info</span>.<span class="ident">occlusion_query_flags</span>))
+            .<span class="ident">pipeline_statistics</span>(<span class="ident">conv</span>::<span class="ident">map_pipeline_statistics</span>(<span class="ident">info</span>.<span class="ident">pipeline_statistics</span>));
 
-        <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">CommandBufferBeginInfo</span> {
-            <span class="ident">s_type</span>: <span class="ident">vk</span>::<span class="ident">StructureType</span>::<span class="ident">COMMAND_BUFFER_BEGIN_INFO</span>,
-            <span class="ident">p_next</span>: <span class="ident">ptr</span>::<span class="ident">null</span>(),
-            <span class="ident">flags</span>: <span class="ident">conv</span>::<span class="ident">map_command_buffer_flags</span>(<span class="ident">flags</span>),
-            <span class="ident">p_inheritance_info</span>: <span class="kw-2">&amp;</span><span class="ident">inheritance_info</span>,
-        };
+        <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">CommandBufferBeginInfo</span>::<span class="ident">builder</span>()
+            .<span class="ident">flags</span>(<span class="ident">conv</span>::<span class="ident">map_command_buffer_flags</span>(<span class="ident">flags</span>))
+            .<span class="ident">inheritance_info</span>(<span class="kw-2">&amp;</span><span class="ident">inheritance_info</span>);
 
         <span class="macro">assert_eq</span><span class="macro">!</span>(
             <span class="prelude-val">Ok</span>(()),
@@ -1437,15 +1412,11 @@
         <span class="ident">inplace_or_alloc_array</span>(<span class="ident">raw_clear_values</span>.<span class="ident">len</span>(), <span class="op">|</span><span class="ident">uninit_guard</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">raw_clear_values</span> <span class="op">=</span> <span class="ident">uninit_guard</span>.<span class="ident">init_with_iter</span>(<span class="ident">raw_clear_values</span>);
 
-            <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">RenderPassBeginInfo</span> {
-                <span class="ident">s_type</span>: <span class="ident">vk</span>::<span class="ident">StructureType</span>::<span class="ident">RENDER_PASS_BEGIN_INFO</span>,
-                <span class="ident">p_next</span>: <span class="ident">ptr</span>::<span class="ident">null</span>(),
-                <span class="ident">render_pass</span>: <span class="ident">render_pass</span>.<span class="ident">raw</span>,
-                <span class="ident">framebuffer</span>: <span class="ident">frame_buffer</span>.<span class="ident">raw</span>,
-                <span class="ident">render_area</span>,
-                <span class="ident">clear_value_count</span>,
-                <span class="ident">p_clear_values</span>: <span class="ident">raw_clear_values</span>.<span class="ident">as_ptr</span>(),
-            };
+            <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">RenderPassBeginInfo</span>::<span class="ident">builder</span>()
+                .<span class="ident">render_pass</span>(<span class="ident">render_pass</span>.<span class="ident">raw</span>)
+                .<span class="ident">framebuffer</span>(<span class="ident">frame_buffer</span>.<span class="ident">raw</span>)
+                .<span class="ident">render_area</span>(<span class="ident">render_area</span>)
+                .<span class="ident">clear_values</span>(<span class="kw-2">&amp;</span><span class="ident">raw_clear_values</span>);
 
             <span class="kw">let</span> <span class="ident">contents</span> <span class="op">=</span> <span class="ident">map_subpass_contents</span>(<span class="ident">first_subpass</span>);
             <span class="self">self</span>.<span class="ident">device</span>
@@ -1698,12 +1669,17 @@
         });
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">bind_index_buffer</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">ibv</span>: <span class="ident">buffer</span>::<span class="ident">IndexBufferView</span><span class="op">&lt;</span><span class="ident">Backend</span><span class="op">&gt;</span>) {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">bind_index_buffer</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">Buffer</span>,
+        <span class="ident">sub</span>: <span class="ident">buffer</span>::<span class="ident">SubRange</span>,
+        <span class="ident">ty</span>: <span class="ident">IndexType</span>,
+    ) {
         <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_bind_index_buffer</span>(
             <span class="self">self</span>.<span class="ident">raw</span>,
-            <span class="ident">ibv</span>.<span class="ident">buffer</span>.<span class="ident">raw</span>,
-            <span class="ident">ibv</span>.<span class="ident">range</span>.<span class="ident">offset</span>,
-            <span class="ident">conv</span>::<span class="ident">map_index_type</span>(<span class="ident">ibv</span>.<span class="ident">index_type</span>),
+            <span class="ident">buffer</span>.<span class="ident">raw</span>,
+            <span class="ident">sub</span>.<span class="ident">offset</span>,
+            <span class="ident">conv</span>::<span class="ident">map_index_type</span>(<span class="ident">ty</span>),
         );
     }
 

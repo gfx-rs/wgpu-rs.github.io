@@ -1,5 +1,6 @@
 (function() {var implementors = {};
 implementors["arrayvec"] = [{"text":"impl&lt;A&gt; Borrow&lt;str&gt; for ArrayString&lt;A&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;A: Array&lt;Item = u8&gt; + Copy,&nbsp;</span>","synthetic":false,"types":[]},{"text":"impl&lt;A:&nbsp;Array&gt; Borrow&lt;[&lt;A as Array&gt;::Item]&gt; for ArrayVec&lt;A&gt;","synthetic":false,"types":[]}];
+implementors["gfx_backend_empty"] = [{"text":"impl Borrow&lt;()&gt; for SwapchainImage","synthetic":false,"types":[]}];
 implementors["smallvec"] = [{"text":"impl&lt;A:&nbsp;Array&gt; Borrow&lt;[&lt;A as Array&gt;::Item]&gt; for SmallVec&lt;A&gt;","synthetic":false,"types":[]}];
 implementors["wgpu_core"] = [{"text":"impl&lt;B:&nbsp;Backend&gt; Borrow&lt;()&gt; for BindGroup&lt;B&gt;","synthetic":false,"types":[]},{"text":"impl&lt;B:&nbsp;Backend&gt; Borrow&lt;()&gt; for Buffer&lt;B&gt;","synthetic":false,"types":[]},{"text":"impl&lt;B:&nbsp;Backend&gt; Borrow&lt;()&gt; for TextureView&lt;B&gt;","synthetic":false,"types":[]},{"text":"impl&lt;B:&nbsp;Backend&gt; Borrow&lt;()&gt; for Sampler&lt;B&gt;","synthetic":false,"types":[]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

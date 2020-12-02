@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["presentation_time","Presentation time protocol"],["unstable","Unstable protocols from wayland-protocols"],["viewporter","Viewporter protocol"],["wlr","wlr-procotols extension family"],["xdg_shell","XDG Shell protocol"]]});

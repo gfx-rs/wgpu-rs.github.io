@@ -1,1 +1,0 @@
-initSidebarItems({"type":[["NativeWidget","A wrapper for a Wayland surface or an X11 `Window`, as appropriate."],["Surface","Represents a hardware buffer of pixels that can be rendered to via the CPU or GPU and either displayed in a native widget or bound to a texture for reading."],["SurfaceTexture","Represents an OpenGL texture that wraps a surface."]]});

@@ -1,1 +1,0 @@
-initSidebarItems({"mod":[["multi","An abstraction that allows the choice of backends dynamically."]]});

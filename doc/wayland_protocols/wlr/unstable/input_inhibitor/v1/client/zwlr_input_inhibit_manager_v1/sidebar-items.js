@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["REQ_GET_INHIBITOR_SINCE","The minimal object version supporting this request"]],"enum":[["Error",""],["Event",""],["Request",""]],"struct":[["ZwlrInputInhibitManagerV1",""]],"trait":[["RequestsTrait",""]]});

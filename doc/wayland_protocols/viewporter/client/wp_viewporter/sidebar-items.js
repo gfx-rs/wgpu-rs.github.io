@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["REQ_DESTROY_SINCE","The minimal object version supporting this request"],["REQ_GET_VIEWPORT_SINCE","The minimal object version supporting this request"]],"enum":[["Error",""],["Event",""],["Request",""]],"struct":[["WpViewporter",""]],"trait":[["RequestsTrait",""]]});
