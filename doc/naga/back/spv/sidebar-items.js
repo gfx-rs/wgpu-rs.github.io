@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Writer",""],["WriterFlags",""]]});
+initSidebarItems({"fn":[["write_vec",""]],"struct":[["Writer",""],["WriterFlags",""]]});

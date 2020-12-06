@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/1d14789/src/backend/vulkan/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/654ad48/src/backend/vulkan/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_vulkan/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -2326,12 +2326,28 @@
 <span id="2323">2323</span>
 <span id="2324">2324</span>
 <span id="2325">2325</span>
+<span id="2326">2326</span>
+<span id="2327">2327</span>
+<span id="2328">2328</span>
+<span id="2329">2329</span>
+<span id="2330">2330</span>
+<span id="2331">2331</span>
+<span id="2332">2332</span>
+<span id="2333">2333</span>
+<span id="2334">2334</span>
+<span id="2335">2335</span>
+<span id="2336">2336</span>
+<span id="2337">2337</span>
+<span id="2338">2338</span>
+<span id="2339">2339</span>
+<span id="2340">2340</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">arrayvec</span>::<span class="ident">ArrayVec</span>;
-<span class="kw">use</span> <span class="ident">ash</span>::<span class="ident">extensions</span>::<span class="ident">khr</span>;
-<span class="kw">use</span> <span class="ident">ash</span>::<span class="ident">version</span>::<span class="ident">DeviceV1_0</span>;
-<span class="kw">use</span> <span class="ident">ash</span>::<span class="ident">vk</span>;
-<span class="kw">use</span> <span class="ident">ash</span>::<span class="ident">vk</span>::<span class="ident">Handle</span>;
+<span class="kw">use</span> <span class="ident">ash</span>::{
+    <span class="ident">extensions</span>::<span class="ident">khr</span>,
+    <span class="ident">version</span>::<span class="ident">DeviceV1_0</span>,
+    <span class="ident">vk</span>::{<span class="self">self</span>, <span class="ident">Handle</span>},
+};
 <span class="kw">use</span> <span class="ident">smallvec</span>::<span class="ident">SmallVec</span>;
 
 <span class="kw">use</span> <span class="ident">hal</span>::{
@@ -2342,16 +2358,20 @@
     {<span class="ident">buffer</span>, <span class="ident">device</span> <span class="kw">as</span> <span class="ident">d</span>, <span class="ident">format</span>, <span class="ident">image</span>, <span class="ident">pass</span>, <span class="ident">pso</span>, <span class="ident">query</span>, <span class="ident">queue</span>}, {<span class="ident">Features</span>, <span class="ident">MemoryTypeId</span>},
 };
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">borrow</span>::<span class="ident">Borrow</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>::{<span class="ident">CStr</span>, <span class="ident">CString</span>};
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">Range</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">pin</span>::<span class="ident">Pin</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">mem</span>, <span class="ident">ptr</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{
+    <span class="ident">borrow</span>::<span class="ident">Borrow</span>,
+    <span class="ident">ffi</span>::{<span class="ident">CStr</span>, <span class="ident">CString</span>},
+    <span class="ident">mem</span>,
+    <span class="ident">ops</span>::<span class="ident">Range</span>,
+    <span class="ident">pin</span>::<span class="ident">Pin</span>,
+    <span class="ident">ptr</span>,
+    <span class="ident">sync</span>::<span class="ident">Arc</span>,
+};
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">pool</span>::<span class="ident">RawCommandPool</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">command</span> <span class="kw">as</span> <span class="ident">cmd</span>, <span class="ident">conv</span>, <span class="ident">native</span> <span class="kw">as</span> <span class="ident">n</span>, <span class="ident">window</span> <span class="kw">as</span> <span class="ident">w</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Backend</span> <span class="kw">as</span> <span class="ident">B</span>, <span class="ident">DebugMessenger</span>, <span class="ident">Device</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{
+    <span class="ident">command</span> <span class="kw">as</span> <span class="ident">cmd</span>, <span class="ident">conv</span>, <span class="ident">native</span> <span class="kw">as</span> <span class="ident">n</span>, <span class="ident">pool</span>::<span class="ident">RawCommandPool</span>, <span class="ident">window</span> <span class="kw">as</span> <span class="ident">w</span>, <span class="ident">Backend</span> <span class="kw">as</span> <span class="ident">B</span>,
+    <span class="ident">DebugMessenger</span>, <span class="ident">Device</span>,
+};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">struct</span> <span class="ident">GraphicsPipelineInfoBuf</span> {
@@ -2378,8 +2398,8 @@
     <span class="ident">depth_stencil_state</span>: <span class="ident">vk</span>::<span class="ident">PipelineDepthStencilStateCreateInfo</span>,
     <span class="ident">color_blend_state</span>: <span class="ident">vk</span>::<span class="ident">PipelineColorBlendStateCreateInfo</span>,
     <span class="ident">pipeline_dynamic_state</span>: <span class="ident">vk</span>::<span class="ident">PipelineDynamicStateCreateInfo</span>,
-    <span class="ident">viewport</span>: <span class="ident">vk</span>::<span class="ident">Viewport</span>,
-    <span class="ident">scissor</span>: <span class="ident">vk</span>::<span class="ident">Rect2D</span>,
+    <span class="ident">viewports</span>: [<span class="ident">vk</span>::<span class="ident">Viewport</span>; <span class="number">1</span>],
+    <span class="ident">scissors</span>: [<span class="ident">vk</span>::<span class="ident">Rect2D</span>; <span class="number">1</span>],
 }
 <span class="kw">impl</span> <span class="ident">GraphicsPipelineInfoBuf</span> {
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">add_stage</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
@@ -2580,36 +2600,30 @@
         };
 
         <span class="ident">this</span>.<span class="ident">viewport_state</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">scissors</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">baked_states</span>.<span class="ident">scissor</span> {
+            <span class="comment">//Note: without `multiViewport` feature, there has to be</span>
+            <span class="comment">// the count of 1 for both viewports and scissors, even</span>
+            <span class="comment">// though the actual pointers are ignored.</span>
+            <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">baked_states</span>.<span class="ident">scissor</span> {
                 <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">rect</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">this</span>.<span class="ident">scissor</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">map_rect</span>(<span class="ident">rect</span>);
-                    <span class="prelude-val">Some</span>([<span class="ident">this</span>.<span class="ident">scissor</span>])
+                    <span class="ident">this</span>.<span class="ident">scissors</span> <span class="op">=</span> [<span class="ident">conv</span>::<span class="ident">map_rect</span>(<span class="ident">rect</span>)];
                 }
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">this</span>.<span class="ident">dynamic_states</span>.<span class="ident">push</span>(<span class="ident">vk</span>::<span class="ident">DynamicState</span>::<span class="ident">SCISSOR</span>);
-                    <span class="prelude-val">None</span>
                 }
-            };
-            <span class="kw">let</span> <span class="ident">viewports</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">baked_states</span>.<span class="ident">viewport</span> {
+            }
+            <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">baked_states</span>.<span class="ident">viewport</span> {
                 <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">vp</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">this</span>.<span class="ident">viewport</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">shared</span>.<span class="ident">map_viewport</span>(<span class="ident">vp</span>);
-                    <span class="prelude-val">Some</span>([<span class="ident">this</span>.<span class="ident">viewport</span>])
+                    <span class="ident">this</span>.<span class="ident">viewports</span> <span class="op">=</span> [<span class="ident">device</span>.<span class="ident">shared</span>.<span class="ident">map_viewport</span>(<span class="ident">vp</span>)];
                 }
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">this</span>.<span class="ident">dynamic_states</span>.<span class="ident">push</span>(<span class="ident">vk</span>::<span class="ident">DynamicState</span>::<span class="ident">VIEWPORT</span>);
-                    <span class="prelude-val">None</span>
                 }
-            };
-
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">PipelineViewportStateCreateInfo</span>::<span class="ident">builder</span>()
-                .<span class="ident">flags</span>(<span class="ident">vk</span>::<span class="ident">PipelineViewportStateCreateFlags</span>::<span class="ident">empty</span>());
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">scissors</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">scissors</span> {
-                <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">scissors</span>(<span class="ident">scissors</span>);
             }
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">viewports</span>) <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">viewports</span> {
-                <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">viewports</span>(<span class="ident">viewports</span>);
-            }
-            <span class="ident">builder</span>.<span class="ident">build</span>()
+            <span class="ident">vk</span>::<span class="ident">PipelineViewportStateCreateInfo</span>::<span class="ident">builder</span>()
+                .<span class="ident">flags</span>(<span class="ident">vk</span>::<span class="ident">PipelineViewportStateCreateFlags</span>::<span class="ident">empty</span>())
+                .<span class="ident">scissors</span>(<span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">scissors</span>)
+                .<span class="ident">viewports</span>(<span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">viewports</span>)
+                .<span class="ident">build</span>()
         };
 
         <span class="ident">this</span>.<span class="ident">multisample_state</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">multisampling</span> {
@@ -3540,6 +3554,20 @@
         }
     }
 
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;naga&quot;</span>)]</span>
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_shader_module_from_naga</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">module</span>: <span class="ident">naga</span>::<span class="ident">Module</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">ShaderModule</span>, (<span class="ident">d</span>::<span class="ident">ShaderError</span>, <span class="ident">naga</span>::<span class="ident">Module</span>)<span class="op">&gt;</span> {
+        <span class="kw">use</span> <span class="ident">naga</span>::<span class="ident">back</span>::<span class="ident">spv</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">spv</span>::<span class="ident">WriterFlags</span>::<span class="ident">empty</span>();
+        <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">debug_assertions</span>) {
+            <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">spv</span>::<span class="ident">WriterFlags</span>::<span class="ident">DEBUG</span>;
+        }
+        <span class="kw">let</span> <span class="ident">spv</span> <span class="op">=</span> <span class="ident">spv</span>::<span class="ident">write_vec</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>, <span class="ident">flags</span>);
+        <span class="self">self</span>.<span class="ident">create_shader_module</span>(<span class="kw-2">&amp;</span><span class="ident">spv</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> (<span class="ident">e</span>, <span class="ident">module</span>))
+    }
+
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_sampler</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">image</span>::<span class="ident">SamplerDesc</span>,
@@ -4175,7 +4203,7 @@
         <span class="ident">fences</span>: <span class="ident">I</span>,
         <span class="ident">wait</span>: <span class="ident">d</span>::<span class="ident">WaitFor</span>,
         <span class="ident">timeout_ns</span>: <span class="ident">u64</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">OomOrDeviceLost</span><span class="op">&gt;</span>
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">WaitError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">I</span>: <span class="ident">IntoIterator</span>,
         <span class="ident">I</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">Fence</span><span class="op">&gt;</span>,
@@ -4225,7 +4253,7 @@
         }
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_event_status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">event</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">Event</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">OomOrDeviceLost</span><span class="op">&gt;</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_event_status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">event</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">Event</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">WaitError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">get_event_status</span>(<span class="ident">event</span>.<span class="number">0</span>);
         <span class="kw">match</span> <span class="ident">result</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">b</span>),
@@ -4303,7 +4331,7 @@
         <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>],
         <span class="ident">stride</span>: <span class="ident">buffer</span>::<span class="ident">Offset</span>,
         <span class="ident">flags</span>: <span class="ident">query</span>::<span class="ident">ResultFlags</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">OomOrDeviceLost</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">WaitError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">fp_v1_0</span>().<span class="ident">get_query_pool_results</span>(
             <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">handle</span>(),
             <span class="ident">pool</span>.<span class="number">0</span>,
@@ -4561,7 +4589,7 @@
         <span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">w</span>::<span class="ident">Surface</span>,
         <span class="ident">config</span>: <span class="ident">SwapchainConfig</span>,
         <span class="ident">provided_old_swapchain</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">w</span>::<span class="ident">Swapchain</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">w</span>::<span class="ident">Swapchain</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">Image</span><span class="op">&gt;</span>), <span class="ident">hal</span>::<span class="ident">window</span>::<span class="ident">CreationError</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">w</span>::<span class="ident">Swapchain</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">Image</span><span class="op">&gt;</span>), <span class="ident">hal</span>::<span class="ident">window</span>::<span class="ident">SwapchainError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">functor</span> <span class="op">=</span> <span class="ident">khr</span>::<span class="ident">Swapchain</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">surface</span>.<span class="ident">raw</span>.<span class="ident">instance</span>.<span class="ident">inner</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>);
 
         <span class="kw">let</span> <span class="ident">old_swapchain</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">provided_old_swapchain</span> {
@@ -4603,8 +4631,10 @@
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">OutOfMemory</span>::<span class="ident">Device</span>.<span class="ident">into</span>());
             }
             <span class="prelude-val">Err</span>(<span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_DEVICE_LOST</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">DeviceLost</span>.<span class="ident">into</span>()),
-            <span class="prelude-val">Err</span>(<span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_SURFACE_LOST_KHR</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">SurfaceLost</span>.<span class="ident">into</span>()),
-            <span class="prelude-val">Err</span>(<span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_NATIVE_WINDOW_IN_USE_KHR</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">WindowInUse</span>.<span class="ident">into</span>()),
+            <span class="prelude-val">Err</span>(<span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_SURFACE_LOST_KHR</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">hal</span>::<span class="ident">window</span>::<span class="ident">SurfaceLost</span>.<span class="ident">into</span>()),
+            <span class="prelude-val">Err</span>(<span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_NATIVE_WINDOW_IN_USE_KHR</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">hal</span>::<span class="ident">window</span>::<span class="ident">SwapchainError</span>::<span class="ident">WindowInUse</span>)
+            }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;Unexpected result - driver bug? {:?}&quot;</span>, <span class="ident">result</span>),
         };
 

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/4513fb2/wgpu-core/src/command/transfer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transfer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/7b886f4/wgpu-core/src/command/transfer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>transfer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -790,6 +790,54 @@
 <span id="787">787</span>
 <span id="788">788</span>
 <span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -959,7 +1007,7 @@
     <span class="kw">let</span> <span class="ident">rows_per_image</span> <span class="op">=</span> <span class="ident">layout</span>.<span class="ident">rows_per_image</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>;
     <span class="kw">let</span> <span class="ident">bytes_per_row</span> <span class="op">=</span> <span class="ident">layout</span>.<span class="ident">bytes_per_row</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>;
 
-    <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="ident">block_height</span>) <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">texture_block_size</span>(<span class="ident">format</span>);
+    <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="ident">block_height</span>) <span class="op">=</span> <span class="ident">format</span>.<span class="ident">describe</span>().<span class="ident">block_dimensions</span>;
     <span class="kw">let</span> <span class="ident">block_width</span> <span class="op">=</span> <span class="ident">block_width</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>;
     <span class="kw">let</span> <span class="ident">block_height</span> <span class="op">=</span> <span class="ident">block_height</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>;
     <span class="kw">let</span> <span class="ident">block_size</span> <span class="op">=</span> <span class="ident">bytes_per_block</span>;
@@ -1021,9 +1069,18 @@
     <span class="ident">texture_side</span>: <span class="ident">CopySide</span>,
     <span class="ident">copy_size</span>: <span class="kw-2">&amp;</span><span class="ident">Extent3d</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">TransferError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="ident">block_height</span>) <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">texture_block_size</span>(<span class="ident">texture_format</span>);
+    <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="ident">block_height</span>) <span class="op">=</span> <span class="ident">texture_format</span>.<span class="ident">describe</span>().<span class="ident">block_dimensions</span>;
+    <span class="kw">let</span> <span class="ident">block_width</span> <span class="op">=</span> <span class="ident">block_width</span> <span class="kw">as</span> <span class="ident">u32</span>;
+    <span class="kw">let</span> <span class="ident">block_height</span> <span class="op">=</span> <span class="ident">block_height</span> <span class="kw">as</span> <span class="ident">u32</span>;
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">extent</span> <span class="op">=</span> <span class="ident">texture_dimension</span>.<span class="ident">level_extent</span>(<span class="ident">texture_copy_view</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">u8</span>);
+
+    <span class="comment">// Adjust extent for the physical size of mips</span>
+    <span class="kw">if</span> <span class="ident">texture_copy_view</span>.<span class="ident">mip_level</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="ident">extent</span>.<span class="ident">width</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">align_up</span>(<span class="ident">extent</span>.<span class="ident">width</span>, <span class="ident">block_width</span>);
+        <span class="ident">extent</span>.<span class="ident">height</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">align_up</span>(<span class="ident">extent</span>.<span class="ident">height</span>, <span class="ident">block_height</span>);
+    }
+
     <span class="kw">match</span> <span class="ident">texture_dimension</span> {
         <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Kind</span>::<span class="ident">D1</span>(..) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">if</span> (<span class="ident">copy_size</span>.<span class="ident">height</span>, <span class="ident">copy_size</span>.<span class="ident">depth</span>) <span class="op">!</span><span class="op">=</span> (<span class="number">1</span>, <span class="number">1</span>) {
@@ -1296,21 +1353,32 @@
             <span class="ident">copy_size</span>,
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">texture_block_size</span>(<span class="ident">dst_texture</span>.<span class="ident">format</span>);
+        <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">dst_texture</span>.<span class="ident">format</span>.<span class="ident">describe</span>().<span class="ident">block_dimensions</span>;
         <span class="kw">if</span> <span class="op">!</span><span class="ident">conv</span>::<span class="ident">is_valid_copy_dst_texture_format</span>(<span class="ident">dst_texture</span>.<span class="ident">format</span>) {
             <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">CopyToForbiddenTextureFormat</span>(
                 <span class="ident">dst_texture</span>.<span class="ident">format</span>,
             ))<span class="question-mark">?</span>
         }
 
-        <span class="kw">let</span> <span class="ident">buffer_width</span> <span class="op">=</span> (<span class="ident">source</span>.<span class="ident">layout</span>.<span class="ident">bytes_per_row</span> <span class="op">/</span> <span class="ident">bytes_per_block</span>) <span class="op">*</span> <span class="ident">block_width</span>;
+        <span class="comment">// WebGPU uses the physical size of the texture for copies whereas vulkan uses</span>
+        <span class="comment">// the virtual size. We have passed validation, so it&#39;s safe to use the</span>
+        <span class="comment">// image extent data directly. We want the provided copy size to be no larger than</span>
+        <span class="comment">// the virtual size.</span>
+        <span class="kw">let</span> <span class="ident">max_image_extent</span> <span class="op">=</span> <span class="ident">dst_texture</span>.<span class="ident">kind</span>.<span class="ident">level_extent</span>(<span class="ident">destination</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="kw">_</span>);
+        <span class="kw">let</span> <span class="ident">image_extent</span> <span class="op">=</span> <span class="ident">Extent3d</span> {
+            <span class="ident">width</span>: <span class="ident">copy_size</span>.<span class="ident">width</span>.<span class="ident">min</span>(<span class="ident">max_image_extent</span>.<span class="ident">width</span>),
+            <span class="ident">height</span>: <span class="ident">copy_size</span>.<span class="ident">height</span>.<span class="ident">min</span>(<span class="ident">max_image_extent</span>.<span class="ident">height</span>),
+            <span class="ident">depth</span>: <span class="ident">copy_size</span>.<span class="ident">depth</span>,
+        };
+
+        <span class="kw">let</span> <span class="ident">buffer_width</span> <span class="op">=</span> (<span class="ident">source</span>.<span class="ident">layout</span>.<span class="ident">bytes_per_row</span> <span class="op">/</span> <span class="ident">bytes_per_block</span>) <span class="op">*</span> <span class="ident">block_width</span> <span class="kw">as</span> <span class="ident">u32</span>;
         <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">BufferImageCopy</span> {
             <span class="ident">buffer_offset</span>: <span class="ident">source</span>.<span class="ident">layout</span>.<span class="ident">offset</span>,
             <span class="ident">buffer_width</span>,
             <span class="ident">buffer_height</span>: <span class="ident">source</span>.<span class="ident">layout</span>.<span class="ident">rows_per_image</span>,
             <span class="ident">image_layers</span>: <span class="ident">dst_layers</span>,
             <span class="ident">image_offset</span>: <span class="ident">dst_offset</span>,
-            <span class="ident">image_extent</span>: <span class="ident">conv</span>::<span class="ident">map_extent</span>(<span class="ident">copy_size</span>, <span class="ident">dst_texture</span>.<span class="ident">dimension</span>),
+            <span class="ident">image_extent</span>: <span class="ident">conv</span>::<span class="ident">map_extent</span>(<span class="kw-2">&amp;</span><span class="ident">image_extent</span>, <span class="ident">dst_texture</span>.<span class="ident">dimension</span>),
         };
         <span class="kw">let</span> <span class="ident">cmb_raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">raw</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
         <span class="kw">unsafe</span> {
@@ -1425,21 +1493,33 @@
             <span class="ident">copy_size</span>,
         )<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">texture_block_size</span>(<span class="ident">src_texture</span>.<span class="ident">format</span>);
+        <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">src_texture</span>.<span class="ident">format</span>.<span class="ident">describe</span>().<span class="ident">block_dimensions</span>;
         <span class="kw">if</span> <span class="op">!</span><span class="ident">conv</span>::<span class="ident">is_valid_copy_src_texture_format</span>(<span class="ident">src_texture</span>.<span class="ident">format</span>) {
             <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">CopyFromForbiddenTextureFormat</span>(
                 <span class="ident">src_texture</span>.<span class="ident">format</span>,
             ))<span class="question-mark">?</span>
         }
 
-        <span class="kw">let</span> <span class="ident">buffer_width</span> <span class="op">=</span> (<span class="ident">destination</span>.<span class="ident">layout</span>.<span class="ident">bytes_per_row</span> <span class="op">/</span> <span class="ident">bytes_per_block</span>) <span class="op">*</span> <span class="ident">block_width</span>;
+        <span class="comment">// WebGPU uses the physical size of the texture for copies whereas vulkan uses</span>
+        <span class="comment">// the virtual size. We have passed validation, so it&#39;s safe to use the</span>
+        <span class="comment">// image extent data directly. We want the provided copy size to be no larger than</span>
+        <span class="comment">// the virtual size.</span>
+        <span class="kw">let</span> <span class="ident">max_image_extent</span> <span class="op">=</span> <span class="ident">src_texture</span>.<span class="ident">kind</span>.<span class="ident">level_extent</span>(<span class="ident">source</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="kw">_</span>);
+        <span class="kw">let</span> <span class="ident">image_extent</span> <span class="op">=</span> <span class="ident">Extent3d</span> {
+            <span class="ident">width</span>: <span class="ident">copy_size</span>.<span class="ident">width</span>.<span class="ident">min</span>(<span class="ident">max_image_extent</span>.<span class="ident">width</span>),
+            <span class="ident">height</span>: <span class="ident">copy_size</span>.<span class="ident">height</span>.<span class="ident">min</span>(<span class="ident">max_image_extent</span>.<span class="ident">height</span>),
+            <span class="ident">depth</span>: <span class="ident">copy_size</span>.<span class="ident">depth</span>,
+        };
+
+        <span class="kw">let</span> <span class="ident">buffer_width</span> <span class="op">=</span>
+            (<span class="ident">destination</span>.<span class="ident">layout</span>.<span class="ident">bytes_per_row</span> <span class="op">/</span> <span class="ident">bytes_per_block</span>) <span class="op">*</span> <span class="ident">block_width</span> <span class="kw">as</span> <span class="ident">u32</span>;
         <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">BufferImageCopy</span> {
             <span class="ident">buffer_offset</span>: <span class="ident">destination</span>.<span class="ident">layout</span>.<span class="ident">offset</span>,
             <span class="ident">buffer_width</span>,
             <span class="ident">buffer_height</span>: <span class="ident">destination</span>.<span class="ident">layout</span>.<span class="ident">rows_per_image</span>,
             <span class="ident">image_layers</span>: <span class="ident">src_layers</span>,
             <span class="ident">image_offset</span>: <span class="ident">src_offset</span>,
-            <span class="ident">image_extent</span>: <span class="ident">conv</span>::<span class="ident">map_extent</span>(<span class="ident">copy_size</span>, <span class="ident">src_texture</span>.<span class="ident">dimension</span>),
+            <span class="ident">image_extent</span>: <span class="ident">conv</span>::<span class="ident">map_extent</span>(<span class="kw-2">&amp;</span><span class="ident">image_extent</span>, <span class="ident">src_texture</span>.<span class="ident">dimension</span>),
         };
         <span class="kw">let</span> <span class="ident">cmb_raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">raw</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
         <span class="kw">unsafe</span> {
@@ -1555,12 +1635,28 @@
             <span class="ident">copy_size</span>,
         )<span class="question-mark">?</span>;
 
+        <span class="comment">// WebGPU uses the physical size of the texture for copies whereas vulkan uses</span>
+        <span class="comment">// the virtual size. We have passed validation, so it&#39;s safe to use the</span>
+        <span class="comment">// image extent data directly. We want the provided copy size to be no larger than</span>
+        <span class="comment">// the virtual size.</span>
+        <span class="kw">let</span> <span class="ident">max_src_image_extent</span> <span class="op">=</span> <span class="ident">src_texture</span>.<span class="ident">kind</span>.<span class="ident">level_extent</span>(<span class="ident">source</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="kw">_</span>);
+        <span class="kw">let</span> <span class="ident">max_dst_image_extent</span> <span class="op">=</span> <span class="ident">dst_texture</span>.<span class="ident">kind</span>.<span class="ident">level_extent</span>(<span class="ident">destination</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="kw">_</span>);
+        <span class="kw">let</span> <span class="ident">image_extent</span> <span class="op">=</span> <span class="ident">Extent3d</span> {
+            <span class="ident">width</span>: <span class="ident">copy_size</span>
+                .<span class="ident">width</span>
+                .<span class="ident">min</span>(<span class="ident">max_src_image_extent</span>.<span class="ident">width</span>.<span class="ident">min</span>(<span class="ident">max_dst_image_extent</span>.<span class="ident">width</span>)),
+            <span class="ident">height</span>: <span class="ident">copy_size</span>
+                .<span class="ident">height</span>
+                .<span class="ident">min</span>(<span class="ident">max_src_image_extent</span>.<span class="ident">height</span>.<span class="ident">min</span>(<span class="ident">max_dst_image_extent</span>.<span class="ident">height</span>)),
+            <span class="ident">depth</span>: <span class="ident">copy_size</span>.<span class="ident">depth</span>,
+        };
+
         <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">ImageCopy</span> {
             <span class="ident">src_subresource</span>: <span class="ident">src_layers</span>,
             <span class="ident">src_offset</span>,
             <span class="ident">dst_subresource</span>: <span class="ident">dst_layers</span>,
             <span class="ident">dst_offset</span>,
-            <span class="ident">extent</span>: <span class="ident">conv</span>::<span class="ident">map_extent</span>(<span class="ident">copy_size</span>, <span class="ident">src_texture</span>.<span class="ident">dimension</span>),
+            <span class="ident">extent</span>: <span class="ident">conv</span>::<span class="ident">map_extent</span>(<span class="kw-2">&amp;</span><span class="ident">image_extent</span>, <span class="ident">src_texture</span>.<span class="ident">dimension</span>),
         };
         <span class="kw">let</span> <span class="ident">cmb_raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">raw</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
         <span class="kw">unsafe</span> {
