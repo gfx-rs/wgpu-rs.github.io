@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/0d81b1f/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/4f958bf/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../naga/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><span class="help-button">?</span>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -789,6 +789,14 @@
 <span id="786">786</span>
 <span id="787">787</span>
 <span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Universal shader translator.</span>
 <span class="doccomment">//!</span>
@@ -1458,12 +1466,20 @@
 <span class="doccomment">/// A code block is just a vector of statements.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Block</span> <span class="op">=</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Statement</span><span class="op">&gt;</span>;
 
-<span class="doccomment">/// Marker type, used for falling through in a switch statement.</span>
+<span class="doccomment">/// A case for a switch statement.</span>
 <span class="comment">// Clone is used only for error reporting and is not intended for end users</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FallThrough</span>;
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SwitchCase</span> {
+    <span class="doccomment">/// Value, upon which the case is considered true.</span>
+    <span class="kw">pub</span> <span class="ident">value</span>: <span class="ident">i32</span>,
+    <span class="doccomment">/// Body of the cae.</span>
+    <span class="kw">pub</span> <span class="ident">body</span>: <span class="ident">Block</span>,
+    <span class="doccomment">/// If true, the control flow continues to the next case in the list,</span>
+    <span class="doccomment">/// or default.</span>
+    <span class="kw">pub</span> <span class="ident">fall_through</span>: <span class="ident">bool</span>,
+}
 
 <span class="doccomment">/// Instructions which make up an executable block.</span>
 <span class="comment">// Clone is used only for error reporting and is not intended for end users</span>
@@ -1482,7 +1498,7 @@
     <span class="doccomment">/// Conditionally executes one of multiple blocks, based on the value of the selector.</span>
     <span class="ident">Switch</span> {
         <span class="ident">selector</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident">Expression</span><span class="op">&gt;</span>, <span class="comment">//int</span>
-        <span class="ident">cases</span>: <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">i32</span>, (<span class="ident">Block</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FallThrough</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
+        <span class="ident">cases</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SwitchCase</span><span class="op">&gt;</span>,
         <span class="ident">default</span>: <span class="ident">Block</span>,
     },
     <span class="doccomment">/// Executes a block repeatedly.</span>
