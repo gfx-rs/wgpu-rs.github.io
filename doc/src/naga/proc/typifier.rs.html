@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/4f958bf/src/proc/typifier.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>typifier.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/583f218/src/proc/typifier.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>typifier.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -425,6 +425,76 @@
 <span id="422">422</span>
 <span id="423">423</span>
 <span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arena</span>::{<span class="ident">Arena</span>, <span class="ident">Handle</span>};
 
@@ -581,7 +651,10 @@
                     })
                 }
                 <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Array</span> { <span class="ident">base</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">base</span>),
-                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Struct</span> { <span class="kw-2">ref</span> <span class="ident">members</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Struct</span> {
+                    <span class="ident">block</span>: <span class="kw">_</span>,
+                    <span class="kw-2">ref</span> <span class="ident">members</span>,
+                } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">member</span> <span class="op">=</span> <span class="ident">members</span>
                         .<span class="ident">get</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>)
                         .<span class="ident">ok_or</span>(<span class="ident">ResolveError</span>::<span class="ident">InvalidAccessIndex</span>)<span class="question-mark">?</span>;
@@ -674,38 +747,139 @@
                 <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BinaryOperator</span>::<span class="ident">ShiftRight</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">left</span>.<span class="ident">index</span>()].<span class="ident">clone</span>(),
             },
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Select</span> { <span class="ident">accept</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">accept</span>.<span class="ident">index</span>()].<span class="ident">clone</span>(),
-            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Intrinsic</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
-            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Transpose</span>(<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">expr</span>, <span class="ident">types</span>) {
-                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
-                    <span class="ident">columns</span>,
-                    <span class="ident">rows</span>,
-                    <span class="ident">width</span>,
-                } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
-                    <span class="ident">columns</span>: <span class="ident">rows</span>,
-                    <span class="ident">rows</span>: <span class="ident">columns</span>,
-                    <span class="ident">width</span>,
-                }),
-                <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">IncompatibleOperand</span> {
-                        <span class="ident">op</span>: <span class="string">&quot;transpose&quot;</span>.<span class="ident">to_string</span>(),
-                        <span class="ident">operand</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">other</span>),
-                    })
+            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Derivative</span> { <span class="ident">axis</span>: <span class="kw">_</span>, <span class="ident">expr</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">expr</span>.<span class="ident">index</span>()].<span class="ident">clone</span>()
+            }
+            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Relational</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> {
+                <span class="ident">kind</span>: <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Bool</span>,
+                <span class="ident">width</span>: <span class="number">4</span>,
+            }),
+            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Math</span> {
+                <span class="ident">fun</span>,
+                <span class="ident">arg</span>,
+                <span class="ident">arg1</span>,
+                <span class="ident">arg2</span>: <span class="kw">_</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">MathFunction</span> <span class="kw">as</span> <span class="ident">Mf</span>;
+                <span class="kw">match</span> <span class="ident">fun</span> {
+                    <span class="comment">// comparison</span>
+                    <span class="ident">Mf</span>::<span class="ident">Abs</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Min</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Max</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Clamp</span> <span class="op">|</span>
+                    <span class="comment">// trigonometry</span>
+                    <span class="ident">Mf</span>::<span class="ident">Cos</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Cosh</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Sin</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Sinh</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Tan</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Tanh</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Acos</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Asin</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Atan</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Atan2</span> <span class="op">|</span>
+                    <span class="comment">// decomposition</span>
+                    <span class="ident">Mf</span>::<span class="ident">Ceil</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Floor</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Round</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Fract</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Trunc</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Modf</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Frexp</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Ldexp</span> <span class="op">|</span>
+                    <span class="comment">// exponent</span>
+                    <span class="ident">Mf</span>::<span class="ident">Exp</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Exp2</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Log</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Log2</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Pow</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">arg</span>.<span class="ident">index</span>()].<span class="ident">clone</span>(),
+                    <span class="comment">// geometry</span>
+                    <span class="ident">Mf</span>::<span class="ident">Dot</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">arg</span>, <span class="ident">types</span>) {
+                        <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
+                            <span class="ident">kind</span>,
+                            <span class="ident">size</span>: <span class="kw">_</span>,
+                            <span class="ident">width</span>,
+                        } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> }),
+                        <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">IncompatibleOperand</span> {
+                                <span class="ident">op</span>: <span class="string">&quot;dot product&quot;</span>.<span class="ident">to_string</span>(),
+                                <span class="ident">operand</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">other</span>),
+                            })
+                        }
+                    },
+                    <span class="ident">Mf</span>::<span class="ident">Outer</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">let</span> <span class="ident">arg1</span> <span class="op">=</span> <span class="ident">arg1</span>.<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">ResolveError</span>::<span class="ident">IncompatibleOperand</span> {
+                            <span class="ident">op</span>: <span class="string">&quot;outer product&quot;</span>.<span class="ident">to_string</span>(),
+                            <span class="ident">operand</span>: <span class="string">&quot;&quot;</span>.<span class="ident">to_string</span>(),
+                        })<span class="question-mark">?</span>;
+                        <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">get</span>(<span class="ident">arg</span>, <span class="ident">types</span>), <span class="self">self</span>.<span class="ident">get</span>(<span class="ident">arg1</span>,<span class="ident">types</span>)) {
+                            (<span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {<span class="ident">kind</span>: <span class="kw">_</span>, <span class="ident">size</span>: <span class="ident">columns</span>,<span class="ident">width</span>}, <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span>{ <span class="ident">size</span>: <span class="ident">rows</span>, .. }) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> { <span class="ident">columns</span>, <span class="ident">rows</span>, <span class="ident">width</span> }),
+                            (<span class="ident">left</span>, <span class="ident">right</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">IncompatibleOperands</span> {
+                                    <span class="ident">op</span>: <span class="string">&quot;outer product&quot;</span>.<span class="ident">to_string</span>(),
+                                    <span class="ident">left</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">left</span>),
+                                    <span class="ident">right</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">right</span>),
+                                })
+                            }
+                        }
+                    },
+                    <span class="ident">Mf</span>::<span class="ident">Cross</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">arg</span>.<span class="ident">index</span>()].<span class="ident">clone</span>(),
+                    <span class="ident">Mf</span>::<span class="ident">Distance</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Length</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">arg</span>, <span class="ident">types</span>) {
+                        <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> {<span class="ident">width</span>,<span class="ident">kind</span>} <span class="op">|</span>
+                        <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {<span class="ident">width</span>,<span class="ident">kind</span>,<span class="ident">size</span>:<span class="kw">_</span>} <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> }),
+                        <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">IncompatibleOperand</span> {
+                                <span class="ident">op</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">fun</span>),
+                                <span class="ident">operand</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">other</span>),
+                            })
+                        }
+                    },
+                    <span class="ident">Mf</span>::<span class="ident">Normalize</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">FaceForward</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Reflect</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">arg</span>.<span class="ident">index</span>()].<span class="ident">clone</span>(),
+                    <span class="comment">// computational</span>
+                    <span class="ident">Mf</span>::<span class="ident">Sign</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Fma</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Mix</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Step</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">SmoothStep</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">Sqrt</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">InverseSqrt</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">arg</span>.<span class="ident">index</span>()].<span class="ident">clone</span>(),
+                    <span class="ident">Mf</span>::<span class="ident">Transpose</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">arg</span>, <span class="ident">types</span>) {
+                        <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
+                            <span class="ident">columns</span>,
+                            <span class="ident">rows</span>,
+                            <span class="ident">width</span>,
+                        } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
+                            <span class="ident">columns</span>: <span class="ident">rows</span>,
+                            <span class="ident">rows</span>: <span class="ident">columns</span>,
+                            <span class="ident">width</span>,
+                        }),
+                        <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">IncompatibleOperand</span> {
+                                <span class="ident">op</span>: <span class="string">&quot;transpose&quot;</span>.<span class="ident">to_string</span>(),
+                                <span class="ident">operand</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">other</span>),
+                            })
+                        }
+                    },
+                    <span class="ident">Mf</span>::<span class="ident">Determinant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">arg</span>, <span class="ident">types</span>) {
+                        <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
+                            <span class="ident">width</span>,
+                            ..
+                        } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>: <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>, <span class="ident">width</span> }),
+                        <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">IncompatibleOperand</span> {
+                                <span class="ident">op</span>: <span class="string">&quot;determinant&quot;</span>.<span class="ident">to_string</span>(),
+                                <span class="ident">operand</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">other</span>),
+                            })
+                        }
+                    },
+                    <span class="comment">// bits</span>
+                    <span class="ident">Mf</span>::<span class="ident">CountOneBits</span> <span class="op">|</span>
+                    <span class="ident">Mf</span>::<span class="ident">ReverseBits</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">arg</span>.<span class="ident">index</span>()].<span class="ident">clone</span>(),
                 }
-            },
-            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">DotProduct</span>(<span class="ident">left_expr</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">left_expr</span>, <span class="ident">types</span>) {
-                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> {
-                    <span class="ident">kind</span>,
-                    <span class="ident">size</span>: <span class="kw">_</span>,
-                    <span class="ident">width</span>,
-                } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> }),
-                <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">IncompatibleOperand</span> {
-                        <span class="ident">op</span>: <span class="string">&quot;dot product&quot;</span>.<span class="ident">to_string</span>(),
-                        <span class="ident">operand</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">other</span>),
-                    })
-                }
-            },
-            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">CrossProduct</span>(<span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
+            }
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">As</span> {
                 <span class="ident">expr</span>,
                 <span class="ident">kind</span>,
@@ -726,45 +900,11 @@
                     })
                 }
             },
-            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Derivative</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Call</span> {
-                <span class="ident">origin</span>: <span class="kw">crate</span>::<span class="ident">FunctionOrigin</span>::<span class="ident">External</span>(<span class="kw-2">ref</span> <span class="ident">name</span>),
-                <span class="kw-2">ref</span> <span class="ident">arguments</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">name</span>.<span class="ident">as_str</span>() {
-                <span class="string">&quot;distance&quot;</span> <span class="op">|</span> <span class="string">&quot;length&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">arguments</span>[<span class="number">0</span>], <span class="ident">types</span>) {
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">kind</span>, <span class="ident">width</span>, .. }
-                    <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> })
-                    }
-                    <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">IncompatibleOperand</span> {
-                            <span class="ident">op</span>: <span class="ident">name</span>.<span class="ident">clone</span>(),
-                            <span class="ident">operand</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">other</span>),
-                        })
-                    }
-                },
-                <span class="string">&quot;dot&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">get</span>(<span class="ident">arguments</span>[<span class="number">0</span>], <span class="ident">types</span>) {
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">kind</span>, <span class="ident">width</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">Resolution</span>::<span class="ident">Value</span>(<span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> })
-                    }
-                    <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">IncompatibleOperand</span> {
-                            <span class="ident">op</span>: <span class="ident">name</span>.<span class="ident">clone</span>(),
-                            <span class="ident">operand</span>: <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">other</span>),
-                        })
-                    }
-                },
-                <span class="comment">//Note: `cross` is here too, we still need to figure out what to do with it</span>
-                <span class="string">&quot;abs&quot;</span> <span class="op">|</span> <span class="string">&quot;atan2&quot;</span> <span class="op">|</span> <span class="string">&quot;cos&quot;</span> <span class="op">|</span> <span class="string">&quot;sin&quot;</span> <span class="op">|</span> <span class="string">&quot;floor&quot;</span> <span class="op">|</span> <span class="string">&quot;inverse&quot;</span> <span class="op">|</span> <span class="string">&quot;normalize&quot;</span> <span class="op">|</span> <span class="string">&quot;min&quot;</span>
-                <span class="op">|</span> <span class="string">&quot;max&quot;</span> <span class="op">|</span> <span class="string">&quot;reflect&quot;</span> <span class="op">|</span> <span class="string">&quot;pow&quot;</span> <span class="op">|</span> <span class="string">&quot;clamp&quot;</span> <span class="op">|</span> <span class="string">&quot;fclamp&quot;</span> <span class="op">|</span> <span class="string">&quot;mix&quot;</span> <span class="op">|</span> <span class="string">&quot;step&quot;</span>
-                <span class="op">|</span> <span class="string">&quot;smoothstep&quot;</span> <span class="op">|</span> <span class="string">&quot;cross&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">resolutions</span>[<span class="ident">arguments</span>[<span class="number">0</span>].<span class="ident">index</span>()].<span class="ident">clone</span>(),
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError</span>::<span class="ident">FunctionNotDefined</span> { <span class="ident">name</span>: <span class="ident">name</span>.<span class="ident">clone</span>() }),
-            },
-            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Call</span> {
-                <span class="ident">origin</span>: <span class="kw">crate</span>::<span class="ident">FunctionOrigin</span>::<span class="ident">Local</span>(<span class="ident">handle</span>),
+                <span class="ident">function</span>,
                 <span class="ident">arguments</span>: <span class="kw">_</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">functions</span>[<span class="ident">handle</span>]
+                <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">ctx</span>.<span class="ident">functions</span>[<span class="ident">function</span>]
                     .<span class="ident">return_type</span>
                     .<span class="ident">ok_or</span>(<span class="ident">ResolveError</span>::<span class="ident">FunctionReturnsVoid</span>)<span class="question-mark">?</span>;
                 <span class="ident">Resolution</span>::<span class="ident">Handle</span>(<span class="ident">ty</span>)

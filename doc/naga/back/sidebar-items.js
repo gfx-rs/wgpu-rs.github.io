@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["msl","Metal Shading Language (MSL) backend"],["spv",""]]});
+initSidebarItems({"mod":[["glsl","OpenGL shading language backend"],["msl","Metal Shading Language (MSL) backend"],["spv",""]]});

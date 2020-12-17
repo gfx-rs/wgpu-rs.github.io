@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/f1398d2/src/backend/gl/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/0244e34/src/backend/gl/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_gl/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -675,32 +675,31 @@
 <span id="672">672</span>
 <span id="673">673</span>
 <span id="674">674</span>
-<span id="675">675</span>
-<span id="676">676</span>
-<span id="677">677</span>
-<span id="678">678</span>
-<span id="679">679</span>
-<span id="680">680</span>
-<span id="681">681</span>
-<span id="682">682</span>
-<span id="683">683</span>
-<span id="684">684</span>
-<span id="685">685</span>
-<span id="686">686</span>
-<span id="687">687</span>
-<span id="688">688</span>
-<span id="689">689</span>
-<span id="690">690</span>
-<span id="691">691</span>
-<span id="692">692</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="doccomment">//! OpenGL implementation of a device, striving to support OpenGL 2.0 with at</span>
-<span class="doccomment">//! least VAOs, but using newer extensions when available.</span>
+<span class="doccomment">/*!
+# OpenGL backend internals.
+
+The main target is OpenGL ES3 on Linux and Android.
+
+## Binding model
+
+Binding model is the biggest and most painful difference with gfx-hal API.
+
+First, the bindings get linearized into the pipeline layout (see `PipelineLayoutSet`).
+Then a pipeline gets created, and we track all the texture-sampler associations.
+We only support at most one sampler used with each texture so far. The linear index
+of this sampler is stored per texture slot in `SamplerBindMap` array.
+
+The texture-sampler pairs get potentially invalidated in 2 places:
+  - when a new pipeline is bound, we update the linear indices of associated samplers
+  - when a new descriptor set is bound, we update both the textures and the samplers
+
+We expect that the changes to sampler states between any 2 pipelines of the same layout
+will be minimal, if any.
+*/</span>
 
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">missing_docs</span>, <span class="ident">missing_copy_implementations</span>)]</span>
 
-<span class="attribute">#[<span class="ident">macro_use</span>]</span>
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">bitflags</span>;
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">log</span>;
 
@@ -712,7 +711,7 @@
     <span class="ident">thread</span>,
 };
 
-<span class="kw">use</span> <span class="ident">hal</span>::{<span class="ident">adapter</span>, <span class="ident">buffer</span>, <span class="ident">image</span>, <span class="ident">memory</span>, <span class="ident">pso</span>, <span class="ident">queue</span> <span class="kw">as</span> <span class="ident">q</span>};
+<span class="kw">use</span> <span class="ident">hal</span>::{<span class="ident">adapter</span>, <span class="ident">buffer</span>, <span class="ident">image</span>, <span class="ident">memory</span>, <span class="ident">queue</span> <span class="kw">as</span> <span class="ident">q</span>};
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">device</span>::<span class="ident">Device</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::<span class="ident">info</span>::{<span class="ident">Info</span>, <span class="ident">PlatformName</span>, <span class="ident">Version</span>};
@@ -739,51 +738,14 @@
 
 <span class="kw">type</span> <span class="ident">ColorSlot</span> <span class="op">=</span> <span class="ident">u8</span>;
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">GlContainer</span> {
+<span class="comment">// we can support more samplers if not every one of them is used at a time,</span>
+<span class="comment">// but it probably doesn&#39;t worth it.</span>
+<span class="kw">const</span> <span class="ident">MAX_SAMPLERS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">16</span>;
+<span class="comment">//TODO: has to be within glow::MAX_COMBINED_TEXTURE_IMAGE_UNITS</span>
+<span class="kw">const</span> <span class="ident">MAX_TEXTURE_SLOTS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">16</span>;
+
+<span class="kw">struct</span> <span class="ident">GlContainer</span> {
     <span class="ident">context</span>: <span class="ident">GlContext</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">GlContainer</span> {
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>))]</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_fn_proc</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="ident">fn_proc</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">GlContainer</span>
-    <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_void</span>,
-    {
-        <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">glow</span>::<span class="ident">Context</span>::<span class="ident">from_loader_function</span>(<span class="ident">fn_proc</span>);
-        <span class="ident">GlContainer</span> { <span class="ident">context</span> }
-    }
-
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">from_canvas</span>(<span class="ident">canvas</span>: <span class="kw-2">&amp;</span><span class="ident">web_sys</span>::<span class="ident">HtmlCanvasElement</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">GlContainer</span> {
-        <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> {
-            <span class="kw">use</span> <span class="ident">wasm_bindgen</span>::<span class="ident">JsCast</span>;
-            <span class="comment">// TODO: Remove hardcoded width/height</span>
-            <span class="kw">if</span> <span class="ident">canvas</span>.<span class="ident">get_attribute</span>(<span class="string">&quot;width&quot;</span>).<span class="ident">is_none</span>() {
-                <span class="ident">canvas</span>
-                    .<span class="ident">set_attribute</span>(<span class="string">&quot;width&quot;</span>, <span class="string">&quot;640&quot;</span>)
-                    .<span class="ident">expect</span>(<span class="string">&quot;Cannot set width&quot;</span>);
-            }
-            <span class="kw">if</span> <span class="ident">canvas</span>.<span class="ident">get_attribute</span>(<span class="string">&quot;height&quot;</span>).<span class="ident">is_none</span>() {
-                <span class="ident">canvas</span>
-                    .<span class="ident">set_attribute</span>(<span class="string">&quot;height&quot;</span>, <span class="string">&quot;480&quot;</span>)
-                    .<span class="ident">expect</span>(<span class="string">&quot;Cannot set height&quot;</span>);
-            }
-            <span class="kw">let</span> <span class="ident">context_options</span> <span class="op">=</span> <span class="ident">js_sys</span>::<span class="ident">Object</span>::<span class="ident">new</span>();
-            <span class="ident">js_sys</span>::<span class="ident">Reflect</span>::<span class="ident">set</span>(
-                <span class="kw-2">&amp;</span><span class="ident">context_options</span>,
-                <span class="kw-2">&amp;</span><span class="string">&quot;antialias&quot;</span>.<span class="ident">into</span>(),
-                <span class="kw-2">&amp;</span><span class="ident">wasm_bindgen</span>::<span class="ident">JsValue</span>::<span class="ident">FALSE</span>,
-            )
-            .<span class="ident">expect</span>(<span class="string">&quot;Cannot create context options&quot;</span>);
-            <span class="kw">let</span> <span class="ident">webgl2_context</span> <span class="op">=</span> <span class="ident">canvas</span>
-                .<span class="ident">get_context_with_context_options</span>(<span class="string">&quot;webgl2&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">context_options</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;Cannot create WebGL2 context&quot;</span>)
-                .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">context</span><span class="op">|</span> <span class="ident">context</span>.<span class="ident">dyn_into</span>::<span class="op">&lt;</span><span class="ident">web_sys</span>::<span class="ident">WebGl2RenderingContext</span><span class="op">&gt;</span>().<span class="ident">ok</span>())
-                .<span class="ident">expect</span>(<span class="string">&quot;Cannot convert into WebGL2 context&quot;</span>);
-            <span class="ident">glow</span>::<span class="ident">Context</span>::<span class="ident">from_webgl2_context</span>(<span class="ident">webgl2_context</span>)
-        };
-        <span class="ident">GlContainer</span> { <span class="ident">context</span> }
-    }
 }
 
 <span class="kw">impl</span> <span class="ident">Deref</span> <span class="kw">for</span> <span class="ident">GlContainer</span> {
@@ -1066,7 +1028,8 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PhysicalDevice</span>(<span class="ident">Starc</span><span class="op">&lt;</span><span class="ident">Share</span><span class="op">&gt;</span>);
 
 <span class="kw">impl</span> <span class="ident">PhysicalDevice</span> {
-    <span class="kw">fn</span> <span class="ident">new_adapter</span>(<span class="ident">gl</span>: <span class="ident">GlContainer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">adapter</span>::<span class="ident">Adapter</span><span class="op">&lt;</span><span class="ident">Backend</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">new_adapter</span>(<span class="ident">context</span>: <span class="ident">GlContext</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">adapter</span>::<span class="ident">Adapter</span><span class="op">&lt;</span><span class="ident">Backend</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="ident">GlContainer</span> { <span class="ident">context</span> };
         <span class="comment">// query information</span>
         <span class="kw">let</span> (<span class="ident">info</span>, <span class="ident">supported_features</span>, <span class="ident">legacy_features</span>, <span class="ident">hints</span>, <span class="ident">limits</span>, <span class="ident">private_caps</span>) <span class="op">=</span>
             <span class="ident">info</span>::<span class="ident">query_all</span>(<span class="kw-2">&amp;</span><span class="ident">gl</span>);
@@ -1311,12 +1274,13 @@
 
     <span class="kw">fn</span> <span class="ident">image_format_properties</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">_format</span>: <span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Format</span>,
+        <span class="ident">format</span>: <span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Format</span>,
         <span class="ident">_dimensions</span>: <span class="ident">u8</span>,
         <span class="ident">_tiling</span>: <span class="ident">image</span>::<span class="ident">Tiling</span>,
         <span class="ident">_usage</span>: <span class="ident">image</span>::<span class="ident">Usage</span>,
         <span class="ident">_view_caps</span>: <span class="ident">image</span>::<span class="ident">ViewCapabilities</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">image</span>::<span class="ident">FormatProperties</span><span class="op">&gt;</span> {
+        <span class="ident">conv</span>::<span class="ident">describe_format</span>(<span class="ident">format</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Some</span>(<span class="ident">image</span>::<span class="ident">FormatProperties</span> {
             <span class="ident">max_extent</span>: <span class="ident">image</span>::<span class="ident">Extent</span> {
                 <span class="ident">width</span>: <span class="op">!</span><span class="number">0</span>,

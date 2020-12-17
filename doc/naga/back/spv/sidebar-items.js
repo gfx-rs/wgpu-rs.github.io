@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["write_vec",""]],"struct":[["Writer",""],["WriterFlags",""]]});
+initSidebarItems({"enum":[["Capability","/// SPIR-V operand kind: Capability"],["Error",""]],"fn":[["write_vec",""]],"struct":[["Writer",""],["WriterFlags",""]]});

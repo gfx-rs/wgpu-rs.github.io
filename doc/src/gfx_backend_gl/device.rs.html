@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/f1398d2/src/backend/gl/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/0244e34/src/backend/gl/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_gl/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -2036,26 +2036,96 @@
 <span id="2033">2033</span>
 <span id="2034">2034</span>
 <span id="2035">2035</span>
+<span id="2036">2036</span>
+<span id="2037">2037</span>
+<span id="2038">2038</span>
+<span id="2039">2039</span>
+<span id="2040">2040</span>
+<span id="2041">2041</span>
+<span id="2042">2042</span>
+<span id="2043">2043</span>
+<span id="2044">2044</span>
+<span id="2045">2045</span>
+<span id="2046">2046</span>
+<span id="2047">2047</span>
+<span id="2048">2048</span>
+<span id="2049">2049</span>
+<span id="2050">2050</span>
+<span id="2051">2051</span>
+<span id="2052">2052</span>
+<span id="2053">2053</span>
+<span id="2054">2054</span>
+<span id="2055">2055</span>
+<span id="2056">2056</span>
+<span id="2057">2057</span>
+<span id="2058">2058</span>
+<span id="2059">2059</span>
+<span id="2060">2060</span>
+<span id="2061">2061</span>
+<span id="2062">2062</span>
+<span id="2063">2063</span>
+<span id="2064">2064</span>
+<span id="2065">2065</span>
+<span id="2066">2066</span>
+<span id="2067">2067</span>
+<span id="2068">2068</span>
+<span id="2069">2069</span>
+<span id="2070">2070</span>
+<span id="2071">2071</span>
+<span id="2072">2072</span>
+<span id="2073">2073</span>
+<span id="2074">2074</span>
+<span id="2075">2075</span>
+<span id="2076">2076</span>
+<span id="2077">2077</span>
+<span id="2078">2078</span>
+<span id="2079">2079</span>
+<span id="2080">2080</span>
+<span id="2081">2081</span>
+<span id="2082">2082</span>
+<span id="2083">2083</span>
+<span id="2084">2084</span>
+<span id="2085">2085</span>
+<span id="2086">2086</span>
+<span id="2087">2087</span>
+<span id="2088">2088</span>
+<span id="2089">2089</span>
+<span id="2090">2090</span>
+<span id="2091">2091</span>
+<span id="2092">2092</span>
+<span id="2093">2093</span>
+<span id="2094">2094</span>
+<span id="2095">2095</span>
+<span id="2096">2096</span>
+<span id="2097">2097</span>
+<span id="2098">2098</span>
+<span id="2099">2099</span>
+<span id="2100">2100</span>
+<span id="2101">2101</span>
+<span id="2102">2102</span>
+<span id="2103">2103</span>
+<span id="2104">2104</span>
+<span id="2105">2105</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">command</span> <span class="kw">as</span> <span class="ident">cmd</span>, <span class="ident">conv</span>,
     <span class="ident">info</span>::<span class="ident">LegacyFeatures</span>,
     <span class="ident">native</span> <span class="kw">as</span> <span class="ident">n</span>,
     <span class="ident">pool</span>::{<span class="ident">BufferMemory</span>, <span class="ident">CommandPool</span>, <span class="ident">OwnedBuffer</span>},
-    <span class="ident">state</span>, <span class="ident">Backend</span> <span class="kw">as</span> <span class="ident">B</span>, <span class="ident">GlContainer</span>, <span class="ident">GlContext</span>, <span class="ident">MemoryUsage</span>, <span class="ident">Share</span>, <span class="ident">Starc</span>,
+    <span class="ident">state</span>, <span class="ident">Backend</span> <span class="kw">as</span> <span class="ident">B</span>, <span class="ident">GlContainer</span>, <span class="ident">GlContext</span>, <span class="ident">MemoryUsage</span>, <span class="ident">Share</span>, <span class="ident">Starc</span>, <span class="ident">MAX_TEXTURE_SLOTS</span>,
 };
 
 <span class="kw">use</span> <span class="ident">auxil</span>::{<span class="ident">spirv_cross_specialize_ast</span>, <span class="ident">FastHashMap</span>, <span class="ident">ShaderStage</span>};
 <span class="kw">use</span> <span class="ident">hal</span>::{
     <span class="ident">buffer</span>, <span class="ident">device</span> <span class="kw">as</span> <span class="ident">d</span>,
-    <span class="ident">format</span>::{<span class="ident">Format</span>, <span class="ident">Swizzle</span>},
+    <span class="ident">format</span>::{<span class="ident">Aspects</span>, <span class="ident">Format</span>, <span class="ident">Swizzle</span>},
     <span class="ident">image</span> <span class="kw">as</span> <span class="ident">i</span>, <span class="ident">memory</span>, <span class="ident">pass</span>,
     <span class="ident">pool</span>::<span class="ident">CommandPoolCreateFlags</span>,
     <span class="ident">pso</span>, <span class="ident">query</span>, <span class="ident">queue</span>,
 };
 
 <span class="kw">use</span> <span class="ident">glow</span>::<span class="ident">HasContext</span>;
-<span class="kw">use</span> <span class="ident">parking_lot</span>::{<span class="ident">Mutex</span>, <span class="ident">RwLock</span>};
+<span class="kw">use</span> <span class="ident">parking_lot</span>::<span class="ident">Mutex</span>;
 <span class="kw">use</span> <span class="ident">spirv_cross</span>::{<span class="ident">glsl</span>, <span class="ident">spirv</span>, <span class="ident">ErrorCode</span> <span class="kw">as</span> <span class="ident">SpirvErrorCode</span>};
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow</span>::<span class="ident">Borrow</span>, <span class="ident">cell</span>::<span class="ident">Cell</span>, <span class="ident">ops</span>::<span class="ident">Range</span>, <span class="ident">slice</span>, <span class="ident">sync</span>::<span class="ident">Arc</span>};
@@ -2105,11 +2175,11 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_shader_module_from_source</span>(
+    <span class="kw">fn</span> <span class="ident">create_shader_module_raw</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">shader</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
         <span class="ident">stage</span>: <span class="ident">ShaderStage</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">ShaderModule</span>, <span class="ident">d</span>::<span class="ident">ShaderError</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">Shader</span>, <span class="ident">d</span>::<span class="ident">ShaderError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">context</span>;
 
         <span class="kw">let</span> <span class="ident">can_compute</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">share</span>.<span class="ident">limits</span>.<span class="ident">max_compute_work_group_count</span>[<span class="number">0</span>] <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
@@ -2140,15 +2210,98 @@
             <span class="kw">if</span> <span class="op">!</span><span class="ident">log</span>.<span class="ident">is_empty</span>() {
                 <span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;\tLog: {}&quot;</span>, <span class="ident">log</span>);
             }
-            <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">ShaderModule</span>::<span class="ident">Raw</span>(<span class="ident">name</span>))
+            <span class="prelude-val">Ok</span>(<span class="ident">name</span>)
         } <span class="kw">else</span> {
             <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">ShaderError</span>::<span class="ident">CompilationFailed</span>(<span class="ident">log</span>))
         }
     }
 
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_shader_module_from_source</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">shader</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+        <span class="ident">stage</span>: <span class="ident">ShaderStage</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">ShaderModule</span>, <span class="ident">d</span>::<span class="ident">ShaderError</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">create_shader_module_raw</span>(<span class="ident">shader</span>, <span class="ident">stage</span>)
+            .<span class="ident">map</span>(<span class="ident">n</span>::<span class="ident">ShaderModule</span>::<span class="ident">Raw</span>)
+    }
+
+    <span class="kw">fn</span> <span class="ident">create_shader_program</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">shaders</span>: <span class="kw-2">&amp;</span>[(<span class="ident">ShaderStage</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">pso</span>::<span class="ident">EntryPoint</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>)],
+        <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">PipelineLayout</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">glow</span>::<span class="ident">Program</span>, <span class="ident">n</span>::<span class="ident">SamplerBindMap</span>), <span class="ident">pso</span>::<span class="ident">CreationError</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">program</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">create_program</span>().<span class="ident">unwrap</span>() };
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name_binding_map</span> <span class="op">=</span> <span class="ident">FastHashMap</span>::<span class="op">&lt;</span><span class="ident">String</span>, (<span class="ident">n</span>::<span class="ident">BindingRegister</span>, <span class="ident">u8</span>)<span class="op">&gt;</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sampler_map</span> <span class="op">=</span> [<span class="prelude-val">None</span>; <span class="ident">MAX_TEXTURE_SLOTS</span>];
+
+        <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="ident">stage</span>, <span class="ident">point_maybe</span>) <span class="kw">in</span> <span class="ident">shaders</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">point</span>) <span class="op">=</span> <span class="ident">point_maybe</span> {
+                <span class="kw">let</span> <span class="ident">shader</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">compile_shader</span>(
+                    <span class="ident">point</span>,
+                    <span class="ident">stage</span>,
+                    <span class="ident">layout</span>,
+                    <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">sampler_map</span>,
+                    <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">name_binding_map</span>,
+                );
+                <span class="kw">unsafe</span> {
+                    <span class="ident">gl</span>.<span class="ident">attach_shader</span>(<span class="ident">program</span>, <span class="ident">shader</span>);
+                    <span class="ident">gl</span>.<span class="ident">delete_shader</span>(<span class="ident">shader</span>);
+                }
+            }
+        }
+
+        <span class="kw">unsafe</span> {
+            <span class="ident">gl</span>.<span class="ident">link_program</span>(<span class="ident">program</span>);
+        }
+        <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;\tLinked program {:?}&quot;</span>, <span class="ident">program</span>);
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">share</span>.<span class="ident">check</span>() {
+            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Error linking program: {:?}&quot;</span>, <span class="ident">err</span>);
+        }
+
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>
+            .<span class="ident">share</span>
+            .<span class="ident">legacy_features</span>
+            .<span class="ident">contains</span>(<span class="ident">LegacyFeatures</span>::<span class="ident">EXPLICIT_LAYOUTS_IN_SHADER</span>)
+        {
+            <span class="kw">unsafe</span> {
+                <span class="ident">gl</span>.<span class="ident">use_program</span>(<span class="prelude-val">Some</span>(<span class="ident">program</span>));
+            }
+            <span class="kw">for</span> (<span class="ident">name</span>, <span class="kw-2">&amp;</span>(<span class="ident">register</span>, <span class="ident">slot</span>)) <span class="kw">in</span> <span class="ident">name_binding_map</span>.<span class="ident">iter</span>() {
+                <span class="kw">match</span> <span class="ident">register</span> {
+                    <span class="ident">n</span>::<span class="ident">BindingRegister</span>::<span class="ident">Textures</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> {
+                        <span class="kw">let</span> <span class="ident">loc</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_uniform_location</span>(<span class="ident">program</span>, <span class="ident">name</span>);
+                        <span class="ident">gl</span>.<span class="ident">uniform_1_i32</span>(<span class="ident">loc</span>.<span class="ident">as_ref</span>(), <span class="ident">slot</span> <span class="kw">as</span> <span class="kw">_</span>);
+                    },
+                    <span class="ident">n</span>::<span class="ident">BindingRegister</span>::<span class="ident">UniformBuffers</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> {
+                        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_uniform_block_index</span>(<span class="ident">program</span>, <span class="ident">name</span>).<span class="ident">unwrap</span>();
+                        <span class="ident">gl</span>.<span class="ident">uniform_block_binding</span>(<span class="ident">program</span>, <span class="ident">index</span>, <span class="ident">slot</span> <span class="kw">as</span> <span class="kw">_</span>);
+                    },
+                    <span class="ident">n</span>::<span class="ident">BindingRegister</span>::<span class="ident">StorageBuffers</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> {
+                        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_shader_storage_block_index</span>(<span class="ident">program</span>, <span class="ident">name</span>).<span class="ident">unwrap</span>();
+                        <span class="ident">gl</span>.<span class="ident">shader_storage_block_binding</span>(<span class="ident">program</span>, <span class="ident">index</span>, <span class="ident">slot</span> <span class="kw">as</span> <span class="kw">_</span>);
+                    },
+                }
+            }
+        }
+
+        <span class="kw">let</span> <span class="ident">linked_ok</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_program_link_status</span>(<span class="ident">program</span>) };
+        <span class="kw">let</span> <span class="ident">log</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_program_info_log</span>(<span class="ident">program</span>) };
+        <span class="kw">if</span> <span class="ident">linked_ok</span> {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">log</span>.<span class="ident">is_empty</span>() {
+                <span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;\tLog: {}&quot;</span>, <span class="ident">log</span>);
+            }
+            <span class="prelude-val">Ok</span>((<span class="ident">program</span>, <span class="ident">sampler_map</span>))
+        } <span class="kw">else</span> {
+            <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;\tLog: {}&quot;</span>, <span class="ident">log</span>);
+            <span class="prelude-val">Err</span>(<span class="ident">pso</span>::<span class="ident">CreationError</span>::<span class="ident">Other</span>)
+        }
+    }
+
     <span class="kw">fn</span> <span class="ident">bind_target_compat</span>(<span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">GlContainer</span>, <span class="ident">point</span>: <span class="ident">u32</span>, <span class="ident">attachment</span>: <span class="ident">u32</span>, <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">ImageView</span>) {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">view</span> {
-            <span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Renderbuffer</span>(<span class="ident">rb</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> {
+            <span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Renderbuffer</span> { <span class="ident">raw</span>: <span class="ident">rb</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> {
                 <span class="ident">gl</span>.<span class="ident">framebuffer_renderbuffer</span>(<span class="ident">point</span>, <span class="ident">attachment</span>, <span class="ident">glow</span>::<span class="ident">RENDERBUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">rb</span>));
             },
             <span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Texture</span> {
@@ -2187,7 +2340,7 @@
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">bind_target</span>(<span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">GlContainer</span>, <span class="ident">point</span>: <span class="ident">u32</span>, <span class="ident">attachment</span>: <span class="ident">u32</span>, <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">ImageView</span>) {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">view</span> {
-            <span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Renderbuffer</span>(<span class="ident">rb</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> {
+            <span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Renderbuffer</span> { <span class="ident">raw</span>: <span class="ident">rb</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> {
                 <span class="ident">gl</span>.<span class="ident">framebuffer_renderbuffer</span>(<span class="ident">point</span>, <span class="ident">attachment</span>, <span class="ident">glow</span>::<span class="ident">RENDERBUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">rb</span>));
             },
             <span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Texture</span> {
@@ -2301,40 +2454,40 @@
     <span class="kw">fn</span> <span class="ident">remap_bindings</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">ast</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">spirv</span>::<span class="ident">Ast</span><span class="op">&lt;</span><span class="ident">glsl</span>::<span class="ident">Target</span><span class="op">&gt;</span>,
-        <span class="ident">desc_remap_data</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">n</span>::<span class="ident">DescRemapData</span>,
-        <span class="ident">nb_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">String</span>, (<span class="ident">n</span>::<span class="ident">BindingTypes</span>, <span class="ident">pso</span>::<span class="ident">DescriptorBinding</span>)<span class="op">&gt;</span>,
+        <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">PipelineLayout</span>,
+        <span class="ident">nb_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">String</span>, (<span class="ident">n</span>::<span class="ident">BindingRegister</span>, <span class="ident">u8</span>)<span class="op">&gt;</span>,
     ) {
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">ast</span>.<span class="ident">get_shader_resources</span>().<span class="ident">unwrap</span>();
         <span class="self">self</span>.<span class="ident">remap_binding</span>(
             <span class="ident">ast</span>,
-            <span class="ident">desc_remap_data</span>,
-            <span class="ident">nb_map</span>,
             <span class="kw-2">&amp;</span><span class="ident">res</span>.<span class="ident">sampled_images</span>,
-            <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">Images</span>,
+            <span class="ident">n</span>::<span class="ident">BindingRegister</span>::<span class="ident">Textures</span>,
+            <span class="ident">layout</span>,
+            <span class="ident">nb_map</span>,
         );
         <span class="self">self</span>.<span class="ident">remap_binding</span>(
             <span class="ident">ast</span>,
-            <span class="ident">desc_remap_data</span>,
-            <span class="ident">nb_map</span>,
             <span class="kw-2">&amp;</span><span class="ident">res</span>.<span class="ident">uniform_buffers</span>,
-            <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">UniformBuffers</span>,
+            <span class="ident">n</span>::<span class="ident">BindingRegister</span>::<span class="ident">UniformBuffers</span>,
+            <span class="ident">layout</span>,
+            <span class="ident">nb_map</span>,
         );
         <span class="self">self</span>.<span class="ident">remap_binding</span>(
             <span class="ident">ast</span>,
-            <span class="ident">desc_remap_data</span>,
-            <span class="ident">nb_map</span>,
             <span class="kw-2">&amp;</span><span class="ident">res</span>.<span class="ident">storage_buffers</span>,
-            <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">StorageBuffers</span>,
+            <span class="ident">n</span>::<span class="ident">BindingRegister</span>::<span class="ident">StorageBuffers</span>,
+            <span class="ident">layout</span>,
+            <span class="ident">nb_map</span>,
         );
     }
 
     <span class="kw">fn</span> <span class="ident">remap_binding</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">ast</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">spirv</span>::<span class="ident">Ast</span><span class="op">&lt;</span><span class="ident">glsl</span>::<span class="ident">Target</span><span class="op">&gt;</span>,
-        <span class="ident">desc_remap_data</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">n</span>::<span class="ident">DescRemapData</span>,
-        <span class="ident">nb_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">String</span>, (<span class="ident">n</span>::<span class="ident">BindingTypes</span>, <span class="ident">pso</span>::<span class="ident">DescriptorBinding</span>)<span class="op">&gt;</span>,
         <span class="ident">all_res</span>: <span class="kw-2">&amp;</span>[<span class="ident">spirv</span>::<span class="ident">Resource</span>],
-        <span class="ident">btype</span>: <span class="ident">n</span>::<span class="ident">BindingTypes</span>,
+        <span class="ident">register</span>: <span class="ident">n</span>::<span class="ident">BindingRegister</span>,
+        <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">PipelineLayout</span>,
+        <span class="ident">nb_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">String</span>, (<span class="ident">n</span>::<span class="ident">BindingRegister</span>, <span class="ident">u8</span>)<span class="op">&gt;</span>,
     ) {
         <span class="kw">for</span> <span class="ident">res</span> <span class="kw">in</span> <span class="ident">all_res</span> {
             <span class="kw">let</span> <span class="ident">set</span> <span class="op">=</span> <span class="ident">ast</span>
@@ -2343,33 +2496,33 @@
             <span class="kw">let</span> <span class="ident">binding</span> <span class="op">=</span> <span class="ident">ast</span>
                 .<span class="ident">get_decoration</span>(<span class="ident">res</span>.<span class="ident">id</span>, <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">Binding</span>)
                 .<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">nbs</span> <span class="op">=</span> <span class="ident">desc_remap_data</span>
-                .<span class="ident">get_binding</span>(<span class="ident">btype</span>, <span class="ident">set</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">binding</span>)
-                .<span class="ident">unwrap</span>();
-            <span class="kw">for</span> <span class="ident">nb</span> <span class="kw">in</span> <span class="ident">nbs</span> {
-                <span class="kw">if</span> <span class="self">self</span>
-                    .<span class="ident">share</span>
-                    .<span class="ident">legacy_features</span>
-                    .<span class="ident">contains</span>(<span class="ident">LegacyFeatures</span>::<span class="ident">EXPLICIT_LAYOUTS_IN_SHADER</span>)
-                {
-                    <span class="ident">ast</span>.<span class="ident">set_decoration</span>(<span class="ident">res</span>.<span class="ident">id</span>, <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">Binding</span>, <span class="kw-2">*</span><span class="ident">nb</span>)
-                        .<span class="ident">unwrap</span>()
-                } <span class="kw">else</span> {
-                    <span class="ident">ast</span>.<span class="ident">unset_decoration</span>(<span class="ident">res</span>.<span class="ident">id</span>, <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">Binding</span>)
-                        .<span class="ident">unwrap</span>();
-                    <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">nb_map</span>.<span class="ident">insert</span>(<span class="ident">res</span>.<span class="ident">name</span>.<span class="ident">clone</span>(), (<span class="ident">btype</span>, <span class="kw-2">*</span><span class="ident">nb</span>)).<span class="ident">is_none</span>());
-                }
-                <span class="ident">ast</span>.<span class="ident">unset_decoration</span>(<span class="ident">res</span>.<span class="ident">id</span>, <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">DescriptorSet</span>)
+            <span class="kw">let</span> <span class="ident">set_info</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">layout</span>.<span class="ident">sets</span>[<span class="ident">set</span> <span class="kw">as</span> <span class="ident">usize</span>];
+            <span class="kw">let</span> <span class="ident">slot</span> <span class="op">=</span> <span class="ident">set_info</span>.<span class="ident">bindings</span>[<span class="ident">binding</span> <span class="kw">as</span> <span class="ident">usize</span>];
+            <span class="macro">assert</span><span class="macro">!</span>((<span class="ident">slot</span> <span class="kw">as</span> <span class="ident">usize</span>) <span class="op">&lt;</span> <span class="ident">MAX_TEXTURE_SLOTS</span>);
+
+            <span class="kw">if</span> <span class="self">self</span>
+                .<span class="ident">share</span>
+                .<span class="ident">legacy_features</span>
+                .<span class="ident">contains</span>(<span class="ident">LegacyFeatures</span>::<span class="ident">EXPLICIT_LAYOUTS_IN_SHADER</span>)
+            {
+                <span class="ident">ast</span>.<span class="ident">set_decoration</span>(<span class="ident">res</span>.<span class="ident">id</span>, <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">Binding</span>, <span class="ident">slot</span> <span class="kw">as</span> <span class="ident">u32</span>)
+                    .<span class="ident">unwrap</span>()
+            } <span class="kw">else</span> {
+                <span class="ident">ast</span>.<span class="ident">unset_decoration</span>(<span class="ident">res</span>.<span class="ident">id</span>, <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">Binding</span>)
                     .<span class="ident">unwrap</span>();
+                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">nb_map</span>.<span class="ident">insert</span>(<span class="ident">res</span>.<span class="ident">name</span>.<span class="ident">clone</span>(), (<span class="ident">register</span>, <span class="ident">slot</span>)).<span class="ident">is_none</span>());
             }
+            <span class="ident">ast</span>.<span class="ident">unset_decoration</span>(<span class="ident">res</span>.<span class="ident">id</span>, <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">DescriptorSet</span>)
+                .<span class="ident">unwrap</span>();
         }
     }
 
     <span class="kw">fn</span> <span class="ident">combine_separate_images_and_samplers</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">ast</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">spirv</span>::<span class="ident">Ast</span><span class="op">&lt;</span><span class="ident">glsl</span>::<span class="ident">Target</span><span class="op">&gt;</span>,
-        <span class="ident">desc_remap_data</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">n</span>::<span class="ident">DescRemapData</span>,
-        <span class="ident">nb_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">String</span>, (<span class="ident">n</span>::<span class="ident">BindingTypes</span>, <span class="ident">pso</span>::<span class="ident">DescriptorBinding</span>)<span class="op">&gt;</span>,
+        <span class="ident">sampler_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">n</span>::<span class="ident">SamplerBindMap</span>,
+        <span class="ident">nb_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">String</span>, (<span class="ident">n</span>::<span class="ident">BindingRegister</span>, <span class="ident">u8</span>)<span class="op">&gt;</span>,
+        <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">PipelineLayout</span>,
     ) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">id_map</span> <span class="op">=</span>
             <span class="ident">FastHashMap</span>::<span class="op">&lt;</span><span class="ident">u32</span>, (<span class="ident">pso</span>::<span class="ident">DescriptorSetIndex</span>, <span class="ident">pso</span>::<span class="ident">DescriptorBinding</span>)<span class="op">&gt;</span>::<span class="ident">default</span>();
@@ -2378,42 +2531,99 @@
         <span class="self">self</span>.<span class="ident">populate_id_map</span>(<span class="ident">ast</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">id_map</span>, <span class="kw-2">&amp;</span><span class="ident">res</span>.<span class="ident">separate_samplers</span>);
 
         <span class="kw">for</span> <span class="ident">cis</span> <span class="kw">in</span> <span class="ident">ast</span>.<span class="ident">get_combined_image_samplers</span>().<span class="ident">unwrap</span>() {
-            <span class="kw">let</span> (<span class="ident">set</span>, <span class="ident">binding</span>) <span class="op">=</span> <span class="ident">id_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">cis</span>.<span class="ident">image_id</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">nb</span> <span class="op">=</span> <span class="ident">desc_remap_data</span>.<span class="ident">reserve_binding</span>(<span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">Images</span>);
-            <span class="ident">desc_remap_data</span>.<span class="ident">insert_missing_binding</span>(<span class="ident">nb</span>, <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">Images</span>, <span class="kw-2">*</span><span class="ident">set</span>, <span class="kw-2">*</span><span class="ident">binding</span>);
-            <span class="kw">let</span> (<span class="ident">set</span>, <span class="ident">binding</span>) <span class="op">=</span> <span class="ident">id_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">cis</span>.<span class="ident">sampler_id</span>).<span class="ident">unwrap</span>();
-            <span class="ident">desc_remap_data</span>.<span class="ident">insert_missing_binding</span>(<span class="ident">nb</span>, <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">Images</span>, <span class="kw-2">*</span><span class="ident">set</span>, <span class="kw-2">*</span><span class="ident">binding</span>);
+            <span class="kw">let</span> <span class="ident">texture_slot</span> <span class="op">=</span> {
+                <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="ident">set</span>, <span class="ident">binding</span>) <span class="op">=</span> <span class="ident">id_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">cis</span>.<span class="ident">image_id</span>).<span class="ident">unwrap</span>();
+                <span class="ident">layout</span>.<span class="ident">sets</span>[<span class="ident">set</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">bindings</span>[<span class="ident">binding</span> <span class="kw">as</span> <span class="ident">usize</span>]
+            };
+            <span class="kw">let</span> <span class="ident">sampler_slot</span> <span class="op">=</span> {
+                <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="ident">set</span>, <span class="ident">binding</span>) <span class="op">=</span> <span class="ident">id_map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">cis</span>.<span class="ident">sampler_id</span>).<span class="ident">unwrap</span>();
+                <span class="ident">layout</span>.<span class="ident">sets</span>[<span class="ident">set</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">bindings</span>[<span class="ident">binding</span> <span class="kw">as</span> <span class="ident">usize</span>]
+            };
+            <span class="ident">sampler_map</span>[<span class="ident">texture_slot</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">sampler_slot</span>);
 
-            <span class="kw">let</span> <span class="ident">new_name</span> <span class="op">=</span> <span class="string">&quot;GFX_HAL_COMBINED_SAMPLER&quot;</span>.<span class="ident">to_owned</span>()
-                <span class="op">+</span> <span class="string">&quot;_&quot;</span>
-                <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">cis</span>.<span class="ident">sampler_id</span>.<span class="ident">to_string</span>()
-                <span class="op">+</span> <span class="string">&quot;_&quot;</span>
-                <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">cis</span>.<span class="ident">image_id</span>.<span class="ident">to_string</span>()
-                <span class="op">+</span> <span class="string">&quot;_&quot;</span>
-                <span class="op">+</span> <span class="kw-2">&amp;</span><span class="ident">cis</span>.<span class="ident">combined_id</span>.<span class="ident">to_string</span>();
-            <span class="ident">ast</span>.<span class="ident">set_name</span>(<span class="ident">cis</span>.<span class="ident">combined_id</span>, <span class="kw-2">&amp;</span><span class="ident">new_name</span>).<span class="ident">unwrap</span>();
             <span class="kw">if</span> <span class="self">self</span>
                 .<span class="ident">share</span>
                 .<span class="ident">legacy_features</span>
                 .<span class="ident">contains</span>(<span class="ident">LegacyFeatures</span>::<span class="ident">EXPLICIT_LAYOUTS_IN_SHADER</span>)
             {
-                <span class="ident">ast</span>.<span class="ident">set_decoration</span>(<span class="ident">cis</span>.<span class="ident">combined_id</span>, <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">Binding</span>, <span class="ident">nb</span>)
-                    .<span class="ident">unwrap</span>()
+                <span class="comment">// if it was previously assigned, clear the binding of the image</span>
+                <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">ast</span>.<span class="ident">unset_decoration</span>(<span class="ident">cis</span>.<span class="ident">image_id</span>, <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">Binding</span>);
+                <span class="ident">ast</span>.<span class="ident">set_decoration</span>(
+                    <span class="ident">cis</span>.<span class="ident">combined_id</span>,
+                    <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">Binding</span>,
+                    <span class="ident">texture_slot</span> <span class="kw">as</span> <span class="ident">u32</span>,
+                )
+                .<span class="ident">unwrap</span>()
             } <span class="kw">else</span> {
+                <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">ast</span>.<span class="ident">get_name</span>(<span class="ident">cis</span>.<span class="ident">combined_id</span>).<span class="ident">unwrap</span>();
                 <span class="ident">ast</span>.<span class="ident">unset_decoration</span>(<span class="ident">cis</span>.<span class="ident">combined_id</span>, <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">Binding</span>)
                     .<span class="ident">unwrap</span>();
-                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">nb_map</span>
-                    .<span class="ident">insert</span>(<span class="ident">new_name</span>, (<span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">Images</span>, <span class="ident">nb</span>))
-                    .<span class="ident">is_none</span>())
+                <span class="macro">assert_eq</span><span class="macro">!</span>(
+                    <span class="ident">nb_map</span>.<span class="ident">insert</span>(<span class="ident">name</span>, (<span class="ident">n</span>::<span class="ident">BindingRegister</span>::<span class="ident">Textures</span>, <span class="ident">texture_slot</span>)),
+                    <span class="prelude-val">None</span>
+                );
             }
             <span class="ident">ast</span>.<span class="ident">unset_decoration</span>(<span class="ident">cis</span>.<span class="ident">combined_id</span>, <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">DescriptorSet</span>)
                 .<span class="ident">unwrap</span>();
         }
     }
 
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;naga&quot;</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">reflect_shader</span>(
+        <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">naga</span>::<span class="ident">Module</span>,
+        <span class="ident">entry_point</span>: <span class="kw-2">&amp;</span>(<span class="ident">naga</span>::<span class="ident">ShaderStage</span>, <span class="ident">String</span>),
+        <span class="ident">texture_mapping</span>: <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">naga</span>::<span class="ident">back</span>::<span class="ident">glsl</span>::<span class="ident">TextureMapping</span><span class="op">&gt;</span>,
+        <span class="ident">sampler_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">n</span>::<span class="ident">SamplerBindMap</span>,
+        <span class="ident">name_binding_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">String</span>, (<span class="ident">n</span>::<span class="ident">BindingRegister</span>, <span class="ident">u8</span>)<span class="op">&gt;</span>,
+        <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">PipelineLayout</span>,
+    ) {
+        <span class="kw">let</span> <span class="ident">ep</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">entry_points</span>[<span class="ident">entry_point</span>];
+        <span class="kw">for</span> ((<span class="kw">_</span>, <span class="ident">var</span>), <span class="ident">usage</span>) <span class="kw">in</span> <span class="ident">module</span>
+            .<span class="ident">global_variables</span>
+            .<span class="ident">iter</span>()
+            .<span class="ident">zip</span>(<span class="ident">ep</span>.<span class="ident">function</span>.<span class="ident">global_usage</span>.<span class="ident">iter</span>())
+        {
+            <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">is_empty</span>() {
+                <span class="kw">continue</span>;
+            }
+            <span class="kw">let</span> <span class="ident">register</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">class</span> {
+                <span class="ident">naga</span>::<span class="ident">StorageClass</span>::<span class="ident">Uniform</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">n</span>::<span class="ident">BindingRegister</span>::<span class="ident">UniformBuffers</span>,
+                <span class="ident">naga</span>::<span class="ident">StorageClass</span>::<span class="ident">Storage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">n</span>::<span class="ident">BindingRegister</span>::<span class="ident">StorageBuffers</span>,
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+            };
+            <span class="comment">//TODO: make Naga reflect all the names, not just textures</span>
+            <span class="kw">let</span> <span class="ident">slot</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">binding</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">naga</span>::<span class="ident">Binding</span>::<span class="ident">Resource</span> { <span class="ident">group</span>, <span class="ident">binding</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">layout</span>.<span class="ident">sets</span>[<span class="ident">group</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">bindings</span>[<span class="ident">binding</span> <span class="kw">as</span> <span class="ident">usize</span>]
+                }
+                <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unexpected resource binding {:?}&quot;</span>, <span class="ident">other</span>),
+            };
+            <span class="ident">name_binding_map</span>.<span class="ident">insert</span>(<span class="ident">var</span>.<span class="ident">name</span>.<span class="ident">clone</span>().<span class="ident">unwrap</span>(), (<span class="ident">register</span>, <span class="ident">slot</span>));
+        }
+
+        <span class="kw">for</span> (<span class="ident">name</span>, <span class="ident">mapping</span>) <span class="kw">in</span> <span class="ident">texture_mapping</span> {
+            <span class="kw">let</span> <span class="ident">texture_linear_index</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">global_variables</span>[<span class="ident">mapping</span>.<span class="ident">texture</span>].<span class="ident">binding</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">naga</span>::<span class="ident">Binding</span>::<span class="ident">Resource</span> { <span class="ident">group</span>, <span class="ident">binding</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">layout</span>.<span class="ident">sets</span>[<span class="ident">group</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">bindings</span>[<span class="ident">binding</span> <span class="kw">as</span> <span class="ident">usize</span>]
+                }
+                <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unexpected texture binding {:?}&quot;</span>, <span class="ident">other</span>),
+            };
+            <span class="ident">name_binding_map</span>.<span class="ident">insert</span>(<span class="ident">name</span>, (<span class="ident">n</span>::<span class="ident">BindingRegister</span>::<span class="ident">Textures</span>, <span class="ident">texture_linear_index</span>));
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">sampler_handle</span>) <span class="op">=</span> <span class="ident">mapping</span>.<span class="ident">sampler</span> {
+                <span class="kw">let</span> <span class="ident">sampler_linear_index</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">global_variables</span>[<span class="ident">sampler_handle</span>].<span class="ident">binding</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">naga</span>::<span class="ident">Binding</span>::<span class="ident">Resource</span> { <span class="ident">group</span>, <span class="ident">binding</span> }) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">layout</span>.<span class="ident">sets</span>[<span class="ident">group</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">bindings</span>[<span class="ident">binding</span> <span class="kw">as</span> <span class="ident">usize</span>]
+                    }
+                    <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unexpected sampler binding {:?}&quot;</span>, <span class="ident">other</span>),
+                };
+                <span class="ident">sampler_map</span>[<span class="ident">texture_linear_index</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">sampler_linear_index</span>);
+            }
+        }
+    }
+
     <span class="kw">fn</span> <span class="ident">populate_id_map</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">ast</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">spirv</span>::<span class="ident">Ast</span><span class="op">&lt;</span><span class="ident">glsl</span>::<span class="ident">Target</span><span class="op">&gt;</span>,
+        <span class="ident">ast</span>: <span class="kw-2">&amp;</span><span class="ident">spirv</span>::<span class="ident">Ast</span><span class="op">&lt;</span><span class="ident">glsl</span>::<span class="ident">Target</span><span class="op">&gt;</span>,
         <span class="ident">id_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">u32</span>, (<span class="ident">pso</span>::<span class="ident">DescriptorSetIndex</span>, <span class="ident">pso</span>::<span class="ident">DescriptorBinding</span>)<span class="op">&gt;</span>,
         <span class="ident">all_res</span>: <span class="kw-2">&amp;</span>[<span class="ident">spirv</span>::<span class="ident">Resource</span>],
     ) {
@@ -2432,10 +2642,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">point</span>: <span class="kw-2">&amp;</span><span class="ident">pso</span>::<span class="ident">EntryPoint</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
         <span class="ident">stage</span>: <span class="ident">ShaderStage</span>,
-        <span class="ident">desc_remap_data</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">n</span>::<span class="ident">DescRemapData</span>,
-        <span class="ident">name_binding_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">String</span>, (<span class="ident">n</span>::<span class="ident">BindingTypes</span>, <span class="ident">pso</span>::<span class="ident">DescriptorBinding</span>)<span class="op">&gt;</span>,
+        <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">PipelineLayout</span>,
+        <span class="ident">sampler_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">n</span>::<span class="ident">SamplerBindMap</span>,
+        <span class="ident">name_binding_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">String</span>, (<span class="ident">n</span>::<span class="ident">BindingRegister</span>, <span class="ident">u8</span>)<span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">n</span>::<span class="ident">Shader</span> {
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">point</span>.<span class="ident">entry</span>, <span class="string">&quot;main&quot;</span>);
         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">point</span>.<span class="ident">module</span> {
             <span class="ident">n</span>::<span class="ident">ShaderModule</span>::<span class="ident">Raw</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Can&#39;t remap bindings for raw shaders. Assuming they are already rebound.&quot;</span>);
@@ -2445,22 +2655,70 @@
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ast</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">parse_spirv</span>(<span class="ident">spirv</span>).<span class="ident">unwrap</span>();
 
                 <span class="ident">spirv_cross_specialize_ast</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ast</span>, <span class="kw-2">&amp;</span><span class="ident">point</span>.<span class="ident">specialization</span>).<span class="ident">unwrap</span>();
-                <span class="self">self</span>.<span class="ident">remap_bindings</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ast</span>, <span class="ident">desc_remap_data</span>, <span class="ident">name_binding_map</span>);
+                <span class="self">self</span>.<span class="ident">remap_bindings</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ast</span>, <span class="ident">layout</span>, <span class="ident">name_binding_map</span>);
                 <span class="self">self</span>.<span class="ident">combine_separate_images_and_samplers</span>(
                     <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ast</span>,
-                    <span class="ident">desc_remap_data</span>,
+                    <span class="ident">sampler_map</span>,
                     <span class="ident">name_binding_map</span>,
+                    <span class="ident">layout</span>,
                 );
                 <span class="self">self</span>.<span class="ident">set_push_const_layout</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ast</span>).<span class="ident">unwrap</span>();
 
                 <span class="kw">let</span> <span class="ident">glsl</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">translate_spirv</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ast</span>, <span class="ident">stage</span>, <span class="ident">point</span>.<span class="ident">entry</span>).<span class="ident">unwrap</span>();
                 <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;SPIRV-Cross generated shader:\n{}&quot;</span>, <span class="ident">glsl</span>);
-                <span class="kw">let</span> <span class="ident">shader</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">create_shader_module_from_source</span>(<span class="kw-2">&amp;</span><span class="ident">glsl</span>, <span class="ident">stage</span>).<span class="ident">unwrap</span>() {
-                    <span class="ident">n</span>::<span class="ident">ShaderModule</span>::<span class="ident">Raw</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">raw</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unhandled&quot;</span>),
+                <span class="self">self</span>.<span class="ident">create_shader_module_raw</span>(<span class="kw-2">&amp;</span><span class="ident">glsl</span>, <span class="ident">stage</span>).<span class="ident">unwrap</span>()
+            }
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;naga&quot;</span>)]</span>
+            <span class="ident">n</span>::<span class="ident">ShaderModule</span>::<span class="ident">Naga</span>(<span class="kw-2">ref</span> <span class="ident">module</span>, <span class="kw-2">ref</span> <span class="ident">spirv</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">use</span> <span class="ident">naga</span>::<span class="ident">back</span>::<span class="ident">glsl</span>;
+
+                <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="ident">glsl</span>::<span class="ident">Options</span> {
+                    <span class="ident">version</span>: {
+                        <span class="kw">let</span> <span class="ident">sl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">info</span>.<span class="ident">shading_language</span>;
+                        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> (<span class="ident">sl</span>.<span class="ident">major</span> <span class="op">*</span> <span class="number">100</span> <span class="op">+</span> <span class="ident">sl</span>.<span class="ident">minor</span> <span class="op">*</span> <span class="number">10</span>) <span class="kw">as</span> <span class="ident">u16</span>;
+                        <span class="kw">if</span> <span class="ident">sl</span>.<span class="ident">is_embedded</span> {
+                            <span class="ident">glsl</span>::<span class="ident">Version</span>::<span class="ident">Embedded</span>(<span class="ident">value</span>)
+                        } <span class="kw">else</span> {
+                            <span class="ident">glsl</span>::<span class="ident">Version</span>::<span class="ident">Desktop</span>(<span class="ident">value</span>)
+                        }
+                    },
+                    <span class="ident">entry_point</span>: (
+                        <span class="kw">match</span> <span class="ident">stage</span> {
+                            <span class="ident">ShaderStage</span>::<span class="ident">Vertex</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga</span>::<span class="ident">ShaderStage</span>::<span class="ident">Vertex</span>,
+                            <span class="ident">ShaderStage</span>::<span class="ident">Fragment</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga</span>::<span class="ident">ShaderStage</span>::<span class="ident">Fragment</span>,
+                            <span class="ident">ShaderStage</span>::<span class="ident">Compute</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga</span>::<span class="ident">ShaderStage</span>::<span class="ident">Compute</span>,
+                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
+                        },
+                        <span class="ident">point</span>.<span class="ident">entry</span>.<span class="ident">to_string</span>(),
+                    ),
                 };
 
-                <span class="ident">shader</span>
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">writer</span> <span class="op">=</span> <span class="ident">glsl</span>::<span class="ident">Writer</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">output</span>, <span class="ident">module</span>, <span class="kw-2">&amp;</span><span class="ident">options</span>).<span class="ident">unwrap</span>();
+
+                <span class="kw">match</span> <span class="ident">writer</span>.<span class="ident">write</span>() {
+                    <span class="prelude-val">Ok</span>(<span class="ident">texture_mapping</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="self">Self</span>::<span class="ident">reflect_shader</span>(
+                            <span class="ident">module</span>,
+                            <span class="kw-2">&amp;</span><span class="ident">options</span>.<span class="ident">entry_point</span>,
+                            <span class="ident">texture_mapping</span>,
+                            <span class="ident">sampler_map</span>,
+                            <span class="ident">name_binding_map</span>,
+                            <span class="ident">layout</span>,
+                        );
+                        <span class="kw">let</span> <span class="ident">source</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">output</span>).<span class="ident">unwrap</span>();
+                        <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Naga generated shader:\n{}&quot;</span>, <span class="ident">source</span>);
+                        <span class="self">self</span>.<span class="ident">create_shader_module_raw</span>(<span class="kw-2">&amp;</span><span class="ident">source</span>, <span class="ident">stage</span>).<span class="ident">unwrap</span>()
+                    }
+                    <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Naga: {}&quot;</span>, <span class="ident">e</span>);
+                        <span class="kw">let</span> <span class="ident">fallback</span> <span class="op">=</span> <span class="ident">pso</span>::<span class="ident">EntryPoint</span> {
+                            <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">ShaderModule</span>::<span class="ident">Spirv</span>(<span class="ident">spirv</span>.<span class="ident">to_vec</span>()),
+                            ..<span class="ident">point</span>.<span class="ident">clone</span>()
+                        };
+                        <span class="self">self</span>.<span class="ident">compile_shader</span>(<span class="kw-2">&amp;</span><span class="ident">fallback</span>, <span class="ident">stage</span>, <span class="ident">layout</span>, <span class="ident">sampler_map</span>, <span class="ident">name_binding_map</span>)
+                    }
+                }
             }
         }
     }
@@ -2712,71 +2970,46 @@
         <span class="ident">IR</span>: <span class="ident">IntoIterator</span>,
         <span class="ident">IR</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span>(<span class="ident">pso</span>::<span class="ident">ShaderStageFlags</span>, <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">drd</span> <span class="op">=</span> <span class="ident">n</span>::<span class="ident">DescRemapData</span>::<span class="ident">new</span>();
+        <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">TryInto</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sets</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">num_samplers</span> <span class="op">=</span> <span class="number">0usize</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">num_textures</span> <span class="op">=</span> <span class="number">0usize</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">num_uniform_buffers</span> <span class="op">=</span> <span class="number">0usize</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">num_storage_buffers</span> <span class="op">=</span> <span class="number">0usize</span>;
 
-        <span class="ident">layouts</span>.<span class="ident">into_iter</span>().<span class="ident">enumerate</span>().<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">set</span>, <span class="ident">layout</span>)<span class="op">|</span> {
-            <span class="ident">layout</span>.<span class="ident">borrow</span>().<span class="ident">iter</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">binding</span><span class="op">|</span> {
-                <span class="comment">// DescriptorType -&gt; Descriptor</span>
-                <span class="comment">//</span>
-                <span class="comment">// Sampler -&gt; Sampler</span>
-                <span class="comment">// Image -&gt; SampledImage, StorageImage, InputAttachment</span>
-                <span class="comment">// CombinedImageSampler -&gt; CombinedImageSampler</span>
-                <span class="comment">// Buffer -&gt; UniformBuffer, StorageBuffer</span>
-                <span class="comment">// UniformTexel -&gt; UniformTexel</span>
-                <span class="comment">// StorageTexel -&gt; StorageTexel</span>
+        <span class="kw">for</span> <span class="ident">layout</span> <span class="kw">in</span> <span class="ident">layouts</span> {
+            <span class="kw">let</span> <span class="ident">layout_bindings</span> <span class="op">=</span> <span class="ident">layout</span>.<span class="ident">borrow</span>();
+            <span class="comment">// create a vector with the size enough to hold all the bindings, filled with `!0`</span>
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bindings</span> <span class="op">=</span>
+                <span class="macro">vec</span><span class="macro">!</span>[<span class="op">!</span><span class="number">0</span>; <span class="ident">layout_bindings</span>.<span class="ident">last</span>().<span class="ident">map_or</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">binding</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">+</span> <span class="number">1</span>)];
 
-                <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">binding</span>.<span class="ident">immutable_samplers</span>); <span class="comment">//TODO: Implement immutable_samplers</span>
-                <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">pso</span>::<span class="ident">DescriptorType</span>::<span class="kw-2">*</span>;
-                <span class="kw">match</span> <span class="ident">binding</span>.<span class="ident">ty</span> {
-                    <span class="ident">Sampler</span>
-                    <span class="op">|</span> <span class="ident">Image</span> {
-                        <span class="ident">ty</span>:
-                            <span class="ident">pso</span>::<span class="ident">ImageDescriptorType</span>::<span class="ident">Sampled</span> {
-                                <span class="ident">with_sampler</span>: <span class="bool-val">false</span>,
-                            },
-                    } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="comment">// We need to figure out combos once we get the shaders, until then we</span>
-                        <span class="comment">// do nothing</span>
+            <span class="kw">for</span> <span class="ident">binding</span> <span class="kw">in</span> <span class="ident">layout_bindings</span>.<span class="ident">iter</span>() {
+                <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">binding</span>.<span class="ident">immutable_samplers</span>); <span class="comment">//TODO</span>
+                <span class="kw">let</span> <span class="ident">counter</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">binding</span>.<span class="ident">ty</span> {
+                    <span class="ident">pso</span>::<span class="ident">DescriptorType</span>::<span class="ident">Sampler</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">num_samplers</span>,
+                    <span class="ident">pso</span>::<span class="ident">DescriptorType</span>::<span class="ident">InputAttachment</span> <span class="op">|</span> <span class="ident">pso</span>::<span class="ident">DescriptorType</span>::<span class="ident">Image</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">num_textures</span>
                     }
-                    <span class="ident">Image</span> {
-                        <span class="ident">ty</span>: <span class="ident">pso</span>::<span class="ident">ImageDescriptorType</span>::<span class="ident">Sampled</span> { <span class="ident">with_sampler</span>: <span class="bool-val">true</span> },
-                    } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">drd</span>.<span class="ident">insert_missing_binding_into_spare</span>(
-                            <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">Images</span>,
-                            <span class="ident">set</span> <span class="kw">as</span> <span class="kw">_</span>,
-                            <span class="ident">binding</span>.<span class="ident">binding</span>,
-                        );
-                    }
-                    <span class="ident">Buffer</span> {
+                    <span class="ident">pso</span>::<span class="ident">DescriptorType</span>::<span class="ident">Buffer</span> {
                         <span class="ident">ty</span>,
-                        <span class="ident">format</span>:
-                            <span class="ident">pso</span>::<span class="ident">BufferDescriptorFormat</span>::<span class="ident">Structured</span> {
-                                <span class="ident">dynamic_offset</span>: <span class="bool-val">false</span>,
-                            },
+                        <span class="ident">format</span>: <span class="kw">_</span>, <span class="comment">//TODO</span>
                     } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">ty</span> {
-                        <span class="ident">pso</span>::<span class="ident">BufferDescriptorType</span>::<span class="ident">Uniform</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="ident">drd</span>.<span class="ident">insert_missing_binding_into_spare</span>(
-                                <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">UniformBuffers</span>,
-                                <span class="ident">set</span> <span class="kw">as</span> <span class="kw">_</span>,
-                                <span class="ident">binding</span>.<span class="ident">binding</span>,
-                            );
-                        }
-                        <span class="ident">pso</span>::<span class="ident">BufferDescriptorType</span>::<span class="ident">Storage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="ident">drd</span>.<span class="ident">insert_missing_binding_into_spare</span>(
-                                <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">StorageBuffers</span>,
-                                <span class="ident">set</span> <span class="kw">as</span> <span class="kw">_</span>,
-                                <span class="ident">binding</span>.<span class="ident">binding</span>,
-                            );
-                        }
+                        <span class="ident">pso</span>::<span class="ident">BufferDescriptorType</span>::<span class="ident">Uniform</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">num_uniform_buffers</span>,
+                        <span class="ident">pso</span>::<span class="ident">BufferDescriptorType</span>::<span class="ident">Storage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">num_storage_buffers</span>,
                     },
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(), <span class="comment">// 6</span>
-                }
-            })
-        });
+                };
 
-        <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">PipelineLayout</span> {
-            <span class="ident">desc_remap_data</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">RwLock</span>::<span class="ident">new</span>(<span class="ident">drd</span>)),
-        })
+                <span class="ident">bindings</span>[<span class="ident">binding</span>.<span class="ident">binding</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">counter</span>).<span class="ident">try_into</span>().<span class="ident">unwrap</span>();
+                <span class="kw-2">*</span><span class="ident">counter</span> <span class="op">+</span><span class="op">=</span> <span class="ident">binding</span>.<span class="ident">count</span>;
+            }
+
+            <span class="ident">sets</span>.<span class="ident">push</span>(<span class="ident">n</span>::<span class="ident">PipelineLayoutSet</span> {
+                <span class="ident">layout</span>: <span class="ident">Arc</span>::<span class="ident">clone</span>(<span class="ident">layout_bindings</span>),
+                <span class="ident">bindings</span>,
+            });
+        }
+
+        <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">PipelineLayout</span> { <span class="ident">sets</span> })
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_pipeline_cache</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_data</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">d</span>::<span class="ident">OutOfMemory</span><span class="op">&gt;</span> {
@@ -2806,16 +3039,7 @@
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">pso</span>::<span class="ident">GraphicsPipelineDesc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span>,
         <span class="ident">_cache</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>()<span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">GraphicsPipeline</span>, <span class="ident">pso</span>::<span class="ident">CreationError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">context</span>;
-        <span class="kw">let</span> <span class="ident">share</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>;
         <span class="kw">let</span> <span class="ident">desc</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">borrow</span>();
-        <span class="kw">let</span> <span class="ident">subpass</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">subpass</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">subpass</span>;
-            <span class="kw">match</span> <span class="ident">subpass</span>.<span class="ident">main_pass</span>.<span class="ident">subpasses</span>.<span class="ident">get</span>(<span class="ident">subpass</span>.<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>) {
-                <span class="prelude-val">Some</span>(<span class="ident">sp</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sp</span>,
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">pso</span>::<span class="ident">CreationError</span>::<span class="ident">InvalidSubpass</span>(<span class="ident">subpass</span>.<span class="ident">index</span>)),
-            }
-        };
 
         <span class="kw">let</span> (<span class="ident">vertex_buffers</span>, <span class="ident">desc_attributes</span>, <span class="ident">input_assembler</span>, <span class="ident">vs</span>, <span class="ident">gs</span>, <span class="ident">hs</span>, <span class="ident">ds</span>) <span class="op">=</span>
             <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">primitive_assembler</span> {
@@ -2856,92 +3080,14 @@
                 }
             };
 
-        <span class="kw">let</span> <span class="ident">program</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">create_program</span>().<span class="ident">unwrap</span>();
-
-            <span class="comment">// Attach shaders to program</span>
-            <span class="kw">let</span> <span class="ident">shaders</span> <span class="op">=</span> [
-                (<span class="ident">ShaderStage</span>::<span class="ident">Vertex</span>, <span class="prelude-val">Some</span>(<span class="ident">vs</span>)),
-                (<span class="ident">ShaderStage</span>::<span class="ident">Hull</span>, <span class="ident">hs</span>),
-                (<span class="ident">ShaderStage</span>::<span class="ident">Domain</span>, <span class="ident">ds</span>),
-                (<span class="ident">ShaderStage</span>::<span class="ident">Geometry</span>, <span class="ident">gs</span>.<span class="ident">as_ref</span>()),
-                (<span class="ident">ShaderStage</span>::<span class="ident">Fragment</span>, <span class="ident">desc</span>.<span class="ident">fragment</span>.<span class="ident">as_ref</span>()),
-            ];
-
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name_binding_map</span> <span class="op">=</span>
-                <span class="ident">FastHashMap</span>::<span class="op">&lt;</span><span class="ident">String</span>, (<span class="ident">n</span>::<span class="ident">BindingTypes</span>, <span class="ident">pso</span>::<span class="ident">DescriptorBinding</span>)<span class="op">&gt;</span>::<span class="ident">default</span>();
-            <span class="kw">let</span> <span class="ident">shader_names</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">shaders</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">filter_map</span>(<span class="op">|</span><span class="kw-2">&amp;</span>(<span class="ident">stage</span>, <span class="ident">point_maybe</span>)<span class="op">|</span> {
-                    <span class="ident">point_maybe</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">point</span><span class="op">|</span> {
-                        <span class="kw">let</span> <span class="ident">shader_name</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">compile_shader</span>(
-                            <span class="ident">point</span>,
-                            <span class="ident">stage</span>,
-                            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">desc</span>.<span class="ident">layout</span>.<span class="ident">desc_remap_data</span>.<span class="ident">write</span>(),
-                            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">name_binding_map</span>,
-                        );
-                        <span class="ident">gl</span>.<span class="ident">attach_shader</span>(<span class="ident">name</span>, <span class="ident">shader_name</span>);
-                        <span class="ident">shader_name</span>
-                    })
-                })
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">share</span>.<span class="ident">private_caps</span>.<span class="ident">program_interface</span> <span class="op">&amp;&amp;</span> <span class="ident">share</span>.<span class="ident">private_caps</span>.<span class="ident">frag_data_location</span> {
-                <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">subpass</span>.<span class="ident">color_attachments</span>.<span class="ident">len</span>() {
-                    <span class="kw">let</span> <span class="ident">color_name</span> <span class="op">=</span> <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;Target{}\0&quot;</span>, <span class="ident">i</span>);
-                    <span class="ident">gl</span>.<span class="ident">bind_frag_data_location</span>(<span class="ident">name</span>, <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">color_name</span>.<span class="ident">as_str</span>());
-                }
-            }
-
-            <span class="ident">gl</span>.<span class="ident">link_program</span>(<span class="ident">name</span>);
-            <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;\tLinked program {:?}&quot;</span>, <span class="ident">name</span>);
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">share</span>.<span class="ident">check</span>() {
-                <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Error linking program: {:?}&quot;</span>, <span class="ident">err</span>);
-            }
-
-            <span class="kw">for</span> <span class="ident">shader_name</span> <span class="kw">in</span> <span class="ident">shader_names</span> {
-                <span class="ident">gl</span>.<span class="ident">detach_shader</span>(<span class="ident">name</span>, <span class="kw-2">*</span><span class="ident">shader_name</span>);
-                <span class="ident">gl</span>.<span class="ident">delete_shader</span>(<span class="kw-2">*</span><span class="ident">shader_name</span>);
-            }
-
-            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>
-                .<span class="ident">share</span>
-                .<span class="ident">legacy_features</span>
-                .<span class="ident">contains</span>(<span class="ident">LegacyFeatures</span>::<span class="ident">EXPLICIT_LAYOUTS_IN_SHADER</span>)
-            {
-                <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">context</span>;
-                <span class="ident">gl</span>.<span class="ident">use_program</span>(<span class="prelude-val">Some</span>(<span class="ident">name</span>));
-                <span class="kw">for</span> (<span class="ident">bname</span>, (<span class="ident">btype</span>, <span class="ident">binding</span>)) <span class="kw">in</span> <span class="ident">name_binding_map</span>.<span class="ident">iter</span>() {
-                    <span class="kw">match</span> <span class="ident">btype</span> {
-                        <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">Images</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">let</span> <span class="ident">loc</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_uniform_location</span>(<span class="ident">name</span>, <span class="ident">bname</span>);
-                            <span class="ident">gl</span>.<span class="ident">uniform_1_i32</span>(<span class="ident">loc</span>.<span class="ident">as_ref</span>(), <span class="kw-2">*</span><span class="ident">binding</span> <span class="kw">as</span> <span class="kw">_</span>);
-                        }
-                        <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">UniformBuffers</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_uniform_block_index</span>(<span class="ident">name</span>, <span class="ident">bname</span>).<span class="ident">unwrap</span>();
-                            <span class="ident">gl</span>.<span class="ident">uniform_block_binding</span>(<span class="ident">name</span>, <span class="ident">index</span>, <span class="kw-2">*</span><span class="ident">binding</span>);
-                        }
-                        <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">StorageBuffers</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_shader_storage_block_index</span>(<span class="ident">name</span>, <span class="ident">bname</span>).<span class="ident">unwrap</span>();
-                            <span class="ident">gl</span>.<span class="ident">shader_storage_block_binding</span>(<span class="ident">name</span>, <span class="ident">index</span>, <span class="kw-2">*</span><span class="ident">binding</span>);
-                        }
-                    }
-                }
-            }
-
-            <span class="kw">let</span> <span class="ident">linked_ok</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_program_link_status</span>(<span class="ident">name</span>);
-            <span class="kw">let</span> <span class="ident">log</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_program_info_log</span>(<span class="ident">name</span>);
-            <span class="kw">if</span> <span class="ident">linked_ok</span> {
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">log</span>.<span class="ident">is_empty</span>() {
-                    <span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;\tLog: {}&quot;</span>, <span class="ident">log</span>);
-                }
-            } <span class="kw">else</span> {
-                <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;\tLog: {}&quot;</span>, <span class="ident">log</span>);
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">pso</span>::<span class="ident">CreationError</span>::<span class="ident">Other</span>);
-            }
-
-            <span class="ident">name</span>
-        };
+        <span class="kw">let</span> <span class="ident">shaders</span> <span class="op">=</span> [
+            (<span class="ident">ShaderStage</span>::<span class="ident">Vertex</span>, <span class="prelude-val">Some</span>(<span class="ident">vs</span>)),
+            (<span class="ident">ShaderStage</span>::<span class="ident">Hull</span>, <span class="ident">hs</span>),
+            (<span class="ident">ShaderStage</span>::<span class="ident">Domain</span>, <span class="ident">ds</span>),
+            (<span class="ident">ShaderStage</span>::<span class="ident">Geometry</span>, <span class="ident">gs</span>.<span class="ident">as_ref</span>()),
+            (<span class="ident">ShaderStage</span>::<span class="ident">Fragment</span>, <span class="ident">desc</span>.<span class="ident">fragment</span>.<span class="ident">as_ref</span>()),
+        ];
+        <span class="kw">let</span> (<span class="ident">program</span>, <span class="ident">sampler_map</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_shader_program</span>(<span class="kw-2">&amp;</span><span class="ident">shaders</span>[..], <span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">layout</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">patch_size</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">input_assembler</span>.<span class="ident">primitive</span> {
             <span class="ident">pso</span>::<span class="ident">Primitive</span>::<span class="ident">PatchList</span>(<span class="ident">size</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">size</span> <span class="kw">as</span> <span class="kw">_</span>),
@@ -2997,6 +3143,7 @@
             <span class="ident">rasterizer</span>: <span class="ident">desc</span>.<span class="ident">rasterizer</span>,
             <span class="ident">depth</span>: <span class="ident">desc</span>.<span class="ident">depth_stencil</span>.<span class="ident">depth</span>,
             <span class="ident">baked_states</span>: <span class="ident">desc</span>.<span class="ident">baked_states</span>.<span class="ident">clone</span>(),
+            <span class="ident">sampler_map</span>,
         })
     }
 
@@ -3005,66 +3152,12 @@
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">pso</span>::<span class="ident">ComputePipelineDesc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span>,
         <span class="ident">_cache</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>()<span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">ComputePipeline</span>, <span class="ident">pso</span>::<span class="ident">CreationError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">context</span>;
-        <span class="kw">let</span> <span class="ident">share</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>;
-
-        <span class="kw">let</span> <span class="ident">program</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">create_program</span>().<span class="ident">unwrap</span>();
-
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name_binding_map</span> <span class="op">=</span>
-                <span class="ident">FastHashMap</span>::<span class="op">&lt;</span><span class="ident">String</span>, (<span class="ident">n</span>::<span class="ident">BindingTypes</span>, <span class="ident">pso</span>::<span class="ident">DescriptorBinding</span>)<span class="op">&gt;</span>::<span class="ident">default</span>();
-            <span class="kw">let</span> <span class="ident">shader</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">compile_shader</span>(
-                <span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">shader</span>,
-                <span class="ident">ShaderStage</span>::<span class="ident">Compute</span>,
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">desc</span>.<span class="ident">layout</span>.<span class="ident">desc_remap_data</span>.<span class="ident">write</span>(),
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">name_binding_map</span>,
-            );
-
-            <span class="ident">gl</span>.<span class="ident">attach_shader</span>(<span class="ident">name</span>, <span class="ident">shader</span>);
-            <span class="ident">gl</span>.<span class="ident">link_program</span>(<span class="ident">name</span>);
-            <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;\tLinked program {:?}&quot;</span>, <span class="ident">name</span>);
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="ident">share</span>.<span class="ident">check</span>() {
-                <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Error linking program: {:?}&quot;</span>, <span class="ident">err</span>);
-            }
-
-            <span class="ident">gl</span>.<span class="ident">detach_shader</span>(<span class="ident">name</span>, <span class="ident">shader</span>);
-            <span class="ident">gl</span>.<span class="ident">delete_shader</span>(<span class="ident">shader</span>);
-
-            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>
-                .<span class="ident">share</span>
-                .<span class="ident">legacy_features</span>
-                .<span class="ident">contains</span>(<span class="ident">LegacyFeatures</span>::<span class="ident">EXPLICIT_LAYOUTS_IN_SHADER</span>)
-            {
-                <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">context</span>;
-                <span class="ident">gl</span>.<span class="ident">use_program</span>(<span class="prelude-val">Some</span>(<span class="ident">name</span>));
-                <span class="kw">for</span> (<span class="ident">bname</span>, (<span class="ident">btype</span>, <span class="ident">binding</span>)) <span class="kw">in</span> <span class="ident">name_binding_map</span>.<span class="ident">iter</span>() {
-                    <span class="kw">match</span> <span class="ident">btype</span> {
-                        <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">Images</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">let</span> <span class="ident">loc</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_uniform_location</span>(<span class="ident">name</span>, <span class="ident">bname</span>);
-                            <span class="ident">gl</span>.<span class="ident">uniform_1_i32</span>(<span class="ident">loc</span>.<span class="ident">as_ref</span>(), <span class="kw-2">*</span><span class="ident">binding</span> <span class="kw">as</span> <span class="kw">_</span>);
-                        }
-                        <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">UniformBuffers</span> <span class="op">|</span> <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">StorageBuffers</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_uniform_block_index</span>(<span class="ident">name</span>, <span class="ident">bname</span>).<span class="ident">unwrap</span>();
-                            <span class="ident">gl</span>.<span class="ident">uniform_block_binding</span>(<span class="ident">name</span>, <span class="ident">index</span>, <span class="kw-2">*</span><span class="ident">binding</span>);
-                        }
-                    }
-                }
-            }
-
-            <span class="kw">let</span> <span class="ident">linked_ok</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_program_link_status</span>(<span class="ident">name</span>);
-            <span class="kw">let</span> <span class="ident">log</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_program_info_log</span>(<span class="ident">name</span>);
-            <span class="kw">if</span> <span class="ident">linked_ok</span> {
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">log</span>.<span class="ident">is_empty</span>() {
-                    <span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;\tLog: {}&quot;</span>, <span class="ident">log</span>);
-                }
-            } <span class="kw">else</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">pso</span>::<span class="ident">CreationError</span>::<span class="ident">Other</span>);
-            }
-
-            <span class="ident">name</span>
-        };
-
-        <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">ComputePipeline</span> { <span class="ident">program</span> })
+        <span class="kw">let</span> <span class="ident">shader</span> <span class="op">=</span> (<span class="ident">ShaderStage</span>::<span class="ident">Compute</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">shader</span>));
+        <span class="kw">let</span> (<span class="ident">program</span>, <span class="ident">sampler_map</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_shader_program</span>(<span class="kw-2">&amp;</span>[<span class="ident">shader</span>], <span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">layout</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">ComputePipeline</span> {
+            <span class="ident">program</span>,
+            <span class="ident">sampler_map</span>,
+        })
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_framebuffer</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(
@@ -3106,12 +3199,24 @@
             }
 
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">depth_stencil</span>) <span class="op">=</span> <span class="ident">subpass</span>.<span class="ident">depth_stencil</span> {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">share</span>.<span class="ident">private_caps</span>.<span class="ident">framebuffer_texture</span> {
-                    <span class="self">Self</span>::<span class="ident">bind_target</span>(<span class="ident">gl</span>, <span class="ident">target</span>, <span class="ident">glow</span>::<span class="ident">DEPTH_STENCIL_ATTACHMENT</span>, <span class="kw-2">&amp;</span><span class="ident">attachments</span>[<span class="ident">depth_stencil</span>]);
-                } <span class="kw">else</span> {
-                    <span class="self">Self</span>::<span class="ident">bind_target_compat</span>(<span class="ident">gl</span>, <span class="ident">target</span>, <span class="ident">glow</span>::<span class="ident">DEPTH_STENCIL_ATTACHMENT</span>, <span class="kw-2">&amp;</span><span class="ident">attachments</span>[<span class="ident">depth_stencil</span>]);
-                }
+                <span class="kw">let</span> <span class="ident">aspects</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">attachments</span>[<span class="ident">depth_stencil</span>] {
+                    <span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Texture</span> { <span class="kw-2">ref</span> <span class="ident">sub</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">sub</span>.<span class="ident">aspects</span>,
+                    <span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Renderbuffer</span> { <span class="ident">aspects</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">aspects</span>,
+                };
 
+                <span class="kw">let</span> <span class="ident">attachment</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">aspects</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Aspects</span>::<span class="ident">DEPTH</span> {
+                    <span class="ident">glow</span>::<span class="ident">DEPTH_ATTACHMENT</span>
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">aspects</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Aspects</span>::<span class="ident">STENCIL</span> {
+                    <span class="ident">glow</span>::<span class="ident">STENCIL_ATTACHMENT</span>
+                } <span class="kw">else</span> {
+                    <span class="ident">glow</span>::<span class="ident">DEPTH_STENCIL_ATTACHMENT</span>
+                };
+
+                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">share</span>.<span class="ident">private_caps</span>.<span class="ident">framebuffer_texture</span> {
+                    <span class="self">Self</span>::<span class="ident">bind_target</span>(<span class="ident">gl</span>, <span class="ident">target</span>, <span class="ident">attachment</span>, <span class="kw-2">&amp;</span><span class="ident">attachments</span>[<span class="ident">depth_stencil</span>]);
+                } <span class="kw">else</span> {
+                    <span class="self">Self</span>::<span class="ident">bind_target_compat</span>(<span class="ident">gl</span>, <span class="ident">target</span>, <span class="ident">attachment</span>, <span class="kw-2">&amp;</span><span class="ident">attachments</span>[<span class="ident">depth_stencil</span>]);
+                }
             }
 
             <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">check_framebuffer_status</span>(<span class="ident">target</span>);
@@ -3146,6 +3251,35 @@
         <span class="ident">raw_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">ShaderModule</span>, <span class="ident">d</span>::<span class="ident">ShaderError</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">ShaderModule</span>::<span class="ident">Spirv</span>(<span class="ident">raw_data</span>.<span class="ident">into</span>()))
+    }
+
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;naga&quot;</span>)]</span>
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_shader_module_from_naga</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">module</span>: <span class="ident">naga</span>::<span class="ident">Module</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">ShaderModule</span>, (<span class="ident">d</span>::<span class="ident">ShaderError</span>, <span class="ident">naga</span>::<span class="ident">Module</span>)<span class="op">&gt;</span> {
+        <span class="kw">use</span> <span class="ident">naga</span>::<span class="ident">back</span>::<span class="ident">spv</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">spv</span>::<span class="ident">WriterFlags</span>::<span class="ident">empty</span>();
+        <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">debug_assertions</span>) {
+            <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">spv</span>::<span class="ident">WriterFlags</span>::<span class="ident">DEBUG</span>;
+        }
+
+        <span class="kw">let</span> <span class="ident">caps</span> <span class="op">=</span> [
+            <span class="ident">spv</span>::<span class="ident">Capability</span>::<span class="ident">Shader</span>,
+            <span class="ident">spv</span>::<span class="ident">Capability</span>::<span class="ident">Matrix</span>,
+            <span class="ident">spv</span>::<span class="ident">Capability</span>::<span class="ident">Sampled1D</span>,
+            <span class="ident">spv</span>::<span class="ident">Capability</span>::<span class="ident">Image1D</span>,
+            <span class="ident">spv</span>::<span class="ident">Capability</span>::<span class="ident">DerivativeControl</span>,
+            <span class="comment">//TODO: fill out the rest</span>
+        ]
+        .<span class="ident">iter</span>()
+        .<span class="ident">cloned</span>()
+        .<span class="ident">collect</span>();
+
+        <span class="kw">match</span> <span class="ident">spv</span>::<span class="ident">write_vec</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>, <span class="ident">flags</span>, <span class="ident">caps</span>) {
+            <span class="prelude-val">Ok</span>(<span class="ident">spv</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">ShaderModule</span>::<span class="ident">Naga</span>(<span class="ident">module</span>, <span class="ident">spv</span>)),
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>((<span class="ident">d</span>::<span class="ident">ShaderError</span>::<span class="ident">CompilationFailed</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)), <span class="ident">module</span>)),
+        }
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_sampler</span>(
@@ -3380,9 +3514,10 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">Image</span>, <span class="ident">i</span>::<span class="ident">CreationError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">context</span>;
 
-        <span class="kw">let</span> <span class="ident">desc</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">describe_format</span>(<span class="ident">format</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">desc</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">describe_format</span>(<span class="ident">format</span>).<span class="ident">ok_or</span>(<span class="ident">i</span>::<span class="ident">CreationError</span>::<span class="ident">Format</span>(<span class="ident">format</span>))<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">channel</span> <span class="op">=</span> <span class="ident">format</span>.<span class="ident">base_format</span>().<span class="number">1</span>;
 
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pixel_count</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">let</span> <span class="ident">image</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">num_levels</span> <span class="op">&gt;</span> <span class="number">1</span> <span class="op">|</span><span class="op">|</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident">i</span>::<span class="ident">Usage</span>::<span class="ident">STORAGE</span> <span class="op">|</span> <span class="ident">i</span>::<span class="ident">Usage</span>::<span class="ident">SAMPLED</span>) {
             <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">create_texture</span>().<span class="ident">unwrap</span>();
             <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">kind</span> {
@@ -3396,6 +3531,7 @@
                             <span class="ident">w</span> <span class="kw">as</span> <span class="kw">_</span>,
                             <span class="ident">h</span> <span class="kw">as</span> <span class="kw">_</span>,
                         );
+                        <span class="ident">pixel_count</span> <span class="op">+</span><span class="op">=</span> (<span class="ident">w</span> <span class="op">*</span> <span class="ident">h</span>) <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">num_levels</span> <span class="kw">as</span> <span class="ident">u64</span>;
                     } <span class="kw">else</span> {
                         <span class="ident">gl</span>.<span class="ident">tex_parameter_i32</span>(
                             <span class="ident">glow</span>::<span class="ident">TEXTURE_2D</span>,
@@ -3416,6 +3552,7 @@
                                 <span class="ident">desc</span>.<span class="ident">data_type</span>,
                                 <span class="prelude-val">None</span>,
                             );
+                            <span class="ident">pixel_count</span> <span class="op">+</span><span class="op">=</span> (<span class="ident">w</span> <span class="op">*</span> <span class="ident">h</span>) <span class="kw">as</span> <span class="ident">u64</span>;
                             <span class="ident">w</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">cmp</span>::<span class="ident">max</span>(<span class="ident">w</span> <span class="op">/</span> <span class="number">2</span>, <span class="number">1</span>);
                             <span class="ident">h</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">cmp</span>::<span class="ident">max</span>(<span class="ident">h</span> <span class="op">/</span> <span class="number">2</span>, <span class="number">1</span>);
                         }
@@ -3433,6 +3570,7 @@
                             <span class="ident">h</span> <span class="kw">as</span> <span class="kw">_</span>,
                             <span class="ident">l</span> <span class="kw">as</span> <span class="kw">_</span>,
                         );
+                        <span class="ident">pixel_count</span> <span class="op">+</span><span class="op">=</span> (<span class="ident">w</span> <span class="op">*</span> <span class="ident">h</span>) <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">l</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">num_levels</span> <span class="kw">as</span> <span class="ident">u64</span>;
                     } <span class="kw">else</span> {
                         <span class="ident">gl</span>.<span class="ident">tex_parameter_i32</span>(
                             <span class="ident">glow</span>::<span class="ident">TEXTURE_2D_ARRAY</span>,
@@ -3454,6 +3592,7 @@
                                 <span class="ident">desc</span>.<span class="ident">data_type</span>,
                                 <span class="prelude-val">None</span>,
                             );
+                            <span class="ident">pixel_count</span> <span class="op">+</span><span class="op">=</span> (<span class="ident">w</span> <span class="op">*</span> <span class="ident">h</span>) <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">l</span> <span class="kw">as</span> <span class="ident">u64</span>;
                             <span class="ident">w</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">cmp</span>::<span class="ident">max</span>(<span class="ident">w</span> <span class="op">/</span> <span class="number">2</span>, <span class="number">1</span>);
                             <span class="ident">h</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">cmp</span>::<span class="ident">max</span>(<span class="ident">h</span> <span class="op">/</span> <span class="number">2</span>, <span class="number">1</span>);
                         }
@@ -3462,7 +3601,7 @@
                 }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
             };
-            <span class="ident">n</span>::<span class="ident">ImageKind</span>::<span class="ident">Texture</span> {
+            <span class="ident">n</span>::<span class="ident">ImageType</span>::<span class="ident">Texture</span> {
                 <span class="ident">target</span>,
                 <span class="ident">raw</span>: <span class="ident">name</span>,
                 <span class="ident">format</span>: <span class="ident">desc</span>.<span class="ident">tex_external</span>,
@@ -3476,6 +3615,7 @@
             <span class="kw">match</span> <span class="ident">kind</span> {
                 <span class="ident">i</span>::<span class="ident">Kind</span>::<span class="ident">D2</span>(<span class="ident">w</span>, <span class="ident">h</span>, <span class="number">1</span>, <span class="number">1</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">gl</span>.<span class="ident">renderbuffer_storage</span>(<span class="ident">glow</span>::<span class="ident">RENDERBUFFER</span>, <span class="ident">desc</span>.<span class="ident">tex_internal</span>, <span class="ident">w</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">h</span> <span class="kw">as</span> <span class="kw">_</span>);
+                    <span class="ident">pixel_count</span> <span class="op">+</span><span class="op">=</span> (<span class="ident">w</span> <span class="op">*</span> <span class="ident">h</span>) <span class="kw">as</span> <span class="ident">u64</span>;
                 }
                 <span class="ident">i</span>::<span class="ident">Kind</span>::<span class="ident">D2</span>(<span class="ident">w</span>, <span class="ident">h</span>, <span class="number">1</span>, <span class="ident">samples</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">gl</span>.<span class="ident">renderbuffer_storage_multisample</span>(
@@ -3485,10 +3625,11 @@
                         <span class="ident">w</span> <span class="kw">as</span> <span class="kw">_</span>,
                         <span class="ident">h</span> <span class="kw">as</span> <span class="kw">_</span>,
                     );
+                    <span class="ident">pixel_count</span> <span class="op">+</span><span class="op">=</span> (<span class="ident">w</span> <span class="op">*</span> <span class="ident">h</span>) <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">samples</span> <span class="kw">as</span> <span class="ident">u64</span>; <span class="comment">// Not sure though</span>
                 }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
             };
-            <span class="ident">n</span>::<span class="ident">ImageKind</span>::<span class="ident">Renderbuffer</span> {
+            <span class="ident">n</span>::<span class="ident">ImageType</span>::<span class="ident">Renderbuffer</span> {
                 <span class="ident">raw</span>: <span class="ident">name</span>,
                 <span class="ident">format</span>: <span class="ident">desc</span>.<span class="ident">tex_external</span>,
             }
@@ -3496,8 +3637,7 @@
 
         <span class="kw">let</span> <span class="ident">surface_desc</span> <span class="op">=</span> <span class="ident">format</span>.<span class="ident">base_format</span>().<span class="number">0</span>.<span class="ident">desc</span>();
         <span class="kw">let</span> <span class="ident">bytes_per_texel</span> <span class="op">=</span> <span class="ident">surface_desc</span>.<span class="ident">bits</span> <span class="op">/</span> <span class="number">8</span>;
-        <span class="kw">let</span> <span class="ident">ext</span> <span class="op">=</span> <span class="ident">kind</span>.<span class="ident">extent</span>();
-        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> (<span class="ident">ext</span>.<span class="ident">width</span> <span class="op">*</span> <span class="ident">ext</span>.<span class="ident">height</span> <span class="op">*</span> <span class="ident">ext</span>.<span class="ident">depth</span>) <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">bytes_per_texel</span> <span class="kw">as</span> <span class="ident">u64</span>;
+        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">pixel_count</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">bytes_per_texel</span> <span class="kw">as</span> <span class="ident">u64</span>;
         <span class="kw">let</span> <span class="ident">type_mask</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">share</span>.<span class="ident">image_memory_type_mask</span>();
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">share</span>.<span class="ident">check</span>() {
@@ -3508,7 +3648,9 @@
         }
 
         <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">Image</span> {
-            <span class="ident">kind</span>: <span class="ident">image</span>,
+            <span class="ident">object_type</span>: <span class="ident">image</span>,
+            <span class="ident">kind</span>,
+            <span class="ident">format_desc</span>: <span class="ident">surface_desc</span>,
             <span class="ident">channel</span>,
             <span class="ident">requirements</span>: <span class="ident">memory</span>::<span class="ident">Requirements</span> {
                 <span class="ident">size</span>,
@@ -3526,10 +3668,22 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_image_subresource_footprint</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">_image</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">Image</span>,
-        <span class="ident">_sub</span>: <span class="ident">i</span>::<span class="ident">Subresource</span>,
+        <span class="ident">image</span>: <span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">Image</span>,
+        <span class="ident">sub</span>: <span class="ident">i</span>::<span class="ident">Subresource</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i</span>::<span class="ident">SubresourceFootprint</span> {
-        <span class="macro">unimplemented</span><span class="macro">!</span>()
+        <span class="kw">let</span> <span class="ident">num_layers</span> <span class="op">=</span> <span class="ident">image</span>.<span class="ident">kind</span>.<span class="ident">num_layers</span>() <span class="kw">as</span> <span class="ident">buffer</span>::<span class="ident">Offset</span>;
+        <span class="kw">let</span> <span class="ident">level_offset</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">sub</span>.<span class="ident">level</span>).<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">offset</span>, <span class="ident">level</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="ident">pitches</span> <span class="op">=</span> <span class="ident">image</span>.<span class="ident">pitches</span>(<span class="ident">level</span>);
+            <span class="ident">offset</span> <span class="op">+</span> <span class="ident">num_layers</span> <span class="op">*</span> <span class="ident">pitches</span>[<span class="number">3</span>]
+        });
+        <span class="kw">let</span> <span class="ident">pitches</span> <span class="op">=</span> <span class="ident">image</span>.<span class="ident">pitches</span>(<span class="ident">sub</span>.<span class="ident">level</span>);
+        <span class="kw">let</span> <span class="ident">layer_offset</span> <span class="op">=</span> <span class="ident">level_offset</span> <span class="op">+</span> <span class="ident">sub</span>.<span class="ident">layer</span> <span class="kw">as</span> <span class="ident">buffer</span>::<span class="ident">Offset</span> <span class="op">*</span> <span class="ident">pitches</span>[<span class="number">3</span>];
+        <span class="ident">i</span>::<span class="ident">SubresourceFootprint</span> {
+            <span class="ident">slice</span>: <span class="ident">layer_offset</span>..<span class="ident">layer_offset</span> <span class="op">+</span> <span class="ident">pitches</span>[<span class="number">3</span>],
+            <span class="ident">row_pitch</span>: <span class="ident">pitches</span>[<span class="number">1</span>] <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident">depth_pitch</span>: <span class="ident">pitches</span>[<span class="number">2</span>] <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident">array_pitch</span>: <span class="ident">pitches</span>[<span class="number">3</span>] <span class="kw">as</span> <span class="kw">_</span>,
+        }
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">bind_image_memory</span>(
@@ -3550,18 +3704,21 @@
         <span class="ident">range</span>: <span class="ident">i</span>::<span class="ident">SubresourceRange</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">ImageView</span>, <span class="ident">i</span>::<span class="ident">ViewCreationError</span><span class="op">&gt;</span> {
         <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">swizzle</span>, <span class="ident">Swizzle</span>::<span class="ident">NO</span>);
-        <span class="kw">match</span> <span class="ident">image</span>.<span class="ident">kind</span> {
-            <span class="ident">n</span>::<span class="ident">ImageKind</span>::<span class="ident">Renderbuffer</span> { <span class="ident">raw</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="ident">image</span>.<span class="ident">object_type</span> {
+            <span class="ident">n</span>::<span class="ident">ImageType</span>::<span class="ident">Renderbuffer</span> { <span class="ident">raw</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">level</span> <span class="op">=</span> <span class="ident">range</span>.<span class="ident">level_start</span>;
                 <span class="kw">if</span> <span class="ident">range</span>.<span class="ident">level_start</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">range</span>.<span class="ident">layer_start</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Renderbuffer</span>(<span class="ident">raw</span>))
+                    <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Renderbuffer</span> {
+                        <span class="ident">raw</span>,
+                        <span class="ident">aspects</span>: <span class="ident">image</span>.<span class="ident">format_desc</span>.<span class="ident">aspects</span>,
+                    })
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">level</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
                     <span class="prelude-val">Err</span>(<span class="ident">i</span>::<span class="ident">ViewCreationError</span>::<span class="ident">Level</span>(<span class="ident">level</span>)) <span class="comment">//TODO</span>
                 } <span class="kw">else</span> {
                     <span class="prelude-val">Err</span>(<span class="ident">i</span>::<span class="ident">ViewCreationError</span>::<span class="ident">Layer</span>(<span class="ident">i</span>::<span class="ident">LayerError</span>::<span class="ident">OutOfBounds</span>))
                 }
             }
-            <span class="ident">n</span>::<span class="ident">ImageKind</span>::<span class="ident">Texture</span> {
+            <span class="ident">n</span>::<span class="ident">ImageType</span>::<span class="ident">Texture</span> {
                 <span class="ident">target</span>,
                 <span class="ident">raw</span>,
                 <span class="ident">format</span>,
@@ -3645,19 +3802,18 @@
 
             <span class="kw">for</span> <span class="ident">descriptor</span> <span class="kw">in</span> <span class="ident">write</span>.<span class="ident">descriptors</span> {
                 <span class="kw">let</span> <span class="ident">binding_layout</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">write</span>.<span class="ident">set</span>.<span class="ident">layout</span>[<span class="ident">layout_index</span>];
-                <span class="kw">let</span> <span class="ident">binding</span> <span class="op">=</span> <span class="ident">binding_layout</span>.<span class="ident">binding</span>;
                 <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">descriptor</span>.<span class="ident">borrow</span>() {
                     <span class="ident">pso</span>::<span class="ident">Descriptor</span>::<span class="ident">Buffer</span>(<span class="ident">buffer</span>, <span class="kw-2">ref</span> <span class="ident">sub</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> (<span class="ident">raw_buffer</span>, <span class="ident">buffer_range</span>) <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">as_bound</span>();
                         <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">resolve_sub_range</span>(<span class="ident">sub</span>, <span class="ident">buffer_range</span>);
 
-                        <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">binding_layout</span>.<span class="ident">ty</span> {
+                        <span class="kw">let</span> <span class="ident">register</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">binding_layout</span>.<span class="ident">ty</span> {
                             <span class="ident">pso</span>::<span class="ident">DescriptorType</span>::<span class="ident">Buffer</span> { <span class="ident">ty</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">ty</span> {
                                 <span class="ident">pso</span>::<span class="ident">BufferDescriptorType</span>::<span class="ident">Uniform</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                    <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">UniformBuffers</span>
+                                    <span class="ident">n</span>::<span class="ident">BindingRegister</span>::<span class="ident">UniformBuffers</span>
                                 }
                                 <span class="ident">pso</span>::<span class="ident">BufferDescriptorType</span>::<span class="ident">Storage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
-                                    <span class="ident">n</span>::<span class="ident">BindingTypes</span>::<span class="ident">StorageBuffers</span>
+                                    <span class="ident">n</span>::<span class="ident">BindingRegister</span>::<span class="ident">StorageBuffers</span>
                                 }
                             },
                             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -3666,8 +3822,7 @@
                         };
 
                         <span class="ident">bindings</span>.<span class="ident">push</span>(<span class="ident">n</span>::<span class="ident">DescSetBindings</span>::<span class="ident">Buffer</span> {
-                            <span class="ident">ty</span>,
-                            <span class="ident">binding</span>,
+                            <span class="ident">register</span>,
                             <span class="ident">buffer</span>: <span class="ident">raw_buffer</span>,
                             <span class="ident">offset</span>: <span class="ident">range</span>.<span class="ident">start</span> <span class="kw">as</span> <span class="ident">i32</span>,
                             <span class="ident">size</span>: (<span class="ident">range</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">range</span>.<span class="ident">start</span>) <span class="kw">as</span> <span class="ident">i32</span>,
@@ -3676,34 +3831,35 @@
                     <span class="ident">pso</span>::<span class="ident">Descriptor</span>::<span class="ident">CombinedImageSampler</span>(<span class="ident">view</span>, <span class="ident">_layout</span>, <span class="ident">sampler</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">view</span> {
                             <span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Texture</span> { <span class="ident">target</span>, <span class="ident">raw</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="ident">bindings</span>.<span class="ident">push</span>(<span class="ident">n</span>::<span class="ident">DescSetBindings</span>::<span class="ident">Texture</span>(<span class="ident">binding</span>, <span class="ident">raw</span>, <span class="ident">target</span>))
+                                <span class="ident">bindings</span>.<span class="ident">push</span>(<span class="ident">n</span>::<span class="ident">DescSetBindings</span>::<span class="ident">Texture</span>(<span class="ident">raw</span>, <span class="ident">target</span>))
                             }
-                            <span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Renderbuffer</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Renderbuffer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                                 <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Texture doesn&#39;t support shader binding&quot;</span>)
                             }
                         }
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">sampler</span> {
                             <span class="ident">n</span>::<span class="ident">FatSampler</span>::<span class="ident">Sampler</span>(<span class="ident">sampler</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="ident">bindings</span>.<span class="ident">push</span>(<span class="ident">n</span>::<span class="ident">DescSetBindings</span>::<span class="ident">Sampler</span>(<span class="ident">binding</span>, <span class="ident">sampler</span>))
+                                <span class="ident">bindings</span>.<span class="ident">push</span>(<span class="ident">n</span>::<span class="ident">DescSetBindings</span>::<span class="ident">Sampler</span>(<span class="ident">sampler</span>))
                             }
-                            <span class="ident">n</span>::<span class="ident">FatSampler</span>::<span class="ident">Info</span>(<span class="kw-2">ref</span> <span class="ident">info</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bindings</span>
-                                .<span class="ident">push</span>(<span class="ident">n</span>::<span class="ident">DescSetBindings</span>::<span class="ident">SamplerDesc</span>(<span class="ident">binding</span>, <span class="ident">info</span>.<span class="ident">clone</span>())),
+                            <span class="ident">n</span>::<span class="ident">FatSampler</span>::<span class="ident">Info</span>(<span class="kw-2">ref</span> <span class="ident">info</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">bindings</span>.<span class="ident">push</span>(<span class="ident">n</span>::<span class="ident">DescSetBindings</span>::<span class="ident">SamplerDesc</span>(<span class="ident">info</span>.<span class="ident">clone</span>()))
+                            }
                         }
                     }
                     <span class="ident">pso</span>::<span class="ident">Descriptor</span>::<span class="ident">Image</span>(<span class="ident">view</span>, <span class="ident">_layout</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">view</span> {
                         <span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Texture</span> { <span class="ident">target</span>, <span class="ident">raw</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="ident">bindings</span>.<span class="ident">push</span>(<span class="ident">n</span>::<span class="ident">DescSetBindings</span>::<span class="ident">Texture</span>(<span class="ident">binding</span>, <span class="ident">raw</span>, <span class="ident">target</span>))
+                            <span class="ident">bindings</span>.<span class="ident">push</span>(<span class="ident">n</span>::<span class="ident">DescSetBindings</span>::<span class="ident">Texture</span>(<span class="ident">raw</span>, <span class="ident">target</span>))
                         }
-                        <span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Renderbuffer</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">n</span>::<span class="ident">ImageView</span>::<span class="ident">Renderbuffer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Texture doesn&#39;t support shader binding&quot;</span>)
                         }
                     },
                     <span class="ident">pso</span>::<span class="ident">Descriptor</span>::<span class="ident">Sampler</span>(<span class="ident">sampler</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">sampler</span> {
                         <span class="ident">n</span>::<span class="ident">FatSampler</span>::<span class="ident">Sampler</span>(<span class="ident">sampler</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="ident">bindings</span>.<span class="ident">push</span>(<span class="ident">n</span>::<span class="ident">DescSetBindings</span>::<span class="ident">Sampler</span>(<span class="ident">binding</span>, <span class="ident">sampler</span>))
+                            <span class="ident">bindings</span>.<span class="ident">push</span>(<span class="ident">n</span>::<span class="ident">DescSetBindings</span>::<span class="ident">Sampler</span>(<span class="ident">sampler</span>))
                         }
                         <span class="ident">n</span>::<span class="ident">FatSampler</span>::<span class="ident">Info</span>(<span class="kw-2">ref</span> <span class="ident">info</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="ident">bindings</span>.<span class="ident">push</span>(<span class="ident">n</span>::<span class="ident">DescSetBindings</span>::<span class="ident">SamplerDesc</span>(<span class="ident">binding</span>, <span class="ident">info</span>.<span class="ident">clone</span>()))
+                            <span class="ident">bindings</span>.<span class="ident">push</span>(<span class="ident">n</span>::<span class="ident">DescSetBindings</span>::<span class="ident">SamplerDesc</span>(<span class="ident">info</span>.<span class="ident">clone</span>()))
                         }
                     },
                     <span class="ident">pso</span>::<span class="ident">Descriptor</span>::<span class="ident">TexelBuffer</span>(<span class="ident">_view</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
@@ -3954,9 +4110,9 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_image</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">image</span>: <span class="ident">n</span>::<span class="ident">Image</span>) {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">context</span>;
-        <span class="kw">match</span> <span class="ident">image</span>.<span class="ident">kind</span> {
-            <span class="ident">n</span>::<span class="ident">ImageKind</span>::<span class="ident">Renderbuffer</span> { <span class="ident">raw</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">gl</span>.<span class="ident">delete_renderbuffer</span>(<span class="ident">raw</span>),
-            <span class="ident">n</span>::<span class="ident">ImageKind</span>::<span class="ident">Texture</span> { <span class="ident">raw</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">gl</span>.<span class="ident">delete_texture</span>(<span class="ident">raw</span>),
+        <span class="kw">match</span> <span class="ident">image</span>.<span class="ident">object_type</span> {
+            <span class="ident">n</span>::<span class="ident">ImageType</span>::<span class="ident">Renderbuffer</span> { <span class="ident">raw</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">gl</span>.<span class="ident">delete_renderbuffer</span>(<span class="ident">raw</span>),
+            <span class="ident">n</span>::<span class="ident">ImageType</span>::<span class="ident">Texture</span> { <span class="ident">raw</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">gl</span>.<span class="ident">delete_texture</span>(<span class="ident">raw</span>),
         }
     }
 
@@ -4051,22 +4207,6 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_pipeline_layout_name</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">_pipeline_layout</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">n</span>::<span class="ident">PipelineLayout</span>,
-        <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) {
-        <span class="comment">// TODO</span>
-    }
-
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_compute_pipeline_name</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">_compute_pipeline</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">n</span>::<span class="ident">ComputePipeline</span>,
-        <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) {
-        <span class="comment">// TODO</span>
-    }
-
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_graphics_pipeline_name</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">_graphics_pipeline</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">n</span>::<span class="ident">GraphicsPipeline</span>,
         <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
     ) {
         <span class="comment">// TODO</span>

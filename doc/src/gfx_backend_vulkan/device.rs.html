@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/f1398d2/src/backend/vulkan/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/0244e34/src/backend/vulkan/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_vulkan/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -2341,6 +2341,19 @@
 <span id="2338">2338</span>
 <span id="2339">2339</span>
 <span id="2340">2340</span>
+<span id="2341">2341</span>
+<span id="2342">2342</span>
+<span id="2343">2343</span>
+<span id="2344">2344</span>
+<span id="2345">2345</span>
+<span id="2346">2346</span>
+<span id="2347">2347</span>
+<span id="2348">2348</span>
+<span id="2349">2349</span>
+<span id="2350">2350</span>
+<span id="2351">2351</span>
+<span id="2352">2352</span>
+<span id="2353">2353</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">arrayvec</span>::<span class="ident">ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">ash</span>::{
@@ -3376,7 +3389,12 @@
             <span class="ident">ptr</span>::<span class="ident">null</span>(),
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">pipeline</span>,
         ) {
-            <span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">SUCCESS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">ComputePipeline</span>(<span class="ident">pipeline</span>)),
+            <span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">SUCCESS</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">name</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">label</span> {
+                    <span class="self">self</span>.<span class="ident">set_object_name</span>(<span class="ident">vk</span>::<span class="ident">ObjectType</span>::<span class="ident">PIPELINE</span>, <span class="ident">pipeline</span>.<span class="ident">as_raw</span>(), <span class="ident">name</span>);
+                }
+                <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">ComputePipeline</span>(<span class="ident">pipeline</span>))
+            }
             <span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_OUT_OF_HOST_MEMORY</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">OutOfMemory</span>::<span class="ident">Host</span>.<span class="ident">into</span>()),
             <span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_OUT_OF_DEVICE_MEMORY</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">OutOfMemory</span>::<span class="ident">Device</span>.<span class="ident">into</span>()),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">pso</span>::<span class="ident">CreationError</span>::<span class="ident">Other</span>),
@@ -3466,7 +3484,8 @@
 
         <span class="ident">pipelines</span>
             .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">pso</span><span class="op">|</span> {
+            .<span class="ident">zip</span>(<span class="ident">bufs</span>.<span class="ident">iter</span>())
+            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">pso</span>, <span class="ident">desc_pair</span>)<span class="op">|</span> {
                 <span class="kw">if</span> <span class="ident">pso</span> <span class="op">=</span><span class="op">=</span> <span class="ident">vk</span>::<span class="ident">Pipeline</span>::<span class="ident">null</span>() {
                     <span class="kw">match</span> <span class="ident">error</span> {
                         <span class="prelude-val">Some</span>(<span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_OUT_OF_HOST_MEMORY</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -3478,6 +3497,10 @@
                         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
                     }
                 } <span class="kw">else</span> {
+                    <span class="kw">let</span> <span class="ident">desc</span> <span class="op">=</span> <span class="ident">desc_pair</span>.<span class="number">0</span>.<span class="ident">borrow</span>();
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">name</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">label</span> {
+                        <span class="self">self</span>.<span class="ident">set_object_name</span>(<span class="ident">vk</span>::<span class="ident">ObjectType</span>::<span class="ident">PIPELINE</span>, <span class="ident">pso</span>.<span class="ident">as_raw</span>(), <span class="ident">name</span>);
+                    }
                     <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">ComputePipeline</span>(<span class="ident">pso</span>))
                 }
             })
@@ -3564,8 +3587,27 @@
         <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">debug_assertions</span>) {
             <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">spv</span>::<span class="ident">WriterFlags</span>::<span class="ident">DEBUG</span>;
         }
-        <span class="kw">let</span> <span class="ident">spv</span> <span class="op">=</span> <span class="ident">spv</span>::<span class="ident">write_vec</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>, <span class="ident">flags</span>);
-        <span class="self">self</span>.<span class="ident">create_shader_module</span>(<span class="kw-2">&amp;</span><span class="ident">spv</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> (<span class="ident">e</span>, <span class="ident">module</span>))
+
+        <span class="kw">let</span> <span class="ident">caps</span> <span class="op">=</span> [
+            <span class="ident">spv</span>::<span class="ident">Capability</span>::<span class="ident">Shader</span>,
+            <span class="ident">spv</span>::<span class="ident">Capability</span>::<span class="ident">Matrix</span>,
+            <span class="ident">spv</span>::<span class="ident">Capability</span>::<span class="ident">InputAttachment</span>,
+            <span class="ident">spv</span>::<span class="ident">Capability</span>::<span class="ident">Sampled1D</span>,
+            <span class="ident">spv</span>::<span class="ident">Capability</span>::<span class="ident">Image1D</span>,
+            <span class="ident">spv</span>::<span class="ident">Capability</span>::<span class="ident">SampledBuffer</span>,
+            <span class="ident">spv</span>::<span class="ident">Capability</span>::<span class="ident">ImageBuffer</span>,
+            <span class="ident">spv</span>::<span class="ident">Capability</span>::<span class="ident">ImageQuery</span>,
+            <span class="ident">spv</span>::<span class="ident">Capability</span>::<span class="ident">DerivativeControl</span>,
+            <span class="comment">//TODO: fill out the rest</span>
+        ]
+        .<span class="ident">iter</span>()
+        .<span class="ident">cloned</span>()
+        .<span class="ident">collect</span>();
+
+        <span class="kw">match</span> <span class="ident">spv</span>::<span class="ident">write_vec</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>, <span class="ident">flags</span>, <span class="ident">caps</span>) {
+            <span class="prelude-val">Ok</span>(<span class="ident">spv</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">create_shader_module</span>(<span class="kw-2">&amp;</span><span class="ident">spv</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> (<span class="ident">e</span>, <span class="ident">module</span>)),
+            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>((<span class="ident">d</span>::<span class="ident">ShaderError</span>::<span class="ident">CompilationFailed</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)), <span class="ident">module</span>)),
+        }
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_sampler</span>(
@@ -4499,22 +4541,6 @@
             <span class="ident">pipeline_layout</span>.<span class="ident">raw</span>.<span class="ident">as_raw</span>(),
             <span class="ident">name</span>,
         )
-    }
-
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_compute_pipeline_name</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">compute_pipeline</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">n</span>::<span class="ident">ComputePipeline</span>,
-        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) {
-        <span class="self">self</span>.<span class="ident">set_object_name</span>(<span class="ident">vk</span>::<span class="ident">ObjectType</span>::<span class="ident">PIPELINE</span>, <span class="ident">compute_pipeline</span>.<span class="number">0</span>.<span class="ident">as_raw</span>(), <span class="ident">name</span>)
-    }
-
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_graphics_pipeline_name</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">graphics_pipeline</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">n</span>::<span class="ident">GraphicsPipeline</span>,
-        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    ) {
-        <span class="self">self</span>.<span class="ident">set_object_name</span>(<span class="ident">vk</span>::<span class="ident">ObjectType</span>::<span class="ident">PIPELINE</span>, <span class="ident">graphics_pipeline</span>.<span class="number">0</span>.<span class="ident">as_raw</span>(), <span class="ident">name</span>)
     }
 }
 
