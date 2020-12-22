@@ -1,6 +1,6 @@
 (function() {var implementors = {};
 implementors["arrayvec"] = [{"text":"impl&lt;A:&nbsp;Array&gt; Drop for ArrayVec&lt;A&gt;","synthetic":false,"types":[]},{"text":"impl&lt;A:&nbsp;Array&gt; Drop for IntoIter&lt;A&gt;","synthetic":false,"types":[]},{"text":"impl&lt;'a, A:&nbsp;Array&gt; Drop for Drain&lt;'a, A&gt; <span class=\"where fmt-newline\">where<br>&nbsp;&nbsp;&nbsp;&nbsp;A::Item: 'a,&nbsp;</span>","synthetic":false,"types":[]}];
-implementors["base64"] = [{"text":"impl&lt;'a, W:&nbsp;Write&gt; Drop for EncoderWriter&lt;'a, W&gt;","synthetic":false,"types":[]}];
+implementors["base64"] = [{"text":"impl&lt;W:&nbsp;Write&gt; Drop for EncoderWriter&lt;W&gt;","synthetic":false,"types":[]}];
 implementors["copyless"] = [{"text":"impl&lt;T&gt; Drop for BoxAllocation&lt;T&gt;","synthetic":false,"types":[]}];
 implementors["futures_channel"] = [{"text":"impl&lt;T&gt; Drop for Receiver&lt;T&gt;","synthetic":false,"types":[]},{"text":"impl&lt;T&gt; Drop for UnboundedReceiver&lt;T&gt;","synthetic":false,"types":[]},{"text":"impl&lt;T&gt; Drop for Sender&lt;T&gt;","synthetic":false,"types":[]},{"text":"impl&lt;T&gt; Drop for Receiver&lt;T&gt;","synthetic":false,"types":[]}];
 implementors["futures_executor"] = [{"text":"impl Drop for Enter","synthetic":false,"types":[]}];
