@@ -82,7 +82,7 @@ will result in a compile error.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="attribute">#[<span class="ident">instrument</span>]</span>
-<span class="kw">pub</span> <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">my_function</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), ()<span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">my_function</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), ()<span class="op">&gt;</span> {
     <span class="comment">// ...</span>
 }</pre></div>
 <p>It also works with <a href="https://crates.io/crates/async-trait">async-trait</a>
@@ -95,7 +95,7 @@ and hopefully most libraries that exhibit similar behaviors:</p>
 
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Foo</span> {
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">foo</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">arg</span>: <span class="ident">usize</span>);
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">foo</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">arg</span>: <span class="ident">usize</span>);
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -104,19 +104,19 @@ and hopefully most libraries that exhibit similar behaviors:</p>
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">impl</span> <span class="ident">Foo</span> <span class="kw">for</span> <span class="ident">FooImpl</span> {
     <span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">fields</span>(<span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>, <span class="ident">tmp</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>()))]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">foo</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">arg</span>: <span class="ident">usize</span>) {}
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">foo</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">arg</span>: <span class="ident">usize</span>) {}
 }</pre></div>
 <p>An interesting note on this subject is that references to the <code>Self</code>
 type inside the <code>fields</code> argument are only allowed when the instrumented
 function is a method aka. the function receives <code>self</code> as an argument.
 For example, this <em>will not work</em> because it doesn't receive <code>self</code>:</p>
 
-<div class='information'><div class='tooltip compile_fail'>ⓘ<span class='tooltiptext'>This example deliberately fails to compile</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered compile_fail">
+<div class='information'><div class='tooltip compile_fail'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered compile_fail">
 <span class="kw">use</span> <span class="ident">async_trait</span>::<span class="ident">async_trait</span>;
 
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Bar</span> {
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">bar</span>();
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">bar</span>();
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -125,7 +125,7 @@ For example, this <em>will not work</em> because it doesn't receive <code>self</
 <span class="attribute">#[<span class="ident">async_trait</span>]</span>
 <span class="kw">impl</span> <span class="ident">Bar</span> <span class="kw">for</span> <span class="ident">BarImpl</span> {
     <span class="attribute">#[<span class="ident">instrument</span>(<span class="ident">fields</span>(<span class="ident">tmp</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">any</span>::<span class="ident">type_name</span>::<span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>()))]</span>
-    <span class="ident">async</span> <span class="kw">fn</span> <span class="ident">bar</span>() {}
+    <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">bar</span>() {}
 }</pre></div>
 <p>Instead, you should manually rewrite any <code>Self</code> types as the type for
 which you implement the trait: <code>#[instrument(fields(tmp = std::any::type_name::&lt;Bar&gt;()))]</code>.</p>

@@ -18,14 +18,14 @@ conveniently extract out the value at the end.</p>
 <span class="kw">use</span> <span class="ident">futures</span>::<span class="ident">pin_mut</span>;
 
 <span class="comment">// These two futures have different types even though their outputs have the same type</span>
-<span class="kw">let</span> <span class="ident">future1</span> <span class="op">=</span> <span class="ident">async</span> { <span class="number">1</span> };
-<span class="kw">let</span> <span class="ident">future2</span> <span class="op">=</span> <span class="ident">async</span> { <span class="number">2</span> };
+<span class="kw">let</span> <span class="ident">future1</span> <span class="op">=</span> <span class="kw">async</span> { <span class="number">1</span> };
+<span class="kw">let</span> <span class="ident">future2</span> <span class="op">=</span> <span class="kw">async</span> { <span class="number">2</span> };
 
 <span class="comment">// &#39;select&#39; requires Future + Unpin bounds</span>
 <span class="macro">pin_mut</span><span class="macro">!</span>(<span class="ident">future1</span>);
 <span class="macro">pin_mut</span><span class="macro">!</span>(<span class="ident">future2</span>);
 
-<span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">future</span>::<span class="ident">select</span>(<span class="ident">future1</span>, <span class="ident">future2</span>).<span class="ident">await</span> {
+<span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">future</span>::<span class="ident">select</span>(<span class="ident">future1</span>, <span class="ident">future2</span>).<span class="kw">await</span> {
     <span class="ident">Either</span>::<span class="ident">Left</span>((<span class="ident">value1</span>, <span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value1</span>, <span class="comment">// `value1` is resolved from `future1`</span>
                                          <span class="comment">// `_` represents `future2`</span>
     <span class="ident">Either</span>::<span class="ident">Right</span>((<span class="ident">value2</span>, <span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value2</span>, <span class="comment">// `value2` is resolved from `future2`</span>

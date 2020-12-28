@@ -67,7 +67,7 @@ sourcesIndex["tracing_attributes"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["tracing_core"] = {"name":"","files":["callsite.rs","dispatcher.rs","event.rs","field.rs","lib.rs","metadata.rs","parent.rs","span.rs","stdlib.rs","subscriber.rs"]};
 sourcesIndex["typed_arena"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["unicode_xid"] = {"name":"","files":["lib.rs","tables.rs"]};
-sourcesIndex["wgpu"] = {"name":"","dirs":[{"name":"backend","files":["direct.rs","error.rs","mod.rs","native_gpu_future.rs"]},{"name":"util","files":["belt.rs","device.rs","mod.rs"]}],"files":["lib.rs","macros.rs"]};
+sourcesIndex["wgpu"] = {"name":"","dirs":[{"name":"backend","files":["direct.rs","error.rs","mod.rs","native_gpu_future.rs"]},{"name":"util","files":["belt.rs","device.rs","encoder.rs","mod.rs"]}],"files":["lib.rs","macros.rs"]};
 sourcesIndex["wgpu_core"] = {"name":"","dirs":[{"name":"command","files":["allocator.rs","bind.rs","bundle.rs","compute.rs","draw.rs","mod.rs","render.rs","transfer.rs"]},{"name":"device","files":["alloc.rs","descriptor.rs","life.rs","mod.rs","queue.rs","trace.rs"]},{"name":"track","files":["buffer.rs","mod.rs","range.rs","texture.rs"]}],"files":["binding_model.rs","conv.rs","hub.rs","id.rs","instance.rs","lib.rs","macros.rs","pipeline.rs","resource.rs","swap_chain.rs","validation.rs"]};
 sourcesIndex["wgpu_types"] = {"name":"","files":["lib.rs"]};
 createSourceSidebar();

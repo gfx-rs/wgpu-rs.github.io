@@ -48,12 +48,12 @@ result in incorrect traces.</p>
 <p>For example,</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">my_async_function</span>() {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">my_async_function</span>() {
     <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="macro">info_span</span><span class="macro">!</span>(<span class="string">&quot;my_async_function&quot;</span>);
 
     <span class="comment">// THIS WILL RESULT IN INCORRECT TRACES</span>
     <span class="kw">let</span> <span class="ident">_enter</span> <span class="op">=</span> <span class="ident">span</span>.<span class="ident">enter</span>();
-    <span class="ident">some_other_async_function</span>().<span class="ident">await</span>;
+    <span class="ident">some_other_async_function</span>().<span class="kw">await</span>;
 
     <span class="comment">// ...</span>
 }</pre></div>
@@ -74,7 +74,7 @@ synchronous closure and exits the span when the closure returns, the
 span will always be exited before the next await point. For example:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">my_async_function</span>() {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">my_async_function</span>() {
     <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="macro">info_span</span><span class="macro">!</span>(<span class="string">&quot;my_async_function&quot;</span>);
 
     <span class="kw">let</span> <span class="ident">some_value</span> <span class="op">=</span> <span class="ident">span</span>.<span class="ident">in_scope</span>(<span class="op">|</span><span class="op">|</span> {
@@ -83,7 +83,7 @@ span will always be exited before the next await point. For example:</p>
 
     <span class="comment">// This is okay! The span has already been exited before we reach</span>
     <span class="comment">// the await point.</span>
-    <span class="ident">some_other_async_function</span>(<span class="ident">some_value</span>).<span class="ident">await</span>;
+    <span class="ident">some_other_async_function</span>(<span class="ident">some_value</span>).<span class="kw">await</span>;
 
     <span class="comment">// ...</span>
 }</pre></div>
@@ -96,15 +96,15 @@ enter the span <em>every</em> time the future is polled, and exit it whenever
 the future yields.</p>
 <p><code>Instrument</code> can be used with an async block inside an async function:</p>
 
-<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
 <span class="kw">use</span> <span class="ident">tracing</span>::<span class="ident">Instrument</span>;
 
-<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">my_async_function</span>() {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">my_async_function</span>() {
     <span class="kw">let</span> <span class="ident">span</span> <span class="op">=</span> <span class="macro">info_span</span><span class="macro">!</span>(<span class="string">&quot;my_async_function&quot;</span>);
-    <span class="ident">async</span> <span class="kw">move</span> {
+    <span class="kw">async</span> <span class="kw">move</span> {
        <span class="comment">// This is correct! If we yield here, the span will be exited,</span>
        <span class="comment">// and re-entered when we resume.</span>
-       <span class="ident">some_other_async_function</span>().<span class="ident">await</span>;
+       <span class="ident">some_other_async_function</span>().<span class="kw">await</span>;
 
        <span class="comment">//more asynchronous code inside the span...</span>
 
@@ -112,18 +112,18 @@ the future yields.</p>
       <span class="comment">// instrument the async block with the span...</span>
       .<span class="ident">instrument</span>(<span class="ident">span</span>)
       <span class="comment">// ...and await it.</span>
-      .<span class="ident">await</span>
+      .<span class="kw">await</span>
 }</pre></div>
 <p>It can also be used to instrument calls to async functions at the
 callsite:</p>
 
-<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
 <span class="kw">use</span> <span class="ident">tracing</span>::<span class="ident">Instrument</span>;
 
-<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">my_async_function</span>() {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">my_async_function</span>() {
     <span class="kw">let</span> <span class="ident">some_value</span> <span class="op">=</span> <span class="ident">some_other_async_function</span>()
        .<span class="ident">instrument</span>(<span class="macro">debug_span</span><span class="macro">!</span>(<span class="string">&quot;some_other_async_function&quot;</span>))
-       .<span class="ident">await</span>;
+       .<span class="kw">await</span>;
 
     <span class="comment">// ...</span>
 }</pre></div>
@@ -132,13 +132,13 @@ callsite:</p>
 <p>The <a href="../../attr.instrument.html"><code>#[instrument]</code> attribute macro</a> can automatically generate
 correct code when used on an async function:</p>
 
-<div class='information'><div class='tooltip ignore'>ⓘ<span class='tooltiptext'>This example is not tested</span></div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore">
 <span class="attribute">#[<span class="ident">tracing</span>::<span class="ident">instrument</span>(<span class="ident">level</span> <span class="op">=</span> <span class="string">&quot;info&quot;</span>)]</span>
-<span class="ident">async</span> <span class="kw">fn</span> <span class="ident">my_async_function</span>() {
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">my_async_function</span>() {
  
     <span class="comment">// This is correct! If we yield here, the span will be exited,</span>
     <span class="comment">// and re-entered when we resume.</span>
-    <span class="ident">some_other_async_function</span>().<span class="ident">await</span>;
+    <span class="ident">some_other_async_function</span>().<span class="kw">await</span>;
 
     <span class="comment">// ...</span>
   
