@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/0244e34/src/backend/vulkan/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/6b3a1e3/src/backend/vulkan/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_vulkan/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -1570,9 +1570,6 @@
 <span id="1567">1567</span>
 <span id="1568">1568</span>
 <span id="1569">1569</span>
-<span id="1570">1570</span>
-<span id="1571">1571</span>
-<span id="1572">1572</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
 
@@ -1614,6 +1611,7 @@
     <span class="ident">ffi</span>::{<span class="ident">CStr</span>, <span class="ident">CString</span>},
     <span class="ident">fmt</span>, <span class="ident">mem</span>, <span class="ident">slice</span>,
     <span class="ident">sync</span>::<span class="ident">Arc</span>,
+    <span class="ident">thread</span>,
 };
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use-rtld-next&quot;</span>)]</span>
@@ -1628,59 +1626,6 @@
 <span class="kw">mod</span> <span class="ident">native</span>;
 <span class="kw">mod</span> <span class="ident">pool</span>;
 <span class="kw">mod</span> <span class="ident">window</span>;
-
-<span class="comment">// CStr&#39;s cannot be constant yet, until const fn lands we need to use a lazy_static</span>
-<span class="macro">lazy_static</span><span class="macro">!</span> {
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">LAYERS</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">debug_assertions</span>) {
-        <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">CStr</span>::<span class="ident">from_bytes_with_nul</span>(<span class="string">b&quot;VK_LAYER_KHRONOS_validation\0&quot;</span>).<span class="ident">unwrap</span>()]
-    } <span class="kw">else</span> {
-        <span class="macro">vec</span><span class="macro">!</span>[]
-    };
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">EXTENSIONS</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">debug_assertions</span>) {
-        <span class="macro">vec</span><span class="macro">!</span>[
-            <span class="ident">DebugUtils</span>::<span class="ident">name</span>(),
-            <span class="ident">DebugReport</span>::<span class="ident">name</span>(),
-            <span class="kw-2">*</span><span class="ident">KHR_GET_PHYSICAL_DEVICE_PROPERTIES2</span>,
-        ]
-    } <span class="kw">else</span> {
-        <span class="macro">vec</span><span class="macro">!</span>[
-            <span class="ident">DebugUtils</span>::<span class="ident">name</span>(),
-            <span class="kw-2">*</span><span class="ident">KHR_GET_PHYSICAL_DEVICE_PROPERTIES2</span>,
-    ]
-    };
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">DEVICE_EXTENSIONS</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">extensions</span>::<span class="ident">khr</span>::<span class="ident">Swapchain</span>::<span class="ident">name</span>()];
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">SURFACE_EXTENSIONS</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
-        <span class="ident">extensions</span>::<span class="ident">khr</span>::<span class="ident">Surface</span>::<span class="ident">name</span>(),
-        <span class="comment">// Platform-specific WSI extensions</span>
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">unix</span>, <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>), <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
-        <span class="ident">extensions</span>::<span class="ident">khr</span>::<span class="ident">XlibSurface</span>::<span class="ident">name</span>(),
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">unix</span>, <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>), <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
-        <span class="ident">extensions</span>::<span class="ident">khr</span>::<span class="ident">XcbSurface</span>::<span class="ident">name</span>(),
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">unix</span>, <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>), <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
-        <span class="ident">extensions</span>::<span class="ident">khr</span>::<span class="ident">WaylandSurface</span>::<span class="ident">name</span>(),
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>)]</span>
-        <span class="ident">extensions</span>::<span class="ident">khr</span>::<span class="ident">AndroidSurface</span>::<span class="ident">name</span>(),
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;windows&quot;</span>)]</span>
-        <span class="ident">extensions</span>::<span class="ident">khr</span>::<span class="ident">Win32Surface</span>::<span class="ident">name</span>(),
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)]</span>
-        <span class="ident">extensions</span>::<span class="ident">mvk</span>::<span class="ident">MacOSSurface</span>::<span class="ident">name</span>(),
-    ];
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">AMD_NEGATIVE_VIEWPORT_HEIGHT</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span> <span class="op">=</span>
-        <span class="ident">CStr</span>::<span class="ident">from_bytes_with_nul</span>(<span class="string">b&quot;VK_AMD_negative_viewport_height\0&quot;</span>).<span class="ident">unwrap</span>();
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">KHR_MAINTENANCE1</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span> <span class="op">=</span>
-        <span class="ident">CStr</span>::<span class="ident">from_bytes_with_nul</span>(<span class="string">b&quot;VK_KHR_maintenance1\0&quot;</span>).<span class="ident">unwrap</span>();
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">KHR_MAINTENANCE3</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span> <span class="op">=</span>
-        <span class="ident">CStr</span>::<span class="ident">from_bytes_with_nul</span>(<span class="string">b&quot;VK_KHR_maintenance3\0&quot;</span>).<span class="ident">unwrap</span>();
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">KHR_SAMPLER_MIRROR_MIRROR_CLAMP_TO_EDGE</span> : <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span> <span class="op">=</span>
-        <span class="ident">CStr</span>::<span class="ident">from_bytes_with_nul</span>(<span class="string">b&quot;VK_KHR_sampler_mirror_clamp_to_edge\0&quot;</span>).<span class="ident">unwrap</span>();
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">KHR_GET_PHYSICAL_DEVICE_PROPERTIES2</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span> <span class="op">=</span>
-        <span class="ident">CStr</span>::<span class="ident">from_bytes_with_nul</span>(<span class="string">b&quot;VK_KHR_get_physical_device_properties2\0&quot;</span>).<span class="ident">unwrap</span>();
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">KHR_DRAW_INDIRECT_COUNT</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span> <span class="op">=</span>
-        <span class="ident">CStr</span>::<span class="ident">from_bytes_with_nul</span>(<span class="string">b&quot;VK_KHR_draw_indirect_count\0&quot;</span>).<span class="ident">unwrap</span>();
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">EXT_DESCRIPTOR_INDEXING</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span> <span class="op">=</span>
-        <span class="ident">CStr</span>::<span class="ident">from_bytes_with_nul</span>(<span class="string">b&quot;VK_EXT_descriptor_indexing\0&quot;</span>).<span class="ident">unwrap</span>();
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">MESH_SHADER</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span> <span class="op">=</span> <span class="ident">MeshShader</span>::<span class="ident">name</span>();
-}
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;use-rtld-next&quot;</span>))]</span>
 <span class="macro">lazy_static</span><span class="macro">!</span> {
@@ -1825,6 +1770,9 @@
     <span class="ident">p_callback_data</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">vk</span>::<span class="ident">DebugUtilsMessengerCallbackDataEXT</span>,
     <span class="ident">_user_data</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_void</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vk</span>::<span class="ident">Bool32</span> {
+    <span class="kw">if</span> <span class="ident">thread</span>::<span class="ident">panicking</span>() {
+        <span class="kw">return</span> <span class="ident">vk</span>::<span class="ident">FALSE</span>;
+    }
     <span class="kw">let</span> <span class="ident">callback_data</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">p_callback_data</span>;
 
     <span class="kw">let</span> <span class="ident">message_severity</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">message_severity</span> {
@@ -1908,6 +1856,10 @@
     <span class="ident">description</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_char</span>,
     <span class="ident">_user_data</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_void</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vk</span>::<span class="ident">Bool32</span> {
+    <span class="kw">if</span> <span class="ident">thread</span>::<span class="ident">panicking</span>() {
+        <span class="kw">return</span> <span class="ident">vk</span>::<span class="ident">FALSE</span>;
+    }
+
     <span class="kw">let</span> <span class="ident">level</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">type_</span> {
         <span class="ident">vk</span>::<span class="ident">DebugReportFlagsEXT</span>::<span class="ident">ERROR</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">log</span>::<span class="ident">Level</span>::<span class="ident">Error</span>,
         <span class="ident">vk</span>::<span class="ident">DebugReportFlagsEXT</span>::<span class="ident">WARNING</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">log</span>::<span class="ident">Level</span>::<span class="ident">Warn</span>,
@@ -1951,48 +1903,89 @@
         })<span class="question-mark">?</span>;
 
         <span class="comment">// Check our extensions against the available extensions</span>
-        <span class="kw">let</span> <span class="ident">extensions</span> <span class="op">=</span> <span class="ident">SURFACE_EXTENSIONS</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">chain</span>(<span class="ident">EXTENSIONS</span>.<span class="ident">iter</span>())
-            .<span class="ident">filter_map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">ext</span><span class="op">|</span> {
-                <span class="ident">instance_extensions</span>
+        <span class="kw">let</span> <span class="ident">extensions</span> <span class="op">=</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">extensions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+            <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">extensions</span>::<span class="ident">khr</span>::<span class="ident">Surface</span>::<span class="ident">name</span>());
+
+            <span class="comment">// Platform-specific WSI extensions</span>
+            <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">all</span>(
+                <span class="ident">unix</span>,
+                <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>),
+                <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)
+            )) {
+                <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">extensions</span>::<span class="ident">khr</span>::<span class="ident">XlibSurface</span>::<span class="ident">name</span>());
+                <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">extensions</span>::<span class="ident">khr</span>::<span class="ident">XcbSurface</span>::<span class="ident">name</span>());
+                <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">extensions</span>::<span class="ident">khr</span>::<span class="ident">WaylandSurface</span>::<span class="ident">name</span>());
+            }
+            <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>) {
+                <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">extensions</span>::<span class="ident">khr</span>::<span class="ident">AndroidSurface</span>::<span class="ident">name</span>());
+            }
+            <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;windows&quot;</span>) {
+                <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">extensions</span>::<span class="ident">khr</span>::<span class="ident">Win32Surface</span>::<span class="ident">name</span>());
+            }
+            <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>) {
+                <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">extensions</span>::<span class="ident">mvk</span>::<span class="ident">MacOSSurface</span>::<span class="ident">name</span>());
+            }
+
+            <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">DebugUtils</span>::<span class="ident">name</span>());
+            <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">debug_assertions</span>) {
+                <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">DebugReport</span>::<span class="ident">name</span>());
+            }
+
+            <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">vk</span>::<span class="ident">KhrGetPhysicalDeviceProperties2Fn</span>::<span class="ident">name</span>());
+
+            <span class="comment">// Only keep available extensions.</span>
+            <span class="ident">extensions</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">ext</span><span class="op">|</span> {
+                <span class="kw">if</span> <span class="ident">instance_extensions</span>
                     .<span class="ident">iter</span>()
                     .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst_ext</span><span class="op">|</span> <span class="kw">unsafe</span> {
                         <span class="ident">CStr</span>::<span class="ident">from_ptr</span>(<span class="ident">inst_ext</span>.<span class="ident">extension_name</span>.<span class="ident">as_ptr</span>()) <span class="op">=</span><span class="op">=</span> <span class="ident">ext</span>
                     })
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ext</span>)
-                    .<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> {
-                        <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Unable to find extension: {}&quot;</span>, <span class="ident">ext</span>.<span class="ident">to_string_lossy</span>());
-                        <span class="prelude-val">None</span>
-                    })
-            })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">CStr</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+                    .<span class="ident">is_some</span>()
+                {
+                    <span class="bool-val">true</span>
+                } <span class="kw">else</span> {
+                    <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Unable to find extension: {}&quot;</span>, <span class="ident">ext</span>.<span class="ident">to_string_lossy</span>());
+                    <span class="bool-val">false</span>
+                }
+            });
+            <span class="ident">extensions</span>
+        };
 
         <span class="comment">// Check requested layers against the available layers</span>
-        <span class="kw">let</span> <span class="ident">layers</span> <span class="op">=</span> <span class="ident">LAYERS</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">filter_map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">layer</span><span class="op">|</span> {
-                <span class="ident">instance_layers</span>
+        <span class="kw">let</span> <span class="ident">layers</span> <span class="op">=</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">layers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+            <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">debug_assertions</span>) {
+                <span class="ident">layers</span>.<span class="ident">push</span>(<span class="ident">CStr</span>::<span class="ident">from_bytes_with_nul</span>(<span class="string">b&quot;VK_LAYER_KHRONOS_validation\0&quot;</span>).<span class="ident">unwrap</span>());
+            }
+
+            <span class="comment">// Only keep available layers.</span>
+            <span class="ident">layers</span>.<span class="ident">retain</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">layer</span><span class="op">|</span> {
+                <span class="kw">if</span> <span class="ident">instance_layers</span>
                     .<span class="ident">iter</span>()
                     .<span class="ident">find</span>(<span class="op">|</span><span class="ident">inst_layer</span><span class="op">|</span> <span class="kw">unsafe</span> {
                         <span class="ident">CStr</span>::<span class="ident">from_ptr</span>(<span class="ident">inst_layer</span>.<span class="ident">layer_name</span>.<span class="ident">as_ptr</span>()) <span class="op">=</span><span class="op">=</span> <span class="ident">layer</span>
                     })
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">layer</span>)
-                    .<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> {
-                        <span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Unable to find layer: {}&quot;</span>, <span class="ident">layer</span>.<span class="ident">to_string_lossy</span>());
-                        <span class="prelude-val">None</span>
-                    })
-            })
-            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">CStr</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+                    .<span class="ident">is_some</span>()
+                {
+                    <span class="bool-val">true</span>
+                } <span class="kw">else</span> {
+                    <span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Unable to find layer: {}&quot;</span>, <span class="ident">layer</span>.<span class="ident">to_string_lossy</span>());
+                    <span class="bool-val">false</span>
+                }
+            });
+            <span class="ident">layers</span>
+        };
 
         <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">cstrings</span> <span class="op">=</span> <span class="ident">layers</span>
+            <span class="kw">let</span> <span class="ident">str_pointers</span> <span class="op">=</span> <span class="ident">layers</span>
                 .<span class="ident">iter</span>()
                 .<span class="ident">chain</span>(<span class="ident">extensions</span>.<span class="ident">iter</span>())
-                .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">s</span><span class="op">|</span> <span class="ident">CString</span>::<span class="ident">from</span>(<span class="ident">s</span>))
+                .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">s</span><span class="op">|</span> {
+                    <span class="comment">// Safe because `layers` and `extensions` entries have static lifetime.</span>
+                    <span class="ident">s</span>.<span class="ident">as_ptr</span>()
+                })
                 .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-
-            <span class="kw">let</span> <span class="ident">str_pointers</span> <span class="op">=</span> <span class="ident">cstrings</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">as_ptr</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
 
             <span class="kw">let</span> <span class="ident">create_info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">InstanceCreateInfo</span>::<span class="ident">builder</span>()
                 .<span class="ident">flags</span>(<span class="ident">vk</span>::<span class="ident">InstanceCreateFlags</span>::<span class="ident">empty</span>())
@@ -2008,7 +2001,7 @@
 
         <span class="kw">let</span> <span class="ident">get_physical_device_properties</span> <span class="op">=</span> <span class="ident">extensions</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="op">&amp;&amp;</span><span class="ident">ext</span><span class="op">|</span> <span class="ident">ext</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">KHR_GET_PHYSICAL_DEVICE_PROPERTIES2</span>)
+            .<span class="ident">find</span>(<span class="op">|</span><span class="op">&amp;&amp;</span><span class="ident">ext</span><span class="op">|</span> <span class="ident">ext</span> <span class="op">=</span><span class="op">=</span> <span class="ident">vk</span>::<span class="ident">KhrGetPhysicalDeviceProperties2Fn</span>::<span class="ident">name</span>())
             .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                 <span class="ident">vk</span>::<span class="ident">KhrGetPhysicalDeviceProperties2Fn</span>::<span class="ident">load</span>(<span class="op">|</span><span class="ident">name</span><span class="op">|</span> <span class="kw">unsafe</span> {
                     <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">transmute</span>(
@@ -2267,52 +2260,47 @@
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DeviceCreationError</span>::<span class="ident">MissingFeature</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">maintenance_level</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">supports_extension</span>(<span class="kw-2">*</span><span class="ident">KHR_MAINTENANCE1</span>) {
+        <span class="kw">let</span> <span class="ident">maintenance_level</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">supports_extension</span>(<span class="ident">vk</span>::<span class="ident">KhrMaintenance1Fn</span>::<span class="ident">name</span>()) {
             <span class="number">1</span>
         } <span class="kw">else</span> {
             <span class="number">0</span>
         };
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">enabled_features</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">map_device_features</span>(<span class="ident">requested_features</span>);
-        <span class="kw">let</span> <span class="ident">enabled_extensions</span> <span class="op">=</span> <span class="ident">DEVICE_EXTENSIONS</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">cloned</span>()
-            .<span class="ident">chain</span>(
-                <span class="kw">if</span> <span class="ident">requested_features</span>.<span class="ident">contains</span>(<span class="ident">Features</span>::<span class="ident">NDC_Y_UP</span>) <span class="op">&amp;&amp;</span> <span class="ident">maintenance_level</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">AMD_NEGATIVE_VIEWPORT_HEIGHT</span>)
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">None</span>
-                },
-            )
-            .<span class="ident">chain</span>(<span class="kw">match</span> <span class="ident">maintenance_level</span> {
-                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">KHR_MAINTENANCE1</span>),
+        <span class="kw">let</span> <span class="ident">enabled_extensions</span> <span class="op">=</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">enabled_extensions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+            <span class="ident">enabled_extensions</span>.<span class="ident">push</span>(<span class="ident">extensions</span>::<span class="ident">khr</span>::<span class="ident">Swapchain</span>::<span class="ident">name</span>());
+
+            <span class="kw">match</span> <span class="ident">maintenance_level</span> {
+                <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">if</span> <span class="ident">requested_features</span>.<span class="ident">contains</span>(<span class="ident">Features</span>::<span class="ident">NDC_Y_UP</span>) {
+                        <span class="ident">enabled_extensions</span>.<span class="ident">push</span>(<span class="ident">vk</span>::<span class="ident">AmdNegativeViewportHeightFn</span>::<span class="ident">name</span>());
+                    }
+                }
+                <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">enabled_extensions</span>.<span class="ident">push</span>(<span class="ident">vk</span>::<span class="ident">KhrMaintenance1Fn</span>::<span class="ident">name</span>());
+                }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
-            })
-            .<span class="ident">chain</span>(
-                <span class="kw">if</span> <span class="ident">requested_features</span>.<span class="ident">intersects</span>(
-                    <span class="ident">Features</span>::<span class="ident">SAMPLED_TEXTURE_DESCRIPTOR_INDEXING</span>
-                        <span class="op">|</span> <span class="ident">Features</span>::<span class="ident">STORAGE_TEXTURE_DESCRIPTOR_INDEXING</span>
-                        <span class="op">|</span> <span class="ident">Features</span>::<span class="ident">UNSIZED_DESCRIPTOR_ARRAY</span>,
-                ) {
-                    <span class="macro">vec</span><span class="macro">!</span>[<span class="kw-2">*</span><span class="ident">KHR_MAINTENANCE3</span>, <span class="kw-2">*</span><span class="ident">EXT_DESCRIPTOR_INDEXING</span>]
-                } <span class="kw">else</span> {
-                    <span class="macro">vec</span><span class="macro">!</span>[]
-                },
-            )
-            .<span class="ident">chain</span>(
-                <span class="kw">if</span> <span class="ident">requested_features</span>.<span class="ident">intersects</span>(<span class="ident">Features</span>::<span class="ident">TASK_SHADER</span> <span class="op">|</span> <span class="ident">Features</span>::<span class="ident">MESH_SHADER</span>) {
-                    <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">MESH_SHADER</span>)
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">None</span>
-                },
-            )
-            .<span class="ident">chain</span>(
-                <span class="kw">if</span> <span class="ident">requested_features</span>.<span class="ident">contains</span>(<span class="ident">Features</span>::<span class="ident">DRAW_INDIRECT_COUNT</span>) {
-                    <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">KHR_DRAW_INDIRECT_COUNT</span>)
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">None</span>
-                },
-            );
+            }
+
+            <span class="kw">if</span> <span class="ident">requested_features</span>.<span class="ident">intersects</span>(
+                <span class="ident">Features</span>::<span class="ident">SAMPLED_TEXTURE_DESCRIPTOR_INDEXING</span>
+                    <span class="op">|</span> <span class="ident">Features</span>::<span class="ident">STORAGE_TEXTURE_DESCRIPTOR_INDEXING</span>
+                    <span class="op">|</span> <span class="ident">Features</span>::<span class="ident">UNSIZED_DESCRIPTOR_ARRAY</span>,
+            ) {
+                <span class="ident">enabled_extensions</span>.<span class="ident">push</span>(<span class="ident">vk</span>::<span class="ident">KhrMaintenance3Fn</span>::<span class="ident">name</span>());
+                <span class="ident">enabled_extensions</span>.<span class="ident">push</span>(<span class="ident">vk</span>::<span class="ident">ExtDescriptorIndexingFn</span>::<span class="ident">name</span>());
+            }
+
+            <span class="kw">if</span> <span class="ident">requested_features</span>.<span class="ident">intersects</span>(<span class="ident">Features</span>::<span class="ident">TASK_SHADER</span> <span class="op">|</span> <span class="ident">Features</span>::<span class="ident">MESH_SHADER</span>) {
+                <span class="ident">enabled_extensions</span>.<span class="ident">push</span>(<span class="ident">MeshShader</span>::<span class="ident">name</span>());
+            }
+
+            <span class="kw">if</span> <span class="ident">requested_features</span>.<span class="ident">contains</span>(<span class="ident">Features</span>::<span class="ident">DRAW_INDIRECT_COUNT</span>) {
+                <span class="ident">enabled_extensions</span>.<span class="ident">push</span>(<span class="ident">DrawIndirectCount</span>::<span class="ident">name</span>());
+            }
+
+            <span class="ident">enabled_extensions</span>
+        };
 
         <span class="kw">let</span> <span class="ident">valid_ash_memory_types</span> <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">mem_properties</span> <span class="op">=</span> <span class="self">self</span>
@@ -2333,9 +2321,13 @@
 
         <span class="comment">// Create device</span>
         <span class="kw">let</span> <span class="ident">device_raw</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">cstrings</span> <span class="op">=</span> <span class="ident">enabled_extensions</span>.<span class="ident">map</span>(<span class="ident">CString</span>::<span class="ident">from</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-
-            <span class="kw">let</span> <span class="ident">str_pointers</span> <span class="op">=</span> <span class="ident">cstrings</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">as_ptr</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+            <span class="kw">let</span> <span class="ident">str_pointers</span> <span class="op">=</span> <span class="ident">enabled_extensions</span>
+                .<span class="ident">iter</span>()
+                .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">s</span><span class="op">|</span> {
+                    <span class="comment">// Safe because `enabled_extensions` entries have static lifetime.</span>
+                    <span class="ident">s</span>.<span class="ident">as_ptr</span>()
+                })
+                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
 
             <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">DeviceCreateInfo</span>::<span class="ident">builder</span>()
                 .<span class="ident">queue_create_infos</span>(<span class="kw-2">&amp;</span><span class="ident">family_infos</span>)
@@ -2547,7 +2539,7 @@
                 .<span class="ident">build</span>();
 
             <span class="comment">// Add extension infos to the p_next chain</span>
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">supports_extension</span>(<span class="kw-2">*</span><span class="ident">EXT_DESCRIPTOR_INDEXING</span>) {
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">supports_extension</span>(<span class="ident">vk</span>::<span class="ident">ExtDescriptorIndexingFn</span>::<span class="ident">name</span>()) {
                 <span class="ident">descriptor_indexing_features</span> <span class="op">=</span>
                     <span class="prelude-val">Some</span>(<span class="ident">vk</span>::<span class="ident">PhysicalDeviceDescriptorIndexingFeaturesEXT</span>::<span class="ident">builder</span>().<span class="ident">build</span>());
 
@@ -2576,15 +2568,15 @@
             <span class="op">|</span> <span class="ident">Features</span>::<span class="ident">MUTABLE_COMPARISON_SAMPLER</span>
             <span class="op">|</span> <span class="ident">Features</span>::<span class="ident">TEXTURE_DESCRIPTOR_ARRAY</span>;
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">supports_extension</span>(<span class="kw-2">*</span><span class="ident">AMD_NEGATIVE_VIEWPORT_HEIGHT</span>)
-            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">supports_extension</span>(<span class="kw-2">*</span><span class="ident">KHR_MAINTENANCE1</span>)
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">supports_extension</span>(<span class="ident">vk</span>::<span class="ident">AmdNegativeViewportHeightFn</span>::<span class="ident">name</span>())
+            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">supports_extension</span>(<span class="ident">vk</span>::<span class="ident">KhrMaintenance1Fn</span>::<span class="ident">name</span>())
         {
             <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features</span>::<span class="ident">NDC_Y_UP</span>;
         }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">supports_extension</span>(<span class="kw-2">*</span><span class="ident">KHR_SAMPLER_MIRROR_MIRROR_CLAMP_TO_EDGE</span>) {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">supports_extension</span>(<span class="ident">vk</span>::<span class="ident">KhrSamplerMirrorClampToEdgeFn</span>::<span class="ident">name</span>()) {
             <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features</span>::<span class="ident">SAMPLER_MIRROR_CLAMP_EDGE</span>;
         }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">supports_extension</span>(<span class="kw-2">*</span><span class="ident">KHR_DRAW_INDIRECT_COUNT</span>) {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">supports_extension</span>(<span class="ident">DrawIndirectCount</span>::<span class="ident">name</span>()) {
             <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features</span>::<span class="ident">DRAW_INDIRECT_COUNT</span>
         }
         <span class="comment">// This will only be some if the extension exists</span>
@@ -2765,7 +2757,7 @@
         <span class="kw">if</span> <span class="ident">features</span>.<span class="ident">inherited_queries</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features</span>::<span class="ident">INHERITED_QUERIES</span>;
         }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">supports_extension</span>(<span class="kw-2">*</span><span class="ident">MESH_SHADER</span>) {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">supports_extension</span>(<span class="ident">MeshShader</span>::<span class="ident">name</span>()) {
             <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features</span>::<span class="ident">TASK_SHADER</span>;
             <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features</span>::<span class="ident">MESH_SHADER</span>
         }
@@ -2822,6 +2814,8 @@
             <span class="ident">framebuffer_depth_sample_counts</span>: <span class="ident">limits</span>.<span class="ident">framebuffer_depth_sample_counts</span>.<span class="ident">as_raw</span>() <span class="kw">as</span> <span class="kw">_</span>,
             <span class="ident">framebuffer_stencil_sample_counts</span>: <span class="ident">limits</span>.<span class="ident">framebuffer_stencil_sample_counts</span>.<span class="ident">as_raw</span>()
                 <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident">timestamp_compute_and_graphics</span>: <span class="ident">limits</span>.<span class="ident">timestamp_compute_and_graphics</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
+            <span class="ident">timestamp_period</span>: <span class="ident">limits</span>.<span class="ident">timestamp_period</span>,
             <span class="ident">max_color_attachments</span>: <span class="ident">limits</span>.<span class="ident">max_color_attachments</span> <span class="kw">as</span> <span class="kw">_</span>,
             <span class="ident">buffer_image_granularity</span>: <span class="ident">limits</span>.<span class="ident">buffer_image_granularity</span>,
             <span class="ident">non_coherent_atom_size</span>: <span class="ident">limits</span>.<span class="ident">non_coherent_atom_size</span> <span class="kw">as</span> <span class="kw">_</span>,
@@ -3010,7 +3004,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">submit</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>, <span class="ident">Ic</span>, <span class="ident">S</span>, <span class="ident">Iw</span>, <span class="ident">Is</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">submission</span>: <span class="ident">queue</span>::<span class="ident">Submission</span><span class="op">&lt;</span><span class="ident">Ic</span>, <span class="ident">Iw</span>, <span class="ident">Is</span><span class="op">&gt;</span>,
-        <span class="ident">fence</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">native</span>::<span class="ident">Fence</span><span class="op">&gt;</span>,
+        <span class="ident">fence</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">native</span>::<span class="ident">Fence</span><span class="op">&gt;</span>,
     ) <span class="kw">where</span>
         <span class="ident">T</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">command</span>::<span class="ident">CommandBuffer</span><span class="op">&gt;</span>,
         <span class="ident">Ic</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span><span class="op">&gt;</span>,
@@ -3056,7 +3050,7 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">window</span>::<span class="ident">Surface</span>,
         <span class="ident">image</span>: <span class="ident">window</span>::<span class="ident">SurfaceImage</span>,
-        <span class="ident">wait_semaphore</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">native</span>::<span class="ident">Semaphore</span><span class="op">&gt;</span>,
+        <span class="ident">wait_semaphore</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">native</span>::<span class="ident">Semaphore</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Suboptimal</span><span class="op">&gt;</span>, <span class="ident">PresentError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ssc</span> <span class="op">=</span> <span class="ident">surface</span>.<span class="ident">swapchain</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">wait_semaphore</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">wait_semaphore</span>) <span class="op">=</span> <span class="ident">wait_semaphore</span> {
@@ -3091,7 +3085,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">wait_idle</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">OutOfMemory</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">wait_idle</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">OutOfMemory</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">queue_wait_idle</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">raw</span>) } {
             <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
             <span class="prelude-val">Err</span>(<span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_OUT_OF_HOST_MEMORY</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">OutOfMemory</span>::<span class="ident">Host</span>),

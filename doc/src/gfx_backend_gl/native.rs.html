@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/0244e34/src/backend/gl/src/native.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>native.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/6b3a1e3/src/backend/gl/src/native.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>native.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_gl/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -364,10 +364,6 @@
 <span id="361">361</span>
 <span id="362">362</span>
 <span id="363">363</span>
-<span id="364">364</span>
-<span id="365">365</span>
-<span id="366">366</span>
-<span id="367">367</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Backend</span>, <span class="ident">GlContext</span>, <span class="ident">MAX_TEXTURE_SLOTS</span>};
 
@@ -377,9 +373,7 @@
     <span class="ident">pass</span>, <span class="ident">pso</span>, <span class="ident">window</span> <span class="kw">as</span> <span class="ident">w</span>,
 };
 
-<span class="kw">use</span> <span class="ident">parking_lot</span>::<span class="ident">Mutex</span>;
-
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow</span>::<span class="ident">Borrow</span>, <span class="ident">cell</span>::<span class="ident">Cell</span>, <span class="ident">ops</span>::<span class="ident">Range</span>, <span class="ident">sync</span>::<span class="ident">Arc</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow</span>::<span class="ident">Borrow</span>, <span class="ident">ops</span>::<span class="ident">Range</span>, <span class="ident">sync</span>::<span class="ident">Arc</span>};
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TextureTarget</span> <span class="op">=</span> <span class="ident">u32</span>;
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">TextureFormat</span> <span class="op">=</span> <span class="ident">u32</span>;
@@ -430,14 +424,12 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferView</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum</span> <span class="ident">FenceInner</span> {
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Fence</span> {
     <span class="ident">Idle</span> { <span class="ident">signaled</span>: <span class="ident">bool</span> },
-    <span class="ident">Pending</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="op">&lt;</span><span class="ident">GlContext</span> <span class="kw">as</span> <span class="ident">glow</span>::<span class="ident">HasContext</span><span class="op">&gt;</span>::<span class="ident">Fence</span><span class="op">&gt;</span>),
+    <span class="ident">Pending</span>(<span class="op">&lt;</span><span class="ident">GlContext</span> <span class="kw">as</span> <span class="ident">glow</span>::<span class="ident">HasContext</span><span class="op">&gt;</span>::<span class="ident">Fence</span>),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Fence</span>(<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">FenceInner</span><span class="op">&gt;</span>);
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">Fence</span> {}
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">Fence</span> {}
 
@@ -612,7 +604,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DescriptorSet</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">layout</span>: <span class="ident">DescriptorSetLayout</span>,
     <span class="comment">//TODO: use `UnsafeCell` instead</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">bindings</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DescSetBindings</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">bindings</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DescSetBindings</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -625,7 +617,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DescriptorSet</span>, <span class="ident">pso</span>::<span class="ident">AllocationError</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">DescriptorSet</span> {
             <span class="ident">layout</span>: <span class="ident">Arc</span>::<span class="ident">clone</span>(<span class="ident">layout</span>),
-            <span class="ident">bindings</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">Vec</span>::<span class="ident">new</span>())),
+            <span class="ident">bindings</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
         })
     }
 
@@ -660,7 +652,7 @@
     <span class="doccomment">/// Allocation size</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">size</span>: <span class="ident">u64</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">map_flags</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">emulate_map_allocation</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">emulate_map_allocation</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">Memory</span> {}

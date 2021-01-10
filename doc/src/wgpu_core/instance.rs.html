@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/4ebe1f5/wgpu-core/src/instance.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>instance.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/5b9cfeb/wgpu-core/src/instance.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>instance.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -791,6 +791,84 @@
 <span id="788">788</span>
 <span id="789">789</span>
 <span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -914,6 +992,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Adapter</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">hal</span>::<span class="ident">adapter</span>::<span class="ident">Adapter</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
     <span class="ident">features</span>: <span class="ident">wgt</span>::<span class="ident">Features</span>,
+    <span class="ident">private_features</span>: <span class="ident">PrivateFeatures</span>,
     <span class="ident">limits</span>: <span class="ident">wgt</span>::<span class="ident">Limits</span>,
     <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>,
 }
@@ -926,7 +1005,8 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">default</span>()
             <span class="op">|</span> <span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">MAPPABLE_PRIMARY_BUFFERS</span>
-            <span class="op">|</span> <span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">PUSH_CONSTANTS</span>;
+            <span class="op">|</span> <span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">PUSH_CONSTANTS</span>
+            <span class="op">|</span> <span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span>;
         <span class="ident">features</span>.<span class="ident">set</span>(
             <span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">DEPTH_CLAMPING</span>,
             <span class="ident">adapter_features</span>.<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">Features</span>::<span class="ident">DEPTH_CLAMP</span>),
@@ -975,6 +1055,20 @@
         <span class="comment">//TODO: https://github.com/gfx-rs/gfx/issues/3346</span>
         <span class="ident">features</span>.<span class="ident">set</span>(<span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">ADDRESS_MODE_CLAMP_TO_BORDER</span>, <span class="bool-val">true</span>);
 
+        <span class="kw">let</span> <span class="ident">private_features</span> <span class="op">=</span> <span class="ident">PrivateFeatures</span> {
+            <span class="ident">anisotropic_filtering</span>: <span class="ident">adapter_features</span>.<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">Features</span>::<span class="ident">SAMPLER_ANISOTROPY</span>),
+            <span class="ident">texture_d24</span>: <span class="ident">raw</span>
+                .<span class="ident">physical_device</span>
+                .<span class="ident">format_properties</span>(<span class="prelude-val">Some</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Format</span>::<span class="ident">X8D24Unorm</span>))
+                .<span class="ident">optimal_tiling</span>
+                .<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">DEPTH_STENCIL_ATTACHMENT</span>),
+            <span class="ident">texture_d24_s8</span>: <span class="ident">raw</span>
+                .<span class="ident">physical_device</span>
+                .<span class="ident">format_properties</span>(<span class="prelude-val">Some</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Format</span>::<span class="ident">D24UnormS8Uint</span>))
+                .<span class="ident">optimal_tiling</span>
+                .<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">DEPTH_STENCIL_ATTACHMENT</span>),
+        };
+
         <span class="kw">let</span> <span class="ident">adapter_limits</span> <span class="op">=</span> <span class="ident">raw</span>.<span class="ident">physical_device</span>.<span class="ident">limits</span>();
 
         <span class="kw">let</span> <span class="ident">default_limits</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">Limits</span>::<span class="ident">default</span>();
@@ -1022,8 +1116,57 @@
         <span class="self">Self</span> {
             <span class="ident">raw</span>,
             <span class="ident">features</span>,
+            <span class="ident">private_features</span>,
             <span class="ident">limits</span>,
             <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>::<span class="ident">new</span>(<span class="string">&quot;&lt;Adapter&gt;&quot;</span>),
+        }
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">get_texture_format_features</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">format</span>: <span class="ident">wgt</span>::<span class="ident">TextureFormat</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">wgt</span>::<span class="ident">TextureFormatFeatures</span> {
+        <span class="kw">let</span> <span class="ident">texture_format_properties</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">raw</span>
+            .<span class="ident">physical_device</span>
+            .<span class="ident">format_properties</span>(<span class="prelude-val">Some</span>(<span class="ident">conv</span>::<span class="ident">map_texture_format</span>(
+                <span class="ident">format</span>,
+                <span class="self">self</span>.<span class="ident">private_features</span>,
+            )))
+            .<span class="ident">optimal_tiling</span>;
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allowed_usages</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">TextureUsage</span>::<span class="ident">empty</span>();
+        <span class="kw">if</span> <span class="ident">texture_format_properties</span>.<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">SAMPLED</span>) {
+            <span class="ident">allowed_usages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">TextureUsage</span>::<span class="ident">SAMPLED</span>;
+        }
+        <span class="kw">if</span> <span class="ident">texture_format_properties</span>.<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">STORAGE</span>) {
+            <span class="ident">allowed_usages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">TextureUsage</span>::<span class="ident">STORAGE</span>;
+        }
+        <span class="kw">if</span> <span class="ident">texture_format_properties</span>.<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">COLOR_ATTACHMENT</span>) {
+            <span class="ident">allowed_usages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">TextureUsage</span>::<span class="ident">RENDER_ATTACHMENT</span>;
+        }
+        <span class="kw">if</span> <span class="ident">texture_format_properties</span>.<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">DEPTH_STENCIL_ATTACHMENT</span>) {
+            <span class="ident">allowed_usages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">TextureUsage</span>::<span class="ident">RENDER_ATTACHMENT</span>;
+        }
+        <span class="kw">if</span> <span class="ident">texture_format_properties</span>.<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">BLIT_SRC</span>) {
+            <span class="ident">allowed_usages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">TextureUsage</span>::<span class="ident">COPY_SRC</span>;
+        }
+        <span class="kw">if</span> <span class="ident">texture_format_properties</span>.<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">BLIT_DST</span>) {
+            <span class="ident">allowed_usages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">TextureUsage</span>::<span class="ident">COPY_DST</span>;
+        }
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">TextureFormatFeatureFlags</span>::<span class="ident">empty</span>();
+        <span class="kw">if</span> <span class="ident">texture_format_properties</span>.<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">STORAGE_ATOMIC</span>) {
+            <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">TextureFormatFeatureFlags</span>::<span class="ident">STORAGE_ATOMICS</span>;
+        }
+        <span class="comment">// TODO: Hal update required. This in turn is blocked by https://github.com/zakarumych/gpu-alloc/issues/33</span>
+        <span class="comment">//if texture_format_properties.contains(hal::format::ImageFeature::STORAGE_READ_WRITE) {</span>
+        <span class="comment">//    flags |= wgt::TextureFormatFeatureFlags::STORAGE_READ_WRITE;</span>
+        <span class="comment">//}</span>
+
+        <span class="ident">wgt</span>::<span class="ident">TextureFormatFeatures</span> {
+            <span class="ident">allowed_usages</span>,
+            <span class="ident">flags</span>,
         }
     }
 
@@ -1069,6 +1212,10 @@
         }
 
         <span class="comment">// Features</span>
+        <span class="ident">enabled_features</span>.<span class="ident">set</span>(
+            <span class="ident">hal</span>::<span class="ident">Features</span>::<span class="ident">DEPTH_CLAMP</span>,
+            <span class="ident">desc</span>.<span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">DEPTH_CLAMPING</span>),
+        );
         <span class="ident">enabled_features</span>.<span class="ident">set</span>(
             <span class="ident">hal</span>::<span class="ident">Features</span>::<span class="ident">FORMAT_BC</span>,
             <span class="ident">desc</span>.<span class="ident">features</span>
@@ -1154,17 +1301,6 @@
         }
 
         <span class="kw">let</span> <span class="ident">mem_props</span> <span class="op">=</span> <span class="ident">phd</span>.<span class="ident">memory_properties</span>();
-        <span class="kw">let</span> <span class="ident">private_features</span> <span class="op">=</span> <span class="ident">PrivateFeatures</span> {
-            <span class="ident">anisotropic_filtering</span>: <span class="ident">enabled_features</span>.<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">Features</span>::<span class="ident">SAMPLER_ANISOTROPY</span>),
-            <span class="ident">texture_d24</span>: <span class="ident">phd</span>
-                .<span class="ident">format_properties</span>(<span class="prelude-val">Some</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Format</span>::<span class="ident">X8D24Unorm</span>))
-                .<span class="ident">optimal_tiling</span>
-                .<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">DEPTH_STENCIL_ATTACHMENT</span>),
-            <span class="ident">texture_d24_s8</span>: <span class="ident">phd</span>
-                .<span class="ident">format_properties</span>(<span class="prelude-val">Some</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Format</span>::<span class="ident">D24UnormS8Uint</span>))
-                .<span class="ident">optimal_tiling</span>
-                .<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">DEPTH_STENCIL_ATTACHMENT</span>),
-        };
 
         <span class="ident">Device</span>::<span class="ident">new</span>(
             <span class="ident">gpu</span>.<span class="ident">device</span>,
@@ -1175,7 +1311,7 @@
             <span class="ident">gpu</span>.<span class="ident">queue_groups</span>.<span class="ident">swap_remove</span>(<span class="number">0</span>),
             <span class="ident">mem_props</span>,
             <span class="ident">limits</span>,
-            <span class="ident">private_features</span>,
+            <span class="self">self</span>.<span class="ident">private_features</span>,
             <span class="ident">desc</span>,
             <span class="ident">trace_path</span>,
         )
@@ -1418,7 +1554,8 @@
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RequestAdapterError</span>::<span class="ident">NotFound</span>);
         }
 
-        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">integrated</span>, <span class="kw-2">mut</span> <span class="ident">discrete</span>, <span class="kw-2">mut</span> <span class="ident">virt</span>, <span class="kw-2">mut</span> <span class="ident">other</span>) <span class="op">=</span> (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">integrated</span>, <span class="kw-2">mut</span> <span class="ident">discrete</span>, <span class="kw-2">mut</span> <span class="ident">virt</span>, <span class="kw-2">mut</span> <span class="ident">cpu</span>, <span class="kw-2">mut</span> <span class="ident">other</span>) <span class="op">=</span>
+            (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
 
         <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">ty</span>) <span class="kw">in</span> <span class="ident">device_types</span>.<span class="ident">into_iter</span>().<span class="ident">enumerate</span>() {
             <span class="kw">match</span> <span class="ident">ty</span> {
@@ -1431,15 +1568,18 @@
                 <span class="ident">hal</span>::<span class="ident">adapter</span>::<span class="ident">DeviceType</span>::<span class="ident">VirtualGpu</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">virt</span> <span class="op">=</span> <span class="ident">virt</span>.<span class="ident">or</span>(<span class="prelude-val">Some</span>(<span class="ident">i</span>));
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">hal</span>::<span class="ident">adapter</span>::<span class="ident">DeviceType</span>::<span class="ident">Cpu</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">cpu</span> <span class="op">=</span> <span class="ident">cpu</span>.<span class="ident">or</span>(<span class="prelude-val">Some</span>(<span class="ident">i</span>));
+                }
+                <span class="ident">hal</span>::<span class="ident">adapter</span>::<span class="ident">DeviceType</span>::<span class="ident">Other</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">other</span> <span class="op">=</span> <span class="ident">other</span>.<span class="ident">or</span>(<span class="prelude-val">Some</span>(<span class="ident">i</span>));
                 }
             }
         }
 
         <span class="kw">let</span> <span class="ident">preferred_gpu</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">power_preference</span> {
-            <span class="ident">PowerPreference</span>::<span class="ident">LowPower</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">integrated</span>.<span class="ident">or</span>(<span class="ident">other</span>).<span class="ident">or</span>(<span class="ident">discrete</span>).<span class="ident">or</span>(<span class="ident">virt</span>),
-            <span class="ident">PowerPreference</span>::<span class="ident">HighPerformance</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">discrete</span>.<span class="ident">or</span>(<span class="ident">other</span>).<span class="ident">or</span>(<span class="ident">integrated</span>).<span class="ident">or</span>(<span class="ident">virt</span>),
+            <span class="ident">PowerPreference</span>::<span class="ident">LowPower</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">integrated</span>.<span class="ident">or</span>(<span class="ident">other</span>).<span class="ident">or</span>(<span class="ident">discrete</span>).<span class="ident">or</span>(<span class="ident">virt</span>).<span class="ident">or</span>(<span class="ident">cpu</span>),
+            <span class="ident">PowerPreference</span>::<span class="ident">HighPerformance</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">discrete</span>.<span class="ident">or</span>(<span class="ident">other</span>).<span class="ident">or</span>(<span class="ident">integrated</span>).<span class="ident">or</span>(<span class="ident">virt</span>).<span class="ident">or</span>(<span class="ident">cpu</span>),
         };
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">selected</span> <span class="op">=</span> <span class="ident">preferred_gpu</span>.<span class="ident">unwrap_or</span>(<span class="number">0</span>);
@@ -1495,6 +1635,22 @@
         <span class="ident">adapter_guard</span>
             .<span class="ident">get</span>(<span class="ident">adapter_id</span>)
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">adapter</span><span class="op">|</span> <span class="ident">conv</span>::<span class="ident">map_adapter_info</span>(<span class="ident">adapter</span>.<span class="ident">raw</span>.<span class="ident">info</span>.<span class="ident">clone</span>(), <span class="ident">adapter_id</span>.<span class="ident">backend</span>()))
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">InvalidAdapter</span>)
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">adapter_get_texture_format_features</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">adapter_id</span>: <span class="ident">AdapterId</span>,
+        <span class="ident">format</span>: <span class="ident">wgt</span>::<span class="ident">TextureFormat</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">TextureFormatFeatures</span>, <span class="ident">InvalidAdapter</span><span class="op">&gt;</span> {
+        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Adapter::get_texture_format_features&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
+        <span class="kw">let</span> (<span class="ident">adapter_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">adapters</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+        <span class="ident">adapter_guard</span>
+            .<span class="ident">get</span>(<span class="ident">adapter_id</span>)
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">adapter</span><span class="op">|</span> <span class="ident">adapter</span>.<span class="ident">get_texture_format_features</span>(<span class="ident">format</span>))
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">InvalidAdapter</span>)
     }
 

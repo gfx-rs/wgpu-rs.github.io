@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/4ebe1f5/wgpu-core/src/track/range.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>range.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/5b9cfeb/wgpu-core/src/track/range.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>range.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -400,6 +400,44 @@
 <span id="397">397</span>
 <span id="398">398</span>
 <span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -610,26 +648,28 @@
             (<span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">ra</span>, <span class="ident">va</span>)), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">rb</span>, <span class="ident">vb</span>))) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> (<span class="ident">range</span>, <span class="ident">usage</span>) <span class="op">=</span> <span class="kw">if</span> <span class="ident">ra</span>.<span class="ident">start</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">base</span> {
                     <span class="comment">// in the middle of the left stream</span>
-                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">base</span> <span class="op">=</span><span class="op">=</span> <span class="ident">rb</span>.<span class="ident">start</span> {
+                    <span class="kw">let</span> (<span class="ident">end</span>, <span class="ident">end_value</span>) <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">base</span> <span class="op">=</span><span class="op">=</span> <span class="ident">rb</span>.<span class="ident">start</span> {
                         <span class="comment">// right stream is starting</span>
                         <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">base</span> <span class="op">&lt;</span> <span class="ident">ra</span>.<span class="ident">end</span>);
-                        (<span class="self">self</span>.<span class="ident">base</span>..<span class="ident">ra</span>.<span class="ident">end</span>.<span class="ident">min</span>(<span class="ident">rb</span>.<span class="ident">end</span>), <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">va</span>)..<span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">vb</span>))
+                        (<span class="ident">rb</span>.<span class="ident">end</span>, <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">vb</span>))
                     } <span class="kw">else</span> {
                         <span class="comment">// right hasn&#39;t started yet</span>
                         <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">base</span> <span class="op">&lt;</span> <span class="ident">rb</span>.<span class="ident">start</span>);
-                        (<span class="self">self</span>.<span class="ident">base</span>..<span class="ident">rb</span>.<span class="ident">start</span>, <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">va</span>)..<span class="prelude-val">None</span>)
-                    }
+                        (<span class="ident">rb</span>.<span class="ident">start</span>, <span class="prelude-val">None</span>)
+                    };
+                    (<span class="self">self</span>.<span class="ident">base</span>..<span class="ident">ra</span>.<span class="ident">end</span>.<span class="ident">min</span>(<span class="ident">end</span>), <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">va</span>)..<span class="ident">end_value</span>)
                 } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">rb</span>.<span class="ident">start</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">base</span> {
                     <span class="comment">// in the middle of the right stream</span>
-                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">base</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ra</span>.<span class="ident">start</span> {
+                    <span class="kw">let</span> (<span class="ident">end</span>, <span class="ident">start_value</span>) <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">base</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ra</span>.<span class="ident">start</span> {
                         <span class="comment">// left stream is starting</span>
                         <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">base</span> <span class="op">&lt;</span> <span class="ident">rb</span>.<span class="ident">end</span>);
-                        (<span class="self">self</span>.<span class="ident">base</span>..<span class="ident">ra</span>.<span class="ident">end</span>.<span class="ident">min</span>(<span class="ident">rb</span>.<span class="ident">end</span>), <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">va</span>)..<span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">vb</span>))
+                        (<span class="ident">ra</span>.<span class="ident">end</span>, <span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">va</span>))
                     } <span class="kw">else</span> {
                         <span class="comment">// left hasn&#39;t started yet</span>
                         <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">base</span> <span class="op">&lt;</span> <span class="ident">ra</span>.<span class="ident">start</span>);
-                        (<span class="self">self</span>.<span class="ident">base</span>..<span class="ident">ra</span>.<span class="ident">start</span>, <span class="prelude-val">None</span>..<span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">vb</span>))
-                    }
+                        (<span class="ident">ra</span>.<span class="ident">start</span>, <span class="prelude-val">None</span>)
+                    };
+                    (<span class="self">self</span>.<span class="ident">base</span>..<span class="ident">rb</span>.<span class="ident">end</span>.<span class="ident">min</span>(<span class="ident">end</span>), <span class="ident">start_value</span>..<span class="prelude-val">Some</span>(<span class="kw-2">*</span><span class="ident">vb</span>))
                 } <span class="kw">else</span> {
                     <span class="comment">// no active streams</span>
                     <span class="kw">match</span> <span class="ident">ra</span>.<span class="ident">start</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">rb</span>.<span class="ident">start</span>) {
@@ -796,6 +836,42 @@
                 (<span class="number">6</span>..<span class="number">7</span>, <span class="prelude-val">Some</span>(<span class="number">1</span>)..<span class="prelude-val">None</span>),
                 (<span class="number">7</span>..<span class="number">8</span>, <span class="prelude-val">Some</span>(<span class="number">1</span>)..<span class="prelude-val">Some</span>(<span class="number">3</span>)),
                 (<span class="number">8</span>..<span class="number">9</span>, <span class="prelude-val">None</span>..<span class="prelude-val">Some</span>(<span class="number">3</span>)),
+            ]
+        );
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">merge_complex</span>() {
+        <span class="macro">assert_eq</span><span class="macro">!</span>(
+            <span class="kw-2">&amp;</span><span class="ident">easy_merge</span>(
+                <span class="kw-2">&amp;</span>[
+                    (<span class="number">0</span>..<span class="number">8</span>, <span class="number">0u8</span>),
+                    (<span class="number">8</span>..<span class="number">9</span>, <span class="number">1</span>),
+                    (<span class="number">9</span>..<span class="number">16</span>, <span class="number">2</span>),
+                    (<span class="number">16</span>..<span class="number">17</span>, <span class="number">3</span>),
+                    (<span class="number">17</span>..<span class="number">118</span>, <span class="number">4</span>),
+                    (<span class="number">118</span>..<span class="number">119</span>, <span class="number">5</span>),
+                    (<span class="number">119</span>..<span class="number">124</span>, <span class="number">6</span>),
+                    (<span class="number">124</span>..<span class="number">125</span>, <span class="number">7</span>),
+                    (<span class="number">125</span>..<span class="number">512</span>, <span class="number">8</span>),
+                ],
+                <span class="kw-2">&amp;</span>[(<span class="number">15</span>..<span class="number">16</span>, <span class="number">10u8</span>), (<span class="number">51</span>..<span class="number">52</span>, <span class="number">11</span>), (<span class="number">126</span>..<span class="number">127</span>, <span class="number">12</span>),],
+            ),
+            <span class="kw-2">&amp;</span>[
+                (<span class="number">0</span>..<span class="number">8</span>, <span class="prelude-val">Some</span>(<span class="number">0</span>)..<span class="prelude-val">None</span>),
+                (<span class="number">8</span>..<span class="number">9</span>, <span class="prelude-val">Some</span>(<span class="number">1</span>)..<span class="prelude-val">None</span>),
+                (<span class="number">9</span>..<span class="number">15</span>, <span class="prelude-val">Some</span>(<span class="number">2</span>)..<span class="prelude-val">None</span>),
+                (<span class="number">15</span>..<span class="number">16</span>, <span class="prelude-val">Some</span>(<span class="number">2</span>)..<span class="prelude-val">Some</span>(<span class="number">10</span>)),
+                (<span class="number">16</span>..<span class="number">17</span>, <span class="prelude-val">Some</span>(<span class="number">3</span>)..<span class="prelude-val">None</span>),
+                (<span class="number">17</span>..<span class="number">51</span>, <span class="prelude-val">Some</span>(<span class="number">4</span>)..<span class="prelude-val">None</span>),
+                (<span class="number">51</span>..<span class="number">52</span>, <span class="prelude-val">Some</span>(<span class="number">4</span>)..<span class="prelude-val">Some</span>(<span class="number">11</span>)),
+                (<span class="number">52</span>..<span class="number">118</span>, <span class="prelude-val">Some</span>(<span class="number">4</span>)..<span class="prelude-val">None</span>),
+                (<span class="number">118</span>..<span class="number">119</span>, <span class="prelude-val">Some</span>(<span class="number">5</span>)..<span class="prelude-val">None</span>),
+                (<span class="number">119</span>..<span class="number">124</span>, <span class="prelude-val">Some</span>(<span class="number">6</span>)..<span class="prelude-val">None</span>),
+                (<span class="number">124</span>..<span class="number">125</span>, <span class="prelude-val">Some</span>(<span class="number">7</span>)..<span class="prelude-val">None</span>),
+                (<span class="number">125</span>..<span class="number">126</span>, <span class="prelude-val">Some</span>(<span class="number">8</span>)..<span class="prelude-val">None</span>),
+                (<span class="number">126</span>..<span class="number">127</span>, <span class="prelude-val">Some</span>(<span class="number">8</span>)..<span class="prelude-val">Some</span>(<span class="number">12</span>)),
+                (<span class="number">127</span>..<span class="number">512</span>, <span class="prelude-val">Some</span>(<span class="number">8</span>)..<span class="prelude-val">None</span>),
             ]
         );
     }

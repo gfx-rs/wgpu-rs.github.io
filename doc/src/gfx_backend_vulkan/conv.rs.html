@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/0244e34/src/backend/vulkan/src/conv.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>conv.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/6b3a1e3/src/backend/vulkan/src/conv.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>conv.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_vulkan/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -671,6 +671,39 @@
 <span id="668">668</span>
 <span id="669">669</span>
 <span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
+<span id="678">678</span>
+<span id="679">679</span>
+<span id="680">680</span>
+<span id="681">681</span>
+<span id="682">682</span>
+<span id="683">683</span>
+<span id="684">684</span>
+<span id="685">685</span>
+<span id="686">686</span>
+<span id="687">687</span>
+<span id="688">688</span>
+<span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">native</span> <span class="kw">as</span> <span class="ident">n</span>;
 
@@ -1052,7 +1085,40 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_image_features</span>(<span class="ident">features</span>: <span class="ident">vk</span>::<span class="ident">FormatFeatureFlags</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">format</span>::<span class="ident">ImageFeature</span> {
-    <span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">from_bits_truncate</span>(<span class="ident">features</span>.<span class="ident">as_raw</span>())
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mapped_flags</span> <span class="op">=</span> <span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">empty</span>();
+    <span class="kw">if</span> <span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">vk</span>::<span class="ident">FormatFeatureFlags</span>::<span class="ident">SAMPLED_IMAGE</span>) {
+        <span class="ident">mapped_flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">SAMPLED</span>;
+    }
+    <span class="kw">if</span> <span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">vk</span>::<span class="ident">FormatFeatureFlags</span>::<span class="ident">SAMPLED_IMAGE_FILTER_LINEAR</span>) {
+        <span class="ident">mapped_flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">SAMPLED_LINEAR</span>;
+    }
+
+    <span class="kw">if</span> <span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">vk</span>::<span class="ident">FormatFeatureFlags</span>::<span class="ident">STORAGE_IMAGE</span>) {
+        <span class="ident">mapped_flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">STORAGE</span>;
+        <span class="ident">mapped_flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">STORAGE_READ_WRITE</span>;
+    }
+    <span class="kw">if</span> <span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">vk</span>::<span class="ident">FormatFeatureFlags</span>::<span class="ident">STORAGE_IMAGE_ATOMIC</span>) {
+        <span class="ident">mapped_flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">STORAGE_ATOMIC</span>;
+    }
+
+    <span class="kw">if</span> <span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">vk</span>::<span class="ident">FormatFeatureFlags</span>::<span class="ident">COLOR_ATTACHMENT</span>) {
+        <span class="ident">mapped_flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">COLOR_ATTACHMENT</span>;
+    }
+    <span class="kw">if</span> <span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">vk</span>::<span class="ident">FormatFeatureFlags</span>::<span class="ident">COLOR_ATTACHMENT_BLEND</span>) {
+        <span class="ident">mapped_flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">COLOR_ATTACHMENT_BLEND</span>;
+    }
+    <span class="kw">if</span> <span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">vk</span>::<span class="ident">FormatFeatureFlags</span>::<span class="ident">DEPTH_STENCIL_ATTACHMENT</span>) {
+        <span class="ident">mapped_flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">DEPTH_STENCIL_ATTACHMENT</span>;
+    }
+
+    <span class="kw">if</span> <span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">vk</span>::<span class="ident">FormatFeatureFlags</span>::<span class="ident">BLIT_SRC</span>) {
+        <span class="ident">mapped_flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">BLIT_SRC</span>;
+    }
+    <span class="kw">if</span> <span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">vk</span>::<span class="ident">FormatFeatureFlags</span>::<span class="ident">BLIT_DST</span>) {
+        <span class="ident">mapped_flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">format</span>::<span class="ident">ImageFeature</span>::<span class="ident">BLIT_DST</span>;
+    }
+
+    <span class="ident">mapped_flags</span>
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_buffer_features</span>(<span class="ident">features</span>: <span class="ident">vk</span>::<span class="ident">FormatFeatureFlags</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">format</span>::<span class="ident">BufferFeature</span> {
