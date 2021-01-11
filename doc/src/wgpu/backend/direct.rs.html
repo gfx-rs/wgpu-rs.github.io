@@ -1778,6 +1778,10 @@
 <span id="1775">1775</span>
 <span id="1776">1776</span>
 <span id="1777">1777</span>
+<span id="1778">1778</span>
+<span id="1779">1779</span>
+<span id="1780">1780</span>
+<span id="1781">1781</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">backend</span>::{<span class="ident">error</span>::<span class="ident">ContextError</span>, <span class="ident">native_gpu_future</span>},
@@ -2454,6 +2458,19 @@
         <span class="ident">ready</span>(<span class="prelude-val">Ok</span>((<span class="ident">device</span>, <span class="ident">device_id</span>)))
     }
 
+    <span class="kw">fn</span> <span class="ident">adapter_get_swap_chain_preferred_format</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">adapter</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">AdapterId</span>,
+        <span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">SurfaceId</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TextureFormat</span> {
+        <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="kw">match</span> <span class="ident">wgc</span>::<span class="macro">gfx_select</span><span class="macro">!</span>(<span class="ident">adapter</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">global</span>.<span class="ident">adapter_get_swap_chain_preferred_format</span>(<span class="kw-2">*</span><span class="ident">adapter</span>, <span class="kw-2">*</span><span class="ident">surface</span>))
+        {
+            <span class="prelude-val">Ok</span>(<span class="ident">swap_chain_preferred_format</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">swap_chain_preferred_format</span>,
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">handle_error_fatal</span>(<span class="ident">err</span>, <span class="string">&quot;Adapter::get_swap_chain_preferred_format&quot;</span>),
+        }
+    }
+
     <span class="kw">fn</span> <span class="ident">adapter_features</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">adapter</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">AdapterId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Features</span> {
         <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">match</span> <span class="ident">wgc</span>::<span class="macro">gfx_select</span><span class="macro">!</span>(<span class="kw-2">*</span><span class="ident">adapter</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">global</span>.<span class="ident">adapter_features</span>(<span class="kw-2">*</span><span class="ident">adapter</span>)) {
@@ -2491,15 +2508,6 @@
         <span class="kw">match</span> <span class="ident">wgc</span>::<span class="macro">gfx_select</span><span class="macro">!</span>(<span class="ident">device</span>.<span class="ident">id</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">global</span>.<span class="ident">device_limits</span>(<span class="ident">device</span>.<span class="ident">id</span>)) {
             <span class="prelude-val">Ok</span>(<span class="ident">limits</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">limits</span>,
             <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">handle_error_fatal</span>(<span class="ident">err</span>, <span class="string">&quot;Device::limits&quot;</span>),
-        }
-    }
-
-    <span class="kw">fn</span> <span class="ident">device_get_swap_chain_preferred_format</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">DeviceId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TextureFormat</span> {
-        <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-        <span class="kw">match</span> <span class="ident">wgc</span>::<span class="macro">gfx_select</span><span class="macro">!</span>(<span class="ident">device</span>.<span class="ident">id</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">global</span>.<span class="ident">device_get_swap_chain_preferred_format</span>(<span class="ident">device</span>.<span class="ident">id</span>))
-        {
-            <span class="prelude-val">Ok</span>(<span class="ident">swap_chain_preferred_format</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">swap_chain_preferred_format</span>,
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">handle_error_fatal</span>(<span class="ident">err</span>, <span class="string">&quot;Device::get_swap_chain_preferred_format&quot;</span>),
         }
     }
 

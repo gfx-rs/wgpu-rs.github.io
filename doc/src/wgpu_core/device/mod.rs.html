@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/5b9cfeb/wgpu-core/src/device/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/ae3e505/wgpu-core/src/device/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -4340,6 +4340,17 @@
 <span id="4337">4337</span>
 <span id="4338">4338</span>
 <span id="4339">4339</span>
+<span id="4340">4340</span>
+<span id="4341">4341</span>
+<span id="4342">4342</span>
+<span id="4343">4343</span>
+<span id="4344">4344</span>
+<span id="4345">4345</span>
+<span id="4346">4346</span>
+<span id="4347">4347</span>
+<span id="4348">4348</span>
+<span id="4349">4349</span>
+<span id="4350">4350</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -4351,7 +4362,7 @@
     <span class="ident">hub</span>::{
         <span class="ident">GfxBackend</span>, <span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">Hub</span>, <span class="ident">Input</span>, <span class="ident">InvalidId</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>,
     },
-    <span class="ident">id</span>, <span class="ident">pipeline</span>, <span class="ident">resource</span>, <span class="ident">span</span>, <span class="ident">swap_chain</span>,
+    <span class="ident">id</span>, <span class="ident">instance</span>, <span class="ident">pipeline</span>, <span class="ident">resource</span>, <span class="ident">span</span>, <span class="ident">swap_chain</span>,
     <span class="ident">track</span>::{<span class="ident">BufferState</span>, <span class="ident">TextureSelector</span>, <span class="ident">TextureState</span>, <span class="ident">TrackerSet</span>},
     <span class="ident">validation</span>::{<span class="self">self</span>, <span class="ident">check_buffer_usage</span>, <span class="ident">check_texture_usage</span>},
     <span class="ident">FastHashMap</span>, <span class="ident">FastHashSet</span>, <span class="ident">Label</span>, <span class="ident">LabelHelpers</span>, <span class="ident">LifeGuard</span>, <span class="ident">MultiRefCount</span>, <span class="ident">PrivateFeatures</span>,
@@ -6722,6 +6733,28 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span> <span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">adapter_get_swap_chain_preferred_format</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">adapter_id</span>: <span class="ident">id</span>::<span class="ident">AdapterId</span>,
+        <span class="ident">surface_id</span>: <span class="ident">id</span>::<span class="ident">SurfaceId</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TextureFormat</span>, <span class="ident">instance</span>::<span class="ident">GetSwapChainPreferredFormatError</span><span class="op">&gt;</span> {
+        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Adapter::get_swap_chain_preferred_format&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
+
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">surface_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">surfaces</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+        <span class="kw">let</span> (<span class="ident">adapter_guard</span>, <span class="kw-2">mut</span> <span class="ident">_token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">adapters</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+        <span class="kw">let</span> <span class="ident">adapter</span> <span class="op">=</span> <span class="ident">adapter_guard</span>
+            .<span class="ident">get</span>(<span class="ident">adapter_id</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">instance</span>::<span class="ident">GetSwapChainPreferredFormatError</span>::<span class="ident">InvalidAdapter</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="ident">surface_guard</span>
+            .<span class="ident">get_mut</span>(<span class="ident">surface_id</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">instance</span>::<span class="ident">GetSwapChainPreferredFormatError</span>::<span class="ident">InvalidSurface</span>)<span class="question-mark">?</span>;
+
+        <span class="ident">adapter</span>.<span class="ident">get_swap_chain_preferred_format</span>(<span class="ident">surface</span>)
+    }
+
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">device_features</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">device_id</span>: <span class="ident">id</span>::<span class="ident">DeviceId</span>,
@@ -8226,17 +8259,6 @@
             .<span class="ident">suspected_resources</span>
             .<span class="ident">pipeline_layouts</span>
             .<span class="ident">push</span>(<span class="ident">layout_id</span>);
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">device_get_swap_chain_preferred_format</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">_device_id</span>: <span class="ident">id</span>::<span class="ident">DeviceId</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TextureFormat</span>, <span class="ident">InvalidDevice</span><span class="op">&gt;</span> {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Device::get_swap_chain_preferred_format&quot;</span>);
-        <span class="comment">//TODO: we can query the formats like done in `device_create_swapchain`,</span>
-        <span class="comment">// but its not clear which format in the list to return.</span>
-        <span class="comment">// For now, return `Bgra8UnormSrgb` that we know is supported everywhere.</span>
-        <span class="prelude-val">Ok</span>(<span class="ident">TextureFormat</span>::<span class="ident">Bgra8UnormSrgb</span>)
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">device_create_swap_chain</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
