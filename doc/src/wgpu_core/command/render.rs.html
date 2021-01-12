@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/ae3e505/wgpu-core/src/command/render.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>render.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/c788b1c/wgpu-core/src/command/render.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>render.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -2210,6 +2210,55 @@
 <span id="2207">2207</span>
 <span id="2208">2208</span>
 <span id="2209">2209</span>
+<span id="2210">2210</span>
+<span id="2211">2211</span>
+<span id="2212">2212</span>
+<span id="2213">2213</span>
+<span id="2214">2214</span>
+<span id="2215">2215</span>
+<span id="2216">2216</span>
+<span id="2217">2217</span>
+<span id="2218">2218</span>
+<span id="2219">2219</span>
+<span id="2220">2220</span>
+<span id="2221">2221</span>
+<span id="2222">2222</span>
+<span id="2223">2223</span>
+<span id="2224">2224</span>
+<span id="2225">2225</span>
+<span id="2226">2226</span>
+<span id="2227">2227</span>
+<span id="2228">2228</span>
+<span id="2229">2229</span>
+<span id="2230">2230</span>
+<span id="2231">2231</span>
+<span id="2232">2232</span>
+<span id="2233">2233</span>
+<span id="2234">2234</span>
+<span id="2235">2235</span>
+<span id="2236">2236</span>
+<span id="2237">2237</span>
+<span id="2238">2238</span>
+<span id="2239">2239</span>
+<span id="2240">2240</span>
+<span id="2241">2241</span>
+<span id="2242">2242</span>
+<span id="2243">2243</span>
+<span id="2244">2244</span>
+<span id="2245">2245</span>
+<span id="2246">2246</span>
+<span id="2247">2247</span>
+<span id="2248">2248</span>
+<span id="2249">2249</span>
+<span id="2250">2250</span>
+<span id="2251">2251</span>
+<span id="2252">2252</span>
+<span id="2253">2253</span>
+<span id="2254">2254</span>
+<span id="2255">2255</span>
+<span id="2256">2256</span>
+<span id="2257">2257</span>
+<span id="2258">2258</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2600,10 +2649,18 @@
     <span class="ident">Encoder</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">CommandEncoderError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;attachment texture view {0:?} is invalid&quot;</span>)]</span>
     <span class="ident">InvalidAttachment</span>(<span class="ident">id</span>::<span class="ident">TextureViewId</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;there are attachments&quot;</span>)]</span>
-    <span class="ident">NoAttachments</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;attachments have different sizes&quot;</span>)]</span>
-    <span class="ident">MismatchAttachments</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;necessary attachments are missing&quot;</span>)]</span>
+    <span class="ident">MissingAttachments</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;color and/or depth attachments have differing sizes: a {mismatching_attachment_type_name} attachment of size {mismatching_dimensions:?} is not compatible with a {previous_attachment_type_name} attachment&#39;s size {previous_dimensions:?}&quot;</span>,
+    )]</span>
+    <span class="ident">AttachmentsDimensionMismatch</span> {
+        <span class="doccomment">/// depth or color</span>
+        <span class="ident">previous_attachment_type_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
+        <span class="doccomment">/// depth or color</span>
+        <span class="ident">mismatching_attachment_type_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
+        <span class="ident">previous_dimensions</span>: (<span class="ident">u32</span>, <span class="ident">u32</span>),
+        <span class="ident">mismatching_dimensions</span>: (<span class="ident">u32</span>, <span class="ident">u32</span>),
+    },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;attachment&#39;s sample count {0} is invalid&quot;</span>)]</span>
     <span class="ident">InvalidSampleCount</span>(<span class="ident">u8</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;attachment with resolve target must be multi-sampled&quot;</span>)]</span>
@@ -2625,8 +2682,6 @@
     <span class="ident">InvalidStencilOps</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;all attachments must have the same sample count, found {actual} != {expected}&quot;</span>)]</span>
     <span class="ident">SampleCountMismatch</span> { <span class="ident">actual</span>: <span class="ident">u8</span>, <span class="ident">expected</span>: <span class="ident">u8</span> },
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;texture view&#39;s swap chain must match swap chain in use&quot;</span>)]</span>
-    <span class="ident">SwapChainMismatch</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;setting `values_offset` to be `None` is only for internal use in render bundles&quot;</span>)]</span>
     <span class="ident">InvalidValuesOffset</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;required device features not enabled: {0:?}&quot;</span>)]</span>
@@ -2741,7 +2796,9 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attachment_width</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attachment_height</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">valid_attachment</span> <span class="op">=</span> <span class="bool-val">true</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attachment_type_name</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>;
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mismatching_dimensions</span> <span class="op">=</span> <span class="prelude-val">None</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">extent</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sample_count</span> <span class="op">=</span> <span class="number">0</span>;
@@ -2780,6 +2837,25 @@
                         .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">view_guard</span>, <span class="ident">at</span>.<span class="ident">attachment</span>, (), ())
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">RenderPassErrorInner</span>::<span class="ident">InvalidAttachment</span>(<span class="ident">at</span>.<span class="ident">attachment</span>))<span class="question-mark">?</span>;
                     <span class="ident">add_view</span>(<span class="ident">view</span>)<span class="question-mark">?</span>;
+
+                    <span class="comment">// get the width and height set by another attachment, then check if it matches</span>
+                    <span class="kw">let</span> (<span class="ident">previous_width</span>, <span class="ident">previous_height</span>) <span class="op">=</span> (
+                        <span class="kw-2">*</span><span class="ident">attachment_width</span>.<span class="ident">get_or_insert</span>(<span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">width</span>),
+                        <span class="kw-2">*</span><span class="ident">attachment_height</span>.<span class="ident">get_or_insert</span>(<span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">height</span>),
+                    );
+
+                    <span class="kw">if</span> <span class="ident">previous_width</span> <span class="op">!</span><span class="op">=</span> <span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">width</span> <span class="op">|</span><span class="op">|</span> <span class="ident">previous_height</span> <span class="op">!</span><span class="op">=</span> <span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">height</span>
+                    {
+                        <span class="ident">mismatching_dimensions</span> <span class="op">=</span> <span class="prelude-val">Some</span>((
+                            <span class="string">&quot;depth&quot;</span>,
+                            (<span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">width</span>, <span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">height</span>),
+                            (<span class="ident">previous_width</span>, <span class="ident">previous_height</span>),
+                        ));
+                    } <span class="kw">else</span> {
+                        <span class="comment">// this attachment&#39;s size was successfully inserted into `attachment_width` and `attachment_height`</span>
+                        <span class="ident">attachment_type_name</span> <span class="op">=</span> <span class="string">&quot;depth&quot;</span>;
+                    }
+
                     <span class="ident">depth_stencil_aspects</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">aspects</span>;
 
                     <span class="kw">let</span> <span class="ident">source_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">view</span>.<span class="ident">inner</span> {
@@ -2838,9 +2914,22 @@
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">RenderPassErrorInner</span>::<span class="ident">InvalidAttachment</span>(<span class="ident">at</span>.<span class="ident">attachment</span>))<span class="question-mark">?</span>;
                 <span class="ident">add_view</span>(<span class="ident">view</span>)<span class="question-mark">?</span>;
 
-                <span class="ident">valid_attachment</span> <span class="op">&amp;=</span> <span class="kw-2">*</span><span class="ident">attachment_width</span>.<span class="ident">get_or_insert</span>(<span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">width</span>)
-                    <span class="op">=</span><span class="op">=</span> <span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">width</span>
-                    <span class="op">&amp;&amp;</span> <span class="kw-2">*</span><span class="ident">attachment_height</span>.<span class="ident">get_or_insert</span>(<span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">height</span>) <span class="op">=</span><span class="op">=</span> <span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">height</span>;
+                <span class="comment">// get the width and height set by another attachment, then check if it matches</span>
+                <span class="kw">let</span> (<span class="ident">previous_width</span>, <span class="ident">previous_height</span>) <span class="op">=</span> (
+                    <span class="kw-2">*</span><span class="ident">attachment_width</span>.<span class="ident">get_or_insert</span>(<span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">width</span>),
+                    <span class="kw-2">*</span><span class="ident">attachment_height</span>.<span class="ident">get_or_insert</span>(<span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">height</span>),
+                );
+
+                <span class="kw">if</span> <span class="ident">previous_width</span> <span class="op">!</span><span class="op">=</span> <span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">width</span> <span class="op">|</span><span class="op">|</span> <span class="ident">previous_height</span> <span class="op">!</span><span class="op">=</span> <span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">height</span> {
+                    <span class="ident">mismatching_dimensions</span> <span class="op">=</span> <span class="prelude-val">Some</span>((
+                        <span class="string">&quot;color&quot;</span>,
+                        (<span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">width</span>, <span class="ident">view</span>.<span class="ident">extent</span>.<span class="ident">height</span>),
+                        (<span class="ident">previous_width</span>, <span class="ident">previous_height</span>),
+                    ));
+                } <span class="kw">else</span> {
+                    <span class="comment">// this attachment&#39;s size was successfully inserted into `attachment_width` and `attachment_height`</span>
+                    <span class="ident">attachment_type_name</span> <span class="op">=</span> <span class="string">&quot;color&quot;</span>;
+                }
 
                 <span class="kw">let</span> <span class="ident">layouts</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">view</span>.<span class="ident">inner</span> {
                     <span class="ident">TextureViewInner</span>::<span class="ident">Native</span> { <span class="kw-2">ref</span> <span class="ident">source_id</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
@@ -2867,14 +2956,8 @@
                         <span class="ident">old_layout</span>..<span class="ident">new_layout</span>
                     }
                     <span class="ident">TextureViewInner</span>::<span class="ident">SwapChain</span> { <span class="kw-2">ref</span> <span class="ident">source_id</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="kw-2">ref</span> <span class="ident">sc_id</span>, <span class="kw">_</span>)) <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">used_swap_chain</span> {
-                            <span class="kw">if</span> <span class="ident">source_id</span>.<span class="ident">value</span> <span class="op">!</span><span class="op">=</span> <span class="ident">sc_id</span>.<span class="ident">value</span> {
-                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner</span>::<span class="ident">SwapChainMismatch</span>);
-                            }
-                        } <span class="kw">else</span> {
-                            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">used_swap_chain</span>.<span class="ident">is_none</span>());
-                            <span class="ident">used_swap_chain</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">source_id</span>.<span class="ident">clone</span>());
-                        }
+                        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">used_swap_chain</span>.<span class="ident">is_none</span>());
+                        <span class="ident">used_swap_chain</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">source_id</span>.<span class="ident">clone</span>());
 
                         <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Layout</span>::<span class="ident">Present</span>;
                         <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">at</span>.<span class="ident">channel</span>.<span class="ident">load_op</span> {
@@ -2898,8 +2981,20 @@
                 <span class="ident">colors</span>.<span class="ident">push</span>((<span class="ident">color_at</span>, <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Layout</span>::<span class="ident">ColorAttachmentOptimal</span>));
             }
 
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">valid_attachment</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner</span>::<span class="ident">MismatchAttachments</span>);
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((
+                <span class="ident">mismatching_attachment_type_name</span>,
+                <span class="ident">previous_dimensions</span>,
+                <span class="ident">mismatching_dimensions</span>,
+            )) <span class="op">=</span> <span class="ident">mismatching_dimensions</span>
+            {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner</span>::<span class="ident">AttachmentsDimensionMismatch</span> {
+                    <span class="comment">// okay to unwrap: for `mismatching_dimensions` to be set, `attachment_{width/height}` must have been</span>
+                    <span class="comment">// set, which includes `attachment_type_name` being set in a later `else` block</span>
+                    <span class="ident">previous_attachment_type_name</span>: <span class="ident">attachment_type_name</span>,
+                    <span class="ident">mismatching_attachment_type_name</span>,
+                    <span class="ident">previous_dimensions</span>,
+                    <span class="ident">mismatching_dimensions</span>,
+                });
             }
 
             <span class="kw">for</span> <span class="ident">resolve_target</span> <span class="kw">in</span> <span class="ident">color_attachments</span>.<span class="ident">iter</span>().<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">at</span><span class="op">|</span> <span class="ident">at</span>.<span class="ident">resolve_target</span>) {
@@ -2945,14 +3040,8 @@
                         <span class="ident">old_layout</span>..<span class="ident">new_layout</span>
                     }
                     <span class="ident">TextureViewInner</span>::<span class="ident">SwapChain</span> { <span class="kw-2">ref</span> <span class="ident">source_id</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="kw-2">ref</span> <span class="ident">sc_id</span>, <span class="kw">_</span>)) <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">used_swap_chain</span> {
-                            <span class="kw">if</span> <span class="ident">source_id</span>.<span class="ident">value</span> <span class="op">!</span><span class="op">=</span> <span class="ident">sc_id</span>.<span class="ident">value</span> {
-                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner</span>::<span class="ident">SwapChainMismatch</span>);
-                            }
-                        } <span class="kw">else</span> {
-                            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">used_swap_chain</span>.<span class="ident">is_none</span>());
-                            <span class="ident">used_swap_chain</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">source_id</span>.<span class="ident">clone</span>());
-                        }
+                        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">used_swap_chain</span>.<span class="ident">is_none</span>());
+                        <span class="ident">used_swap_chain</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">source_id</span>.<span class="ident">clone</span>());
                         <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Layout</span>::<span class="ident">Undefined</span>..<span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Layout</span>::<span class="ident">Present</span>
                     }
                 };
@@ -3078,7 +3167,6 @@
 
         <span class="kw">let</span> <span class="ident">framebuffer</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">used_swap_chain</span>.<span class="ident">take</span>() {
             <span class="prelude-val">Some</span>(<span class="ident">sc_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">cmd_buf</span>.<span class="ident">used_swap_chain</span>.<span class="ident">is_none</span>());
                 <span class="comment">// Always create a new framebuffer and delete it after presentation.</span>
                 <span class="kw">let</span> <span class="ident">attachments</span> <span class="op">=</span> <span class="ident">fb_key</span>
                     .<span class="ident">all</span>()
@@ -3207,8 +3295,8 @@
             <span class="ident">used_swapchain_with_framebuffer</span>,
             <span class="ident">is_ds_read_only</span>,
             <span class="ident">extent</span>: <span class="ident">wgt</span>::<span class="ident">Extent3d</span> {
-                <span class="ident">width</span>: <span class="ident">attachment_width</span>.<span class="ident">ok_or</span>(<span class="ident">RenderPassErrorInner</span>::<span class="ident">NoAttachments</span>)<span class="question-mark">?</span>,
-                <span class="ident">height</span>: <span class="ident">attachment_height</span>.<span class="ident">ok_or</span>(<span class="ident">RenderPassErrorInner</span>::<span class="ident">NoAttachments</span>)<span class="question-mark">?</span>,
+                <span class="ident">width</span>: <span class="ident">attachment_width</span>.<span class="ident">ok_or</span>(<span class="ident">RenderPassErrorInner</span>::<span class="ident">MissingAttachments</span>)<span class="question-mark">?</span>,
+                <span class="ident">height</span>: <span class="ident">attachment_height</span>.<span class="ident">ok_or</span>(<span class="ident">RenderPassErrorInner</span>::<span class="ident">MissingAttachments</span>)<span class="question-mark">?</span>,
                 <span class="ident">depth</span>: <span class="number">1</span>,
             },
         })
@@ -3717,7 +3805,11 @@
                         <span class="ident">first_vertex</span>,
                         <span class="ident">first_instance</span>,
                     } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">Draw</span>;
+                        <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">Draw</span> {
+                            <span class="ident">indexed</span>: <span class="bool-val">false</span>,
+                            <span class="ident">indirect</span>: <span class="bool-val">false</span>,
+                            <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
+                        };
                         <span class="ident">state</span>.<span class="ident">is_ready</span>().<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
                         <span class="kw">let</span> <span class="ident">last_vertex</span> <span class="op">=</span> <span class="ident">first_vertex</span> <span class="op">+</span> <span class="ident">vertex_count</span>;
                         <span class="kw">let</span> <span class="ident">vertex_limit</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">vertex</span>.<span class="ident">vertex_limit</span>;
@@ -3754,7 +3846,11 @@
                         <span class="ident">base_vertex</span>,
                         <span class="ident">first_instance</span>,
                     } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">DrawIndexed</span>;
+                        <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">Draw</span> {
+                            <span class="ident">indexed</span>: <span class="bool-val">true</span>,
+                            <span class="ident">indirect</span>: <span class="bool-val">false</span>,
+                            <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
+                        };
                         <span class="ident">state</span>.<span class="ident">is_ready</span>().<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
                         <span class="comment">//TODO: validate that base_vertex + max_index() is within the provided range</span>
@@ -3792,10 +3888,10 @@
                         <span class="ident">count</span>,
                         <span class="ident">indexed</span>,
                     } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">indexed</span> {
-                            <span class="ident">PassErrorScope</span>::<span class="ident">DrawIndexedIndirect</span>
-                        } <span class="kw">else</span> {
-                            <span class="ident">PassErrorScope</span>::<span class="ident">DrawIndirect</span>
+                        <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">Draw</span> {
+                            <span class="ident">indexed</span>,
+                            <span class="ident">indirect</span>: <span class="bool-val">true</span>,
+                            <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
                         };
                         <span class="ident">state</span>.<span class="ident">is_ready</span>().<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
@@ -3868,10 +3964,10 @@
                         <span class="ident">max_count</span>,
                         <span class="ident">indexed</span>,
                     } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">indexed</span> {
-                            <span class="ident">PassErrorScope</span>::<span class="ident">DrawIndexedIndirect</span>
-                        } <span class="kw">else</span> {
-                            <span class="ident">PassErrorScope</span>::<span class="ident">DrawIndirect</span>
+                        <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">Draw</span> {
+                            <span class="ident">indexed</span>,
+                            <span class="ident">indirect</span>: <span class="bool-val">true</span>,
+                            <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
                         };
                         <span class="ident">state</span>.<span class="ident">is_ready</span>().<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
@@ -4045,7 +4141,9 @@
         <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span>
             <span class="ident">CommandBuffer</span>::<span class="ident">get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmb_guard</span>, <span class="ident">encoder_id</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
         <span class="ident">cmd_buf</span>.<span class="ident">has_labels</span> <span class="op">|</span><span class="op">=</span> <span class="ident">base</span>.<span class="ident">label</span>.<span class="ident">is_some</span>();
-        <span class="ident">cmd_buf</span>.<span class="ident">used_swap_chain</span> <span class="op">=</span> <span class="ident">used_swapchain_with_framebuffer</span>;
+        <span class="ident">cmd_buf</span>
+            .<span class="ident">used_swap_chains</span>
+            .<span class="ident">extend</span>(<span class="ident">used_swapchain_with_framebuffer</span>);
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">list</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">commands</span> {
