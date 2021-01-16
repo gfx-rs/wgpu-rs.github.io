@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/6b3a1e3/src/backend/gl/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/7dc99d5/src/backend/gl/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_gl/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -675,6 +675,7 @@
 <span id="672">672</span>
 <span id="673">673</span>
 <span id="674">674</span>
+<span id="675">675</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">/*!
 # OpenGL backend internals.
@@ -743,6 +744,7 @@ will be minimal, if any.
 <span class="kw">const</span> <span class="ident">MAX_SAMPLERS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">16</span>;
 <span class="comment">//TODO: has to be within glow::MAX_COMBINED_TEXTURE_IMAGE_UNITS</span>
 <span class="kw">const</span> <span class="ident">MAX_TEXTURE_SLOTS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">16</span>;
+<span class="kw">const</span> <span class="ident">MAX_COLOR_ATTACHMENTS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">16</span>;
 
 <span class="kw">struct</span> <span class="ident">GlContainer</span> {
     <span class="ident">context</span>: <span class="ident">GlContext</span>,
@@ -774,7 +776,7 @@ will be minimal, if any.
 
     <span class="kw">type</span> <span class="ident">ShaderModule</span> <span class="op">=</span> <span class="ident">native</span>::<span class="ident">ShaderModule</span>;
     <span class="kw">type</span> <span class="ident">RenderPass</span> <span class="op">=</span> <span class="ident">native</span>::<span class="ident">RenderPass</span>;
-    <span class="kw">type</span> <span class="ident">Framebuffer</span> <span class="op">=</span> <span class="ident">native</span>::<span class="ident">FrameBuffer</span>;
+    <span class="kw">type</span> <span class="ident">Framebuffer</span> <span class="op">=</span> <span class="ident">native</span>::<span class="ident">Framebuffer</span>;
 
     <span class="kw">type</span> <span class="ident">Buffer</span> <span class="op">=</span> <span class="ident">native</span>::<span class="ident">Buffer</span>;
     <span class="kw">type</span> <span class="ident">BufferView</span> <span class="op">=</span> <span class="ident">native</span>::<span class="ident">BufferView</span>;
@@ -880,8 +882,8 @@ will be minimal, if any.
     <span class="ident">info</span>: <span class="ident">Info</span>,
     <span class="ident">supported_features</span>: <span class="ident">hal</span>::<span class="ident">Features</span>,
     <span class="ident">legacy_features</span>: <span class="ident">info</span>::<span class="ident">LegacyFeatures</span>,
-    <span class="ident">hints</span>: <span class="ident">hal</span>::<span class="ident">Hints</span>,
     <span class="ident">limits</span>: <span class="ident">hal</span>::<span class="ident">Limits</span>,
+    <span class="ident">public_caps</span>: <span class="ident">hal</span>::<span class="ident">Capabilities</span>,
     <span class="ident">private_caps</span>: <span class="ident">info</span>::<span class="ident">PrivateCaps</span>,
     <span class="comment">// Indicates if there is an active logical device.</span>
     <span class="ident">open</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>,
@@ -1031,7 +1033,7 @@ will be minimal, if any.
     <span class="kw">fn</span> <span class="ident">new_adapter</span>(<span class="ident">context</span>: <span class="ident">GlContext</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">adapter</span>::<span class="ident">Adapter</span><span class="op">&lt;</span><span class="ident">Backend</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="ident">GlContainer</span> { <span class="ident">context</span> };
         <span class="comment">// query information</span>
-        <span class="kw">let</span> (<span class="ident">info</span>, <span class="ident">supported_features</span>, <span class="ident">legacy_features</span>, <span class="ident">hints</span>, <span class="ident">limits</span>, <span class="ident">private_caps</span>) <span class="op">=</span>
+        <span class="kw">let</span> (<span class="ident">info</span>, <span class="ident">supported_features</span>, <span class="ident">legacy_features</span>, <span class="ident">limits</span>, <span class="ident">public_caps</span>, <span class="ident">private_caps</span>) <span class="op">=</span>
             <span class="ident">info</span>::<span class="ident">query_all</span>(<span class="kw-2">&amp;</span><span class="ident">gl</span>);
         <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Vendor: {:?}&quot;</span>, <span class="ident">info</span>.<span class="ident">platform_name</span>.<span class="ident">vendor</span>);
         <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Renderer: {:?}&quot;</span>, <span class="ident">info</span>.<span class="ident">platform_name</span>.<span class="ident">renderer</span>);
@@ -1039,6 +1041,7 @@ will be minimal, if any.
         <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Shading Language: {:?}&quot;</span>, <span class="ident">info</span>.<span class="ident">shading_language</span>);
         <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Supported Features: {:?}&quot;</span>, <span class="ident">supported_features</span>);
         <span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Legacy Features: {:?}&quot;</span>, <span class="ident">legacy_features</span>);
+        <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Public capabilities: {:#?}&quot;</span>, <span class="ident">public_caps</span>);
         <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Private capabilities: {:#?}&quot;</span>, <span class="ident">private_caps</span>);
         <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;Loaded Extensions:&quot;</span>);
         <span class="kw">for</span> <span class="ident">extension</span> <span class="kw">in</span> <span class="ident">info</span>.<span class="ident">extensions</span>.<span class="ident">iter</span>() {
@@ -1108,8 +1111,8 @@ will be minimal, if any.
             <span class="ident">info</span>,
             <span class="ident">supported_features</span>,
             <span class="ident">legacy_features</span>,
-            <span class="ident">hints</span>,
             <span class="ident">limits</span>,
+            <span class="ident">public_caps</span>,
             <span class="ident">private_caps</span>,
             <span class="ident">open</span>: <span class="ident">Cell</span>::<span class="ident">new</span>(<span class="bool-val">false</span>),
             <span class="ident">memory_types</span>,
@@ -1261,14 +1264,13 @@ will be minimal, if any.
     }
 
     <span class="kw">fn</span> <span class="ident">format_properties</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Format</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Properties</span> {
-        <span class="kw">use</span> <span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">BufferFeature</span>;
-        <span class="kw">use</span> <span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">ImageFeature</span>;
+        <span class="kw">use</span> <span class="ident">hal</span>::<span class="ident">format</span>::{<span class="ident">BufferFeature</span> <span class="kw">as</span> <span class="ident">Bf</span>, <span class="ident">ImageFeature</span> <span class="kw">as</span> <span class="ident">If</span>};
 
         <span class="comment">// TODO: These are for show</span>
         <span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Properties</span> {
-            <span class="ident">linear_tiling</span>: <span class="ident">ImageFeature</span>::<span class="ident">SAMPLED</span>,
-            <span class="ident">optimal_tiling</span>: <span class="ident">ImageFeature</span>::<span class="ident">SAMPLED</span>,
-            <span class="ident">buffer_features</span>: <span class="ident">BufferFeature</span>::<span class="ident">VERTEX</span>,
+            <span class="ident">linear_tiling</span>: <span class="ident">If</span>::<span class="ident">TRANSFER_SRC</span> <span class="op">|</span> <span class="ident">If</span>::<span class="ident">TRANSFER_DST</span> <span class="op">|</span> <span class="ident">If</span>::<span class="ident">empty</span>(),
+            <span class="ident">optimal_tiling</span>: <span class="ident">If</span>::<span class="ident">TRANSFER_SRC</span> <span class="op">|</span> <span class="ident">If</span>::<span class="ident">TRANSFER_DST</span> <span class="op">|</span> <span class="ident">If</span>::<span class="ident">SAMPLED</span>,
+            <span class="ident">buffer_features</span>: <span class="ident">Bf</span>::<span class="ident">VERTEX</span>,
         }
     }
 
@@ -1319,8 +1321,8 @@ will be minimal, if any.
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">supported_features</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">hints</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">hal</span>::<span class="ident">Hints</span> {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">hints</span>
+    <span class="kw">fn</span> <span class="ident">capabilities</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">hal</span>::<span class="ident">Capabilities</span> {
+        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">public_caps</span>
     }
 
     <span class="kw">fn</span> <span class="ident">limits</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">hal</span>::<span class="ident">Limits</span> {

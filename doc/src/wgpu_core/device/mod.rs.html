@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/c788b1c/wgpu-core/src/device/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/9dce0af/wgpu-core/src/device/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -4351,6 +4351,167 @@
 <span id="4348">4348</span>
 <span id="4349">4349</span>
 <span id="4350">4350</span>
+<span id="4351">4351</span>
+<span id="4352">4352</span>
+<span id="4353">4353</span>
+<span id="4354">4354</span>
+<span id="4355">4355</span>
+<span id="4356">4356</span>
+<span id="4357">4357</span>
+<span id="4358">4358</span>
+<span id="4359">4359</span>
+<span id="4360">4360</span>
+<span id="4361">4361</span>
+<span id="4362">4362</span>
+<span id="4363">4363</span>
+<span id="4364">4364</span>
+<span id="4365">4365</span>
+<span id="4366">4366</span>
+<span id="4367">4367</span>
+<span id="4368">4368</span>
+<span id="4369">4369</span>
+<span id="4370">4370</span>
+<span id="4371">4371</span>
+<span id="4372">4372</span>
+<span id="4373">4373</span>
+<span id="4374">4374</span>
+<span id="4375">4375</span>
+<span id="4376">4376</span>
+<span id="4377">4377</span>
+<span id="4378">4378</span>
+<span id="4379">4379</span>
+<span id="4380">4380</span>
+<span id="4381">4381</span>
+<span id="4382">4382</span>
+<span id="4383">4383</span>
+<span id="4384">4384</span>
+<span id="4385">4385</span>
+<span id="4386">4386</span>
+<span id="4387">4387</span>
+<span id="4388">4388</span>
+<span id="4389">4389</span>
+<span id="4390">4390</span>
+<span id="4391">4391</span>
+<span id="4392">4392</span>
+<span id="4393">4393</span>
+<span id="4394">4394</span>
+<span id="4395">4395</span>
+<span id="4396">4396</span>
+<span id="4397">4397</span>
+<span id="4398">4398</span>
+<span id="4399">4399</span>
+<span id="4400">4400</span>
+<span id="4401">4401</span>
+<span id="4402">4402</span>
+<span id="4403">4403</span>
+<span id="4404">4404</span>
+<span id="4405">4405</span>
+<span id="4406">4406</span>
+<span id="4407">4407</span>
+<span id="4408">4408</span>
+<span id="4409">4409</span>
+<span id="4410">4410</span>
+<span id="4411">4411</span>
+<span id="4412">4412</span>
+<span id="4413">4413</span>
+<span id="4414">4414</span>
+<span id="4415">4415</span>
+<span id="4416">4416</span>
+<span id="4417">4417</span>
+<span id="4418">4418</span>
+<span id="4419">4419</span>
+<span id="4420">4420</span>
+<span id="4421">4421</span>
+<span id="4422">4422</span>
+<span id="4423">4423</span>
+<span id="4424">4424</span>
+<span id="4425">4425</span>
+<span id="4426">4426</span>
+<span id="4427">4427</span>
+<span id="4428">4428</span>
+<span id="4429">4429</span>
+<span id="4430">4430</span>
+<span id="4431">4431</span>
+<span id="4432">4432</span>
+<span id="4433">4433</span>
+<span id="4434">4434</span>
+<span id="4435">4435</span>
+<span id="4436">4436</span>
+<span id="4437">4437</span>
+<span id="4438">4438</span>
+<span id="4439">4439</span>
+<span id="4440">4440</span>
+<span id="4441">4441</span>
+<span id="4442">4442</span>
+<span id="4443">4443</span>
+<span id="4444">4444</span>
+<span id="4445">4445</span>
+<span id="4446">4446</span>
+<span id="4447">4447</span>
+<span id="4448">4448</span>
+<span id="4449">4449</span>
+<span id="4450">4450</span>
+<span id="4451">4451</span>
+<span id="4452">4452</span>
+<span id="4453">4453</span>
+<span id="4454">4454</span>
+<span id="4455">4455</span>
+<span id="4456">4456</span>
+<span id="4457">4457</span>
+<span id="4458">4458</span>
+<span id="4459">4459</span>
+<span id="4460">4460</span>
+<span id="4461">4461</span>
+<span id="4462">4462</span>
+<span id="4463">4463</span>
+<span id="4464">4464</span>
+<span id="4465">4465</span>
+<span id="4466">4466</span>
+<span id="4467">4467</span>
+<span id="4468">4468</span>
+<span id="4469">4469</span>
+<span id="4470">4470</span>
+<span id="4471">4471</span>
+<span id="4472">4472</span>
+<span id="4473">4473</span>
+<span id="4474">4474</span>
+<span id="4475">4475</span>
+<span id="4476">4476</span>
+<span id="4477">4477</span>
+<span id="4478">4478</span>
+<span id="4479">4479</span>
+<span id="4480">4480</span>
+<span id="4481">4481</span>
+<span id="4482">4482</span>
+<span id="4483">4483</span>
+<span id="4484">4484</span>
+<span id="4485">4485</span>
+<span id="4486">4486</span>
+<span id="4487">4487</span>
+<span id="4488">4488</span>
+<span id="4489">4489</span>
+<span id="4490">4490</span>
+<span id="4491">4491</span>
+<span id="4492">4492</span>
+<span id="4493">4493</span>
+<span id="4494">4494</span>
+<span id="4495">4495</span>
+<span id="4496">4496</span>
+<span id="4497">4497</span>
+<span id="4498">4498</span>
+<span id="4499">4499</span>
+<span id="4500">4500</span>
+<span id="4501">4501</span>
+<span id="4502">4502</span>
+<span id="4503">4503</span>
+<span id="4504">4504</span>
+<span id="4505">4505</span>
+<span id="4506">4506</span>
+<span id="4507">4507</span>
+<span id="4508">4508</span>
+<span id="4509">4509</span>
+<span id="4510">4510</span>
+<span id="4511">4511</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -4457,12 +4618,23 @@
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">resolves</span>)
             .<span class="ident">chain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">depth_stencil</span>)
     }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">map</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">U</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fun</span>: <span class="ident">F</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AttachmentData</span><span class="op">&lt;</span><span class="ident">U</span><span class="op">&gt;</span> {
+        <span class="ident">AttachmentData</span> {
+            <span class="ident">colors</span>: <span class="self">self</span>.<span class="ident">colors</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="kw-2">&amp;</span><span class="ident">fun</span>).<span class="ident">collect</span>(),
+            <span class="ident">resolves</span>: <span class="self">self</span>.<span class="ident">resolves</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="kw-2">&amp;</span><span class="ident">fun</span>).<span class="ident">collect</span>(),
+            <span class="ident">depth_stencil</span>: <span class="self">self</span>.<span class="ident">depth_stencil</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="kw-2">&amp;</span><span class="ident">fun</span>),
+        }
+    }
 }
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type</span> <span class="ident">AttachmentDataVec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="ident">T</span>; <span class="ident">MAX_COLOR_TARGETS</span> <span class="op">+</span> <span class="ident">MAX_COLOR_TARGETS</span> <span class="op">+</span> <span class="number">1</span>]<span class="op">&gt;</span>;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type</span> <span class="ident">RenderPassKey</span> <span class="op">=</span> <span class="ident">AttachmentData</span><span class="op">&lt;</span>(<span class="ident">hal</span>::<span class="ident">pass</span>::<span class="ident">Attachment</span>, <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Layout</span>)<span class="op">&gt;</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type</span> <span class="ident">FramebufferKey</span> <span class="op">=</span> <span class="ident">AttachmentData</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">TextureViewId</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type</span> <span class="ident">FramebufferKey</span> <span class="op">=</span> (
+    <span class="ident">AttachmentData</span><span class="op">&lt;</span><span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">FramebufferAttachment</span><span class="op">&gt;</span>,
+    <span class="ident">wgt</span>::<span class="ident">Extent3d</span>,
+);
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serial-pass&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>, <span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
@@ -4565,11 +4737,17 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">RenderPassLock</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">render_passes</span>: <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">RenderPassKey</span>, <span class="ident">B</span>::<span class="ident">RenderPass</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">framebuffers</span>: <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">FramebufferKey</span>, <span class="ident">B</span>::<span class="ident">Framebuffer</span><span class="op">&gt;</span>,
+}
+
 <span class="doccomment">/// Structure describing a logical device. Some members are internally mutable,</span>
 <span class="doccomment">/// stored behind mutexes.</span>
 <span class="doccomment">/// TODO: establish clear order of locking for these:</span>
 <span class="doccomment">/// `mem_allocator`, `desc_allocator`, `life_tracke`, `trackers`,</span>
-<span class="doccomment">/// `render_passes`, `framebuffers`, `pending_writes`, `trace`.</span>
+<span class="doccomment">/// `render_passes`, `pending_writes`, `trace`.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Currently, the rules are:</span>
 <span class="doccomment">/// 1. `life_tracker` is locked after `hub.devices`, enforced by the type system</span>
@@ -4588,8 +4766,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">active_submission_index</span>: <span class="ident">SubmissionIndex</span>,
     <span class="doccomment">/// Has to be locked temporarily only (locked last)</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">trackers</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">TrackerSet</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">render_passes</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">RenderPassKey</span>, <span class="ident">B</span>::<span class="ident">RenderPass</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">framebuffers</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">FramebufferKey</span>, <span class="ident">B</span>::<span class="ident">Framebuffer</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">render_passes</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">RenderPassLock</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="comment">// Life tracker should be locked right after the device and before anything else.</span>
     <span class="ident">life_tracker</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">life</span>::<span class="ident">LifetimeTracker</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">temp_suspected</span>: <span class="ident">life</span>::<span class="ident">SuspectedResources</span>,
@@ -4651,8 +4828,10 @@
             <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>::<span class="ident">new</span>(<span class="string">&quot;&lt;device&gt;&quot;</span>),
             <span class="ident">active_submission_index</span>: <span class="number">0</span>,
             <span class="ident">trackers</span>: <span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">TrackerSet</span>::<span class="ident">new</span>(<span class="ident">B</span>::<span class="ident">VARIANT</span>)),
-            <span class="ident">render_passes</span>: <span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">FastHashMap</span>::<span class="ident">default</span>()),
-            <span class="ident">framebuffers</span>: <span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">FastHashMap</span>::<span class="ident">default</span>()),
+            <span class="ident">render_passes</span>: <span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">RenderPassLock</span> {
+                <span class="ident">render_passes</span>: <span class="ident">FastHashMap</span>::<span class="ident">default</span>(),
+                <span class="ident">framebuffers</span>: <span class="ident">FastHashMap</span>::<span class="ident">default</span>(),
+            }),
             <span class="ident">life_tracker</span>: <span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">life</span>::<span class="ident">LifetimeTracker</span>::<span class="ident">new</span>()),
             <span class="ident">temp_suspected</span>: <span class="ident">life</span>::<span class="ident">SuspectedResources</span>::<span class="ident">default</span>(),
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
@@ -4713,7 +4892,6 @@
             <span class="ident">token</span>,
         );
         <span class="ident">life_tracker</span>.<span class="ident">triage_mapped</span>(<span class="ident">hub</span>, <span class="ident">token</span>);
-        <span class="ident">life_tracker</span>.<span class="ident">triage_framebuffers</span>(<span class="ident">hub</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">framebuffers</span>.<span class="ident">lock</span>(), <span class="ident">token</span>);
         <span class="kw">let</span> <span class="ident">last_done</span> <span class="op">=</span> <span class="ident">life_tracker</span>.<span class="ident">triage_submissions</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>, <span class="ident">force_wait</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">callbacks</span> <span class="op">=</span> <span class="ident">life_tracker</span>.<span class="ident">handle_mapping</span>(<span class="ident">hub</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">trackers</span>, <span class="ident">token</span>);
         <span class="ident">life_tracker</span>.<span class="ident">cleanup</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">mem_allocator</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">desc_allocator</span>);
@@ -4738,6 +4916,7 @@
             <span class="kw">let</span> (<span class="ident">bind_group_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">bind_groups</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
             <span class="kw">let</span> (<span class="ident">compute_pipe_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">compute_pipelines</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
             <span class="kw">let</span> (<span class="ident">render_pipe_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">render_pipelines</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+            <span class="kw">let</span> (<span class="ident">query_set_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">query_sets</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
             <span class="kw">let</span> (<span class="ident">buffer_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
             <span class="kw">let</span> (<span class="ident">texture_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
             <span class="kw">let</span> (<span class="ident">texture_view_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">texture_views</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
@@ -4776,6 +4955,11 @@
             <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="ident">trackers</span>.<span class="ident">render_pipes</span>.<span class="ident">used</span>() {
                 <span class="kw">if</span> <span class="ident">render_pipe_guard</span>[<span class="ident">id</span>].<span class="ident">life_guard</span>.<span class="ident">ref_count</span>.<span class="ident">is_none</span>() {
                     <span class="self">self</span>.<span class="ident">temp_suspected</span>.<span class="ident">render_pipelines</span>.<span class="ident">push</span>(<span class="ident">id</span>);
+                }
+            }
+            <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="ident">trackers</span>.<span class="ident">query_sets</span>.<span class="ident">used</span>() {
+                <span class="kw">if</span> <span class="ident">query_set_guard</span>[<span class="ident">id</span>].<span class="ident">life_guard</span>.<span class="ident">ref_count</span>.<span class="ident">is_none</span>() {
+                    <span class="self">self</span>.<span class="ident">temp_suspected</span>.<span class="ident">query_sets</span>.<span class="ident">push</span>(<span class="ident">id</span>);
                 }
             }
         }
@@ -4945,12 +5129,11 @@
                 <span class="ident">mip_level_count</span>,
             ));
         }
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">view_capabilities</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">ViewCapabilities</span>::<span class="ident">empty</span>();
-
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">view_caps</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">ViewCapabilities</span>::<span class="ident">empty</span>();
         <span class="comment">// 2D textures with array layer counts that are multiples of 6 could be cubemaps</span>
         <span class="comment">// Following gpuweb/gpuweb#68 always add the hint in that case</span>
         <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">dimension</span> <span class="op">=</span><span class="op">=</span> <span class="ident">TextureDimension</span>::<span class="ident">D2</span> <span class="op">&amp;&amp;</span> <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth</span> <span class="op">%</span> <span class="number">6</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">view_capabilities</span> <span class="op">|</span><span class="op">=</span> <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">ViewCapabilities</span>::<span class="ident">KIND_CUBE</span>;
+            <span class="ident">view_caps</span> <span class="op">|</span><span class="op">=</span> <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">ViewCapabilities</span>::<span class="ident">KIND_CUBE</span>;
         };
 
         <span class="comment">// TODO: 2D arrays, cubemap arrays</span>
@@ -4964,7 +5147,7 @@
                     <span class="ident">format</span>,
                     <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Tiling</span>::<span class="ident">Optimal</span>,
                     <span class="ident">usage</span>,
-                    <span class="ident">view_capabilities</span>,
+                    <span class="ident">view_caps</span>,
                 )
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">err</span> {
                     <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">CreationError</span>::<span class="ident">OutOfMemory</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">DeviceError</span>::<span class="ident">OutOfMemory</span>,
@@ -4996,6 +5179,11 @@
             <span class="ident">kind</span>,
             <span class="ident">format</span>: <span class="ident">desc</span>.<span class="ident">format</span>,
             <span class="ident">format_features</span>,
+            <span class="ident">framebuffer_attachment</span>: <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">FramebufferAttachment</span> {
+                <span class="ident">usage</span>,
+                <span class="ident">format</span>,
+                <span class="ident">view_caps</span>,
+            },
             <span class="ident">full_range</span>: <span class="ident">TextureSelector</span> {
                 <span class="ident">levels</span>: <span class="number">0</span>..<span class="ident">desc</span>.<span class="ident">mip_level_count</span> <span class="kw">as</span> <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Level</span>,
                 <span class="ident">layers</span>: <span class="number">0</span>..<span class="ident">kind</span>.<span class="ident">num_layers</span>(),
@@ -5129,6 +5317,7 @@
             <span class="ident">layer_start</span>: <span class="ident">desc</span>.<span class="ident">base_array_layer</span> <span class="kw">as</span> <span class="kw">_</span>,
             <span class="ident">layer_count</span>: <span class="ident">desc</span>.<span class="ident">array_layer_count</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">get</span>() <span class="kw">as</span> <span class="kw">_</span>),
         };
+        <span class="kw">let</span> <span class="ident">hal_extent</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">kind</span>.<span class="ident">extent</span>().<span class="ident">at_level</span>(<span class="ident">desc</span>.<span class="ident">base_mip_level</span> <span class="kw">as</span> <span class="kw">_</span>);
 
         <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="self">self</span>.<span class="ident">raw</span>
@@ -5153,8 +5342,13 @@
             <span class="ident">aspects</span>,
             <span class="ident">format</span>: <span class="ident">texture</span>.<span class="ident">format</span>,
             <span class="ident">format_features</span>: <span class="ident">texture</span>.<span class="ident">format_features</span>,
-            <span class="ident">extent</span>: <span class="ident">texture</span>.<span class="ident">kind</span>.<span class="ident">extent</span>().<span class="ident">at_level</span>(<span class="ident">desc</span>.<span class="ident">base_mip_level</span> <span class="kw">as</span> <span class="kw">_</span>),
+            <span class="ident">extent</span>: <span class="ident">wgt</span>::<span class="ident">Extent3d</span> {
+                <span class="ident">width</span>: <span class="ident">hal_extent</span>.<span class="ident">width</span>,
+                <span class="ident">height</span>: <span class="ident">hal_extent</span>.<span class="ident">height</span>,
+                <span class="ident">depth</span>: <span class="ident">view_layer_count</span>,
+            },
             <span class="ident">samples</span>: <span class="ident">texture</span>.<span class="ident">kind</span>.<span class="ident">num_samples</span>(),
+            <span class="ident">framebuffer_attachment</span>: <span class="ident">texture</span>.<span class="ident">framebuffer_attachment</span>.<span class="ident">clone</span>(),
             <span class="ident">selector</span>,
             <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>::<span class="ident">new</span>(<span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_or_default</span>()),
         })
@@ -6526,7 +6720,7 @@
             .<span class="ident">get</span>(<span class="ident">pipeline_layout_id</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">pipeline</span>::<span class="ident">CreateRenderPipelineError</span>::<span class="ident">InvalidLayout</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">render_pass_cache</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">render_passes</span>.<span class="ident">lock</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rp_lock</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">render_passes</span>.<span class="ident">lock</span>();
         <span class="kw">let</span> <span class="ident">pipeline_desc</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">pso</span>::<span class="ident">GraphicsPipelineDesc</span> {
             <span class="ident">label</span>: <span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="ident">AsRef</span>::<span class="ident">as_ref</span>),
             <span class="ident">primitive_assembler</span>,
@@ -6539,7 +6733,7 @@
             <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident">layout</span>.<span class="ident">raw</span>,
             <span class="ident">subpass</span>: <span class="ident">hal</span>::<span class="ident">pass</span>::<span class="ident">Subpass</span> {
                 <span class="ident">index</span>: <span class="number">0</span>,
-                <span class="ident">main_pass</span>: <span class="kw">match</span> <span class="ident">render_pass_cache</span>.<span class="ident">entry</span>(<span class="ident">rp_key</span>) {
+                <span class="ident">main_pass</span>: <span class="kw">match</span> <span class="ident">rp_lock</span>.<span class="ident">render_passes</span>.<span class="ident">entry</span>(<span class="ident">rp_key</span>) {
                     <span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">e</span>.<span class="ident">into_mut</span>(),
                     <span class="ident">Entry</span>::<span class="ident">Vacant</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">pass</span> <span class="op">=</span> <span class="self">self</span>
@@ -6666,10 +6860,11 @@
         <span class="kw">unsafe</span> {
             <span class="ident">desc_alloc</span>.<span class="ident">cleanup</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>);
             <span class="ident">mem_alloc</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>);
-            <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">rp</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">render_passes</span>.<span class="ident">lock</span>().<span class="ident">drain</span>() {
+            <span class="kw">let</span> <span class="ident">rps</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">render_passes</span>.<span class="ident">into_inner</span>();
+            <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">rp</span>) <span class="kw">in</span> <span class="ident">rps</span>.<span class="ident">render_passes</span> {
                 <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">destroy_render_pass</span>(<span class="ident">rp</span>);
             }
-            <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">fbo</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">framebuffers</span>.<span class="ident">lock</span>().<span class="ident">drain</span>() {
+            <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">fbo</span>) <span class="kw">in</span> <span class="ident">rps</span>.<span class="ident">framebuffers</span> {
                 <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">destroy_framebuffer</span>(<span class="ident">fbo</span>);
             }
         }
@@ -7999,6 +8194,132 @@
             .<span class="ident">push</span>(<span class="ident">id</span>::<span class="ident">Valid</span>(<span class="ident">render_bundle_id</span>));
     }
 
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">device_create_query_set</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">device_id</span>: <span class="ident">id</span>::<span class="ident">DeviceId</span>,
+        <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">wgt</span>::<span class="ident">QuerySetDescriptor</span>,
+        <span class="ident">id_in</span>: <span class="ident">Input</span><span class="op">&lt;</span><span class="ident">G</span>, <span class="ident">id</span>::<span class="ident">QuerySetId</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">id</span>::<span class="ident">QuerySetId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">resource</span>::<span class="ident">CreateQuerySetError</span><span class="op">&gt;</span>) {
+        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Device::create_query_set&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
+
+        <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="kw">loop</span> {
+            <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">device_guard</span>.<span class="ident">get</span>(<span class="ident">device_id</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">device</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">device</span>,
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span> <span class="ident">DeviceError</span>::<span class="ident">Invalid</span>.<span class="ident">into</span>(),
+            };
+
+            <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">ty</span> {
+                <span class="ident">wgt</span>::<span class="ident">QueryType</span>::<span class="ident">Timestamp</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">if</span> <span class="op">!</span><span class="ident">device</span>.<span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">TIMESTAMP_QUERY</span>) {
+                        <span class="kw">break</span> <span class="ident">resource</span>::<span class="ident">CreateQuerySetError</span>::<span class="ident">MissingFeature</span>(
+                            <span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">TIMESTAMP_QUERY</span>,
+                        );
+                    }
+                }
+                <span class="ident">wgt</span>::<span class="ident">QueryType</span>::<span class="ident">PipelineStatistics</span>(..) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">if</span> <span class="op">!</span><span class="ident">device</span>
+                        .<span class="ident">features</span>
+                        .<span class="ident">contains</span>(<span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">PIPELINE_STATISTICS_QUERY</span>)
+                    {
+                        <span class="kw">break</span> <span class="ident">resource</span>::<span class="ident">CreateQuerySetError</span>::<span class="ident">MissingFeature</span>(
+                            <span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">PIPELINE_STATISTICS_QUERY</span>,
+                        );
+                    }
+                }
+            }
+
+            <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">count</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+                <span class="kw">break</span> <span class="ident">resource</span>::<span class="ident">CreateQuerySetError</span>::<span class="ident">ZeroCount</span>;
+            }
+
+            <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">count</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">QUERY_SET_MAX_QUERIES</span> {
+                <span class="kw">break</span> <span class="ident">resource</span>::<span class="ident">CreateQuerySetError</span>::<span class="ident">TooManyQueries</span> {
+                    <span class="ident">count</span>: <span class="ident">desc</span>.<span class="ident">count</span>,
+                    <span class="ident">maximum</span>: <span class="ident">wgt</span>::<span class="ident">QUERY_SET_MAX_QUERIES</span>,
+                };
+            }
+
+            <span class="kw">let</span> <span class="ident">query_set</span> <span class="op">=</span> {
+                <span class="kw">let</span> (<span class="ident">hal_type</span>, <span class="ident">elements</span>) <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">map_query_type</span>(<span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">ty</span>);
+
+                <span class="ident">resource</span>::<span class="ident">QuerySet</span> {
+                    <span class="ident">raw</span>: <span class="kw">unsafe</span> { <span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">create_query_pool</span>(<span class="ident">hal_type</span>, <span class="ident">desc</span>.<span class="ident">count</span>).<span class="ident">unwrap</span>() },
+                    <span class="ident">device_id</span>: <span class="ident">Stored</span> {
+                        <span class="ident">value</span>: <span class="ident">id</span>::<span class="ident">Valid</span>(<span class="ident">device_id</span>),
+                        <span class="ident">ref_count</span>: <span class="ident">device</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>(),
+                    },
+                    <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>::<span class="ident">new</span>(<span class="string">&quot;&quot;</span>),
+                    <span class="ident">desc</span>: <span class="ident">desc</span>.<span class="ident">clone</span>(),
+                    <span class="ident">elements</span>,
+                }
+            };
+
+            <span class="kw">let</span> <span class="ident">ref_count</span> <span class="op">=</span> <span class="ident">query_set</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>();
+
+            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">hub</span>
+                .<span class="ident">query_sets</span>
+                .<span class="ident">register_identity</span>(<span class="ident">id_in</span>, <span class="ident">query_set</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
+            <span class="kw">match</span> <span class="ident">device</span>.<span class="ident">trace</span> {
+                <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">trace</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">trace</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">CreateQuerySet</span> {
+                    <span class="ident">id</span>: <span class="ident">id</span>.<span class="number">0</span>,
+                    <span class="ident">desc</span>: <span class="ident">desc</span>.<span class="ident">clone</span>(),
+                }),
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (),
+            };
+
+            <span class="ident">device</span>
+                .<span class="ident">trackers</span>
+                .<span class="ident">lock</span>()
+                .<span class="ident">query_sets</span>
+                .<span class="ident">init</span>(<span class="ident">id</span>, <span class="ident">ref_count</span>, <span class="ident">PhantomData</span>)
+                .<span class="ident">unwrap</span>();
+
+            <span class="kw">return</span> (<span class="ident">id</span>.<span class="number">0</span>, <span class="prelude-val">None</span>);
+        };
+
+        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>)
+            .<span class="ident">query_sets</span>
+            .<span class="ident">register_error</span>(<span class="ident">id_in</span>, <span class="string">&quot;&quot;</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+        (<span class="ident">id</span>, <span class="prelude-val">Some</span>(<span class="ident">error</span>))
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">query_set_drop</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">query_set_id</span>: <span class="ident">id</span>::<span class="ident">QuerySetId</span>) {
+        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;QuerySet::drop&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
+
+        <span class="kw">let</span> <span class="ident">device_id</span> <span class="op">=</span> {
+            <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">query_set_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">query_sets</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+            <span class="kw">let</span> <span class="ident">query_set</span> <span class="op">=</span> <span class="ident">query_set_guard</span>.<span class="ident">get_mut</span>(<span class="ident">query_set_id</span>).<span class="ident">unwrap</span>();
+            <span class="ident">query_set</span>.<span class="ident">life_guard</span>.<span class="ident">ref_count</span>.<span class="ident">take</span>();
+            <span class="ident">query_set</span>.<span class="ident">device_id</span>.<span class="ident">value</span>
+        };
+
+        <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+        <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">device_guard</span>[<span class="ident">device_id</span>];
+
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
+        <span class="kw">match</span> <span class="ident">device</span>.<span class="ident">trace</span> {
+            <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">trace</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">trace</span>
+                .<span class="ident">lock</span>()
+                .<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">DestroyQuerySet</span>(<span class="ident">query_set_id</span>)),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (),
+        };
+
+        <span class="ident">device</span>
+            .<span class="ident">lock_life</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>)
+            .<span class="ident">suspected_resources</span>
+            .<span class="ident">query_sets</span>
+            .<span class="ident">push</span>(<span class="ident">id</span>::<span class="ident">Valid</span>(<span class="ident">query_set_id</span>));
+    }
+
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">device_create_render_pipeline</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">device_id</span>: <span class="ident">id</span>::<span class="ident">DeviceId</span>,
@@ -8341,6 +8662,7 @@
             }
         }
         <span class="ident">validate_swap_chain_descriptor</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">config</span>, <span class="kw-2">&amp;</span><span class="ident">caps</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">framebuffer_attachment</span> <span class="op">=</span> <span class="ident">config</span>.<span class="ident">framebuffer_attachment</span>();
 
         <span class="kw">unsafe</span> {
             <span class="ident">B</span>::<span class="ident">get_surface_mut</span>(<span class="ident">surface</span>)
@@ -8381,8 +8703,8 @@
                 .<span class="ident">create_semaphore</span>()
                 .<span class="ident">or</span>(<span class="prelude-val">Err</span>(<span class="ident">DeviceError</span>::<span class="ident">OutOfMemory</span>))<span class="question-mark">?</span>,
             <span class="ident">acquired_view_id</span>: <span class="prelude-val">None</span>,
-            <span class="ident">acquired_framebuffers</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
             <span class="ident">active_submission_index</span>: <span class="number">0</span>,
+            <span class="ident">framebuffer_attachment</span>,
         };
         <span class="ident">swap_chain_guard</span>.<span class="ident">insert</span>(<span class="ident">sc_id</span>, <span class="ident">swap_chain</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">sc_id</span>)

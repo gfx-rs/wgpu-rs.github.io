@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/6b3a1e3/src/backend/vulkan/src/native.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>native.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/7dc99d5/src/backend/vulkan/src/native.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>native.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_vulkan/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -179,11 +179,22 @@
 <span id="176">176</span>
 <span id="177">177</span>
 <span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">window</span>::<span class="ident">FramebufferCachePtr</span>, <span class="ident">Backend</span>, <span class="ident">RawDevice</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Backend</span>, <span class="ident">RawDevice</span>, <span class="ident">ROUGH_MAX_ATTACHMENT_COUNT</span>};
 <span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">version</span>::<span class="ident">DeviceV1_0</span>, <span class="ident">vk</span>};
-<span class="kw">use</span> <span class="ident">hal</span>::{<span class="ident">device</span>::<span class="ident">OutOfMemory</span>, <span class="ident">image</span>::<span class="ident">SubresourceRange</span>, <span class="ident">pso</span>};
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow</span>::<span class="ident">Borrow</span>, <span class="ident">sync</span>::<span class="ident">Arc</span>};
+<span class="kw">use</span> <span class="ident">hal</span>::{
+    <span class="ident">device</span>::<span class="ident">OutOfMemory</span>,
+    <span class="ident">image</span>::{<span class="ident">Extent</span>, <span class="ident">SubresourceRange</span>},
+    <span class="ident">pso</span>,
+};
+<span class="kw">use</span> <span class="ident">parking_lot</span>::<span class="ident">Mutex</span>;
+<span class="kw">use</span> <span class="ident">smallvec</span>::<span class="ident">SmallVec</span>;
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow</span>::<span class="ident">Borrow</span>, <span class="ident">collections</span>::<span class="ident">HashMap</span>, <span class="ident">sync</span>::<span class="ident">Arc</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Semaphore</span>(<span class="kw">pub</span> <span class="ident">vk</span>::<span class="ident">Semaphore</span>);
@@ -227,17 +238,10 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ImageViewOwner</span> {
-    <span class="ident">User</span>,
-    <span class="ident">Surface</span>(<span class="ident">FramebufferCachePtr</span>),
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ImageView</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">image</span>: <span class="ident">vk</span>::<span class="ident">Image</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">view</span>: <span class="ident">vk</span>::<span class="ident">ImageView</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">vk</span>::<span class="ident">ImageView</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">range</span>: <span class="ident">SubresourceRange</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">owner</span>: <span class="ident">ImageViewOwner</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Hash</span>)]</span>
@@ -246,13 +250,19 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Hash</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderPass</span> {
     <span class="kw">pub</span> <span class="ident">raw</span>: <span class="ident">vk</span>::<span class="ident">RenderPass</span>,
-    <span class="kw">pub</span> <span class="ident">clear_attachments_mask</span>: <span class="ident">u64</span>,
+    <span class="kw">pub</span> <span class="ident">attachment_count</span>: <span class="ident">usize</span>,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Framebuffer</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">vk</span>::<span class="ident">Framebuffer</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">owned</span>: <span class="ident">bool</span>,
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">FramebufferKey</span> <span class="op">=</span> <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">vk</span>::<span class="ident">ImageView</span>; <span class="ident">ROUGH_MAX_ATTACHMENT_COUNT</span>]<span class="op">&gt;</span>;
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Framebuffer</span> {
+    <span class="ident">ImageLess</span>(<span class="ident">vk</span>::<span class="ident">Framebuffer</span>),
+    <span class="ident">Legacy</span> {
+        <span class="ident">name</span>: <span class="ident">String</span>,
+        <span class="ident">map</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">FramebufferKey</span>, <span class="ident">vk</span>::<span class="ident">Framebuffer</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">extent</span>: <span class="ident">Extent</span>,
+    },
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>

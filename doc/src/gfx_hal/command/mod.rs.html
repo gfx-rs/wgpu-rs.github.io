@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/6b3a1e3/src/hal/src/command/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/7dc99d5/src/hal/src/command/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../gfx_hal/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -646,6 +646,17 @@
 <span id="643">643</span>
 <span id="644">644</span>
 <span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Command buffers.</span>
 <span class="doccomment">//!</span>
@@ -709,7 +720,7 @@
     <span class="ident">Secondary</span>,
 }
 
-<span class="doccomment">/// Specifies how commands for the following renderpasses will be recorded.</span>
+<span class="doccomment">/// Specifies how commands for the following render passes will be recorded.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SubpassContents</span> {
     <span class="doccomment">/// Contents of the subpass will be inline in the command buffer,</span>
@@ -719,6 +730,15 @@
     <span class="doccomment">/// the primary command buffer will only contain `execute_command()` calls</span>
     <span class="doccomment">/// until the subpass or render pass is complete.</span>
     <span class="ident">SecondaryBuffers</span>,
+}
+
+<span class="doccomment">/// A render attachment provided to `begin_render_pass`.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderAttachmentInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span>: <span class="ident">Backend</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// View of the attachment image.</span>
+    <span class="kw">pub</span> <span class="ident">image_view</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">B</span>::<span class="ident">ImageView</span>,
+    <span class="doccomment">/// Clear value, if needed.</span>
+    <span class="kw">pub</span> <span class="ident">clear_value</span>: <span class="ident">ClearValue</span>,
 }
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">missing_docs</span>)]</span>
@@ -942,23 +962,25 @@
     <span class="doccomment">/// # Arguments</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// * `render_area` - section of the framebuffer to render.</span>
-    <span class="doccomment">/// * `clear_values` - iterator of [clear values][crate::command::ClearValue]</span>
-    <span class="doccomment">///   to use to use for `clear_*` commands, one for each attachment of the render pass</span>
-    <span class="doccomment">///   that has a clear operation.</span>
+    <span class="doccomment">/// * `attachments` - iterator of [attachments][crate::command::RenderAttachmentInfo]</span>
+    <span class="doccomment">///   that has both the image views and the clear values</span>
     <span class="doccomment">/// * `first_subpass` - specifies, for the first subpass, whether the</span>
     <span class="doccomment">///   rendering commands are provided inline or whether the render</span>
     <span class="doccomment">///   pass is composed of subpasses.</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">begin_render_pass</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Note</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The `ExactSizeIterator` is not required, since the number of the attachments</span>
+    <span class="doccomment">/// can be known from the render pass.</span>
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">begin_render_pass</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">render_pass</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>::<span class="ident">RenderPass</span>,
         <span class="ident">framebuffer</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>::<span class="ident">Framebuffer</span>,
         <span class="ident">render_area</span>: <span class="ident">pso</span>::<span class="ident">Rect</span>,
-        <span class="ident">clear_values</span>: <span class="ident">T</span>,
+        <span class="ident">attachments</span>: <span class="ident">T</span>,
         <span class="ident">first_subpass</span>: <span class="ident">SubpassContents</span>,
     ) <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">IntoIterator</span>,
-        <span class="ident">T</span>::<span class="ident">Item</span>: <span class="ident">Borrow</span><span class="op">&lt;</span><span class="ident">ClearValue</span><span class="op">&gt;</span>,
-        <span class="ident">T</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>;
+        <span class="ident">T</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">RenderAttachmentInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Steps to the next subpass in the current render pass.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">next_subpass</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">contents</span>: <span class="ident">SubpassContents</span>);

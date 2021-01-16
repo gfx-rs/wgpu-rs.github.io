@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/6b3a1e3/src/backend/gl/src/queue.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>queue.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/7dc99d5/src/backend/gl/src/queue.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>queue.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_gl/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -1130,12 +1130,21 @@
 <span id="1127">1127</span>
 <span id="1128">1128</span>
 <span id="1129">1129</span>
+<span id="1130">1130</span>
+<span id="1131">1131</span>
+<span id="1132">1132</span>
+<span id="1133">1133</span>
+<span id="1134">1134</span>
+<span id="1135">1135</span>
+<span id="1136">1136</span>
+<span id="1137">1137</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">command</span> <span class="kw">as</span> <span class="ident">com</span>, <span class="ident">device</span>, <span class="ident">info</span>::<span class="ident">LegacyFeatures</span>, <span class="ident">native</span>, <span class="ident">state</span>, <span class="ident">Backend</span>, <span class="ident">Device</span>, <span class="ident">GlContext</span>, <span class="ident">Share</span>,
-    <span class="ident">Starc</span>, <span class="ident">Surface</span>,
+    <span class="ident">Starc</span>, <span class="ident">Surface</span>, <span class="ident">MAX_COLOR_ATTACHMENTS</span>,
 };
 
+<span class="kw">use</span> <span class="ident">arrayvec</span>::<span class="ident">ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">glow</span>::<span class="ident">HasContext</span>;
 <span class="kw">use</span> <span class="ident">smallvec</span>::<span class="ident">SmallVec</span>;
 
@@ -1160,8 +1169,6 @@
     <span class="ident">num_viewports</span>: <span class="ident">usize</span>,
     <span class="comment">// Currently set scissor rects.</span>
     <span class="ident">num_scissors</span>: <span class="ident">usize</span>,
-    <span class="comment">// Currently bound fbo</span>
-    <span class="ident">fbo</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">native</span>::<span class="ident">RawFrameBuffer</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">State</span> {
@@ -1173,7 +1180,6 @@
             <span class="ident">index_buffer</span>: <span class="prelude-val">None</span>,
             <span class="ident">num_viewports</span>: <span class="number">0</span>,
             <span class="ident">num_scissors</span>: <span class="number">0</span>,
-            <span class="ident">fbo</span>: <span class="prelude-val">None</span>,
         }
     }
 
@@ -1432,7 +1438,7 @@
             } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">context</span>;
                 <span class="kw">let</span> <span class="ident">legacy</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">legacy_features</span>;
-                <span class="kw">let</span> <span class="ident">hints</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">hints</span>;
+                <span class="kw">let</span> <span class="ident">caveats</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">public_caps</span>.<span class="ident">performance_caveats</span>;
 
                 <span class="kw">if</span> <span class="ident">instances</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">&amp;</span>(<span class="number">0u32</span>..<span class="number">1</span>) {
                     <span class="kw">if</span> <span class="ident">base_vertex</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
@@ -1483,7 +1489,12 @@
                         }
                     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">instances</span>.<span class="ident">start</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
                         <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Base vertex with instanced indexed drawing is not supported&quot;</span>);
-                    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">hints</span>.<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">Hints</span>::<span class="ident">BASE_VERTEX_INSTANCE_DRAWING</span>) {
+                    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">caveats</span>
+                        .<span class="ident">contains</span>(<span class="ident">hal</span>::<span class="ident">PerformanceCaveats</span>::<span class="ident">BASE_VERTEX_INSTANCE_DRAWING</span>)
+                    {
+                        <span class="comment">//TODO: this is supposed to be a workaround, not an error</span>
+                        <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Instance bases with instanced indexed drawing is not supported&quot;</span>);
+                    } <span class="kw">else</span> {
                         <span class="kw">unsafe</span> {
                             <span class="ident">gl</span>.<span class="ident">draw_elements_instanced_base_vertex_base_instance</span>(
                                 <span class="ident">primitive</span>,
@@ -1495,8 +1506,6 @@
                                 <span class="ident">instances</span>.<span class="ident">start</span> <span class="kw">as</span> <span class="kw">_</span>,
                             );
                         }
-                    } <span class="kw">else</span> {
-                        <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Instance bases with instanced indexed drawing is not supported&quot;</span>);
                     }
                 } <span class="kw">else</span> {
                     <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Instanced indexed drawing is not supported&quot;</span>);
@@ -1614,28 +1623,35 @@
                 };
             },
             <span class="ident">com</span>::<span class="ident">Command</span>::<span class="ident">ClearTexture</span>(<span class="ident">_color</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unimplemented</span><span class="macro">!</span>(),
-            <span class="ident">com</span>::<span class="ident">Command</span>::<span class="ident">DrawBuffers</span>(<span class="ident">draw_buffers</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">share</span>.<span class="ident">private_caps</span>.<span class="ident">draw_buffers</span> {
-                    <span class="kw">let</span> <span class="ident">draw_buffers</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">get</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>(<span class="ident">data_buf</span>, <span class="ident">draw_buffers</span>);
-                    <span class="self">self</span>.<span class="ident">share</span>.<span class="ident">context</span>.<span class="ident">draw_buffers</span>(<span class="ident">draw_buffers</span>);
-                } <span class="kw">else</span> {
-                    <span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Draw buffers are not supported&quot;</span>);
+            <span class="ident">com</span>::<span class="ident">Command</span>::<span class="ident">BindFramebuffer</span> {
+                <span class="ident">target</span>,
+                <span class="ident">framebuffer</span>,
+                <span class="kw-2">ref</span> <span class="ident">colors</span>,
+                <span class="kw-2">ref</span> <span class="ident">depth_stencil</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">context</span>;
+                <span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">target</span>, <span class="prelude-val">Some</span>(<span class="ident">framebuffer</span>)) };
+                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">view</span>) <span class="kw">in</span> <span class="ident">colors</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
+                    <span class="self">self</span>.<span class="ident">bind_target</span>(<span class="ident">target</span>, <span class="ident">glow</span>::<span class="ident">COLOR_ATTACHMENT0</span> <span class="op">+</span> <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">view</span>);
                 }
-            },
-            <span class="ident">com</span>::<span class="ident">Command</span>::<span class="ident">BindFrameBuffer</span>(<span class="ident">point</span>, <span class="ident">frame_buffer</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">share</span>.<span class="ident">private_caps</span>.<span class="ident">framebuffer</span> {
-                    <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">context</span>;
-                    <span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">point</span>, <span class="ident">frame_buffer</span>) };
-                    <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">fbo</span> <span class="op">=</span> <span class="ident">frame_buffer</span>;
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">frame_buffer</span>.<span class="ident">is_some</span>() {
-                    <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Tried to bind FBO without FBO support!&quot;</span>);
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">view</span>) <span class="op">=</span> <span class="kw-2">*</span><span class="ident">depth_stencil</span> {
+                    <span class="kw">let</span> <span class="ident">aspects</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">aspects</span>();
+                    <span class="kw">let</span> <span class="ident">attachment</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">aspects</span> <span class="op">=</span><span class="op">=</span> <span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Aspects</span>::<span class="ident">DEPTH</span> {
+                        <span class="ident">glow</span>::<span class="ident">DEPTH_ATTACHMENT</span>
+                    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">aspects</span> <span class="op">=</span><span class="op">=</span> <span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Aspects</span>::<span class="ident">STENCIL</span> {
+                        <span class="ident">glow</span>::<span class="ident">STENCIL_ATTACHMENT</span>
+                    } <span class="kw">else</span> {
+                        <span class="ident">glow</span>::<span class="ident">DEPTH_STENCIL_ATTACHMENT</span>
+                    };
+                    <span class="self">self</span>.<span class="ident">bind_target</span>(<span class="ident">target</span>, <span class="ident">attachment</span>, <span class="ident">view</span>);
                 }
             }
-            <span class="ident">com</span>::<span class="ident">Command</span>::<span class="ident">BindTargetView</span>(<span class="ident">point</span>, <span class="ident">attachment</span>, <span class="kw-2">ref</span> <span class="ident">view</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">bind_target</span>(<span class="ident">point</span>, <span class="ident">attachment</span>, <span class="ident">view</span>)
-            }
-            <span class="ident">com</span>::<span class="ident">Command</span>::<span class="ident">SetDrawColorBuffers</span>(<span class="ident">num</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">state</span>::<span class="ident">bind_draw_color_buffers</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">share</span>.<span class="ident">context</span>, <span class="ident">num</span>);
+            <span class="ident">com</span>::<span class="ident">Command</span>::<span class="ident">SetDrawColorBuffers</span>(<span class="kw-2">ref</span> <span class="ident">indices</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">gl_indices</span> <span class="op">=</span> <span class="ident">indices</span>
+                    .<span class="ident">iter</span>()
+                    .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">i</span><span class="op">|</span> <span class="ident">glow</span>::<span class="ident">COLOR_ATTACHMENT0</span> <span class="op">+</span> <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>)
+                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="kw">_</span>; <span class="ident">MAX_COLOR_ATTACHMENTS</span>]<span class="op">&gt;</span><span class="op">&gt;</span>();
+                <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">share</span>.<span class="ident">context</span>.<span class="ident">draw_buffers</span>(<span class="kw-2">&amp;</span><span class="ident">gl_indices</span>) };
             }
             <span class="ident">com</span>::<span class="ident">Command</span>::<span class="ident">SetPatchSize</span>(<span class="ident">num</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> {
                 <span class="self">self</span>.<span class="ident">share</span>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/6b3a1e3/src/backend/gl/src/window/egl.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>egl.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/7dc99d5/src/backend/gl/src/window/egl.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>egl.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../gfx_backend_gl/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -576,6 +576,36 @@
 <span id="573">573</span>
 <span id="574">574</span>
 <span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! EGL-based surface and swapchain.</span>
 
@@ -626,6 +656,7 @@
 
 <span class="kw">type</span> <span class="ident">WlDisplayDisconnectFun</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(<span class="ident">display</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw</span>::<span class="ident">c_void</span>);
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>))]</span>
 <span class="kw">type</span> <span class="ident">WlEglWindowCreateFun</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(
     <span class="ident">surface</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw</span>::<span class="ident">c_void</span>,
     <span class="ident">width</span>: <span class="ident">raw</span>::<span class="ident">c_int</span>,
@@ -717,21 +748,23 @@
         <span class="comment">//Note: only GLES is supported here.</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">supports_native_window</span> <span class="op">=</span> <span class="bool-val">true</span>;
         <span class="comment">//TODO: EGL_SLOW_CONFIG</span>
-        <span class="kw">let</span> <span class="ident">config_attributes</span> <span class="op">=</span> [
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config_attributes</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
             <span class="ident">egl</span>::<span class="ident">CONFORMANT</span>,
             <span class="ident">egl</span>::<span class="ident">OPENGL_ES2_BIT</span>,
             <span class="ident">egl</span>::<span class="ident">RENDERABLE_TYPE</span>,
             <span class="ident">egl</span>::<span class="ident">OPENGL_ES2_BIT</span>,
-            <span class="ident">egl</span>::<span class="ident">NATIVE_RENDERABLE</span>,
-            <span class="ident">egl</span>::<span class="ident">TRUE</span> <span class="kw">as</span> <span class="kw">_</span>,
             <span class="ident">egl</span>::<span class="ident">SURFACE_TYPE</span>,
             <span class="ident">egl</span>::<span class="ident">WINDOW_BIT</span>,
-            <span class="ident">egl</span>::<span class="ident">NONE</span>,
         ];
-        <span class="kw">let</span> <span class="ident">pre_config</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">wsi_library</span> {
-            <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">egl</span>.<span class="ident">choose_first_config</span>(<span class="ident">display</span>, <span class="kw-2">&amp;</span><span class="ident">config_attributes</span>),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
-        };
+
+        <span class="kw">if</span> <span class="op">!</span><span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>) {
+            <span class="ident">config_attributes</span>.<span class="ident">push</span>(<span class="ident">egl</span>::<span class="ident">NATIVE_RENDERABLE</span>);
+            <span class="ident">config_attributes</span>.<span class="ident">push</span>(<span class="ident">egl</span>::<span class="ident">TRUE</span> <span class="kw">as</span> <span class="kw">_</span>);
+        }
+
+        <span class="ident">config_attributes</span>.<span class="ident">push</span>(<span class="ident">egl</span>::<span class="ident">NONE</span>);
+
+        <span class="kw">let</span> <span class="ident">pre_config</span> <span class="op">=</span> <span class="ident">egl</span>.<span class="ident">choose_first_config</span>(<span class="ident">display</span>, <span class="kw-2">&amp;</span><span class="ident">config_attributes</span>);
         <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">pre_config</span> {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">config</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">config</span>,
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -757,7 +790,7 @@
             <span class="ident">egl</span>::<span class="ident">CONTEXT_CLIENT_VERSION</span>,
             <span class="number">3</span>, <span class="comment">// Request GLES 3.0 or higher</span>
         ];
-        <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">debug_assertions</span>) <span class="op">&amp;&amp;</span> <span class="ident">wsi_library</span>.<span class="ident">is_none</span>() {
+        <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">debug_assertions</span>) <span class="op">&amp;&amp;</span> <span class="ident">wsi_library</span>.<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>) {
             <span class="comment">//TODO: figure out why this is needed</span>
             <span class="ident">context_attributes</span>.<span class="ident">push</span>(<span class="ident">egl</span>::<span class="ident">CONTEXT_OPENGL_DEBUG</span>);
             <span class="ident">context_attributes</span>.<span class="ident">push</span>(<span class="ident">egl</span>::<span class="ident">TRUE</span> <span class="kw">as</span> <span class="kw">_</span>);
@@ -804,22 +837,23 @@
             }
         };
 
-        <span class="kw">let</span> <span class="ident">client_extensions</span> <span class="op">=</span> <span class="ident">egl</span>
-            .<span class="ident">query_string</span>(<span class="prelude-val">None</span>, <span class="ident">egl</span>::<span class="ident">EXTENSIONS</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">hal</span>::<span class="ident">UnsupportedBackend</span>)<span class="question-mark">?</span>
-            .<span class="ident">to_string_lossy</span>();
-        <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Client extensions: {:?}&quot;</span>, <span class="ident">client_extensions</span>);
-        <span class="kw">let</span> <span class="ident">client_ext_list</span> <span class="op">=</span> <span class="ident">client_extensions</span>.<span class="ident">split_whitespace</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+        <span class="kw">let</span> <span class="ident">client_extensions</span> <span class="op">=</span> <span class="ident">egl</span>.<span class="ident">query_string</span>(<span class="prelude-val">None</span>, <span class="ident">egl</span>::<span class="ident">EXTENSIONS</span>);
+
+        <span class="kw">let</span> <span class="ident">client_ext_str</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">client_extensions</span> {
+            <span class="prelude-val">Ok</span>(<span class="ident">ext</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ext</span>.<span class="ident">to_string_lossy</span>().<span class="ident">into_owned</span>(),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">String</span>::<span class="ident">new</span>(),
+        };
+        <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Client extensions: {:?}&quot;</span>, <span class="ident">client_ext_str</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wsi_library</span> <span class="op">=</span> <span class="prelude-val">None</span>;
 
-        <span class="kw">let</span> <span class="ident">wayland_display</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">client_ext_list</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="string">&quot;EGL_EXT_platform_wayland&quot;</span>) {
+        <span class="kw">let</span> <span class="ident">wayland_display</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">client_ext_str</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="string">&quot;EGL_EXT_platform_wayland&quot;</span>) {
             <span class="ident">test_wayland_display</span>()
         } <span class="kw">else</span> {
             <span class="prelude-val">None</span>
         };
 
-        <span class="kw">let</span> <span class="ident">x11_display</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">client_ext_list</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="string">&quot;EGL_EXT_platform_x11&quot;</span>) {
+        <span class="kw">let</span> <span class="ident">x11_display</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">client_ext_str</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="string">&quot;EGL_EXT_platform_x11&quot;</span>) {
             <span class="ident">open_x_display</span>()
         } <span class="kw">else</span> {
             <span class="prelude-val">None</span>
@@ -866,7 +900,10 @@
             .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="ident">glow</span>::<span class="ident">Context</span>::<span class="ident">from_loader_function</span>(<span class="op">|</span><span class="ident">name</span><span class="op">|</span> {
-                <span class="ident">inner</span>.<span class="ident">egl</span>.<span class="ident">get_proc_address</span>(<span class="ident">name</span>).<span class="ident">unwrap</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>
+                <span class="ident">inner</span>
+                    .<span class="ident">egl</span>
+                    .<span class="ident">get_proc_address</span>(<span class="ident">name</span>)
+                    .<span class="ident">map_or</span>(<span class="ident">ptr</span>::<span class="ident">null</span>(), <span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>)
             })
         };
         <span class="comment">// Create physical device</span>
@@ -880,13 +917,13 @@
         <span class="kw">use</span> <span class="ident">raw_window_handle</span>::<span class="ident">RawWindowHandle</span> <span class="kw">as</span> <span class="ident">Rwh</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">native_window</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">has_handle</span>.<span class="ident">raw_window_handle</span>() {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">native_window_ptr</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">has_handle</span>.<span class="ident">raw_window_handle</span>() {
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>))]</span>
-            <span class="ident">Rwh</span>::<span class="ident">Xlib</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">handle</span>.<span class="ident">window</span>,
+            <span class="ident">Rwh</span>::<span class="ident">Xlib</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">handle</span>.<span class="ident">window</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">c_void</span>,
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>))]</span>
-            <span class="ident">Rwh</span>::<span class="ident">Xcb</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">handle</span>.<span class="ident">window</span> <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident">Rwh</span>::<span class="ident">Xcb</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">handle</span>.<span class="ident">window</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">c_void</span>,
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>)]</span>
-            <span class="ident">Rwh</span>::<span class="ident">Android</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">handle</span>.<span class="ident">a_native_window</span>,
+            <span class="ident">Rwh</span>::<span class="ident">Android</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">handle</span>.<span class="ident">a_native_window</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">c_void</span>,
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>))]</span>
             <span class="ident">Rwh</span>::<span class="ident">Wayland</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">/* Wayland displays are not sharable between surfaces so if the
@@ -930,11 +967,19 @@
                     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">wl_egl_window_create</span>(<span class="ident">handle</span>.<span class="ident">surface</span>, <span class="number">640</span>, <span class="number">480</span>);
                     <span class="ident">ptr</span>::<span class="ident">NonNull</span>::<span class="ident">new</span>(<span class="ident">result</span>)
                 };
-                <span class="ident">window</span>.<span class="ident">expect</span>(<span class="string">&quot;unsupported window&quot;</span>).<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>
+                <span class="ident">window</span>.<span class="ident">expect</span>(<span class="string">&quot;unsupported window&quot;</span>).<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">c_void</span>
             }
             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Unsupported window: {:?}&quot;</span>, <span class="ident">other</span>),
         };
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">egl</span>::<span class="ident">RENDER_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">egl</span>::<span class="ident">SINGLE_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>];
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[
+            <span class="ident">egl</span>::<span class="ident">RENDER_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>,
+            <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>) {
+                <span class="ident">egl</span>::<span class="ident">BACK_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>
+            } <span class="kw">else</span> {
+                <span class="ident">egl</span>::<span class="ident">SINGLE_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>
+            },
+        ];
         <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">version</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">1</span>, <span class="number">5</span>) {
             <span class="comment">// Always enable sRGB in EGL 1.5</span>
             <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">egl</span>::<span class="ident">GL_COLORSPACE</span> <span class="kw">as</span> <span class="ident">usize</span>);
@@ -942,35 +987,50 @@
         }
         <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">egl</span>::<span class="ident">ATTRIB_NONE</span>);
 
-        <span class="kw">let</span> <span class="ident">native_window_ptr</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">has_handle</span>.<span class="ident">raw_window_handle</span>() {
+        <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">version</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">1</span>, <span class="number">5</span>) {
+            <span class="ident">inner</span>
+                .<span class="ident">egl</span>
+                .<span class="ident">create_platform_window_surface</span>(
+                    <span class="ident">inner</span>.<span class="ident">display</span>,
+                    <span class="ident">inner</span>.<span class="ident">config</span>,
+                    <span class="ident">native_window_ptr</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">attributes</span>,
+                )
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                    <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Error in create_platform_window_surface: {:?}&quot;</span>, <span class="ident">e</span>);
+                    <span class="ident">w</span>::<span class="ident">InitError</span>::<span class="ident">UnsupportedWindowHandle</span>
+                })
+        } <span class="kw">else</span> {
+            <span class="kw">let</span> <span class="ident">attributes_i32</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">attributes</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> (<span class="kw-2">*</span><span class="ident">a</span> <span class="kw">as</span> <span class="ident">i32</span>).<span class="ident">into</span>()).<span class="ident">collect</span>();
+            <span class="ident">inner</span>
+                .<span class="ident">egl</span>
+                .<span class="ident">create_window_surface</span>(
+                    <span class="ident">inner</span>.<span class="ident">display</span>,
+                    <span class="ident">inner</span>.<span class="ident">config</span>,
+                    <span class="ident">native_window_ptr</span>,
+                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">attributes_i32</span>),
+                )
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                    <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Error in create_platform_window_surface: {:?}&quot;</span>, <span class="ident">e</span>);
+                    <span class="ident">w</span>::<span class="ident">InitError</span>::<span class="ident">UnsupportedWindowHandle</span>
+                })
+        }<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">wl_window</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">has_handle</span>.<span class="ident">raw_window_handle</span>() {
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>))]</span>
-            <span class="ident">Rwh</span>::<span class="ident">Wayland</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">native_window</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw</span>::<span class="ident">c_void</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">native_window</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>,
+            <span class="ident">Rwh</span>::<span class="ident">Wayland</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">native_window_ptr</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         };
-        <span class="kw">match</span> <span class="ident">inner</span>.<span class="ident">egl</span>.<span class="ident">create_platform_window_surface</span>(
-            <span class="ident">inner</span>.<span class="ident">display</span>,
-            <span class="ident">inner</span>.<span class="ident">config</span>,
-            <span class="ident">native_window_ptr</span>,
-            <span class="kw-2">&amp;</span><span class="ident">attributes</span>,
-        ) {
-            <span class="prelude-val">Ok</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">Surface</span> {
-                <span class="ident">egl</span>: <span class="ident">inner</span>.<span class="ident">egl</span>.<span class="ident">clone</span>(),
-                <span class="ident">raw</span>,
-                <span class="ident">display</span>: <span class="ident">inner</span>.<span class="ident">display</span>,
-                <span class="ident">context</span>: <span class="ident">inner</span>.<span class="ident">context</span>,
-                <span class="ident">presentable</span>: <span class="ident">inner</span>.<span class="ident">supports_native_window</span>,
-                <span class="ident">wl_window</span>: <span class="kw">match</span> <span class="ident">has_handle</span>.<span class="ident">raw_window_handle</span>() {
-                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>))]</span>
-                    <span class="ident">Rwh</span>::<span class="ident">Wayland</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">native_window_ptr</span>),
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-                },
-                <span class="ident">swapchain</span>: <span class="prelude-val">None</span>,
-            }),
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Error in create_window_surface: {:?}&quot;</span>, <span class="ident">e</span>);
-                <span class="prelude-val">Err</span>(<span class="ident">w</span>::<span class="ident">InitError</span>::<span class="ident">UnsupportedWindowHandle</span>)
-            }
-        }
+
+        <span class="prelude-val">Ok</span>(<span class="ident">Surface</span> {
+            <span class="ident">egl</span>: <span class="ident">inner</span>.<span class="ident">egl</span>.<span class="ident">clone</span>(),
+            <span class="ident">raw</span>,
+            <span class="ident">display</span>: <span class="ident">inner</span>.<span class="ident">display</span>,
+            <span class="ident">context</span>: <span class="ident">inner</span>.<span class="ident">context</span>,
+            <span class="ident">presentable</span>: <span class="ident">inner</span>.<span class="ident">supports_native_window</span>,
+            <span class="ident">wl_window</span>,
+            <span class="ident">swapchain</span>: <span class="prelude-val">None</span>,
+        })
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_surface</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">surface</span>: <span class="ident">Surface</span>) {
