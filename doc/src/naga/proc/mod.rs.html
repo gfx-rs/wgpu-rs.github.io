@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/583f218/src/proc/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/6f5ff27/src/proc/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -130,6 +130,19 @@
 <span id="127">127</span>
 <span id="128">128</span>
 <span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Module processing functionality.</span>
 
@@ -137,6 +150,7 @@
 <span class="kw">mod</span> <span class="ident">call_graph</span>;
 <span class="kw">mod</span> <span class="ident">interface</span>;
 <span class="kw">mod</span> <span class="ident">namer</span>;
+<span class="kw">mod</span> <span class="ident">sizer</span>;
 <span class="kw">mod</span> <span class="ident">terminator</span>;
 <span class="kw">mod</span> <span class="ident">typifier</span>;
 <span class="kw">mod</span> <span class="ident">validator</span>;
@@ -145,8 +159,9 @@
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">call_graph</span>::{<span class="ident">CallGraph</span>, <span class="ident">CallGraphBuilder</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">interface</span>::{<span class="ident">Interface</span>, <span class="ident">Visitor</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">namer</span>::{<span class="ident">EntryPointIndex</span>, <span class="ident">NameKey</span>, <span class="ident">Namer</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">sizer</span>::<span class="ident">Sizer</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">terminator</span>::<span class="ident">ensure_block_returns</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">typifier</span>::{<span class="ident">check_constant_type</span>, <span class="ident">ResolveContext</span>, <span class="ident">ResolveError</span>, <span class="ident">Typifier</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">typifier</span>::{<span class="ident">ResolveContext</span>, <span class="ident">ResolveError</span>, <span class="ident">Typifier</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">validator</span>::{<span class="ident">ValidationError</span>, <span class="ident">Validator</span>};
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw">super</span>::<span class="ident">StorageFormat</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw">super</span>::<span class="ident">ScalarKind</span> {
@@ -185,6 +200,17 @@
             <span class="ident">Sf</span>::<span class="ident">Rgba32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Uint</span>,
             <span class="ident">Sf</span>::<span class="ident">Rgba32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Sint</span>,
             <span class="ident">Sf</span>::<span class="ident">Rgba32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
+        }
+    }
+}
+
+<span class="kw">impl</span> <span class="kw">crate</span>::<span class="ident">ScalarValue</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scalar_kind</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">ScalarKind</span> {
+        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+            <span class="self">Self</span>::<span class="ident">Uint</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>,
+            <span class="self">Self</span>::<span class="ident">Sint</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>,
+            <span class="self">Self</span>::<span class="ident">Float</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
+            <span class="self">Self</span>::<span class="ident">Bool</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Bool</span>,
         }
     }
 }
