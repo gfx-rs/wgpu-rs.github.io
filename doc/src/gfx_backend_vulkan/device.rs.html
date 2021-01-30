@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/0028581/src/backend/vulkan/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/2fd74db/src/backend/vulkan/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_vulkan/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -2000,59 +2000,10 @@
 <span id="1997">1997</span>
 <span id="1998">1998</span>
 <span id="1999">1999</span>
-<span id="2000">2000</span>
-<span id="2001">2001</span>
-<span id="2002">2002</span>
-<span id="2003">2003</span>
-<span id="2004">2004</span>
-<span id="2005">2005</span>
-<span id="2006">2006</span>
-<span id="2007">2007</span>
-<span id="2008">2008</span>
-<span id="2009">2009</span>
-<span id="2010">2010</span>
-<span id="2011">2011</span>
-<span id="2012">2012</span>
-<span id="2013">2013</span>
-<span id="2014">2014</span>
-<span id="2015">2015</span>
-<span id="2016">2016</span>
-<span id="2017">2017</span>
-<span id="2018">2018</span>
-<span id="2019">2019</span>
-<span id="2020">2020</span>
-<span id="2021">2021</span>
-<span id="2022">2022</span>
-<span id="2023">2023</span>
-<span id="2024">2024</span>
-<span id="2025">2025</span>
-<span id="2026">2026</span>
-<span id="2027">2027</span>
-<span id="2028">2028</span>
-<span id="2029">2029</span>
-<span id="2030">2030</span>
-<span id="2031">2031</span>
-<span id="2032">2032</span>
-<span id="2033">2033</span>
-<span id="2034">2034</span>
-<span id="2035">2035</span>
-<span id="2036">2036</span>
-<span id="2037">2037</span>
-<span id="2038">2038</span>
-<span id="2039">2039</span>
-<span id="2040">2040</span>
-<span id="2041">2041</span>
-<span id="2042">2042</span>
-<span id="2043">2043</span>
-<span id="2044">2044</span>
-<span id="2045">2045</span>
-<span id="2046">2046</span>
-<span id="2047">2047</span>
-<span id="2048">2048</span>
-<span id="2049">2049</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">arrayvec</span>::<span class="ident">ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">extensions</span>::<span class="ident">khr</span>, <span class="ident">version</span>::<span class="ident">DeviceV1_0</span>, <span class="ident">vk</span>};
+<span class="kw">use</span> <span class="ident">inplace_it</span>::<span class="ident">inplace_or_alloc_from_iter</span>;
 <span class="kw">use</span> <span class="ident">smallvec</span>::<span class="ident">SmallVec</span>;
 
 <span class="kw">use</span> <span class="ident">hal</span>::{
@@ -2063,14 +2014,12 @@
     {<span class="ident">buffer</span>, <span class="ident">device</span> <span class="kw">as</span> <span class="ident">d</span>, <span class="ident">format</span>, <span class="ident">image</span>, <span class="ident">pass</span>, <span class="ident">pso</span>, <span class="ident">query</span>, <span class="ident">queue</span>}, {<span class="ident">Features</span>, <span class="ident">MemoryTypeId</span>},
 };
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">ffi</span>::<span class="ident">CString</span>, <span class="ident">mem</span>, <span class="ident">ops</span>::<span class="ident">Range</span>, <span class="ident">pin</span>::<span class="ident">Pin</span>, <span class="ident">ptr</span>, <span class="ident">sync</span>::<span class="ident">Arc</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">ffi</span>::<span class="ident">CString</span>, <span class="ident">marker</span>::<span class="ident">PhantomData</span>, <span class="ident">mem</span>, <span class="ident">ops</span>::<span class="ident">Range</span>, <span class="ident">ptr</span>, <span class="ident">sync</span>::<span class="ident">Arc</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">command</span> <span class="kw">as</span> <span class="ident">cmd</span>, <span class="ident">conv</span>, <span class="ident">native</span> <span class="kw">as</span> <span class="ident">n</span>, <span class="ident">pool</span>::<span class="ident">RawCommandPool</span>, <span class="ident">window</span> <span class="kw">as</span> <span class="ident">w</span>, <span class="ident">Backend</span> <span class="kw">as</span> <span class="ident">B</span>, <span class="ident">Device</span>,
-};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">command</span> <span class="kw">as</span> <span class="ident">cmd</span>, <span class="ident">conv</span>, <span class="ident">native</span> <span class="kw">as</span> <span class="ident">n</span>, <span class="ident">pool</span>::<span class="ident">RawCommandPool</span>, <span class="ident">window</span> <span class="kw">as</span> <span class="ident">w</span>, <span class="ident">Backend</span> <span class="kw">as</span> <span class="ident">B</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">GraphicsPipelineInfoBuf</span> {
+<span class="kw">struct</span> <span class="ident">GraphicsPipelineInfoBuf</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="comment">// 10 is the max amount of dynamic states</span>
     <span class="ident">dynamic_states</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="ident">vk</span>::<span class="ident">DynamicState</span>; <span class="number">10</span>]<span class="op">&gt;</span>,
 
@@ -2096,13 +2045,11 @@
     <span class="ident">pipeline_dynamic_state</span>: <span class="ident">vk</span>::<span class="ident">PipelineDynamicStateCreateInfo</span>,
     <span class="ident">viewports</span>: [<span class="ident">vk</span>::<span class="ident">Viewport</span>; <span class="number">1</span>],
     <span class="ident">scissors</span>: [<span class="ident">vk</span>::<span class="ident">Rect2D</span>; <span class="number">1</span>],
+
+    <span class="ident">lifetime</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">vk</span>::<span class="ident">Pipeline</span><span class="op">&gt;</span>,
 }
-<span class="kw">impl</span> <span class="ident">GraphicsPipelineInfoBuf</span> {
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">add_stage</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">stage</span>: <span class="ident">vk</span>::<span class="ident">ShaderStageFlags</span>,
-        <span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="ident">pso</span>::<span class="ident">EntryPoint</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span>,
-    ) {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">GraphicsPipelineInfoBuf</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">add_stage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">stage</span>: <span class="ident">vk</span>::<span class="ident">ShaderStageFlags</span>, <span class="ident">source</span>: <span class="kw-2">&amp;</span><span class="ident">pso</span>::<span class="ident">EntryPoint</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">CString</span>::<span class="ident">new</span>(<span class="ident">source</span>.<span class="ident">entry</span>).<span class="ident">unwrap</span>();
         <span class="self">self</span>.<span class="ident">c_strings</span>.<span class="ident">push</span>(<span class="ident">string</span>);
         <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">c_strings</span>.<span class="ident">last</span>().<span class="ident">unwrap</span>().<span class="ident">as_c_str</span>();
@@ -2139,12 +2086,8 @@
         )
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">initialize</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-        <span class="ident">this</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span><span class="op">&gt;</span>,
-        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">Device</span>,
-        <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">pso</span>::<span class="ident">GraphicsPipelineDesc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span>,
-    ) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">this</span> <span class="op">=</span> <span class="ident">Pin</span>::<span class="ident">get_mut</span>(<span class="ident">this</span>.<span class="ident">as_mut</span>()); <span class="comment">// use into_inner when it gets stable</span>
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">pso</span>::<span class="ident">GraphicsPipelineDesc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="kw">super</span>::<span class="ident">RawDevice</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">default</span>();
 
         <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">primitive_assembler</span> {
             <span class="ident">pso</span>::<span class="ident">PrimitiveAssemblerDesc</span>::<span class="ident">Vertex</span> {
@@ -2251,7 +2194,7 @@
         <span class="ident">this</span>.<span class="ident">rasterization_state</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">PipelineRasterizationStateCreateInfo</span>::<span class="ident">builder</span>()
             .<span class="ident">flags</span>(<span class="ident">vk</span>::<span class="ident">PipelineRasterizationStateCreateFlags</span>::<span class="ident">empty</span>())
             .<span class="ident">depth_clamp_enable</span>(<span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">rasterizer</span>.<span class="ident">depth_clamping</span> {
-                <span class="kw">if</span> <span class="ident">device</span>.<span class="ident">shared</span>.<span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">Features</span>::<span class="ident">DEPTH_CLAMP</span>) {
+                <span class="kw">if</span> <span class="ident">device</span>.<span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">Features</span>::<span class="ident">DEPTH_CLAMP</span>) {
                     <span class="bool-val">true</span>
                 } <span class="kw">else</span> {
                     <span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Depth clamping was requested on a device with disabled feature&quot;</span>);
@@ -2309,7 +2252,7 @@
             }
             <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">baked_states</span>.<span class="ident">viewport</span> {
                 <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">vp</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">this</span>.<span class="ident">viewports</span> <span class="op">=</span> [<span class="ident">device</span>.<span class="ident">shared</span>.<span class="ident">map_viewport</span>(<span class="ident">vp</span>)];
+                    <span class="ident">this</span>.<span class="ident">viewports</span> <span class="op">=</span> [<span class="ident">device</span>.<span class="ident">map_viewport</span>(<span class="ident">vp</span>)];
                 }
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">this</span>.<span class="ident">dynamic_states</span>.<span class="ident">push</span>(<span class="ident">vk</span>::<span class="ident">DynamicState</span>::<span class="ident">VIEWPORT</span>);
@@ -2458,19 +2401,21 @@
             .<span class="ident">flags</span>(<span class="ident">vk</span>::<span class="ident">PipelineDynamicStateCreateFlags</span>::<span class="ident">empty</span>())
             .<span class="ident">dynamic_states</span>(<span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">dynamic_states</span>)
             .<span class="ident">build</span>();
+
+        <span class="ident">this</span>
     }
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">ComputePipelineInfoBuf</span> {
+<span class="kw">struct</span> <span class="ident">ComputePipelineInfoBuf</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">c_string</span>: <span class="ident">CString</span>,
     <span class="ident">specialization</span>: <span class="ident">vk</span>::<span class="ident">SpecializationInfo</span>,
     <span class="ident">entries</span>: <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">vk</span>::<span class="ident">SpecializationMapEntry</span>; <span class="number">4</span>]<span class="op">&gt;</span>,
+    <span class="ident">lifetime</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">vk</span>::<span class="ident">Pipeline</span><span class="op">&gt;</span>,
 }
-<span class="kw">impl</span> <span class="ident">ComputePipelineInfoBuf</span> {
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">initialize</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">this</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">pso</span>::<span class="ident">ComputePipelineDesc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">this</span> <span class="op">=</span> <span class="ident">Pin</span>::<span class="ident">get_mut</span>(<span class="ident">this</span>.<span class="ident">as_mut</span>()); <span class="comment">// use into_inner when it gets stable</span>
-
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">ComputePipelineInfoBuf</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">pso</span>::<span class="ident">ComputePipelineDesc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">default</span>();
         <span class="ident">this</span>.<span class="ident">c_string</span> <span class="op">=</span> <span class="ident">CString</span>::<span class="ident">new</span>(<span class="ident">desc</span>.<span class="ident">shader</span>.<span class="ident">entry</span>).<span class="ident">unwrap</span>();
         <span class="ident">this</span>.<span class="ident">entries</span> <span class="op">=</span> <span class="ident">desc</span>
             .<span class="ident">shader</span>
@@ -2489,10 +2434,11 @@
             <span class="ident">data_size</span>: <span class="ident">desc</span>.<span class="ident">shader</span>.<span class="ident">specialization</span>.<span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
             <span class="ident">p_data</span>: <span class="ident">desc</span>.<span class="ident">shader</span>.<span class="ident">specialization</span>.<span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>,
         };
+        <span class="ident">this</span>
     }
 }
 
-<span class="kw">impl</span> <span class="ident">d</span>::<span class="ident">Device</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Device</span> {
+<span class="kw">impl</span> <span class="ident">d</span>::<span class="ident">Device</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw">super</span>::<span class="ident">Device</span> {
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">allocate_memory</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">mem_type</span>: <span class="ident">MemoryTypeId</span>,
@@ -2554,30 +2500,25 @@
         <span class="ident">dependencies</span>: <span class="ident">Id</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">RenderPass</span>, <span class="ident">d</span>::<span class="ident">OutOfMemory</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">Ia</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">pass</span>::<span class="ident">Attachment</span><span class="op">&gt;</span>,
-        <span class="ident">Ia</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
-        <span class="ident">Is</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">pass</span>::<span class="ident">SubpassDesc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">Is</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
-        <span class="ident">Id</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">pass</span>::<span class="ident">SubpassDependency</span><span class="op">&gt;</span>,
-        <span class="ident">Id</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
+        <span class="ident">Ia</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">pass</span>::<span class="ident">Attachment</span><span class="op">&gt;</span>,
+        <span class="ident">Is</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">pass</span>::<span class="ident">SubpassDesc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">Id</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">pass</span>::<span class="ident">SubpassDependency</span><span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="ident">attachments</span> <span class="op">=</span> <span class="ident">attachments</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">attachment</span><span class="op">|</span> <span class="ident">vk</span>::<span class="ident">AttachmentDescription</span> {
-                <span class="ident">flags</span>: <span class="ident">vk</span>::<span class="ident">AttachmentDescriptionFlags</span>::<span class="ident">empty</span>(), <span class="comment">// TODO: may even alias!</span>
-                <span class="ident">format</span>: <span class="ident">attachment</span>
-                    .<span class="ident">format</span>
-                    .<span class="ident">map_or</span>(<span class="ident">vk</span>::<span class="ident">Format</span>::<span class="ident">UNDEFINED</span>, <span class="ident">conv</span>::<span class="ident">map_format</span>),
-                <span class="ident">samples</span>: <span class="ident">conv</span>::<span class="ident">map_sample_count_flags</span>(<span class="ident">attachment</span>.<span class="ident">samples</span>),
-                <span class="ident">load_op</span>: <span class="ident">conv</span>::<span class="ident">map_attachment_load_op</span>(<span class="ident">attachment</span>.<span class="ident">ops</span>.<span class="ident">load</span>),
-                <span class="ident">store_op</span>: <span class="ident">conv</span>::<span class="ident">map_attachment_store_op</span>(<span class="ident">attachment</span>.<span class="ident">ops</span>.<span class="ident">store</span>),
-                <span class="ident">stencil_load_op</span>: <span class="ident">conv</span>::<span class="ident">map_attachment_load_op</span>(<span class="ident">attachment</span>.<span class="ident">stencil_ops</span>.<span class="ident">load</span>),
-                <span class="ident">stencil_store_op</span>: <span class="ident">conv</span>::<span class="ident">map_attachment_store_op</span>(<span class="ident">attachment</span>.<span class="ident">stencil_ops</span>.<span class="ident">store</span>),
-                <span class="ident">initial_layout</span>: <span class="ident">conv</span>::<span class="ident">map_image_layout</span>(<span class="ident">attachment</span>.<span class="ident">layouts</span>.<span class="ident">start</span>),
-                <span class="ident">final_layout</span>: <span class="ident">conv</span>::<span class="ident">map_image_layout</span>(<span class="ident">attachment</span>.<span class="ident">layouts</span>.<span class="ident">end</span>),
-            });
+        <span class="kw">let</span> <span class="ident">attachments_iter</span> <span class="op">=</span> <span class="ident">attachments</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">attachment</span><span class="op">|</span> <span class="ident">vk</span>::<span class="ident">AttachmentDescription</span> {
+            <span class="ident">flags</span>: <span class="ident">vk</span>::<span class="ident">AttachmentDescriptionFlags</span>::<span class="ident">empty</span>(), <span class="comment">// TODO: may even alias!</span>
+            <span class="ident">format</span>: <span class="ident">attachment</span>
+                .<span class="ident">format</span>
+                .<span class="ident">map_or</span>(<span class="ident">vk</span>::<span class="ident">Format</span>::<span class="ident">UNDEFINED</span>, <span class="ident">conv</span>::<span class="ident">map_format</span>),
+            <span class="ident">samples</span>: <span class="ident">conv</span>::<span class="ident">map_sample_count_flags</span>(<span class="ident">attachment</span>.<span class="ident">samples</span>),
+            <span class="ident">load_op</span>: <span class="ident">conv</span>::<span class="ident">map_attachment_load_op</span>(<span class="ident">attachment</span>.<span class="ident">ops</span>.<span class="ident">load</span>),
+            <span class="ident">store_op</span>: <span class="ident">conv</span>::<span class="ident">map_attachment_store_op</span>(<span class="ident">attachment</span>.<span class="ident">ops</span>.<span class="ident">store</span>),
+            <span class="ident">stencil_load_op</span>: <span class="ident">conv</span>::<span class="ident">map_attachment_load_op</span>(<span class="ident">attachment</span>.<span class="ident">stencil_ops</span>.<span class="ident">load</span>),
+            <span class="ident">stencil_store_op</span>: <span class="ident">conv</span>::<span class="ident">map_attachment_store_op</span>(<span class="ident">attachment</span>.<span class="ident">stencil_ops</span>.<span class="ident">store</span>),
+            <span class="ident">initial_layout</span>: <span class="ident">conv</span>::<span class="ident">map_image_layout</span>(<span class="ident">attachment</span>.<span class="ident">layouts</span>.<span class="ident">start</span>),
+            <span class="ident">final_layout</span>: <span class="ident">conv</span>::<span class="ident">map_image_layout</span>(<span class="ident">attachment</span>.<span class="ident">layouts</span>.<span class="ident">end</span>),
+        });
 
-        <span class="kw">let</span> <span class="ident">dependencies</span> <span class="op">=</span> <span class="ident">dependencies</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">sdep</span><span class="op">|</span>
+        <span class="kw">let</span> <span class="ident">dependencies_iter</span> <span class="op">=</span> <span class="ident">dependencies</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">sdep</span><span class="op">|</span>
             <span class="comment">// TODO: checks</span>
             <span class="ident">vk</span>::<span class="ident">SubpassDependency</span> {
                 <span class="ident">src_subpass</span>: <span class="ident">sdep</span>
@@ -2592,11 +2533,8 @@
                 <span class="ident">dependency_flags</span>: <span class="ident">mem</span>::<span class="ident">transmute</span>(<span class="ident">sdep</span>.<span class="ident">flags</span>),
             });
 
-        <span class="kw">let</span> <span class="ident">attachment_count</span> <span class="op">=</span> <span class="ident">attachments</span>.<span class="ident">len</span>();
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_it</span>::<span class="ident">inplace_or_alloc_array</span>(<span class="ident">attachment_count</span>, <span class="op">|</span><span class="ident">uninit_guard</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">attachments</span> <span class="op">=</span> <span class="ident">uninit_guard</span>.<span class="ident">init_with_iter</span>(<span class="ident">attachments</span>);
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">attachments_iter</span>, <span class="op">|</span><span class="ident">attachments</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">attachment_refs</span> <span class="op">=</span> <span class="ident">subpasses</span>
-                .<span class="ident">into_iter</span>()
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">subpass</span><span class="op">|</span> {
                     <span class="kw">fn</span> <span class="ident">make_ref</span>(<span class="kw-2">&amp;</span>(<span class="ident">id</span>, <span class="ident">layout</span>): <span class="kw-2">&amp;</span><span class="ident">pass</span>::<span class="ident">AttachmentRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vk</span>::<span class="ident">AttachmentReference</span> {
                         <span class="ident">vk</span>::<span class="ident">AttachmentReference</span> {
@@ -2643,24 +2581,25 @@
                 })
                 .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span>[<span class="kw">_</span>]<span class="op">&gt;</span><span class="op">&gt;</span>();
 
-            <span class="ident">inplace_it</span>::<span class="ident">inplace_or_alloc_array</span>(<span class="ident">dependencies</span>.<span class="ident">len</span>(), <span class="op">|</span><span class="ident">uninit_guard</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">dependencies</span> <span class="op">=</span> <span class="ident">uninit_guard</span>.<span class="ident">init_with_iter</span>(<span class="ident">dependencies</span>);
-
+            <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">dependencies_iter</span>, <span class="op">|</span><span class="ident">dependencies</span><span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">RenderPassCreateInfo</span>::<span class="ident">builder</span>()
                     .<span class="ident">flags</span>(<span class="ident">vk</span>::<span class="ident">RenderPassCreateFlags</span>::<span class="ident">empty</span>())
                     .<span class="ident">attachments</span>(<span class="kw-2">&amp;</span><span class="ident">attachments</span>)
                     .<span class="ident">subpasses</span>(<span class="kw-2">&amp;</span><span class="ident">subpasses</span>)
                     .<span class="ident">dependencies</span>(<span class="kw-2">&amp;</span><span class="ident">dependencies</span>);
 
-                <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">create_render_pass</span>(<span class="kw-2">&amp;</span><span class="ident">info</span>, <span class="prelude-val">None</span>)
+                <span class="self">self</span>.<span class="ident">shared</span>
+                    .<span class="ident">raw</span>
+                    .<span class="ident">create_render_pass</span>(<span class="kw-2">&amp;</span><span class="ident">info</span>, <span class="prelude-val">None</span>)
+                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">raw</span><span class="op">|</span> <span class="ident">n</span>::<span class="ident">RenderPass</span> {
+                        <span class="ident">raw</span>,
+                        <span class="ident">attachment_count</span>: <span class="ident">attachments</span>.<span class="ident">len</span>(),
+                    })
             })
         });
 
         <span class="kw">match</span> <span class="ident">result</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">renderpass</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">RenderPass</span> {
-                <span class="ident">raw</span>: <span class="ident">renderpass</span>,
-                <span class="ident">attachment_count</span>,
-            }),
+            <span class="prelude-val">Ok</span>(<span class="ident">renderpass</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">renderpass</span>),
             <span class="prelude-val">Err</span>(<span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_OUT_OF_HOST_MEMORY</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">OutOfMemory</span>::<span class="ident">Host</span>),
             <span class="prelude-val">Err</span>(<span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_OUT_OF_DEVICE_MEMORY</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">OutOfMemory</span>::<span class="ident">Device</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
@@ -2669,35 +2608,27 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_pipeline_layout</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Is</span>, <span class="ident">Ic</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">set_layouts_iter</span>: <span class="ident">Is</span>,
+        <span class="ident">set_layouts</span>: <span class="ident">Is</span>,
         <span class="ident">push_constant_ranges</span>: <span class="ident">Ic</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">PipelineLayout</span>, <span class="ident">d</span>::<span class="ident">OutOfMemory</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">Is</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">n</span>::<span class="ident">DescriptorSetLayout</span><span class="op">&gt;</span>,
-        <span class="ident">Is</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
-        <span class="ident">Ic</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">pso</span>::<span class="ident">ShaderStageFlags</span>, <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
-        <span class="ident">Ic</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
+        <span class="ident">Is</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">n</span>::<span class="ident">DescriptorSetLayout</span><span class="op">&gt;</span>,
+        <span class="ident">Ic</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">pso</span>::<span class="ident">ShaderStageFlags</span>, <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="ident">vk_set_layouts</span> <span class="op">=</span> <span class="ident">set_layouts_iter</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">set</span><span class="op">|</span> <span class="ident">set</span>.<span class="ident">raw</span>);
+        <span class="kw">let</span> <span class="ident">vk_set_layouts_iter</span> <span class="op">=</span> <span class="ident">set_layouts</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">set</span><span class="op">|</span> <span class="ident">set</span>.<span class="ident">raw</span>);
 
-        <span class="kw">let</span> <span class="ident">push_constant_ranges</span> <span class="op">=</span>
-            <span class="ident">push_constant_ranges</span>
-                .<span class="ident">into_iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">s</span>, <span class="kw-2">ref</span> <span class="ident">r</span>)<span class="op">|</span> <span class="ident">vk</span>::<span class="ident">PushConstantRange</span> {
-                    <span class="ident">stage_flags</span>: <span class="ident">conv</span>::<span class="ident">map_stage_flags</span>(<span class="ident">s</span>),
-                    <span class="ident">offset</span>: <span class="ident">r</span>.<span class="ident">start</span>,
-                    <span class="ident">size</span>: <span class="ident">r</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">start</span>,
-                });
+        <span class="kw">let</span> <span class="ident">push_constant_ranges_iter</span> <span class="op">=</span>
+            <span class="ident">push_constant_ranges</span>.<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">s</span>, <span class="kw-2">ref</span> <span class="ident">r</span>)<span class="op">|</span> <span class="ident">vk</span>::<span class="ident">PushConstantRange</span> {
+                <span class="ident">stage_flags</span>: <span class="ident">conv</span>::<span class="ident">map_stage_flags</span>(<span class="ident">s</span>),
+                <span class="ident">offset</span>: <span class="ident">r</span>.<span class="ident">start</span>,
+                <span class="ident">size</span>: <span class="ident">r</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">r</span>.<span class="ident">start</span>,
+            });
 
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_it</span>::<span class="ident">inplace_or_alloc_array</span>(<span class="ident">vk_set_layouts</span>.<span class="ident">len</span>(), <span class="op">|</span><span class="ident">uninit_guard</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">set_layouts</span> <span class="op">=</span> <span class="ident">uninit_guard</span>.<span class="ident">init_with_iter</span>(<span class="ident">vk_set_layouts</span>);
-
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">vk_set_layouts_iter</span>, <span class="op">|</span><span class="ident">set_layouts</span><span class="op">|</span> {
             <span class="comment">// TODO: set_layouts doesnt implement fmt::Debug, submit PR?</span>
             <span class="comment">// debug!(&quot;create_pipeline_layout {:?}&quot;, set_layouts);</span>
 
-            <span class="ident">inplace_it</span>::<span class="ident">inplace_or_alloc_array</span>(<span class="ident">push_constant_ranges</span>.<span class="ident">len</span>(), <span class="op">|</span><span class="ident">uninit_guard</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">push_constant_ranges</span> <span class="op">=</span> <span class="ident">uninit_guard</span>.<span class="ident">init_with_iter</span>(<span class="ident">push_constant_ranges</span>);
-
+            <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">push_constant_ranges_iter</span>, <span class="op">|</span><span class="ident">push_constant_ranges</span><span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">PipelineLayoutCreateInfo</span>::<span class="ident">builder</span>()
                     .<span class="ident">flags</span>(<span class="ident">vk</span>::<span class="ident">PipelineLayoutCreateFlags</span>::<span class="ident">empty</span>())
                     .<span class="ident">set_layouts</span>(<span class="kw-2">&amp;</span><span class="ident">set_layouts</span>)
@@ -2761,14 +2692,11 @@
         <span class="ident">sources</span>: <span class="ident">I</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">d</span>::<span class="ident">OutOfMemory</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">n</span>::<span class="ident">PipelineCache</span><span class="op">&gt;</span>,
-        <span class="ident">I</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
+        <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">n</span>::<span class="ident">PipelineCache</span><span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="ident">caches</span> <span class="op">=</span> <span class="ident">sources</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">raw</span>);
+        <span class="kw">let</span> <span class="ident">caches_iter</span> <span class="op">=</span> <span class="ident">sources</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">raw</span>);
 
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_it</span>::<span class="ident">inplace_or_alloc_array</span>(<span class="ident">caches</span>.<span class="ident">len</span>(), <span class="op">|</span><span class="ident">uninit_guard</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">caches</span> <span class="op">=</span> <span class="ident">uninit_guard</span>.<span class="ident">init_with_iter</span>(<span class="ident">caches</span>);
-
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">caches_iter</span>, <span class="op">|</span><span class="ident">caches</span><span class="op">|</span> {
             <span class="comment">//TODO: https://github.com/MaikKlein/ash/issues/357</span>
             <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">fp_v1_0</span>().<span class="ident">merge_pipeline_caches</span>(
                 <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">handle</span>(),
@@ -2792,10 +2720,7 @@
         <span class="ident">cache</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">PipelineCache</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">GraphicsPipeline</span>, <span class="ident">pso</span>::<span class="ident">CreationError</span><span class="op">&gt;</span> {
         <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;create_graphics_pipeline {:?}&quot;</span>, <span class="ident">desc</span>);
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">GraphicsPipelineInfoBuf</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">Pin</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buf</span>);
-        <span class="ident">GraphicsPipelineInfoBuf</span>::<span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buf</span>, <span class="self">self</span>, <span class="ident">desc</span>);
+        <span class="kw">let</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">GraphicsPipelineInfoBuf</span>::<span class="ident">new</span>(<span class="ident">desc</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>);
 
         <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> {
             <span class="kw">let</span> (<span class="ident">base_handle</span>, <span class="ident">base_index</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">parent</span> {
@@ -2869,9 +2794,8 @@
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">pso</span>::<span class="ident">ComputePipelineDesc</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span>,
         <span class="ident">cache</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">n</span>::<span class="ident">PipelineCache</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">ComputePipeline</span>, <span class="ident">pso</span>::<span class="ident">CreationError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">ComputePipelineInfoBuf</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">Pin</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buf</span>);
-        <span class="ident">ComputePipelineInfoBuf</span>::<span class="ident">initialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buf</span>, <span class="ident">desc</span>);
+        <span class="macro">debug</span><span class="macro">!</span>(<span class="string">&quot;create_graphics_pipeline {:?}&quot;</span>, <span class="ident">desc</span>);
+        <span class="kw">let</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">ComputePipelineInfoBuf</span>::<span class="ident">new</span>(<span class="ident">desc</span>);
 
         <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">stage</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">PipelineShaderStageCreateInfo</span>::<span class="ident">builder</span>()
@@ -2946,7 +2870,7 @@
         <span class="ident">extent</span>: <span class="ident">image</span>::<span class="ident">Extent</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">Framebuffer</span>, <span class="ident">d</span>::<span class="ident">OutOfMemory</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">image</span>::<span class="ident">FramebufferAttachment</span><span class="op">&gt;</span>,
+        <span class="ident">T</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">image</span>::<span class="ident">FramebufferAttachment</span><span class="op">&gt;</span>,
     {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">imageless_framebuffers</span> {
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">Framebuffer</span>::<span class="ident">Legacy</span> {
@@ -2960,7 +2884,6 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">view_formats</span> <span class="op">=</span>
             <span class="ident">SmallVec</span>::<span class="op">&lt;</span>[<span class="ident">vk</span>::<span class="ident">Format</span>; <span class="number">5</span>]<span class="op">&gt;</span>::<span class="ident">with_capacity</span>(<span class="ident">renderpass</span>.<span class="ident">attachment_count</span>);
         <span class="kw">let</span> <span class="ident">attachment_infos</span> <span class="op">=</span> <span class="ident">attachments</span>
-            .<span class="ident">into_iter</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">fat</span><span class="op">|</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">FramebufferAttachmentImageInfo</span>::<span class="ident">builder</span>()
                     .<span class="ident">usage</span>(<span class="ident">conv</span>::<span class="ident">map_image_usage</span>(<span class="ident">fat</span>.<span class="ident">usage</span>))
@@ -3313,19 +3236,14 @@
         <span class="ident">flags</span>: <span class="ident">pso</span>::<span class="ident">DescriptorPoolCreateFlags</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">DescriptorPool</span>, <span class="ident">d</span>::<span class="ident">OutOfMemory</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">pso</span>::<span class="ident">DescriptorRangeDesc</span><span class="op">&gt;</span>,
-        <span class="ident">T</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
+        <span class="ident">T</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">pso</span>::<span class="ident">DescriptorRangeDesc</span><span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="ident">pools</span> <span class="op">=</span> <span class="ident">descriptor_ranges</span>
-            .<span class="ident">into_iter</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">pool</span><span class="op">|</span> <span class="ident">vk</span>::<span class="ident">DescriptorPoolSize</span> {
-                <span class="ident">ty</span>: <span class="ident">conv</span>::<span class="ident">map_descriptor_type</span>(<span class="ident">pool</span>.<span class="ident">ty</span>),
-                <span class="ident">descriptor_count</span>: <span class="ident">pool</span>.<span class="ident">count</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            });
+        <span class="kw">let</span> <span class="ident">pools_iter</span> <span class="op">=</span> <span class="ident">descriptor_ranges</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pool</span><span class="op">|</span> <span class="ident">vk</span>::<span class="ident">DescriptorPoolSize</span> {
+            <span class="ident">ty</span>: <span class="ident">conv</span>::<span class="ident">map_descriptor_type</span>(<span class="ident">pool</span>.<span class="ident">ty</span>),
+            <span class="ident">descriptor_count</span>: <span class="ident">pool</span>.<span class="ident">count</span> <span class="kw">as</span> <span class="ident">u32</span>,
+        });
 
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_it</span>::<span class="ident">inplace_or_alloc_array</span>(<span class="ident">pools</span>.<span class="ident">len</span>(), <span class="op">|</span><span class="ident">uninit_guard</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">pools</span> <span class="op">=</span> <span class="ident">uninit_guard</span>.<span class="ident">init_with_iter</span>(<span class="ident">pools</span>);
-
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">pools_iter</span>, <span class="op">|</span><span class="ident">pools</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">DescriptorPoolCreateInfo</span>::<span class="ident">builder</span>()
                 .<span class="ident">flags</span>(<span class="ident">conv</span>::<span class="ident">map_descriptor_pool_create_flags</span>(<span class="ident">flags</span>))
                 .<span class="ident">max_sets</span>(<span class="ident">max_sets</span> <span class="kw">as</span> <span class="ident">u32</span>)
@@ -3335,11 +3253,7 @@
         });
 
         <span class="kw">match</span> <span class="ident">result</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">pool</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">DescriptorPool</span> {
-                <span class="ident">raw</span>: <span class="ident">pool</span>,
-                <span class="ident">device</span>: <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">clone</span>(),
-                <span class="ident">set_free_vec</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            }),
+            <span class="prelude-val">Ok</span>(<span class="ident">pool</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">DescriptorPool</span>::<span class="ident">new</span>(<span class="ident">pool</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>)),
             <span class="prelude-val">Err</span>(<span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_OUT_OF_HOST_MEMORY</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">OutOfMemory</span>::<span class="ident">Host</span>.<span class="ident">into</span>()),
             <span class="prelude-val">Err</span>(<span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">ERROR_OUT_OF_DEVICE_MEMORY</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">d</span>::<span class="ident">OutOfMemory</span>::<span class="ident">Device</span>.<span class="ident">into</span>()),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
@@ -3349,51 +3263,45 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_descriptor_set_layout</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span>, <span class="ident">J</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">binding_iter</span>: <span class="ident">I</span>,
-        <span class="ident">immutable_sampler_iter</span>: <span class="ident">J</span>,
+        <span class="ident">immutable_samplers</span>: <span class="ident">J</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">DescriptorSetLayout</span>, <span class="ident">d</span>::<span class="ident">OutOfMemory</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">pso</span>::<span class="ident">DescriptorSetLayoutBinding</span><span class="op">&gt;</span>,
-        <span class="ident">J</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">n</span>::<span class="ident">Sampler</span><span class="op">&gt;</span>,
-        <span class="ident">J</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
+        <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">pso</span>::<span class="ident">DescriptorSetLayoutBinding</span><span class="op">&gt;</span>,
+        <span class="ident">J</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">n</span>::<span class="ident">Sampler</span><span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="ident">vk_immutable_samplers</span> <span class="op">=</span> <span class="ident">immutable_sampler_iter</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">is</span><span class="op">|</span> <span class="ident">is</span>.<span class="number">0</span>);
+        <span class="kw">let</span> <span class="ident">vk_immutable_samplers_iter</span> <span class="op">=</span> <span class="ident">immutable_samplers</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">is</span><span class="op">|</span> <span class="ident">is</span>.<span class="number">0</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sampler_offset</span> <span class="op">=</span> <span class="number">0</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bindings</span> <span class="op">=</span> <span class="ident">binding_iter</span>.<span class="ident">into_iter</span>().<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bindings</span> <span class="op">=</span> <span class="ident">binding_iter</span>.<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
         <span class="comment">// Sorting will come handy in `write_descriptor_sets`.</span>
         <span class="ident">bindings</span>.<span class="ident">sort_by_key</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">binding</span>);
 
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
-            <span class="ident">inplace_it</span>::<span class="ident">inplace_or_alloc_array</span>(<span class="ident">vk_immutable_samplers</span>.<span class="ident">len</span>(), <span class="op">|</span><span class="ident">uninit_guard</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">immutable_samplers</span> <span class="op">=</span> <span class="ident">uninit_guard</span>.<span class="ident">init_with_iter</span>(<span class="ident">vk_immutable_samplers</span>);
-
-                <span class="kw">let</span> <span class="ident">raw_bindings</span> <span class="op">=</span> <span class="ident">bindings</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">vk</span>::<span class="ident">DescriptorSetLayoutBinding</span> {
-                    <span class="ident">binding</span>: <span class="ident">b</span>.<span class="ident">binding</span>,
-                    <span class="ident">descriptor_type</span>: <span class="ident">conv</span>::<span class="ident">map_descriptor_type</span>(<span class="ident">b</span>.<span class="ident">ty</span>),
-                    <span class="ident">descriptor_count</span>: <span class="ident">b</span>.<span class="ident">count</span> <span class="kw">as</span> <span class="kw">_</span>,
-                    <span class="ident">stage_flags</span>: <span class="ident">conv</span>::<span class="ident">map_stage_flags</span>(<span class="ident">b</span>.<span class="ident">stage_flags</span>),
-                    <span class="ident">p_immutable_samplers</span>: <span class="kw">if</span> <span class="ident">b</span>.<span class="ident">immutable_samplers</span> {
-                        <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">immutable_samplers</span>[<span class="ident">sampler_offset</span>..];
-                        <span class="ident">sampler_offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">b</span>.<span class="ident">count</span>;
-                        <span class="ident">slice</span>.<span class="ident">as_ptr</span>()
-                    } <span class="kw">else</span> {
-                        <span class="ident">ptr</span>::<span class="ident">null</span>()
-                    },
-                });
-
-                <span class="ident">inplace_it</span>::<span class="ident">inplace_or_alloc_array</span>(<span class="ident">raw_bindings</span>.<span class="ident">len</span>(), <span class="op">|</span><span class="ident">uninit_guard</span><span class="op">|</span> {
-                    <span class="kw">let</span> <span class="ident">raw_bindings</span> <span class="op">=</span> <span class="ident">uninit_guard</span>.<span class="ident">init_with_iter</span>(<span class="ident">raw_bindings</span>);
-
-                    <span class="comment">// TODO raw_bindings doesnt implement fmt::Debug</span>
-                    <span class="comment">// debug!(&quot;create_descriptor_set_layout {:?}&quot;, raw_bindings);</span>
-
-                    <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">DescriptorSetLayoutCreateInfo</span>::<span class="ident">builder</span>()
-                        .<span class="ident">flags</span>(<span class="ident">vk</span>::<span class="ident">DescriptorSetLayoutCreateFlags</span>::<span class="ident">empty</span>())
-                        .<span class="ident">bindings</span>(<span class="kw-2">&amp;</span><span class="ident">raw_bindings</span>);
-
-                    <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">create_descriptor_set_layout</span>(<span class="kw-2">&amp;</span><span class="ident">info</span>, <span class="prelude-val">None</span>)
-                })
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">vk_immutable_samplers_iter</span>, <span class="op">|</span><span class="ident">immutable_samplers</span><span class="op">|</span> {
+            <span class="kw">let</span> <span class="ident">raw_bindings_iter</span> <span class="op">=</span> <span class="ident">bindings</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">vk</span>::<span class="ident">DescriptorSetLayoutBinding</span> {
+                <span class="ident">binding</span>: <span class="ident">b</span>.<span class="ident">binding</span>,
+                <span class="ident">descriptor_type</span>: <span class="ident">conv</span>::<span class="ident">map_descriptor_type</span>(<span class="ident">b</span>.<span class="ident">ty</span>),
+                <span class="ident">descriptor_count</span>: <span class="ident">b</span>.<span class="ident">count</span> <span class="kw">as</span> <span class="kw">_</span>,
+                <span class="ident">stage_flags</span>: <span class="ident">conv</span>::<span class="ident">map_stage_flags</span>(<span class="ident">b</span>.<span class="ident">stage_flags</span>),
+                <span class="ident">p_immutable_samplers</span>: <span class="kw">if</span> <span class="ident">b</span>.<span class="ident">immutable_samplers</span> {
+                    <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">immutable_samplers</span>[<span class="ident">sampler_offset</span>..];
+                    <span class="ident">sampler_offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">b</span>.<span class="ident">count</span>;
+                    <span class="ident">slice</span>.<span class="ident">as_ptr</span>()
+                } <span class="kw">else</span> {
+                    <span class="ident">ptr</span>::<span class="ident">null</span>()
+                },
             });
+
+            <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">raw_bindings_iter</span>, <span class="op">|</span><span class="ident">raw_bindings</span><span class="op">|</span> {
+                <span class="comment">// TODO raw_bindings doesnt implement fmt::Debug</span>
+                <span class="comment">// debug!(&quot;create_descriptor_set_layout {:?}&quot;, raw_bindings);</span>
+
+                <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">DescriptorSetLayoutCreateInfo</span>::<span class="ident">builder</span>()
+                    .<span class="ident">flags</span>(<span class="ident">vk</span>::<span class="ident">DescriptorSetLayoutCreateFlags</span>::<span class="ident">empty</span>())
+                    .<span class="ident">bindings</span>(<span class="kw-2">&amp;</span><span class="ident">raw_bindings</span>);
+
+                <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">create_descriptor_set_layout</span>(<span class="kw-2">&amp;</span><span class="ident">info</span>, <span class="prelude-val">None</span>)
+            })
+        });
 
         <span class="kw">match</span> <span class="ident">result</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">layout</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">n</span>::<span class="ident">DescriptorSetLayout</span> {
@@ -3408,11 +3316,11 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">write_descriptor_set</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">op</span>: <span class="ident">pso</span>::<span class="ident">DescriptorSetWrite</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span>, <span class="ident">I</span><span class="op">&gt;</span>)
     <span class="kw">where</span>
-        <span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">pso</span>::<span class="ident">Descriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">I</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
+        <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">pso</span>::<span class="ident">Descriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="ident">descriptors</span> <span class="op">=</span> <span class="ident">op</span>.<span class="ident">descriptors</span>.<span class="ident">into_iter</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">raw_writes</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">vk</span>::<span class="ident">WriteDescriptorSet</span><span class="op">&gt;</span>::<span class="ident">with_capacity</span>(<span class="ident">descriptors</span>.<span class="ident">len</span>());
+        <span class="kw">let</span> <span class="ident">descriptors</span> <span class="op">=</span> <span class="ident">op</span>.<span class="ident">descriptors</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">raw_writes</span> <span class="op">=</span>
+            <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">vk</span>::<span class="ident">WriteDescriptorSet</span><span class="op">&gt;</span>::<span class="ident">with_capacity</span>(<span class="ident">descriptors</span>.<span class="ident">size_hint</span>().<span class="number">0</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">image_infos</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer_infos</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">texel_buffer_views</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
@@ -3505,7 +3413,7 @@
         }
 
         <span class="comment">// Patch the pointers now that we have all the storage allocated.</span>
-        <span class="kw">for</span> <span class="ident">raw</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">raw_writes</span> {
+        <span class="kw">for</span> <span class="ident">raw</span> <span class="kw">in</span> <span class="ident">raw_writes</span>.<span class="ident">iter_mut</span>() {
             <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vk</span>::<span class="ident">DescriptorType</span> <span class="kw">as</span> <span class="ident">Dt</span>;
             <span class="kw">match</span> <span class="ident">raw</span>.<span class="ident">descriptor_type</span> {
                 <span class="ident">Dt</span>::<span class="ident">SAMPLER</span>
@@ -3579,13 +3487,11 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">flush_mapped_memory_ranges</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ranges</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">d</span>::<span class="ident">OutOfMemory</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">n</span>::<span class="ident">Memory</span>, <span class="ident">Segment</span>)<span class="op">&gt;</span>,
-        <span class="ident">I</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
+        <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">n</span>::<span class="ident">Memory</span>, <span class="ident">Segment</span>)<span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="ident">vk_ranges</span> <span class="op">=</span> <span class="ident">ranges</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="ident">conv</span>::<span class="ident">map_memory_range</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_it</span>::<span class="ident">inplace_or_alloc_array</span>(<span class="ident">vk_ranges</span>.<span class="ident">len</span>(), <span class="op">|</span><span class="ident">uninit_guard</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">range_slice</span> <span class="op">=</span> <span class="ident">uninit_guard</span>.<span class="ident">init_with_iter</span>(<span class="ident">vk_ranges</span>);
-            <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">flush_mapped_memory_ranges</span>(<span class="kw-2">&amp;</span><span class="ident">range_slice</span>)
+        <span class="kw">let</span> <span class="ident">vk_ranges_iter</span> <span class="op">=</span> <span class="ident">ranges</span>.<span class="ident">map</span>(<span class="ident">conv</span>::<span class="ident">map_memory_range</span>);
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">vk_ranges_iter</span>, <span class="op">|</span><span class="ident">ranges</span><span class="op">|</span> {
+            <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">flush_mapped_memory_ranges</span>(<span class="kw-2">&amp;</span><span class="ident">ranges</span>)
         });
 
         <span class="kw">match</span> <span class="ident">result</span> {
@@ -3598,15 +3504,11 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">invalidate_mapped_memory_ranges</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ranges</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">d</span>::<span class="ident">OutOfMemory</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">n</span>::<span class="ident">Memory</span>, <span class="ident">Segment</span>)<span class="op">&gt;</span>,
-        <span class="ident">I</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
+        <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">n</span>::<span class="ident">Memory</span>, <span class="ident">Segment</span>)<span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="ident">vk_ranges</span> <span class="op">=</span> <span class="ident">ranges</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="ident">conv</span>::<span class="ident">map_memory_range</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_it</span>::<span class="ident">inplace_or_alloc_array</span>(<span class="ident">vk_ranges</span>.<span class="ident">len</span>(), <span class="op">|</span><span class="ident">uninit_guard</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">range_slice</span> <span class="op">=</span> <span class="ident">uninit_guard</span>.<span class="ident">init_with_iter</span>(<span class="ident">vk_ranges</span>);
-            <span class="self">self</span>.<span class="ident">shared</span>
-                .<span class="ident">raw</span>
-                .<span class="ident">invalidate_mapped_memory_ranges</span>(<span class="kw-2">&amp;</span><span class="ident">range_slice</span>)
+        <span class="kw">let</span> <span class="ident">vk_ranges_iter</span> <span class="op">=</span> <span class="ident">ranges</span>.<span class="ident">map</span>(<span class="ident">conv</span>::<span class="ident">map_memory_range</span>);
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">vk_ranges_iter</span>, <span class="op">|</span><span class="ident">ranges</span><span class="op">|</span> {
+            <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">invalidate_mapped_memory_ranges</span>(<span class="kw-2">&amp;</span><span class="ident">ranges</span>)
         });
 
         <span class="kw">match</span> <span class="ident">result</span> {
@@ -3663,19 +3565,17 @@
         <span class="ident">timeout_ns</span>: <span class="ident">u64</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">d</span>::<span class="ident">WaitError</span><span class="op">&gt;</span>
     <span class="kw">where</span>
-        <span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">n</span>::<span class="ident">Fence</span><span class="op">&gt;</span>,
-        <span class="ident">I</span>::<span class="ident">IntoIter</span>: <span class="ident">ExactSizeIterator</span>,
+        <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">n</span>::<span class="ident">Fence</span><span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="ident">vk_fences</span> <span class="op">=</span> <span class="ident">fences_iter</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">fence</span><span class="op">|</span> <span class="ident">fence</span>.<span class="number">0</span>);
+        <span class="kw">let</span> <span class="ident">vk_fences_iter</span> <span class="op">=</span> <span class="ident">fences_iter</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">fence</span><span class="op">|</span> <span class="ident">fence</span>.<span class="number">0</span>);
 
         <span class="kw">let</span> <span class="ident">all</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">wait</span> {
             <span class="ident">d</span>::<span class="ident">WaitFor</span>::<span class="ident">Any</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
             <span class="ident">d</span>::<span class="ident">WaitFor</span>::<span class="ident">All</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_it</span>::<span class="ident">inplace_or_alloc_array</span>(<span class="ident">vk_fences</span>.<span class="ident">len</span>(), <span class="op">|</span><span class="ident">uninit_guard</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">fences</span> <span class="op">=</span> <span class="ident">uninit_guard</span>.<span class="ident">init_with_iter</span>(<span class="ident">vk_fences</span>);
-            <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">wait_for_fences</span>(<span class="kw-2">&amp;</span><span class="ident">fences</span>, <span class="ident">all</span>, <span class="ident">timeout_ns</span>)
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">vk_fences_iter</span>, <span class="op">|</span><span class="ident">fences</span><span class="op">|</span> {
+            <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">wait_for_fences</span>(<span class="ident">fences</span>, <span class="ident">all</span>, <span class="ident">timeout_ns</span>)
         });
 
         <span class="kw">match</span> <span class="ident">result</span> {
@@ -3868,7 +3768,7 @@
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_descriptor_pool</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pool</span>: <span class="ident">n</span>::<span class="ident">DescriptorPool</span>) {
-        <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">destroy_descriptor_pool</span>(<span class="ident">pool</span>.<span class="ident">raw</span>, <span class="prelude-val">None</span>);
+        <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">destroy_descriptor_pool</span>(<span class="ident">pool</span>.<span class="ident">finish</span>(), <span class="prelude-val">None</span>);
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_descriptor_set_layout</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">layout</span>: <span class="ident">n</span>::<span class="ident">DescriptorSetLayout</span>) {
@@ -3972,7 +3872,7 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Device</span> {
+<span class="kw">impl</span> <span class="kw">super</span>::<span class="ident">Device</span> {
     <span class="doccomment">/// We only work with a subset of Ash-exposed memory types that we know.</span>
     <span class="doccomment">/// This function filters an ash mask into our mask.</span>
     <span class="kw">fn</span> <span class="ident">filter_memory_requirements</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ash_mask</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
@@ -4098,7 +3998,7 @@
 <span class="attribute">#[<span class="ident">test</span>]</span>
 <span class="kw">fn</span> <span class="ident">test_send_sync</span>() {
     <span class="kw">fn</span> <span class="ident">foo</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span><span class="op">&gt;</span>() {}
-    <span class="ident">foo</span>::<span class="op">&lt;</span><span class="ident">Device</span><span class="op">&gt;</span>()
+    <span class="ident">foo</span>::<span class="op">&lt;</span><span class="kw">super</span>::<span class="ident">Device</span><span class="op">&gt;</span>()
 }
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="gfx_backend_vulkan"></div>

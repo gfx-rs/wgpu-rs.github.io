@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/0ea8a0a/src/proc/validator.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>validator.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/4a13ce0/src/proc/validator.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>validator.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -690,6 +690,28 @@
 <span id="687">687</span>
 <span id="688">688</span>
 <span id="689">689</span>
+<span id="690">690</span>
+<span id="691">691</span>
+<span id="692">692</span>
+<span id="693">693</span>
+<span id="694">694</span>
+<span id="695">695</span>
+<span id="696">696</span>
+<span id="697">697</span>
+<span id="698">698</span>
+<span id="699">699</span>
+<span id="700">700</span>
+<span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
+<span id="705">705</span>
+<span id="706">706</span>
+<span id="707">707</span>
+<span id="708">708</span>
+<span id="709">709</span>
+<span id="710">710</span>
+<span id="711">711</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">typifier</span>::{<span class="ident">ResolveContext</span>, <span class="ident">ResolveError</span>, <span class="ident">Typifier</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arena</span>::{<span class="ident">Arena</span>, <span class="ident">Handle</span>};
@@ -733,6 +755,8 @@
     <span class="ident">InvalidUsage</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Type isn&#39;t compatible with the storage class&quot;</span>)]</span>
     <span class="ident">InvalidType</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Structure doesn&#39;t have a block decoration, can&#39;t be host-shared&quot;</span>)]</span>
+    <span class="ident">MissingBlockDecoration</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Interpolation is not valid&quot;</span>)]</span>
     <span class="ident">InvalidInterpolation</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Storage access {seen:?} exceed the allowed {allowed:?}&quot;</span>)]</span>
@@ -915,6 +939,22 @@
     }
 }
 
+<span class="kw">impl</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span> {
+    <span class="kw">fn</span> <span class="ident">check_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">GlobalVariableError</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+            <span class="self">Self</span>::<span class="ident">Struct</span> {
+                <span class="ident">block</span>: <span class="bool-val">true</span>,
+                <span class="ident">members</span>: <span class="kw">_</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(()),
+            <span class="self">Self</span>::<span class="ident">Struct</span> {
+                <span class="ident">block</span>: <span class="bool-val">false</span>,
+                <span class="ident">members</span>: <span class="kw">_</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">MissingBlockDecoration</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError</span>::<span class="ident">InvalidType</span>),
+        }
+    }
+}
+
 <span class="kw">fn</span> <span class="ident">storage_usage</span>(<span class="ident">access</span>: <span class="kw">crate</span>::<span class="ident">StorageAccess</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">GlobalUse</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">storage_usage</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">GlobalUse</span>::<span class="ident">empty</span>();
     <span class="kw">if</span> <span class="ident">access</span>.<span class="ident">contains</span>(<span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">LOAD</span>) {
@@ -1081,10 +1121,14 @@
             }
             <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Storage</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">var</span>.<span class="ident">check_resource</span>()<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">types</span>[<span class="ident">var</span>.<span class="ident">ty</span>];
+                <span class="ident">ty</span>.<span class="ident">inner</span>.<span class="ident">check_block</span>()<span class="question-mark">?</span>;
                 <span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">all</span>()
             }
             <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Uniform</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">var</span>.<span class="ident">check_resource</span>()<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">types</span>[<span class="ident">var</span>.<span class="ident">ty</span>];
+                <span class="ident">ty</span>.<span class="ident">inner</span>.<span class="ident">check_block</span>()<span class="question-mark">?</span>;
                 <span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">empty</span>()
             }
             <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Handle</span> <span class="op">=</span><span class="op">&gt;</span> {

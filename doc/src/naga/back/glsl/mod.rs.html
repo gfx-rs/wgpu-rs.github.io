@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/0ea8a0a/src/back/glsl/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/4a13ce0/src/back/glsl/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -1854,6 +1854,11 @@
 <span id="1851">1851</span>
 <span id="1852">1852</span>
 <span id="1853">1853</span>
+<span id="1854">1854</span>
+<span id="1855">1855</span>
+<span id="1856">1856</span>
+<span id="1857">1857</span>
+<span id="1858">1858</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! OpenGL shading language backend</span>
 <span class="doccomment">//!</span>
@@ -1895,7 +1900,7 @@
 <span class="comment">//</span>
 <span class="comment">// The only thing that glsl removes that makes a difference are pointers.</span>
 <span class="comment">//</span>
-<span class="comment">// Addititions that are relevant for the backend are the discard keyword, the introduction of</span>
+<span class="comment">// Additions that are relevant for the backend are the discard keyword, the introduction of</span>
 <span class="comment">// vector, matrices, samplers, image types and functions that provide common shader operations</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">features</span>::<span class="ident">Features</span>;
@@ -1928,6 +1933,7 @@
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SUPPORTED_CORE_VERSIONS</span>: <span class="kw-2">&amp;</span>[<span class="ident">u16</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">330</span>, <span class="number">400</span>, <span class="number">410</span>, <span class="number">420</span>, <span class="number">430</span>, <span class="number">440</span>, <span class="number">450</span>];
 <span class="doccomment">/// List of supported es glsl versions</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SUPPORTED_ES_VERSIONS</span>: <span class="kw-2">&amp;</span>[<span class="ident">u16</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">300</span>, <span class="number">310</span>, <span class="number">320</span>];
+<span class="kw">const</span> <span class="ident">INDENT</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;    &quot;</span>;
 
 <span class="doccomment">/// glsl version</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
@@ -2198,7 +2204,7 @@
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">/// Might panic if the module is invalid</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">TextureMapping</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="comment">// We use `writeln!(self.out)` troughout the write to add newlines</span>
+        <span class="comment">// We use `writeln!(self.out)` throughout the write to add newlines</span>
         <span class="comment">// to make the output more readable</span>
 
         <span class="kw">let</span> <span class="ident">es</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">options</span>.<span class="ident">version</span>.<span class="ident">is_es</span>();
@@ -2212,12 +2218,13 @@
         <span class="comment">// extensions to appear before being used, even though extensions are part of the</span>
         <span class="comment">// preprocessor not the processor ¯\_(ツ)_/¯</span>
         <span class="self">self</span>.<span class="ident">features</span>.<span class="ident">write</span>(<span class="self">self</span>.<span class="ident">options</span>.<span class="ident">version</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">out</span>)<span class="question-mark">?</span>;
-        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// glsl es requires a precision to be specified for floats</span>
         <span class="comment">// TODO: Should this be user configurable?</span>
         <span class="kw">if</span> <span class="ident">es</span> {
-            <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;precision highp float;\n&quot;</span>)<span class="question-mark">?</span>;
+            <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>)<span class="question-mark">?</span>;
+            <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;precision highp float;&quot;</span>)<span class="question-mark">?</span>;
+            <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>)<span class="question-mark">?</span>;
         }
 
         <span class="comment">// Enable early depth tests if needed</span>
@@ -2235,9 +2242,8 @@
                     }
                 )<span class="question-mark">?</span>;
             }
+            <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>)<span class="question-mark">?</span>;
         }
-
-        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// Write all structs</span>
         <span class="comment">//</span>
@@ -2252,8 +2258,6 @@
                 <span class="self">self</span>.<span class="ident">write_struct</span>(<span class="ident">handle</span>, <span class="ident">members</span>)<span class="question-mark">?</span>
             }
         }
-
-        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// Write the globals</span>
         <span class="comment">//</span>
@@ -2317,7 +2321,9 @@
                         <span class="self">self</span>.<span class="ident">out</span>,
                         <span class="string">&quot; {};&quot;</span>,
                         <span class="self">self</span>.<span class="ident">names</span>[<span class="kw-2">&amp;</span><span class="ident">NameKey</span>::<span class="ident">GlobalVariable</span>(<span class="ident">handle</span>)]
-                    )<span class="question-mark">?</span>
+                    )<span class="question-mark">?</span>;
+
+                    <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>)<span class="question-mark">?</span>;
                 }
                 <span class="comment">// glsl has no concept of samplers so we just ignore it</span>
                 <span class="ident">TypeInner</span>::<span class="ident">Sampler</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
@@ -2325,8 +2331,6 @@
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">write_global</span>(<span class="ident">handle</span>, <span class="ident">global</span>)<span class="question-mark">?</span>,
             }
         }
-
-        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// Sort the graph topologically so that functions calls are valid</span>
         <span class="comment">// It&#39;s impossible for this to panic because the IR forbids cycles</span>
@@ -2446,8 +2450,8 @@
 
                     <span class="comment">// Write the block members</span>
                     <span class="kw">for</span> (<span class="ident">idx</span>, <span class="ident">member</span>) <span class="kw">in</span> <span class="ident">members</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                        <span class="comment">// Add a tab for identation (readability only)</span>
-                        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;\t&quot;</span>)<span class="question-mark">?</span>;
+                        <span class="comment">// Add a tab for indentation (readability only)</span>
+                        <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">INDENT</span>)<span class="question-mark">?</span>;
                         <span class="comment">// Write the member type</span>
                         <span class="self">self</span>.<span class="ident">write_type</span>(<span class="ident">member</span>.<span class="ident">ty</span>)<span class="question-mark">?</span>;
 
@@ -2571,6 +2575,7 @@
         <span class="comment">// Finally write the global name and end the global with a `;` and a newline</span>
         <span class="comment">// Leading space is important</span>
         <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot; {};&quot;</span>, <span class="self">self</span>.<span class="ident">get_global_name</span>(<span class="ident">handle</span>, <span class="ident">global</span>))<span class="question-mark">?</span>;
+        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -2587,7 +2592,7 @@
         <span class="kw">match</span> <span class="ident">global</span>.<span class="ident">binding</span> {
             <span class="prelude-val">Some</span>(<span class="ident">Binding</span>::<span class="ident">Location</span>(<span class="ident">location</span>)) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="macro">format</span><span class="macro">!</span>(
-                    <span class="string">&quot; _location_{}{}&quot;</span>,
+                    <span class="string">&quot;_location_{}{}&quot;</span>,
                     <span class="ident">location</span>,
                     <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">options</span>.<span class="ident">entry_point</span>.<span class="number">0</span>, <span class="ident">global</span>.<span class="ident">class</span>) {
                         (<span class="ident">ShaderStage</span>::<span class="ident">Fragment</span>, <span class="ident">StorageClass</span>::<span class="ident">Input</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;_vs&quot;</span>,
@@ -2597,7 +2602,7 @@
                 )
             }
             <span class="prelude-val">Some</span>(<span class="ident">Binding</span>::<span class="ident">Resource</span> { <span class="ident">group</span>, <span class="ident">binding</span> }) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot; _group_{}_binding_{}&quot;</span>, <span class="ident">group</span>, <span class="ident">binding</span>)
+                <span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;_group_{}_binding_{}&quot;</span>, <span class="ident">group</span>, <span class="ident">binding</span>)
             }
             <span class="prelude-val">Some</span>(<span class="ident">Binding</span>::<span class="ident">BuiltIn</span>(<span class="ident">built_in</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">glsl_built_in</span>(<span class="ident">built_in</span>).<span class="ident">to_string</span>(),
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">names</span>[<span class="kw-2">&amp;</span><span class="ident">NameKey</span>::<span class="ident">GlobalVariable</span>(<span class="ident">handle</span>)].<span class="ident">clone</span>(),
@@ -2681,9 +2686,9 @@
         <span class="comment">//</span>
         <span class="comment">// Always adds a newline</span>
         <span class="kw">for</span> (<span class="ident">handle</span>, <span class="ident">local</span>) <span class="kw">in</span> <span class="ident">func</span>.<span class="ident">local_variables</span>.<span class="ident">iter</span>() {
-            <span class="comment">// Write identation (only for readability) and the type</span>
+            <span class="comment">// Write indentation (only for readability) and the type</span>
             <span class="comment">// `write_type` adds no trailing space</span>
-            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;\t&quot;</span>)<span class="question-mark">?</span>;
+            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">INDENT</span>)<span class="question-mark">?</span>;
             <span class="self">self</span>.<span class="ident">write_type</span>(<span class="ident">local</span>.<span class="ident">ty</span>)<span class="question-mark">?</span>;
 
             <span class="comment">// Write the local name</span>
@@ -2704,8 +2709,6 @@
             <span class="comment">// Finish the local with `;` and add a newline (only for readability)</span>
             <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>
         }
-
-        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>)<span class="question-mark">?</span>;
 
         <span class="comment">// Write the function body (statement list)</span>
         <span class="kw">for</span> <span class="ident">sta</span> <span class="kw">in</span> <span class="ident">func</span>.<span class="ident">body</span>.<span class="ident">iter</span>() {
@@ -2806,8 +2809,8 @@
         <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;struct {} {{&quot;</span>, <span class="self">self</span>.<span class="ident">names</span>[<span class="kw-2">&amp;</span><span class="ident">NameKey</span>::<span class="ident">Type</span>(<span class="ident">handle</span>)])<span class="question-mark">?</span>;
 
         <span class="kw">for</span> (<span class="ident">idx</span>, <span class="ident">member</span>) <span class="kw">in</span> <span class="ident">members</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="comment">// The identation is only for readability</span>
-            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;\t&quot;</span>)<span class="question-mark">?</span>;
+            <span class="comment">// The indentation is only for readability</span>
+            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">INDENT</span>)<span class="question-mark">?</span>;
 
             <span class="comment">// Write the member type</span>
             <span class="comment">// Adds no trailing space</span>
@@ -2824,6 +2827,8 @@
         }
 
         <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;}};&quot;</span>)<span class="question-mark">?</span>;
+        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>)<span class="question-mark">?</span>;
+
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -2838,7 +2843,7 @@
         <span class="ident">indent</span>: <span class="ident">usize</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BackendResult</span> {
         <span class="comment">// The indentation is only for readability</span>
-        <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}&quot;</span>, <span class="string">&quot;\t&quot;</span>.<span class="ident">repeat</span>(<span class="ident">indent</span>))<span class="question-mark">?</span>;
+        <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">INDENT</span>.<span class="ident">repeat</span>(<span class="ident">indent</span>))<span class="question-mark">?</span>;
 
         <span class="kw">match</span> <span class="ident">sta</span> {
             <span class="comment">// Blocks are simple we just need to write the block statements between braces</span>
@@ -2850,7 +2855,7 @@
                     <span class="comment">// Increase the indentation to help with readability</span>
                     <span class="self">self</span>.<span class="ident">write_stmt</span>(<span class="ident">sta</span>, <span class="ident">ctx</span>, <span class="ident">indent</span> <span class="op">+</span> <span class="number">1</span>)<span class="question-mark">?</span>
                 }
-                <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}}}&quot;</span>, <span class="string">&quot;\t&quot;</span>.<span class="ident">repeat</span>(<span class="ident">indent</span>))<span class="question-mark">?</span>
+                <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}}}&quot;</span>, <span class="ident">INDENT</span>.<span class="ident">repeat</span>(<span class="ident">indent</span>))<span class="question-mark">?</span>
             }
             <span class="comment">// Ifs are written as in C:</span>
             <span class="comment">// ```</span>
@@ -2877,15 +2882,15 @@
                 <span class="comment">// If there are no statements in the reject block we skip writing it</span>
                 <span class="comment">// This is only for readability</span>
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">reject</span>.<span class="ident">is_empty</span>() {
-                    <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}}} else {{&quot;</span>, <span class="string">&quot;\t&quot;</span>.<span class="ident">repeat</span>(<span class="ident">indent</span>))<span class="question-mark">?</span>;
+                    <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}}} else {{&quot;</span>, <span class="ident">INDENT</span>.<span class="ident">repeat</span>(<span class="ident">indent</span>))<span class="question-mark">?</span>;
 
                     <span class="kw">for</span> <span class="ident">sta</span> <span class="kw">in</span> <span class="ident">reject</span> {
-                        <span class="comment">// Increase identation to help with readability</span>
+                        <span class="comment">// Increase indentation to help with readability</span>
                         <span class="self">self</span>.<span class="ident">write_stmt</span>(<span class="ident">sta</span>, <span class="ident">ctx</span>, <span class="ident">indent</span> <span class="op">+</span> <span class="number">1</span>)<span class="question-mark">?</span>;
                     }
                 }
 
-                <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}}}&quot;</span>, <span class="string">&quot;\t&quot;</span>.<span class="ident">repeat</span>(<span class="ident">indent</span>))<span class="question-mark">?</span>
+                <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}}}&quot;</span>, <span class="ident">INDENT</span>.<span class="ident">repeat</span>(<span class="ident">indent</span>))<span class="question-mark">?</span>
             }
             <span class="comment">// Switch are written as in C:</span>
             <span class="comment">// ```</span>
@@ -2915,7 +2920,12 @@
 
                 <span class="comment">// Write all cases</span>
                 <span class="kw">for</span> <span class="ident">case</span> <span class="kw">in</span> <span class="ident">cases</span> {
-                    <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}case {}:&quot;</span>, <span class="string">&quot;\t&quot;</span>.<span class="ident">repeat</span>(<span class="ident">indent</span> <span class="op">+</span> <span class="number">1</span>), <span class="ident">case</span>.<span class="ident">value</span>)<span class="question-mark">?</span>;
+                    <span class="macro">writeln</span><span class="macro">!</span>(
+                        <span class="self">self</span>.<span class="ident">out</span>,
+                        <span class="string">&quot;{}case {}:&quot;</span>,
+                        <span class="ident">INDENT</span>.<span class="ident">repeat</span>(<span class="ident">indent</span> <span class="op">+</span> <span class="number">1</span>),
+                        <span class="ident">case</span>.<span class="ident">value</span>
+                    )<span class="question-mark">?</span>;
 
                     <span class="kw">for</span> <span class="ident">sta</span> <span class="kw">in</span> <span class="ident">case</span>.<span class="ident">body</span>.<span class="ident">iter</span>() {
                         <span class="self">self</span>.<span class="ident">write_stmt</span>(<span class="ident">sta</span>, <span class="ident">ctx</span>, <span class="ident">indent</span> <span class="op">+</span> <span class="number">2</span>)<span class="question-mark">?</span>;
@@ -2923,21 +2933,21 @@
 
                     <span class="comment">// Write `break;` if the block isn&#39;t fallthrough</span>
                     <span class="kw">if</span> <span class="ident">case</span>.<span class="ident">fall_through</span> {
-                        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}break;&quot;</span>, <span class="string">&quot;\t&quot;</span>.<span class="ident">repeat</span>(<span class="ident">indent</span> <span class="op">+</span> <span class="number">2</span>))<span class="question-mark">?</span>;
+                        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}break;&quot;</span>, <span class="ident">INDENT</span>.<span class="ident">repeat</span>(<span class="ident">indent</span> <span class="op">+</span> <span class="number">2</span>))<span class="question-mark">?</span>;
                     }
                 }
 
                 <span class="comment">// Only write the default block if the block isn&#39;t empty</span>
                 <span class="comment">// Writing default without a block is valid but it&#39;s more readable this way</span>
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">default</span>.<span class="ident">is_empty</span>() {
-                    <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}default:&quot;</span>, <span class="string">&quot;\t&quot;</span>.<span class="ident">repeat</span>(<span class="ident">indent</span> <span class="op">+</span> <span class="number">1</span>))<span class="question-mark">?</span>;
+                    <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}default:&quot;</span>, <span class="ident">INDENT</span>.<span class="ident">repeat</span>(<span class="ident">indent</span> <span class="op">+</span> <span class="number">1</span>))<span class="question-mark">?</span>;
 
                     <span class="kw">for</span> <span class="ident">sta</span> <span class="kw">in</span> <span class="ident">default</span> {
                         <span class="self">self</span>.<span class="ident">write_stmt</span>(<span class="ident">sta</span>, <span class="ident">ctx</span>, <span class="ident">indent</span> <span class="op">+</span> <span class="number">2</span>)<span class="question-mark">?</span>;
                     }
                 }
 
-                <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}}}&quot;</span>, <span class="string">&quot;\t&quot;</span>.<span class="ident">repeat</span>(<span class="ident">indent</span>))<span class="question-mark">?</span>
+                <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}}}&quot;</span>, <span class="ident">INDENT</span>.<span class="ident">repeat</span>(<span class="ident">indent</span>))<span class="question-mark">?</span>
             }
             <span class="comment">// Loops in naga IR are based on wgsl loops, glsl can emulate the behaviour by using a</span>
             <span class="comment">// while true loop and appending the continuing block to the body resulting on:</span>
@@ -2954,7 +2964,7 @@
                     <span class="self">self</span>.<span class="ident">write_stmt</span>(<span class="ident">sta</span>, <span class="ident">ctx</span>, <span class="ident">indent</span> <span class="op">+</span> <span class="number">1</span>)<span class="question-mark">?</span>;
                 }
 
-                <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}}}&quot;</span>, <span class="string">&quot;\t&quot;</span>.<span class="ident">repeat</span>(<span class="ident">indent</span>))<span class="question-mark">?</span>
+                <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}}}&quot;</span>, <span class="ident">INDENT</span>.<span class="ident">repeat</span>(<span class="ident">indent</span>))<span class="question-mark">?</span>
             }
             <span class="comment">// Break, continue and return as written as in C</span>
             <span class="comment">// `break;`</span>
@@ -3199,7 +3209,7 @@
             <span class="comment">// &quot;~&quot; - for `Not` if it&#39;s an integer</span>
             <span class="comment">// &quot;!&quot; - for `Not` if it&#39;s a boolean</span>
             <span class="comment">//</span>
-            <span class="comment">// We also wrap the everything in parantheses to avoid precedence issues</span>
+            <span class="comment">// We also wrap the everything in parentheses to avoid precedence issues</span>
             <span class="ident">Expression</span>::<span class="ident">Unary</span> { <span class="ident">op</span>, <span class="ident">expr</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="macro">write</span><span class="macro">!</span>(
                     <span class="self">self</span>.<span class="ident">out</span>,
