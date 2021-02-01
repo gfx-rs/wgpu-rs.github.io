@@ -3083,7 +3083,6 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TextureFormat</span>;
     <span class="kw">fn</span> <span class="ident">adapter_features</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">adapter</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">AdapterId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Features</span>;
     <span class="kw">fn</span> <span class="ident">adapter_limits</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">adapter</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">AdapterId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Limits</span>;
-    <span class="kw">fn</span> <span class="ident">adapter_get_timestamp_period</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">adapter</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">AdapterId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span>;
     <span class="kw">fn</span> <span class="ident">adapter_get_info</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">adapter</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">AdapterId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">AdapterInfo</span>;
     <span class="kw">fn</span> <span class="ident">adapter_get_texture_format_features</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -3321,6 +3320,7 @@
         <span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">QueueId</span>,
         <span class="ident">command_buffers</span>: <span class="ident">I</span>,
     );
+    <span class="kw">fn</span> <span class="ident">queue_get_timestamp_period</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">QueueId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span>;
 }
 
 <span class="doccomment">/// Context for all other wgpu objects. Instance of wgpu.</span>
@@ -4330,13 +4330,6 @@
     <span class="doccomment">/// the values that you are allowed to use.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">limits</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Limits</span> {
         <span class="ident">Context</span>::<span class="ident">adapter_limits</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
-    }
-
-    <span class="doccomment">/// Gets the amount of nanoseconds each tick of a timestamp query represents.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns zero if timestamp queries are unsupported.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_timestamp_period</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
-        <span class="ident">Context</span>::<span class="ident">adapter_get_timestamp_period</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
     }
 
     <span class="doccomment">/// Get info about the adapter itself.</span>
@@ -5669,6 +5662,13 @@
                 .<span class="ident">into_iter</span>()
                 .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">mut</span> <span class="ident">comb</span><span class="op">|</span> <span class="ident">comb</span>.<span class="ident">id</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>()),
         );
+    }
+
+    <span class="doccomment">/// Gets the amount of nanoseconds each tick of a timestamp query represents.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Returns zero if timestamp queries are unsupported.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_timestamp_period</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
+        <span class="ident">Context</span>::<span class="ident">queue_get_timestamp_period</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
     }
 }
 

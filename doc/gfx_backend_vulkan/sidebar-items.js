@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Backend",""],["DebugMessenger",""]],"struct":[["CommandQueue",""],["Device",""],["DeviceCreationFeatures",""],["Instance",""],["PhysicalDevice",""],["QueueFamily",""],["RawInstance",""]],"type":[["RawCommandQueue",""]]});
+initSidebarItems({"enum":[["Backend",""],["DebugMessenger",""]],"struct":[["Device",""],["DeviceCreationFeatures",""],["Instance",""],["PhysicalDevice",""],["Queue",""],["QueueFamily",""],["RawInstance",""]],"type":[["RawCommandQueue",""]]});

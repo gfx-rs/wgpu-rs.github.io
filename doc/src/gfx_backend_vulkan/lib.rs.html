@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/2fd74db/src/backend/vulkan/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/d54cdcf/src/backend/vulkan/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_backend_vulkan/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -1646,6 +1646,13 @@
 <span id="1643">1643</span>
 <span id="1644">1644</span>
 <span id="1645">1645</span>
+<span id="1646">1646</span>
+<span id="1647">1647</span>
+<span id="1648">1648</span>
+<span id="1649">1649</span>
+<span id="1650">1650</span>
+<span id="1651">1651</span>
+<span id="1652">1652</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">/*!
 # Vulkan backend internals.
@@ -2498,6 +2505,7 @@ framebuffers internally in an internally-synchronized map, per `B::Framebuffer`.
                 },
                 <span class="ident">maintenance_level</span>,
                 <span class="ident">imageless_framebuffers</span>,
+                <span class="ident">timestamp_period</span>: <span class="self">self</span>.<span class="ident">properties</span>.<span class="ident">limits</span>.<span class="ident">timestamp_period</span>,
             }),
             <span class="ident">vendor_id</span>: <span class="self">self</span>.<span class="ident">properties</span>.<span class="ident">vendor_id</span>,
             <span class="ident">valid_ash_memory_types</span>,
@@ -2511,7 +2519,7 @@ framebuffers internally in an internally-synchronized map, per `B::Framebuffer`.
                     <span class="ident">queue</span>::<span class="ident">QueueGroup</span>::<span class="ident">new</span>(<span class="ident">queue</span>::<span class="ident">QueueFamilyId</span>(<span class="ident">family</span>.<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>));
                 <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">priorities</span>.<span class="ident">len</span>() {
                     <span class="kw">let</span> <span class="ident">queue_raw</span> <span class="op">=</span> <span class="ident">device_arc</span>.<span class="ident">raw</span>.<span class="ident">get_device_queue</span>(<span class="ident">family</span>.<span class="ident">index</span>, <span class="ident">id</span> <span class="kw">as</span> <span class="kw">_</span>);
-                    <span class="ident">family_raw</span>.<span class="ident">add_queue</span>(<span class="ident">CommandQueue</span> {
+                    <span class="ident">family_raw</span>.<span class="ident">add_queue</span>(<span class="ident">Queue</span> {
                         <span class="ident">raw</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">queue_raw</span>),
                         <span class="ident">device</span>: <span class="ident">device_arc</span>.<span class="ident">clone</span>(),
                         <span class="ident">swapchain_fn</span>: <span class="ident">swapchain_fn</span>.<span class="ident">clone</span>(),
@@ -2931,7 +2939,6 @@ framebuffers internally in an internally-synchronized map, per `B::Framebuffer`.
             <span class="ident">framebuffer_stencil_sample_counts</span>: <span class="ident">limits</span>.<span class="ident">framebuffer_stencil_sample_counts</span>.<span class="ident">as_raw</span>()
                 <span class="kw">as</span> <span class="kw">_</span>,
             <span class="ident">timestamp_compute_and_graphics</span>: <span class="ident">limits</span>.<span class="ident">timestamp_compute_and_graphics</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
-            <span class="ident">timestamp_period</span>: <span class="ident">limits</span>.<span class="ident">timestamp_period</span>,
             <span class="ident">max_color_attachments</span>: <span class="ident">limits</span>.<span class="ident">max_color_attachments</span> <span class="kw">as</span> <span class="kw">_</span>,
             <span class="ident">buffer_image_granularity</span>: <span class="ident">limits</span>.<span class="ident">buffer_image_granularity</span>,
             <span class="ident">non_coherent_atom_size</span>: <span class="ident">limits</span>.<span class="ident">non_coherent_atom_size</span> <span class="kw">as</span> <span class="kw">_</span>,
@@ -3075,6 +3082,7 @@ framebuffers internally in an internally-synchronized map, per `B::Framebuffer`.
     <span class="ident">extension_fns</span>: <span class="ident">DeviceExtensionFunctions</span>,
     <span class="ident">maintenance_level</span>: <span class="ident">u8</span>,
     <span class="ident">imageless_framebuffers</span>: <span class="ident">bool</span>,
+    <span class="ident">timestamp_period</span>: <span class="ident">f32</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">RawDevice</span> {
@@ -3146,19 +3154,19 @@ framebuffers internally in an internally-synchronized map, per `B::Framebuffer`.
 <span class="comment">// Need to explicitly synchronize on submission and present.</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">RawCommandQueue</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">vk</span>::<span class="ident">Queue</span><span class="op">&gt;</span>;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CommandQueue</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Queue</span> {
     <span class="ident">raw</span>: <span class="ident">RawCommandQueue</span>,
     <span class="ident">device</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">RawDevice</span><span class="op">&gt;</span>,
     <span class="ident">swapchain_fn</span>: <span class="ident">Swapchain</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">CommandQueue</span> {
+<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Queue</span> {
     <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fmt</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
-        <span class="ident">fmt</span>.<span class="ident">write_str</span>(<span class="string">&quot;CommandQueue&quot;</span>)
+        <span class="ident">fmt</span>.<span class="ident">write_str</span>(<span class="string">&quot;Queue&quot;</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">queue</span>::<span class="ident">CommandQueue</span><span class="op">&lt;</span><span class="ident">Backend</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CommandQueue</span> {
+<span class="kw">impl</span> <span class="ident">queue</span>::<span class="ident">Queue</span><span class="op">&lt;</span><span class="ident">Backend</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Queue</span> {
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">submit</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Ic</span>, <span class="ident">Iw</span>, <span class="ident">Is</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">command_buffers</span>: <span class="ident">Ic</span>,
@@ -3195,7 +3203,9 @@ framebuffers internally in an internally-synchronized map, per `B::Framebuffer`.
         <span class="kw">let</span> <span class="ident">fence_raw</span> <span class="op">=</span> <span class="ident">fence</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">fence</span><span class="op">|</span> <span class="ident">fence</span>.<span class="number">0</span>).<span class="ident">unwrap_or</span>(<span class="ident">vk</span>::<span class="ident">Fence</span>::<span class="ident">null</span>());
 
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">queue_submit</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">raw</span>, <span class="kw-2">&amp;</span>[<span class="kw-2">*</span><span class="ident">info</span>], <span class="ident">fence_raw</span>);
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="prelude-val">Ok</span>(()), <span class="ident">result</span>);
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">result</span> {
+            <span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Submit resulted in {:?}&quot;</span>, <span class="ident">e</span>);
+        }
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">present</span>(
@@ -3245,6 +3255,10 @@ framebuffers internally in an internally-synchronized map, per `B::Framebuffer`.
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(),
         }
     }
+
+    <span class="kw">fn</span> <span class="ident">timestamp_period</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span> {
+        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">timestamp_period</span>
+    }
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -3263,7 +3277,7 @@ framebuffers internally in an internally-synchronized map, per `B::Framebuffer`.
     <span class="kw">type</span> <span class="ident">Surface</span> <span class="op">=</span> <span class="ident">window</span>::<span class="ident">Surface</span>;
 
     <span class="kw">type</span> <span class="ident">QueueFamily</span> <span class="op">=</span> <span class="ident">QueueFamily</span>;
-    <span class="kw">type</span> <span class="ident">CommandQueue</span> <span class="op">=</span> <span class="ident">CommandQueue</span>;
+    <span class="kw">type</span> <span class="ident">Queue</span> <span class="op">=</span> <span class="ident">Queue</span>;
     <span class="kw">type</span> <span class="ident">CommandBuffer</span> <span class="op">=</span> <span class="ident">command</span>::<span class="ident">CommandBuffer</span>;
 
     <span class="kw">type</span> <span class="ident">Memory</span> <span class="op">=</span> <span class="ident">native</span>::<span class="ident">Memory</span>;
