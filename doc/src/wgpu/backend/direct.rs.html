@@ -1920,8 +1920,6 @@
 <span id="1917">1917</span>
 <span id="1918">1918</span>
 <span id="1919">1919</span>
-<span id="1920">1920</span>
-<span id="1921">1921</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">backend</span>::{<span class="ident">error</span>::<span class="ident">ContextError</span>, <span class="ident">native_gpu_future</span>},
@@ -3250,7 +3248,6 @@
             <span class="prelude-val">Ok</span>(<span class="ident">ptr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BufferMappedRange</span> {
                 <span class="ident">ptr</span>,
                 <span class="ident">size</span>: <span class="ident">size</span> <span class="kw">as</span> <span class="ident">usize</span>,
-                <span class="ident">phantom</span>: <span class="ident">PhantomData</span>,
             },
             <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">handle_error_fatal</span>(<span class="ident">err</span>, <span class="string">&quot;Buffer::get_mapped_range&quot;</span>),
         }
@@ -3822,13 +3819,12 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferMappedRange</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferMappedRange</span> {
     <span class="ident">ptr</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>,
     <span class="ident">size</span>: <span class="ident">usize</span>,
-    <span class="ident">phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> ()<span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">BufferMappedRangeSlice</span> <span class="kw">for</span> <span class="ident">BufferMappedRange</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="kw">crate</span>::<span class="ident">BufferMappedRangeSlice</span> <span class="kw">for</span> <span class="ident">BufferMappedRange</span> {
     <span class="kw">fn</span> <span class="ident">slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
         <span class="kw">unsafe</span> { <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="self">self</span>.<span class="ident">ptr</span>, <span class="self">self</span>.<span class="ident">size</span>) }
     }
@@ -3838,7 +3834,7 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">BufferMappedRange</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">BufferMappedRange</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="comment">// Intentionally left blank so that `BufferMappedRange` still</span>
         <span class="comment">// implements `Drop`, to match the web backend</span>
