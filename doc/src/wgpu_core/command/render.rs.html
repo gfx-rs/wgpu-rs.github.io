@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/3ebe198/wgpu-core/src/command/render.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>render.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/b1b44ca/wgpu-core/src/command/render.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>render.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -2362,6 +2362,11 @@
 <span id="2359">2359</span>
 <span id="2360">2360</span>
 <span id="2361">2361</span>
+<span id="2362">2362</span>
+<span id="2363">2363</span>
+<span id="2364">2364</span>
+<span id="2365">2365</span>
+<span id="2366">2366</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2701,7 +2706,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">State</span> {
-    <span class="kw">fn</span> <span class="ident">is_ready</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">DrawError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">is_ready</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">indexed</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">DrawError</span><span class="op">&gt;</span> {
         <span class="comment">// Determine how many vertex buffers have already been bound</span>
         <span class="kw">let</span> <span class="ident">bound_buffers</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">vertex</span>.<span class="ident">inputs</span>.<span class="ident">iter</span>().<span class="ident">take_while</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">bound</span>).<span class="ident">count</span>() <span class="kw">as</span> <span class="ident">u32</span>;
         <span class="comment">// Compare with the needed quantity</span>
@@ -2724,17 +2729,19 @@
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">blend_color</span> <span class="op">=</span><span class="op">=</span> <span class="ident">OptionalState</span>::<span class="ident">Required</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DrawError</span>::<span class="ident">MissingBlendColor</span>);
         }
-        <span class="comment">// Pipeline expects an index buffer</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pipeline_index_format</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">index</span>.<span class="ident">pipeline_format</span> {
-            <span class="comment">// We have a buffer bound</span>
-            <span class="kw">let</span> <span class="ident">buffer_index_format</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">index</span>.<span class="ident">format</span>.<span class="ident">ok_or</span>(<span class="ident">DrawError</span>::<span class="ident">MissingIndexBuffer</span>)<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="ident">indexed</span> {
+            <span class="comment">// Pipeline expects an index buffer</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pipeline_index_format</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">index</span>.<span class="ident">pipeline_format</span> {
+                <span class="comment">// We have a buffer bound</span>
+                <span class="kw">let</span> <span class="ident">buffer_index_format</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">index</span>.<span class="ident">format</span>.<span class="ident">ok_or</span>(<span class="ident">DrawError</span>::<span class="ident">MissingIndexBuffer</span>)<span class="question-mark">?</span>;
 
-            <span class="comment">// The buffers are different formats</span>
-            <span class="kw">if</span> <span class="ident">pipeline_index_format</span> <span class="op">!</span><span class="op">=</span> <span class="ident">buffer_index_format</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DrawError</span>::<span class="ident">UnmatchedIndexFormats</span> {
-                    <span class="ident">pipeline</span>: <span class="ident">pipeline_index_format</span>,
-                    <span class="ident">buffer</span>: <span class="ident">buffer_index_format</span>,
-                });
+                <span class="comment">// The buffers are different formats</span>
+                <span class="kw">if</span> <span class="ident">pipeline_index_format</span> <span class="op">!</span><span class="op">=</span> <span class="ident">buffer_index_format</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DrawError</span>::<span class="ident">UnmatchedIndexFormats</span> {
+                        <span class="ident">pipeline</span>: <span class="ident">pipeline_index_format</span>,
+                        <span class="ident">buffer</span>: <span class="ident">buffer_index_format</span>,
+                    });
+                }
             }
         }
         <span class="prelude-val">Ok</span>(())
@@ -3854,12 +3861,14 @@
                         <span class="ident">first_vertex</span>,
                         <span class="ident">first_instance</span>,
                     } <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">let</span> <span class="ident">indexed</span> <span class="op">=</span> <span class="bool-val">false</span>;
                         <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">Draw</span> {
-                            <span class="ident">indexed</span>: <span class="bool-val">false</span>,
+                            <span class="ident">indexed</span>,
                             <span class="ident">indirect</span>: <span class="bool-val">false</span>,
                             <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
                         };
-                        <span class="ident">state</span>.<span class="ident">is_ready</span>().<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
+                        <span class="ident">state</span>.<span class="ident">is_ready</span>(<span class="ident">indexed</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
+
                         <span class="kw">let</span> <span class="ident">last_vertex</span> <span class="op">=</span> <span class="ident">first_vertex</span> <span class="op">+</span> <span class="ident">vertex_count</span>;
                         <span class="kw">let</span> <span class="ident">vertex_limit</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">vertex</span>.<span class="ident">vertex_limit</span>;
                         <span class="kw">if</span> <span class="ident">last_vertex</span> <span class="op">&gt;</span> <span class="ident">vertex_limit</span> {
@@ -3895,12 +3904,13 @@
                         <span class="ident">base_vertex</span>,
                         <span class="ident">first_instance</span>,
                     } <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">let</span> <span class="ident">indexed</span> <span class="op">=</span> <span class="bool-val">true</span>;
                         <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">Draw</span> {
-                            <span class="ident">indexed</span>: <span class="bool-val">true</span>,
+                            <span class="ident">indexed</span>,
                             <span class="ident">indirect</span>: <span class="bool-val">false</span>,
                             <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
                         };
-                        <span class="ident">state</span>.<span class="ident">is_ready</span>().<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
+                        <span class="ident">state</span>.<span class="ident">is_ready</span>(<span class="ident">indexed</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
                         <span class="comment">//TODO: validate that base_vertex + max_index() is within the provided range</span>
                         <span class="kw">let</span> <span class="ident">last_index</span> <span class="op">=</span> <span class="ident">first_index</span> <span class="op">+</span> <span class="ident">index_count</span>;
@@ -3942,7 +3952,7 @@
                             <span class="ident">indirect</span>: <span class="bool-val">true</span>,
                             <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
                         };
-                        <span class="ident">state</span>.<span class="ident">is_ready</span>().<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
+                        <span class="ident">state</span>.<span class="ident">is_ready</span>(<span class="ident">indexed</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
                         <span class="kw">let</span> <span class="ident">stride</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">indexed</span> {
                             <span class="bool-val">false</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">DrawIndirectArgs</span><span class="op">&gt;</span>(),
@@ -4027,7 +4037,7 @@
                             <span class="ident">indirect</span>: <span class="bool-val">true</span>,
                             <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
                         };
-                        <span class="ident">state</span>.<span class="ident">is_ready</span>().<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
+                        <span class="ident">state</span>.<span class="ident">is_ready</span>(<span class="ident">indexed</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
                         <span class="kw">let</span> <span class="ident">stride</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">indexed</span> {
                             <span class="bool-val">false</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">DrawIndirectArgs</span><span class="op">&gt;</span>(),

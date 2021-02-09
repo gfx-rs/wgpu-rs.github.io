@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Backend",""],["DebugMessenger",""]],"struct":[["Device",""],["DeviceCreationFeatures",""],["Instance",""],["PhysicalDevice",""],["Queue",""],["QueueFamily",""],["RawInstance",""]],"type":[["RawCommandQueue",""]]});
+initSidebarItems({"enum":[["Backend",""],["DebugMessenger",""]],"struct":[["Device",""],["DeviceCreationFeatures",""],["Instance",""],["PhysicalDevice",""],["Queue",""],["QueueFamily",""],["RawInstance",""],["Version","Helper wrapper around `vk::make_version`."]],"type":[["RawCommandQueue",""]]});

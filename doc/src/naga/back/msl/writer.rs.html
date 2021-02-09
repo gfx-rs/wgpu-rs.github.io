@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/c12003f/src/back/msl/writer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>writer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/4f19903/src/back/msl/writer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>writer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -1094,6 +1094,86 @@
 <span id="1091">1091</span>
 <span id="1092">1092</span>
 <span id="1093">1093</span>
+<span id="1094">1094</span>
+<span id="1095">1095</span>
+<span id="1096">1096</span>
+<span id="1097">1097</span>
+<span id="1098">1098</span>
+<span id="1099">1099</span>
+<span id="1100">1100</span>
+<span id="1101">1101</span>
+<span id="1102">1102</span>
+<span id="1103">1103</span>
+<span id="1104">1104</span>
+<span id="1105">1105</span>
+<span id="1106">1106</span>
+<span id="1107">1107</span>
+<span id="1108">1108</span>
+<span id="1109">1109</span>
+<span id="1110">1110</span>
+<span id="1111">1111</span>
+<span id="1112">1112</span>
+<span id="1113">1113</span>
+<span id="1114">1114</span>
+<span id="1115">1115</span>
+<span id="1116">1116</span>
+<span id="1117">1117</span>
+<span id="1118">1118</span>
+<span id="1119">1119</span>
+<span id="1120">1120</span>
+<span id="1121">1121</span>
+<span id="1122">1122</span>
+<span id="1123">1123</span>
+<span id="1124">1124</span>
+<span id="1125">1125</span>
+<span id="1126">1126</span>
+<span id="1127">1127</span>
+<span id="1128">1128</span>
+<span id="1129">1129</span>
+<span id="1130">1130</span>
+<span id="1131">1131</span>
+<span id="1132">1132</span>
+<span id="1133">1133</span>
+<span id="1134">1134</span>
+<span id="1135">1135</span>
+<span id="1136">1136</span>
+<span id="1137">1137</span>
+<span id="1138">1138</span>
+<span id="1139">1139</span>
+<span id="1140">1140</span>
+<span id="1141">1141</span>
+<span id="1142">1142</span>
+<span id="1143">1143</span>
+<span id="1144">1144</span>
+<span id="1145">1145</span>
+<span id="1146">1146</span>
+<span id="1147">1147</span>
+<span id="1148">1148</span>
+<span id="1149">1149</span>
+<span id="1150">1150</span>
+<span id="1151">1151</span>
+<span id="1152">1152</span>
+<span id="1153">1153</span>
+<span id="1154">1154</span>
+<span id="1155">1155</span>
+<span id="1156">1156</span>
+<span id="1157">1157</span>
+<span id="1158">1158</span>
+<span id="1159">1159</span>
+<span id="1160">1160</span>
+<span id="1161">1161</span>
+<span id="1162">1162</span>
+<span id="1163">1163</span>
+<span id="1164">1164</span>
+<span id="1165">1165</span>
+<span id="1166">1166</span>
+<span id="1167">1167</span>
+<span id="1168">1168</span>
+<span id="1169">1169</span>
+<span id="1170">1170</span>
+<span id="1171">1171</span>
+<span id="1172">1172</span>
+<span id="1173">1173</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">keywords</span>::<span class="ident">RESERVED</span>, <span class="ident">Error</span>, <span class="ident">LocationMode</span>, <span class="ident">Options</span>, <span class="ident">TranslationInfo</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -1235,6 +1315,22 @@
                 <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
             }
             <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">handle</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+        }
+        <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn</span> <span class="ident">put_image_query</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">image</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
+        <span class="ident">query</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+        <span class="ident">level</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">ExpressionContext</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">image</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+        <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;.get_{}(&quot;</span>, <span class="ident">query</span>)<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">expr</span>) <span class="op">=</span> <span class="ident">level</span> {
+            <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">expr</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
         }
         <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
@@ -1428,6 +1524,61 @@
                 }
                 <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
             }
+            <span class="comment">//Note: for all the queries, the signed integers are expected,</span>
+            <span class="comment">// so a conversion is needed.</span>
+            <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">ImageQuery</span> { <span class="ident">image</span>, <span class="ident">query</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">query</span> {
+                <span class="kw">crate</span>::<span class="ident">ImageQuery</span>::<span class="ident">Size</span> { <span class="ident">level</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="comment">//Note: MSL only has separate width/height/depth queries,</span>
+                    <span class="comment">// so compose the result of them.</span>
+                    <span class="kw">let</span> <span class="ident">dim</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">typifier</span>.<span class="ident">get</span>(<span class="ident">image</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">module</span>.<span class="ident">types</span>) {
+                        <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Image</span> { <span class="ident">dim</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">dim</span>,
+                        <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;Unexpected type {:?}&quot;</span>, <span class="ident">other</span>),
+                    };
+                    <span class="kw">match</span> <span class="ident">dim</span> {
+                        <span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">D1</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int(&quot;</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;width&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">D2</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int2(&quot;</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;width&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;height&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">D3</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int3(&quot;</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;width&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;height&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;depth&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">Cube</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int(&quot;</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;width&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;).xxx&quot;</span>)<span class="question-mark">?</span>;
+                        }
+                    }
+                }
+                <span class="kw">crate</span>::<span class="ident">ImageQuery</span>::<span class="ident">NumLevels</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int(&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">image</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;.get_num_mip_levels())&quot;</span>)<span class="question-mark">?</span>;
+                }
+                <span class="kw">crate</span>::<span class="ident">ImageQuery</span>::<span class="ident">NumLayers</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int(&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">image</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;.get_array_size())&quot;</span>)<span class="question-mark">?</span>;
+                }
+                <span class="kw">crate</span>::<span class="ident">ImageQuery</span>::<span class="ident">NumSamples</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int(&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">image</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                    <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;.get_num_samples())&quot;</span>)<span class="question-mark">?</span>;
+                }
+            },
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Unary</span> { <span class="ident">op</span>, <span class="ident">expr</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">op_str</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">op</span> {
                     <span class="kw">crate</span>::<span class="ident">UnaryOperator</span>::<span class="ident">Negate</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;-&quot;</span>,
@@ -1725,10 +1876,10 @@
                         <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}bool {} = true;&quot;</span>, <span class="ident">level</span>, <span class="ident">gate_name</span>)<span class="question-mark">?</span>;
                         <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}while(true) {{&quot;</span>, <span class="ident">level</span>)<span class="question-mark">?</span>;
                         <span class="kw">let</span> <span class="ident">lif</span> <span class="op">=</span> <span class="ident">level</span>.<span class="ident">next</span>();
-                        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}if (!loop_init) {{&quot;</span>, <span class="ident">lif</span>)<span class="question-mark">?</span>;
+                        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}if (!{}) {{&quot;</span>, <span class="ident">lif</span>, <span class="ident">gate_name</span>)<span class="question-mark">?</span>;
                         <span class="self">self</span>.<span class="ident">put_block</span>(<span class="ident">lif</span>.<span class="ident">next</span>(), <span class="ident">continuing</span>, <span class="ident">context</span>, <span class="ident">return_value</span>)<span class="question-mark">?</span>;
                         <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}}}&quot;</span>, <span class="ident">lif</span>)<span class="question-mark">?</span>;
-                        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}loop_init = false;&quot;</span>, <span class="ident">lif</span>)<span class="question-mark">?</span>;
+                        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}{} = false;&quot;</span>, <span class="ident">lif</span>, <span class="ident">gate_name</span>)<span class="question-mark">?</span>;
                     } <span class="kw">else</span> {
                         <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}while(true) {{&quot;</span>, <span class="ident">level</span>)<span class="question-mark">?</span>;
                     }
@@ -1765,6 +1916,15 @@
                     <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">pointer</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
                     <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot; = &quot;</span>)<span class="question-mark">?</span>;
                     <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">value</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                    <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>;
+                }
+                <span class="kw">crate</span>::<span class="ident">Statement</span>::<span class="ident">Call</span> {
+                    <span class="ident">function</span>,
+                    <span class="kw-2">ref</span> <span class="ident">arguments</span>,
+                } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">names</span>[<span class="kw-2">&amp;</span><span class="ident">NameKey</span>::<span class="ident">Function</span>(<span class="ident">function</span>)];
+                    <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">name</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.<span class="ident">put_call</span>(<span class="string">&quot;&quot;</span>, <span class="ident">arguments</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
                     <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>;
                 }
             }
