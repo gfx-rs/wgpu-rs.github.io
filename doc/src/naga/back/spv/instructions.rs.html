@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/4f19903/src/back/spv/instructions.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>instructions.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/fa7d4d8/src/back/spv/instructions.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>instructions.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -731,8 +731,49 @@
 <span id="728">728</span>
 <span id="729">729</span>
 <span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">back</span>::<span class="ident">spv</span>::{<span class="ident">helpers</span>, <span class="ident">Instruction</span>};
+<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">helpers</span>;
 <span class="kw">use</span> <span class="ident">spirv</span>::{<span class="ident">Op</span>, <span class="ident">Word</span>};
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum</span> <span class="ident">Signedness</span> {
@@ -740,728 +781,769 @@
     <span class="ident">Signed</span> <span class="op">=</span> <span class="number">1</span>,
 }
 
-<span class="comment">//</span>
-<span class="comment">// Debug Instructions</span>
-<span class="comment">//</span>
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_source</span>(
-    <span class="ident">source_language</span>: <span class="ident">spirv</span>::<span class="ident">SourceLanguage</span>,
-    <span class="ident">version</span>: <span class="ident">u32</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Source</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">source_language</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operands</span>(<span class="ident">helpers</span>::<span class="ident">bytes_to_words</span>(<span class="kw-2">&amp;</span><span class="ident">version</span>.<span class="ident">to_le_bytes</span>()));
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_name</span>(<span class="ident">target_id</span>: <span class="ident">Word</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Name</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">target_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operands</span>(<span class="ident">helpers</span>::<span class="ident">string_to_words</span>(<span class="ident">name</span>));
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_member_name</span>(<span class="ident">target_id</span>: <span class="ident">Word</span>, <span class="ident">member</span>: <span class="ident">Word</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">MemberName</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">target_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">member</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operands</span>(<span class="ident">helpers</span>::<span class="ident">string_to_words</span>(<span class="ident">name</span>));
-    <span class="ident">instruction</span>
-}
-
-<span class="comment">//</span>
-<span class="comment">// Annotation Instructions</span>
-<span class="comment">//</span>
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_decorate</span>(
-    <span class="ident">target_id</span>: <span class="ident">Word</span>,
-    <span class="ident">decoration</span>: <span class="ident">spirv</span>::<span class="ident">Decoration</span>,
-    <span class="ident">operands</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Decorate</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">target_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">decoration</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="kw">for</span> <span class="ident">operand</span> <span class="kw">in</span> <span class="ident">operands</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">operand</span>)
-    }
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_member_decorate</span>(
-    <span class="ident">target_id</span>: <span class="ident">Word</span>,
-    <span class="ident">member_index</span>: <span class="ident">Word</span>,
-    <span class="ident">decoration</span>: <span class="ident">spirv</span>::<span class="ident">Decoration</span>,
-    <span class="ident">operands</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">MemberDecorate</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">target_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">member_index</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">decoration</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="kw">for</span> <span class="ident">operand</span> <span class="kw">in</span> <span class="ident">operands</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">operand</span>)
-    }
-    <span class="ident">instruction</span>
-}
-
-<span class="comment">//</span>
-<span class="comment">// Extension Instructions</span>
-<span class="comment">//</span>
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_ext_inst_import</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ExtInstImport</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operands</span>(<span class="ident">helpers</span>::<span class="ident">string_to_words</span>(<span class="ident">name</span>));
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_ext_inst</span>(
-    <span class="ident">set_id</span>: <span class="ident">Word</span>,
-    <span class="ident">op</span>: <span class="ident">spirv</span>::<span class="ident">GLOp</span>,
-    <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">operands</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ExtInst</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">set_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">op</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="kw">for</span> <span class="ident">operand</span> <span class="kw">in</span> <span class="ident">operands</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">operand</span>)
-    }
-    <span class="ident">instruction</span>
-}
-
-<span class="comment">//</span>
-<span class="comment">// Mode-Setting Instructions</span>
-<span class="comment">//</span>
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_memory_model</span>(
-    <span class="ident">addressing_model</span>: <span class="ident">spirv</span>::<span class="ident">AddressingModel</span>,
-    <span class="ident">memory_model</span>: <span class="ident">spirv</span>::<span class="ident">MemoryModel</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">MemoryModel</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">addressing_model</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">memory_model</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_entry_point</span>(
-    <span class="ident">execution_model</span>: <span class="ident">spirv</span>::<span class="ident">ExecutionModel</span>,
-    <span class="ident">entry_point_id</span>: <span class="ident">Word</span>,
-    <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-    <span class="ident">interface_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">EntryPoint</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">execution_model</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">entry_point_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operands</span>(<span class="ident">helpers</span>::<span class="ident">string_to_words</span>(<span class="ident">name</span>));
-
-    <span class="kw">for</span> <span class="ident">interface_id</span> <span class="kw">in</span> <span class="ident">interface_ids</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">interface_id</span>);
-    }
-
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_execution_mode</span>(
-    <span class="ident">entry_point_id</span>: <span class="ident">Word</span>,
-    <span class="ident">execution_mode</span>: <span class="ident">spirv</span>::<span class="ident">ExecutionMode</span>,
-    <span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ExecutionMode</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">entry_point_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">execution_mode</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="kw">for</span> <span class="ident">arg</span> <span class="kw">in</span> <span class="ident">args</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">arg</span>);
-    }
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_capability</span>(<span class="ident">capability</span>: <span class="ident">spirv</span>::<span class="ident">Capability</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Capability</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">capability</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="comment">//</span>
-<span class="comment">// Type-Declaration Instructions</span>
-<span class="comment">//</span>
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_type_void</span>(<span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeVoid</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_type_bool</span>(<span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeBool</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_type_int</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">width</span>: <span class="ident">Word</span>, <span class="ident">signedness</span>: <span class="ident">Signedness</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeInt</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">width</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">signedness</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_type_float</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">width</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeFloat</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">width</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_type_vector</span>(
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">component_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">component_count</span>: <span class="kw">crate</span>::<span class="ident">VectorSize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeVector</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">component_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">component_count</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_type_matrix</span>(
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">column_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">column_count</span>: <span class="kw">crate</span>::<span class="ident">VectorSize</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeMatrix</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">column_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">column_count</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_type_image</span>(
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">sampled_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">dim</span>: <span class="ident">spirv</span>::<span class="ident">Dim</span>,
-    <span class="ident">arrayed</span>: <span class="ident">bool</span>,
-    <span class="ident">image_class</span>: <span class="kw">crate</span>::<span class="ident">ImageClass</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeImage</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">sampled_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">dim</span> <span class="kw">as</span> <span class="ident">u32</span>);
-
-    <span class="kw">let</span> (<span class="ident">depth</span>, <span class="ident">multi</span>, <span class="ident">sampled</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">image_class</span> {
-        <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Sampled</span> { <span class="ident">kind</span>: <span class="kw">_</span>, <span class="ident">multi</span> } <span class="op">=</span><span class="op">&gt;</span> (<span class="bool-val">false</span>, <span class="ident">multi</span>, <span class="bool-val">true</span>),
-        <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Depth</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>),
-        <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Storage</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>),
-    };
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">depth</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">arrayed</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">multi</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">sampled</span> <span class="kw">as</span> <span class="ident">u32</span>);
-
-    <span class="kw">let</span> <span class="ident">format</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">image_class</span> {
-        <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Storage</span>(<span class="ident">format</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">format</span> {
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R8</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R8Snorm</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R8ui</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R8i</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R16ui</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R16i</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R16f</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg8</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg8Snorm</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg8ui</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg8i</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R32ui</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R32i</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R32f</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg16ui</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg16i</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg16f</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba8</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba8Snorm</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba8ui</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba8i</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgb10a2Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgb10a2ui</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg11b10Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R11fG11fB10f</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg32ui</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg32i</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg32f</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba16ui</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba16i</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba16f</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba32ui</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba32i</span>,
-            <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba32f</span>,
-        },
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Unknown</span>,
-    };
-
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">format</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_type_sampler</span>(<span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeSampler</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_type_sampled_image</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">image_type_id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeSampledImage</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">image_type_id</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_type_array</span>(
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">element_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">length_id</span>: <span class="ident">Word</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeArray</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">element_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">length_id</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_type_runtime_array</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">element_type_id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeRuntimeArray</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">element_type_id</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_type_struct</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">member_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeStruct</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-
-    <span class="kw">for</span> <span class="ident">member_id</span> <span class="kw">in</span> <span class="ident">member_ids</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">member_id</span>)
-    }
-
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_type_pointer</span>(
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">storage_class</span>: <span class="ident">spirv</span>::<span class="ident">StorageClass</span>,
-    <span class="ident">type_id</span>: <span class="ident">Word</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypePointer</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">storage_class</span> <span class="kw">as</span> <span class="ident">u32</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">type_id</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_type_function</span>(
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">return_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">parameter_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeFunction</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">return_type_id</span>);
-
-    <span class="kw">for</span> <span class="ident">parameter_id</span> <span class="kw">in</span> <span class="ident">parameter_ids</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">parameter_id</span>);
-    }
-
-    <span class="ident">instruction</span>
-}
-
-<span class="comment">//</span>
-<span class="comment">// Constant-Creation Instructions</span>
-<span class="comment">//</span>
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_constant_true</span>(<span class="ident">result_type_id</span>: <span class="ident">Word</span>, <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ConstantTrue</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_constant_false</span>(<span class="ident">result_type_id</span>: <span class="ident">Word</span>, <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ConstantFalse</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_constant</span>(<span class="ident">result_type_id</span>: <span class="ident">Word</span>, <span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">values</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Constant</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-
-    <span class="kw">for</span> <span class="ident">value</span> <span class="kw">in</span> <span class="ident">values</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">value</span>);
-    }
-
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_constant_composite</span>(
-    <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">constituent_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ConstantComposite</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-
-    <span class="kw">for</span> <span class="ident">constituent_id</span> <span class="kw">in</span> <span class="ident">constituent_ids</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">constituent_id</span>);
-    }
-
-    <span class="ident">instruction</span>
-}
-
-<span class="comment">//</span>
-<span class="comment">// Memory Instructions</span>
-<span class="comment">//</span>
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_variable</span>(
-    <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">storage_class</span>: <span class="ident">spirv</span>::<span class="ident">StorageClass</span>,
-    <span class="ident">initializer_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Variable</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">storage_class</span> <span class="kw">as</span> <span class="ident">u32</span>);
-
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">initializer_id</span>) <span class="op">=</span> <span class="ident">initializer_id</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">initializer_id</span>);
-    }
-
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_load</span>(
-    <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">pointer_id</span>: <span class="ident">Word</span>,
-    <span class="ident">memory_access</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv</span>::<span class="ident">MemoryAccess</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Load</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">pointer_id</span>);
-
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">memory_access</span>) <span class="op">=</span> <span class="ident">memory_access</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">memory_access</span>.<span class="ident">bits</span>());
-    }
-
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_store</span>(
-    <span class="ident">pointer_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">object_id</span>: <span class="ident">Word</span>,
-    <span class="ident">memory_access</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv</span>::<span class="ident">MemoryAccess</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Store</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">pointer_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">object_id</span>);
-
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">memory_access</span>) <span class="op">=</span> <span class="ident">memory_access</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">memory_access</span>.<span class="ident">bits</span>());
-    }
-
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_access_chain</span>(
-    <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">base_id</span>: <span class="ident">Word</span>,
-    <span class="ident">index_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">AccessChain</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">base_id</span>);
-
-    <span class="kw">for</span> <span class="ident">index_id</span> <span class="kw">in</span> <span class="ident">index_ids</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">index_id</span>);
-    }
-
-    <span class="ident">instruction</span>
-}
-
-<span class="comment">//</span>
-<span class="comment">// Function Instructions</span>
-<span class="comment">//</span>
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_function</span>(
-    <span class="ident">return_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">function_control</span>: <span class="ident">spirv</span>::<span class="ident">FunctionControl</span>,
-    <span class="ident">function_type_id</span>: <span class="ident">Word</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Function</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">return_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">function_control</span>.<span class="ident">bits</span>());
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">function_type_id</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_function_parameter</span>(<span class="ident">result_type_id</span>: <span class="ident">Word</span>, <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">FunctionParameter</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_function_end</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">FunctionEnd</span>)
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_function_call</span>(
-    <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">function_id</span>: <span class="ident">Word</span>,
-    <span class="ident">argument_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">FunctionCall</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">function_id</span>);
-
-    <span class="kw">for</span> <span class="ident">argument_id</span> <span class="kw">in</span> <span class="ident">argument_ids</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">argument_id</span>);
-    }
-
-    <span class="ident">instruction</span>
-}
-
-<span class="comment">//</span>
-<span class="comment">// Image Instructions</span>
-<span class="comment">//</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_sampled_image</span>(
-    <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">image</span>: <span class="ident">Word</span>,
-    <span class="ident">sampler</span>: <span class="ident">Word</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">SampledImage</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">image</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">sampler</span>);
-    <span class="ident">instruction</span>
-}
-
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum</span> <span class="ident">SampleLod</span> {
     <span class="ident">Explicit</span>,
     <span class="ident">Implicit</span>,
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_image_sample</span>(
-    <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">lod</span>: <span class="ident">SampleLod</span>,
-    <span class="ident">sampled_image</span>: <span class="ident">Word</span>,
-    <span class="ident">coordinates</span>: <span class="ident">Word</span>,
-    <span class="ident">depth_ref</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="ident">op</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">lod</span>, <span class="ident">depth_ref</span>) {
-        (<span class="ident">SampleLod</span>::<span class="ident">Explicit</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Op</span>::<span class="ident">ImageSampleExplicitLod</span>,
-        (<span class="ident">SampleLod</span>::<span class="ident">Implicit</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Op</span>::<span class="ident">ImageSampleImplicitLod</span>,
-        (<span class="ident">SampleLod</span>::<span class="ident">Explicit</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Op</span>::<span class="ident">ImageSampleDrefExplicitLod</span>,
-        (<span class="ident">SampleLod</span>::<span class="ident">Implicit</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Op</span>::<span class="ident">ImageSampleDrefImplicitLod</span>,
-    };
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">Case</span> {
+    <span class="kw">pub</span> <span class="ident">value</span>: <span class="ident">Word</span>,
+    <span class="kw">pub</span> <span class="ident">label_id</span>: <span class="ident">Word</span>,
+}
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">op</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">sampled_image</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">coordinates</span>);
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">dref</span>) <span class="op">=</span> <span class="ident">depth_ref</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">dref</span>);
+<span class="kw">impl</span> <span class="kw">super</span>::<span class="ident">Instruction</span> {
+    <span class="comment">//</span>
+    <span class="comment">//  Debug Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">source</span>(<span class="ident">source_language</span>: <span class="ident">spirv</span>::<span class="ident">SourceLanguage</span>, <span class="ident">version</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Source</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">source_language</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operands</span>(<span class="ident">helpers</span>::<span class="ident">bytes_to_words</span>(<span class="kw-2">&amp;</span><span class="ident">version</span>.<span class="ident">to_le_bytes</span>()));
+        <span class="ident">instruction</span>
     }
 
-    <span class="ident">instruction</span>
-}
-
-<span class="comment">//</span>
-<span class="comment">// Conversion Instructions</span>
-<span class="comment">//</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_unary</span>(
-    <span class="ident">op</span>: <span class="ident">Op</span>,
-    <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">value</span>: <span class="ident">Word</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">op</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">value</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="comment">//</span>
-<span class="comment">// Composite Instructions</span>
-<span class="comment">//</span>
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_composite_construct</span>(
-    <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">constituent_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">CompositeConstruct</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-
-    <span class="kw">for</span> <span class="ident">constituent_id</span> <span class="kw">in</span> <span class="ident">constituent_ids</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">constituent_id</span>);
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">name</span>(<span class="ident">target_id</span>: <span class="ident">Word</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Name</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">target_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operands</span>(<span class="ident">helpers</span>::<span class="ident">string_to_words</span>(<span class="ident">name</span>));
+        <span class="ident">instruction</span>
     }
 
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_composite_extract</span>(
-    <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">composite_id</span>: <span class="ident">Word</span>,
-    <span class="ident">indices</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">CompositeExtract</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">composite_id</span>);
-    <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="ident">indices</span> {
-        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">index</span>);
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">member_name</span>(<span class="ident">target_id</span>: <span class="ident">Word</span>, <span class="ident">member</span>: <span class="ident">Word</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">MemberName</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">target_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">member</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operands</span>(<span class="ident">helpers</span>::<span class="ident">string_to_words</span>(<span class="ident">name</span>));
+        <span class="ident">instruction</span>
     }
 
-    <span class="ident">instruction</span>
+    <span class="comment">//</span>
+    <span class="comment">//  Annotation Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">decorate</span>(
+        <span class="ident">target_id</span>: <span class="ident">Word</span>,
+        <span class="ident">decoration</span>: <span class="ident">spirv</span>::<span class="ident">Decoration</span>,
+        <span class="ident">operands</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Decorate</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">target_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">decoration</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="kw">for</span> <span class="ident">operand</span> <span class="kw">in</span> <span class="ident">operands</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">operand</span>)
+        }
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">member_decorate</span>(
+        <span class="ident">target_id</span>: <span class="ident">Word</span>,
+        <span class="ident">member_index</span>: <span class="ident">Word</span>,
+        <span class="ident">decoration</span>: <span class="ident">spirv</span>::<span class="ident">Decoration</span>,
+        <span class="ident">operands</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">MemberDecorate</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">target_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">member_index</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">decoration</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="kw">for</span> <span class="ident">operand</span> <span class="kw">in</span> <span class="ident">operands</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">operand</span>)
+        }
+        <span class="ident">instruction</span>
+    }
+
+    <span class="comment">//</span>
+    <span class="comment">//  Extension Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">ext_inst_import</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ExtInstImport</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operands</span>(<span class="ident">helpers</span>::<span class="ident">string_to_words</span>(<span class="ident">name</span>));
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">ext_inst</span>(
+        <span class="ident">set_id</span>: <span class="ident">Word</span>,
+        <span class="ident">op</span>: <span class="ident">spirv</span>::<span class="ident">GLOp</span>,
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">operands</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ExtInst</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">set_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">op</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="kw">for</span> <span class="ident">operand</span> <span class="kw">in</span> <span class="ident">operands</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">operand</span>)
+        }
+        <span class="ident">instruction</span>
+    }
+
+    <span class="comment">//</span>
+    <span class="comment">//  Mode-Setting Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">memory_model</span>(
+        <span class="ident">addressing_model</span>: <span class="ident">spirv</span>::<span class="ident">AddressingModel</span>,
+        <span class="ident">memory_model</span>: <span class="ident">spirv</span>::<span class="ident">MemoryModel</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">MemoryModel</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">addressing_model</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">memory_model</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">entry_point</span>(
+        <span class="ident">execution_model</span>: <span class="ident">spirv</span>::<span class="ident">ExecutionModel</span>,
+        <span class="ident">entry_point_id</span>: <span class="ident">Word</span>,
+        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+        <span class="ident">interface_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">EntryPoint</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">execution_model</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">entry_point_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operands</span>(<span class="ident">helpers</span>::<span class="ident">string_to_words</span>(<span class="ident">name</span>));
+
+        <span class="kw">for</span> <span class="ident">interface_id</span> <span class="kw">in</span> <span class="ident">interface_ids</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">interface_id</span>);
+        }
+
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">execution_mode</span>(
+        <span class="ident">entry_point_id</span>: <span class="ident">Word</span>,
+        <span class="ident">execution_mode</span>: <span class="ident">spirv</span>::<span class="ident">ExecutionMode</span>,
+        <span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ExecutionMode</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">entry_point_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">execution_mode</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="kw">for</span> <span class="ident">arg</span> <span class="kw">in</span> <span class="ident">args</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">arg</span>);
+        }
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">capability</span>(<span class="ident">capability</span>: <span class="ident">spirv</span>::<span class="ident">Capability</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Capability</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">capability</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="comment">//</span>
+    <span class="comment">//  Type-Declaration Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">type_void</span>(<span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeVoid</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">type_bool</span>(<span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeBool</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">type_int</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">width</span>: <span class="ident">Word</span>, <span class="ident">signedness</span>: <span class="ident">Signedness</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeInt</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">width</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">signedness</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">type_float</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">width</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeFloat</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">width</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">type_vector</span>(
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">component_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">component_count</span>: <span class="kw">crate</span>::<span class="ident">VectorSize</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeVector</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">component_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">component_count</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">type_matrix</span>(
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">column_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">column_count</span>: <span class="kw">crate</span>::<span class="ident">VectorSize</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeMatrix</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">column_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">column_count</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">type_image</span>(
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">sampled_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">dim</span>: <span class="ident">spirv</span>::<span class="ident">Dim</span>,
+        <span class="ident">arrayed</span>: <span class="ident">bool</span>,
+        <span class="ident">image_class</span>: <span class="kw">crate</span>::<span class="ident">ImageClass</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeImage</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">sampled_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">dim</span> <span class="kw">as</span> <span class="ident">u32</span>);
+
+        <span class="kw">let</span> (<span class="ident">depth</span>, <span class="ident">multi</span>, <span class="ident">sampled</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">image_class</span> {
+            <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Sampled</span> { <span class="ident">kind</span>: <span class="kw">_</span>, <span class="ident">multi</span> } <span class="op">=</span><span class="op">&gt;</span> (<span class="bool-val">false</span>, <span class="ident">multi</span>, <span class="bool-val">true</span>),
+            <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Depth</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>),
+            <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Storage</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>),
+        };
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">depth</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">arrayed</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">multi</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw">if</span> <span class="ident">sampled</span> { <span class="number">1</span> } <span class="kw">else</span> { <span class="number">2</span> });
+
+        <span class="kw">let</span> <span class="ident">format</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">image_class</span> {
+            <span class="kw">crate</span>::<span class="ident">ImageClass</span>::<span class="ident">Storage</span>(<span class="ident">format</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">format</span> {
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R8</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R8Snorm</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R8ui</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R8i</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R16ui</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R16i</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R16f</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg8</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg8Snorm</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg8ui</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg8i</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R32ui</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R32i</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">R32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R32f</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg16ui</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg16i</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg16f</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba8</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba8Snorm</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba8ui</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba8i</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgb10a2Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgb10a2ui</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg11b10Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">R11fG11fB10f</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg32ui</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg32i</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rg32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rg32f</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba16ui</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba16i</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba16f</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba32ui</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba32i</span>,
+                <span class="kw">crate</span>::<span class="ident">StorageFormat</span>::<span class="ident">Rgba32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Rgba32f</span>,
+            },
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv</span>::<span class="ident">ImageFormat</span>::<span class="ident">Unknown</span>,
+        };
+
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">format</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">type_sampler</span>(<span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeSampler</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">type_sampled_image</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">image_type_id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeSampledImage</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">image_type_id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">type_array</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">element_type_id</span>: <span class="ident">Word</span>, <span class="ident">length_id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeArray</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">element_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">length_id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">type_runtime_array</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">element_type_id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeRuntimeArray</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">element_type_id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">type_struct</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">member_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeStruct</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+
+        <span class="kw">for</span> <span class="ident">member_id</span> <span class="kw">in</span> <span class="ident">member_ids</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">member_id</span>)
+        }
+
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">type_pointer</span>(
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">storage_class</span>: <span class="ident">spirv</span>::<span class="ident">StorageClass</span>,
+        <span class="ident">type_id</span>: <span class="ident">Word</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypePointer</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">storage_class</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">type_id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">type_function</span>(<span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">return_type_id</span>: <span class="ident">Word</span>, <span class="ident">parameter_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">TypeFunction</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">return_type_id</span>);
+
+        <span class="kw">for</span> <span class="ident">parameter_id</span> <span class="kw">in</span> <span class="ident">parameter_ids</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">parameter_id</span>);
+        }
+
+        <span class="ident">instruction</span>
+    }
+
+    <span class="comment">//</span>
+    <span class="comment">//  Constant-Creation Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">constant_true</span>(<span class="ident">result_type_id</span>: <span class="ident">Word</span>, <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ConstantTrue</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">constant_false</span>(<span class="ident">result_type_id</span>: <span class="ident">Word</span>, <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ConstantFalse</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">constant</span>(<span class="ident">result_type_id</span>: <span class="ident">Word</span>, <span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">values</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Constant</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+
+        <span class="kw">for</span> <span class="ident">value</span> <span class="kw">in</span> <span class="ident">values</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">value</span>);
+        }
+
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">constant_composite</span>(
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">constituent_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ConstantComposite</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+
+        <span class="kw">for</span> <span class="ident">constituent_id</span> <span class="kw">in</span> <span class="ident">constituent_ids</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">constituent_id</span>);
+        }
+
+        <span class="ident">instruction</span>
+    }
+
+    <span class="comment">//</span>
+    <span class="comment">//  Memory Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">variable</span>(
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">storage_class</span>: <span class="ident">spirv</span>::<span class="ident">StorageClass</span>,
+        <span class="ident">initializer_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Variable</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">storage_class</span> <span class="kw">as</span> <span class="ident">u32</span>);
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">initializer_id</span>) <span class="op">=</span> <span class="ident">initializer_id</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">initializer_id</span>);
+        }
+
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">load</span>(
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">pointer_id</span>: <span class="ident">Word</span>,
+        <span class="ident">memory_access</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv</span>::<span class="ident">MemoryAccess</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Load</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">pointer_id</span>);
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">memory_access</span>) <span class="op">=</span> <span class="ident">memory_access</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">memory_access</span>.<span class="ident">bits</span>());
+        }
+
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">store</span>(
+        <span class="ident">pointer_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">object_id</span>: <span class="ident">Word</span>,
+        <span class="ident">memory_access</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">spirv</span>::<span class="ident">MemoryAccess</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Store</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">pointer_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">object_id</span>);
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">memory_access</span>) <span class="op">=</span> <span class="ident">memory_access</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">memory_access</span>.<span class="ident">bits</span>());
+        }
+
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">access_chain</span>(
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">base_id</span>: <span class="ident">Word</span>,
+        <span class="ident">index_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">AccessChain</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">base_id</span>);
+
+        <span class="kw">for</span> <span class="ident">index_id</span> <span class="kw">in</span> <span class="ident">index_ids</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">index_id</span>);
+        }
+
+        <span class="ident">instruction</span>
+    }
+
+    <span class="comment">//</span>
+    <span class="comment">//  Function Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">function</span>(
+        <span class="ident">return_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">function_control</span>: <span class="ident">spirv</span>::<span class="ident">FunctionControl</span>,
+        <span class="ident">function_type_id</span>: <span class="ident">Word</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Function</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">return_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">function_control</span>.<span class="ident">bits</span>());
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">function_type_id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">function_parameter</span>(<span class="ident">result_type_id</span>: <span class="ident">Word</span>, <span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">FunctionParameter</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">function_end</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">FunctionEnd</span>)
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">function_call</span>(
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">function_id</span>: <span class="ident">Word</span>,
+        <span class="ident">argument_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">FunctionCall</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">function_id</span>);
+
+        <span class="kw">for</span> <span class="ident">argument_id</span> <span class="kw">in</span> <span class="ident">argument_ids</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">argument_id</span>);
+        }
+
+        <span class="ident">instruction</span>
+    }
+
+    <span class="comment">//</span>
+    <span class="comment">//  Image Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">sampled_image</span>(
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">image</span>: <span class="ident">Word</span>,
+        <span class="ident">sampler</span>: <span class="ident">Word</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">SampledImage</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">image</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">sampler</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">image_sample</span>(
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">lod</span>: <span class="ident">SampleLod</span>,
+        <span class="ident">sampled_image</span>: <span class="ident">Word</span>,
+        <span class="ident">coordinates</span>: <span class="ident">Word</span>,
+        <span class="ident">depth_ref</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="ident">op</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">lod</span>, <span class="ident">depth_ref</span>) {
+            (<span class="ident">SampleLod</span>::<span class="ident">Explicit</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Op</span>::<span class="ident">ImageSampleExplicitLod</span>,
+            (<span class="ident">SampleLod</span>::<span class="ident">Implicit</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Op</span>::<span class="ident">ImageSampleImplicitLod</span>,
+            (<span class="ident">SampleLod</span>::<span class="ident">Explicit</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Op</span>::<span class="ident">ImageSampleDrefExplicitLod</span>,
+            (<span class="ident">SampleLod</span>::<span class="ident">Implicit</span>, <span class="prelude-val">Some</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Op</span>::<span class="ident">ImageSampleDrefImplicitLod</span>,
+        };
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">op</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">sampled_image</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">coordinates</span>);
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">dref</span>) <span class="op">=</span> <span class="ident">depth_ref</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">dref</span>);
+        }
+
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">image_read</span>(
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">image</span>: <span class="ident">Word</span>,
+        <span class="ident">coordinates</span>: <span class="ident">Word</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ImageRead</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">image</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">coordinates</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">image_write</span>(<span class="ident">image</span>: <span class="ident">Word</span>, <span class="ident">coordinates</span>: <span class="ident">Word</span>, <span class="ident">value</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ImageWrite</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">image</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">coordinates</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">value</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="comment">//</span>
+    <span class="comment">//  Conversion Instructions</span>
+    <span class="comment">//</span>
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">unary</span>(<span class="ident">op</span>: <span class="ident">Op</span>, <span class="ident">result_type_id</span>: <span class="ident">Word</span>, <span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">value</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">op</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">value</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="comment">//</span>
+    <span class="comment">//  Composite Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">composite_construct</span>(
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">constituent_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">CompositeConstruct</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+
+        <span class="kw">for</span> <span class="ident">constituent_id</span> <span class="kw">in</span> <span class="ident">constituent_ids</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">constituent_id</span>);
+        }
+
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">composite_extract</span>(
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">composite_id</span>: <span class="ident">Word</span>,
+        <span class="ident">indices</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">CompositeExtract</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">composite_id</span>);
+        <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="ident">indices</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="kw-2">*</span><span class="ident">index</span>);
+        }
+
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">vector_extract_dynamic</span>(
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">vector_id</span>: <span class="ident">Word</span>,
+        <span class="ident">index_id</span>: <span class="ident">Word</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">VectorExtractDynamic</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">vector_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">index_id</span>);
+
+        <span class="ident">instruction</span>
+    }
+
+    <span class="comment">//</span>
+    <span class="comment">// Arithmetic Instructions</span>
+    <span class="comment">//</span>
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">binary</span>(
+        <span class="ident">op</span>: <span class="ident">Op</span>,
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">operand_1</span>: <span class="ident">Word</span>,
+        <span class="ident">operand_2</span>: <span class="ident">Word</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">op</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">operand_1</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">operand_2</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="comment">//</span>
+    <span class="comment">// Bit Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="comment">//</span>
+    <span class="comment">// Relational and Logical Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="comment">//</span>
+    <span class="comment">// Derivative Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="comment">//</span>
+    <span class="comment">// Control-Flow Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">selection_merge</span>(
+        <span class="ident">merge_id</span>: <span class="ident">Word</span>,
+        <span class="ident">selection_control</span>: <span class="ident">spirv</span>::<span class="ident">SelectionControl</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">SelectionMerge</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">merge_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">selection_control</span>.<span class="ident">bits</span>());
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">loop_merge</span>(
+        <span class="ident">merge_id</span>: <span class="ident">Word</span>,
+        <span class="ident">continuing_id</span>: <span class="ident">Word</span>,
+        <span class="ident">selection_control</span>: <span class="ident">spirv</span>::<span class="ident">SelectionControl</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">LoopMerge</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">merge_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">continuing_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">selection_control</span>.<span class="ident">bits</span>());
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">label</span>(<span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Label</span>);
+        <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">branch</span>(<span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Branch</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="comment">// TODO Branch Weights not implemented.</span>
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">branch_conditional</span>(
+        <span class="ident">condition_id</span>: <span class="ident">Word</span>,
+        <span class="ident">true_label</span>: <span class="ident">Word</span>,
+        <span class="ident">false_label</span>: <span class="ident">Word</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">BranchConditional</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">condition_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">true_label</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">false_label</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">switch</span>(<span class="ident">selector_id</span>: <span class="ident">Word</span>, <span class="ident">default_id</span>: <span class="ident">Word</span>, <span class="ident">cases</span>: <span class="kw-2">&amp;</span>[<span class="ident">Case</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Switch</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">selector_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">default_id</span>);
+        <span class="kw">for</span> <span class="ident">case</span> <span class="kw">in</span> <span class="ident">cases</span> {
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">case</span>.<span class="ident">value</span>);
+            <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">case</span>.<span class="ident">label_id</span>);
+        }
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">select</span>(
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">id</span>: <span class="ident">Word</span>,
+        <span class="ident">condition_id</span>: <span class="ident">Word</span>,
+        <span class="ident">accept_id</span>: <span class="ident">Word</span>,
+        <span class="ident">reject_id</span>: <span class="ident">Word</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Select</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">result_type_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">condition_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">accept_id</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">reject_id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">kill</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Kill</span>)
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">return_void</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Return</span>)
+    }
+
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">return_value</span>(<span class="ident">value_id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ReturnValue</span>);
+        <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">value_id</span>);
+        <span class="ident">instruction</span>
+    }
+
+    <span class="comment">//</span>
+    <span class="comment">//  Atomic Instructions</span>
+    <span class="comment">//</span>
+
+    <span class="comment">//</span>
+    <span class="comment">//  Primitive Instructions</span>
+    <span class="comment">//</span>
 }
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_vector_extract_dynamic</span>(
-    <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">vector_id</span>: <span class="ident">Word</span>,
-    <span class="ident">index_id</span>: <span class="ident">Word</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">VectorExtractDynamic</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">vector_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">index_id</span>);
-
-    <span class="ident">instruction</span>
-}
-
-<span class="comment">//</span>
-<span class="comment">// Arithmetic Instructions</span>
-<span class="comment">//</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_binary</span>(
-    <span class="ident">op</span>: <span class="ident">Op</span>,
-    <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
-    <span class="ident">id</span>: <span class="ident">Word</span>,
-    <span class="ident">operand_1</span>: <span class="ident">Word</span>,
-    <span class="ident">operand_2</span>: <span class="ident">Word</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">op</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_type</span>(<span class="ident">result_type_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">operand_1</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">operand_2</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="comment">//</span>
-<span class="comment">// Bit Instructions</span>
-<span class="comment">//</span>
-
-<span class="comment">//</span>
-<span class="comment">// Relational and Logical Instructions</span>
-<span class="comment">//</span>
-
-<span class="comment">//</span>
-<span class="comment">// Derivative Instructions</span>
-<span class="comment">//</span>
-
-<span class="comment">//</span>
-<span class="comment">// Control-Flow Instructions</span>
-<span class="comment">//</span>
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_selection_merge</span>(
-    <span class="ident">merge_id</span>: <span class="ident">Word</span>,
-    <span class="ident">selection_control</span>: <span class="ident">spirv</span>::<span class="ident">SelectionControl</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">SelectionMerge</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">merge_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">selection_control</span>.<span class="ident">bits</span>());
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_loop_merge</span>(
-    <span class="ident">merge_id</span>: <span class="ident">Word</span>,
-    <span class="ident">continuing_id</span>: <span class="ident">Word</span>,
-    <span class="ident">selection_control</span>: <span class="ident">spirv</span>::<span class="ident">SelectionControl</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">LoopMerge</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">merge_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">continuing_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">selection_control</span>.<span class="ident">bits</span>());
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_label</span>(<span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Label</span>);
-    <span class="ident">instruction</span>.<span class="ident">set_result</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_branch</span>(<span class="ident">id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Branch</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">id</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="comment">// TODO Branch Weights not implemented.</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_branch_conditional</span>(
-    <span class="ident">condition_id</span>: <span class="ident">Word</span>,
-    <span class="ident">true_label</span>: <span class="ident">Word</span>,
-    <span class="ident">false_label</span>: <span class="ident">Word</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">BranchConditional</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">condition_id</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">true_label</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">false_label</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_kill</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Kill</span>)
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_return</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">Return</span>)
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">instruction_return_value</span>(<span class="ident">value_id</span>: <span class="ident">Word</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instruction</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction</span>::<span class="ident">new</span>(<span class="ident">Op</span>::<span class="ident">ReturnValue</span>);
-    <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">value_id</span>);
-    <span class="ident">instruction</span>
-}
-
-<span class="comment">//</span>
-<span class="comment">// Atomic Instructions</span>
-<span class="comment">//</span>
-
-<span class="comment">//</span>
-<span class="comment">// Primitive Instructions</span>
-<span class="comment">//</span>
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="naga"></div>
     <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script><script defer src="../../../../search-index.js"></script></body></html>

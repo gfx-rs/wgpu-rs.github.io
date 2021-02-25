@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/4f19903/src/front/wgsl/lexer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lexer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/fa7d4d8/src/front/wgsl/lexer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lexer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -353,6 +353,40 @@
 <span id="350">350</span>
 <span id="351">351</span>
 <span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">conv</span>, <span class="ident">Error</span>, <span class="ident">Token</span>};
 
@@ -413,102 +447,99 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">consume_token</span>(<span class="kw-2">mut</span> <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-    <span class="kw">loop</span> {
-        <span class="ident">input</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">trim_start</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">chars</span>();
-        <span class="kw">let</span> <span class="ident">cur</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>,
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> (<span class="ident">Token</span>::<span class="ident">End</span>, <span class="ident">input</span>),
-        };
-        <span class="kw">break</span> <span class="kw">match</span> <span class="ident">cur</span> {
-            <span class="string">&#39;:&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
-                <span class="kw">if</span> <span class="ident">chars</span>.<span class="ident">next</span>() <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="string">&#39;:&#39;</span>) {
-                    (<span class="ident">Token</span>::<span class="ident">DoubleColon</span>, <span class="ident">chars</span>.<span class="ident">as_str</span>())
-                } <span class="kw">else</span> {
-                    (<span class="ident">Token</span>::<span class="ident">Separator</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
-                }
+<span class="kw">fn</span> <span class="ident">consume_token</span>(<span class="kw-2">mut</span> <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">generic</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="ident">str</span>) {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">chars</span>();
+    <span class="kw">let</span> <span class="ident">cur</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
+        <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">c</span>,
+        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> (<span class="ident">Token</span>::<span class="ident">End</span>, <span class="ident">input</span>),
+    };
+    <span class="kw">match</span> <span class="ident">cur</span> {
+        <span class="string">&#39;:&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+            <span class="kw">if</span> <span class="ident">chars</span>.<span class="ident">next</span>() <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="string">&#39;:&#39;</span>) {
+                (<span class="ident">Token</span>::<span class="ident">DoubleColon</span>, <span class="ident">chars</span>.<span class="ident">as_str</span>())
+            } <span class="kw">else</span> {
+                (<span class="ident">Token</span>::<span class="ident">Separator</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
             }
-            <span class="string">&#39;;&#39;</span> <span class="op">|</span> <span class="string">&#39;,&#39;</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">Separator</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
-            <span class="string">&#39;.&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">og_chars</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
-                <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-                    <span class="prelude-val">Some</span>(<span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">consume_number</span>(<span class="ident">input</span>),
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">Separator</span>(<span class="ident">cur</span>), <span class="ident">og_chars</span>),
-                }
+        }
+        <span class="string">&#39;;&#39;</span> <span class="op">|</span> <span class="string">&#39;,&#39;</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">Separator</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
+        <span class="string">&#39;.&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">og_chars</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+            <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
+                <span class="prelude-val">Some</span>(<span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">consume_number</span>(<span class="ident">input</span>),
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">Separator</span>(<span class="ident">cur</span>), <span class="ident">og_chars</span>),
             }
-            <span class="string">&#39;(&#39;</span> <span class="op">|</span> <span class="string">&#39;)&#39;</span> <span class="op">|</span> <span class="string">&#39;{&#39;</span> <span class="op">|</span> <span class="string">&#39;}&#39;</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">Paren</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
-            <span class="string">&#39;&lt;&#39;</span> <span class="op">|</span> <span class="string">&#39;&gt;&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
-                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>();
-                <span class="kw">if</span> <span class="ident">next</span> <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) {
-                    (<span class="ident">Token</span>::<span class="ident">LogicalOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">next</span> <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">cur</span>) {
-                    (<span class="ident">Token</span>::<span class="ident">ShiftOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
-                } <span class="kw">else</span> {
-                    (<span class="ident">Token</span>::<span class="ident">Paren</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
-                }
+        }
+        <span class="string">&#39;(&#39;</span> <span class="op">|</span> <span class="string">&#39;)&#39;</span> <span class="op">|</span> <span class="string">&#39;{&#39;</span> <span class="op">|</span> <span class="string">&#39;}&#39;</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">Paren</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
+        <span class="string">&#39;&lt;&#39;</span> <span class="op">|</span> <span class="string">&#39;&gt;&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+            <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>();
+            <span class="kw">if</span> <span class="ident">next</span> <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">generic</span> {
+                (<span class="ident">Token</span>::<span class="ident">LogicalOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
+            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">next</span> <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">cur</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">generic</span> {
+                (<span class="ident">Token</span>::<span class="ident">ShiftOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
+            } <span class="kw">else</span> {
+                (<span class="ident">Token</span>::<span class="ident">Paren</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
             }
-            <span class="string">&#39;[&#39;</span> <span class="op">|</span> <span class="string">&#39;]&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
-                <span class="kw">if</span> <span class="ident">chars</span>.<span class="ident">next</span>() <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">cur</span>) {
-                    (<span class="ident">Token</span>::<span class="ident">DoubleParen</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
-                } <span class="kw">else</span> {
-                    (<span class="ident">Token</span>::<span class="ident">Paren</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
-                }
+        }
+        <span class="string">&#39;[&#39;</span> <span class="op">|</span> <span class="string">&#39;]&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+            <span class="kw">if</span> <span class="ident">chars</span>.<span class="ident">next</span>() <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">cur</span>) {
+                (<span class="ident">Token</span>::<span class="ident">DoubleParen</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
+            } <span class="kw">else</span> {
+                (<span class="ident">Token</span>::<span class="ident">Paren</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
             }
-            <span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">consume_number</span>(<span class="ident">input</span>),
-            <span class="string">&#39;a&#39;</span>..<span class="op">=</span><span class="string">&#39;z&#39;</span> <span class="op">|</span> <span class="string">&#39;A&#39;</span>..<span class="op">=</span><span class="string">&#39;Z&#39;</span> <span class="op">|</span> <span class="string">&#39;_&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> (<span class="ident">word</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="ident">consume_any</span>(<span class="ident">input</span>, <span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">is_ascii_alphanumeric</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="string">&#39;_&#39;</span>);
-                (<span class="ident">Token</span>::<span class="ident">Word</span>(<span class="ident">word</span>), <span class="ident">rest</span>)
-            }
-            <span class="string">&#39;&quot;&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>().<span class="ident">splitn</span>(<span class="number">2</span>, <span class="string">&#39;&quot;&#39;</span>);
+        }
+        <span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">consume_number</span>(<span class="ident">input</span>),
+        <span class="string">&#39;a&#39;</span>..<span class="op">=</span><span class="string">&#39;z&#39;</span> <span class="op">|</span> <span class="string">&#39;A&#39;</span>..<span class="op">=</span><span class="string">&#39;Z&#39;</span> <span class="op">|</span> <span class="string">&#39;_&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> (<span class="ident">word</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="ident">consume_any</span>(<span class="ident">input</span>, <span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">is_ascii_alphanumeric</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="string">&#39;_&#39;</span>);
+            (<span class="ident">Token</span>::<span class="ident">Word</span>(<span class="ident">word</span>), <span class="ident">rest</span>)
+        }
+        <span class="string">&#39;&quot;&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>().<span class="ident">splitn</span>(<span class="number">2</span>, <span class="string">&#39;&quot;&#39;</span>);
 
-                <span class="comment">// splitn returns an iterator with at least one element, so unwrapping is fine</span>
-                <span class="kw">let</span> <span class="ident">quote_content</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>();
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">rest</span>) <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">next</span>() {
-                    (<span class="ident">Token</span>::<span class="ident">String</span>(<span class="ident">quote_content</span>), <span class="ident">rest</span>)
-                } <span class="kw">else</span> {
-                    (<span class="ident">Token</span>::<span class="ident">UnterminatedString</span>, <span class="ident">quote_content</span>)
-                }
+            <span class="comment">// splitn returns an iterator with at least one element, so unwrapping is fine</span>
+            <span class="kw">let</span> <span class="ident">quote_content</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>();
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">rest</span>) <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">next</span>() {
+                (<span class="ident">Token</span>::<span class="ident">String</span>(<span class="ident">quote_content</span>), <span class="ident">rest</span>)
+            } <span class="kw">else</span> {
+                (<span class="ident">Token</span>::<span class="ident">UnterminatedString</span>, <span class="ident">quote_content</span>)
             }
-            <span class="string">&#39;/&#39;</span> <span class="kw">if</span> <span class="ident">chars</span>.<span class="ident">as_str</span>().<span class="ident">starts_with</span>(<span class="string">&#39;/&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">position</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="string">&#39;\n&#39;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="string">&#39;\r&#39;</span>) {
-                    <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
-                        <span class="kw">continue</span>;
-                    }
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">End</span>, <span class="ident">chars</span>.<span class="ident">as_str</span>()),
-                }
+        }
+        <span class="string">&#39;/&#39;</span> <span class="kw">if</span> <span class="ident">chars</span>.<span class="ident">as_str</span>().<span class="ident">starts_with</span>(<span class="string">&#39;/&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">position</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="string">&#39;\n&#39;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="string">&#39;\r&#39;</span>);
+            (<span class="ident">Token</span>::<span class="ident">Trivia</span>, <span class="ident">chars</span>.<span class="ident">as_str</span>())
+        }
+        <span class="string">&#39;-&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> <span class="ident">og_chars</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+            <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
+                <span class="prelude-val">Some</span>(<span class="string">&#39;&gt;&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">Arrow</span>, <span class="ident">chars</span>.<span class="ident">as_str</span>()),
+                <span class="prelude-val">Some</span>(<span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">&#39;.&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">consume_number</span>(<span class="ident">input</span>),
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">Operation</span>(<span class="ident">cur</span>), <span class="ident">og_chars</span>),
             }
-            <span class="string">&#39;-&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">og_chars</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
-                <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
-                    <span class="prelude-val">Some</span>(<span class="string">&#39;&gt;&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">Arrow</span>, <span class="ident">chars</span>.<span class="ident">as_str</span>()),
-                    <span class="prelude-val">Some</span>(<span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">&#39;.&#39;</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">consume_number</span>(<span class="ident">input</span>),
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">Operation</span>(<span class="ident">cur</span>), <span class="ident">og_chars</span>),
-                }
+        }
+        <span class="string">&#39;+&#39;</span> <span class="op">|</span> <span class="string">&#39;*&#39;</span> <span class="op">|</span> <span class="string">&#39;/&#39;</span> <span class="op">|</span> <span class="string">&#39;%&#39;</span> <span class="op">|</span> <span class="string">&#39;^&#39;</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">Operation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
+        <span class="string">&#39;!&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+            <span class="kw">if</span> <span class="ident">chars</span>.<span class="ident">next</span>() <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) {
+                (<span class="ident">Token</span>::<span class="ident">LogicalOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
+            } <span class="kw">else</span> {
+                (<span class="ident">Token</span>::<span class="ident">Operation</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
             }
-            <span class="string">&#39;+&#39;</span> <span class="op">|</span> <span class="string">&#39;*&#39;</span> <span class="op">|</span> <span class="string">&#39;/&#39;</span> <span class="op">|</span> <span class="string">&#39;%&#39;</span> <span class="op">|</span> <span class="string">&#39;^&#39;</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">Operation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
-            <span class="string">&#39;!&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="ident">chars</span>.<span class="ident">next</span>() <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) {
-                    (<span class="ident">Token</span>::<span class="ident">LogicalOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
-                } <span class="kw">else</span> {
-                    (<span class="ident">Token</span>::<span class="ident">Operation</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
-                }
+        }
+        <span class="string">&#39;=&#39;</span> <span class="op">|</span> <span class="string">&#39;&amp;&#39;</span> <span class="op">|</span> <span class="string">&#39;|&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+            <span class="kw">if</span> <span class="ident">chars</span>.<span class="ident">next</span>() <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">cur</span>) {
+                (<span class="ident">Token</span>::<span class="ident">LogicalOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
+            } <span class="kw">else</span> {
+                (<span class="ident">Token</span>::<span class="ident">Operation</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
             }
-            <span class="string">&#39;=&#39;</span> <span class="op">|</span> <span class="string">&#39;&amp;&#39;</span> <span class="op">|</span> <span class="string">&#39;|&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
-                <span class="kw">if</span> <span class="ident">chars</span>.<span class="ident">next</span>() <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">cur</span>) {
-                    (<span class="ident">Token</span>::<span class="ident">LogicalOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
-                } <span class="kw">else</span> {
-                    (<span class="ident">Token</span>::<span class="ident">Operation</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
-                }
-            }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">Unknown</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
-        };
+        }
+        <span class="string">&#39; &#39;</span> <span class="op">|</span> <span class="string">&#39;\n&#39;</span> <span class="op">|</span> <span class="string">&#39;\r&#39;</span> <span class="op">|</span> <span class="string">&#39;\t&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="ident">consume_any</span>(<span class="ident">input</span>, <span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="string">&#39; &#39;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="string">&#39;\n&#39;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="string">&#39;\r&#39;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="string">&#39;\t&#39;</span>);
+            (<span class="ident">Token</span>::<span class="ident">Trivia</span>, <span class="ident">rest</span>)
+        }
+        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Token</span>::<span class="ident">Unknown</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
     }
 }
 
@@ -522,16 +553,43 @@
         <span class="ident">Lexer</span> { <span class="ident">input</span> }
     }
 
+    <span class="kw">fn</span> <span class="ident">peek_token_and_rest</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>) {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cloned</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>();
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">cloned</span>.<span class="ident">next</span>();
+        <span class="kw">let</span> <span class="ident">rest</span> <span class="op">=</span> <span class="ident">cloned</span>.<span class="ident">input</span>;
+        (<span class="ident">token</span>, <span class="ident">rest</span>)
+    }
+
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> (<span class="ident">token</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="ident">consume_token</span>(<span class="self">self</span>.<span class="ident">input</span>);
-        <span class="self">self</span>.<span class="ident">input</span> <span class="op">=</span> <span class="ident">rest</span>;
-        <span class="ident">token</span>
+        <span class="kw">let</span> <span class="ident">original_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">input</span>.<span class="ident">len</span>();
+        <span class="kw">loop</span> {
+            <span class="kw">let</span> (<span class="ident">token</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="ident">consume_token</span>(<span class="self">self</span>.<span class="ident">input</span>, <span class="bool-val">false</span>);
+            <span class="self">self</span>.<span class="ident">input</span> <span class="op">=</span> <span class="ident">rest</span>;
+            <span class="kw">if</span> <span class="ident">token</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Token</span>::<span class="ident">Trivia</span> {
+                <span class="kw">let</span> <span class="ident">_bytes_read</span> <span class="op">=</span> <span class="ident">original_len</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">input</span>.<span class="ident">len</span>();
+                <span class="kw">return</span> <span class="ident">token</span>;
+            }
+        }
+    }
+
+    <span class="attribute">#[<span class="ident">must_use</span>]</span>
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">next_generic</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">original_len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">input</span>.<span class="ident">len</span>();
+        <span class="kw">loop</span> {
+            <span class="kw">let</span> (<span class="ident">token</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="ident">consume_token</span>(<span class="self">self</span>.<span class="ident">input</span>, <span class="bool-val">true</span>);
+            <span class="self">self</span>.<span class="ident">input</span> <span class="op">=</span> <span class="ident">rest</span>;
+            <span class="kw">if</span> <span class="ident">token</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Token</span>::<span class="ident">Trivia</span> {
+                <span class="kw">let</span> <span class="ident">_bytes_read</span> <span class="op">=</span> <span class="ident">original_len</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">input</span>.<span class="ident">len</span>();
+                <span class="kw">return</span> <span class="ident">token</span>;
+            }
+        }
     }
 
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">peek</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">clone</span>().<span class="ident">next</span>()
+        <span class="kw">let</span> (<span class="ident">token</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">peek_token_and_rest</span>();
+        <span class="ident">token</span>
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">expect</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">expected</span>: <span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> {
@@ -553,15 +611,25 @@
                 <span class="ident">Token</span>::<span class="ident">Arrow</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;-&gt;&quot;</span>,
                 <span class="ident">Token</span>::<span class="ident">Unknown</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;unknown&quot;</span>,
                 <span class="ident">Token</span>::<span class="ident">UnterminatedString</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;string&quot;</span>,
+                <span class="ident">Token</span>::<span class="ident">Trivia</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;trivia&quot;</span>,
                 <span class="ident">Token</span>::<span class="ident">End</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;&quot;</span>,
             };
             <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">Unexpected</span>(<span class="ident">token</span>, <span class="ident">description</span>))
         }
     }
 
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">expect_generic_paren</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">expected</span>: <span class="ident">char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">token</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_generic</span>();
+        <span class="kw">if</span> <span class="ident">token</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Token</span>::<span class="ident">Paren</span>(<span class="ident">expected</span>) {
+            <span class="prelude-val">Ok</span>(())
+        } <span class="kw">else</span> {
+            <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">Unexpected</span>(<span class="ident">token</span>, <span class="string">&quot;paren&quot;</span>))
+        }
+    }
+
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">skip</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">what</span>: <span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">let</span> (<span class="ident">token</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="ident">consume_token</span>(<span class="self">self</span>.<span class="ident">input</span>);
-        <span class="kw">if</span> <span class="ident">token</span> <span class="op">=</span><span class="op">=</span> <span class="ident">what</span> {
+        <span class="kw">let</span> (<span class="ident">peeked_token</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">peek_token_and_rest</span>();
+        <span class="kw">if</span> <span class="ident">peeked_token</span> <span class="op">=</span><span class="op">=</span> <span class="ident">what</span> {
             <span class="self">self</span>.<span class="ident">input</span> <span class="op">=</span> <span class="ident">rest</span>;
             <span class="bool-val">true</span>
         } <span class="kw">else</span> {
@@ -604,10 +672,10 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">next_scalar_generic</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="kw">crate</span>::<span class="ident">ScalarKind</span>, <span class="kw">crate</span>::<span class="ident">Bytes</span>), <span class="ident">Error</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">expect</span>(<span class="ident">Token</span>::<span class="ident">Paren</span>(<span class="string">&#39;&lt;&#39;</span>))<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">expect_generic_paren</span>(<span class="string">&#39;&lt;&#39;</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">word</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next_ident</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">pair</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">get_scalar_type</span>(<span class="ident">word</span>).<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="ident">UnknownScalarType</span>(<span class="ident">word</span>))<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">expect</span>(<span class="ident">Token</span>::<span class="ident">Paren</span>(<span class="string">&#39;&gt;&#39;</span>))<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">expect_generic_paren</span>(<span class="string">&#39;&gt;&#39;</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">pair</span>)
     }
 

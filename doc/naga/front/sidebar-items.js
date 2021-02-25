@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["GENERATOR",""]],"mod":[["spv","SPIR-V frontend"],["wgsl","Front end for consuming WebGPU Shading Language."]]});
+initSidebarItems({"mod":[["spv","SPIR-V frontend"],["wgsl","Front end for consuming WebGPU Shading Language."]]});

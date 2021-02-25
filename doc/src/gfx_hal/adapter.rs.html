@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/f29dcc7/src/hal/src/adapter.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>adapter.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/a76e687/src/hal/src/adapter.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>adapter.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../gfx_hal/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -178,9 +178,6 @@
 <span id="175">175</span>
 <span id="176">176</span>
 <span id="177">177</span>
-<span id="178">178</span>
-<span id="179">179</span>
-<span id="180">180</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Physical graphics devices.</span>
 <span class="doccomment">//!</span>
@@ -195,7 +192,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">device</span>, <span class="ident">format</span>, <span class="ident">image</span>, <span class="ident">memory</span>,
     <span class="ident">queue</span>::{<span class="ident">QueueGroup</span>, <span class="ident">QueuePriority</span>},
-    <span class="ident">Backend</span>, <span class="ident">Capabilities</span>, <span class="ident">Features</span>, <span class="ident">Limits</span>,
+    <span class="ident">Backend</span>, <span class="ident">Features</span>, <span class="ident">PhysicalDeviceProperties</span>,
 };
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">any</span>::<span class="ident">Any</span>, <span class="ident">fmt</span>};
@@ -303,12 +300,9 @@
     <span class="doccomment">/// used, as well as the actual platform underneath.</span>
     <span class="kw">fn</span> <span class="ident">features</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Features</span>;
 
-    <span class="doccomment">/// Returns the capabilities of this `PhysicalDevice`. Similarly to `Features`, they</span>
+    <span class="doccomment">/// Returns the properties of this `PhysicalDevice`. Similarly to `Features`, they</span>
     <span class="comment">// depend on the platform, but unlike features, these are immutable and can&#39;t be switched on.</span>
-    <span class="kw">fn</span> <span class="ident">capabilities</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Capabilities</span>;
-
-    <span class="doccomment">/// Returns the resource limits of this `PhysicalDevice`.</span>
-    <span class="kw">fn</span> <span class="ident">limits</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Limits</span>;
+    <span class="kw">fn</span> <span class="ident">properties</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PhysicalDeviceProperties</span>;
 
     <span class="doccomment">/// Check cache compatibility with the `PhysicalDevice`.</span>
     <span class="kw">fn</span> <span class="ident">is_valid_cache</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_cache</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/05a5311/wgpu-core/src/instance.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>instance.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/2d0142a/wgpu-core/src/instance.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>instance.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu">&#9776;</div><a href='../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -928,11 +928,6 @@
 <span id="925">925</span>
 <span id="926">926</span>
 <span id="927">927</span>
-<span id="928">928</span>
-<span id="929">929</span>
-<span id="930">930</span>
-<span id="931">931</span>
-<span id="932">932</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -1066,7 +1061,7 @@
         <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Adapter::new&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">adapter_features</span> <span class="op">=</span> <span class="ident">raw</span>.<span class="ident">physical_device</span>.<span class="ident">features</span>();
-        <span class="kw">let</span> <span class="ident">adapter_limits</span> <span class="op">=</span> <span class="ident">raw</span>.<span class="ident">physical_device</span>.<span class="ident">limits</span>();
+        <span class="kw">let</span> <span class="ident">properties</span> <span class="op">=</span> <span class="ident">raw</span>.<span class="ident">physical_device</span>.<span class="ident">properties</span>();
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">default</span>()
             <span class="op">|</span> <span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">MAPPABLE_PRIMARY_BUFFERS</span>
@@ -1118,7 +1113,7 @@
         );
         <span class="ident">features</span>.<span class="ident">set</span>(
             <span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">TIMESTAMP_QUERY</span>,
-            <span class="ident">adapter_limits</span>.<span class="ident">timestamp_compute_and_graphics</span>,
+            <span class="ident">properties</span>.<span class="ident">limits</span>.<span class="ident">timestamp_compute_and_graphics</span>,
         );
         <span class="ident">features</span>.<span class="ident">set</span>(
             <span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">PIPELINE_STATISTICS_QUERY</span>,
@@ -1151,40 +1146,35 @@
         <span class="comment">// All these casts to u32 are safe as the underlying vulkan types are u32s.</span>
         <span class="comment">// If another backend provides larger limits than u32, we need to clamp them to u32::MAX.</span>
         <span class="comment">// TODO: fix all gfx-hal backends to produce limits we care about, and remove .max</span>
+        <span class="kw">let</span> <span class="ident">desc_limits</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">properties</span>.<span class="ident">limits</span>.<span class="ident">descriptor_limits</span>;
         <span class="kw">let</span> <span class="ident">limits</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">Limits</span> {
-            <span class="ident">max_bind_groups</span>: (<span class="ident">adapter_limits</span>.<span class="ident">max_bound_descriptor_sets</span> <span class="kw">as</span> <span class="ident">u32</span>)
+            <span class="ident">max_bind_groups</span>: (<span class="ident">properties</span>.<span class="ident">limits</span>.<span class="ident">max_bound_descriptor_sets</span> <span class="kw">as</span> <span class="ident">u32</span>)
                 .<span class="ident">min</span>(<span class="ident">MAX_BIND_GROUPS</span> <span class="kw">as</span> <span class="ident">u32</span>)
                 .<span class="ident">max</span>(<span class="ident">default_limits</span>.<span class="ident">max_bind_groups</span>),
-            <span class="ident">max_dynamic_uniform_buffers_per_pipeline_layout</span>: (<span class="ident">adapter_limits</span>
+            <span class="ident">max_dynamic_uniform_buffers_per_pipeline_layout</span>: <span class="ident">desc_limits</span>
                 .<span class="ident">max_descriptor_set_uniform_buffers_dynamic</span>
-                <span class="kw">as</span> <span class="ident">u32</span>)
                 .<span class="ident">max</span>(<span class="ident">default_limits</span>.<span class="ident">max_dynamic_uniform_buffers_per_pipeline_layout</span>),
-            <span class="ident">max_dynamic_storage_buffers_per_pipeline_layout</span>: (<span class="ident">adapter_limits</span>
+            <span class="ident">max_dynamic_storage_buffers_per_pipeline_layout</span>: <span class="ident">desc_limits</span>
                 .<span class="ident">max_descriptor_set_storage_buffers_dynamic</span>
-                <span class="kw">as</span> <span class="ident">u32</span>)
                 .<span class="ident">max</span>(<span class="ident">default_limits</span>.<span class="ident">max_dynamic_storage_buffers_per_pipeline_layout</span>),
-            <span class="ident">max_sampled_textures_per_shader_stage</span>: (<span class="ident">adapter_limits</span>
+            <span class="ident">max_sampled_textures_per_shader_stage</span>: <span class="ident">desc_limits</span>
                 .<span class="ident">max_per_stage_descriptor_sampled_images</span>
-                <span class="kw">as</span> <span class="ident">u32</span>)
                 .<span class="ident">max</span>(<span class="ident">default_limits</span>.<span class="ident">max_sampled_textures_per_shader_stage</span>),
-            <span class="ident">max_samplers_per_shader_stage</span>: (<span class="ident">adapter_limits</span>.<span class="ident">max_per_stage_descriptor_samplers</span>
-                <span class="kw">as</span> <span class="ident">u32</span>)
+            <span class="ident">max_samplers_per_shader_stage</span>: <span class="ident">desc_limits</span>
+                .<span class="ident">max_per_stage_descriptor_samplers</span>
                 .<span class="ident">max</span>(<span class="ident">default_limits</span>.<span class="ident">max_samplers_per_shader_stage</span>),
-            <span class="ident">max_storage_buffers_per_shader_stage</span>: (<span class="ident">adapter_limits</span>
+            <span class="ident">max_storage_buffers_per_shader_stage</span>: <span class="ident">desc_limits</span>
                 .<span class="ident">max_per_stage_descriptor_storage_buffers</span>
-                <span class="kw">as</span> <span class="ident">u32</span>)
                 .<span class="ident">max</span>(<span class="ident">default_limits</span>.<span class="ident">max_storage_buffers_per_shader_stage</span>),
-            <span class="ident">max_storage_textures_per_shader_stage</span>: (<span class="ident">adapter_limits</span>
+            <span class="ident">max_storage_textures_per_shader_stage</span>: <span class="ident">desc_limits</span>
                 .<span class="ident">max_per_stage_descriptor_storage_images</span>
-                <span class="kw">as</span> <span class="ident">u32</span>)
                 .<span class="ident">max</span>(<span class="ident">default_limits</span>.<span class="ident">max_storage_textures_per_shader_stage</span>),
-            <span class="ident">max_uniform_buffers_per_shader_stage</span>: (<span class="ident">adapter_limits</span>
+            <span class="ident">max_uniform_buffers_per_shader_stage</span>: <span class="ident">desc_limits</span>
                 .<span class="ident">max_per_stage_descriptor_uniform_buffers</span>
-                <span class="kw">as</span> <span class="ident">u32</span>)
                 .<span class="ident">max</span>(<span class="ident">default_limits</span>.<span class="ident">max_uniform_buffers_per_shader_stage</span>),
-            <span class="ident">max_uniform_buffer_binding_size</span>: (<span class="ident">adapter_limits</span>.<span class="ident">max_uniform_buffer_range</span> <span class="kw">as</span> <span class="ident">u32</span>)
+            <span class="ident">max_uniform_buffer_binding_size</span>: (<span class="ident">properties</span>.<span class="ident">limits</span>.<span class="ident">max_uniform_buffer_range</span> <span class="kw">as</span> <span class="ident">u32</span>)
                 .<span class="ident">max</span>(<span class="ident">default_limits</span>.<span class="ident">max_uniform_buffer_binding_size</span>),
-            <span class="ident">max_push_constant_size</span>: (<span class="ident">adapter_limits</span>.<span class="ident">max_push_constants_size</span> <span class="kw">as</span> <span class="ident">u32</span>)
+            <span class="ident">max_push_constant_size</span>: (<span class="ident">properties</span>.<span class="ident">limits</span>.<span class="ident">max_push_constants_size</span> <span class="kw">as</span> <span class="ident">u32</span>)
                 .<span class="ident">max</span>(<span class="ident">MIN_PUSH_CONSTANT_SIZE</span>), <span class="comment">// As an extension, the default is always 0, so define a separate minimum.</span>
         };
 
@@ -1401,7 +1391,7 @@
             <span class="comment">//TODO</span>
         }
 
-        <span class="kw">let</span> <span class="ident">limits</span> <span class="op">=</span> <span class="ident">phd</span>.<span class="ident">limits</span>();
+        <span class="kw">let</span> <span class="ident">limits</span> <span class="op">=</span> <span class="ident">phd</span>.<span class="ident">properties</span>().<span class="ident">limits</span>;
         <span class="macro">assert_eq</span><span class="macro">!</span>(
             <span class="number">0</span>,
             <span class="ident">BIND_BUFFER_ALIGNMENT</span> <span class="op">%</span> <span class="ident">limits</span>.<span class="ident">min_storage_buffer_offset_alignment</span>,
