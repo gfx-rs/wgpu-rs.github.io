@@ -1928,6 +1928,7 @@
 <span id="1925">1925</span>
 <span id="1926">1926</span>
 <span id="1927">1927</span>
+<span id="1928">1928</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">backend</span>::{<span class="ident">error</span>::<span class="ident">ContextError</span>, <span class="ident">native_gpu_future</span>},
@@ -2655,11 +2656,12 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">adapter</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">AdapterId</span>,
         <span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">SurfaceId</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TextureFormat</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TextureFormat</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">match</span> <span class="ident">wgc</span>::<span class="macro">gfx_select</span><span class="macro">!</span>(<span class="ident">adapter</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">global</span>.<span class="ident">adapter_get_swap_chain_preferred_format</span>(<span class="kw-2">*</span><span class="ident">adapter</span>, <span class="kw-2">*</span><span class="ident">surface</span>))
         {
-            <span class="prelude-val">Ok</span>(<span class="ident">swap_chain_preferred_format</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">swap_chain_preferred_format</span>,
+            <span class="prelude-val">Ok</span>(<span class="ident">swap_chain_preferred_format</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">swap_chain_preferred_format</span>),
+            <span class="prelude-val">Err</span>(<span class="ident">wgc</span>::<span class="ident">instance</span>::<span class="ident">GetSwapChainPreferredFormatError</span>::<span class="ident">UnsupportedQueueFamily</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
             <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">handle_error_fatal</span>(<span class="ident">err</span>, <span class="string">&quot;Adapter::get_swap_chain_preferred_format&quot;</span>),
         }
     }
