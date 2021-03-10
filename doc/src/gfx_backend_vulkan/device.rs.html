@@ -1,7 +1,7 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/0a201d1/src/backend/vulkan/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/cd96e77/src/backend/vulkan/src/device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
-<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../gfx_backend_vulkan/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
-                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
+<link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../gfx_backend_vulkan/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
+                <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
 <span id="3">   3</span>
 <span id="4">   4</span>
@@ -1984,6 +1984,9 @@
 <span id="1981">1981</span>
 <span id="1982">1982</span>
 <span id="1983">1983</span>
+<span id="1984">1984</span>
+<span id="1985">1985</span>
+<span id="1986">1986</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">arrayvec</span>::<span class="ident">ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">extensions</span>::<span class="ident">khr</span>, <span class="ident">version</span>::<span class="ident">DeviceV1_0</span>, <span class="ident">vk</span>};
@@ -1991,6 +1994,7 @@
 <span class="kw">use</span> <span class="ident">smallvec</span>::<span class="ident">SmallVec</span>;
 
 <span class="kw">use</span> <span class="ident">hal</span>::{
+    <span class="ident">memory</span>,
     <span class="ident">memory</span>::{<span class="ident">Requirements</span>, <span class="ident">Segment</span>},
     <span class="ident">pool</span>::<span class="ident">CommandPoolCreateFlags</span>,
     <span class="ident">pso</span>::<span class="ident">VertexInputRate</span>,
@@ -2992,9 +2996,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">size</span>: <span class="ident">u64</span>,
         <span class="ident">usage</span>: <span class="ident">buffer</span>::<span class="ident">Usage</span>,
+        <span class="ident">sparse</span>: <span class="ident">memory</span>::<span class="ident">SparseFlags</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">Buffer</span>, <span class="ident">buffer</span>::<span class="ident">CreationError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">BufferCreateInfo</span>::<span class="ident">builder</span>()
-            .<span class="ident">flags</span>(<span class="ident">vk</span>::<span class="ident">BufferCreateFlags</span>::<span class="ident">empty</span>()) <span class="comment">// TODO:</span>
+            .<span class="ident">flags</span>(<span class="ident">conv</span>::<span class="ident">map_buffer_create_flags</span>(<span class="ident">sparse</span>))
             .<span class="ident">size</span>(<span class="ident">size</span>)
             .<span class="ident">usage</span>(<span class="ident">conv</span>::<span class="ident">map_buffer_usage</span>(<span class="ident">usage</span>))
             .<span class="ident">sharing_mode</span>(<span class="ident">vk</span>::<span class="ident">SharingMode</span>::<span class="ident">EXCLUSIVE</span>); <span class="comment">// TODO:</span>
@@ -3068,9 +3073,10 @@
         <span class="ident">format</span>: <span class="ident">format</span>::<span class="ident">Format</span>,
         <span class="ident">tiling</span>: <span class="ident">image</span>::<span class="ident">Tiling</span>,
         <span class="ident">usage</span>: <span class="ident">image</span>::<span class="ident">Usage</span>,
+        <span class="ident">sparse</span>: <span class="ident">memory</span>::<span class="ident">SparseFlags</span>,
         <span class="ident">view_caps</span>: <span class="ident">image</span>::<span class="ident">ViewCapabilities</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">n</span>::<span class="ident">Image</span>, <span class="ident">image</span>::<span class="ident">CreationError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">map_view_capabilities</span>(<span class="ident">view_caps</span>);
+        <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">map_view_capabilities_sparse</span>(<span class="ident">sparse</span>, <span class="ident">view_caps</span>);
         <span class="kw">let</span> <span class="ident">extent</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">map_extent</span>(<span class="ident">kind</span>.<span class="ident">extent</span>());
         <span class="kw">let</span> <span class="ident">array_layers</span> <span class="op">=</span> <span class="ident">kind</span>.<span class="ident">num_layers</span>();
         <span class="kw">let</span> <span class="ident">samples</span> <span class="op">=</span> <span class="ident">kind</span>.<span class="ident">num_samples</span>();
@@ -3969,5 +3975,5 @@
     <span class="ident">foo</span>::<span class="op">&lt;</span><span class="kw">super</span>::<span class="ident">Device</span><span class="op">&gt;</span>()
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="gfx_backend_vulkan"></div>
-    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script><script defer src="../../search-index.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="gfx_backend_vulkan" data-search-js="../../search-index.js"></div>
+    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

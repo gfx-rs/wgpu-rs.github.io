@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["AnalysisError",""]],"struct":[["Analysis",""],["ControlFlags",""],["ExpressionInfo",""],["FunctionInfo",""],["GlobalUse","Indicates how a global variable is used."],["SamplingKey",""]]});
+initSidebarItems({"enum":[["AnalysisError",""],["UniformityDisruptor","Disruptor of the uniform control flow."]],"struct":[["Analysis",""],["ExpressionInfo",""],["FunctionInfo",""],["GlobalUse","Indicates how a global variable is used."],["SamplingKey",""],["Uniformity","Uniform control flow characteristics."]]});
