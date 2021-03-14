@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/f5ee791/src/proc/analyzer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>analyzer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/32a1175/src/proc/analyzer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>analyzer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -772,6 +772,118 @@
 <span id="769">769</span>
 <span id="770">770</span>
 <span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">/*! Module analyzer.
 
@@ -783,6 +895,19 @@ Figures out the following properties:
 
 <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">arena</span>::{<span class="ident">Arena</span>, <span class="ident">Handle</span>};
 <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>;
+
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">NonUniformResult</span> <span class="op">=</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+
+<span class="doccomment">/// Expressions that require uniform control flow.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">test</span>, <span class="ident">derive</span>(<span class="ident">PartialEq</span>))]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">UniformityRequirement</span> {
+    <span class="ident">WorkGroupBarrier</span>,
+    <span class="ident">Derivative</span>,
+    <span class="ident">ImplicitLevel</span>,
+}
 
 <span class="doccomment">/// Uniform control flow characteristics.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
@@ -801,52 +926,18 @@ Figures out the following properties:
     <span class="doccomment">/// and process all branches of the control flow.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Any operations that depend on non-uniform results also produce non-uniform.</span>
-    <span class="ident">non_uniform_result</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// A child expression that requires uniform control flow.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Some operations can only be done within uniform control flow:</span>
-    <span class="doccomment">/// derivatives and auto-level image sampling in fragment shaders,</span>
-    <span class="doccomment">/// and group barriers in compute shaders.</span>
-    <span class="ident">require_uniform</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-}
-
-<span class="comment">//TODO: instead of doing cur | next, we could reverse this everywhere</span>
-<span class="comment">// and do `next | cur`, which would allow us to trace the cause of</span>
-<span class="comment">// uniformity requirement/disruption across the expression chain.</span>
-
-<span class="kw">impl</span> <span class="ident">ops</span>::<span class="ident">BitOr</span> <span class="kw">for</span> <span class="ident">Uniformity</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
-    <span class="kw">fn</span> <span class="ident">bitor</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">Uniformity</span> {
-            <span class="ident">non_uniform_result</span>: <span class="self">self</span>.<span class="ident">non_uniform_result</span>.<span class="ident">or</span>(<span class="ident">other</span>.<span class="ident">non_uniform_result</span>),
-            <span class="ident">require_uniform</span>: <span class="self">self</span>.<span class="ident">require_uniform</span>.<span class="ident">or</span>(<span class="ident">other</span>.<span class="ident">require_uniform</span>),
-        }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">ops</span>::<span class="ident">BitOrAssign</span> <span class="kw">for</span> <span class="ident">Uniformity</span> {
-    <span class="kw">fn</span> <span class="ident">bitor_assign</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) {
-        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">clone</span>() <span class="op">|</span> <span class="ident">other</span>;
-    }
+    <span class="kw">pub</span> <span class="ident">non_uniform_result</span>: <span class="ident">NonUniformResult</span>,
+    <span class="doccomment">/// If this expression requires uniform control flow, store the reason here.</span>
+    <span class="kw">pub</span> <span class="ident">requirement</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">UniformityRequirement</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Uniformity</span> {
+    <span class="comment">//TODO: is this helper really useful?</span>
     <span class="kw">fn</span> <span class="ident">non_uniform_result</span>(<span class="ident">expr</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Uniformity</span> {
             <span class="ident">non_uniform_result</span>: <span class="prelude-val">Some</span>(<span class="ident">expr</span>),
-            <span class="ident">require_uniform</span>: <span class="prelude-val">None</span>,
+            <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
         }
-    }
-
-    <span class="kw">fn</span> <span class="ident">require_uniform</span>(<span class="ident">expr</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">Uniformity</span> {
-            <span class="ident">non_uniform_result</span>: <span class="prelude-val">None</span>,
-            <span class="ident">require_uniform</span>: <span class="prelude-val">Some</span>(<span class="ident">expr</span>),
-        }
-    }
-
-    <span class="kw">fn</span> <span class="ident">disruptor</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">UniformityDisruptor</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">non_uniform_result</span>.<span class="ident">map</span>(<span class="ident">UniformityDisruptor</span>::<span class="ident">Expression</span>)
     }
 }
 
@@ -859,6 +950,49 @@ Figures out the following properties:
         <span class="doccomment">/// Control flow may be killed. Anything after `Statement::Kill` is</span>
         <span class="doccomment">/// considered inside non-uniform context.</span>
         <span class="kw">const</span> <span class="ident">MAY_KILL</span> <span class="op">=</span> <span class="number">0x2</span>;
+    }
+}
+
+<span class="doccomment">/// Uniformity characteristics of a function.</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">test</span>, <span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>))]</span>
+<span class="kw">struct</span> <span class="ident">FunctionUniformity</span> {
+    <span class="ident">result</span>: <span class="ident">Uniformity</span>,
+    <span class="ident">exit</span>: <span class="ident">ExitFlags</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">ops</span>::<span class="ident">BitOr</span> <span class="kw">for</span> <span class="ident">FunctionUniformity</span> {
+    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
+    <span class="kw">fn</span> <span class="ident">bitor</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">FunctionUniformity</span> {
+            <span class="ident">result</span>: <span class="ident">Uniformity</span> {
+                <span class="ident">non_uniform_result</span>: <span class="self">self</span>
+                    .<span class="ident">result</span>
+                    .<span class="ident">non_uniform_result</span>
+                    .<span class="ident">or</span>(<span class="ident">other</span>.<span class="ident">result</span>.<span class="ident">non_uniform_result</span>),
+                <span class="ident">requirement</span>: <span class="self">self</span>.<span class="ident">result</span>.<span class="ident">requirement</span>.<span class="ident">or</span>(<span class="ident">other</span>.<span class="ident">result</span>.<span class="ident">requirement</span>),
+            },
+            <span class="ident">exit</span>: <span class="self">self</span>.<span class="ident">exit</span> <span class="op">|</span> <span class="ident">other</span>.<span class="ident">exit</span>,
+        }
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">FunctionUniformity</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="ident">FunctionUniformity</span> {
+            <span class="ident">result</span>: <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
+            <span class="ident">exit</span>: <span class="ident">ExitFlags</span>::<span class="ident">empty</span>(),
+        }
+    }
+
+    <span class="doccomment">/// Returns a disruptor based on the stored exit flags, if any.</span>
+    <span class="kw">fn</span> <span class="ident">exit_disruptor</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">UniformityDisruptor</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">exit</span>.<span class="ident">contains</span>(<span class="ident">ExitFlags</span>::<span class="ident">MAY_RETURN</span>) {
+            <span class="prelude-val">Some</span>(<span class="ident">UniformityDisruptor</span>::<span class="ident">Return</span>)
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">exit</span>.<span class="ident">contains</span>(<span class="ident">ExitFlags</span>::<span class="ident">MAY_KILL</span>) {
+            <span class="prelude-val">Some</span>(<span class="ident">UniformityDisruptor</span>::<span class="ident">Discard</span>)
+        } <span class="kw">else</span> {
+            <span class="prelude-val">None</span>
+        }
     }
 }
 
@@ -957,25 +1091,19 @@ Figures out the following properties:
     <span class="ident">Discard</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">UniformityDisruptor</span> {
-    <span class="kw">fn</span> <span class="ident">from_exit</span>(<span class="ident">flags</span>: <span class="ident">ExitFlags</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">ExitFlags</span>::<span class="ident">MAY_RETURN</span>) {
-            <span class="prelude-val">Some</span>(<span class="self">Self</span>::<span class="ident">Return</span>)
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">ExitFlags</span>::<span class="ident">MAY_KILL</span>) {
-            <span class="prelude-val">Some</span>(<span class="self">Self</span>::<span class="ident">Discard</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
-    }
-}
-
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">thiserror</span>::<span class="ident">Error</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">test</span>, <span class="ident">derive</span>(<span class="ident">PartialEq</span>))]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AnalysisError</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Expression {0:?} is not a global variable!&quot;</span>)]</span>
     <span class="ident">ExpectedGlobalVariable</span>(<span class="kw">crate</span>::<span class="ident">Expression</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Required uniformity of control flow for {0:?} is not fulfilled because of {1:?}&quot;</span>)]</span>
-    <span class="ident">NonUniformControlFlow</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>, <span class="ident">UniformityDisruptor</span>),
+    <span class="attribute">#[<span class="ident">error</span>(
+        <span class="string">&quot;Required uniformity of control flow for {0:?} in {1:?} is not fulfilled because of {2:?}&quot;</span>
+    )]</span>
+    <span class="ident">NonUniformControlFlow</span>(
+        <span class="ident">UniformityRequirement</span>,
+        <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
+        <span class="ident">UniformityDisruptor</span>,
+    ),
 }
 
 <span class="kw">impl</span> <span class="ident">FunctionInfo</span> {
@@ -985,19 +1113,19 @@ Figures out the following properties:
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
         <span class="ident">global_use</span>: <span class="ident">GlobalUse</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">NonUniformResult</span> {
         <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">expressions</span>[<span class="ident">handle</span>.<span class="ident">index</span>()];
         <span class="ident">info</span>.<span class="ident">ref_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         <span class="comment">// mark the used global as read</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">global</span>) <span class="op">=</span> <span class="ident">info</span>.<span class="ident">assignable_global</span> {
             <span class="self">self</span>.<span class="ident">global_uses</span>[<span class="ident">global</span>.<span class="ident">index</span>()] <span class="op">|</span><span class="op">=</span> <span class="ident">global_use</span>;
         }
-        <span class="ident">info</span>.<span class="ident">uniformity</span>.<span class="ident">clone</span>()
+        <span class="ident">info</span>.<span class="ident">uniformity</span>.<span class="ident">non_uniform_result</span>
     }
 
     <span class="doccomment">/// Adds a value-type reference to an expression.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">add_ref</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
+    <span class="kw">fn</span> <span class="ident">add_ref</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">NonUniformResult</span> {
         <span class="self">self</span>.<span class="ident">add_ref_impl</span>(<span class="ident">handle</span>, <span class="ident">GlobalUse</span>::<span class="ident">READ</span>)
     }
 
@@ -1009,7 +1137,7 @@ Figures out the following properties:
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
         <span class="ident">assignable_global</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">GlobalVariable</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">NonUniformResult</span> {
         <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">expressions</span>[<span class="ident">handle</span>.<span class="ident">index</span>()];
         <span class="ident">info</span>.<span class="ident">ref_count</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         <span class="comment">// propagate the assignable global up the chain, till it either hits</span>
@@ -1019,26 +1147,35 @@ Figures out the following properties:
                 <span class="macro">unreachable</span><span class="macro">!</span>()
             }
         }
-        <span class="ident">info</span>.<span class="ident">uniformity</span>.<span class="ident">clone</span>()
+        <span class="ident">info</span>.<span class="ident">uniformity</span>.<span class="ident">non_uniform_result</span>
     }
 
     <span class="doccomment">/// Inherit information from a called function.</span>
-    <span class="kw">fn</span> <span class="ident">process_call</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
+    <span class="kw">fn</span> <span class="ident">process_call</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FunctionUniformity</span> {
         <span class="kw">for</span> <span class="ident">key</span> <span class="kw">in</span> <span class="ident">info</span>.<span class="ident">sampling_set</span>.<span class="ident">iter</span>() {
             <span class="self">self</span>.<span class="ident">sampling_set</span>.<span class="ident">insert</span>(<span class="ident">key</span>.<span class="ident">clone</span>());
         }
         <span class="kw">for</span> (<span class="ident">mine</span>, <span class="ident">other</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">global_uses</span>.<span class="ident">iter_mut</span>().<span class="ident">zip</span>(<span class="ident">info</span>.<span class="ident">global_uses</span>.<span class="ident">iter</span>()) {
             <span class="kw-2">*</span><span class="ident">mine</span> <span class="op">|</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">other</span>;
         }
-        <span class="ident">info</span>.<span class="ident">uniformity</span>.<span class="ident">clone</span>()
+        <span class="ident">FunctionUniformity</span> {
+            <span class="ident">result</span>: <span class="ident">info</span>.<span class="ident">uniformity</span>.<span class="ident">clone</span>(),
+            <span class="ident">exit</span>: <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">may_kill</span> {
+                <span class="ident">ExitFlags</span>::<span class="ident">MAY_KILL</span>
+            } <span class="kw">else</span> {
+                <span class="ident">ExitFlags</span>::<span class="ident">empty</span>()
+            },
+        }
     }
 
     <span class="doccomment">/// Computes the expression info and stores it in `self.expressions`.</span>
     <span class="doccomment">/// Also, bumps the reference counts on dependent expressions.</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">or_fun_call</span>)]</span>
     <span class="kw">fn</span> <span class="ident">process_expression</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
         <span class="ident">expression_arena</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
+        <span class="ident">arguments</span>: <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::<span class="ident">FunctionArgument</span>],
         <span class="ident">global_var_arena</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">GlobalVariable</span><span class="op">&gt;</span>,
         <span class="ident">other_functions</span>: <span class="kw-2">&amp;</span>[<span class="ident">FunctionInfo</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">AnalysisError</span><span class="op">&gt;</span> {
@@ -1046,55 +1183,72 @@ Figures out the following properties:
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">assignable_global</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="ident">uniformity</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">expression_arena</span>[<span class="ident">handle</span>] {
-            <span class="ident">E</span>::<span class="ident">Access</span> { <span class="ident">base</span>, <span class="ident">index</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">add_assignable_ref</span>(<span class="ident">base</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">assignable_global</span>) <span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">index</span>)
-            }
-            <span class="ident">E</span>::<span class="ident">AccessIndex</span> { <span class="ident">base</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_assignable_ref</span>(<span class="ident">base</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">assignable_global</span>),
+            <span class="ident">E</span>::<span class="ident">Access</span> { <span class="ident">base</span>, <span class="ident">index</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
+                <span class="ident">non_uniform_result</span>: <span class="self">self</span>
+                    .<span class="ident">add_assignable_ref</span>(<span class="ident">base</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">assignable_global</span>)
+                    .<span class="ident">or</span>(<span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">index</span>)),
+                <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
+            },
+            <span class="ident">E</span>::<span class="ident">AccessIndex</span> { <span class="ident">base</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
+                <span class="ident">non_uniform_result</span>: <span class="self">self</span>.<span class="ident">add_assignable_ref</span>(<span class="ident">base</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">assignable_global</span>),
+                <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
+            },
+            <span class="comment">// always uniform</span>
             <span class="ident">E</span>::<span class="ident">Constant</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
             <span class="ident">E</span>::<span class="ident">Compose</span> { <span class="kw-2">ref</span> <span class="ident">components</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">accum</span> <span class="op">=</span> <span class="ident">Uniformity</span>::<span class="ident">default</span>();
-                <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">comp</span> <span class="kw">in</span> <span class="ident">components</span> {
-                    <span class="ident">accum</span> <span class="op">|</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">comp</span>);
+                <span class="kw">let</span> <span class="ident">non_uniform_result</span> <span class="op">=</span> <span class="ident">components</span>
+                    .<span class="ident">iter</span>()
+                    .<span class="ident">fold</span>(<span class="prelude-val">None</span>, <span class="op">|</span><span class="ident">nur</span>, <span class="kw-2">&amp;</span><span class="ident">comp</span><span class="op">|</span> <span class="ident">nur</span>.<span class="ident">or</span>(<span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">comp</span>)));
+                <span class="ident">Uniformity</span> {
+                    <span class="ident">non_uniform_result</span>,
+                    <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
                 }
-                <span class="ident">accum</span>
             }
-            <span class="ident">E</span>::<span class="ident">FunctionArgument</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">non_uniform_result</span>(<span class="ident">handle</span>), <span class="comment">//TODO?</span>
-            <span class="ident">E</span>::<span class="ident">GlobalVariable</span>(<span class="ident">gh</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">assignable_global</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">gh</span>);
-                <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">global_var_arena</span>[<span class="ident">gh</span>];
-                <span class="kw">let</span> <span class="ident">uniform</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">BuiltIn</span>(<span class="ident">built_in</span>)) <span class="op">=</span> <span class="ident">var</span>.<span class="ident">binding</span> {
-                    <span class="kw">match</span> <span class="ident">built_in</span> {
+            <span class="comment">// depends on the builtin or interpolation</span>
+            <span class="ident">E</span>::<span class="ident">FunctionArgument</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">arg</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">arguments</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>];
+                <span class="kw">let</span> <span class="ident">uniform</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">arg</span>.<span class="ident">binding</span> {
+                    <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">BuiltIn</span>(<span class="ident">built_in</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">built_in</span> {
                         <span class="comment">// per-polygon built-ins are uniform</span>
                         <span class="kw">crate</span>::<span class="ident">BuiltIn</span>::<span class="ident">FrontFacing</span>
                         <span class="comment">// per-work-group built-ins are uniform</span>
                         <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BuiltIn</span>::<span class="ident">WorkGroupId</span>
                         <span class="op">|</span> <span class="kw">crate</span>::<span class="ident">BuiltIn</span>::<span class="ident">WorkGroupSize</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
                         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-                    }
-                } <span class="kw">else</span> {
-                    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">StorageClass</span> <span class="kw">as</span> <span class="ident">Sc</span>;
-                    <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">class</span> {
-                        <span class="comment">// only flat inputs are uniform</span>
-                        <span class="ident">Sc</span>::<span class="ident">Input</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">var</span>.<span class="ident">interpolation</span> <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Interpolation</span>::<span class="ident">Flat</span>),
-                        <span class="ident">Sc</span>::<span class="ident">Output</span> <span class="op">|</span> <span class="ident">Sc</span>::<span class="ident">Function</span> <span class="op">|</span> <span class="ident">Sc</span>::<span class="ident">Private</span> <span class="op">|</span> <span class="ident">Sc</span>::<span class="ident">WorkGroup</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-                        <span class="comment">// uniform data</span>
-                        <span class="ident">Sc</span>::<span class="ident">Uniform</span> <span class="op">|</span> <span class="ident">Sc</span>::<span class="ident">PushConstant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-                        <span class="comment">// storage data is only uniform when read-only</span>
-                        <span class="ident">Sc</span>::<span class="ident">Handle</span> <span class="op">|</span> <span class="ident">Sc</span>::<span class="ident">Storage</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="op">!</span><span class="ident">var</span>.<span class="ident">storage_access</span>.<span class="ident">contains</span>(<span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">STORE</span>)
-                        }
-                    }
+                    },
+                    <span class="comment">// only flat inputs are uniform</span>
+                    <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">Location</span>(<span class="kw">_</span>, <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Interpolation</span>::<span class="ident">Flat</span>))) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
                 };
-                <span class="kw">if</span> <span class="ident">uniform</span> {
-                    <span class="ident">Uniformity</span>::<span class="ident">default</span>()
-                } <span class="kw">else</span> {
-                    <span class="ident">Uniformity</span>::<span class="ident">non_uniform_result</span>(<span class="ident">handle</span>)
+                <span class="ident">Uniformity</span> {
+                    <span class="ident">non_uniform_result</span>: <span class="kw">if</span> <span class="ident">uniform</span> { <span class="prelude-val">None</span> } <span class="kw">else</span> { <span class="prelude-val">Some</span>(<span class="ident">handle</span>) },
+                    <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
                 }
             }
-            <span class="ident">E</span>::<span class="ident">LocalVariable</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">Uniformity</span>::<span class="ident">non_uniform_result</span>(<span class="ident">handle</span>) <span class="comment">//TODO?</span>
+            <span class="comment">// depends on the storage class</span>
+            <span class="ident">E</span>::<span class="ident">GlobalVariable</span>(<span class="ident">gh</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">StorageClass</span> <span class="kw">as</span> <span class="ident">Sc</span>;
+                <span class="ident">assignable_global</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">gh</span>);
+                <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">global_var_arena</span>[<span class="ident">gh</span>];
+                <span class="kw">let</span> <span class="ident">uniform</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">class</span> {
+                    <span class="ident">Sc</span>::<span class="ident">Function</span> <span class="op">|</span> <span class="ident">Sc</span>::<span class="ident">Private</span> <span class="op">|</span> <span class="ident">Sc</span>::<span class="ident">WorkGroup</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                    <span class="comment">// uniform data</span>
+                    <span class="ident">Sc</span>::<span class="ident">Uniform</span> <span class="op">|</span> <span class="ident">Sc</span>::<span class="ident">PushConstant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+                    <span class="comment">// storage data is only uniform when read-only</span>
+                    <span class="ident">Sc</span>::<span class="ident">Handle</span> <span class="op">|</span> <span class="ident">Sc</span>::<span class="ident">Storage</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="op">!</span><span class="ident">var</span>.<span class="ident">storage_access</span>.<span class="ident">contains</span>(<span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">STORE</span>)
+                    }
+                };
+                <span class="ident">Uniformity</span> {
+                    <span class="ident">non_uniform_result</span>: <span class="kw">if</span> <span class="ident">uniform</span> { <span class="prelude-val">None</span> } <span class="kw">else</span> { <span class="prelude-val">Some</span>(<span class="ident">handle</span>) },
+                    <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
+                }
             }
-            <span class="ident">E</span>::<span class="ident">Load</span> { <span class="ident">pointer</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">pointer</span>),
+            <span class="ident">E</span>::<span class="ident">LocalVariable</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">non_uniform_result</span>(<span class="ident">handle</span>),
+            <span class="ident">E</span>::<span class="ident">Load</span> { <span class="ident">pointer</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
+                <span class="ident">non_uniform_result</span>: <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">pointer</span>),
+                <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
+            },
             <span class="ident">E</span>::<span class="ident">ImageSample</span> {
                 <span class="ident">image</span>,
                 <span class="ident">sampler</span>,
@@ -1118,27 +1272,28 @@ Figures out the following properties:
                         }
                     },
                 });
-                <span class="kw">let</span> <span class="ident">array_flags</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">array_index</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">h</span>),
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
-                };
-                <span class="kw">let</span> <span class="ident">level_flags</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">level</span> {
-                    <span class="comment">// implicit derivatives for LOD require uniform</span>
-                    <span class="ident">Sl</span>::<span class="ident">Auto</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">require_uniform</span>(<span class="ident">handle</span>),
-                    <span class="ident">Sl</span>::<span class="ident">Zero</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
+                <span class="comment">// &quot;nur&quot; == &quot;Non-Uniform Result&quot;</span>
+                <span class="kw">let</span> <span class="ident">array_nur</span> <span class="op">=</span> <span class="ident">array_index</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">h</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">h</span>));
+                <span class="kw">let</span> <span class="ident">level_nur</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">level</span> {
+                    <span class="ident">Sl</span>::<span class="ident">Auto</span> <span class="op">|</span> <span class="ident">Sl</span>::<span class="ident">Zero</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
                     <span class="ident">Sl</span>::<span class="ident">Exact</span>(<span class="ident">h</span>) <span class="op">|</span> <span class="ident">Sl</span>::<span class="ident">Bias</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">h</span>),
-                    <span class="ident">Sl</span>::<span class="ident">Gradient</span> { <span class="ident">x</span>, <span class="ident">y</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">x</span>) <span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">y</span>),
+                    <span class="ident">Sl</span>::<span class="ident">Gradient</span> { <span class="ident">x</span>, <span class="ident">y</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">x</span>).<span class="ident">or</span>(<span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">y</span>)),
                 };
-                <span class="kw">let</span> <span class="ident">dref_flags</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">depth_ref</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">h</span>),
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
-                };
-                <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">image</span>)
-                    <span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">sampler</span>)
-                    <span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">coordinate</span>)
-                    <span class="op">|</span> <span class="ident">array_flags</span>
-                    <span class="op">|</span> <span class="ident">level_flags</span>
-                    <span class="op">|</span> <span class="ident">dref_flags</span>
+                <span class="kw">let</span> <span class="ident">dref_nur</span> <span class="op">=</span> <span class="ident">depth_ref</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">h</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">h</span>));
+                <span class="ident">Uniformity</span> {
+                    <span class="ident">non_uniform_result</span>: <span class="self">self</span>
+                        .<span class="ident">add_ref</span>(<span class="ident">image</span>)
+                        .<span class="ident">or</span>(<span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">sampler</span>))
+                        .<span class="ident">or</span>(<span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">coordinate</span>))
+                        .<span class="ident">or</span>(<span class="ident">array_nur</span>)
+                        .<span class="ident">or</span>(<span class="ident">level_nur</span>)
+                        .<span class="ident">or</span>(<span class="ident">dref_nur</span>),
+                    <span class="ident">requirement</span>: <span class="kw">if</span> <span class="ident">level</span>.<span class="ident">implicit_derivatives</span>() {
+                        <span class="prelude-val">Some</span>(<span class="ident">UniformityRequirement</span>::<span class="ident">ImplicitLevel</span>)
+                    } <span class="kw">else</span> {
+                        <span class="prelude-val">None</span>
+                    },
+                }
             }
             <span class="ident">E</span>::<span class="ident">ImageLoad</span> {
                 <span class="ident">image</span>,
@@ -1146,49 +1301,75 @@ Figures out the following properties:
                 <span class="ident">array_index</span>,
                 <span class="ident">index</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">array_flags</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">array_index</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">h</span>),
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
-                };
-                <span class="kw">let</span> <span class="ident">index_flags</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">index</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">h</span>),
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
-                };
-                <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">image</span>) <span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">coordinate</span>) <span class="op">|</span> <span class="ident">array_flags</span> <span class="op">|</span> <span class="ident">index_flags</span>
+                <span class="kw">let</span> <span class="ident">array_nur</span> <span class="op">=</span> <span class="ident">array_index</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">h</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">h</span>));
+                <span class="kw">let</span> <span class="ident">index_nur</span> <span class="op">=</span> <span class="ident">index</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">h</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">h</span>));
+                <span class="ident">Uniformity</span> {
+                    <span class="ident">non_uniform_result</span>: <span class="self">self</span>
+                        .<span class="ident">add_ref</span>(<span class="ident">image</span>)
+                        .<span class="ident">or</span>(<span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">coordinate</span>))
+                        .<span class="ident">or</span>(<span class="ident">array_nur</span>)
+                        .<span class="ident">or</span>(<span class="ident">index_nur</span>),
+                    <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
+                }
             }
             <span class="ident">E</span>::<span class="ident">ImageQuery</span> { <span class="ident">image</span>, <span class="ident">query</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">query_flags</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">query</span> {
+                <span class="kw">let</span> <span class="ident">query_nur</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">query</span> {
                     <span class="kw">crate</span>::<span class="ident">ImageQuery</span>::<span class="ident">Size</span> { <span class="ident">level</span>: <span class="prelude-val">Some</span>(<span class="ident">h</span>) } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">h</span>),
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
                 };
-                <span class="self">self</span>.<span class="ident">add_ref_impl</span>(<span class="ident">image</span>, <span class="ident">GlobalUse</span>::<span class="ident">QUERY</span>) <span class="op">|</span> <span class="ident">query_flags</span>
+                <span class="ident">Uniformity</span> {
+                    <span class="ident">non_uniform_result</span>: <span class="self">self</span>.<span class="ident">add_ref_impl</span>(<span class="ident">image</span>, <span class="ident">GlobalUse</span>::<span class="ident">QUERY</span>).<span class="ident">or</span>(<span class="ident">query_nur</span>),
+                    <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
+                }
             }
-            <span class="ident">E</span>::<span class="ident">Unary</span> { <span class="ident">expr</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">expr</span>),
-            <span class="ident">E</span>::<span class="ident">Binary</span> { <span class="ident">left</span>, <span class="ident">right</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">left</span>) <span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">right</span>),
+            <span class="ident">E</span>::<span class="ident">Unary</span> { <span class="ident">expr</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
+                <span class="ident">non_uniform_result</span>: <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">expr</span>),
+                <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
+            },
+            <span class="ident">E</span>::<span class="ident">Binary</span> { <span class="ident">left</span>, <span class="ident">right</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
+                <span class="ident">non_uniform_result</span>: <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">left</span>).<span class="ident">or</span>(<span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">right</span>)),
+                <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
+            },
             <span class="ident">E</span>::<span class="ident">Select</span> {
                 <span class="ident">condition</span>,
                 <span class="ident">accept</span>,
                 <span class="ident">reject</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">condition</span>) <span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">accept</span>) <span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">reject</span>),
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
+                <span class="ident">non_uniform_result</span>: <span class="self">self</span>
+                    .<span class="ident">add_ref</span>(<span class="ident">condition</span>)
+                    .<span class="ident">or</span>(<span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">accept</span>))
+                    .<span class="ident">or</span>(<span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">reject</span>)),
+                <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
+            },
             <span class="comment">// explicit derivatives require uniform</span>
-            <span class="ident">E</span>::<span class="ident">Derivative</span> { <span class="ident">expr</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">require_uniform</span>(<span class="ident">handle</span>) <span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">expr</span>),
-            <span class="ident">E</span>::<span class="ident">Relational</span> { <span class="ident">argument</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">argument</span>),
+            <span class="ident">E</span>::<span class="ident">Derivative</span> { <span class="ident">expr</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
+                <span class="comment">//Note: taking a derivative of a uniform doesn&#39;t make it non-uniform</span>
+                <span class="ident">non_uniform_result</span>: <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">expr</span>),
+                <span class="ident">requirement</span>: <span class="prelude-val">Some</span>(<span class="ident">UniformityRequirement</span>::<span class="ident">Derivative</span>),
+            },
+            <span class="ident">E</span>::<span class="ident">Relational</span> { <span class="ident">argument</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
+                <span class="ident">non_uniform_result</span>: <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">argument</span>),
+                <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
+            },
             <span class="ident">E</span>::<span class="ident">Math</span> {
                 <span class="ident">arg</span>, <span class="ident">arg1</span>, <span class="ident">arg2</span>, ..
             } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">arg1_flags</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">arg1</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">h</span>),
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
-                };
-                <span class="kw">let</span> <span class="ident">arg2_flags</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">arg2</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">h</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">h</span>),
-                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
-                };
-                <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">arg</span>) <span class="op">|</span> <span class="ident">arg1_flags</span> <span class="op">|</span> <span class="ident">arg2_flags</span>
+                <span class="kw">let</span> <span class="ident">arg1_nur</span> <span class="op">=</span> <span class="ident">arg1</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">h</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">h</span>));
+                <span class="kw">let</span> <span class="ident">arg2_nur</span> <span class="op">=</span> <span class="ident">arg2</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">h</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">h</span>));
+                <span class="ident">Uniformity</span> {
+                    <span class="ident">non_uniform_result</span>: <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">arg</span>).<span class="ident">or</span>(<span class="ident">arg1_nur</span>).<span class="ident">or</span>(<span class="ident">arg2_nur</span>),
+                    <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
+                }
             }
-            <span class="ident">E</span>::<span class="ident">As</span> { <span class="ident">expr</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">expr</span>),
-            <span class="ident">E</span>::<span class="ident">Call</span>(<span class="ident">function</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">process_call</span>(<span class="kw-2">&amp;</span><span class="ident">other_functions</span>[<span class="ident">function</span>.<span class="ident">index</span>()]),
-            <span class="ident">E</span>::<span class="ident">ArrayLength</span>(<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref_impl</span>(<span class="ident">expr</span>, <span class="ident">GlobalUse</span>::<span class="ident">QUERY</span>),
+            <span class="ident">E</span>::<span class="ident">As</span> { <span class="ident">expr</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
+                <span class="ident">non_uniform_result</span>: <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">expr</span>),
+                <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
+            },
+            <span class="ident">E</span>::<span class="ident">Call</span>(<span class="ident">function</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">process_call</span>(<span class="kw-2">&amp;</span><span class="ident">other_functions</span>[<span class="ident">function</span>.<span class="ident">index</span>()]).<span class="ident">result</span>,
+            <span class="ident">E</span>::<span class="ident">ArrayLength</span>(<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
+                <span class="ident">non_uniform_result</span>: <span class="self">self</span>.<span class="ident">add_ref_impl</span>(<span class="ident">expr</span>, <span class="ident">GlobalUse</span>::<span class="ident">QUERY</span>),
+                <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
+            },
         };
 
         <span class="self">self</span>.<span class="ident">expressions</span>[<span class="ident">handle</span>.<span class="ident">index</span>()] <span class="op">=</span> <span class="ident">ExpressionInfo</span> {
@@ -1199,8 +1380,11 @@ Figures out the following properties:
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Computes the uniformity and the exit flags on the block</span>
-    <span class="doccomment">/// (as a sequence of statements), and returns them.</span>
+    <span class="doccomment">/// Analyzes the uniformity requirements of a block (as a sequence of statements).</span>
+    <span class="doccomment">/// Returns the uniformity characteristics at the *function* level, i.e.</span>
+    <span class="doccomment">/// whether or not the function requires to be called in uniform control flow,</span>
+    <span class="doccomment">/// and whether the produced result is not disrupting the control flow.</span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// The parent control flow is uniform if `disruptor.is_none()`.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns a `NonUniformControlFlow` error if any of the expressions in the block</span>
@@ -1211,84 +1395,105 @@ Figures out the following properties:
         <span class="ident">statements</span>: <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::<span class="ident">Statement</span>],
         <span class="ident">other_functions</span>: <span class="kw-2">&amp;</span>[<span class="ident">FunctionInfo</span>],
         <span class="kw-2">mut</span> <span class="ident">disruptor</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">UniformityDisruptor</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Uniformity</span>, <span class="ident">ExitFlags</span>), <span class="ident">AnalysisError</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FunctionUniformity</span>, <span class="ident">AnalysisError</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">Statement</span> <span class="kw">as</span> <span class="ident">S</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">block_uniformity</span> <span class="op">=</span> <span class="ident">Uniformity</span>::<span class="ident">default</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">block_exit</span> <span class="op">=</span> <span class="ident">ExitFlags</span>::<span class="ident">empty</span>();
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">combined_uniformity</span> <span class="op">=</span> <span class="ident">FunctionUniformity</span>::<span class="ident">new</span>();
         <span class="kw">for</span> <span class="ident">statement</span> <span class="kw">in</span> <span class="ident">statements</span> {
-            <span class="kw">let</span> (<span class="ident">cur_uniformity</span>, <span class="ident">cur_exit</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">statement</span> {
-                <span class="ident">S</span>::<span class="ident">Emit</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="ident">S</span>::<span class="ident">Break</span> <span class="op">|</span> <span class="ident">S</span>::<span class="ident">Continue</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Uniformity</span>::<span class="ident">default</span>(), <span class="ident">ExitFlags</span>::<span class="ident">empty</span>()),
-                <span class="ident">S</span>::<span class="ident">Kill</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">Uniformity</span>::<span class="ident">default</span>(), <span class="ident">ExitFlags</span>::<span class="ident">MAY_KILL</span>),
+            <span class="kw">let</span> <span class="ident">uniformity</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">statement</span> {
+                <span class="ident">S</span>::<span class="ident">Emit</span>(<span class="kw-2">ref</span> <span class="ident">range</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">requirement</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+                    <span class="kw">for</span> <span class="ident">expr</span> <span class="kw">in</span> <span class="ident">range</span>.<span class="ident">clone</span>() {
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">req</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">expressions</span>[<span class="ident">expr</span>.<span class="ident">index</span>()].<span class="ident">uniformity</span>.<span class="ident">requirement</span> {
+                            <span class="ident">requirement</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">disruptor</span> {
+                                <span class="prelude-val">Some</span>(<span class="ident">cause</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AnalysisError</span>::<span class="ident">NonUniformControlFlow</span>(
+                                        <span class="ident">req</span>, <span class="ident">expr</span>, <span class="ident">cause</span>,
+                                    ))
+                                }
+                                <span class="comment">// remember the requirement of any emitted expressions</span>
+                                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">req</span>),
+                            };
+                        }
+                    }
+                    <span class="ident">FunctionUniformity</span> {
+                        <span class="ident">result</span>: <span class="ident">Uniformity</span> {
+                            <span class="ident">non_uniform_result</span>: <span class="prelude-val">None</span>,
+                            <span class="ident">requirement</span>,
+                        },
+                        <span class="ident">exit</span>: <span class="ident">ExitFlags</span>::<span class="ident">empty</span>(),
+                    }
+                }
+                <span class="ident">S</span>::<span class="ident">Break</span> <span class="op">|</span> <span class="ident">S</span>::<span class="ident">Continue</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FunctionUniformity</span>::<span class="ident">new</span>(),
+                <span class="ident">S</span>::<span class="ident">Kill</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FunctionUniformity</span> {
+                    <span class="ident">result</span>: <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
+                    <span class="ident">exit</span>: <span class="ident">ExitFlags</span>::<span class="ident">MAY_KILL</span>,
+                },
                 <span class="ident">S</span>::<span class="ident">Block</span>(<span class="kw-2">ref</span> <span class="ident">b</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">process_block</span>(<span class="ident">b</span>, <span class="ident">other_functions</span>, <span class="ident">disruptor</span>)<span class="question-mark">?</span>,
                 <span class="ident">S</span>::<span class="ident">If</span> {
                     <span class="ident">condition</span>,
                     <span class="kw-2">ref</span> <span class="ident">accept</span>,
                     <span class="kw-2">ref</span> <span class="ident">reject</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">condition_uniformity</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">condition</span>);
-                    <span class="kw">let</span> <span class="ident">branch_disruptor</span> <span class="op">=</span> <span class="ident">disruptor</span>.<span class="ident">or</span>(<span class="ident">condition_uniformity</span>.<span class="ident">disruptor</span>());
-                    <span class="kw">let</span> (<span class="ident">accept_uniformity</span>, <span class="ident">accept_exit</span>) <span class="op">=</span>
+                    <span class="kw">let</span> <span class="ident">condition_nur</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">condition</span>);
+                    <span class="kw">let</span> <span class="ident">branch_disruptor</span> <span class="op">=</span>
+                        <span class="ident">disruptor</span>.<span class="ident">or</span>(<span class="ident">condition_nur</span>.<span class="ident">map</span>(<span class="ident">UniformityDisruptor</span>::<span class="ident">Expression</span>));
+                    <span class="kw">let</span> <span class="ident">accept_uniformity</span> <span class="op">=</span>
                         <span class="self">self</span>.<span class="ident">process_block</span>(<span class="ident">accept</span>, <span class="ident">other_functions</span>, <span class="ident">branch_disruptor</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let</span> (<span class="ident">reject_uniformity</span>, <span class="ident">reject_exit</span>) <span class="op">=</span>
+                    <span class="kw">let</span> <span class="ident">reject_uniformity</span> <span class="op">=</span>
                         <span class="self">self</span>.<span class="ident">process_block</span>(<span class="ident">reject</span>, <span class="ident">other_functions</span>, <span class="ident">branch_disruptor</span>)<span class="question-mark">?</span>;
-                    (
-                        <span class="ident">condition_uniformity</span> <span class="op">|</span> <span class="ident">accept_uniformity</span> <span class="op">|</span> <span class="ident">reject_uniformity</span>,
-                        <span class="ident">accept_exit</span> <span class="op">|</span> <span class="ident">reject_exit</span>,
-                    )
+                    <span class="ident">accept_uniformity</span> <span class="op">|</span> <span class="ident">reject_uniformity</span>
                 }
                 <span class="ident">S</span>::<span class="ident">Switch</span> {
                     <span class="ident">selector</span>,
                     <span class="kw-2">ref</span> <span class="ident">cases</span>,
                     <span class="kw-2">ref</span> <span class="ident">default</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">selector_uniformity</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">selector</span>);
-                    <span class="kw">let</span> <span class="ident">branch_disruptor</span> <span class="op">=</span> <span class="ident">disruptor</span>.<span class="ident">or</span>(<span class="ident">selector_uniformity</span>.<span class="ident">disruptor</span>());
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">uniformity</span> <span class="op">=</span> <span class="ident">selector_uniformity</span>;
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">exit</span> <span class="op">=</span> <span class="ident">ExitFlags</span>::<span class="ident">empty</span>();
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">case_disruptor</span> <span class="op">=</span> <span class="ident">disruptor</span>;
+                    <span class="kw">let</span> <span class="ident">selector_nur</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">selector</span>);
+                    <span class="kw">let</span> <span class="ident">branch_disruptor</span> <span class="op">=</span>
+                        <span class="ident">disruptor</span>.<span class="ident">or</span>(<span class="ident">selector_nur</span>.<span class="ident">map</span>(<span class="ident">UniformityDisruptor</span>::<span class="ident">Expression</span>));
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">uniformity</span> <span class="op">=</span> <span class="ident">FunctionUniformity</span>::<span class="ident">new</span>();
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">case_disruptor</span> <span class="op">=</span> <span class="ident">branch_disruptor</span>;
                     <span class="kw">for</span> <span class="ident">case</span> <span class="kw">in</span> <span class="ident">cases</span>.<span class="ident">iter</span>() {
-                        <span class="kw">let</span> (<span class="ident">case_uniformity</span>, <span class="ident">case_exit</span>) <span class="op">=</span>
+                        <span class="kw">let</span> <span class="ident">case_uniformity</span> <span class="op">=</span>
                             <span class="self">self</span>.<span class="ident">process_block</span>(<span class="kw-2">&amp;</span><span class="ident">case</span>.<span class="ident">body</span>, <span class="ident">other_functions</span>, <span class="ident">case_disruptor</span>)<span class="question-mark">?</span>;
-                        <span class="ident">uniformity</span> <span class="op">|</span><span class="op">=</span> <span class="ident">case_uniformity</span>;
-                        <span class="ident">exit</span> <span class="op">|</span><span class="op">=</span> <span class="ident">case_exit</span>;
                         <span class="ident">case_disruptor</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">case</span>.<span class="ident">fall_through</span> {
-                            <span class="ident">case_disruptor</span>.<span class="ident">or</span>(<span class="ident">UniformityDisruptor</span>::<span class="ident">from_exit</span>(<span class="ident">case_exit</span>))
+                            <span class="ident">case_disruptor</span>.<span class="ident">or</span>(<span class="ident">case_uniformity</span>.<span class="ident">exit_disruptor</span>())
                         } <span class="kw">else</span> {
                             <span class="ident">branch_disruptor</span>
                         };
+                        <span class="ident">uniformity</span> <span class="op">=</span> <span class="ident">uniformity</span> <span class="op">|</span> <span class="ident">case_uniformity</span>;
                     }
-                    <span class="kw">let</span> (<span class="ident">default_uniformity</span>, <span class="ident">default_exit</span>) <span class="op">=</span>
+                    <span class="comment">// using the disruptor inherited from the last fall-through chain</span>
+                    <span class="kw">let</span> <span class="ident">default_exit</span> <span class="op">=</span>
                         <span class="self">self</span>.<span class="ident">process_block</span>(<span class="ident">default</span>, <span class="ident">other_functions</span>, <span class="ident">case_disruptor</span>)<span class="question-mark">?</span>;
-                    (<span class="ident">uniformity</span> <span class="op">|</span> <span class="ident">default_uniformity</span>, <span class="ident">exit</span> <span class="op">|</span> <span class="ident">default_exit</span>)
+                    <span class="ident">uniformity</span> <span class="op">|</span> <span class="ident">default_exit</span>
                 }
                 <span class="ident">S</span>::<span class="ident">Loop</span> {
                     <span class="kw-2">ref</span> <span class="ident">body</span>,
                     <span class="kw-2">ref</span> <span class="ident">continuing</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> (<span class="ident">body_uniformity</span>, <span class="ident">body_exit</span>) <span class="op">=</span>
-                        <span class="self">self</span>.<span class="ident">process_block</span>(<span class="ident">body</span>, <span class="ident">other_functions</span>, <span class="ident">disruptor</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">continuing_disruptor</span> <span class="op">=</span> <span class="ident">disruptor</span>
-                        .<span class="ident">or</span>(<span class="ident">body_uniformity</span>.<span class="ident">disruptor</span>())
-                        .<span class="ident">or</span>(<span class="ident">UniformityDisruptor</span>::<span class="ident">from_exit</span>(<span class="ident">body_exit</span>));
-                    <span class="kw">let</span> (<span class="ident">continuing_uniformity</span>, <span class="ident">continuing_exit</span>) <span class="op">=</span>
+                    <span class="kw">let</span> <span class="ident">body_uniformity</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">process_block</span>(<span class="ident">body</span>, <span class="ident">other_functions</span>, <span class="ident">disruptor</span>)<span class="question-mark">?</span>;
+                    <span class="kw">let</span> <span class="ident">continuing_disruptor</span> <span class="op">=</span> <span class="ident">disruptor</span>.<span class="ident">or</span>(<span class="ident">body_uniformity</span>.<span class="ident">exit_disruptor</span>());
+                    <span class="kw">let</span> <span class="ident">continuing_uniformity</span> <span class="op">=</span>
                         <span class="self">self</span>.<span class="ident">process_block</span>(<span class="ident">continuing</span>, <span class="ident">other_functions</span>, <span class="ident">continuing_disruptor</span>)<span class="question-mark">?</span>;
-                    (
-                        <span class="ident">body_uniformity</span> <span class="op">|</span> <span class="ident">continuing_uniformity</span>,
-                        <span class="ident">body_exit</span> <span class="op">|</span> <span class="ident">continuing_exit</span>,
-                    )
+                    <span class="ident">body_uniformity</span> <span class="op">|</span> <span class="ident">continuing_uniformity</span>
                 }
-                <span class="ident">S</span>::<span class="ident">Return</span> { <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">uniformity</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">value</span> {
-                        <span class="prelude-val">Some</span>(<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">expr</span>),
-                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
-                    };
+                <span class="ident">S</span>::<span class="ident">Return</span> { <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">FunctionUniformity</span> {
+                    <span class="ident">result</span>: <span class="ident">Uniformity</span> {
+                        <span class="ident">non_uniform_result</span>: <span class="ident">value</span>.<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">expr</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">expr</span>)),
+                        <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
+                    },
                     <span class="comment">//TODO: if we are in the uniform control flow, should this still be an exit flag?</span>
-                    (<span class="ident">uniformity</span>, <span class="ident">ExitFlags</span>::<span class="ident">MAY_RETURN</span>)
-                }
+                    <span class="ident">exit</span>: <span class="ident">ExitFlags</span>::<span class="ident">MAY_RETURN</span>,
+                },
+                <span class="comment">// Here and below, the used expressions are already emitted,</span>
+                <span class="comment">// and their results do not affect the function return value,</span>
+                <span class="comment">// so we can ignore their non-uniformity.</span>
                 <span class="ident">S</span>::<span class="ident">Store</span> { <span class="ident">pointer</span>, <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">uniformity</span> <span class="op">=</span>
-                        <span class="self">self</span>.<span class="ident">add_ref_impl</span>(<span class="ident">pointer</span>, <span class="ident">GlobalUse</span>::<span class="ident">WRITE</span>) <span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">value</span>);
-                    (<span class="ident">uniformity</span>, <span class="ident">ExitFlags</span>::<span class="ident">empty</span>())
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_ref_impl</span>(<span class="ident">pointer</span>, <span class="ident">GlobalUse</span>::<span class="ident">WRITE</span>);
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">value</span>);
+                    <span class="ident">FunctionUniformity</span>::<span class="ident">new</span>()
                 }
                 <span class="ident">S</span>::<span class="ident">ImageStore</span> {
                     <span class="ident">image</span>,
@@ -1296,43 +1501,31 @@ Figures out the following properties:
                     <span class="ident">array_index</span>,
                     <span class="ident">value</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">array_uniformity</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">array_index</span> {
-                        <span class="prelude-val">Some</span>(<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">expr</span>),
-                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
-                    };
-                    <span class="kw">let</span> <span class="ident">uniformity</span> <span class="op">=</span> <span class="ident">array_uniformity</span>
-                        <span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref_impl</span>(<span class="ident">image</span>, <span class="ident">GlobalUse</span>::<span class="ident">WRITE</span>)
-                        <span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">coordinate</span>)
-                        <span class="op">|</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">value</span>);
-                    (<span class="ident">uniformity</span>, <span class="ident">ExitFlags</span>::<span class="ident">empty</span>())
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_ref_impl</span>(<span class="ident">image</span>, <span class="ident">GlobalUse</span>::<span class="ident">WRITE</span>);
+                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">expr</span>) <span class="op">=</span> <span class="ident">array_index</span> {
+                        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">expr</span>);
+                    }
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">coordinate</span>);
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">value</span>);
+                    <span class="ident">FunctionUniformity</span>::<span class="ident">new</span>()
                 }
                 <span class="ident">S</span>::<span class="ident">Call</span> {
                     <span class="ident">function</span>,
                     <span class="kw-2">ref</span> <span class="ident">arguments</span>,
                     <span class="ident">result</span>: <span class="kw">_</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">other_functions</span>[<span class="ident">function</span>.<span class="ident">index</span>()];
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">uniformity</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">process_call</span>(<span class="ident">info</span>);
                     <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">argument</span> <span class="kw">in</span> <span class="ident">arguments</span> {
-                        <span class="ident">uniformity</span> <span class="op">|</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">argument</span>);
+                        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">argument</span>);
                     }
-                    <span class="kw">let</span> <span class="ident">exit</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">may_kill</span> {
-                        <span class="ident">ExitFlags</span>::<span class="ident">MAY_KILL</span>
-                    } <span class="kw">else</span> {
-                        <span class="ident">ExitFlags</span>::<span class="ident">empty</span>()
-                    };
-                    (<span class="ident">uniformity</span>, <span class="ident">exit</span>)
+                    <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">other_functions</span>[<span class="ident">function</span>.<span class="ident">index</span>()];
+                    <span class="self">self</span>.<span class="ident">process_call</span>(<span class="ident">info</span>)
                 }
             };
 
-            <span class="kw">if</span> <span class="kw">let</span> (<span class="prelude-val">Some</span>(<span class="ident">expr</span>), <span class="prelude-val">Some</span>(<span class="ident">cause</span>)) <span class="op">=</span> (<span class="ident">cur_uniformity</span>.<span class="ident">require_uniform</span>, <span class="ident">disruptor</span>) {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AnalysisError</span>::<span class="ident">NonUniformControlFlow</span>(<span class="ident">expr</span>, <span class="ident">cause</span>));
-            }
-            <span class="ident">disruptor</span> <span class="op">=</span> <span class="ident">disruptor</span>.<span class="ident">or</span>(<span class="ident">UniformityDisruptor</span>::<span class="ident">from_exit</span>(<span class="ident">cur_exit</span>));
-            <span class="ident">block_uniformity</span> <span class="op">|</span><span class="op">=</span> <span class="ident">cur_uniformity</span>;
-            <span class="ident">block_exit</span> <span class="op">|</span><span class="op">=</span> <span class="ident">cur_exit</span>;
+            <span class="ident">disruptor</span> <span class="op">=</span> <span class="ident">disruptor</span>.<span class="ident">or</span>(<span class="ident">uniformity</span>.<span class="ident">exit_disruptor</span>());
+            <span class="ident">combined_uniformity</span> <span class="op">=</span> <span class="ident">combined_uniformity</span> <span class="op">|</span> <span class="ident">uniformity</span>;
         }
-        <span class="prelude-val">Ok</span>((<span class="ident">block_uniformity</span>, <span class="ident">block_exit</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">combined_uniformity</span>)
     }
 }
 
@@ -1361,12 +1554,18 @@ Figures out the following properties:
         };
 
         <span class="kw">for</span> (<span class="ident">handle</span>, <span class="kw">_</span>) <span class="kw">in</span> <span class="ident">fun</span>.<span class="ident">expressions</span>.<span class="ident">iter</span>() {
-            <span class="ident">info</span>.<span class="ident">process_expression</span>(<span class="ident">handle</span>, <span class="kw-2">&amp;</span><span class="ident">fun</span>.<span class="ident">expressions</span>, <span class="ident">global_var_arena</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">functions</span>)<span class="question-mark">?</span>;
+            <span class="ident">info</span>.<span class="ident">process_expression</span>(
+                <span class="ident">handle</span>,
+                <span class="kw-2">&amp;</span><span class="ident">fun</span>.<span class="ident">expressions</span>,
+                <span class="kw-2">&amp;</span><span class="ident">fun</span>.<span class="ident">arguments</span>,
+                <span class="ident">global_var_arena</span>,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">functions</span>,
+            )<span class="question-mark">?</span>;
         }
 
-        <span class="kw">let</span> (<span class="ident">uniformity</span>, <span class="ident">exit</span>) <span class="op">=</span> <span class="ident">info</span>.<span class="ident">process_block</span>(<span class="kw-2">&amp;</span><span class="ident">fun</span>.<span class="ident">body</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">functions</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-        <span class="ident">info</span>.<span class="ident">uniformity</span> <span class="op">=</span> <span class="ident">uniformity</span>;
-        <span class="ident">info</span>.<span class="ident">may_kill</span> <span class="op">=</span> <span class="ident">exit</span>.<span class="ident">contains</span>(<span class="ident">ExitFlags</span>::<span class="ident">MAY_KILL</span>);
+        <span class="kw">let</span> <span class="ident">uniformity</span> <span class="op">=</span> <span class="ident">info</span>.<span class="ident">process_block</span>(<span class="kw-2">&amp;</span><span class="ident">fun</span>.<span class="ident">body</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">functions</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+        <span class="ident">info</span>.<span class="ident">uniformity</span> <span class="op">=</span> <span class="ident">uniformity</span>.<span class="ident">result</span>;
+        <span class="ident">info</span>.<span class="ident">may_kill</span> <span class="op">=</span> <span class="ident">uniformity</span>.<span class="ident">exit</span>.<span class="ident">contains</span>(<span class="ident">ExitFlags</span>::<span class="ident">MAY_KILL</span>);
 
         <span class="prelude-val">Ok</span>(<span class="ident">info</span>)
     }
@@ -1428,18 +1627,16 @@ Figures out the following properties:
         <span class="ident">name</span>: <span class="prelude-val">None</span>,
         <span class="ident">init</span>: <span class="prelude-val">None</span>,
         <span class="ident">ty</span>,
-        <span class="ident">binding</span>: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">BuiltIn</span>(<span class="kw">crate</span>::<span class="ident">BuiltIn</span>::<span class="ident">VertexIndex</span>)),
-        <span class="ident">class</span>: <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Input</span>,
-        <span class="ident">interpolation</span>: <span class="prelude-val">None</span>,
-        <span class="ident">storage_access</span>: <span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">empty</span>(),
+        <span class="ident">class</span>: <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Handle</span>,
+        <span class="ident">binding</span>: <span class="prelude-val">None</span>,
+        <span class="ident">storage_access</span>: <span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">STORE</span>,
     });
     <span class="kw">let</span> <span class="ident">uniform_global</span> <span class="op">=</span> <span class="ident">global_var_arena</span>.<span class="ident">append</span>(<span class="kw">crate</span>::<span class="ident">GlobalVariable</span> {
         <span class="ident">name</span>: <span class="prelude-val">None</span>,
         <span class="ident">init</span>: <span class="prelude-val">None</span>,
         <span class="ident">ty</span>,
-        <span class="ident">binding</span>: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">Location</span>(<span class="number">0</span>)),
-        <span class="ident">class</span>: <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Input</span>,
-        <span class="ident">interpolation</span>: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Interpolation</span>::<span class="ident">Flat</span>),
+        <span class="ident">binding</span>: <span class="prelude-val">None</span>,
+        <span class="ident">class</span>: <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Uniform</span>,
         <span class="ident">storage_access</span>: <span class="kw">crate</span>::<span class="ident">StorageAccess</span>::<span class="ident">empty</span>(),
     });
 
@@ -1451,8 +1648,11 @@ Figures out the following properties:
         <span class="ident">axis</span>: <span class="kw">crate</span>::<span class="ident">DerivativeAxis</span>::<span class="ident">X</span>,
         <span class="ident">expr</span>: <span class="ident">constant_expr</span>,
     });
+    <span class="kw">let</span> <span class="ident">emit_range_constant_derivative</span> <span class="op">=</span> <span class="ident">expressions</span>.<span class="ident">range_from</span>(<span class="number">0</span>);
     <span class="kw">let</span> <span class="ident">non_uniform_global_expr</span> <span class="op">=</span> <span class="ident">expressions</span>.<span class="ident">append</span>(<span class="ident">E</span>::<span class="ident">GlobalVariable</span>(<span class="ident">non_uniform_global</span>));
     <span class="kw">let</span> <span class="ident">uniform_global_expr</span> <span class="op">=</span> <span class="ident">expressions</span>.<span class="ident">append</span>(<span class="ident">E</span>::<span class="ident">GlobalVariable</span>(<span class="ident">uniform_global</span>));
+    <span class="kw">let</span> <span class="ident">emit_range_globals</span> <span class="op">=</span> <span class="ident">expressions</span>.<span class="ident">range_from</span>(<span class="number">2</span>);
+
     <span class="comment">// checks the QUERY flag</span>
     <span class="kw">let</span> <span class="ident">query_expr</span> <span class="op">=</span> <span class="ident">expressions</span>.<span class="ident">append</span>(<span class="ident">E</span>::<span class="ident">ArrayLength</span>(<span class="ident">uniform_global_expr</span>));
     <span class="comment">// checks the transitive WRITE flag</span>
@@ -1460,6 +1660,7 @@ Figures out the following properties:
         <span class="ident">base</span>: <span class="ident">non_uniform_global_expr</span>,
         <span class="ident">index</span>: <span class="number">1</span>,
     });
+    <span class="kw">let</span> <span class="ident">emit_range_query_access_globals</span> <span class="op">=</span> <span class="ident">expressions</span>.<span class="ident">range_from</span>(<span class="number">2</span>);
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">FunctionInfo</span> {
         <span class="ident">uniformity</span>: <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
@@ -1469,7 +1670,7 @@ Figures out the following properties:
         <span class="ident">expressions</span>: <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">ExpressionInfo</span>::<span class="ident">default</span>(); <span class="ident">expressions</span>.<span class="ident">len</span>()].<span class="ident">into_boxed_slice</span>(),
     };
     <span class="kw">for</span> (<span class="ident">handle</span>, <span class="kw">_</span>) <span class="kw">in</span> <span class="ident">expressions</span>.<span class="ident">iter</span>() {
-        <span class="ident">info</span>.<span class="ident">process_expression</span>(<span class="ident">handle</span>, <span class="kw-2">&amp;</span><span class="ident">expressions</span>, <span class="kw-2">&amp;</span><span class="ident">global_var_arena</span>, <span class="kw-2">&amp;</span>[])
+        <span class="ident">info</span>.<span class="ident">process_expression</span>(<span class="ident">handle</span>, <span class="kw-2">&amp;</span><span class="ident">expressions</span>, <span class="kw-2">&amp;</span>[], <span class="kw-2">&amp;</span><span class="ident">global_var_arena</span>, <span class="kw-2">&amp;</span>[])
             .<span class="ident">unwrap</span>();
     }
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">info</span>[<span class="ident">non_uniform_global_expr</span>].<span class="ident">ref_count</span>, <span class="number">1</span>);
@@ -1479,68 +1680,91 @@ Figures out the following properties:
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">info</span>[<span class="ident">non_uniform_global</span>], <span class="ident">GlobalUse</span>::<span class="ident">empty</span>());
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">info</span>[<span class="ident">uniform_global</span>], <span class="ident">GlobalUse</span>::<span class="ident">QUERY</span>);
 
+    <span class="kw">let</span> <span class="ident">stmt_emit1</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">Emit</span>(<span class="ident">emit_range_globals</span>.<span class="ident">clone</span>());
     <span class="kw">let</span> <span class="ident">stmt_if_uniform</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">If</span> {
         <span class="ident">condition</span>: <span class="ident">uniform_global_expr</span>,
         <span class="ident">accept</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-        <span class="ident">reject</span>: <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">S</span>::<span class="ident">Store</span> {
-            <span class="ident">pointer</span>: <span class="ident">constant_expr</span>,
-            <span class="ident">value</span>: <span class="ident">derivative_expr</span>,
-        }],
+        <span class="ident">reject</span>: <span class="macro">vec</span><span class="macro">!</span>[
+            <span class="ident">S</span>::<span class="ident">Emit</span>(<span class="ident">emit_range_constant_derivative</span>.<span class="ident">clone</span>()),
+            <span class="ident">S</span>::<span class="ident">Store</span> {
+                <span class="ident">pointer</span>: <span class="ident">constant_expr</span>,
+                <span class="ident">value</span>: <span class="ident">derivative_expr</span>,
+            },
+        ],
     };
     <span class="macro">assert_eq</span><span class="macro">!</span>(
-        <span class="ident">info</span>.<span class="ident">process_block</span>(<span class="kw-2">&amp;</span>[<span class="ident">stmt_if_uniform</span>], <span class="kw-2">&amp;</span>[], <span class="prelude-val">None</span>),
-        <span class="prelude-val">Ok</span>((
-            <span class="ident">Uniformity</span>::<span class="ident">require_uniform</span>(<span class="ident">derivative_expr</span>),
-            <span class="ident">ExitFlags</span>::<span class="ident">empty</span>()
-        )),
+        <span class="ident">info</span>.<span class="ident">process_block</span>(<span class="kw-2">&amp;</span>[<span class="ident">stmt_emit1</span>, <span class="ident">stmt_if_uniform</span>], <span class="kw-2">&amp;</span>[], <span class="prelude-val">None</span>),
+        <span class="prelude-val">Ok</span>(<span class="ident">FunctionUniformity</span> {
+            <span class="ident">result</span>: <span class="ident">Uniformity</span> {
+                <span class="ident">non_uniform_result</span>: <span class="prelude-val">None</span>,
+                <span class="ident">requirement</span>: <span class="prelude-val">Some</span>(<span class="ident">UniformityRequirement</span>::<span class="ident">Derivative</span>),
+            },
+            <span class="ident">exit</span>: <span class="ident">ExitFlags</span>::<span class="ident">empty</span>(),
+        }),
     );
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">info</span>[<span class="ident">constant_expr</span>].<span class="ident">ref_count</span>, <span class="number">2</span>);
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">info</span>[<span class="ident">uniform_global</span>], <span class="ident">GlobalUse</span>::<span class="ident">READ</span> <span class="op">|</span> <span class="ident">GlobalUse</span>::<span class="ident">QUERY</span>);
 
+    <span class="kw">let</span> <span class="ident">stmt_emit2</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">Emit</span>(<span class="ident">emit_range_globals</span>.<span class="ident">clone</span>());
     <span class="kw">let</span> <span class="ident">stmt_if_non_uniform</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">If</span> {
         <span class="ident">condition</span>: <span class="ident">non_uniform_global_expr</span>,
-        <span class="ident">accept</span>: <span class="macro">vec</span><span class="macro">!</span>[<span class="ident">S</span>::<span class="ident">Store</span> {
-            <span class="ident">pointer</span>: <span class="ident">constant_expr</span>,
-            <span class="ident">value</span>: <span class="ident">derivative_expr</span>,
-        }],
+        <span class="ident">accept</span>: <span class="macro">vec</span><span class="macro">!</span>[
+            <span class="ident">S</span>::<span class="ident">Emit</span>(<span class="ident">emit_range_constant_derivative</span>.<span class="ident">clone</span>()),
+            <span class="ident">S</span>::<span class="ident">Store</span> {
+                <span class="ident">pointer</span>: <span class="ident">constant_expr</span>,
+                <span class="ident">value</span>: <span class="ident">derivative_expr</span>,
+            },
+        ],
         <span class="ident">reject</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
     };
     <span class="macro">assert_eq</span><span class="macro">!</span>(
-        <span class="ident">info</span>.<span class="ident">process_block</span>(<span class="kw-2">&amp;</span>[<span class="ident">stmt_if_non_uniform</span>], <span class="kw-2">&amp;</span>[], <span class="prelude-val">None</span>),
+        <span class="ident">info</span>.<span class="ident">process_block</span>(<span class="kw-2">&amp;</span>[<span class="ident">stmt_emit2</span>, <span class="ident">stmt_if_non_uniform</span>], <span class="kw-2">&amp;</span>[], <span class="prelude-val">None</span>),
         <span class="prelude-val">Err</span>(<span class="ident">AnalysisError</span>::<span class="ident">NonUniformControlFlow</span>(
+            <span class="ident">UniformityRequirement</span>::<span class="ident">Derivative</span>,
             <span class="ident">derivative_expr</span>,
             <span class="ident">UniformityDisruptor</span>::<span class="ident">Expression</span>(<span class="ident">non_uniform_global_expr</span>)
         )),
     );
-    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">info</span>[<span class="ident">derivative_expr</span>].<span class="ident">ref_count</span>, <span class="number">2</span>);
+    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">info</span>[<span class="ident">derivative_expr</span>].<span class="ident">ref_count</span>, <span class="number">1</span>);
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">info</span>[<span class="ident">non_uniform_global</span>], <span class="ident">GlobalUse</span>::<span class="ident">READ</span>);
 
+    <span class="kw">let</span> <span class="ident">stmt_emit3</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">Emit</span>(<span class="ident">emit_range_globals</span>);
     <span class="kw">let</span> <span class="ident">stmt_return_non_uniform</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">Return</span> {
         <span class="ident">value</span>: <span class="prelude-val">Some</span>(<span class="ident">non_uniform_global_expr</span>),
     };
     <span class="macro">assert_eq</span><span class="macro">!</span>(
         <span class="ident">info</span>.<span class="ident">process_block</span>(
-            <span class="kw-2">&amp;</span>[<span class="ident">stmt_return_non_uniform</span>],
+            <span class="kw-2">&amp;</span>[<span class="ident">stmt_emit3</span>, <span class="ident">stmt_return_non_uniform</span>],
             <span class="kw-2">&amp;</span>[],
             <span class="prelude-val">Some</span>(<span class="ident">UniformityDisruptor</span>::<span class="ident">Return</span>)
         ),
-        <span class="prelude-val">Ok</span>((
-            <span class="ident">Uniformity</span>::<span class="ident">non_uniform_result</span>(<span class="ident">non_uniform_global_expr</span>),
-            <span class="ident">ExitFlags</span>::<span class="ident">MAY_RETURN</span>
-        )),
+        <span class="prelude-val">Ok</span>(<span class="ident">FunctionUniformity</span> {
+            <span class="ident">result</span>: <span class="ident">Uniformity</span>::<span class="ident">non_uniform_result</span>(<span class="ident">non_uniform_global_expr</span>),
+            <span class="ident">exit</span>: <span class="ident">ExitFlags</span>::<span class="ident">MAY_RETURN</span>,
+        }),
     );
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">info</span>[<span class="ident">non_uniform_global_expr</span>].<span class="ident">ref_count</span>, <span class="number">3</span>);
 
+    <span class="comment">// Check that uniformity requirements reach through a pointer</span>
+    <span class="kw">let</span> <span class="ident">stmt_emit4</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">Emit</span>(<span class="ident">emit_range_query_access_globals</span>);
     <span class="kw">let</span> <span class="ident">stmt_assign</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">Store</span> {
         <span class="ident">pointer</span>: <span class="ident">access_expr</span>,
         <span class="ident">value</span>: <span class="ident">query_expr</span>,
     };
+    <span class="kw">let</span> <span class="ident">stmt_return_pointer</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">Return</span> {
+        <span class="ident">value</span>: <span class="prelude-val">Some</span>(<span class="ident">access_expr</span>),
+    };
+    <span class="kw">let</span> <span class="ident">stmt_kill</span> <span class="op">=</span> <span class="ident">S</span>::<span class="ident">Kill</span>;
     <span class="macro">assert_eq</span><span class="macro">!</span>(
-        <span class="ident">info</span>.<span class="ident">process_block</span>(<span class="kw-2">&amp;</span>[<span class="ident">stmt_assign</span>], <span class="kw-2">&amp;</span>[], <span class="prelude-val">Some</span>(<span class="ident">UniformityDisruptor</span>::<span class="ident">Discard</span>)),
-        <span class="prelude-val">Ok</span>((
-            <span class="ident">Uniformity</span>::<span class="ident">non_uniform_result</span>(<span class="ident">non_uniform_global_expr</span>),
-            <span class="ident">ExitFlags</span>::<span class="ident">empty</span>()
-        )),
+        <span class="ident">info</span>.<span class="ident">process_block</span>(
+            <span class="kw-2">&amp;</span>[<span class="ident">stmt_emit4</span>, <span class="ident">stmt_assign</span>, <span class="ident">stmt_kill</span>, <span class="ident">stmt_return_pointer</span>],
+            <span class="kw-2">&amp;</span>[],
+            <span class="prelude-val">Some</span>(<span class="ident">UniformityDisruptor</span>::<span class="ident">Discard</span>)
+        ),
+        <span class="prelude-val">Ok</span>(<span class="ident">FunctionUniformity</span> {
+            <span class="ident">result</span>: <span class="ident">Uniformity</span>::<span class="ident">non_uniform_result</span>(<span class="ident">non_uniform_global_expr</span>),
+            <span class="ident">exit</span>: <span class="ident">ExitFlags</span>::<span class="ident">all</span>(),
+        }),
     );
     <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">info</span>[<span class="ident">non_uniform_global</span>], <span class="ident">GlobalUse</span>::<span class="ident">READ</span> <span class="op">|</span> <span class="ident">GlobalUse</span>::<span class="ident">WRITE</span>);
 }

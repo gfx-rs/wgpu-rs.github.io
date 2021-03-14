@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["SUPPORTED_CAPABILITIES",""],["SUPPORTED_EXTENSIONS",""],["SUPPORTED_EXT_SETS",""]],"enum":[["ModuleState",""]],"fn":[["parse_u8_slice",""]],"struct":[["Assignment",""],["Instruction",""],["Options",""],["Parser",""]]});
+initSidebarItems({"constant":[["SUPPORTED_CAPABILITIES",""],["SUPPORTED_EXTENSIONS",""],["SUPPORTED_EXT_SETS",""]],"enum":[["ModuleState",""]],"fn":[["parse_u8_slice",""]],"struct":[["Instruction",""],["Options",""],["Parser",""]]});
