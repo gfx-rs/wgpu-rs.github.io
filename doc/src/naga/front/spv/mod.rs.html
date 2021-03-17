@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/196523d/src/front/spv/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/a17ae02/src/front/spv/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -2890,6 +2890,13 @@
 <span id="2887">2887</span>
 <span id="2888">2888</span>
 <span id="2889">2889</span>
+<span id="2890">2890</span>
+<span id="2891">2891</span>
+<span id="2892">2892</span>
+<span id="2893">2893</span>
+<span id="2894">2894</span>
+<span id="2895">2895</span>
+<span id="2896">2896</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">/*! SPIR-V frontend
 
@@ -2987,10 +2994,12 @@ such that we can handle any `Return` statements without problems.
 }
 
 <span class="doccomment">/// OpPhi instruction.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Default</span>, <span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">PhiInstruction</span> {
     <span class="doccomment">/// SPIR-V&#39;s ID.</span>
     <span class="ident">id</span>: <span class="ident">u32</span>,
+
+    <span class="ident">pointer</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
 
     <span class="doccomment">/// Tuples of (variable, parent).</span>
     <span class="ident">variables</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>)<span class="op">&gt;</span>,
@@ -3344,9 +3353,6 @@ such that we can handle any `Return` statements without problems.
             <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">Flat</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">dec</span>.<span class="ident">interpolation</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Interpolation</span>::<span class="ident">Flat</span>);
             }
-            <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">Patch</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="comment">// skip</span>
-            }
             <span class="ident">spirv</span>::<span class="ident">Decoration</span>::<span class="ident">Centroid</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">dec</span>.<span class="ident">interpolation</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Interpolation</span>::<span class="ident">Centroid</span>);
             }
@@ -3577,25 +3583,32 @@ such that we can handle any `Return` statements without problems.
                         <span class="ident">ty</span>: <span class="self">self</span>.<span class="ident">lookup_type</span>.<span class="ident">lookup</span>(<span class="ident">result_type_id</span>)<span class="question-mark">?</span>.<span class="ident">handle</span>,
                         <span class="ident">init</span>: <span class="prelude-val">None</span>,
                     });
-                    <span class="self">self</span>.<span class="ident">lookup_expression</span>.<span class="ident">insert</span>(
-                        <span class="ident">result_id</span>,
-                        <span class="ident">LookupExpression</span> {
-                            <span class="ident">handle</span>: <span class="ident">expressions</span>
-                                .<span class="ident">append</span>(<span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">LocalVariable</span>(<span class="ident">var_handle</span>)),
-                            <span class="ident">type_id</span>: <span class="ident">result_type_id</span>,
-                        },
-                    );
+                    <span class="kw">let</span> <span class="ident">pointer</span> <span class="op">=</span> <span class="ident">expressions</span>.<span class="ident">append</span>(<span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">LocalVariable</span>(<span class="ident">var_handle</span>));
 
+                    <span class="kw">let</span> <span class="ident">in_count</span> <span class="op">=</span> (<span class="ident">inst</span>.<span class="ident">wc</span> <span class="op">-</span> <span class="number">3</span>) <span class="op">/</span> <span class="number">2</span>;
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">phi</span> <span class="op">=</span> <span class="ident">PhiInstruction</span> {
                         <span class="ident">id</span>: <span class="ident">result_id</span>,
-                        ..<span class="ident">Default</span>::<span class="ident">default</span>()
+                        <span class="ident">pointer</span>,
+                        <span class="ident">variables</span>: <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">in_count</span> <span class="kw">as</span> <span class="ident">usize</span>),
                     };
-                    <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..(<span class="ident">inst</span>.<span class="ident">wc</span> <span class="op">-</span> <span class="number">3</span>) <span class="op">/</span> <span class="number">2</span> {
-                        <span class="ident">phi</span>.<span class="ident">variables</span>.<span class="ident">push</span>((<span class="self">self</span>.<span class="ident">next</span>()<span class="question-mark">?</span>, <span class="self">self</span>.<span class="ident">next</span>()<span class="question-mark">?</span>));
+                    <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">in_count</span> {
+                        <span class="kw">let</span> <span class="ident">source_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next</span>()<span class="question-mark">?</span>;
+                        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">next</span>()<span class="question-mark">?</span>;
+                        <span class="ident">phi</span>.<span class="ident">variables</span>.<span class="ident">push</span>((<span class="ident">source_id</span>, <span class="ident">value</span>));
                     }
 
                     <span class="ident">phis</span>.<span class="ident">push</span>(<span class="ident">phi</span>);
                     <span class="ident">emitter</span>.<span class="ident">start</span>(<span class="ident">expressions</span>);
+
+                    <span class="comment">// Associate the lookup with an actual value, which is emitted</span>
+                    <span class="comment">// into the current block.</span>
+                    <span class="self">self</span>.<span class="ident">lookup_expression</span>.<span class="ident">insert</span>(
+                        <span class="ident">result_id</span>,
+                        <span class="ident">LookupExpression</span> {
+                            <span class="ident">handle</span>: <span class="ident">expressions</span>.<span class="ident">append</span>(<span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">Load</span> { <span class="ident">pointer</span> }),
+                            <span class="ident">type_id</span>: <span class="ident">result_type_id</span>,
+                        },
+                    );
                 }
                 <span class="ident">Op</span>::<span class="ident">AccessChain</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">struct</span> <span class="ident">AccessExpression</span> {
@@ -4702,8 +4715,9 @@ such that we can handle any `Return` statements without problems.
         <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">fun</span>) <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">iter_mut</span>() {
             <span class="self">self</span>.<span class="ident">patch_function_calls</span>(<span class="ident">fun</span>)<span class="question-mark">?</span>;
         }
-        <span class="comment">// Note: we aren&#39;t patching the entry point functions, because they are simply</span>
-        <span class="comment">// wrappers behind real functions, and are already resolved.</span>
+        <span class="kw">for</span> <span class="ident">ep</span> <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">entry_points</span>.<span class="ident">iter_mut</span>() {
+            <span class="self">self</span>.<span class="ident">patch_function_calls</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ep</span>.<span class="ident">function</span>)<span class="question-mark">?</span>;
+        }
 
         <span class="comment">// Check all the images and samplers to have consistent comparison property.</span>
         <span class="kw">for</span> (<span class="ident">handle</span>, <span class="ident">flags</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">handle_sampling</span>.<span class="ident">drain</span>() {

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/196523d/src/proc/analyzer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>analyzer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/a17ae02/src/proc/analyzer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>analyzer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -884,6 +884,35 @@
 <span id="881">881</span>
 <span id="882">882</span>
 <span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
+<span id="910">910</span>
+<span id="911">911</span>
+<span id="912">912</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">/*! Module analyzer.
 
@@ -1093,9 +1122,11 @@ Figures out the following properties:
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">thiserror</span>::<span class="ident">Error</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">test</span>, <span class="ident">derive</span>(<span class="ident">PartialEq</span>))]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AnalysisError</span> {
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">FunctionAnalysisError</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Expression {0:?} is not a global variable!&quot;</span>)]</span>
     <span class="ident">ExpectedGlobalVariable</span>(<span class="kw">crate</span>::<span class="ident">Expression</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Called function {0:?} that hasn&#39;t been declared in the IR yet&quot;</span>)]</span>
+    <span class="ident">ForwardCall</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Function</span><span class="op">&gt;</span>),
     <span class="attribute">#[<span class="ident">error</span>(
         <span class="string">&quot;Required uniformity of control flow for {0:?} in {1:?} is not fulfilled because of {2:?}&quot;</span>
     )]</span>
@@ -1104,6 +1135,15 @@ Figures out the following properties:
         <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
         <span class="ident">UniformityDisruptor</span>,
     ),
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">thiserror</span>::<span class="ident">Error</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">test</span>, <span class="ident">derive</span>(<span class="ident">PartialEq</span>))]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AnalysisError</span> {
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Function {0:?} analysis failed&quot;</span>)]</span>
+    <span class="ident">Function</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Function</span><span class="op">&gt;</span>, <span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">FunctionAnalysisError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Entry point {0:?}/&#39;{1}&#39; function analysis failed&quot;</span>)]</span>
+    <span class="ident">EntryPoint</span>(<span class="kw">crate</span>::<span class="ident">ShaderStage</span>, <span class="ident">String</span>, <span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">FunctionAnalysisError</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">FunctionInfo</span> {
@@ -1178,7 +1218,7 @@ Figures out the following properties:
         <span class="ident">arguments</span>: <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::<span class="ident">FunctionArgument</span>],
         <span class="ident">global_var_arena</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">GlobalVariable</span><span class="op">&gt;</span>,
         <span class="ident">other_functions</span>: <span class="kw-2">&amp;</span>[<span class="ident">FunctionInfo</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">AnalysisError</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">FunctionAnalysisError</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Expression</span> <span class="kw">as</span> <span class="ident">E</span>, <span class="ident">SampleLevel</span> <span class="kw">as</span> <span class="ident">Sl</span>};
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">assignable_global</span> <span class="op">=</span> <span class="prelude-val">None</span>;
@@ -1231,7 +1271,10 @@ Figures out the following properties:
                 <span class="ident">assignable_global</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">gh</span>);
                 <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">global_var_arena</span>[<span class="ident">gh</span>];
                 <span class="kw">let</span> <span class="ident">uniform</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">class</span> {
-                    <span class="ident">Sc</span>::<span class="ident">Function</span> <span class="op">|</span> <span class="ident">Sc</span>::<span class="ident">Private</span> <span class="op">|</span> <span class="ident">Sc</span>::<span class="ident">WorkGroup</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                    <span class="comment">// local data is non-uniform</span>
+                    <span class="ident">Sc</span>::<span class="ident">Function</span> <span class="op">|</span> <span class="ident">Sc</span>::<span class="ident">Private</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                    <span class="comment">// workgroup memory is exclusively accessed by the group</span>
+                    <span class="ident">Sc</span>::<span class="ident">WorkGroup</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
                     <span class="comment">// uniform data</span>
                     <span class="ident">Sc</span>::<span class="ident">Uniform</span> <span class="op">|</span> <span class="ident">Sc</span>::<span class="ident">PushConstant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
                     <span class="comment">// storage data is only uniform when read-only</span>
@@ -1262,13 +1305,17 @@ Figures out the following properties:
                     <span class="ident">image</span>: <span class="kw">match</span> <span class="ident">expression_arena</span>[<span class="ident">image</span>] {
                         <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">GlobalVariable</span>(<span class="ident">var</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">var</span>,
                         <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AnalysisError</span>::<span class="ident">ExpectedGlobalVariable</span>(<span class="ident">other</span>.<span class="ident">clone</span>()))
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionAnalysisError</span>::<span class="ident">ExpectedGlobalVariable</span>(
+                                <span class="ident">other</span>.<span class="ident">clone</span>(),
+                            ))
                         }
                     },
                     <span class="ident">sampler</span>: <span class="kw">match</span> <span class="ident">expression_arena</span>[<span class="ident">sampler</span>] {
                         <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">GlobalVariable</span>(<span class="ident">var</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">var</span>,
                         <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AnalysisError</span>::<span class="ident">ExpectedGlobalVariable</span>(<span class="ident">other</span>.<span class="ident">clone</span>()))
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionAnalysisError</span>::<span class="ident">ExpectedGlobalVariable</span>(
+                                <span class="ident">other</span>.<span class="ident">clone</span>(),
+                            ))
                         }
                     },
                 });
@@ -1365,7 +1412,12 @@ Figures out the following properties:
                 <span class="ident">non_uniform_result</span>: <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">expr</span>),
                 <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
             },
-            <span class="ident">E</span>::<span class="ident">Call</span>(<span class="ident">function</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">process_call</span>(<span class="kw-2">&amp;</span><span class="ident">other_functions</span>[<span class="ident">function</span>.<span class="ident">index</span>()]).<span class="ident">result</span>,
+            <span class="ident">E</span>::<span class="ident">Call</span>(<span class="ident">function</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">fun</span> <span class="op">=</span> <span class="ident">other_functions</span>
+                    .<span class="ident">get</span>(<span class="ident">function</span>.<span class="ident">index</span>())
+                    .<span class="ident">ok_or</span>(<span class="ident">FunctionAnalysisError</span>::<span class="ident">ForwardCall</span>(<span class="ident">function</span>))<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">process_call</span>(<span class="ident">fun</span>).<span class="ident">result</span>
+            }
             <span class="ident">E</span>::<span class="ident">ArrayLength</span>(<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Uniformity</span> {
                 <span class="ident">non_uniform_result</span>: <span class="self">self</span>.<span class="ident">add_ref_impl</span>(<span class="ident">expr</span>, <span class="ident">GlobalUse</span>::<span class="ident">QUERY</span>),
                 <span class="ident">requirement</span>: <span class="prelude-val">None</span>,
@@ -1395,7 +1447,7 @@ Figures out the following properties:
         <span class="ident">statements</span>: <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::<span class="ident">Statement</span>],
         <span class="ident">other_functions</span>: <span class="kw-2">&amp;</span>[<span class="ident">FunctionInfo</span>],
         <span class="kw-2">mut</span> <span class="ident">disruptor</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">UniformityDisruptor</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FunctionUniformity</span>, <span class="ident">AnalysisError</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FunctionUniformity</span>, <span class="ident">FunctionAnalysisError</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">Statement</span> <span class="kw">as</span> <span class="ident">S</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">combined_uniformity</span> <span class="op">=</span> <span class="ident">FunctionUniformity</span>::<span class="ident">new</span>();
@@ -1407,7 +1459,7 @@ Figures out the following properties:
                         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">req</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">expressions</span>[<span class="ident">expr</span>.<span class="ident">index</span>()].<span class="ident">uniformity</span>.<span class="ident">requirement</span> {
                             <span class="ident">requirement</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">disruptor</span> {
                                 <span class="prelude-val">Some</span>(<span class="ident">cause</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AnalysisError</span>::<span class="ident">NonUniformControlFlow</span>(
+                                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FunctionAnalysisError</span>::<span class="ident">NonUniformControlFlow</span>(
                                         <span class="ident">req</span>, <span class="ident">expr</span>, <span class="ident">cause</span>,
                                     ))
                                 }
@@ -1517,7 +1569,9 @@ Figures out the following properties:
                     <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">argument</span> <span class="kw">in</span> <span class="ident">arguments</span> {
                         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_ref</span>(<span class="ident">argument</span>);
                     }
-                    <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">other_functions</span>[<span class="ident">function</span>.<span class="ident">index</span>()];
+                    <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">other_functions</span>
+                        .<span class="ident">get</span>(<span class="ident">function</span>.<span class="ident">index</span>())
+                        .<span class="ident">ok_or</span>(<span class="ident">FunctionAnalysisError</span>::<span class="ident">ForwardCall</span>(<span class="ident">function</span>))<span class="question-mark">?</span>;
                     <span class="self">self</span>.<span class="ident">process_call</span>(<span class="ident">info</span>)
                 }
             };
@@ -1544,7 +1598,7 @@ Figures out the following properties:
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">fun</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">Function</span>,
         <span class="ident">global_var_arena</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">GlobalVariable</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FunctionInfo</span>, <span class="ident">AnalysisError</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FunctionInfo</span>, <span class="ident">FunctionAnalysisError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">FunctionInfo</span> {
             <span class="ident">uniformity</span>: <span class="ident">Uniformity</span>::<span class="ident">default</span>(),
             <span class="ident">may_kill</span>: <span class="bool-val">false</span>,
@@ -1576,13 +1630,17 @@ Figures out the following properties:
             <span class="ident">functions</span>: <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">len</span>()),
             <span class="ident">entry_points</span>: <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">module</span>.<span class="ident">entry_points</span>.<span class="ident">len</span>()),
         };
-        <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">fun</span>) <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">this</span>.<span class="ident">process_function</span>(<span class="ident">fun</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">global_variables</span>)<span class="question-mark">?</span>;
+        <span class="kw">for</span> (<span class="ident">fun_handle</span>, <span class="ident">fun</span>) <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">iter</span>() {
+            <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">this</span>
+                .<span class="ident">process_function</span>(<span class="ident">fun</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">global_variables</span>)
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">source</span><span class="op">|</span> <span class="ident">AnalysisError</span>::<span class="ident">Function</span>(<span class="ident">fun_handle</span>, <span class="ident">source</span>))<span class="question-mark">?</span>;
             <span class="ident">this</span>.<span class="ident">functions</span>.<span class="ident">push</span>(<span class="ident">info</span>);
         }
 
         <span class="kw">for</span> <span class="ident">ep</span> <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">entry_points</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">this</span>.<span class="ident">process_function</span>(<span class="kw-2">&amp;</span><span class="ident">ep</span>.<span class="ident">function</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">global_variables</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">this</span>
+                .<span class="ident">process_function</span>(<span class="kw-2">&amp;</span><span class="ident">ep</span>.<span class="ident">function</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">global_variables</span>)
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">source</span><span class="op">|</span> <span class="ident">AnalysisError</span>::<span class="ident">EntryPoint</span>(<span class="ident">ep</span>.<span class="ident">stage</span>, <span class="ident">ep</span>.<span class="ident">name</span>.<span class="ident">clone</span>(), <span class="ident">source</span>))<span class="question-mark">?</span>;
             <span class="ident">this</span>.<span class="ident">entry_points</span>.<span class="ident">push</span>(<span class="ident">info</span>);
         }
 
@@ -1719,7 +1777,7 @@ Figures out the following properties:
     };
     <span class="macro">assert_eq</span><span class="macro">!</span>(
         <span class="ident">info</span>.<span class="ident">process_block</span>(<span class="kw-2">&amp;</span>[<span class="ident">stmt_emit2</span>, <span class="ident">stmt_if_non_uniform</span>], <span class="kw-2">&amp;</span>[], <span class="prelude-val">None</span>),
-        <span class="prelude-val">Err</span>(<span class="ident">AnalysisError</span>::<span class="ident">NonUniformControlFlow</span>(
+        <span class="prelude-val">Err</span>(<span class="ident">FunctionAnalysisError</span>::<span class="ident">NonUniformControlFlow</span>(
             <span class="ident">UniformityRequirement</span>::<span class="ident">Derivative</span>,
             <span class="ident">derivative_expr</span>,
             <span class="ident">UniformityDisruptor</span>::<span class="ident">Expression</span>(<span class="ident">non_uniform_global_expr</span>)
