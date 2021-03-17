@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/717c2d7/wgpu-core/src/instance.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>instance.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/2f3b398/wgpu-core/src/instance.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>instance.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -989,7 +989,7 @@
     <span class="ident">device</span>::{<span class="ident">Device</span>, <span class="ident">DeviceDescriptor</span>},
     <span class="ident">hub</span>::{<span class="ident">GfxBackend</span>, <span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">Input</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>::{<span class="ident">AdapterId</span>, <span class="ident">DeviceId</span>, <span class="ident">SurfaceId</span>, <span class="ident">Valid</span>},
-    <span class="ident">span</span>, <span class="ident">LabelHelpers</span>, <span class="ident">LifeGuard</span>, <span class="ident">PrivateFeatures</span>, <span class="ident">Stored</span>, <span class="ident">MAX_BIND_GROUPS</span>,
+    <span class="ident">LabelHelpers</span>, <span class="ident">LifeGuard</span>, <span class="ident">PrivateFeatures</span>, <span class="ident">Stored</span>, <span class="ident">MAX_BIND_GROUPS</span>,
 };
 
 <span class="kw">use</span> <span class="ident">wgt</span>::{<span class="ident">Backend</span>, <span class="ident">BackendBit</span>, <span class="ident">PowerPreference</span>, <span class="ident">BIND_BUFFER_ALIGNMENT</span>};
@@ -1109,7 +1109,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span> <span class="ident">Adapter</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">raw</span>: <span class="ident">hal</span>::<span class="ident">adapter</span>::<span class="ident">Adapter</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Adapter::new&quot;</span>);
+        <span class="ident">profiling</span>::<span class="macro">scope</span><span class="macro">!</span>(<span class="string">&quot;Adapter::new&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">adapter_features</span> <span class="op">=</span> <span class="ident">raw</span>.<span class="ident">physical_device</span>.<span class="ident">features</span>();
         <span class="kw">let</span> <span class="ident">properties</span> <span class="op">=</span> <span class="ident">raw</span>.<span class="ident">physical_device</span>.<span class="ident">properties</span>();
@@ -1269,7 +1269,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">TextureFormat</span>, <span class="ident">GetSwapChainPreferredFormatError</span><span class="op">&gt;</span> {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Adapter::get_swap_chain_preferred_format&quot;</span>);
+        <span class="ident">profiling</span>::<span class="macro">scope</span><span class="macro">!</span>(<span class="string">&quot;Adapter::get_swap_chain_preferred_format&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">formats</span> <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">get_surface_mut</span>(<span class="ident">surface</span>);
@@ -1367,7 +1367,7 @@
             .<span class="ident">contains</span>(<span class="ident">wgt</span>::<span class="ident">Features</span>::<span class="ident">MAPPABLE_PRIMARY_BUFFERS</span>)
             <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">info</span>.<span class="ident">device_type</span> <span class="op">=</span><span class="op">=</span> <span class="ident">hal</span>::<span class="ident">adapter</span>::<span class="ident">DeviceType</span>::<span class="ident">DiscreteGpu</span>
         {
-            <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Feature MAPPABLE_PRIMARY_BUFFERS enabled on a discrete gpu. This is a massive performance footgun and likely not what you wanted&quot;</span>);
+            <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Feature MAPPABLE_PRIMARY_BUFFERS enabled on a discrete gpu. This is a massive performance footgun and likely not what you wanted&quot;</span>);
         }
 
         <span class="kw">let</span> <span class="ident">phd</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">physical_device</span>;
@@ -1383,7 +1383,7 @@
             <span class="op">|</span> <span class="ident">hal</span>::<span class="ident">Features</span>::<span class="ident">IMAGE_CUBE_ARRAY</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">enabled_features</span> <span class="op">=</span> <span class="ident">available_features</span> <span class="op">&amp;</span> <span class="ident">wishful_features</span>;
         <span class="kw">if</span> <span class="ident">enabled_features</span> <span class="op">!</span><span class="op">=</span> <span class="ident">wishful_features</span> {
-            <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(
+            <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(
                 <span class="string">&quot;Missing internal features: {:?}&quot;</span>,
                 <span class="ident">wishful_features</span> <span class="op">-</span> <span class="ident">enabled_features</span>
             );
@@ -1590,7 +1590,7 @@
         <span class="ident">handle</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">raw_window_handle</span>::<span class="ident">HasRawWindowHandle</span>,
         <span class="ident">id_in</span>: <span class="ident">Input</span><span class="op">&lt;</span><span class="ident">G</span>, <span class="ident">SurfaceId</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SurfaceId</span> {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Instance::create_surface&quot;</span>);
+        <span class="ident">profiling</span>::<span class="macro">scope</span><span class="macro">!</span>(<span class="string">&quot;Instance::create_surface&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="macro">backends_map</span><span class="macro">!</span> {
@@ -1598,7 +1598,7 @@
                     <span class="ident">inst</span>
                     .<span class="ident">as_ref</span>()
                     .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">inst</span><span class="op">|</span> <span class="ident">inst</span>.<span class="ident">create_surface</span>(<span class="ident">handle</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                        <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Error: {:?}&quot;</span>, <span class="ident">e</span>);
+                        <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Error: {:?}&quot;</span>, <span class="ident">e</span>);
                     }).<span class="ident">ok</span>())
                 };
 
@@ -1628,7 +1628,7 @@
         <span class="ident">layer</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">c_void</span>,
         <span class="ident">id_in</span>: <span class="ident">Input</span><span class="op">&lt;</span><span class="ident">G</span>, <span class="ident">SurfaceId</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">SurfaceId</span> {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Instance::instance_create_surface_metal&quot;</span>);
+        <span class="ident">profiling</span>::<span class="macro">scope</span><span class="macro">!</span>(<span class="string">&quot;Instance::instance_create_surface_metal&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="ident">Surface</span> {
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gfx-backend-vulkan&quot;</span>)]</span>
@@ -1646,14 +1646,14 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">surface_drop</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">SurfaceId</span>) {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Surface::drop&quot;</span>);
+        <span class="ident">profiling</span>::<span class="macro">scope</span><span class="macro">!</span>(<span class="string">&quot;Surface::drop&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
         <span class="kw">let</span> (<span class="ident">surface</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">surfaces</span>.<span class="ident">unregister</span>(<span class="ident">id</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="self">self</span>.<span class="ident">instance</span>.<span class="ident">destroy_surface</span>(<span class="ident">surface</span>.<span class="ident">unwrap</span>());
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enumerate_adapters</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">inputs</span>: <span class="ident">AdapterInputs</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&lt;</span><span class="ident">G</span>, <span class="ident">AdapterId</span><span class="op">&gt;</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">AdapterId</span><span class="op">&gt;</span> {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Instance::enumerate_adapters&quot;</span>);
+        <span class="ident">profiling</span>::<span class="macro">scope</span><span class="macro">!</span>(<span class="string">&quot;Instance::enumerate_adapters&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">instance</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
@@ -1666,7 +1666,7 @@
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id_backend</span>) <span class="op">=</span> <span class="ident">inputs</span>.<span class="ident">find</span>(<span class="ident">backend</span>) {
                         <span class="kw">for</span> <span class="ident">raw</span> <span class="kw">in</span> <span class="ident">inst</span>.<span class="ident">enumerate_adapters</span>() {
                             <span class="kw">let</span> <span class="ident">adapter</span> <span class="op">=</span> <span class="ident">Adapter</span>::<span class="ident">new</span>(<span class="ident">raw</span>);
-                            <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Adapter {} {:?}&quot;</span>, <span class="ident">backend_info</span>, <span class="ident">adapter</span>.<span class="ident">raw</span>.<span class="ident">info</span>);
+                            <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Adapter {} {:?}&quot;</span>, <span class="ident">backend_info</span>, <span class="ident">adapter</span>.<span class="ident">raw</span>.<span class="ident">info</span>);
                             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">adapters</span>
                                 .<span class="ident">prepare</span>(<span class="ident">id_backend</span>.<span class="ident">clone</span>())
                                 .<span class="ident">assign</span>(<span class="ident">adapter</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
@@ -1696,7 +1696,7 @@
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">RequestAdapterOptions</span>,
         <span class="ident">inputs</span>: <span class="ident">AdapterInputs</span><span class="op">&lt;</span><span class="ident">Input</span><span class="op">&lt;</span><span class="ident">G</span>, <span class="ident">AdapterId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">AdapterId</span>, <span class="ident">RequestAdapterError</span><span class="op">&gt;</span> {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Instance::pick_adapter&quot;</span>);
+        <span class="ident">profiling</span>::<span class="macro">scope</span><span class="macro">!</span>(<span class="string">&quot;Instance::pick_adapter&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">instance</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">instance</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
@@ -1814,7 +1814,7 @@
             <span class="kw">let</span> <span class="ident">map</span> <span class="op">=</span> <span class="op">|</span>(<span class="ident">info_adapter</span>, <span class="ident">id_backend</span>, <span class="kw-2">mut</span> <span class="ident">adapters_backend</span>, <span class="ident">backend_hub</span>)<span class="op">|</span> {
                 <span class="kw">if</span> <span class="ident">selected</span> <span class="op">&lt;</span> <span class="ident">adapters_backend</span>.<span class="ident">len</span>() {
                     <span class="kw">let</span> <span class="ident">adapter</span> <span class="op">=</span> <span class="ident">Adapter</span>::<span class="ident">new</span>(<span class="ident">adapters_backend</span>.<span class="ident">swap_remove</span>(<span class="ident">selected</span>));
-                    <span class="ident">tracing</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Adapter {} {:?}&quot;</span>, <span class="ident">info_adapter</span>, <span class="ident">adapter</span>.<span class="ident">raw</span>.<span class="ident">info</span>);
+                    <span class="ident">log</span>::<span class="macro">info</span><span class="macro">!</span>(<span class="string">&quot;Adapter {} {:?}&quot;</span>, <span class="ident">info_adapter</span>, <span class="ident">adapter</span>.<span class="ident">raw</span>.<span class="ident">info</span>);
                     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">backend_hub</span>(<span class="self">self</span>).<span class="ident">adapters</span>
                         .<span class="ident">prepare</span>(<span class="ident">id_backend</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>())
                         .<span class="ident">assign</span>(<span class="ident">adapter</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
@@ -1843,7 +1843,7 @@
             <span class="ident">id_dx11</span>.<span class="ident">take</span>(),
             <span class="ident">id_gl</span>.<span class="ident">take</span>(),
         );
-        <span class="ident">tracing</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Some adapters are present, but enumerating them failed!&quot;</span>);
+        <span class="ident">log</span>::<span class="macro">warn</span><span class="macro">!</span>(<span class="string">&quot;Some adapters are present, but enumerating them failed!&quot;</span>);
         <span class="prelude-val">Err</span>(<span class="ident">RequestAdapterError</span>::<span class="ident">NotFound</span>)
     }
 
@@ -1851,7 +1851,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">adapter_id</span>: <span class="ident">AdapterId</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">AdapterInfo</span>, <span class="ident">InvalidAdapter</span><span class="op">&gt;</span> {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Adapter::get_info&quot;</span>);
+        <span class="ident">profiling</span>::<span class="macro">scope</span><span class="macro">!</span>(<span class="string">&quot;Adapter::get_info&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
@@ -1867,7 +1867,7 @@
         <span class="ident">adapter_id</span>: <span class="ident">AdapterId</span>,
         <span class="ident">format</span>: <span class="ident">wgt</span>::<span class="ident">TextureFormat</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">TextureFormatFeatures</span>, <span class="ident">InvalidAdapter</span><span class="op">&gt;</span> {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Adapter::get_texture_format_features&quot;</span>);
+        <span class="ident">profiling</span>::<span class="macro">scope</span><span class="macro">!</span>(<span class="string">&quot;Adapter::get_texture_format_features&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
@@ -1882,7 +1882,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">adapter_id</span>: <span class="ident">AdapterId</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">Features</span>, <span class="ident">InvalidAdapter</span><span class="op">&gt;</span> {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Adapter::features&quot;</span>);
+        <span class="ident">profiling</span>::<span class="macro">scope</span><span class="macro">!</span>(<span class="string">&quot;Adapter::features&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
@@ -1897,7 +1897,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">adapter_id</span>: <span class="ident">AdapterId</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">Limits</span>, <span class="ident">InvalidAdapter</span><span class="op">&gt;</span> {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Adapter::limits&quot;</span>);
+        <span class="ident">profiling</span>::<span class="macro">scope</span><span class="macro">!</span>(<span class="string">&quot;Adapter::limits&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
@@ -1909,7 +1909,7 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">adapter_drop</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">adapter_id</span>: <span class="ident">AdapterId</span>) {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Adapter::drop&quot;</span>);
+        <span class="ident">profiling</span>::<span class="macro">scope</span><span class="macro">!</span>(<span class="string">&quot;Adapter::drop&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
@@ -1934,7 +1934,7 @@
         <span class="ident">trace_path</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">std</span>::<span class="ident">path</span>::<span class="ident">Path</span><span class="op">&gt;</span>,
         <span class="ident">id_in</span>: <span class="ident">Input</span><span class="op">&lt;</span><span class="ident">G</span>, <span class="ident">DeviceId</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">DeviceId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">RequestDeviceError</span><span class="op">&gt;</span>) {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;Adapter::request_device&quot;</span>);
+        <span class="ident">profiling</span>::<span class="macro">scope</span><span class="macro">!</span>(<span class="string">&quot;Adapter::request_device&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();

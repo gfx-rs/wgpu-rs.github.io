@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/717c2d7/wgpu-core/src/command/compute.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>compute.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/2f3b398/wgpu-core/src/command/compute.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>compute.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -827,25 +827,6 @@
 <span id="824">824</span>
 <span id="825">825</span>
 <span id="826">826</span>
-<span id="827">827</span>
-<span id="828">828</span>
-<span id="829">829</span>
-<span id="830">830</span>
-<span id="831">831</span>
-<span id="832">832</span>
-<span id="833">833</span>
-<span id="834">834</span>
-<span id="835">835</span>
-<span id="836">836</span>
-<span id="837">837</span>
-<span id="838">838</span>
-<span id="839">839</span>
-<span id="840">840</span>
-<span id="841">841</span>
-<span id="842">842</span>
-<span id="843">843</span>
-<span id="844">844</span>
-<span id="845">845</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -861,7 +842,6 @@
     <span class="ident">id</span>,
     <span class="ident">memory_init_tracker</span>::{<span class="ident">MemoryInitKind</span>, <span class="ident">MemoryInitTrackerAction</span>},
     <span class="ident">resource</span>::{<span class="ident">Buffer</span>, <span class="ident">BufferUse</span>, <span class="ident">Texture</span>},
-    <span class="ident">span</span>,
     <span class="ident">track</span>::{<span class="ident">TrackerSet</span>, <span class="ident">UsageConflict</span>},
     <span class="ident">validation</span>::{<span class="ident">check_buffer_usage</span>, <span class="ident">MissingBufferUsageError</span>},
     <span class="ident">Label</span>,
@@ -1070,7 +1050,7 @@
             <span class="self">self</span>.<span class="ident">trackers</span>.<span class="ident">merge_extend</span>(<span class="kw-2">&amp;</span><span class="ident">bind_group_guard</span>[<span class="ident">id</span>].<span class="ident">used</span>)<span class="question-mark">?</span>;
         }
 
-        <span class="ident">tracing</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Encoding dispatch barriers&quot;</span>);
+        <span class="ident">log</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;Encoding dispatch barriers&quot;</span>);
 
         <span class="ident">CommandBuffer</span>::<span class="ident">insert_barriers</span>(
             <span class="ident">raw_cmd_buf</span>,
@@ -1102,7 +1082,7 @@
         <span class="ident">encoder_id</span>: <span class="ident">id</span>::<span class="ident">CommandEncoderId</span>,
         <span class="ident">base</span>: <span class="ident">BasePassRef</span><span class="op">&lt;</span><span class="ident">ComputeCommand</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ComputePassError</span><span class="op">&gt;</span> {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">INFO</span>, <span class="string">&quot;CommandEncoder::run_compute_pass&quot;</span>);
+        <span class="ident">profiling</span>::<span class="macro">scope</span><span class="macro">!</span>(<span class="string">&quot;CommandEncoder::run_compute_pass&quot;</span>);
         <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">Pass</span>(<span class="ident">encoder_id</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
@@ -1498,7 +1478,7 @@
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">compute_ffi</span> {
     <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">ComputeCommand</span>, <span class="ident">ComputePass</span>};
-    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">id</span>, <span class="ident">span</span>, <span class="ident">RawString</span>};
+    <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">id</span>, <span class="ident">RawString</span>};
     <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">convert</span>::<span class="ident">TryInto</span>, <span class="ident">ffi</span>, <span class="ident">slice</span>};
     <span class="kw">use</span> <span class="ident">wgt</span>::{<span class="ident">BufferAddress</span>, <span class="ident">DynamicOffset</span>};
 
@@ -1514,7 +1494,6 @@
         <span class="ident">offsets</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">DynamicOffset</span>,
         <span class="ident">offset_length</span>: <span class="ident">usize</span>,
     ) {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">DEBUG</span>, <span class="string">&quot;ComputePass::set_bind_group&quot;</span>);
         <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">SetBindGroup</span> {
             <span class="ident">index</span>: <span class="ident">index</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
             <span class="ident">num_dynamic_offsets</span>: <span class="ident">offset_length</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
@@ -1532,7 +1511,6 @@
         <span class="ident">pass</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ComputePass</span>,
         <span class="ident">pipeline_id</span>: <span class="ident">id</span>::<span class="ident">ComputePipelineId</span>,
     ) {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">DEBUG</span>, <span class="string">&quot;ComputePass::set_pipeline&quot;</span>);
         <span class="ident">pass</span>.<span class="ident">base</span>
             .<span class="ident">commands</span>
             .<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">SetPipeline</span>(<span class="ident">pipeline_id</span>));
@@ -1549,7 +1527,6 @@
         <span class="ident">size_bytes</span>: <span class="ident">u32</span>,
         <span class="ident">data</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>,
     ) {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">DEBUG</span>, <span class="string">&quot;ComputePass::set_push_constant&quot;</span>);
         <span class="macro">assert_eq</span><span class="macro">!</span>(
             <span class="ident">offset</span> <span class="op">&amp;</span> (<span class="ident">wgt</span>::<span class="ident">PUSH_CONSTANT_ALIGNMENT</span> <span class="op">-</span> <span class="number">1</span>),
             <span class="number">0</span>,
@@ -1585,7 +1562,6 @@
         <span class="ident">groups_y</span>: <span class="ident">u32</span>,
         <span class="ident">groups_z</span>: <span class="ident">u32</span>,
     ) {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">DEBUG</span>, <span class="string">&quot;ComputePass::dispatch&quot;</span>);
         <span class="ident">pass</span>.<span class="ident">base</span>
             .<span class="ident">commands</span>
             .<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">Dispatch</span>([<span class="ident">groups_x</span>, <span class="ident">groups_y</span>, <span class="ident">groups_z</span>]));
@@ -1597,7 +1573,6 @@
         <span class="ident">buffer_id</span>: <span class="ident">id</span>::<span class="ident">BufferId</span>,
         <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
     ) {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">DEBUG</span>, <span class="string">&quot;ComputePass::dispatch_indirect&quot;</span>);
         <span class="ident">pass</span>.<span class="ident">base</span>
             .<span class="ident">commands</span>
             .<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">DispatchIndirect</span> { <span class="ident">buffer_id</span>, <span class="ident">offset</span> });
@@ -1613,7 +1588,6 @@
         <span class="ident">label</span>: <span class="ident">RawString</span>,
         <span class="ident">color</span>: <span class="ident">u32</span>,
     ) {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">DEBUG</span>, <span class="string">&quot;ComputePass::push_debug_group&quot;</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">CStr</span>::<span class="ident">from_ptr</span>(<span class="ident">label</span>).<span class="ident">to_bytes</span>();
         <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">string_data</span>.<span class="ident">extend_from_slice</span>(<span class="ident">bytes</span>);
 
@@ -1625,7 +1599,6 @@
 
     <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
     <span class="kw">pub</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">wgpu_compute_pass_pop_debug_group</span>(<span class="ident">pass</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ComputePass</span>) {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">DEBUG</span>, <span class="string">&quot;ComputePass::pop_debug_group&quot;</span>);
         <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">PopDebugGroup</span>);
     }
 
@@ -1639,7 +1612,6 @@
         <span class="ident">label</span>: <span class="ident">RawString</span>,
         <span class="ident">color</span>: <span class="ident">u32</span>,
     ) {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">DEBUG</span>, <span class="string">&quot;ComputePass::insert_debug_marker&quot;</span>);
         <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">CStr</span>::<span class="ident">from_ptr</span>(<span class="ident">label</span>).<span class="ident">to_bytes</span>();
         <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">string_data</span>.<span class="ident">extend_from_slice</span>(<span class="ident">bytes</span>);
 
@@ -1655,8 +1627,6 @@
         <span class="ident">query_set_id</span>: <span class="ident">id</span>::<span class="ident">QuerySetId</span>,
         <span class="ident">query_index</span>: <span class="ident">u32</span>,
     ) {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">DEBUG</span>, <span class="string">&quot;ComputePass::write_timestamp&quot;</span>);
-
         <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">WriteTimestamp</span> {
             <span class="ident">query_set_id</span>,
             <span class="ident">query_index</span>,
@@ -1669,12 +1639,6 @@
         <span class="ident">query_set_id</span>: <span class="ident">id</span>::<span class="ident">QuerySetId</span>,
         <span class="ident">query_index</span>: <span class="ident">u32</span>,
     ) {
-        <span class="macro">span</span><span class="macro">!</span>(
-            <span class="ident">_guard</span>,
-            <span class="ident">DEBUG</span>,
-            <span class="string">&quot;ComputePass::begin_pipeline_statistics query&quot;</span>
-        );
-
         <span class="ident">pass</span>.<span class="ident">base</span>
             .<span class="ident">commands</span>
             .<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">BeginPipelineStatisticsQuery</span> {
@@ -1685,8 +1649,6 @@
 
     <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
     <span class="kw">pub</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">wgpu_compute_pass_end_pipeline_statistics_query</span>(<span class="ident">pass</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ComputePass</span>) {
-        <span class="macro">span</span><span class="macro">!</span>(<span class="ident">_guard</span>, <span class="ident">DEBUG</span>, <span class="string">&quot;ComputePass::end_pipeline_statistics_query&quot;</span>);
-
         <span class="ident">pass</span>.<span class="ident">base</span>
             .<span class="ident">commands</span>
             .<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">EndPipelineStatisticsQuery</span>);

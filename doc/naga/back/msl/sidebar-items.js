@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Error",""]],"fn":[["write_string",""]],"struct":[["BindSource",""],["BindTarget",""],["Options",""],["TranslationInfo","Information about a translated module that is required for the use of the result."],["Writer",""]],"type":[["BindingMap",""]]});
+initSidebarItems({"enum":[["EntryPointError",""],["Error",""]],"fn":[["write_string",""]],"struct":[["BindSource",""],["BindTarget",""],["Options",""],["TranslationInfo","Information about a translated module that is required for the use of the result."],["Writer",""]],"type":[["BindingMap",""]]});

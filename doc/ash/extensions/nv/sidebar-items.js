@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["MeshShader",""],["RayTracing",""]]});
+initSidebarItems({"struct":[["DeviceDiagnosticCheckpoints",""],["MeshShader",""],["RayTracing",""]]});
