@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/a17ae02/src/front/spv/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/d5fbb19/src/front/spv/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><script src="../../../../theme.js"></script><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -2897,6 +2897,15 @@
 <span id="2894">2894</span>
 <span id="2895">2895</span>
 <span id="2896">2896</span>
+<span id="2897">2897</span>
+<span id="2898">2898</span>
+<span id="2899">2899</span>
+<span id="2900">2900</span>
+<span id="2901">2901</span>
+<span id="2902">2902</span>
+<span id="2903">2903</span>
+<span id="2904">2904</span>
+<span id="2905">2905</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">/*! SPIR-V frontend
 
@@ -2943,13 +2952,22 @@ such that we can handle any `Return` statements without problems.
     <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">Shader</span>,
     <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">ClipDistance</span>,
     <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">CullDistance</span>,
+    <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">SampleRateShading</span>,
+    <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">DerivativeControl</span>,
+    <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">InterpolationFunction</span>,
+    <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">Matrix</span>,
     <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">ImageQuery</span>,
+    <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">Sampled1D</span>,
     <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">Image1D</span>,
+    <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">SampledCubeArray</span>,
     <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">ImageCubeArray</span>,
     <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">ImageMSArray</span>,
     <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">StorageImageExtendedFormats</span>,
     <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">Sampled1D</span>,
     <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">SampledCubeArray</span>,
+    <span class="comment">// tricky ones</span>
+    <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">UniformBufferArrayDynamicIndexing</span>,
+    <span class="ident">spirv</span>::<span class="ident">Capability</span>::<span class="ident">StorageBufferArrayDynamicIndexing</span>,
 ];
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SUPPORTED_EXTENSIONS</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[];
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SUPPORTED_EXT_SETS</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="string">&quot;GLSL.std.450&quot;</span>];
@@ -3125,13 +3143,13 @@ such that we can handle any `Return` statements without problems.
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">io_binding</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">is_output</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Binding</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">io_binding</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Binding</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
             <span class="ident">Decoration</span> {
                 <span class="ident">built_in</span>: <span class="prelude-val">Some</span>(<span class="ident">built_in</span>),
                 <span class="ident">location</span>: <span class="prelude-val">None</span>,
                 ..
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">map_builtin</span>(<span class="ident">built_in</span>, <span class="ident">is_output</span>).<span class="ident">map</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">BuiltIn</span>),
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">map_builtin</span>(<span class="ident">built_in</span>).<span class="ident">map</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">BuiltIn</span>),
             <span class="ident">Decoration</span> {
                 <span class="ident">built_in</span>: <span class="prelude-val">None</span>,
                 <span class="ident">location</span>: <span class="prelude-val">Some</span>(<span class="ident">loc</span>),
@@ -5682,7 +5700,7 @@ such that we can handle any `Return` statements without problems.
                 (<span class="ident">Variable</span>::<span class="ident">Global</span>, <span class="ident">var</span>)
             }
             <span class="ident">ExtendedClass</span>::<span class="ident">Input</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">binding</span> <span class="op">=</span> <span class="ident">dec</span>.<span class="ident">io_binding</span>(<span class="bool-val">false</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">binding</span> <span class="op">=</span> <span class="ident">dec</span>.<span class="ident">io_binding</span>()<span class="question-mark">?</span>;
                 <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">BuiltIn</span>(<span class="ident">built_in</span>) <span class="op">=</span> <span class="ident">binding</span> {
                     <span class="kw">let</span> <span class="ident">needs_inner_uint</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">built_in</span> {
                         <span class="kw">crate</span>::<span class="ident">BuiltIn</span>::<span class="ident">BaseInstance</span>
@@ -5731,7 +5749,7 @@ such that we can handle any `Return` statements without problems.
                 (<span class="ident">inner</span>, <span class="ident">var</span>)
             }
             <span class="ident">ExtendedClass</span>::<span class="ident">Output</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">binding</span> <span class="op">=</span> <span class="ident">dec</span>.<span class="ident">io_binding</span>(<span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                <span class="kw">let</span> <span class="ident">binding</span> <span class="op">=</span> <span class="ident">dec</span>.<span class="ident">io_binding</span>()<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">var</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">GlobalVariable</span> {
                     <span class="ident">name</span>: <span class="ident">dec</span>.<span class="ident">name</span>,
                     <span class="ident">class</span>: <span class="kw">crate</span>::<span class="ident">StorageClass</span>::<span class="ident">Private</span>,
