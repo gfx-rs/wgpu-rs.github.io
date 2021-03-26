@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/455ab67/src/backend/vulkan/src/physical_device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>physical_device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gfx-e86e7f3ebdbc4218/2ac006f/src/backend/vulkan/src/physical_device.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>physical_device.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../gfx_backend_vulkan/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -1295,6 +1295,16 @@
 <span id="1292">1292</span>
 <span id="1293">1293</span>
 <span id="1294">1294</span>
+<span id="1295">1295</span>
+<span id="1296">1296</span>
+<span id="1297">1297</span>
+<span id="1298">1298</span>
+<span id="1299">1299</span>
+<span id="1300">1300</span>
+<span id="1301">1301</span>
+<span id="1302">1302</span>
+<span id="1303">1303</span>
+<span id="1304">1304</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">ash</span>::{
     <span class="ident">extensions</span>::{<span class="self">self</span>, <span class="ident">khr</span>::<span class="ident">DrawIndirectCount</span>, <span class="ident">khr</span>::<span class="ident">Swapchain</span>, <span class="ident">nv</span>::<span class="ident">MeshShader</span>},
@@ -2235,14 +2245,24 @@
             .<span class="ident">device_info</span>
             .<span class="ident">supports_extension</span>(<span class="ident">vk</span>::<span class="ident">KhrMaintenance1Fn</span>::<span class="ident">name</span>());
 
+        <span class="kw">let</span> <span class="ident">supports_sampler_filter_minmax</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">device_info</span>
+            .<span class="ident">supports_extension</span>(<span class="ident">vk</span>::<span class="ident">ExtSamplerFilterMinmaxFn</span>::<span class="ident">name</span>())
+            <span class="op">|</span><span class="op">|</span> <span class="self">self</span>
+                .<span class="ident">device_features</span>
+                .<span class="ident">vulkan_1_2</span>
+                .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">features</span><span class="op">|</span> <span class="ident">features</span>.<span class="ident">sampler_filter_minmax</span> <span class="op">=</span><span class="op">=</span> <span class="ident">vk</span>::<span class="ident">TRUE</span>);
+
         <span class="ident">format</span>::<span class="ident">Properties</span> {
             <span class="ident">linear_tiling</span>: <span class="ident">conv</span>::<span class="ident">map_image_features</span>(
                 <span class="ident">properties</span>.<span class="ident">linear_tiling_features</span>,
                 <span class="ident">supports_transfer_bits</span>,
+                <span class="ident">supports_sampler_filter_minmax</span>,
             ),
             <span class="ident">optimal_tiling</span>: <span class="ident">conv</span>::<span class="ident">map_image_features</span>(
                 <span class="ident">properties</span>.<span class="ident">optimal_tiling_features</span>,
                 <span class="ident">supports_transfer_bits</span>,
+                <span class="ident">supports_sampler_filter_minmax</span>,
             ),
             <span class="ident">buffer_features</span>: <span class="ident">conv</span>::<span class="ident">map_buffer_features</span>(<span class="ident">properties</span>.<span class="ident">buffer_features</span>),
         }
