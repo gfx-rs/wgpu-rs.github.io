@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/gpu-alloc-0.3.0/src/linear.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>linear.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/gpu-alloc-b89b27c43ff2846f/560ad65/gpu-alloc/src/linear.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>linear.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings"></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../gpu_alloc/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../settings.html"><img src="../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -315,6 +315,37 @@
 <span id="312">312</span>
 <span id="313">313</span>
 <span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> {
     <span class="kw">crate</span>::{
@@ -342,29 +373,32 @@
 <span class="kw">unsafe</span> <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">LinearBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">M</span>: <span class="ident">Send</span> {}
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">Chunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
+<span class="kw">struct</span> <span class="ident">ActiveChunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
     <span class="ident">memory</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>,
     <span class="ident">offset</span>: <span class="ident">u64</span>,
     <span class="ident">ptr</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> <span class="ident">Chunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">exhaust</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ExhaustedChunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
-        <span class="ident">ExhaustedChunk</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> <span class="ident">ActiveChunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">exhaust</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Chunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
+        <span class="ident">Chunk</span> {
             <span class="ident">memory</span>: <span class="self">self</span>.<span class="ident">memory</span>,
+            <span class="ident">ptr</span>: <span class="self">self</span>.<span class="ident">ptr</span>,
         }
     }
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">ExhaustedChunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
+<span class="kw">struct</span> <span class="ident">Chunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
     <span class="ident">memory</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>,
+    <span class="ident">ptr</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">LinearAllocator</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
-    <span class="ident">ready</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Chunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">exhausted</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExhaustedChunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">active</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ActiveChunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">prepared</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Chunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">exhausted</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Chunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">offset</span>: <span class="ident">u64</span>,
     <span class="ident">chunk_size</span>: <span class="ident">u64</span>,
     <span class="ident">memory_type</span>: <span class="ident">u32</span>,
@@ -388,7 +422,8 @@
         <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="ident">align_down</span>(<span class="ident">chunk_size</span>, <span class="ident">atom_mask</span>), <span class="ident">chunk_size</span>);
 
         <span class="ident">LinearAllocator</span> {
-            <span class="ident">ready</span>: <span class="prelude-val">None</span>,
+            <span class="ident">active</span>: <span class="prelude-val">None</span>,
+            <span class="ident">prepared</span>: <span class="prelude-val">None</span>,
             <span class="ident">exhausted</span>: <span class="ident">VecDeque</span>::<span class="ident">new</span>(),
             <span class="ident">offset</span>: <span class="number">0</span>,
             <span class="ident">chunk_size</span>: <span class="ident">min</span>(<span class="ident">chunk_size</span>, <span class="ident">isize</span>::<span class="ident">max_value</span>()),
@@ -419,74 +454,79 @@
         <span class="kw">let</span> <span class="ident">align_mask</span> <span class="op">=</span> <span class="ident">align_mask</span> <span class="op">|</span> <span class="self">self</span>.<span class="ident">atom_mask</span>;
         <span class="kw">let</span> <span class="ident">host_visible</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">host_visible</span>();
 
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">ready</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">ready</span>) <span class="kw">if</span> <span class="ident">fits</span>(<span class="self">self</span>.<span class="ident">chunk_size</span>, <span class="ident">ready</span>.<span class="ident">offset</span>, <span class="ident">size</span>, <span class="ident">align_mask</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">let</span> <span class="ident">chunks_offset</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">offset</span>;
-                <span class="kw">let</span> <span class="ident">exhausted</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">exhausted</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>;
+        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">active</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">active</span>) <span class="kw">if</span> <span class="ident">fits</span>(<span class="self">self</span>.<span class="ident">chunk_size</span>, <span class="ident">active</span>.<span class="ident">offset</span>, <span class="ident">size</span>, <span class="ident">align_mask</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">chunks_index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">exhausted</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>;
                 <span class="prelude-val">Ok</span>(<span class="self">Self</span>::<span class="ident">alloc_from_chunk</span>(
-                    <span class="ident">ready</span>,
+                    <span class="ident">active</span>,
                     <span class="self">self</span>.<span class="ident">chunk_size</span>,
-                    <span class="ident">chunks_offset</span>,
-                    <span class="ident">exhausted</span>,
+                    <span class="ident">chunks_index</span>,
                     <span class="ident">size</span>,
                     <span class="ident">align_mask</span>,
                 ))
             }
 
-            <span class="ident">ready</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">active</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">exhausted</span>
-                    .<span class="ident">extend</span>(<span class="ident">ready</span>.<span class="ident">take</span>().<span class="ident">map</span>(<span class="ident">Chunk</span>::<span class="ident">exhaust</span>).<span class="ident">map</span>(<span class="prelude-val">Some</span>));
+                    .<span class="ident">extend</span>(<span class="ident">active</span>.<span class="ident">take</span>().<span class="ident">map</span>(<span class="ident">ActiveChunk</span>::<span class="ident">exhaust</span>).<span class="ident">map</span>(<span class="prelude-val">Some</span>));
 
-                <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">allocations_remains</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">TooManyObjects</span>);
-                }
-
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">memory</span> <span class="op">=</span>
-                    <span class="ident">device</span>.<span class="ident">allocate_memory</span>(<span class="self">self</span>.<span class="ident">chunk_size</span>, <span class="self">self</span>.<span class="ident">memory_type</span>, <span class="ident">flags</span>)<span class="question-mark">?</span>;
-
-                <span class="kw-2">*</span><span class="ident">allocations_remains</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
-                <span class="ident">heap</span>.<span class="ident">alloc</span>(<span class="self">self</span>.<span class="ident">chunk_size</span>);
-
-                <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">host_visible</span> {
-                    <span class="kw">match</span> <span class="ident">device</span>.<span class="ident">map_memory</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">memory</span>, <span class="number">0</span>, <span class="self">self</span>.<span class="ident">chunk_size</span>) {
-                        <span class="prelude-val">Ok</span>(<span class="ident">ptr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">ptr</span>),
-                        <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError</span>::<span class="ident">MapFailed</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>)]</span>
-                            <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(
-                                <span class="string">&quot;Failed to map host-visible memory in linear allocator&quot;</span>
-                            );
-                            <span class="ident">device</span>.<span class="ident">deallocate_memory</span>(<span class="ident">memory</span>);
-                            <span class="kw-2">*</span><span class="ident">allocations_remains</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                            <span class="ident">heap</span>.<span class="ident">dealloc</span>(<span class="self">self</span>.<span class="ident">chunk_size</span>);
-
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">OutOfHostMemory</span>);
+                <span class="kw">let</span> <span class="ident">active</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">prepared</span>.<span class="ident">take</span>() {
+                    <span class="prelude-val">Some</span>(<span class="ident">chunk</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">active</span>.<span class="ident">get_or_insert</span>(<span class="ident">ActiveChunk</span> {
+                        <span class="ident">ptr</span>: <span class="ident">chunk</span>.<span class="ident">ptr</span>,
+                        <span class="ident">memory</span>: <span class="ident">chunk</span>.<span class="ident">memory</span>,
+                        <span class="ident">offset</span>: <span class="number">0</span>,
+                    }),
+                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">allocations_remains</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">TooManyObjects</span>);
                         }
-                        <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError</span>::<span class="ident">OutOfDeviceMemory</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">OutOfDeviceMemory</span>);
-                        }
-                        <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError</span>::<span class="ident">OutOfHostMemory</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">OutOfHostMemory</span>);
-                        }
+
+                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">memory</span> <span class="op">=</span>
+                            <span class="ident">device</span>.<span class="ident">allocate_memory</span>(<span class="self">self</span>.<span class="ident">chunk_size</span>, <span class="self">self</span>.<span class="ident">memory_type</span>, <span class="ident">flags</span>)<span class="question-mark">?</span>;
+
+                        <span class="kw-2">*</span><span class="ident">allocations_remains</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
+                        <span class="ident">heap</span>.<span class="ident">alloc</span>(<span class="self">self</span>.<span class="ident">chunk_size</span>);
+
+                        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">host_visible</span> {
+                            <span class="kw">match</span> <span class="ident">device</span>.<span class="ident">map_memory</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">memory</span>, <span class="number">0</span>, <span class="self">self</span>.<span class="ident">chunk_size</span>) {
+                                <span class="prelude-val">Ok</span>(<span class="ident">ptr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">ptr</span>),
+                                <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError</span>::<span class="ident">MapFailed</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>)]</span>
+                                    <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(
+                                        <span class="string">&quot;Failed to map host-visible memory in linear allocator&quot;</span>
+                                    );
+                                    <span class="ident">device</span>.<span class="ident">deallocate_memory</span>(<span class="ident">memory</span>);
+                                    <span class="kw-2">*</span><span class="ident">allocations_remains</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                                    <span class="ident">heap</span>.<span class="ident">dealloc</span>(<span class="self">self</span>.<span class="ident">chunk_size</span>);
+
+                                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">OutOfHostMemory</span>);
+                                }
+                                <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError</span>::<span class="ident">OutOfDeviceMemory</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">OutOfDeviceMemory</span>);
+                                }
+                                <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError</span>::<span class="ident">OutOfHostMemory</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">OutOfHostMemory</span>);
+                                }
+                            }
+                        } <span class="kw">else</span> {
+                            <span class="prelude-val">None</span>
+                        };
+
+                        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">memory</span>);
+
+                        <span class="ident">active</span>.<span class="ident">get_or_insert</span>(<span class="ident">ActiveChunk</span> {
+                            <span class="ident">ptr</span>,
+                            <span class="ident">memory</span>,
+                            <span class="ident">offset</span>: <span class="number">0</span>,
+                        })
                     }
-                } <span class="kw">else</span> {
-                    <span class="prelude-val">None</span>
                 };
 
-                <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">memory</span>);
-
-                <span class="kw">let</span> <span class="ident">ready</span> <span class="op">=</span> <span class="ident">ready</span>.<span class="ident">get_or_insert</span>(<span class="ident">Chunk</span> {
-                    <span class="ident">ptr</span>,
-                    <span class="ident">memory</span>,
-                    <span class="ident">offset</span>: <span class="number">0</span>,
-                });
-
-                <span class="kw">let</span> <span class="ident">chunks_offset</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">offset</span>;
-                <span class="kw">let</span> <span class="ident">exhausted</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">exhausted</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>;
+                <span class="kw">let</span> <span class="ident">chunks_index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">exhausted</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>;
                 <span class="prelude-val">Ok</span>(<span class="self">Self</span>::<span class="ident">alloc_from_chunk</span>(
-                    <span class="ident">ready</span>,
+                    <span class="ident">active</span>,
                     <span class="self">self</span>.<span class="ident">chunk_size</span>,
-                    <span class="ident">chunks_offset</span>,
-                    <span class="ident">exhausted</span>,
+                    <span class="ident">chunks_index</span>,
                     <span class="ident">size</span>,
                     <span class="ident">align_mask</span>,
                 ))
@@ -513,7 +553,7 @@
                 }
 
                 <span class="kw">if</span> <span class="ident">chunk_offset</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">exhausted</span>.<span class="ident">len</span>() {
-                    <span class="kw">let</span> <span class="ident">chunk</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ready</span>.<span class="ident">as_mut</span>().<span class="ident">expect</span>(
+                    <span class="kw">let</span> <span class="ident">chunk</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">active</span>.<span class="ident">as_mut</span>().<span class="ident">expect</span>(
                         <span class="string">&quot;Chunk index is out of bounds. Probably incorrect allocator instance&quot;</span>,
                     );
                     <span class="ident">drop</span>(<span class="ident">block</span>);
@@ -527,11 +567,17 @@
                     <span class="ident">drop</span>(<span class="ident">block</span>);
 
                     <span class="kw">if</span> <span class="ident">is_arc_unique</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">chunk</span>.<span class="ident">memory</span>) {
-                        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">exhausted</span>[<span class="ident">chunk_offset</span>].<span class="ident">take</span>().<span class="ident">unwrap</span>().<span class="ident">memory</span>;
-                        <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="ident">arc_unwrap</span>(<span class="ident">memory</span>);
-                        <span class="ident">device</span>.<span class="ident">deallocate_memory</span>(<span class="ident">memory</span>);
-                        <span class="kw-2">*</span><span class="ident">allocations_remains</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                        <span class="ident">heap</span>.<span class="ident">dealloc</span>(<span class="self">self</span>.<span class="ident">chunk_size</span>);
+                        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">prepared</span>.<span class="ident">is_some</span>() {
+                            <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">exhausted</span>[<span class="ident">chunk_offset</span>].<span class="ident">take</span>().<span class="ident">unwrap</span>().<span class="ident">memory</span>;
+                            <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="ident">arc_unwrap</span>(<span class="ident">memory</span>);
+                            <span class="ident">device</span>.<span class="ident">deallocate_memory</span>(<span class="ident">memory</span>);
+                            <span class="kw-2">*</span><span class="ident">allocations_remains</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+                            <span class="ident">heap</span>.<span class="ident">dealloc</span>(<span class="self">self</span>.<span class="ident">chunk_size</span>);
+                        } <span class="kw">else</span> {
+                            <span class="comment">// Keep one free chunk prepared.</span>
+                            <span class="kw">let</span> <span class="ident">chunk</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">exhausted</span>[<span class="ident">chunk_offset</span>].<span class="ident">take</span>().<span class="ident">unwrap</span>();
+                            <span class="self">self</span>.<span class="ident">prepared</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">chunk</span>);
+                        }
 
                         <span class="kw">if</span> <span class="ident">chunk_offset</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
                             <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="prelude-val">None</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">exhausted</span>.<span class="ident">get</span>(<span class="number">0</span>) {
@@ -550,7 +596,24 @@
 
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing</span>::<span class="ident">instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">device</span>)))]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">cleanup</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">MemoryDevice</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">chunk</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">ready</span>.<span class="ident">take</span>() {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">chunk</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">active</span>.<span class="ident">take</span>() {
+            <span class="macro">debug_assert</span><span class="macro">!</span>(
+                <span class="ident">is_arc_unique</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">chunk</span>.<span class="ident">memory</span>),
+                <span class="string">&quot;All blocks must be deallocated before cleanup&quot;</span>
+            );
+
+            <span class="kw">match</span> <span class="ident">Arc</span>::<span class="ident">try_unwrap</span>(<span class="ident">chunk</span>.<span class="ident">memory</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">memory</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">device</span>.<span class="ident">deallocate_memory</span>(<span class="ident">memory</span>),
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>)]</span>
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Cleanup before all memory blocks are deallocated&quot;</span>);
+                }
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>))]</span>
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+            }
+        }
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">chunk</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">prepared</span>.<span class="ident">take</span>() {
             <span class="macro">debug_assert</span><span class="macro">!</span>(
                 <span class="ident">is_arc_unique</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">chunk</span>.<span class="ident">memory</span>),
                 <span class="string">&quot;All blocks must be deallocated before cleanup&quot;</span>
@@ -578,10 +641,9 @@
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">alloc_from_chunk</span>(
-        <span class="ident">chunk</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Chunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>,
+        <span class="ident">chunk</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ActiveChunk</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>,
         <span class="ident">chunk_size</span>: <span class="ident">u64</span>,
-        <span class="ident">chunks_offset</span>: <span class="ident">u64</span>,
-        <span class="ident">exhausted</span>: <span class="ident">u64</span>,
+        <span class="ident">chunks_index</span>: <span class="ident">u64</span>,
         <span class="ident">size</span>: <span class="ident">u64</span>,
         <span class="ident">align_mask</span>: <span class="ident">u64</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">LinearBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
@@ -590,8 +652,8 @@
             <span class="string">&quot;Must be checked in caller&quot;</span>
         );
 
-        <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span>
-            <span class="ident">align_up</span>(<span class="ident">chunk</span>.<span class="ident">offset</span>, <span class="ident">align_mask</span>).<span class="ident">expect</span>(<span class="string">&quot;Chunk must be checked to fit allocation&quot;</span>);
+        <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">align_up</span>(<span class="ident">chunk</span>.<span class="ident">offset</span>, <span class="ident">align_mask</span>)
+            .<span class="ident">expect</span>(<span class="string">&quot;ActiveChunk must be checked to fit allocation&quot;</span>);
 
         <span class="macro">debug_assert</span><span class="macro">!</span>(
             <span class="ident">offset</span>
@@ -609,7 +671,7 @@
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">ptr</span><span class="op">|</span> <span class="ident">NonNull</span>::<span class="ident">new_unchecked</span>(<span class="ident">ptr</span>.<span class="ident">as_ptr</span>().<span class="ident">offset</span>(<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">isize</span>))),
             <span class="ident">offset</span>,
             <span class="ident">size</span>,
-            <span class="ident">chunk</span>: <span class="ident">chunks_offset</span> <span class="op">+</span> <span class="ident">exhausted</span>,
+            <span class="ident">chunk</span>: <span class="ident">chunks_index</span>,
         }
     }
 }
