@@ -2944,6 +2944,21 @@
 <span id="2941">2941</span>
 <span id="2942">2942</span>
 <span id="2943">2943</span>
+<span id="2944">2944</span>
+<span id="2945">2945</span>
+<span id="2946">2946</span>
+<span id="2947">2947</span>
+<span id="2948">2948</span>
+<span id="2949">2949</span>
+<span id="2950">2950</span>
+<span id="2951">2951</span>
+<span id="2952">2952</span>
+<span id="2953">2953</span>
+<span id="2954">2954</span>
+<span id="2955">2955</span>
+<span id="2956">2956</span>
+<span id="2957">2957</span>
+<span id="2958">2958</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).</span>
 <span class="doccomment">//!</span>
@@ -3126,8 +3141,9 @@
     <span class="kw">type</span> <span class="ident">SwapChainOutputDetail</span>: <span class="ident">Send</span>;
 
     <span class="kw">type</span> <span class="ident">RequestAdapterFuture</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">AdapterId</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
-    <span class="kw">type</span> <span class="ident">RequestDeviceFuture</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="self">Self</span>::<span class="ident">DeviceId</span>, <span class="self">Self</span>::<span class="ident">QueueId</span>), <span class="ident">RequestDeviceError</span><span class="op">&gt;</span><span class="op">&gt;</span>
-        <span class="op">+</span> <span class="ident">Send</span>;
+    <span class="kw">type</span> <span class="ident">RequestDeviceFuture</span>: <span class="ident">Future</span><span class="op">&lt;</span>
+        <span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="self">Self</span>::<span class="ident">DeviceId</span>, <span class="self">Self</span>::<span class="ident">QueueId</span>), <span class="ident">RequestDeviceError</span><span class="op">&gt;</span>,
+    <span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
     <span class="kw">type</span> <span class="ident">MapAsyncFuture</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BufferAsyncError</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
 
     <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">backends</span>: <span class="ident">BackendBit</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>;
@@ -3394,6 +3410,10 @@
         <span class="ident">command_buffers</span>: <span class="ident">I</span>,
     );
     <span class="kw">fn</span> <span class="ident">queue_get_timestamp_period</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">QueueId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">f32</span>;
+
+    <span class="kw">fn</span> <span class="ident">start_capture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">DeviceId</span>);
+
+    <span class="kw">fn</span> <span class="ident">stop_capture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">DeviceId</span>);
 }
 
 <span class="doccomment">/// Context for all other wgpu objects. Instance of wgpu.</span>
@@ -4596,6 +4616,16 @@
     <span class="doccomment">/// Set a callback for errors that are not handled in error scopes.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">on_uncaptured_error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">handler</span>: <span class="kw">impl</span> <span class="ident">UncapturedErrorHandler</span>) {
         <span class="self">self</span>.<span class="ident">context</span>.<span class="ident">device_on_uncaptured_error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>, <span class="ident">handler</span>);
+    }
+
+    <span class="doccomment">/// Starts frame capture.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start_capture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="ident">Context</span>::<span class="ident">start_capture</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
+    }
+
+    <span class="doccomment">/// Stops frame capture.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stop_capture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="ident">Context</span>::<span class="ident">stop_capture</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
     }
 }
 
