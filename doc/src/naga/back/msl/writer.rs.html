@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/80a8243/src/back/msl/writer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>writer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/0369ee1/src/back/msl/writer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>writer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -1625,6 +1625,138 @@
 <span id="1622">1622</span>
 <span id="1623">1623</span>
 <span id="1624">1624</span>
+<span id="1625">1625</span>
+<span id="1626">1626</span>
+<span id="1627">1627</span>
+<span id="1628">1628</span>
+<span id="1629">1629</span>
+<span id="1630">1630</span>
+<span id="1631">1631</span>
+<span id="1632">1632</span>
+<span id="1633">1633</span>
+<span id="1634">1634</span>
+<span id="1635">1635</span>
+<span id="1636">1636</span>
+<span id="1637">1637</span>
+<span id="1638">1638</span>
+<span id="1639">1639</span>
+<span id="1640">1640</span>
+<span id="1641">1641</span>
+<span id="1642">1642</span>
+<span id="1643">1643</span>
+<span id="1644">1644</span>
+<span id="1645">1645</span>
+<span id="1646">1646</span>
+<span id="1647">1647</span>
+<span id="1648">1648</span>
+<span id="1649">1649</span>
+<span id="1650">1650</span>
+<span id="1651">1651</span>
+<span id="1652">1652</span>
+<span id="1653">1653</span>
+<span id="1654">1654</span>
+<span id="1655">1655</span>
+<span id="1656">1656</span>
+<span id="1657">1657</span>
+<span id="1658">1658</span>
+<span id="1659">1659</span>
+<span id="1660">1660</span>
+<span id="1661">1661</span>
+<span id="1662">1662</span>
+<span id="1663">1663</span>
+<span id="1664">1664</span>
+<span id="1665">1665</span>
+<span id="1666">1666</span>
+<span id="1667">1667</span>
+<span id="1668">1668</span>
+<span id="1669">1669</span>
+<span id="1670">1670</span>
+<span id="1671">1671</span>
+<span id="1672">1672</span>
+<span id="1673">1673</span>
+<span id="1674">1674</span>
+<span id="1675">1675</span>
+<span id="1676">1676</span>
+<span id="1677">1677</span>
+<span id="1678">1678</span>
+<span id="1679">1679</span>
+<span id="1680">1680</span>
+<span id="1681">1681</span>
+<span id="1682">1682</span>
+<span id="1683">1683</span>
+<span id="1684">1684</span>
+<span id="1685">1685</span>
+<span id="1686">1686</span>
+<span id="1687">1687</span>
+<span id="1688">1688</span>
+<span id="1689">1689</span>
+<span id="1690">1690</span>
+<span id="1691">1691</span>
+<span id="1692">1692</span>
+<span id="1693">1693</span>
+<span id="1694">1694</span>
+<span id="1695">1695</span>
+<span id="1696">1696</span>
+<span id="1697">1697</span>
+<span id="1698">1698</span>
+<span id="1699">1699</span>
+<span id="1700">1700</span>
+<span id="1701">1701</span>
+<span id="1702">1702</span>
+<span id="1703">1703</span>
+<span id="1704">1704</span>
+<span id="1705">1705</span>
+<span id="1706">1706</span>
+<span id="1707">1707</span>
+<span id="1708">1708</span>
+<span id="1709">1709</span>
+<span id="1710">1710</span>
+<span id="1711">1711</span>
+<span id="1712">1712</span>
+<span id="1713">1713</span>
+<span id="1714">1714</span>
+<span id="1715">1715</span>
+<span id="1716">1716</span>
+<span id="1717">1717</span>
+<span id="1718">1718</span>
+<span id="1719">1719</span>
+<span id="1720">1720</span>
+<span id="1721">1721</span>
+<span id="1722">1722</span>
+<span id="1723">1723</span>
+<span id="1724">1724</span>
+<span id="1725">1725</span>
+<span id="1726">1726</span>
+<span id="1727">1727</span>
+<span id="1728">1728</span>
+<span id="1729">1729</span>
+<span id="1730">1730</span>
+<span id="1731">1731</span>
+<span id="1732">1732</span>
+<span id="1733">1733</span>
+<span id="1734">1734</span>
+<span id="1735">1735</span>
+<span id="1736">1736</span>
+<span id="1737">1737</span>
+<span id="1738">1738</span>
+<span id="1739">1739</span>
+<span id="1740">1740</span>
+<span id="1741">1741</span>
+<span id="1742">1742</span>
+<span id="1743">1743</span>
+<span id="1744">1744</span>
+<span id="1745">1745</span>
+<span id="1746">1746</span>
+<span id="1747">1747</span>
+<span id="1748">1748</span>
+<span id="1749">1749</span>
+<span id="1750">1750</span>
+<span id="1751">1751</span>
+<span id="1752">1752</span>
+<span id="1753">1753</span>
+<span id="1754">1754</span>
+<span id="1755">1755</span>
+<span id="1756">1756</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">keywords</span>::<span class="ident">RESERVED</span>, <span class="ident">Error</span>, <span class="ident">LocationMode</span>, <span class="ident">Options</span>, <span class="ident">TranslationInfo</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -1706,6 +1838,8 @@
     <span class="ident">namer</span>: <span class="ident">Namer</span>,
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
     <span class="ident">put_expression_stack_pointers</span>: <span class="kw">crate</span>::<span class="ident">FastHashSet</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> ()<span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+    <span class="ident">put_block_stack_pointers</span>: <span class="kw">crate</span>::<span class="ident">FastHashSet</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> ()<span class="op">&gt;</span>,
 }
 
 <span class="kw">fn</span> <span class="ident">scalar_kind_string</span>(<span class="ident">kind</span>: <span class="kw">crate</span>::<span class="ident">ScalarKind</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
@@ -1776,6 +1910,7 @@
     <span class="ident">origin</span>: <span class="ident">FunctionOrigin</span>,
     <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">FunctionInfo</span>,
     <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">crate</span>::<span class="ident">Module</span>,
+    <span class="ident">options</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Options</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">ExpressionContext</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -1800,6 +1935,8 @@
             <span class="ident">namer</span>: <span class="ident">Namer</span>::<span class="ident">default</span>(),
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
             <span class="ident">put_expression_stack_pointers</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+            <span class="ident">put_block_stack_pointers</span>: <span class="ident">Default</span>::<span class="ident">default</span>(),
         }
     }
 
@@ -1836,6 +1973,66 @@
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">expr</span>) <span class="op">=</span> <span class="ident">level</span> {
             <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">expr</span>, <span class="ident">context</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
         }
+        <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn</span> <span class="ident">put_image_size_query</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">image</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
+        <span class="ident">level</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">ExpressionContext</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="comment">//Note: MSL only has separate width/height/depth queries,</span>
+        <span class="comment">// so compose the result of them.</span>
+        <span class="kw">let</span> <span class="ident">dim</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">context</span>.<span class="ident">resolve_type</span>(<span class="ident">image</span>) {
+            <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Image</span> { <span class="ident">dim</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">dim</span>,
+            <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;Unexpected type {:?}&quot;</span>, <span class="ident">other</span>),
+        };
+        <span class="kw">match</span> <span class="ident">dim</span> {
+            <span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">D1</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int(&quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;width&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
+            }
+            <span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">D2</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int2(&quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;width&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;height&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
+            }
+            <span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">D3</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int3(&quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;width&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;height&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;depth&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
+            }
+            <span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">Cube</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int(&quot;</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;width&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;).xxx&quot;</span>)<span class="question-mark">?</span>;
+            }
+        }
+        <span class="prelude-val">Ok</span>(())
+    }
+
+    <span class="kw">fn</span> <span class="ident">put_storage_image_coordinate</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">expr</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
+        <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">ExpressionContext</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="comment">// coordinates in IR are int, but Metal expects uint</span>
+        <span class="kw">let</span> <span class="ident">size_str</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">context</span>.<span class="ident">info</span>[<span class="ident">expr</span>].<span class="ident">ty</span>.<span class="ident">inner_with</span>(<span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">module</span>.<span class="ident">types</span>) {
+            <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;&quot;</span>,
+            <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">size</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">vector_size_string</span>(<span class="ident">size</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">Validation</span>),
+        };
+        <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}::uint{}(&quot;</span>, <span class="ident">NAMESPACE</span>, <span class="ident">size_str</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">expr</span>, <span class="ident">context</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
         <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
@@ -2069,7 +2266,7 @@
             } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">image</span>, <span class="ident">context</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>;
                 <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;.read(&quot;</span>)<span class="question-mark">?</span>;
-                <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">coordinate</span>, <span class="ident">context</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">put_storage_image_coordinate</span>(<span class="ident">coordinate</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">expr</span>) <span class="op">=</span> <span class="ident">array_index</span> {
                     <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
                     <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">expr</span>, <span class="ident">context</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
@@ -2084,40 +2281,7 @@
             <span class="comment">// so a conversion is needed.</span>
             <span class="kw">crate</span>::<span class="ident">Expression</span>::<span class="ident">ImageQuery</span> { <span class="ident">image</span>, <span class="ident">query</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">query</span> {
                 <span class="kw">crate</span>::<span class="ident">ImageQuery</span>::<span class="ident">Size</span> { <span class="ident">level</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="comment">//Note: MSL only has separate width/height/depth queries,</span>
-                    <span class="comment">// so compose the result of them.</span>
-                    <span class="kw">let</span> <span class="ident">dim</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">context</span>.<span class="ident">resolve_type</span>(<span class="ident">image</span>) {
-                        <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Image</span> { <span class="ident">dim</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">dim</span>,
-                        <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;Unexpected type {:?}&quot;</span>, <span class="ident">other</span>),
-                    };
-                    <span class="kw">match</span> <span class="ident">dim</span> {
-                        <span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">D1</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int(&quot;</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;width&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
-                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
-                        }
-                        <span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">D2</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int2(&quot;</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;width&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
-                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;height&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
-                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
-                        }
-                        <span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">D3</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int3(&quot;</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;width&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
-                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;height&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
-                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;depth&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
-                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
-                        }
-                        <span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">Cube</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int(&quot;</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.<span class="ident">put_image_query</span>(<span class="ident">image</span>, <span class="string">&quot;width&quot;</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
-                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;).xxx&quot;</span>)<span class="question-mark">?</span>;
-                        }
-                    }
+                    <span class="self">self</span>.<span class="ident">put_image_size_query</span>(<span class="ident">image</span>, <span class="ident">level</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
                 }
                 <span class="kw">crate</span>::<span class="ident">ImageQuery</span>::<span class="ident">NumLevels</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;int(&quot;</span>)<span class="question-mark">?</span>;
@@ -2347,6 +2511,75 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="kw">fn</span> <span class="ident">put_return_value</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">level</span>: <span class="ident">Level</span>,
+        <span class="ident">expr_handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
+        <span class="ident">result_struct</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>,
+        <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">ExpressionContext</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="kw">match</span> <span class="ident">result_struct</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">struct_name</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">result_ty</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">function</span>.<span class="ident">result</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">ty</span>;
+                <span class="kw">match</span> <span class="ident">context</span>.<span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">result_ty</span>].<span class="ident">inner</span> {
+                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Struct</span> {
+                        <span class="ident">block</span>: <span class="kw">_</span>,
+                        <span class="kw-2">ref</span> <span class="ident">members</span>,
+                    } <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="string">&quot;_tmp&quot;</span>;
+                        <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}const auto {} = &quot;</span>, <span class="ident">level</span>, <span class="ident">tmp</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">expr_handle</span>, <span class="ident">context</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>;
+                        <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}return {} {{&quot;</span>, <span class="ident">level</span>, <span class="ident">struct_name</span>)<span class="question-mark">?</span>;
+                        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">is_first</span> <span class="op">=</span> <span class="bool-val">true</span>;
+                        <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">member</span>) <span class="kw">in</span> <span class="ident">members</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
+                            <span class="kw">if</span> <span class="op">!</span><span class="ident">context</span>.<span class="ident">options</span>.<span class="ident">allow_point_size</span>
+                                <span class="op">&amp;&amp;</span> <span class="ident">member</span>.<span class="ident">binding</span>
+                                    <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">BuiltIn</span>(<span class="kw">crate</span>::<span class="ident">BuiltIn</span>::<span class="ident">PointSize</span>))
+                            {
+                                <span class="kw">continue</span>;
+                            }
+                            <span class="kw">let</span> <span class="ident">comma</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_first</span> { <span class="string">&quot;&quot;</span> } <span class="kw">else</span> { <span class="string">&quot;,&quot;</span> };
+                            <span class="ident">is_first</span> <span class="op">=</span> <span class="bool-val">false</span>;
+                            <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">names</span>[<span class="kw-2">&amp;</span><span class="ident">NameKey</span>::<span class="ident">StructMember</span>(<span class="ident">result_ty</span>, <span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>)];
+                            <span class="comment">// logic similar to `put_initialization_component`</span>
+                            <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Array</span> {
+                                <span class="ident">size</span>: <span class="kw">crate</span>::<span class="ident">ArraySize</span>::<span class="ident">Constant</span>(<span class="ident">const_handle</span>),
+                                ..
+                            } <span class="op">=</span> <span class="ident">context</span>.<span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">member</span>.<span class="ident">ty</span>].<span class="ident">inner</span>
+                            {
+                                <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">module</span>.<span class="ident">constants</span>[<span class="ident">const_handle</span>]
+                                    .<span class="ident">to_array_length</span>()
+                                    .<span class="ident">unwrap</span>();
+                                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{} {{&quot;</span>, <span class="ident">comma</span>)<span class="question-mark">?</span>;
+                                <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">size</span> {
+                                    <span class="kw">if</span> <span class="ident">j</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+                                        <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;,&quot;</span>)<span class="question-mark">?</span>;
+                                    }
+                                    <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}.{}[{}]&quot;</span>, <span class="ident">tmp</span>, <span class="ident">name</span>, <span class="ident">j</span>)<span class="question-mark">?</span>;
+                                }
+                                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;}}&quot;</span>)<span class="question-mark">?</span>;
+                            } <span class="kw">else</span> {
+                                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{} {}.{}&quot;</span>, <span class="ident">comma</span>, <span class="ident">tmp</span>, <span class="ident">name</span>)<span class="question-mark">?</span>;
+                            }
+                        }
+                    }
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}return {} {{ &quot;</span>, <span class="ident">level</span>, <span class="ident">struct_name</span>)<span class="question-mark">?</span>;
+                        <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">expr_handle</span>, <span class="ident">context</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                    }
+                }
+                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot; }}&quot;</span>)<span class="question-mark">?</span>;
+            }
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}return &quot;</span>, <span class="ident">level</span>)<span class="question-mark">?</span>;
+                <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">expr_handle</span>, <span class="ident">context</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+            }
+        }
+        <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="kw">fn</span> <span class="ident">start_baking_expression</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span>,
@@ -2386,6 +2619,12 @@
         <span class="ident">statements</span>: <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::<span class="ident">Statement</span>],
         <span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">StatementContext</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="comment">// Add to the set in order to track the stack size.</span>
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
+        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">trivial_casts</span>)]</span>
+        <span class="self">self</span>.<span class="ident">put_block_stack_pointers</span>
+            .<span class="ident">insert</span>(<span class="kw-2">&amp;</span><span class="ident">level</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> ());
+
         <span class="kw">for</span> <span class="ident">statement</span> <span class="kw">in</span> <span class="ident">statements</span> {
             <span class="ident">log</span>::<span class="macro">trace</span><span class="macro">!</span>(<span class="string">&quot;statement[{}] {:?}&quot;</span>, <span class="ident">level</span>.<span class="number">0</span>, <span class="ident">statement</span>);
             <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">statement</span> {
@@ -2474,59 +2713,12 @@
                 <span class="kw">crate</span>::<span class="ident">Statement</span>::<span class="ident">Return</span> {
                     <span class="ident">value</span>: <span class="prelude-val">Some</span>(<span class="ident">expr_handle</span>),
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">match</span> <span class="ident">context</span>.<span class="ident">result_struct</span> {
-                        <span class="prelude-val">Some</span>(<span class="ident">struct_name</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">let</span> <span class="ident">result_ty</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">expression</span>.<span class="ident">function</span>.<span class="ident">result</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="ident">ty</span>;
-                            <span class="kw">match</span> <span class="ident">context</span>.<span class="ident">expression</span>.<span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">result_ty</span>].<span class="ident">inner</span> {
-                                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Struct</span> {
-                                    <span class="ident">block</span>: <span class="kw">_</span>,
-                                    <span class="kw-2">ref</span> <span class="ident">members</span>,
-                                } <span class="op">=</span><span class="op">&gt;</span> {
-                                    <span class="kw">let</span> <span class="ident">tmp</span> <span class="op">=</span> <span class="string">&quot;_tmp&quot;</span>;
-                                    <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}const auto {} = &quot;</span>, <span class="ident">level</span>, <span class="ident">tmp</span>)<span class="question-mark">?</span>;
-                                    <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">expr_handle</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                                    <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>;
-                                    <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}return {} {{&quot;</span>, <span class="ident">level</span>, <span class="ident">struct_name</span>)<span class="question-mark">?</span>;
-                                    <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">member</span>) <span class="kw">in</span> <span class="ident">members</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                                        <span class="kw">let</span> <span class="ident">comma</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">index</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> { <span class="string">&quot;&quot;</span> } <span class="kw">else</span> { <span class="string">&quot;,&quot;</span> };
-                                        <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">names</span>
-                                            [<span class="kw-2">&amp;</span><span class="ident">NameKey</span>::<span class="ident">StructMember</span>(<span class="ident">result_ty</span>, <span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>)];
-                                        <span class="comment">// logic similar to `put_initialization_component`</span>
-                                        <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Array</span> {
-                                            <span class="ident">size</span>: <span class="kw">crate</span>::<span class="ident">ArraySize</span>::<span class="ident">Constant</span>(<span class="ident">const_handle</span>),
-                                            ..
-                                        } <span class="op">=</span> <span class="ident">context</span>.<span class="ident">expression</span>.<span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">member</span>.<span class="ident">ty</span>].<span class="ident">inner</span>
-                                        {
-                                            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">expression</span>.<span class="ident">module</span>.<span class="ident">constants</span>
-                                                [<span class="ident">const_handle</span>]
-                                                .<span class="ident">to_array_length</span>()
-                                                .<span class="ident">unwrap</span>();
-                                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{} {{&quot;</span>, <span class="ident">comma</span>)<span class="question-mark">?</span>;
-                                            <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">size</span> {
-                                                <span class="kw">if</span> <span class="ident">j</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                                                    <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;,&quot;</span>)<span class="question-mark">?</span>;
-                                                }
-                                                <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}.{}[{}]&quot;</span>, <span class="ident">tmp</span>, <span class="ident">name</span>, <span class="ident">j</span>)<span class="question-mark">?</span>;
-                                            }
-                                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;}}&quot;</span>)<span class="question-mark">?</span>;
-                                        } <span class="kw">else</span> {
-                                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{} {}.{}&quot;</span>, <span class="ident">comma</span>, <span class="ident">tmp</span>, <span class="ident">name</span>)<span class="question-mark">?</span>;
-                                        }
-                                    }
-                                }
-                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                    <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}return {} {{ &quot;</span>, <span class="ident">level</span>, <span class="ident">struct_name</span>)<span class="question-mark">?</span>;
-                                    <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">expr_handle</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                                }
-                            }
-                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot; }}&quot;</span>)<span class="question-mark">?</span>;
-                        }
-                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}return &quot;</span>, <span class="ident">level</span>)<span class="question-mark">?</span>;
-                            <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">expr_handle</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                        }
-                    }
-                    <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.<span class="ident">put_return_value</span>(
+                        <span class="ident">level</span>.<span class="ident">clone</span>(),
+                        <span class="ident">expr_handle</span>,
+                        <span class="ident">context</span>.<span class="ident">result_struct</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>,
+                    )<span class="question-mark">?</span>;
                 }
                 <span class="kw">crate</span>::<span class="ident">Statement</span>::<span class="ident">Return</span> { <span class="ident">value</span>: <span class="prelude-val">None</span> } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}return;&quot;</span>, <span class="ident">level</span>)<span class="question-mark">?</span>;
@@ -2535,11 +2727,40 @@
                     <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}{}::discard_fragment();&quot;</span>, <span class="ident">level</span>, <span class="ident">NAMESPACE</span>)<span class="question-mark">?</span>;
                 }
                 <span class="kw">crate</span>::<span class="ident">Statement</span>::<span class="ident">Store</span> { <span class="ident">pointer</span>, <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">level</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">pointer</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                    <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot; = &quot;</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">value</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
-                    <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>;
+                    <span class="comment">// we can&#39;t assign fixed-size arrays</span>
+                    <span class="kw">let</span> <span class="ident">pointer_info</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>.<span class="ident">info</span>[<span class="ident">pointer</span>];
+                    <span class="kw">let</span> <span class="ident">array_size</span> <span class="op">=</span>
+                        <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">pointer_info</span>.<span class="ident">ty</span>.<span class="ident">inner_with</span>(<span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>.<span class="ident">module</span>.<span class="ident">types</span>) {
+                            <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Pointer</span> { <span class="ident">base</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="kw">match</span> <span class="ident">context</span>.<span class="ident">expression</span>.<span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">base</span>].<span class="ident">inner</span> {
+                                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Array</span> {
+                                        <span class="ident">size</span>: <span class="kw">crate</span>::<span class="ident">ArraySize</span>::<span class="ident">Constant</span>(<span class="ident">ch</span>),
+                                        ..
+                                    } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">ch</span>),
+                                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+                                }
+                            }
+                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+                        };
+                    <span class="kw">match</span> <span class="ident">array_size</span> {
+                        <span class="prelude-val">Some</span>(<span class="ident">const_handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">expression</span>.<span class="ident">module</span>.<span class="ident">constants</span>[<span class="ident">const_handle</span>]
+                                .<span class="ident">to_array_length</span>()
+                                .<span class="ident">unwrap</span>();
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}for(int _i=0; _i&lt;{}; ++_i) &quot;</span>, <span class="ident">level</span>, <span class="ident">size</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">pointer</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;[_i] = &quot;</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">value</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                            <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;[_i];&quot;</span>)<span class="question-mark">?</span>;
+                        }
+                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">level</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">pointer</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                            <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot; = &quot;</span>)<span class="question-mark">?</span>;
+                            <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">value</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                            <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>;
+                        }
+                    }
                 }
                 <span class="kw">crate</span>::<span class="ident">Statement</span>::<span class="ident">ImageStore</span> {
                     <span class="ident">image</span>,
@@ -2552,7 +2773,7 @@
                     <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;.write(&quot;</span>)<span class="question-mark">?</span>;
                     <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">value</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                     <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">coordinate</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
+                    <span class="self">self</span>.<span class="ident">put_storage_image_coordinate</span>(<span class="ident">coordinate</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>)<span class="question-mark">?</span>;
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">expr</span>) <span class="op">=</span> <span class="ident">array_index</span> {
                         <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
                         <span class="self">self</span>.<span class="ident">put_expression</span>(<span class="ident">expr</span>, <span class="kw-2">&amp;</span><span class="ident">context</span>.<span class="ident">expression</span>, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
@@ -2597,6 +2818,16 @@
                 }
             }
         }
+
+        <span class="comment">// un-emit expressions</span>
+        <span class="comment">//TODO: take care of loop/continuing?</span>
+        <span class="kw">for</span> <span class="ident">statement</span> <span class="kw">in</span> <span class="ident">statements</span> {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span>::<span class="ident">Statement</span>::<span class="ident">Emit</span>(<span class="kw-2">ref</span> <span class="ident">range</span>) <span class="op">=</span> <span class="kw-2">*</span><span class="ident">statement</span> {
+                <span class="kw">for</span> <span class="ident">handle</span> <span class="kw">in</span> <span class="ident">range</span>.<span class="ident">clone</span>() {
+                    <span class="self">self</span>.<span class="ident">named_expressions</span>.<span class="ident">remove</span>(<span class="ident">handle</span>.<span class="ident">index</span>());
+                }
+            }
+        }
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -2624,6 +2855,13 @@
             <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">names</span>[<span class="kw-2">&amp;</span><span class="ident">NameKey</span>::<span class="ident">Type</span>(<span class="ident">handle</span>)];
             <span class="kw">let</span> <span class="ident">global_use</span> <span class="op">=</span> <span class="ident">GlobalUse</span>::<span class="ident">all</span>(); <span class="comment">//TODO</span>
             <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">inner</span> {
+                <span class="comment">// work around Metal toolchain bug with `uint` typedef</span>
+                <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> {
+                    <span class="ident">kind</span>: <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>,
+                    ..
+                } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;typedef metal::uint {};&quot;</span>, <span class="ident">name</span>)<span class="question-mark">?</span>;
+                }
                 <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="macro">writeln</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;typedef {} {};&quot;</span>, <span class="ident">scalar_kind_string</span>(<span class="ident">kind</span>), <span class="ident">name</span>)<span class="question-mark">?</span>;
                 }
@@ -2904,6 +3142,7 @@
                     <span class="ident">origin</span>: <span class="ident">FunctionOrigin</span>::<span class="ident">Handle</span>(<span class="ident">fun_handle</span>),
                     <span class="ident">info</span>: <span class="ident">fun_info</span>,
                     <span class="ident">module</span>,
+                    <span class="ident">options</span>,
                 },
                 <span class="ident">mod_info</span>,
                 <span class="ident">result_struct</span>: <span class="prelude-val">None</span>,
@@ -3032,6 +3271,11 @@
                     <span class="kw">for</span> (<span class="ident">name</span>, <span class="ident">ty</span>, <span class="ident">binding</span>) <span class="kw">in</span> <span class="ident">result_members</span> {
                         <span class="kw">let</span> <span class="ident">type_name</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">names</span>[<span class="kw-2">&amp;</span><span class="ident">NameKey</span>::<span class="ident">Type</span>(<span class="ident">ty</span>)];
                         <span class="kw">let</span> <span class="ident">binding</span> <span class="op">=</span> <span class="ident">binding</span>.<span class="ident">ok_or</span>(<span class="ident">Error</span>::<span class="ident">Validation</span>)<span class="question-mark">?</span>;
+                        <span class="kw">if</span> <span class="op">!</span><span class="ident">options</span>.<span class="ident">allow_point_size</span>
+                            <span class="op">&amp;&amp;</span> <span class="kw-2">*</span><span class="ident">binding</span> <span class="op">=</span><span class="op">=</span> <span class="kw">crate</span>::<span class="ident">Binding</span>::<span class="ident">BuiltIn</span>(<span class="kw">crate</span>::<span class="ident">BuiltIn</span>::<span class="ident">PointSize</span>)
+                        {
+                            <span class="kw">continue</span>;
+                        }
                         <span class="kw">let</span> <span class="ident">resolved</span> <span class="op">=</span> <span class="ident">options</span>.<span class="ident">resolve_local_binding</span>(<span class="ident">binding</span>, <span class="ident">out_mode</span>)<span class="question-mark">?</span>;
                         <span class="macro">write</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;{}{} {}&quot;</span>, <span class="ident">INDENT</span>, <span class="ident">type_name</span>, <span class="ident">name</span>)<span class="question-mark">?</span>;
                         <span class="ident">resolved</span>.<span class="ident">try_fmt_decorated</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">out</span>, <span class="string">&quot;&quot;</span>)<span class="question-mark">?</span>;
@@ -3186,6 +3430,7 @@
                     <span class="ident">origin</span>: <span class="ident">FunctionOrigin</span>::<span class="ident">EntryPoint</span>(<span class="ident">ep_index</span> <span class="kw">as</span> <span class="kw">_</span>),
                     <span class="ident">info</span>: <span class="ident">fun_info</span>,
                     <span class="ident">module</span>,
+                    <span class="ident">options</span>,
                 },
                 <span class="ident">mod_info</span>,
                 <span class="ident">result_struct</span>: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">stage_out_name</span>),
@@ -3238,16 +3483,35 @@
     <span class="comment">// process the module</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">writer</span> <span class="op">=</span> <span class="ident">Writer</span>::<span class="ident">new</span>(<span class="ident">String</span>::<span class="ident">new</span>());
     <span class="ident">writer</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>, <span class="kw-2">&amp;</span><span class="ident">info</span>, <span class="kw-2">&amp;</span><span class="ident">Default</span>::<span class="ident">default</span>()).<span class="ident">unwrap</span>();
-    <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">min_addr</span>, <span class="kw-2">mut</span> <span class="ident">max_addr</span>) <span class="op">=</span> (<span class="op">!</span><span class="number">0usize</span>, <span class="number">0usize</span>);
-    <span class="kw">for</span> <span class="ident">pointer</span> <span class="kw">in</span> <span class="ident">writer</span>.<span class="ident">put_expression_stack_pointers</span> {
-        <span class="ident">min_addr</span> <span class="op">=</span> <span class="ident">min_addr</span>.<span class="ident">min</span>(<span class="ident">pointer</span> <span class="kw">as</span> <span class="ident">usize</span>);
-        <span class="ident">max_addr</span> <span class="op">=</span> <span class="ident">max_addr</span>.<span class="ident">max</span>(<span class="ident">pointer</span> <span class="kw">as</span> <span class="ident">usize</span>);
+
+    {
+        <span class="comment">// check expression stack</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="op">!</span><span class="number">0usize</span>..<span class="number">0usize</span>;
+        <span class="kw">for</span> <span class="ident">pointer</span> <span class="kw">in</span> <span class="ident">writer</span>.<span class="ident">put_expression_stack_pointers</span> {
+            <span class="ident">addresses</span>.<span class="ident">start</span> <span class="op">=</span> <span class="ident">addresses</span>.<span class="ident">start</span>.<span class="ident">min</span>(<span class="ident">pointer</span> <span class="kw">as</span> <span class="ident">usize</span>);
+            <span class="ident">addresses</span>.<span class="ident">end</span> <span class="op">=</span> <span class="ident">addresses</span>.<span class="ident">end</span>.<span class="ident">max</span>(<span class="ident">pointer</span> <span class="kw">as</span> <span class="ident">usize</span>);
+        }
+        <span class="kw">let</span> <span class="ident">stack_size</span> <span class="op">=</span> <span class="ident">addresses</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">addresses</span>.<span class="ident">start</span>;
+        <span class="comment">// check the size (in debug only)</span>
+        <span class="comment">// last observed macOS value: 18768</span>
+        <span class="kw">if</span> <span class="ident">stack_size</span> <span class="op">&lt;</span> <span class="number">18000</span> <span class="op">|</span><span class="op">|</span> <span class="ident">stack_size</span> <span class="op">&gt;</span> <span class="number">20000</span> {
+            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;`put_expression` stack size {} has changed!&quot;</span>, <span class="ident">stack_size</span>);
+        }
     }
-    <span class="kw">let</span> <span class="ident">stack_size</span> <span class="op">=</span> <span class="ident">max_addr</span> <span class="op">-</span> <span class="ident">min_addr</span>;
-    <span class="comment">// check the size (in debug only)</span>
-    <span class="comment">// last observed macOS value: 22112</span>
-    <span class="kw">if</span> <span class="ident">stack_size</span> <span class="op">&gt;</span> <span class="number">22200</span> {
-        <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;`put_expression` stack size {} is too large!&quot;</span>, <span class="ident">stack_size</span>);
+
+    {
+        <span class="comment">// check block stack</span>
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">addresses</span> <span class="op">=</span> <span class="op">!</span><span class="number">0usize</span>..<span class="number">0usize</span>;
+        <span class="kw">for</span> <span class="ident">pointer</span> <span class="kw">in</span> <span class="ident">writer</span>.<span class="ident">put_block_stack_pointers</span> {
+            <span class="ident">addresses</span>.<span class="ident">start</span> <span class="op">=</span> <span class="ident">addresses</span>.<span class="ident">start</span>.<span class="ident">min</span>(<span class="ident">pointer</span> <span class="kw">as</span> <span class="ident">usize</span>);
+            <span class="ident">addresses</span>.<span class="ident">end</span> <span class="op">=</span> <span class="ident">addresses</span>.<span class="ident">end</span>.<span class="ident">max</span>(<span class="ident">pointer</span> <span class="kw">as</span> <span class="ident">usize</span>);
+        }
+        <span class="kw">let</span> <span class="ident">stack_size</span> <span class="op">=</span> <span class="ident">addresses</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">addresses</span>.<span class="ident">start</span>;
+        <span class="comment">// check the size (in debug only)</span>
+        <span class="comment">// last observed macOS value: 12736</span>
+        <span class="kw">if</span> <span class="ident">stack_size</span> <span class="op">&lt;</span> <span class="number">12000</span> <span class="op">|</span><span class="op">|</span> <span class="ident">stack_size</span> <span class="op">&gt;</span> <span class="number">13500</span> {
+            <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;`put_block` stack size {} has changed!&quot;</span>, <span class="ident">stack_size</span>);
+        }
     }
 }
 </pre></div>
