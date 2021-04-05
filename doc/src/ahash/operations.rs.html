@@ -462,12 +462,12 @@
             <span class="kw">let</span> <span class="ident">actual_location</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> <span class="ident">shuffle</span>(<span class="ident">value</span>.<span class="ident">convert</span>()).<span class="ident">convert</span>();
             <span class="kw">for</span> <span class="ident">pos</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">16</span> {
                 <span class="kw">if</span> <span class="ident">actual_location</span>[<span class="ident">pos</span>] <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="macro">assert_eq</span><span class="macro">!</span>(
+                    <span class="macro">assert_eq!</span>(
                         <span class="number">0</span>, <span class="ident">excluded_positions_enc</span>[<span class="ident">pos</span>],
                         <span class="string">&quot;Forward Overlap between {:?} and {:?} at {}&quot;</span>,
                         <span class="ident">excluded_positions_enc</span>, <span class="ident">actual_location</span>, <span class="ident">index</span>
                     );
-                    <span class="macro">assert_eq</span><span class="macro">!</span>(
+                    <span class="macro">assert_eq!</span>(
                         <span class="number">0</span>, <span class="ident">excluded_positions_dec</span>[<span class="ident">pos</span>],
                         <span class="string">&quot;Reverse Overlap between {:?} and {:?} at {}&quot;</span>,
                         <span class="ident">excluded_positions_dec</span>, <span class="ident">actual_location</span>, <span class="ident">index</span>
@@ -483,7 +483,7 @@
         <span class="kw">let</span> <span class="ident">value</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> <span class="number">0x00010203_04050607_08090A0B_0C0D0E0F_u128</span>.<span class="ident">convert</span>();
         <span class="kw">let</span> <span class="ident">shuffled</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> <span class="ident">shuffle</span>(<span class="ident">value</span>.<span class="ident">convert</span>()).<span class="ident">convert</span>();
         <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">16_u8</span> {
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">shuffled</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>), <span class="string">&quot;Value is missing {}&quot;</span>, <span class="ident">index</span>);
+            <span class="macro">assert!</span>(<span class="ident">shuffled</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>), <span class="string">&quot;Value is missing {}&quot;</span>, <span class="ident">index</span>);
         }
     }
 
@@ -493,46 +493,46 @@
         <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">16</span> {
             <span class="ident">value</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="number">1</span>;
             <span class="kw">let</span> <span class="ident">shuffled</span>: [<span class="ident">u8</span>; <span class="number">16</span>] <span class="op">=</span> <span class="ident">shuffle</span>(<span class="ident">value</span>.<span class="ident">convert</span>()).<span class="ident">convert</span>();
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="number">0</span>, <span class="ident">shuffled</span>[<span class="ident">index</span>], <span class="string">&quot;Value is not moved {}&quot;</span>, <span class="ident">index</span>);
+            <span class="macro">assert_eq!</span>(<span class="number">0</span>, <span class="ident">shuffled</span>[<span class="ident">index</span>], <span class="string">&quot;Value is not moved {}&quot;</span>, <span class="ident">index</span>);
             <span class="ident">value</span>[<span class="ident">index</span>] <span class="op">=</span> <span class="number">0</span>;
         }
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_shuffle_moves_high_bits</span>() {
-        <span class="macro">assert</span><span class="macro">!</span>(
+        <span class="macro">assert!</span>(
             <span class="ident">shuffle</span>(<span class="number">1</span>) <span class="op">&gt;</span> (<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">80</span>),
             <span class="string">&quot;Low bits must be moved to other half {:?} -&gt; {:?}&quot;</span>,
             <span class="number">0</span>,
             <span class="ident">shuffle</span>(<span class="number">1</span>)
         );
 
-        <span class="macro">assert</span><span class="macro">!</span>(
+        <span class="macro">assert!</span>(
             <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">58</span>) <span class="op">&gt;</span><span class="op">=</span> (<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">64</span>),
             <span class="string">&quot;High bits must be moved to other half {:?} -&gt; {:?}&quot;</span>,
             <span class="number">7</span>,
             <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">58</span>)
         );
-        <span class="macro">assert</span><span class="macro">!</span>(
+        <span class="macro">assert!</span>(
             <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">58</span>) <span class="op">&lt;</span> (<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">112</span>),
             <span class="string">&quot;High bits must not remain high {:?} -&gt; {:?}&quot;</span>,
             <span class="number">7</span>,
             <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">58</span>)
         );
-        <span class="macro">assert</span><span class="macro">!</span>(
+        <span class="macro">assert!</span>(
             <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">64</span>) <span class="op">&lt;</span> (<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">64</span>),
             <span class="string">&quot;Low bits must be moved to other half {:?} -&gt; {:?}&quot;</span>,
             <span class="number">8</span>,
             <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">64</span>)
         );
-        <span class="macro">assert</span><span class="macro">!</span>(
+        <span class="macro">assert!</span>(
             <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">64</span>) <span class="op">&gt;</span><span class="op">=</span> (<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">16</span>),
             <span class="string">&quot;Low bits must not remain low {:?} -&gt; {:?}&quot;</span>,
             <span class="number">8</span>,
             <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">64</span>)
         );
 
-        <span class="macro">assert</span><span class="macro">!</span>(
+        <span class="macro">assert!</span>(
             <span class="ident">shuffle</span>(<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">120</span>) <span class="op">&lt;</span> (<span class="number">1_u128</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">50</span>),
             <span class="string">&quot;High bits must be moved to low half {:?} -&gt; {:?}&quot;</span>,
             <span class="number">15</span>,
@@ -551,7 +551,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">shuffled</span> <span class="op">=</span> <span class="ident">shuffle</span>(<span class="ident">numbered</span>);
         <span class="kw">for</span> <span class="ident">count</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">100</span> {
             <span class="comment">// println!(&quot;{:&gt;16x}&quot;, shuffled);</span>
-            <span class="macro">assert_ne</span><span class="macro">!</span>(<span class="ident">numbered</span>, <span class="ident">shuffled</span>, <span class="string">&quot;Equal after {} vs {:x}&quot;</span>, <span class="ident">count</span>, <span class="ident">shuffled</span>);
+            <span class="macro">assert_ne!</span>(<span class="ident">numbered</span>, <span class="ident">shuffled</span>, <span class="string">&quot;Equal after {} vs {:x}&quot;</span>, <span class="ident">count</span>, <span class="ident">shuffled</span>);
             <span class="ident">shuffled</span> <span class="op">=</span> <span class="ident">shuffle</span>(<span class="ident">shuffled</span>);
         }
     }

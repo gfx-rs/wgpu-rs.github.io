@@ -356,7 +356,7 @@
 <span class="kw">impl</span> <span class="ident">ThreadData</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ThreadData</span> {
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">mem</span>::<span class="ident">align_of</span>::<span class="op">&lt;</span><span class="ident">ThreadData</span><span class="op">&gt;</span>() <span class="op">&gt;</span> <span class="op">!</span><span class="ident">QUEUE_MASK</span>);
+        <span class="macro">assert!</span>(<span class="ident">mem</span>::<span class="ident">align_of</span>::<span class="op">&lt;</span><span class="ident">ThreadData</span><span class="op">&gt;</span>() <span class="op">&gt;</span> <span class="op">!</span><span class="ident">QUEUE_MASK</span>);
         <span class="ident">ThreadData</span> {
             <span class="ident">parker</span>: <span class="ident">ThreadParker</span>::<span class="ident">new</span>(),
             <span class="ident">queue_tail</span>: <span class="ident">Cell</span>::<span class="ident">new</span>(<span class="ident">ptr</span>::<span class="ident">null</span>()),
@@ -373,7 +373,7 @@
     <span class="comment">// If ThreadData is expensive to construct, then we want to use a cached</span>
     <span class="comment">// version in thread-local storage if possible.</span>
     <span class="kw">if</span> <span class="op">!</span><span class="ident">ThreadParker</span>::<span class="ident">IS_CHEAP_TO_CONSTRUCT</span> {
-        <span class="macro">thread_local</span><span class="macro">!</span>(<span class="kw">static</span> <span class="ident">THREAD_DATA</span>: <span class="ident">ThreadData</span> <span class="op">=</span> <span class="ident">ThreadData</span>::<span class="ident">new</span>());
+        <span class="macro">thread_local!</span>(<span class="kw">static</span> <span class="ident">THREAD_DATA</span>: <span class="ident">ThreadData</span> <span class="op">=</span> <span class="ident">ThreadData</span>::<span class="ident">new</span>());
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">tls_thread_data</span>) <span class="op">=</span> <span class="ident">THREAD_DATA</span>.<span class="ident">try_with</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ThreadData</span>) {
             <span class="ident">thread_data_ptr</span> <span class="op">=</span> <span class="ident">tls_thread_data</span>;
         }

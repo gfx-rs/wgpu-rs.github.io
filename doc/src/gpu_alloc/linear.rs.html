@@ -419,7 +419,7 @@
         <span class="ident">props</span>: <span class="ident">MemoryPropertyFlags</span>,
         <span class="ident">atom_mask</span>: <span class="ident">u64</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="ident">align_down</span>(<span class="ident">chunk_size</span>, <span class="ident">atom_mask</span>), <span class="ident">chunk_size</span>);
+        <span class="macro">debug_assert_eq!</span>(<span class="ident">align_down</span>(<span class="ident">chunk_size</span>, <span class="ident">atom_mask</span>), <span class="ident">chunk_size</span>);
 
         <span class="ident">LinearAllocator</span> {
             <span class="ident">active</span>: <span class="prelude-val">None</span>,
@@ -443,7 +443,7 @@
         <span class="ident">heap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Heap</span>,
         <span class="ident">allocations_remains</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">u32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">LinearBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>, <span class="ident">AllocationError</span><span class="op">&gt;</span> {
-        <span class="macro">debug_assert</span><span class="macro">!</span>(
+        <span class="macro">debug_assert!</span>(
             <span class="self">self</span>.<span class="ident">chunk_size</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">size</span>,
             <span class="string">&quot;GpuAllocator must not request allocations equal or greater to chunks size&quot;</span>
         );
@@ -492,7 +492,7 @@
                                 <span class="prelude-val">Ok</span>(<span class="ident">ptr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">ptr</span>),
                                 <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError</span>::<span class="ident">MapFailed</span>) <span class="op">=</span><span class="op">&gt;</span> {
                                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>)]</span>
-                                    <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(
+                                    <span class="ident">tracing</span>::<span class="macro">error!</span>(
                                         <span class="string">&quot;Failed to map host-visible memory in linear allocator&quot;</span>
                                     );
                                     <span class="ident">device</span>.<span class="ident">deallocate_memory</span>(<span class="ident">memory</span>);
@@ -542,14 +542,14 @@
         <span class="ident">heap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Heap</span>,
         <span class="ident">allocations_remains</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">u32</span>,
     ) {
-        <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="ident">block</span>.<span class="ident">ptr</span>.<span class="ident">is_some</span>(), <span class="self">self</span>.<span class="ident">host_visible</span>());
+        <span class="macro">debug_assert_eq!</span>(<span class="ident">block</span>.<span class="ident">ptr</span>.<span class="ident">is_some</span>(), <span class="self">self</span>.<span class="ident">host_visible</span>());
 
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">block</span>.<span class="ident">chunk</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">offset</span>, <span class="string">&quot;Chunk index is less than chunk offset in this allocator. Probably incorrect allocator instance&quot;</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">block</span>.<span class="ident">chunk</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">offset</span>, <span class="string">&quot;Chunk index is less than chunk offset in this allocator. Probably incorrect allocator instance&quot;</span>);
         <span class="kw">let</span> <span class="ident">chunk_offset</span> <span class="op">=</span> <span class="ident">block</span>.<span class="ident">chunk</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">offset</span>;
         <span class="kw">match</span> <span class="ident">usize</span>::<span class="ident">try_from</span>(<span class="ident">chunk_offset</span>) {
             <span class="prelude-val">Ok</span>(<span class="ident">chunk_offset</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="ident">chunk_offset</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">exhausted</span>.<span class="ident">len</span>() {
-                    <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Chunk index is out of bounds. Probably incorrect allocator instance&quot;</span>)
+                    <span class="macro">panic!</span>(<span class="string">&quot;Chunk index is out of bounds. Probably incorrect allocator instance&quot;</span>)
                 }
 
                 <span class="kw">if</span> <span class="ident">chunk_offset</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">exhausted</span>.<span class="ident">len</span>() {
@@ -589,7 +589,7 @@
                 }
             }
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Chunk index does not fit `usize`. Probably incorrect allocator instance&quot;</span>)
+                <span class="macro">panic!</span>(<span class="string">&quot;Chunk index does not fit `usize`. Probably incorrect allocator instance&quot;</span>)
             }
         }
     }
@@ -597,7 +597,7 @@
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing</span>::<span class="ident">instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">device</span>)))]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">cleanup</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">MemoryDevice</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">chunk</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">active</span>.<span class="ident">take</span>() {
-            <span class="macro">debug_assert</span><span class="macro">!</span>(
+            <span class="macro">debug_assert!</span>(
                 <span class="ident">is_arc_unique</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">chunk</span>.<span class="ident">memory</span>),
                 <span class="string">&quot;All blocks must be deallocated before cleanup&quot;</span>
             );
@@ -606,7 +606,7 @@
                 <span class="prelude-val">Ok</span>(<span class="ident">memory</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">device</span>.<span class="ident">deallocate_memory</span>(<span class="ident">memory</span>),
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>)]</span>
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Cleanup before all memory blocks are deallocated&quot;</span>);
+                    <span class="ident">tracing</span>::<span class="macro">error!</span>(<span class="string">&quot;Cleanup before all memory blocks are deallocated&quot;</span>);
                 }
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>))]</span>
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
@@ -614,7 +614,7 @@
         }
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">chunk</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">prepared</span>.<span class="ident">take</span>() {
-            <span class="macro">debug_assert</span><span class="macro">!</span>(
+            <span class="macro">debug_assert!</span>(
                 <span class="ident">is_arc_unique</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">chunk</span>.<span class="ident">memory</span>),
                 <span class="string">&quot;All blocks must be deallocated before cleanup&quot;</span>
             );
@@ -623,14 +623,14 @@
                 <span class="prelude-val">Ok</span>(<span class="ident">memory</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">device</span>.<span class="ident">deallocate_memory</span>(<span class="ident">memory</span>),
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>)]</span>
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">tracing</span>::<span class="macro">error</span><span class="macro">!</span>(<span class="string">&quot;Cleanup before all memory blocks are deallocated&quot;</span>);
+                    <span class="ident">tracing</span>::<span class="macro">error!</span>(<span class="string">&quot;Cleanup before all memory blocks are deallocated&quot;</span>);
                 }
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>))]</span>
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
             }
         }
 
-        <span class="macro">assert</span><span class="macro">!</span>(
+        <span class="macro">assert!</span>(
             <span class="self">self</span>.<span class="ident">exhausted</span>.<span class="ident">is_empty</span>(),
             <span class="string">&quot;All blocks must be deallocated before cleanup&quot;</span>
         );
@@ -647,7 +647,7 @@
         <span class="ident">size</span>: <span class="ident">u64</span>,
         <span class="ident">align_mask</span>: <span class="ident">u64</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">LinearBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
-        <span class="macro">debug_assert</span><span class="macro">!</span>(
+        <span class="macro">debug_assert!</span>(
             <span class="ident">fits</span>(<span class="ident">chunk_size</span>, <span class="ident">chunk</span>.<span class="ident">offset</span>, <span class="ident">size</span>, <span class="ident">align_mask</span>),
             <span class="string">&quot;Must be checked in caller&quot;</span>
         );
@@ -655,7 +655,7 @@
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">align_up</span>(<span class="ident">chunk</span>.<span class="ident">offset</span>, <span class="ident">align_mask</span>)
             .<span class="ident">expect</span>(<span class="string">&quot;ActiveChunk must be checked to fit allocation&quot;</span>);
 
-        <span class="macro">debug_assert</span><span class="macro">!</span>(
+        <span class="macro">debug_assert!</span>(
             <span class="ident">offset</span>
                 .<span class="ident">checked_add</span>(<span class="ident">size</span>)
                 .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">end</span><span class="op">|</span> <span class="ident">end</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">chunk_size</span>),

@@ -145,7 +145,7 @@
 <span class="comment">// Indicates whether the target architecture supports lock elision</span>
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">have_elision</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-    <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">all</span>(
+    <span class="macro">cfg!</span>(<span class="ident">all</span>(
         <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>,
         <span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86&quot;</span>, <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>),
     ))
@@ -159,12 +159,12 @@
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">elision_compare_exchange_acquire</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="ident">usize</span>, <span class="kw">_</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="macro">unreachable</span><span class="macro">!</span>();
+        <span class="macro">unreachable!</span>();
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="kw">fn</span> <span class="ident">elision_fetch_sub_release</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
-        <span class="macro">unreachable</span><span class="macro">!</span>();
+        <span class="macro">unreachable!</span>();
     }
 }
 
@@ -177,7 +177,7 @@
     <span class="kw">fn</span> <span class="ident">elision_compare_exchange_acquire</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">current</span>: <span class="ident">usize</span>, <span class="ident">new</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">usize</span><span class="op">&gt;</span> {
         <span class="kw">unsafe</span> {
             <span class="kw">let</span> <span class="ident">prev</span>: <span class="ident">usize</span>;
-            <span class="macro">llvm_asm</span><span class="macro">!</span>(<span class="string">&quot;xacquire; lock; cmpxchgl $2, $1&quot;</span>
+            <span class="macro">llvm_asm!</span>(<span class="string">&quot;xacquire; lock; cmpxchgl $2, $1&quot;</span>
                       : <span class="string">&quot;={eax}&quot;</span> (<span class="ident">prev</span>), <span class="string">&quot;+*m&quot;</span> (<span class="self">self</span>)
                       : <span class="string">&quot;r&quot;</span> (<span class="ident">new</span>), <span class="string">&quot;{eax}&quot;</span> (<span class="ident">current</span>)
                       : <span class="string">&quot;memory&quot;</span>
@@ -194,7 +194,7 @@
     <span class="kw">fn</span> <span class="ident">elision_compare_exchange_acquire</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">current</span>: <span class="ident">usize</span>, <span class="ident">new</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">usize</span><span class="op">&gt;</span> {
         <span class="kw">unsafe</span> {
             <span class="kw">let</span> <span class="ident">prev</span>: <span class="ident">usize</span>;
-            <span class="macro">llvm_asm</span><span class="macro">!</span>(<span class="string">&quot;xacquire; lock; cmpxchgq $2, $1&quot;</span>
+            <span class="macro">llvm_asm!</span>(<span class="string">&quot;xacquire; lock; cmpxchgq $2, $1&quot;</span>
                       : <span class="string">&quot;={rax}&quot;</span> (<span class="ident">prev</span>), <span class="string">&quot;+*m&quot;</span> (<span class="self">self</span>)
                       : <span class="string">&quot;r&quot;</span> (<span class="ident">new</span>), <span class="string">&quot;{rax}&quot;</span> (<span class="ident">current</span>)
                       : <span class="string">&quot;memory&quot;</span>
@@ -212,7 +212,7 @@
     <span class="kw">fn</span> <span class="ident">elision_fetch_sub_release</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">val</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
         <span class="kw">unsafe</span> {
             <span class="kw">let</span> <span class="ident">prev</span>: <span class="ident">usize</span>;
-            <span class="macro">llvm_asm</span><span class="macro">!</span>(<span class="string">&quot;xrelease; lock; xaddl $2, $1&quot;</span>
+            <span class="macro">llvm_asm!</span>(<span class="string">&quot;xrelease; lock; xaddl $2, $1&quot;</span>
                       : <span class="string">&quot;=r&quot;</span> (<span class="ident">prev</span>), <span class="string">&quot;+*m&quot;</span> (<span class="self">self</span>)
                       : <span class="string">&quot;0&quot;</span> (<span class="ident">val</span>.<span class="ident">wrapping_neg</span>())
                       : <span class="string">&quot;memory&quot;</span>
@@ -225,7 +225,7 @@
     <span class="kw">fn</span> <span class="ident">elision_fetch_sub_release</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">val</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
         <span class="kw">unsafe</span> {
             <span class="kw">let</span> <span class="ident">prev</span>: <span class="ident">usize</span>;
-            <span class="macro">llvm_asm</span><span class="macro">!</span>(<span class="string">&quot;xrelease; lock; xaddq $2, $1&quot;</span>
+            <span class="macro">llvm_asm!</span>(<span class="string">&quot;xrelease; lock; xaddq $2, $1&quot;</span>
                       : <span class="string">&quot;=r&quot;</span> (<span class="ident">prev</span>), <span class="string">&quot;+*m&quot;</span> (<span class="self">self</span>)
                       : <span class="string">&quot;0&quot;</span> (<span class="ident">val</span>.<span class="ident">wrapping_neg</span>())
                       : <span class="string">&quot;memory&quot;</span>

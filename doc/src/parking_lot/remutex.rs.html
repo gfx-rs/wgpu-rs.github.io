@@ -172,7 +172,7 @@
         <span class="comment">// The address of a thread-local variable is guaranteed to be unique to the</span>
         <span class="comment">// current thread, and is also guaranteed to be non-zero. The variable has to have a</span>
         <span class="comment">// non-zero size to guarantee it has a unique address for each thread.</span>
-        <span class="macro">thread_local</span><span class="macro">!</span>(<span class="kw">static</span> <span class="ident">KEY</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0</span>);
+        <span class="macro">thread_local!</span>(<span class="kw">static</span> <span class="ident">KEY</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0</span>);
         <span class="ident">KEY</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> {
             <span class="ident">NonZeroUsize</span>::<span class="ident">new</span>(<span class="ident">x</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">usize</span>)
                 .<span class="ident">expect</span>(<span class="string">&quot;thread-local variable address is null&quot;</span>)
@@ -240,11 +240,11 @@
                 <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">lock</span>();
                 {
                     <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">lock</span>();
-                    <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">*</span><span class="ident">c</span>, <span class="number">2</span>);
+                    <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">c</span>, <span class="number">2</span>);
                 }
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">*</span><span class="ident">b</span>, <span class="number">2</span>);
+                <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">b</span>, <span class="number">2</span>);
             }
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">*</span><span class="ident">a</span>, <span class="number">2</span>);
+            <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">a</span>, <span class="number">2</span>);
         }
     }
 
@@ -255,7 +255,7 @@
         <span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">lock</span>();
         <span class="kw">let</span> <span class="ident">child</span> <span class="op">=</span> <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">m2</span>.<span class="ident">lock</span>();
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">*</span><span class="ident">lock</span>.<span class="ident">borrow</span>(), <span class="number">4950</span>);
+            <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">lock</span>.<span class="ident">borrow</span>(), <span class="number">4950</span>);
         });
         <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">100</span> {
             <span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">lock</span>();
@@ -273,7 +273,7 @@
         <span class="kw">let</span> <span class="ident">_lock2</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">try_lock</span>();
         <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">m2</span>.<span class="ident">try_lock</span>();
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">lock</span>.<span class="ident">is_none</span>());
+            <span class="macro">assert!</span>(<span class="ident">lock</span>.<span class="ident">is_none</span>());
         })
         .<span class="ident">join</span>()
         .<span class="ident">unwrap</span>();
@@ -282,22 +282,22 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_reentrant_mutex_debug</span>() {
-        <span class="kw">let</span> <span class="ident">mutex</span> <span class="op">=</span> <span class="ident">ReentrantMutex</span>::<span class="ident">new</span>(<span class="macro">vec</span><span class="macro">!</span>[<span class="number">0u8</span>, <span class="number">10</span>]);
+        <span class="kw">let</span> <span class="ident">mutex</span> <span class="op">=</span> <span class="ident">ReentrantMutex</span>::<span class="ident">new</span>(<span class="macro">vec!</span>[<span class="number">0u8</span>, <span class="number">10</span>]);
 
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">mutex</span>), <span class="string">&quot;ReentrantMutex { data: [0, 10] }&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">mutex</span>), <span class="string">&quot;ReentrantMutex { data: [0, 10] }&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>)]</span>
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_serde</span>() {
-        <span class="kw">let</span> <span class="ident">contents</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec</span><span class="macro">!</span>[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>];
+        <span class="kw">let</span> <span class="ident">contents</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="number">0</span>, <span class="number">1</span>, <span class="number">2</span>];
         <span class="kw">let</span> <span class="ident">mutex</span> <span class="op">=</span> <span class="ident">ReentrantMutex</span>::<span class="ident">new</span>(<span class="ident">contents</span>.<span class="ident">clone</span>());
 
         <span class="kw">let</span> <span class="ident">serialized</span> <span class="op">=</span> <span class="ident">serialize</span>(<span class="kw-2">&amp;</span><span class="ident">mutex</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">deserialized</span>: <span class="ident">ReentrantMutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">deserialize</span>(<span class="kw-2">&amp;</span><span class="ident">serialized</span>).<span class="ident">unwrap</span>();
 
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="kw-2">*</span>(<span class="ident">mutex</span>.<span class="ident">lock</span>()), <span class="kw-2">*</span>(<span class="ident">deserialized</span>.<span class="ident">lock</span>()));
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">contents</span>, <span class="kw-2">*</span>(<span class="ident">deserialized</span>.<span class="ident">lock</span>()));
+        <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>(<span class="ident">mutex</span>.<span class="ident">lock</span>()), <span class="kw-2">*</span>(<span class="ident">deserialized</span>.<span class="ident">lock</span>()));
+        <span class="macro">assert_eq!</span>(<span class="ident">contents</span>, <span class="kw-2">*</span>(<span class="ident">deserialized</span>.<span class="ident">lock</span>()));
     }
 }
 </pre></div>

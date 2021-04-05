@@ -374,12 +374,12 @@
     <span class="doccomment">/// Must only be called when there is something to write and space to write into.</span>
     <span class="doccomment">/// Returns a Result with the number of (decoded) bytes copied.</span>
     <span class="kw">fn</span> <span class="ident">flush_decoded_buf</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">decoded_len</span> <span class="op">&gt;</span> <span class="number">0</span>);
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">buf</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span>);
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">decoded_len</span> <span class="op">&gt;</span> <span class="number">0</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">buf</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span>);
 
         <span class="kw">let</span> <span class="ident">copy_len</span> <span class="op">=</span> <span class="ident">cmp</span>::<span class="ident">min</span>(<span class="self">self</span>.<span class="ident">decoded_len</span>, <span class="ident">buf</span>.<span class="ident">len</span>());
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">copy_len</span> <span class="op">&gt;</span> <span class="number">0</span>);
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">copy_len</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">decoded_len</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">copy_len</span> <span class="op">&gt;</span> <span class="number">0</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">copy_len</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">decoded_len</span>);
 
         <span class="ident">buf</span>[..<span class="ident">copy_len</span>].<span class="ident">copy_from_slice</span>(
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">decoded_buffer</span>[<span class="self">self</span>.<span class="ident">decoded_offset</span>..<span class="self">self</span>.<span class="ident">decoded_offset</span> <span class="op">+</span> <span class="ident">copy_len</span>],
@@ -388,7 +388,7 @@
         <span class="self">self</span>.<span class="ident">decoded_offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">copy_len</span>;
         <span class="self">self</span>.<span class="ident">decoded_len</span> <span class="op">-</span><span class="op">=</span> <span class="ident">copy_len</span>;
 
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">decoded_len</span> <span class="op">&lt;</span> <span class="ident">DECODED_CHUNK_SIZE</span>);
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">decoded_len</span> <span class="op">&lt;</span> <span class="ident">DECODED_CHUNK_SIZE</span>);
 
         <span class="prelude-val">Ok</span>(<span class="ident">copy_len</span>)
     }
@@ -397,14 +397,14 @@
     <span class="doccomment">/// Must only be called when there is space to read into in the buffer.</span>
     <span class="doccomment">/// Returns the number of bytes read.</span>
     <span class="kw">fn</span> <span class="ident">read_from_delegate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&lt;</span> <span class="ident">BUF_SIZE</span>);
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&lt;</span> <span class="ident">BUF_SIZE</span>);
 
         <span class="kw">let</span> <span class="ident">read</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">r</span>
             .<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">b64_buffer</span>[<span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">b64_len</span>..])<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">+</span><span class="op">=</span> <span class="ident">read</span>;
 
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">BUF_SIZE</span>);
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">BUF_SIZE</span>);
 
         <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">read</span>);
     }
@@ -414,9 +414,9 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns a Result with the number of decoded bytes written to `buf`.</span>
     <span class="kw">fn</span> <span class="ident">decode_to_buf</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">num_bytes</span>: <span class="ident">usize</span>, <span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">io</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">num_bytes</span>);
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">BUF_SIZE</span>);
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">buf</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span>);
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">num_bytes</span>);
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">BUF_SIZE</span>);
+        <span class="macro">debug_assert!</span>(<span class="ident">buf</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span>);
 
         <span class="kw">let</span> <span class="ident">decoded</span> <span class="op">=</span> <span class="ident">decode_config_slice</span>(
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">b64_buffer</span>[<span class="self">self</span>.<span class="ident">b64_offset</span>..<span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">+</span> <span class="ident">num_bytes</span>],
@@ -438,7 +438,7 @@
         <span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">num_bytes</span>;
         <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">-</span><span class="op">=</span> <span class="ident">num_bytes</span>;
 
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">BUF_SIZE</span>);
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">BUF_SIZE</span>);
 
         <span class="prelude-val">Ok</span>(<span class="ident">decoded</span>)
     }
@@ -463,15 +463,15 @@
         }
 
         <span class="comment">// offset == BUF_SIZE when we copied it all last time</span>
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">BUF_SIZE</span>);
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">BUF_SIZE</span>);
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="kw">if</span> <span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">=</span><span class="op">=</span> <span class="ident">BUF_SIZE</span> {
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">BUF_SIZE</span>);
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">BUF_SIZE</span>);
+        <span class="macro">debug_assert!</span>(<span class="kw">if</span> <span class="self">self</span>.<span class="ident">b64_offset</span> <span class="op">=</span><span class="op">=</span> <span class="ident">BUF_SIZE</span> {
             <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>
         } <span class="kw">else</span> {
             <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">BUF_SIZE</span>
         });
 
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="kw">if</span> <span class="self">self</span>.<span class="ident">decoded_len</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="macro">debug_assert!</span>(<span class="kw">if</span> <span class="self">self</span>.<span class="ident">decoded_len</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
             <span class="comment">// can be = when we were able to copy the complete chunk</span>
             <span class="self">self</span>.<span class="ident">decoded_offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">DECODED_CHUNK_SIZE</span>
         } <span class="kw">else</span> {
@@ -481,8 +481,8 @@
         <span class="comment">// We shouldn&#39;t ever decode into here when we can&#39;t immediately write at least one byte into</span>
         <span class="comment">// the provided buf, so the effective length should only be 3 momentarily between when we</span>
         <span class="comment">// decode and when we copy into the target buffer.</span>
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">decoded_len</span> <span class="op">&lt;</span> <span class="ident">DECODED_CHUNK_SIZE</span>);
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">decoded_len</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">decoded_offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">DECODED_CHUNK_SIZE</span>);
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">decoded_len</span> <span class="op">&lt;</span> <span class="ident">DECODED_CHUNK_SIZE</span>);
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.<span class="ident">decoded_len</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">decoded_offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">DECODED_CHUNK_SIZE</span>);
 
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">decoded_len</span> <span class="op">&gt;</span> <span class="number">0</span> {
             <span class="comment">// we have a few leftover decoded bytes; flush that rather than pull in more b64</span>
@@ -510,12 +510,12 @@
             }
 
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">at_eof</span>);
+                <span class="macro">debug_assert!</span>(<span class="ident">at_eof</span>);
                 <span class="comment">// we must be at EOF, and we have no data left to decode</span>
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="number">0</span>);
             };
 
-            <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="kw">if</span> <span class="ident">at_eof</span> {
+            <span class="macro">debug_assert!</span>(<span class="kw">if</span> <span class="ident">at_eof</span> {
                 <span class="comment">// if we are at eof, we may not have a complete chunk</span>
                 <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&gt;</span> <span class="number">0</span>
             } <span class="kw">else</span> {
@@ -523,7 +523,7 @@
                 <span class="self">self</span>.<span class="ident">b64_len</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">BASE64_CHUNK_SIZE</span>
             });
 
-            <span class="macro">debug_assert_eq</span><span class="macro">!</span>(<span class="number">0</span>, <span class="self">self</span>.<span class="ident">decoded_len</span>);
+            <span class="macro">debug_assert_eq!</span>(<span class="number">0</span>, <span class="self">self</span>.<span class="ident">decoded_len</span>);
 
             <span class="kw">if</span> <span class="ident">buf</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">DECODED_CHUNK_SIZE</span> {
                 <span class="comment">// caller requested an annoyingly short read</span>
@@ -541,14 +541,14 @@
                 <span class="self">self</span>.<span class="ident">decoded_len</span> <span class="op">=</span> <span class="ident">decoded</span>;
 
                 <span class="comment">// can be less than 3 on last block due to padding</span>
-                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">decoded</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">3</span>);
+                <span class="macro">debug_assert!</span>(<span class="ident">decoded</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">3</span>);
 
                 <span class="self">self</span>.<span class="ident">flush_decoded_buf</span>(<span class="ident">buf</span>)
             } <span class="kw">else</span> {
                 <span class="kw">let</span> <span class="ident">b64_bytes_that_can_decode_into_buf</span> <span class="op">=</span> (<span class="ident">buf</span>.<span class="ident">len</span>() <span class="op">/</span> <span class="ident">DECODED_CHUNK_SIZE</span>)
                     .<span class="ident">checked_mul</span>(<span class="ident">BASE64_CHUNK_SIZE</span>)
                     .<span class="ident">expect</span>(<span class="string">&quot;too many chunks&quot;</span>);
-                <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="ident">b64_bytes_that_can_decode_into_buf</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">BASE64_CHUNK_SIZE</span>);
+                <span class="macro">debug_assert!</span>(<span class="ident">b64_bytes_that_can_decode_into_buf</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">BASE64_CHUNK_SIZE</span>);
 
                 <span class="kw">let</span> <span class="ident">b64_bytes_available_to_decode</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">at_eof</span> {
                     <span class="self">self</span>.<span class="ident">b64_len</span>

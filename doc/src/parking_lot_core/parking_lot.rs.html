@@ -1847,7 +1847,7 @@
     <span class="comment">// to construct. Try to use a thread-local version if possible. Otherwise just</span>
     <span class="comment">// create a ThreadData on the stack</span>
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">thread_data_storage</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-    <span class="macro">thread_local</span><span class="macro">!</span>(<span class="kw">static</span> <span class="ident">THREAD_DATA</span>: <span class="ident">ThreadData</span> <span class="op">=</span> <span class="ident">ThreadData</span>::<span class="ident">new</span>());
+    <span class="macro">thread_local!</span>(<span class="kw">static</span> <span class="ident">THREAD_DATA</span>: <span class="ident">ThreadData</span> <span class="op">=</span> <span class="ident">ThreadData</span>::<span class="ident">new</span>());
     <span class="kw">let</span> <span class="ident">thread_data_ptr</span> <span class="op">=</span> <span class="ident">THREAD_DATA</span>
         .<span class="ident">try_with</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ThreadData</span>)
         .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">thread_data_storage</span>.<span class="ident">get_or_insert_with</span>(<span class="ident">ThreadData</span>::<span class="ident">new</span>));
@@ -2344,7 +2344,7 @@
 
         <span class="comment">// There should be no way for our thread to have been removed from the queue</span>
         <span class="comment">// if we timed out.</span>
-        <span class="macro">debug_assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">current</span>.<span class="ident">is_null</span>());
+        <span class="macro">debug_assert!</span>(<span class="op">!</span><span class="ident">current</span>.<span class="ident">is_null</span>());
 
         <span class="comment">// Unlock the bucket, we are done</span>
         <span class="comment">// SAFETY: We hold the lock here, as required</span>
@@ -2857,7 +2857,7 @@
             <span class="comment">// park until the end of the time</span>
             <span class="ident">td</span>.<span class="ident">parker</span>.<span class="ident">prepare_park</span>();
             <span class="ident">td</span>.<span class="ident">parker</span>.<span class="ident">park</span>();
-            <span class="macro">unreachable</span><span class="macro">!</span>(<span class="string">&quot;unparked deadlocked thread!&quot;</span>);
+            <span class="macro">unreachable!</span>(<span class="string">&quot;unparked deadlocked thread!&quot;</span>);
         }
     }
 
@@ -3096,7 +3096,7 @@
         <span class="kw">unsafe</span> { <span class="ident">bucket</span>.<span class="ident">mutex</span>.<span class="ident">unlock</span>() };
     }
 
-    <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">test</span> {
+    <span class="macro">macro_rules!</span> <span class="ident">test</span> {
         ( $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>(
             <span class="ident">repeats</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">repeats</span>:<span class="ident">expr</span>,
             <span class="ident">latches</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">latches</span>:<span class="ident">expr</span>,
@@ -3114,7 +3114,7 @@
         };
     }
 
-    <span class="macro">test</span><span class="macro">!</span> {
+    <span class="macro">test!</span> {
         <span class="ident">unpark_all_one_fast</span>(
             <span class="ident">repeats</span>: <span class="number">10000</span>, <span class="ident">latches</span>: <span class="number">1</span>, <span class="ident">delay</span>: <span class="number">0</span>, <span class="ident">threads</span>: <span class="number">1</span>, <span class="ident">single_unparks</span>: <span class="number">0</span>
         );
@@ -3219,13 +3219,13 @@
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unpark_one</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">single_unpark_index</span>: <span class="ident">usize</span>) {
             <span class="comment">// last_awoken should be null at all times except between self.up() and at the bottom</span>
             <span class="comment">// of this method where it&#39;s reset to null again</span>
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">last_awoken</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>).<span class="ident">is_null</span>());
+            <span class="macro">assert!</span>(<span class="self">self</span>.<span class="ident">last_awoken</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>).<span class="ident">is_null</span>());
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">queue</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">ThreadData</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="self">self</span>.<span class="ident">num_threads</span>);
             <span class="ident">for_each</span>(<span class="self">self</span>.<span class="ident">semaphore_addr</span>(), <span class="op">|</span><span class="ident">thread_data</span><span class="op">|</span> {
                 <span class="ident">queue</span>.<span class="ident">push</span>(<span class="ident">thread_data</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>);
             });
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">queue</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">num_threads</span> <span class="op">-</span> <span class="ident">single_unpark_index</span>);
+            <span class="macro">assert!</span>(<span class="ident">queue</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">num_threads</span> <span class="op">-</span> <span class="ident">single_unpark_index</span>);
 
             <span class="kw">let</span> <span class="ident">num_awake_before_up</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">num_awake</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
 
@@ -3238,9 +3238,9 @@
 
             <span class="comment">// At this point the other thread should have set last_awoken inside the run() method</span>
             <span class="kw">let</span> <span class="ident">last_awoken</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">last_awoken</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">last_awoken</span>.<span class="ident">is_null</span>());
+            <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">last_awoken</span>.<span class="ident">is_null</span>());
             <span class="kw">if</span> <span class="op">!</span><span class="ident">queue</span>.<span class="ident">is_empty</span>() <span class="op">&amp;&amp;</span> <span class="ident">queue</span>[<span class="number">0</span>] <span class="op">!</span><span class="op">=</span> <span class="ident">last_awoken</span> {
-                <span class="macro">panic</span><span class="macro">!</span>(
+                <span class="macro">panic!</span>(
                     <span class="string">&quot;Woke up wrong thread:\n\tqueue: {:?}\n\tlast awoken: {:?}&quot;</span>,
                     <span class="ident">queue</span>, <span class="ident">last_awoken</span>
                 );
@@ -3259,14 +3259,14 @@
                 <span class="ident">for_each</span>(<span class="self">self</span>.<span class="ident">semaphore_addr</span>(), <span class="op">|</span><span class="ident">_thread_data</span><span class="op">|</span> {
                     <span class="ident">num_waiting_on_address</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                 });
-                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">num_waiting_on_address</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">num_threads_left</span>);
+                <span class="macro">assert!</span>(<span class="ident">num_waiting_on_address</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">num_threads_left</span>);
 
                 <span class="kw">let</span> <span class="ident">num_awake_before_unpark</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">num_awake</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>);
 
                 <span class="kw">let</span> <span class="ident">num_unparked</span> <span class="op">=</span>
                     <span class="kw">unsafe</span> { <span class="kw">super</span>::<span class="ident">unpark_all</span>(<span class="self">self</span>.<span class="ident">semaphore_addr</span>(), <span class="ident">DEFAULT_UNPARK_TOKEN</span>) };
-                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">num_unparked</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">num_waiting_on_address</span>);
-                <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">num_unparked</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">num_threads_left</span>);
+                <span class="macro">assert!</span>(<span class="ident">num_unparked</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">num_waiting_on_address</span>);
+                <span class="macro">assert!</span>(<span class="ident">num_unparked</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">num_threads_left</span>);
 
                 <span class="comment">// Wait for all unparked threads to wake up and update num_awake + last_awoken.</span>
                 <span class="kw">while</span> <span class="self">self</span>.<span class="ident">num_awake</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>)
@@ -3278,14 +3278,14 @@
                 <span class="ident">num_threads_left</span> <span class="op">=</span> <span class="ident">num_threads_left</span>.<span class="ident">checked_sub</span>(<span class="ident">num_unparked</span>).<span class="ident">unwrap</span>();
             }
             <span class="comment">// By now, all threads should have been woken up</span>
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="self">self</span>.<span class="ident">num_awake</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>), <span class="self">self</span>.<span class="ident">num_threads</span>);
+            <span class="macro">assert_eq!</span>(<span class="self">self</span>.<span class="ident">num_awake</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">SeqCst</span>), <span class="self">self</span>.<span class="ident">num_threads</span>);
 
             <span class="comment">// Make sure no thread is parked on our semaphore address</span>
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">num_waiting_on_address</span> <span class="op">=</span> <span class="number">0</span>;
             <span class="ident">for_each</span>(<span class="self">self</span>.<span class="ident">semaphore_addr</span>(), <span class="op">|</span><span class="ident">_thread_data</span><span class="op">|</span> {
                 <span class="ident">num_waiting_on_address</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
             });
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">num_waiting_on_address</span>, <span class="number">0</span>);
+            <span class="macro">assert_eq!</span>(<span class="ident">num_waiting_on_address</span>, <span class="number">0</span>);
         }
 
         <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">down</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
@@ -3327,7 +3327,7 @@
                     } {
                         <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span>,
                         <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> (),
-                        <span class="ident">i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;Should not wake up {} threads&quot;</span>, <span class="ident">i</span>),
+                        <span class="ident">i</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;Should not wake up {} threads&quot;</span>, <span class="ident">i</span>),
                     }
                 }
             }

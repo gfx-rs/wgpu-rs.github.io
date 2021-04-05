@@ -1410,7 +1410,7 @@
             <span class="comment">// that at this point the MutexGuard is still locked. It will be</span>
             <span class="comment">// unlocked by the unwinding logic.</span>
             <span class="kw">if</span> <span class="ident">bad_mutex</span> {
-                <span class="macro">panic</span><span class="macro">!</span>(<span class="string">&quot;attempted to use a condition variable with more than one mutex&quot;</span>);
+                <span class="macro">panic!</span>(<span class="string">&quot;attempted to use a condition variable with more than one mutex&quot;</span>);
             }
 
             <span class="comment">// ... and re-lock it once we are done sleeping</span>
@@ -1549,7 +1549,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">lock</span>();
         <span class="kw">let</span> <span class="ident">_t</span> <span class="op">=</span> <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">_g</span> <span class="op">=</span> <span class="ident">m2</span>.<span class="ident">lock</span>();
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">c2</span>.<span class="ident">notify_one</span>());
+            <span class="macro">assert!</span>(<span class="ident">c2</span>.<span class="ident">notify_one</span>());
         });
         <span class="ident">c</span>.<span class="ident">wait</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">g</span>);
     }
@@ -1561,7 +1561,7 @@
 
         <span class="kw">let</span> <span class="ident">_t</span> <span class="op">=</span> <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">_g</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">lock</span>();
-            <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">c</span>.<span class="ident">notify_one</span>());
+            <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">c</span>.<span class="ident">notify_one</span>());
         });
     }
 
@@ -1593,14 +1593,14 @@
         <span class="ident">rx</span>.<span class="ident">recv</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cnt</span> <span class="op">=</span> <span class="ident">lock</span>.<span class="ident">lock</span>();
         <span class="kw-2">*</span><span class="ident">cnt</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">cond</span>.<span class="ident">notify_all</span>(), <span class="ident">N</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">cond</span>.<span class="ident">notify_all</span>(), <span class="ident">N</span>);
         <span class="ident">drop</span>(<span class="ident">cnt</span>);
 
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">N</span> {
             <span class="ident">rx</span>.<span class="ident">recv</span>().<span class="ident">unwrap</span>();
         }
 
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">cond</span>.<span class="ident">notify_all</span>(), <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">cond</span>.<span class="ident">notify_all</span>(), <span class="number">0</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -1612,21 +1612,21 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">lock</span>();
         <span class="kw">let</span> <span class="ident">no_timeout</span> <span class="op">=</span> <span class="ident">c</span>.<span class="ident">wait_for</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">g</span>, <span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">1</span>));
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">no_timeout</span>.<span class="ident">timed_out</span>());
+        <span class="macro">assert!</span>(<span class="ident">no_timeout</span>.<span class="ident">timed_out</span>());
 
         <span class="kw">let</span> <span class="ident">_t</span> <span class="op">=</span> <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">_g</span> <span class="op">=</span> <span class="ident">m2</span>.<span class="ident">lock</span>();
             <span class="ident">c2</span>.<span class="ident">notify_one</span>();
         });
         <span class="comment">// Non-nightly panics on too large timeouts. Nightly treats it as indefinite wait.</span>
-        <span class="kw">let</span> <span class="ident">very_long_timeout</span> <span class="op">=</span> <span class="kw">if</span> <span class="macro">cfg</span><span class="macro">!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>) {
+        <span class="kw">let</span> <span class="ident">very_long_timeout</span> <span class="op">=</span> <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>) {
             <span class="ident">Duration</span>::<span class="ident">from_secs</span>(<span class="ident">u64</span>::<span class="ident">max_value</span>())
         } <span class="kw">else</span> {
             <span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="ident">u32</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">u64</span>)
         };
 
         <span class="kw">let</span> <span class="ident">timeout_res</span> <span class="op">=</span> <span class="ident">c</span>.<span class="ident">wait_for</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">g</span>, <span class="ident">very_long_timeout</span>);
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">timeout_res</span>.<span class="ident">timed_out</span>());
+        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">timeout_res</span>.<span class="ident">timed_out</span>());
 
         <span class="ident">drop</span>(<span class="ident">g</span>);
     }
@@ -1640,7 +1640,7 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">m</span>.<span class="ident">lock</span>();
         <span class="kw">let</span> <span class="ident">no_timeout</span> <span class="op">=</span> <span class="ident">c</span>.<span class="ident">wait_until</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">g</span>, <span class="ident">Instant</span>::<span class="ident">now</span>() <span class="op">+</span> <span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">1</span>));
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="ident">no_timeout</span>.<span class="ident">timed_out</span>());
+        <span class="macro">assert!</span>(<span class="ident">no_timeout</span>.<span class="ident">timed_out</span>());
         <span class="kw">let</span> <span class="ident">_t</span> <span class="op">=</span> <span class="ident">thread</span>::<span class="ident">spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">_g</span> <span class="op">=</span> <span class="ident">m2</span>.<span class="ident">lock</span>();
             <span class="ident">c2</span>.<span class="ident">notify_one</span>();
@@ -1649,7 +1649,7 @@
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">g</span>,
             <span class="ident">Instant</span>::<span class="ident">now</span>() <span class="op">+</span> <span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="ident">u32</span>::<span class="ident">max_value</span>() <span class="kw">as</span> <span class="ident">u64</span>),
         );
-        <span class="macro">assert</span><span class="macro">!</span>(<span class="op">!</span><span class="ident">timeout_res</span>.<span class="ident">timed_out</span>());
+        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">timeout_res</span>.<span class="ident">timed_out</span>());
         <span class="ident">drop</span>(<span class="ident">g</span>);
     }
 
@@ -1706,7 +1706,7 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_debug_condvar</span>() {
         <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">Condvar</span>::<span class="ident">new</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="macro">format</span><span class="macro">!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">c</span>), <span class="string">&quot;Condvar { .. }&quot;</span>);
+        <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">c</span>), <span class="string">&quot;Condvar { .. }&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
@@ -1754,7 +1754,7 @@
         <span class="ident">locks</span>.<span class="number">1</span>.<span class="ident">notify_one</span>();
 
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">4</span> {
-            <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">rx</span>.<span class="ident">recv_timeout</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">500</span>)), <span class="prelude-val">Ok</span>(()));
+            <span class="macro">assert_eq!</span>(<span class="ident">rx</span>.<span class="ident">recv_timeout</span>(<span class="ident">Duration</span>::<span class="ident">from_millis</span>(<span class="number">500</span>)), <span class="prelude-val">Ok</span>(()));
         }
     }
 }
@@ -1834,7 +1834,7 @@
         <span class="kw">let</span> <span class="ident">empty_condition</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Condvar</span>::<span class="ident">new</span>());
         <span class="kw">let</span> <span class="ident">full_condition</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Condvar</span>::<span class="ident">new</span>());
 
-        <span class="kw">let</span> <span class="ident">output_vec</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="macro">vec</span><span class="macro">!</span>[]));
+        <span class="kw">let</span> <span class="ident">output_vec</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="macro">vec!</span>[]));
 
         <span class="kw">let</span> <span class="ident">consumers</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">num_consumers</span>)
             .<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
@@ -1880,11 +1880,11 @@
         }
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output_vec</span> <span class="op">=</span> <span class="ident">output_vec</span>.<span class="ident">lock</span>();
-        <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">output_vec</span>.<span class="ident">len</span>(), <span class="ident">num_producers</span> <span class="op">*</span> <span class="ident">messages_per_producer</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">output_vec</span>.<span class="ident">len</span>(), <span class="ident">num_producers</span> <span class="op">*</span> <span class="ident">messages_per_producer</span>);
         <span class="ident">output_vec</span>.<span class="ident">sort</span>();
         <span class="kw">for</span> <span class="ident">msg_idx</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">messages_per_producer</span> {
             <span class="kw">for</span> <span class="ident">producer_idx</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">num_producers</span> {
-                <span class="macro">assert_eq</span><span class="macro">!</span>(<span class="ident">msg_idx</span>, <span class="ident">output_vec</span>[<span class="ident">msg_idx</span> <span class="op">*</span> <span class="ident">num_producers</span> <span class="op">+</span> <span class="ident">producer_idx</span>]);
+                <span class="macro">assert_eq!</span>(<span class="ident">msg_idx</span>, <span class="ident">output_vec</span>[<span class="ident">msg_idx</span> <span class="op">*</span> <span class="ident">num_producers</span> <span class="op">+</span> <span class="ident">producer_idx</span>]);
             }
         }
     }
@@ -1952,7 +1952,7 @@
         })
     }
 
-    <span class="macro">macro_rules</span><span class="macro">!</span> <span class="ident">run_queue_tests</span> {
+    <span class="macro">macro_rules!</span> <span class="ident">run_queue_tests</span> {
         ( $( <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span>(
             <span class="ident">num_producers</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">num_producers</span>:<span class="ident">expr</span>,
             <span class="ident">num_consumers</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">num_consumers</span>:<span class="ident">expr</span>,
@@ -1978,7 +1978,7 @@
         };
     }
 
-    <span class="macro">run_queue_tests</span><span class="macro">!</span> {
+    <span class="macro">run_queue_tests!</span> {
         <span class="ident">sanity_check_queue</span>(
             <span class="ident">num_producers</span>: <span class="number">1</span>,
             <span class="ident">num_consumers</span>: <span class="number">1</span>,
