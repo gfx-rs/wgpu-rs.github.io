@@ -167,9 +167,9 @@
 <span id="164">164</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de</span>, <span class="ident">ser</span>};
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">error</span>::<span class="ident">Error</span> <span class="kw">as</span> <span class="ident">StdError</span>, <span class="ident">fmt</span>, <span class="ident">io</span>, <span class="ident">str</span>::<span class="ident">Utf8Error</span>, <span class="ident">string</span>::<span class="ident">FromUtf8Error</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">error::Error</span> <span class="kw">as</span> <span class="ident">StdError</span>, <span class="ident">fmt</span>, <span class="ident">io</span>, <span class="ident">str::Utf8Error</span>, <span class="ident">string::FromUtf8Error</span>};
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">parse</span>::<span class="ident">Position</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::parse::Position</span>;
 
 <span class="doccomment">/// This type represents all possible errors that can occur when</span>
 <span class="doccomment">/// serializing or deserializing RON data.</span>
@@ -179,13 +179,13 @@
     <span class="kw">pub</span> <span class="ident">position</span>: <span class="ident">Position</span>,
 }
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">result</span>::<span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">Error</span><span class="op">&gt;</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ErrorCode</span> {
     <span class="ident">Io</span>(<span class="ident">String</span>),
     <span class="ident">Message</span>(<span class="ident">String</span>),
-    <span class="ident">Base64Error</span>(<span class="ident">base64</span>::<span class="ident">DecodeError</span>),
+    <span class="ident">Base64Error</span>(<span class="ident">base64::DecodeError</span>),
     <span class="ident">Eof</span>,
     <span class="ident">ExpectedArray</span>,
     <span class="ident">ExpectedArrayEnd</span>,
@@ -227,8 +227,8 @@
     <span class="ident">__Nonexhaustive</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Error</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="kw">if</span> (<span class="self">self</span>.<span class="ident">position</span> <span class="op">=</span><span class="op">=</span> <span class="ident">Position</span> { <span class="ident">line</span>: <span class="number">0</span>, <span class="ident">col</span>: <span class="number">0</span> }) {
             <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="self">self</span>.<span class="ident">code</span>)
         } <span class="kw">else</span> {
@@ -237,63 +237,63 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">ErrorCode</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">ErrorCode</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">ErrorCode</span>::<span class="ident">Io</span>(<span class="kw-2">ref</span> <span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="ident">s</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">Message</span>(<span class="kw-2">ref</span> <span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="ident">s</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">Base64Error</span>(<span class="kw-2">ref</span> <span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Display</span>::<span class="ident">fmt</span>(<span class="ident">e</span>, <span class="ident">f</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">Eof</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Unexpected end of file&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedArray</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected array&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedArrayEnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected end of array&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedAttribute</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected an enable attribute&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedAttributeEnd</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">ErrorCode::Io</span>(<span class="kw-2">ref</span> <span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="ident">s</span>),
+            <span class="ident">ErrorCode::Message</span>(<span class="kw-2">ref</span> <span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="ident">s</span>),
+            <span class="ident">ErrorCode::Base64Error</span>(<span class="kw-2">ref</span> <span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fmt::Display::fmt</span>(<span class="ident">e</span>, <span class="ident">f</span>),
+            <span class="ident">ErrorCode::Eof</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Unexpected end of file&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedArray</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected array&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedArrayEnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected end of array&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedAttribute</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected an enable attribute&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedAttributeEnd</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected closing `)` and `]` after the attribute&quot;</span>)
             }
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedBoolean</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected boolean&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedComma</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected comma&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedBoolean</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected boolean&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedComma</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected comma&quot;</span>),
             <span class="comment">// ErrorCode::ExpectedEnum =&gt; f.write_str(&quot;Expected enum&quot;),</span>
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedChar</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected char&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedFloat</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected float&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedInteger</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected integer&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedOption</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected option&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedOptionEnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected end of option&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedMap</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected map&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedMapColon</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected colon&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedMapEnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected end of map&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedStruct</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected struct&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedStructEnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected end of struct&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedUnit</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected unit&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedChar</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected char&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedFloat</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected float&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedInteger</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected integer&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedOption</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected option&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedOptionEnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected end of option&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedMap</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected map&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedMapColon</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected colon&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedMapEnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected end of map&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedStruct</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected struct&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedStructEnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected end of struct&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedUnit</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected unit&quot;</span>),
             <span class="comment">// ErrorCode::ExpectedStructName =&gt; f.write_str(&quot;Expected struct name&quot;),</span>
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedString</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected string&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedStringEnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected string end&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">ExpectedIdentifier</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected identifier&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">InvalidEscape</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Invalid escape sequence&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">IntegerOutOfBounds</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Integer is out of bounds&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">NoSuchExtension</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;No such RON extension&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">Utf8Error</span>(<span class="kw-2">ref</span> <span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Display</span>::<span class="ident">fmt</span>(<span class="ident">e</span>, <span class="ident">f</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">UnclosedBlockComment</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Unclosed block comment&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">UnderscoreAtBeginning</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Found underscore at the beginning&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">UnexpectedByte</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Unexpected byte&quot;</span>),
-            <span class="ident">ErrorCode</span>::<span class="ident">TrailingCharacters</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Non-whitespace trailing characters&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedString</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected string&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedStringEnd</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected string end&quot;</span>),
+            <span class="ident">ErrorCode::ExpectedIdentifier</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Expected identifier&quot;</span>),
+            <span class="ident">ErrorCode::InvalidEscape</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Invalid escape sequence&quot;</span>),
+            <span class="ident">ErrorCode::IntegerOutOfBounds</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Integer is out of bounds&quot;</span>),
+            <span class="ident">ErrorCode::NoSuchExtension</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;No such RON extension&quot;</span>),
+            <span class="ident">ErrorCode::Utf8Error</span>(<span class="kw-2">ref</span> <span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">fmt::Display::fmt</span>(<span class="ident">e</span>, <span class="ident">f</span>),
+            <span class="ident">ErrorCode::UnclosedBlockComment</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Unclosed block comment&quot;</span>),
+            <span class="ident">ErrorCode::UnderscoreAtBeginning</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Found underscore at the beginning&quot;</span>),
+            <span class="ident">ErrorCode::UnexpectedByte</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Unexpected byte&quot;</span>),
+            <span class="ident">ErrorCode::TrailingCharacters</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Non-whitespace trailing characters&quot;</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">write_str</span>(<span class="string">&quot;Unknown ErrorCode&quot;</span>),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">de</span>::<span class="ident">Error</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">custom</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">fmt</span>::<span class="ident">Display</span><span class="op">&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">de::Error</span> <span class="kw">for</span> <span class="ident">Error</span> {
+    <span class="kw">fn</span> <span class="ident">custom</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">fmt::Display</span><span class="op">&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Error</span> {
-            <span class="ident">code</span>: <span class="ident">ErrorCode</span>::<span class="ident">Message</span>(<span class="ident">msg</span>.<span class="ident">to_string</span>()),
+            <span class="ident">code</span>: <span class="ident">ErrorCode::Message</span>(<span class="ident">msg</span>.<span class="ident">to_string</span>()),
             <span class="ident">position</span>: <span class="ident">Position</span> { <span class="ident">line</span>: <span class="number">0</span>, <span class="ident">col</span>: <span class="number">0</span> },
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">ser</span>::<span class="ident">Error</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">custom</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">fmt</span>::<span class="ident">Display</span><span class="op">&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">ser::Error</span> <span class="kw">for</span> <span class="ident">Error</span> {
+    <span class="kw">fn</span> <span class="ident">custom</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">fmt::Display</span><span class="op">&gt;</span>(<span class="ident">msg</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Error</span> {
-            <span class="ident">code</span>: <span class="ident">ErrorCode</span>::<span class="ident">Message</span>(<span class="ident">msg</span>.<span class="ident">to_string</span>()),
+            <span class="ident">code</span>: <span class="ident">ErrorCode::Message</span>(<span class="ident">msg</span>.<span class="ident">to_string</span>()),
             <span class="ident">position</span>: <span class="ident">Position</span> { <span class="ident">line</span>: <span class="number">0</span>, <span class="ident">col</span>: <span class="number">0</span> },
         }
     }
@@ -303,29 +303,29 @@
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Utf8Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ErrorCode</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">Utf8Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">ErrorCode</span>::<span class="ident">Utf8Error</span>(<span class="ident">e</span>)
+        <span class="ident">ErrorCode::Utf8Error</span>(<span class="ident">e</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">FromUtf8Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ErrorCode</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">FromUtf8Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">ErrorCode</span>::<span class="ident">Utf8Error</span>(<span class="ident">e</span>.<span class="ident">utf8_error</span>())
+        <span class="ident">ErrorCode::Utf8Error</span>(<span class="ident">e</span>.<span class="ident">utf8_error</span>())
     }
 }
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Utf8Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">Utf8Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Error</span> {
-            <span class="ident">code</span>: <span class="ident">ErrorCode</span>::<span class="ident">Utf8Error</span>(<span class="ident">e</span>),
+            <span class="ident">code</span>: <span class="ident">ErrorCode::Utf8Error</span>(<span class="ident">e</span>),
             <span class="ident">position</span>: <span class="ident">Position</span> { <span class="ident">line</span>: <span class="number">0</span>, <span class="ident">col</span>: <span class="number">0</span> },
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">io</span>::<span class="ident">Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">io</span>::<span class="ident">Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">io::Error</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Error</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">io::Error</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Error</span> {
-            <span class="ident">code</span>: <span class="ident">ErrorCode</span>::<span class="ident">Io</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()),
+            <span class="ident">code</span>: <span class="ident">ErrorCode::Io</span>(<span class="ident">e</span>.<span class="ident">to_string</span>()),
             <span class="ident">position</span>: <span class="ident">Position</span> { <span class="ident">line</span>: <span class="number">0</span>, <span class="ident">col</span>: <span class="number">0</span> },
         }
     }

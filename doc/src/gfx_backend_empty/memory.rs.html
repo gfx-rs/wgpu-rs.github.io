@@ -62,11 +62,11 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="ident">hal</span>::{
     <span class="ident">device</span>::{<span class="ident">AllocationError</span>, <span class="ident">MapError</span>, <span class="ident">OutOfMemory</span>},
-    <span class="ident">memory</span>::<span class="ident">Segment</span>,
+    <span class="ident">memory::Segment</span>,
     <span class="ident">MemoryTypeId</span>,
 };
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">cell</span>::<span class="ident">UnsafeCell</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">TryInto</span>;
+<span class="kw">use</span> <span class="ident">std::cell::UnsafeCell</span>;
+<span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
 
 <span class="doccomment">/// A memory allocation.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -89,7 +89,7 @@
                 .<span class="ident">try_into</span>()
                 <span class="comment">// If we&#39;re on 32-bit and the given size is greater than 2^32,</span>
                 <span class="comment">// we certainly can&#39;t allocate it.</span>
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">AllocationError</span>::<span class="ident">OutOfMemory</span>(<span class="ident">OutOfMemory</span>::<span class="ident">Host</span>))<span class="question-mark">?</span>;
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">AllocationError::OutOfMemory</span>(<span class="ident">OutOfMemory::Host</span>))<span class="question-mark">?</span>;
 
             <span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="ident">size</span>].<span class="ident">into_boxed_slice</span>()
         };
@@ -97,18 +97,18 @@
         <span class="kw">let</span> <span class="ident">memory</span> <span class="op">=</span> <span class="ident">Memory</span> {
             <span class="ident">memory_type</span>,
             <span class="ident">size</span>,
-            <span class="ident">data</span>: <span class="ident">UnsafeCell</span>::<span class="ident">new</span>(<span class="ident">data</span>),
+            <span class="ident">data</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">data</span>),
         };
         <span class="prelude-val">Ok</span>(<span class="ident">memory</span>)
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">segment</span>: <span class="ident">Segment</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>, <span class="ident">MapError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">segment</span>.<span class="ident">offset</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">size</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MapError</span>::<span class="ident">OutOfBounds</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MapError::OutOfBounds</span>);
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">size</span>) <span class="op">=</span> <span class="ident">segment</span>.<span class="ident">size</span> {
             <span class="kw">if</span> <span class="ident">segment</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">size</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">size</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MapError</span>::<span class="ident">OutOfBounds</span>);
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MapError::OutOfBounds</span>);
             }
         }
 

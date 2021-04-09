@@ -767,43 +767,43 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */</span>
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">device</span>::<span class="ident">trace</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::device::trace</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">device</span>::{
         <span class="ident">alloc</span>,
         <span class="ident">descriptor</span>::{<span class="ident">DescriptorAllocator</span>, <span class="ident">DescriptorSet</span>},
-        <span class="ident">queue</span>::<span class="ident">TempResource</span>,
+        <span class="ident">queue::TempResource</span>,
         <span class="ident">DeviceError</span>,
     },
     <span class="ident">hub</span>::{<span class="ident">GfxBackend</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">Hub</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>, <span class="ident">resource</span>,
-    <span class="ident">track</span>::<span class="ident">TrackerSet</span>,
+    <span class="ident">track::TrackerSet</span>,
     <span class="ident">RefCount</span>, <span class="ident">Stored</span>, <span class="ident">SubmissionIndex</span>,
 };
 
-<span class="kw">use</span> <span class="ident">copyless</span>::<span class="ident">VecHelper</span> <span class="kw">as</span> <span class="kw">_</span>;
-<span class="kw">use</span> <span class="ident">hal</span>::<span class="ident">device</span>::<span class="ident">Device</span> <span class="kw">as</span> <span class="kw">_</span>;
-<span class="kw">use</span> <span class="ident">parking_lot</span>::<span class="ident">Mutex</span>;
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">copyless::VecHelper</span> <span class="kw">as</span> <span class="kw">_</span>;
+<span class="kw">use</span> <span class="ident">hal::device::Device</span> <span class="kw">as</span> <span class="kw">_</span>;
+<span class="kw">use</span> <span class="ident">parking_lot::Mutex</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">sync</span>::<span class="ident">atomic</span>::<span class="ident">Ordering</span>;
+<span class="kw">use</span> <span class="ident">std::sync::atomic::Ordering</span>;
 
 <span class="kw">const</span> <span class="ident">CLEANUP_WAIT_MS</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">5000</span>;
 
 <span class="doccomment">/// A struct that keeps lists of resources that are no longer needed by the user.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">SuspectedResources</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">buffers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">textures</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">TextureId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">texture_views</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">TextureViewId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">samplers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">SamplerId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">bind_groups</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">BindGroupId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">compute_pipelines</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">ComputePipelineId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">render_pipelines</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">RenderPipelineId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">bind_group_layouts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">BindGroupLayoutId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">pipeline_layouts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">PipelineLayoutId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">render_bundles</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">RenderBundleId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">query_sets</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">QuerySetId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">buffers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">textures</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::TextureId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">texture_views</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::TextureViewId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">samplers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::SamplerId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">bind_groups</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::BindGroupId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">compute_pipelines</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::ComputePipelineId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">render_pipelines</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::RenderPipelineId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">bind_group_layouts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::BindGroupLayoutId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">pipeline_layouts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::PipelineLayoutId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">render_bundles</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::RenderBundleId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">query_sets</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::QuerySetId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">SuspectedResources</span> {
@@ -854,36 +854,36 @@
 
 <span class="doccomment">/// A struct that keeps lists of resources that are no longer needed.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">NonReferencedResources</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> {
-    <span class="ident">buffers</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">B</span>::<span class="ident">Buffer</span>, <span class="ident">alloc</span>::<span class="ident">MemoryBlock</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
-    <span class="ident">images</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">B</span>::<span class="ident">Image</span>, <span class="ident">alloc</span>::<span class="ident">MemoryBlock</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
+<span class="kw">struct</span> <span class="ident">NonReferencedResources</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> {
+    <span class="ident">buffers</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">B::Buffer</span>, <span class="ident">alloc::MemoryBlock</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
+    <span class="ident">images</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">B::Image</span>, <span class="ident">alloc::MemoryBlock</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
     <span class="comment">// Note: we keep the associated ID here in order to be able to check</span>
     <span class="comment">// at any point what resources are used in a submission.</span>
-    <span class="ident">image_views</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">TextureViewId</span><span class="op">&gt;</span>, <span class="ident">B</span>::<span class="ident">ImageView</span>)<span class="op">&gt;</span>,
-    <span class="ident">samplers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">Sampler</span><span class="op">&gt;</span>,
-    <span class="ident">framebuffers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">Framebuffer</span><span class="op">&gt;</span>,
+    <span class="ident">image_views</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::TextureViewId</span><span class="op">&gt;</span>, <span class="ident">B::ImageView</span>)<span class="op">&gt;</span>,
+    <span class="ident">samplers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B::Sampler</span><span class="op">&gt;</span>,
+    <span class="ident">framebuffers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B::Framebuffer</span><span class="op">&gt;</span>,
     <span class="ident">desc_sets</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">DescriptorSet</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">compute_pipes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">ComputePipeline</span><span class="op">&gt;</span>,
-    <span class="ident">graphics_pipes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">GraphicsPipeline</span><span class="op">&gt;</span>,
-    <span class="ident">descriptor_set_layouts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">DescriptorSetLayout</span><span class="op">&gt;</span>,
-    <span class="ident">pipeline_layouts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">PipelineLayout</span><span class="op">&gt;</span>,
-    <span class="ident">query_sets</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B</span>::<span class="ident">QueryPool</span><span class="op">&gt;</span>,
+    <span class="ident">compute_pipes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B::ComputePipeline</span><span class="op">&gt;</span>,
+    <span class="ident">graphics_pipes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B::GraphicsPipeline</span><span class="op">&gt;</span>,
+    <span class="ident">descriptor_set_layouts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B::DescriptorSetLayout</span><span class="op">&gt;</span>,
+    <span class="ident">pipeline_layouts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B::PipelineLayout</span><span class="op">&gt;</span>,
+    <span class="ident">query_sets</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">B::QueryPool</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> <span class="ident">NonReferencedResources</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> <span class="ident">NonReferencedResources</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">buffers</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">images</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">image_views</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">samplers</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">framebuffers</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">desc_sets</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">compute_pipes</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">graphics_pipes</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">descriptor_set_layouts</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">pipeline_layouts</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">query_sets</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
+            <span class="ident">buffers</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">images</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">image_views</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">samplers</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">framebuffers</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">desc_sets</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">compute_pipes</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">graphics_pipes</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">descriptor_set_layouts</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">pipeline_layouts</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">query_sets</span>: <span class="ident">Vec::new</span>(),
         }
     }
 
@@ -903,19 +903,19 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">clean</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>::<span class="ident">Device</span>,
-        <span class="ident">memory_allocator_mutex</span>: <span class="kw-2">&amp;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">alloc</span>::<span class="ident">MemoryAllocator</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">B::Device</span>,
+        <span class="ident">memory_allocator_mutex</span>: <span class="kw-2">&amp;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">alloc::MemoryAllocator</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">descriptor_allocator_mutex</span>: <span class="kw-2">&amp;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">DescriptorAllocator</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">buffers</span>.<span class="ident">is_empty</span>() <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">images</span>.<span class="ident">is_empty</span>() {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allocator</span> <span class="op">=</span> <span class="ident">memory_allocator_mutex</span>.<span class="ident">lock</span>();
             <span class="kw">for</span> (<span class="ident">raw</span>, <span class="ident">memory</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">buffers</span>.<span class="ident">drain</span>(..) {
-                <span class="ident">log</span>::<span class="macro">trace!</span>(<span class="string">&quot;Buffer {:?} is destroyed with memory {:?}&quot;</span>, <span class="ident">raw</span>, <span class="ident">memory</span>);
+                <span class="macro">log::trace!</span>(<span class="string">&quot;Buffer {:?} is destroyed with memory {:?}&quot;</span>, <span class="ident">raw</span>, <span class="ident">memory</span>);
                 <span class="ident">device</span>.<span class="ident">destroy_buffer</span>(<span class="ident">raw</span>);
                 <span class="ident">allocator</span>.<span class="ident">free</span>(<span class="ident">device</span>, <span class="ident">memory</span>);
             }
             <span class="kw">for</span> (<span class="ident">raw</span>, <span class="ident">memory</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">images</span>.<span class="ident">drain</span>(..) {
-                <span class="ident">log</span>::<span class="macro">trace!</span>(<span class="string">&quot;Image {:?} is destroyed with memory {:?}&quot;</span>, <span class="ident">raw</span>, <span class="ident">memory</span>);
+                <span class="macro">log::trace!</span>(<span class="string">&quot;Image {:?} is destroyed with memory {:?}&quot;</span>, <span class="ident">raw</span>, <span class="ident">memory</span>);
                 <span class="ident">device</span>.<span class="ident">destroy_image</span>(<span class="ident">raw</span>);
                 <span class="ident">allocator</span>.<span class="ident">free</span>(<span class="ident">device</span>, <span class="ident">memory</span>);
             }
@@ -956,11 +956,11 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">ActiveSubmission</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> {
+<span class="kw">struct</span> <span class="ident">ActiveSubmission</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> {
     <span class="ident">index</span>: <span class="ident">SubmissionIndex</span>,
-    <span class="ident">fence</span>: <span class="ident">B</span>::<span class="ident">Fence</span>,
+    <span class="ident">fence</span>: <span class="ident">B::Fence</span>,
     <span class="ident">last_resources</span>: <span class="ident">NonReferencedResources</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-    <span class="ident">mapped</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">mapped</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
@@ -980,14 +980,14 @@
 <span class="doccomment">///   3. When `ActiveSubmission` is retired, the mapped buffers associated with it are moved to `ready_to_map` vector.</span>
 <span class="doccomment">///   4. Finally, `handle_mapping` issues all the callbacks.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">LifetimeTracker</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> {
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">LifetimeTracker</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Resources that the user has requested be mapped, but are still in use.</span>
-    <span class="ident">mapped</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">mapped</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Buffers can be used in a submission that is yet to be made, by the</span>
     <span class="doccomment">/// means of `write_buffer()`, so we have a special place for them.</span>
-    <span class="kw">pub</span> <span class="ident">future_suspected_buffers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">future_suspected_buffers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Textures can be used in the upcoming submission by `write_texture`.</span>
-    <span class="kw">pub</span> <span class="ident">future_suspected_textures</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">TextureId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">future_suspected_textures</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::TextureId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Resources that are suspected for destruction.</span>
     <span class="kw">pub</span> <span class="ident">suspected_resources</span>: <span class="ident">SuspectedResources</span>,
     <span class="doccomment">/// Resources that are not referenced any more but still used by GPU.</span>
@@ -997,34 +997,34 @@
     <span class="doccomment">/// Resources that are neither referenced or used, just life_tracker</span>
     <span class="doccomment">/// actual deletion.</span>
     <span class="ident">free_resources</span>: <span class="ident">NonReferencedResources</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-    <span class="ident">ready_to_map</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">ready_to_map</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> <span class="ident">LifetimeTracker</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> <span class="ident">LifetimeTracker</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">mapped</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">future_suspected_buffers</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">future_suspected_textures</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">suspected_resources</span>: <span class="ident">SuspectedResources</span>::<span class="ident">default</span>(),
-            <span class="ident">active</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">free_resources</span>: <span class="ident">NonReferencedResources</span>::<span class="ident">new</span>(),
-            <span class="ident">ready_to_map</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
+            <span class="ident">mapped</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">future_suspected_buffers</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">future_suspected_textures</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">suspected_resources</span>: <span class="ident">SuspectedResources::default</span>(),
+            <span class="ident">active</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">free_resources</span>: <span class="ident">NonReferencedResources::new</span>(),
+            <span class="ident">ready_to_map</span>: <span class="ident">Vec::new</span>(),
         }
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">track_submission</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">index</span>: <span class="ident">SubmissionIndex</span>,
-        <span class="ident">fence</span>: <span class="ident">B</span>::<span class="ident">Fence</span>,
+        <span class="ident">fence</span>: <span class="ident">B::Fence</span>,
         <span class="ident">new_suspects</span>: <span class="kw-2">&amp;</span><span class="ident">SuspectedResources</span>,
-        <span class="ident">temp_resources</span>: <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">TempResource</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">alloc</span>::<span class="ident">MemoryBlock</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
+        <span class="ident">temp_resources</span>: <span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">TempResource</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">alloc::MemoryBlock</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
     ) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_resources</span> <span class="op">=</span> <span class="ident">NonReferencedResources</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">last_resources</span> <span class="op">=</span> <span class="ident">NonReferencedResources::new</span>();
         <span class="kw">for</span> (<span class="ident">res</span>, <span class="ident">memory</span>) <span class="kw">in</span> <span class="ident">temp_resources</span> {
             <span class="kw">match</span> <span class="ident">res</span> {
-                <span class="ident">TempResource</span>::<span class="ident">Buffer</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">last_resources</span>.<span class="ident">buffers</span>.<span class="ident">push</span>((<span class="ident">raw</span>, <span class="ident">memory</span>)),
-                <span class="ident">TempResource</span>::<span class="ident">Image</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">last_resources</span>.<span class="ident">images</span>.<span class="ident">push</span>((<span class="ident">raw</span>, <span class="ident">memory</span>)),
+                <span class="ident">TempResource::Buffer</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">last_resources</span>.<span class="ident">buffers</span>.<span class="ident">push</span>((<span class="ident">raw</span>, <span class="ident">memory</span>)),
+                <span class="ident">TempResource::Image</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">last_resources</span>.<span class="ident">images</span>.<span class="ident">push</span>((<span class="ident">raw</span>, <span class="ident">memory</span>)),
             }
         }
 
@@ -1044,31 +1044,31 @@
             <span class="ident">index</span>,
             <span class="ident">fence</span>,
             <span class="ident">last_resources</span>,
-            <span class="ident">mapped</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
+            <span class="ident">mapped</span>: <span class="ident">Vec::new</span>(),
         });
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">map</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">id</span>::<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">BufferId</span><span class="op">&gt;</span>, <span class="ident">ref_count</span>: <span class="ident">RefCount</span>) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">map</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span>, <span class="ident">ref_count</span>: <span class="ident">RefCount</span>) {
         <span class="self">self</span>.<span class="ident">mapped</span>.<span class="ident">push</span>(<span class="ident">Stored</span> { <span class="ident">value</span>, <span class="ident">ref_count</span> });
     }
 
-    <span class="kw">fn</span> <span class="ident">wait_idle</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>::<span class="ident">Device</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">WaitIdleError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">wait_idle</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">B::Device</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">WaitIdleError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">active</span>.<span class="ident">is_empty</span>() {
-            <span class="ident">log</span>::<span class="macro">debug!</span>(<span class="string">&quot;Waiting for IDLE...&quot;</span>);
+            <span class="macro">log::debug!</span>(<span class="string">&quot;Waiting for IDLE...&quot;</span>);
             <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="kw">unsafe</span> {
                 <span class="ident">device</span>
                     .<span class="ident">wait_for_fences</span>(
                         <span class="self">self</span>.<span class="ident">active</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="ident">a</span>.<span class="ident">fence</span>),
-                        <span class="ident">hal</span>::<span class="ident">device</span>::<span class="ident">WaitFor</span>::<span class="ident">All</span>,
+                        <span class="ident">hal::device::WaitFor::All</span>,
                         <span class="ident">CLEANUP_WAIT_MS</span> <span class="op">*</span> <span class="number">1_000_000</span>,
                     )
-                    .<span class="ident">map_err</span>(<span class="ident">DeviceError</span>::<span class="ident">from</span>)<span class="question-mark">?</span>
+                    .<span class="ident">map_err</span>(<span class="ident">DeviceError::from</span>)<span class="question-mark">?</span>
             };
-            <span class="ident">log</span>::<span class="macro">debug!</span>(<span class="string">&quot;...Done&quot;</span>);
+            <span class="macro">log::debug!</span>(<span class="string">&quot;...Done&quot;</span>);
 
             <span class="kw">if</span> <span class="op">!</span><span class="ident">status</span> {
                 <span class="comment">// We timed out while waiting for the fences</span>
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WaitIdleError</span>::<span class="ident">StuckGpu</span>);
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">WaitIdleError::StuckGpu</span>);
             }
         }
         <span class="prelude-val">Ok</span>(())
@@ -1077,7 +1077,7 @@
     <span class="doccomment">/// Returns the last submission index that is done.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">triage_submissions</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>::<span class="ident">Device</span>,
+        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">B::Device</span>,
         <span class="ident">force_wait</span>: <span class="ident">bool</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SubmissionIndex</span>, <span class="ident">WaitIdleError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">force_wait</span> {
@@ -1096,7 +1096,7 @@
         };
 
         <span class="kw">for</span> <span class="ident">a</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">active</span>.<span class="ident">drain</span>(..<span class="ident">done_count</span>) {
-            <span class="ident">log</span>::<span class="macro">trace!</span>(<span class="string">&quot;Active submission {} is done&quot;</span>, <span class="ident">a</span>.<span class="ident">index</span>);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Active submission {} is done&quot;</span>, <span class="ident">a</span>.<span class="ident">index</span>);
             <span class="self">self</span>.<span class="ident">free_resources</span>.<span class="ident">extend</span>(<span class="ident">a</span>.<span class="ident">last_resources</span>);
             <span class="self">self</span>.<span class="ident">ready_to_map</span>.<span class="ident">extend</span>(<span class="ident">a</span>.<span class="ident">mapped</span>);
             <span class="kw">unsafe</span> {
@@ -1109,8 +1109,8 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cleanup</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>::<span class="ident">Device</span>,
-        <span class="ident">memory_allocator_mutex</span>: <span class="kw-2">&amp;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">alloc</span>::<span class="ident">MemoryAllocator</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">B::Device</span>,
+        <span class="ident">memory_allocator_mutex</span>: <span class="kw-2">&amp;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">alloc::MemoryAllocator</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">descriptor_allocator_mutex</span>: <span class="kw-2">&amp;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">DescriptorAllocator</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) {
         <span class="kw">unsafe</span> {
@@ -1123,7 +1123,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">schedule_resource_destruction</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">temp_resource</span>: <span class="ident">TempResource</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-        <span class="ident">memory</span>: <span class="ident">alloc</span>::<span class="ident">MemoryBlock</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
+        <span class="ident">memory</span>: <span class="ident">alloc::MemoryBlock</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
         <span class="ident">last_submit_index</span>: <span class="ident">SubmissionIndex</span>,
     ) {
         <span class="kw">let</span> <span class="ident">resources</span> <span class="op">=</span> <span class="self">self</span>
@@ -1132,8 +1132,8 @@
             .<span class="ident">find</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">index</span> <span class="op">=</span><span class="op">=</span> <span class="ident">last_submit_index</span>)
             .<span class="ident">map_or</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">free_resources</span>, <span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">a</span>.<span class="ident">last_resources</span>);
         <span class="kw">match</span> <span class="ident">temp_resource</span> {
-            <span class="ident">TempResource</span>::<span class="ident">Buffer</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">resources</span>.<span class="ident">buffers</span>.<span class="ident">push</span>((<span class="ident">raw</span>, <span class="ident">memory</span>)),
-            <span class="ident">TempResource</span>::<span class="ident">Image</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">resources</span>.<span class="ident">images</span>.<span class="ident">push</span>((<span class="ident">raw</span>, <span class="ident">memory</span>)),
+            <span class="ident">TempResource::Buffer</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">resources</span>.<span class="ident">buffers</span>.<span class="ident">push</span>((<span class="ident">raw</span>, <span class="ident">memory</span>)),
+            <span class="ident">TempResource::Image</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">resources</span>.<span class="ident">images</span>.<span class="ident">push</span>((<span class="ident">raw</span>, <span class="ident">memory</span>)),
         }
     }
 }
@@ -1143,8 +1143,8 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">hub</span>: <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="ident">B</span>, <span class="ident">G</span><span class="op">&gt;</span>,
         <span class="ident">trackers</span>: <span class="kw-2">&amp;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">TrackerSet</span><span class="op">&gt;</span>,
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span> <span class="ident">trace</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">trace</span>::<span class="ident">Trace</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="kw">super</span>::<span class="ident">Device</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span> <span class="ident">trace</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">trace::Trace</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Device</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">suspected_resources</span>.<span class="ident">render_bundles</span>.<span class="ident">is_empty</span>() {
             <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">render_bundles</span>.<span class="ident">write</span>(<span class="ident">token</span>);
@@ -1154,7 +1154,7 @@
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">bundles</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
-                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">DestroyRenderBundle</span>(<span class="ident">id</span>.<span class="number">0</span>));
+                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyRenderBundle</span>(<span class="ident">id</span>.<span class="number">0</span>));
                     }
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">res</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">render_bundles</span>.<span class="ident">unregister_locked</span>(<span class="ident">id</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">guard</span>) {
@@ -1172,13 +1172,13 @@
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">bind_groups</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
-                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">DestroyBindGroup</span>(<span class="ident">id</span>.<span class="number">0</span>));
+                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyBindGroup</span>(<span class="ident">id</span>.<span class="number">0</span>));
                     }
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">res</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">bind_groups</span>.<span class="ident">unregister_locked</span>(<span class="ident">id</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">guard</span>) {
                         <span class="self">self</span>.<span class="ident">suspected_resources</span>.<span class="ident">add_trackers</span>(<span class="kw-2">&amp;</span><span class="ident">res</span>.<span class="ident">used</span>);
 
-                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
+                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
                         <span class="self">self</span>.<span class="ident">active</span>
                             .<span class="ident">iter_mut</span>()
                             .<span class="ident">find</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">index</span> <span class="op">=</span><span class="op">=</span> <span class="ident">submit_index</span>)
@@ -1198,19 +1198,19 @@
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">views</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
-                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">DestroyTextureView</span>(<span class="ident">id</span>.<span class="number">0</span>));
+                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyTextureView</span>(<span class="ident">id</span>.<span class="number">0</span>));
                     }
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">res</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">texture_views</span>.<span class="ident">unregister_locked</span>(<span class="ident">id</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">guard</span>) {
                         <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">res</span>.<span class="ident">inner</span> {
-                            <span class="ident">resource</span>::<span class="ident">TextureViewInner</span>::<span class="ident">Native</span> { <span class="ident">raw</span>, <span class="ident">source_id</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">resource::TextureViewInner::Native</span> { <span class="ident">raw</span>, <span class="ident">source_id</span> } <span class="op">=</span><span class="op">&gt;</span> {
                                 <span class="self">self</span>.<span class="ident">suspected_resources</span>.<span class="ident">textures</span>.<span class="ident">push</span>(<span class="ident">source_id</span>.<span class="ident">value</span>);
                                 <span class="ident">raw</span>
                             }
-                            <span class="ident">resource</span>::<span class="ident">TextureViewInner</span>::<span class="ident">SwapChain</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                            <span class="ident">resource::TextureViewInner::SwapChain</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
                         };
 
-                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
+                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
                         <span class="self">self</span>.<span class="ident">active</span>
                             .<span class="ident">iter_mut</span>()
                             .<span class="ident">find</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">index</span> <span class="op">=</span><span class="op">=</span> <span class="ident">submit_index</span>)
@@ -1230,11 +1230,11 @@
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">textures</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
-                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">DestroyTexture</span>(<span class="ident">id</span>.<span class="number">0</span>));
+                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyTexture</span>(<span class="ident">id</span>.<span class="number">0</span>));
                     }
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">res</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">unregister_locked</span>(<span class="ident">id</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">guard</span>) {
-                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
+                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
                         <span class="self">self</span>.<span class="ident">active</span>
                             .<span class="ident">iter_mut</span>()
                             .<span class="ident">find</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">index</span> <span class="op">=</span><span class="op">=</span> <span class="ident">submit_index</span>)
@@ -1254,11 +1254,11 @@
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">samplers</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
-                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">DestroySampler</span>(<span class="ident">id</span>.<span class="number">0</span>));
+                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroySampler</span>(<span class="ident">id</span>.<span class="number">0</span>));
                     }
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">res</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">samplers</span>.<span class="ident">unregister_locked</span>(<span class="ident">id</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">guard</span>) {
-                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
+                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
                         <span class="self">self</span>.<span class="ident">active</span>
                             .<span class="ident">iter_mut</span>()
                             .<span class="ident">find</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">index</span> <span class="op">=</span><span class="op">=</span> <span class="ident">submit_index</span>)
@@ -1278,13 +1278,13 @@
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">buffers</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
-                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">DestroyBuffer</span>(<span class="ident">id</span>.<span class="number">0</span>));
+                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyBuffer</span>(<span class="ident">id</span>.<span class="number">0</span>));
                     }
-                    <span class="ident">log</span>::<span class="macro">debug!</span>(<span class="string">&quot;Buffer {:?} is detached&quot;</span>, <span class="ident">id</span>);
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Buffer {:?} is detached&quot;</span>, <span class="ident">id</span>);
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">res</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">unregister_locked</span>(<span class="ident">id</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">guard</span>) {
-                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
-                        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">resource</span>::<span class="ident">BufferMapState</span>::<span class="ident">Init</span> {
+                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">resource::BufferMapState::Init</span> {
                             <span class="ident">stage_buffer</span>,
                             <span class="ident">stage_memory</span>,
                             ..
@@ -1313,11 +1313,11 @@
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">compute_pipes</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
-                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">DestroyComputePipeline</span>(<span class="ident">id</span>.<span class="number">0</span>));
+                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyComputePipeline</span>(<span class="ident">id</span>.<span class="number">0</span>));
                     }
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">res</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">compute_pipelines</span>.<span class="ident">unregister_locked</span>(<span class="ident">id</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">guard</span>) {
-                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
+                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
                         <span class="self">self</span>.<span class="ident">active</span>
                             .<span class="ident">iter_mut</span>()
                             .<span class="ident">find</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">index</span> <span class="op">=</span><span class="op">=</span> <span class="ident">submit_index</span>)
@@ -1337,11 +1337,11 @@
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">render_pipes</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
-                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">DestroyRenderPipeline</span>(<span class="ident">id</span>.<span class="number">0</span>));
+                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyRenderPipeline</span>(<span class="ident">id</span>.<span class="number">0</span>));
                     }
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">res</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">render_pipelines</span>.<span class="ident">unregister_locked</span>(<span class="ident">id</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">guard</span>) {
-                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
+                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
                         <span class="self">self</span>.<span class="ident">active</span>
                             .<span class="ident">iter_mut</span>()
                             .<span class="ident">find</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">index</span> <span class="op">=</span><span class="op">=</span> <span class="ident">submit_index</span>)
@@ -1365,7 +1365,7 @@
                 <span class="kw">if</span> <span class="ident">ref_count</span>.<span class="ident">load</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
-                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">DestroyPipelineLayout</span>(<span class="ident">id</span>.<span class="number">0</span>));
+                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyPipelineLayout</span>(<span class="ident">id</span>.<span class="number">0</span>));
                     }
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">lay</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">pipeline_layouts</span>.<span class="ident">unregister_locked</span>(<span class="ident">id</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">guard</span>) {
@@ -1389,7 +1389,7 @@
                 <span class="kw">if</span> <span class="ident">guard</span>[<span class="ident">id</span>].<span class="ident">multi_ref_count</span>.<span class="ident">dec_and_check_empty</span>() {
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
-                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace</span>::<span class="ident">Action</span>::<span class="ident">DestroyBindGroupLayout</span>(<span class="ident">id</span>.<span class="number">0</span>));
+                        <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyBindGroupLayout</span>(<span class="ident">id</span>.<span class="number">0</span>));
                     }
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">lay</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">bind_group_layouts</span>.<span class="ident">unregister_locked</span>(<span class="ident">id</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">guard</span>) {
                         <span class="self">self</span>.<span class="ident">free_resources</span>.<span class="ident">descriptor_set_layouts</span>.<span class="ident">push</span>(<span class="ident">lay</span>.<span class="ident">raw</span>);
@@ -1407,7 +1407,7 @@
                     <span class="comment">// #[cfg(feature = &quot;trace&quot;)]</span>
                     <span class="comment">// trace.map(|t| t.lock().add(trace::Action::DestroyComputePipeline(id.0)));</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">res</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">query_sets</span>.<span class="ident">unregister_locked</span>(<span class="ident">id</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">guard</span>) {
-                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
+                        <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
                         <span class="self">self</span>.<span class="ident">active</span>
                             .<span class="ident">iter_mut</span>()
                             .<span class="ident">find</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">index</span> <span class="op">=</span><span class="op">=</span> <span class="ident">submit_index</span>)
@@ -1423,7 +1423,7 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">triage_mapped</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">hub</span>: <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="ident">B</span>, <span class="ident">G</span><span class="op">&gt;</span>,
-        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="kw">super</span>::<span class="ident">Device</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Device</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">mapped</span>.<span class="ident">is_empty</span>() {
             <span class="kw">return</span>;
@@ -1434,8 +1434,8 @@
             <span class="kw">let</span> <span class="ident">resource_id</span> <span class="op">=</span> <span class="ident">stored</span>.<span class="ident">value</span>;
             <span class="kw">let</span> <span class="ident">buf</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">buffer_guard</span>[<span class="ident">resource_id</span>];
 
-            <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">buf</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering</span>::<span class="ident">Acquire</span>);
-            <span class="ident">log</span>::<span class="macro">trace!</span>(
+            <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">buf</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
+            <span class="macro">log::trace!</span>(
                 <span class="string">&quot;Mapping of {:?} at submission {:?} gets assigned to active {:?}&quot;</span>,
                 <span class="ident">resource_id</span>,
                 <span class="ident">submit_index</span>,
@@ -1453,23 +1453,23 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">handle_mapping</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">hub</span>: <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="ident">B</span>, <span class="ident">G</span><span class="op">&gt;</span>,
-        <span class="ident">raw</span>: <span class="kw-2">&amp;</span><span class="ident">B</span>::<span class="ident">Device</span>,
+        <span class="ident">raw</span>: <span class="kw-2">&amp;</span><span class="ident">B::Device</span>,
         <span class="ident">trackers</span>: <span class="kw-2">&amp;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">TrackerSet</span><span class="op">&gt;</span>,
-        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="kw">super</span>::<span class="ident">Device</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">super</span>::<span class="ident">BufferMapPendingCallback</span><span class="op">&gt;</span> {
+        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Device</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::BufferMapPendingCallback</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ready_to_map</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+            <span class="kw">return</span> <span class="ident">Vec::new</span>();
         }
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">buffer_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">write</span>(<span class="ident">token</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pending_callbacks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">super</span>::<span class="ident">BufferMapPendingCallback</span><span class="op">&gt;</span> <span class="op">=</span>
-            <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="self">self</span>.<span class="ident">ready_to_map</span>.<span class="ident">len</span>());
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pending_callbacks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::BufferMapPendingCallback</span><span class="op">&gt;</span> <span class="op">=</span>
+            <span class="ident">Vec::with_capacity</span>(<span class="self">self</span>.<span class="ident">ready_to_map</span>.<span class="ident">len</span>());
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">trackers</span> <span class="op">=</span> <span class="ident">trackers</span>.<span class="ident">lock</span>();
         <span class="kw">for</span> <span class="ident">buffer_id</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">ready_to_map</span>.<span class="ident">drain</span>(..) {
             <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buffer_guard</span>[<span class="ident">buffer_id</span>];
             <span class="kw">if</span> <span class="ident">buffer</span>.<span class="ident">life_guard</span>.<span class="ident">ref_count</span>.<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="ident">trackers</span>.<span class="ident">buffers</span>.<span class="ident">remove_abandoned</span>(<span class="ident">buffer_id</span>)
             {
-                <span class="ident">buffer</span>.<span class="ident">map_state</span> <span class="op">=</span> <span class="ident">resource</span>::<span class="ident">BufferMapState</span>::<span class="ident">Idle</span>;
-                <span class="ident">log</span>::<span class="macro">debug!</span>(<span class="string">&quot;Mapping request is dropped because the buffer is destroyed.&quot;</span>);
+                <span class="ident">buffer</span>.<span class="ident">map_state</span> <span class="op">=</span> <span class="ident">resource::BufferMapState::Idle</span>;
+                <span class="macro">log::debug!</span>(<span class="string">&quot;Mapping request is dropped because the buffer is destroyed.&quot;</span>);
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">buf</span>) <span class="op">=</span> <span class="ident">hub</span>
                     .<span class="ident">buffers</span>
                     .<span class="ident">unregister_locked</span>(<span class="ident">buffer_id</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">buffer_guard</span>)
@@ -1477,44 +1477,44 @@
                     <span class="self">self</span>.<span class="ident">free_resources</span>.<span class="ident">buffers</span>.<span class="ident">extend</span>(<span class="ident">buf</span>.<span class="ident">raw</span>);
                 }
             } <span class="kw">else</span> {
-                <span class="kw">let</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">replace</span>(
+                <span class="kw">let</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">std::mem::replace</span>(
                     <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buffer</span>.<span class="ident">map_state</span>,
-                    <span class="ident">resource</span>::<span class="ident">BufferMapState</span>::<span class="ident">Idle</span>,
+                    <span class="ident">resource::BufferMapState::Idle</span>,
                 ) {
-                    <span class="ident">resource</span>::<span class="ident">BufferMapState</span>::<span class="ident">Waiting</span>(<span class="ident">pending_mapping</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pending_mapping</span>,
+                    <span class="ident">resource::BufferMapState::Waiting</span>(<span class="ident">pending_mapping</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pending_mapping</span>,
                     <span class="comment">// Mapping cancelled</span>
-                    <span class="ident">resource</span>::<span class="ident">BufferMapState</span>::<span class="ident">Idle</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                    <span class="ident">resource::BufferMapState::Idle</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
                     <span class="comment">// Mapping queued at least twice by map -&gt; unmap -&gt; map</span>
                     <span class="comment">// and was already successfully mapped below</span>
-                    <span class="ident">active</span> @ <span class="ident">resource</span>::<span class="ident">BufferMapState</span>::<span class="ident">Active</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">active</span> @ <span class="ident">resource::BufferMapState::Active</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">buffer</span>.<span class="ident">map_state</span> <span class="op">=</span> <span class="ident">active</span>;
                         <span class="kw">continue</span>;
                     }
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;No pending mapping.&quot;</span>),
                 };
                 <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">mapping</span>.<span class="ident">range</span>.<span class="ident">start</span> <span class="op">!</span><span class="op">=</span> <span class="ident">mapping</span>.<span class="ident">range</span>.<span class="ident">end</span> {
-                    <span class="ident">log</span>::<span class="macro">debug!</span>(<span class="string">&quot;Buffer {:?} map state -&gt; Active&quot;</span>, <span class="ident">buffer_id</span>);
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Buffer {:?} map state -&gt; Active&quot;</span>, <span class="ident">buffer_id</span>);
                     <span class="kw">let</span> <span class="ident">host</span> <span class="op">=</span> <span class="ident">mapping</span>.<span class="ident">op</span>.<span class="ident">host</span>;
                     <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">mapping</span>.<span class="ident">range</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">mapping</span>.<span class="ident">range</span>.<span class="ident">start</span>;
-                    <span class="kw">match</span> <span class="kw">super</span>::<span class="ident">map_buffer</span>(<span class="ident">raw</span>, <span class="ident">buffer</span>, <span class="ident">mapping</span>.<span class="ident">range</span>.<span class="ident">start</span>, <span class="ident">size</span>, <span class="ident">host</span>) {
+                    <span class="kw">match</span> <span class="kw">super</span><span class="ident">::map_buffer</span>(<span class="ident">raw</span>, <span class="ident">buffer</span>, <span class="ident">mapping</span>.<span class="ident">range</span>.<span class="ident">start</span>, <span class="ident">size</span>, <span class="ident">host</span>) {
                         <span class="prelude-val">Ok</span>(<span class="ident">ptr</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="ident">buffer</span>.<span class="ident">map_state</span> <span class="op">=</span> <span class="ident">resource</span>::<span class="ident">BufferMapState</span>::<span class="ident">Active</span> {
+                            <span class="ident">buffer</span>.<span class="ident">map_state</span> <span class="op">=</span> <span class="ident">resource::BufferMapState::Active</span> {
                                 <span class="ident">ptr</span>,
-                                <span class="ident">sub_range</span>: <span class="ident">hal</span>::<span class="ident">buffer</span>::<span class="ident">SubRange</span> {
+                                <span class="ident">sub_range</span>: <span class="ident">hal::buffer::SubRange</span> {
                                     <span class="ident">offset</span>: <span class="ident">mapping</span>.<span class="ident">range</span>.<span class="ident">start</span>,
                                     <span class="ident">size</span>: <span class="prelude-val">Some</span>(<span class="ident">size</span>),
                                 },
                                 <span class="ident">host</span>,
                             };
-                            <span class="ident">resource</span>::<span class="ident">BufferMapAsyncStatus</span>::<span class="ident">Success</span>
+                            <span class="ident">resource::BufferMapAsyncStatus::Success</span>
                         }
                         <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="ident">log</span>::<span class="macro">error!</span>(<span class="string">&quot;Mapping failed {:?}&quot;</span>, <span class="ident">e</span>);
-                            <span class="ident">resource</span>::<span class="ident">BufferMapAsyncStatus</span>::<span class="ident">Error</span>
+                            <span class="macro">log::error!</span>(<span class="string">&quot;Mapping failed {:?}&quot;</span>, <span class="ident">e</span>);
+                            <span class="ident">resource::BufferMapAsyncStatus::Error</span>
                         }
                     }
                 } <span class="kw">else</span> {
-                    <span class="ident">resource</span>::<span class="ident">BufferMapAsyncStatus</span>::<span class="ident">Success</span>
+                    <span class="ident">resource::BufferMapAsyncStatus::Success</span>
                 };
                 <span class="ident">pending_callbacks</span>.<span class="ident">push</span>((<span class="ident">mapping</span>.<span class="ident">op</span>, <span class="ident">status</span>));
             }

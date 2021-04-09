@@ -692,27 +692,27 @@
         <span class="ident">descriptor</span>::{<span class="ident">DescriptorSet</span>, <span class="ident">DescriptorTotalCount</span>},
         <span class="ident">DeviceError</span>, <span class="ident">SHADER_STAGE_COUNT</span>,
     },
-    <span class="ident">hub</span>::<span class="ident">Resource</span>,
+    <span class="ident">hub::Resource</span>,
     <span class="ident">id</span>::{<span class="ident">BindGroupLayoutId</span>, <span class="ident">BufferId</span>, <span class="ident">DeviceId</span>, <span class="ident">SamplerId</span>, <span class="ident">TextureViewId</span>, <span class="ident">Valid</span>},
-    <span class="ident">memory_init_tracker</span>::<span class="ident">MemoryInitTrackerAction</span>,
+    <span class="ident">memory_init_tracker::MemoryInitTrackerAction</span>,
     <span class="ident">track</span>::{<span class="ident">TrackerSet</span>, <span class="ident">DUMMY_SELECTOR</span>},
     <span class="ident">validation</span>::{<span class="ident">MissingBufferUsageError</span>, <span class="ident">MissingTextureUsageError</span>},
     <span class="ident">FastHashMap</span>, <span class="ident">Label</span>, <span class="ident">LifeGuard</span>, <span class="ident">MultiRefCount</span>, <span class="ident">Stored</span>, <span class="ident">MAX_BIND_GROUPS</span>,
 };
 
-<span class="kw">use</span> <span class="ident">arrayvec</span>::<span class="ident">ArrayVec</span>;
+<span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Deserialize</span>;
+<span class="kw">use</span> <span class="ident">serde::Deserialize</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
-<span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">Serialize</span>;
+<span class="kw">use</span> <span class="ident">serde::Serialize</span>;
 
 <span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">borrow</span>::{<span class="ident">Borrow</span>, <span class="ident">Cow</span>},
-    <span class="ident">ops</span>::<span class="ident">Range</span>,
+    <span class="ident">ops::Range</span>,
 };
 
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CreateBindGroupLayoutError</span> {
@@ -723,7 +723,7 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;conflicting binding at index {0}&quot;</span>)]</span>
     <span class="ident">ConflictBinding</span>(<span class="ident">u32</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;required device feature is missing: {0:?}&quot;</span>)]</span>
-    <span class="ident">MissingFeature</span>(<span class="ident">wgt</span>::<span class="ident">Features</span>),
+    <span class="ident">MissingFeature</span>(<span class="ident">wgt::Features</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">TooManyBindings</span>(<span class="ident">BindingTypeMaxCountError</span>),
 }
@@ -745,7 +745,7 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;bound buffer range {range:?} does not fit in buffer of size {size}&quot;</span>)]</span>
     <span class="ident">BindingRangeTooLarge</span> {
         <span class="ident">buffer</span>: <span class="ident">BufferId</span>,
-        <span class="ident">range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">BufferAddress</span><span class="op">&gt;</span>,
+        <span class="ident">range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span>,
         <span class="ident">size</span>: <span class="ident">u64</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;buffer binding size {actual} is less than minimum {min}&quot;</span>)]</span>
@@ -767,13 +767,13 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">MissingTextureUsage</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">MissingTextureUsageError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;required device features not enabled: {0:?}&quot;</span>)]</span>
-    <span class="ident">MissingFeatures</span>(<span class="ident">wgt</span>::<span class="ident">Features</span>),
+    <span class="ident">MissingFeatures</span>(<span class="ident">wgt::Features</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;binding declared as a single item, but bind group is using it as an array&quot;</span>)]</span>
     <span class="ident">SingleBindingExpected</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;unable to create a bind group with a swap chain image&quot;</span>)]</span>
     <span class="ident">SwapChainImage</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;buffer offset {0} does not respect `BIND_BUFFER_ALIGNMENT`&quot;</span>)]</span>
-    <span class="ident">UnalignedBufferOffset</span>(<span class="ident">wgt</span>::<span class="ident">BufferAddress</span>),
+    <span class="ident">UnalignedBufferOffset</span>(<span class="ident">wgt::BufferAddress</span>),
     <span class="attribute">#[<span class="ident">error</span>(
         <span class="string">&quot;buffer binding {binding} range {given} exceeds `max_*_buffer_binding_size` limit {limit}&quot;</span>
     )]</span>
@@ -787,7 +787,7 @@
         <span class="comment">// Index of the binding</span>
         <span class="ident">binding</span>: <span class="ident">u32</span>,
         <span class="comment">// The type given to the function</span>
-        <span class="ident">actual</span>: <span class="ident">wgt</span>::<span class="ident">BindingType</span>,
+        <span class="ident">actual</span>: <span class="ident">wgt::BindingType</span>,
         <span class="comment">// Human-readable description of expected types</span>
         <span class="ident">expected</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
     },
@@ -800,33 +800,33 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;texture binding {binding} expects sample type = {layout_sample_type:?}, but given a view with format = {view_format:?}&quot;</span>)]</span>
     <span class="ident">InvalidTextureSampleType</span> {
         <span class="ident">binding</span>: <span class="ident">u32</span>,
-        <span class="ident">layout_sample_type</span>: <span class="ident">wgt</span>::<span class="ident">TextureSampleType</span>,
-        <span class="ident">view_format</span>: <span class="ident">wgt</span>::<span class="ident">TextureFormat</span>,
+        <span class="ident">layout_sample_type</span>: <span class="ident">wgt::TextureSampleType</span>,
+        <span class="ident">view_format</span>: <span class="ident">wgt::TextureFormat</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;texture binding {binding} expects dimension = {layout_dimension:?}, but given a view with dimension = {view_dimension:?}&quot;</span>)]</span>
     <span class="ident">InvalidTextureDimension</span> {
         <span class="ident">binding</span>: <span class="ident">u32</span>,
-        <span class="ident">layout_dimension</span>: <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>,
-        <span class="ident">view_dimension</span>: <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>,
+        <span class="ident">layout_dimension</span>: <span class="ident">wgt::TextureViewDimension</span>,
+        <span class="ident">view_dimension</span>: <span class="ident">wgt::TextureViewDimension</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;storage texture binding {binding} expects format = {layout_format:?}, but given a view with format = {view_format:?}&quot;</span>)]</span>
     <span class="ident">InvalidStorageTextureFormat</span> {
         <span class="ident">binding</span>: <span class="ident">u32</span>,
-        <span class="ident">layout_format</span>: <span class="ident">wgt</span>::<span class="ident">TextureFormat</span>,
-        <span class="ident">view_format</span>: <span class="ident">wgt</span>::<span class="ident">TextureFormat</span>,
+        <span class="ident">layout_format</span>: <span class="ident">wgt::TextureFormat</span>,
+        <span class="ident">view_format</span>: <span class="ident">wgt::TextureFormat</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;the given sampler is/is not a comparison sampler, while the layout type indicates otherwise&quot;</span>)]</span>
     <span class="ident">WrongSamplerComparison</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;bound texture views can not have both depth and stencil aspects enabled&quot;</span>)]</span>
     <span class="ident">DepthStencilAspect</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;the adapter does not support simultaneous read + write storage texture access for the format {0:?}&quot;</span>)]</span>
-    <span class="ident">StorageReadWriteNotSupported</span>(<span class="ident">wgt</span>::<span class="ident">TextureFormat</span>),
+    <span class="ident">StorageReadWriteNotSupported</span>(<span class="ident">wgt::TextureFormat</span>),
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BindingZone</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;stage {0:?}&quot;</span>)]</span>
-    <span class="ident">Stage</span>(<span class="ident">wgt</span>::<span class="ident">ShaderStage</span>),
+    <span class="ident">Stage</span>(<span class="ident">wgt::ShaderStage</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;whole pipeline&quot;</span>)]</span>
     <span class="ident">Pipeline</span>,
 }
@@ -859,31 +859,31 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PerStageBindingTypeCounter</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">stage</span>: <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>, <span class="ident">count</span>: <span class="ident">u32</span>) {
-        <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt</span>::<span class="ident">ShaderStage</span>::<span class="ident">VERTEX</span>) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">stage</span>: <span class="ident">wgt::ShaderStage</span>, <span class="ident">count</span>: <span class="ident">u32</span>) {
+        <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt::ShaderStage::VERTEX</span>) {
             <span class="self">self</span>.<span class="ident">vertex</span> <span class="op">+</span><span class="op">=</span> <span class="ident">count</span>;
         }
-        <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt</span>::<span class="ident">ShaderStage</span>::<span class="ident">FRAGMENT</span>) {
+        <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt::ShaderStage::FRAGMENT</span>) {
             <span class="self">self</span>.<span class="ident">fragment</span> <span class="op">+</span><span class="op">=</span> <span class="ident">count</span>;
         }
-        <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt</span>::<span class="ident">ShaderStage</span>::<span class="ident">COMPUTE</span>) {
+        <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt::ShaderStage::COMPUTE</span>) {
             <span class="self">self</span>.<span class="ident">compute</span> <span class="op">+</span><span class="op">=</span> <span class="ident">count</span>;
         }
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">max</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">BindingZone</span>, <span class="ident">u32</span>) {
         <span class="kw">let</span> <span class="ident">max_value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">vertex</span>.<span class="ident">max</span>(<span class="self">self</span>.<span class="ident">fragment</span>.<span class="ident">max</span>(<span class="self">self</span>.<span class="ident">compute</span>));
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stage</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>::<span class="ident">NONE</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stage</span> <span class="op">=</span> <span class="ident">wgt::ShaderStage::NONE</span>;
         <span class="kw">if</span> <span class="ident">max_value</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">vertex</span> {
-            <span class="ident">stage</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>::<span class="ident">VERTEX</span>
+            <span class="ident">stage</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt::ShaderStage::VERTEX</span>
         }
         <span class="kw">if</span> <span class="ident">max_value</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">fragment</span> {
-            <span class="ident">stage</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>::<span class="ident">FRAGMENT</span>
+            <span class="ident">stage</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt::ShaderStage::FRAGMENT</span>
         }
         <span class="kw">if</span> <span class="ident">max_value</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">compute</span> {
-            <span class="ident">stage</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>::<span class="ident">COMPUTE</span>
+            <span class="ident">stage</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt::ShaderStage::COMPUTE</span>
         }
-        (<span class="ident">BindingZone</span>::<span class="ident">Stage</span>(<span class="ident">stage</span>), <span class="ident">max_value</span>)
+        (<span class="ident">BindingZone::Stage</span>(<span class="ident">stage</span>), <span class="ident">max_value</span>)
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">merge</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) {
@@ -923,11 +923,11 @@
 }
 
 <span class="kw">impl</span> <span class="ident">BindingTypeMaxCountValidator</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add_binding</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">binding</span>: <span class="kw-2">&amp;</span><span class="ident">wgt</span>::<span class="ident">BindGroupLayoutEntry</span>) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add_binding</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">binding</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::BindGroupLayoutEntry</span>) {
         <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="ident">binding</span>.<span class="ident">count</span>.<span class="ident">map_or</span>(<span class="number">1</span>, <span class="op">|</span><span class="ident">count</span><span class="op">|</span> <span class="ident">count</span>.<span class="ident">get</span>());
         <span class="kw">match</span> <span class="ident">binding</span>.<span class="ident">ty</span> {
-            <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">Buffer</span> {
-                <span class="ident">ty</span>: <span class="ident">wgt</span>::<span class="ident">BufferBindingType</span>::<span class="ident">Uniform</span>,
+            <span class="ident">wgt::BindingType::Buffer</span> {
+                <span class="ident">ty</span>: <span class="ident">wgt::BufferBindingType::Uniform</span>,
                 <span class="ident">has_dynamic_offset</span>,
                 ..
             } <span class="op">=</span><span class="op">&gt;</span> {
@@ -936,8 +936,8 @@
                     <span class="self">self</span>.<span class="ident">dynamic_uniform_buffers</span> <span class="op">+</span><span class="op">=</span> <span class="ident">count</span>;
                 }
             }
-            <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">Buffer</span> {
-                <span class="ident">ty</span>: <span class="ident">wgt</span>::<span class="ident">BufferBindingType</span>::<span class="ident">Storage</span> { .. },
+            <span class="ident">wgt::BindingType::Buffer</span> {
+                <span class="ident">ty</span>: <span class="ident">wgt::BufferBindingType::Storage</span> { .. },
                 <span class="ident">has_dynamic_offset</span>,
                 ..
             } <span class="op">=</span><span class="op">&gt;</span> {
@@ -946,13 +946,13 @@
                     <span class="self">self</span>.<span class="ident">dynamic_storage_buffers</span> <span class="op">+</span><span class="op">=</span> <span class="ident">count</span>;
                 }
             }
-            <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">Sampler</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">wgt::BindingType::Sampler</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">samplers</span>.<span class="ident">add</span>(<span class="ident">binding</span>.<span class="ident">visibility</span>, <span class="ident">count</span>);
             }
-            <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">Texture</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">wgt::BindingType::Texture</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">sampled_textures</span>.<span class="ident">add</span>(<span class="ident">binding</span>.<span class="ident">visibility</span>, <span class="ident">count</span>);
             }
-            <span class="ident">wgt</span>::<span class="ident">BindingType</span>::<span class="ident">StorageTexture</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">wgt::BindingType::StorageTexture</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="self">self</span>.<span class="ident">storage_textures</span>.<span class="ident">add</span>(<span class="ident">binding</span>.<span class="ident">visibility</span>, <span class="ident">count</span>);
             }
         }
@@ -968,46 +968,46 @@
         <span class="self">self</span>.<span class="ident">uniform_buffers</span>.<span class="ident">merge</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">uniform_buffers</span>);
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">limits</span>: <span class="kw-2">&amp;</span><span class="ident">wgt</span>::<span class="ident">Limits</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BindingTypeMaxCountError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">limits</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::Limits</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BindingTypeMaxCountError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">limits</span>.<span class="ident">max_dynamic_uniform_buffers_per_pipeline_layout</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">dynamic_uniform_buffers</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingTypeMaxCountError</span> {
-                <span class="ident">kind</span>: <span class="ident">BindingTypeMaxCountErrorKind</span>::<span class="ident">DynamicUniformBuffers</span>,
-                <span class="ident">zone</span>: <span class="ident">BindingZone</span>::<span class="ident">Pipeline</span>,
+                <span class="ident">kind</span>: <span class="ident">BindingTypeMaxCountErrorKind::DynamicUniformBuffers</span>,
+                <span class="ident">zone</span>: <span class="ident">BindingZone::Pipeline</span>,
                 <span class="ident">limit</span>: <span class="ident">limits</span>.<span class="ident">max_dynamic_uniform_buffers_per_pipeline_layout</span>,
                 <span class="ident">count</span>: <span class="self">self</span>.<span class="ident">dynamic_uniform_buffers</span>,
             });
         }
         <span class="kw">if</span> <span class="ident">limits</span>.<span class="ident">max_dynamic_storage_buffers_per_pipeline_layout</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">dynamic_storage_buffers</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingTypeMaxCountError</span> {
-                <span class="ident">kind</span>: <span class="ident">BindingTypeMaxCountErrorKind</span>::<span class="ident">DynamicStorageBuffers</span>,
-                <span class="ident">zone</span>: <span class="ident">BindingZone</span>::<span class="ident">Pipeline</span>,
+                <span class="ident">kind</span>: <span class="ident">BindingTypeMaxCountErrorKind::DynamicStorageBuffers</span>,
+                <span class="ident">zone</span>: <span class="ident">BindingZone::Pipeline</span>,
                 <span class="ident">limit</span>: <span class="ident">limits</span>.<span class="ident">max_dynamic_storage_buffers_per_pipeline_layout</span>,
                 <span class="ident">count</span>: <span class="self">self</span>.<span class="ident">dynamic_storage_buffers</span>,
             });
         }
         <span class="self">self</span>.<span class="ident">sampled_textures</span>.<span class="ident">validate</span>(
             <span class="ident">limits</span>.<span class="ident">max_sampled_textures_per_shader_stage</span>,
-            <span class="ident">BindingTypeMaxCountErrorKind</span>::<span class="ident">SampledTextures</span>,
+            <span class="ident">BindingTypeMaxCountErrorKind::SampledTextures</span>,
         )<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">storage_buffers</span>.<span class="ident">validate</span>(
             <span class="ident">limits</span>.<span class="ident">max_storage_buffers_per_shader_stage</span>,
-            <span class="ident">BindingTypeMaxCountErrorKind</span>::<span class="ident">StorageBuffers</span>,
+            <span class="ident">BindingTypeMaxCountErrorKind::StorageBuffers</span>,
         )<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">samplers</span>.<span class="ident">validate</span>(
             <span class="ident">limits</span>.<span class="ident">max_samplers_per_shader_stage</span>,
-            <span class="ident">BindingTypeMaxCountErrorKind</span>::<span class="ident">Samplers</span>,
+            <span class="ident">BindingTypeMaxCountErrorKind::Samplers</span>,
         )<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">storage_buffers</span>.<span class="ident">validate</span>(
             <span class="ident">limits</span>.<span class="ident">max_storage_buffers_per_shader_stage</span>,
-            <span class="ident">BindingTypeMaxCountErrorKind</span>::<span class="ident">StorageBuffers</span>,
+            <span class="ident">BindingTypeMaxCountErrorKind::StorageBuffers</span>,
         )<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">storage_textures</span>.<span class="ident">validate</span>(
             <span class="ident">limits</span>.<span class="ident">max_storage_textures_per_shader_stage</span>,
-            <span class="ident">BindingTypeMaxCountErrorKind</span>::<span class="ident">StorageTextures</span>,
+            <span class="ident">BindingTypeMaxCountErrorKind::StorageTextures</span>,
         )<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">uniform_buffers</span>.<span class="ident">validate</span>(
             <span class="ident">limits</span>.<span class="ident">max_uniform_buffers_per_shader_stage</span>,
-            <span class="ident">BindingTypeMaxCountErrorKind</span>::<span class="ident">UniformBuffers</span>,
+            <span class="ident">BindingTypeMaxCountErrorKind::UniformBuffers</span>,
         )<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
@@ -1040,20 +1040,20 @@
 
 <span class="doccomment">/// Describes a [`BindGroupLayout`].</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroupLayoutDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Debug label of the bind group layout. This will show up in graphics debuggers for easy identification.</span>
     <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Array of entries in this BindGroupLayout</span>
-    <span class="kw">pub</span> <span class="ident">entries</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, [<span class="ident">wgt</span>::<span class="ident">BindGroupLayoutEntry</span>]<span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">entries</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, [<span class="ident">wgt::BindGroupLayoutEntry</span>]<span class="op">&gt;</span>,
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type</span> <span class="ident">BindEntryMap</span> <span class="op">=</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">wgt</span>::<span class="ident">BindGroupLayoutEntry</span><span class="op">&gt;</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type</span> <span class="ident">BindEntryMap</span> <span class="op">=</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">wgt::BindGroupLayoutEntry</span><span class="op">&gt;</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroupLayout</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">B</span>::<span class="ident">DescriptorSetLayout</span>,
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroupLayout</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">B::DescriptorSetLayout</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">device_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">DeviceId</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">multi_ref_count</span>: <span class="ident">MultiRefCount</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">entries</span>: <span class="ident">BindEntryMap</span>,
@@ -1064,7 +1064,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">label</span>: <span class="ident">String</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> <span class="ident">Resource</span> <span class="kw">for</span> <span class="ident">BindGroupLayout</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> <span class="ident">Resource</span> <span class="kw">for</span> <span class="ident">BindGroupLayout</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
     <span class="kw">const</span> <span class="ident">TYPE</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;BindGroupLayout&quot;</span>;
 
     <span class="kw">fn</span> <span class="ident">life_guard</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">LifeGuard</span> {
@@ -1087,16 +1087,16 @@
     <span class="ident">InvalidBindGroupLayout</span>(<span class="ident">BindGroupLayoutId</span>),
     <span class="attribute">#[<span class="ident">error</span>(
         <span class="string">&quot;push constant at index {index} has range bound {bound} not aligned to {}&quot;</span>,
-        <span class="ident">wgt</span>::<span class="ident">PUSH_CONSTANT_ALIGNMENT</span>
+        <span class="ident">wgt::PUSH_CONSTANT_ALIGNMENT</span>
     )]</span>
     <span class="ident">MisalignedPushConstantRange</span> { <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">bound</span>: <span class="ident">u32</span> },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;device does not have required feature: {0:?}&quot;</span>)]</span>
-    <span class="ident">MissingFeature</span>(<span class="ident">wgt</span>::<span class="ident">Features</span>),
+    <span class="ident">MissingFeature</span>(<span class="ident">wgt::Features</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;push constant range (index {index}) provides for stage(s) {provided:?} but there exists another range that provides stage(s) {intersected:?}. Each stage may only be provided by one range&quot;</span>)]</span>
     <span class="ident">MoreThanOnePushConstantRangePerStage</span> {
         <span class="ident">index</span>: <span class="ident">usize</span>,
-        <span class="ident">provided</span>: <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>,
-        <span class="ident">intersected</span>: <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>,
+        <span class="ident">provided</span>: <span class="ident">wgt::ShaderStage</span>,
+        <span class="ident">intersected</span>: <span class="ident">wgt::ShaderStage</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;push constant at index {index} has range {}..{} which exceeds device push constant size limit 0..{max}&quot;</span>, <span class="ident">range</span>.<span class="ident">start</span>, <span class="ident">range</span>.<span class="ident">end</span>)]</span>
     <span class="ident">PushConstantRangeTooLarge</span> {
@@ -1117,24 +1117,24 @@
         <span class="ident">offset</span>: <span class="ident">u32</span>,
         <span class="ident">end_offset</span>: <span class="ident">u32</span>,
         <span class="ident">idx</span>: <span class="ident">usize</span>,
-        <span class="ident">range</span>: <span class="ident">wgt</span>::<span class="ident">PushConstantRange</span>,
+        <span class="ident">range</span>: <span class="ident">wgt::PushConstantRange</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;provided push constant is for stage(s) {actual:?}, stage with a partial match found at index {idx} with stage(s) {matched:?}, however push constants must be complete matches&quot;</span>)]</span>
     <span class="ident">PartialRangeMatch</span> {
-        <span class="ident">actual</span>: <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>,
+        <span class="ident">actual</span>: <span class="ident">wgt::ShaderStage</span>,
         <span class="ident">idx</span>: <span class="ident">usize</span>,
-        <span class="ident">matched</span>: <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>,
+        <span class="ident">matched</span>: <span class="ident">wgt::ShaderStage</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;provided push constant is for stage(s) {actual:?}, but intersects a push constant range (at index {idx}) with stage(s) {missing:?}. Push constants must provide the stages for all ranges they intersect&quot;</span>)]</span>
     <span class="ident">MissingStages</span> {
-        <span class="ident">actual</span>: <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>,
+        <span class="ident">actual</span>: <span class="ident">wgt::ShaderStage</span>,
         <span class="ident">idx</span>: <span class="ident">usize</span>,
-        <span class="ident">missing</span>: <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>,
+        <span class="ident">missing</span>: <span class="ident">wgt::ShaderStage</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;provided push constant is for stage(s) {actual:?}, however the pipeline layout has no push constant range for the stage(s) {unmatched:?}&quot;</span>)]</span>
     <span class="ident">UnmatchedStages</span> {
-        <span class="ident">actual</span>: <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>,
-        <span class="ident">unmatched</span>: <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>,
+        <span class="ident">actual</span>: <span class="ident">wgt::ShaderStage</span>,
+        <span class="ident">unmatched</span>: <span class="ident">wgt::ShaderStage</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;provided push constant offset {0} does not respect `PUSH_CONSTANT_ALIGNMENT`&quot;</span>)]</span>
     <span class="ident">Unaligned</span>(<span class="ident">u32</span>),
@@ -1157,23 +1157,23 @@
     <span class="doccomment">/// uniform block.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// If this array is non-empty, the [`Features::PUSH_CONSTANTS`](wgt::Features::PUSH_CONSTANTS) must be enabled.</span>
-    <span class="kw">pub</span> <span class="ident">push_constant_ranges</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, [<span class="ident">wgt</span>::<span class="ident">PushConstantRange</span>]<span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">push_constant_ranges</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, [<span class="ident">wgt::PushConstantRange</span>]<span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PipelineLayout</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">B</span>::<span class="ident">PipelineLayout</span>,
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PipelineLayout</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">B::PipelineLayout</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">device_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">DeviceId</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">bind_group_layout_ids</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">BindGroupLayoutId</span><span class="op">&gt;</span>; <span class="ident">MAX_BIND_GROUPS</span>]<span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">push_constant_ranges</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="ident">wgt</span>::<span class="ident">PushConstantRange</span>; <span class="ident">SHADER_STAGE_COUNT</span>]<span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">push_constant_ranges</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="ident">wgt::PushConstantRange</span>; <span class="ident">SHADER_STAGE_COUNT</span>]<span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> <span class="ident">PipelineLayout</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> <span class="ident">PipelineLayout</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Validate push constants match up with expected ranges.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">validate_push_constant_ranges</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">stages</span>: <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>,
+        <span class="ident">stages</span>: <span class="ident">wgt::ShaderStage</span>,
         <span class="ident">offset</span>: <span class="ident">u32</span>,
         <span class="ident">end_offset</span>: <span class="ident">u32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PushConstantUploadError</span><span class="op">&gt;</span> {
@@ -1181,8 +1181,8 @@
         <span class="comment">// as push constant ranges are already validated to be within bounds,</span>
         <span class="comment">// and we validate that they are within the ranges.</span>
 
-        <span class="kw">if</span> <span class="ident">offset</span> <span class="op">%</span> <span class="ident">wgt</span>::<span class="ident">PUSH_CONSTANT_ALIGNMENT</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PushConstantUploadError</span>::<span class="ident">Unaligned</span>(<span class="ident">offset</span>));
+        <span class="kw">if</span> <span class="ident">offset</span> <span class="op">%</span> <span class="ident">wgt::PUSH_CONSTANT_ALIGNMENT</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PushConstantUploadError::Unaligned</span>(<span class="ident">offset</span>));
         }
 
         <span class="comment">// Push constant validation looks very complicated on the surface, but</span>
@@ -1204,12 +1204,12 @@
         <span class="comment">//   when we check for 1, we can simply check that our entire updated range</span>
         <span class="comment">//   is within a push constant range. i.e. our range for a specific stage cannot</span>
         <span class="comment">//   intersect more than one push constant range.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">used_stages</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>::<span class="ident">NONE</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">used_stages</span> <span class="op">=</span> <span class="ident">wgt::ShaderStage::NONE</span>;
         <span class="kw">for</span> (<span class="ident">idx</span>, <span class="ident">range</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">push_constant_ranges</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
             <span class="comment">// contains not intersects due to 2</span>
             <span class="kw">if</span> <span class="ident">stages</span>.<span class="ident">contains</span>(<span class="ident">range</span>.<span class="ident">stages</span>) {
                 <span class="kw">if</span> <span class="op">!</span>(<span class="ident">range</span>.<span class="ident">range</span>.<span class="ident">start</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">offset</span> <span class="op">&amp;&amp;</span> <span class="ident">end_offset</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">range</span>.<span class="ident">range</span>.<span class="ident">end</span>) {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PushConstantUploadError</span>::<span class="ident">TooLarge</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PushConstantUploadError::TooLarge</span> {
                         <span class="ident">offset</span>,
                         <span class="ident">end_offset</span>,
                         <span class="ident">idx</span>,
@@ -1220,7 +1220,7 @@
             } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">stages</span>.<span class="ident">intersects</span>(<span class="ident">range</span>.<span class="ident">stages</span>) {
                 <span class="comment">// Will be caught by used stages check below, but we can do this because of 1</span>
                 <span class="comment">// and is more helpful to the user.</span>
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PushConstantUploadError</span>::<span class="ident">PartialRangeMatch</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PushConstantUploadError::PartialRangeMatch</span> {
                     <span class="ident">actual</span>: <span class="ident">stages</span>,
                     <span class="ident">idx</span>,
                     <span class="ident">matched</span>: <span class="ident">range</span>.<span class="ident">stages</span>,
@@ -1231,7 +1231,7 @@
             <span class="kw">if</span> <span class="ident">offset</span> <span class="op">&lt;</span> <span class="ident">range</span>.<span class="ident">range</span>.<span class="ident">end</span> <span class="op">&amp;&amp;</span> <span class="ident">range</span>.<span class="ident">range</span>.<span class="ident">start</span> <span class="op">&lt;</span> <span class="ident">end_offset</span> {
                 <span class="comment">// But requires stages we don&#39;t provide</span>
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">stages</span>.<span class="ident">contains</span>(<span class="ident">range</span>.<span class="ident">stages</span>) {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PushConstantUploadError</span>::<span class="ident">MissingStages</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PushConstantUploadError::MissingStages</span> {
                         <span class="ident">actual</span>: <span class="ident">stages</span>,
                         <span class="ident">idx</span>,
                         <span class="ident">missing</span>: <span class="ident">stages</span>,
@@ -1240,7 +1240,7 @@
             }
         }
         <span class="kw">if</span> <span class="ident">used_stages</span> <span class="op">!</span><span class="op">=</span> <span class="ident">stages</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PushConstantUploadError</span>::<span class="ident">UnmatchedStages</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">PushConstantUploadError::UnmatchedStages</span> {
                 <span class="ident">actual</span>: <span class="ident">stages</span>,
                 <span class="ident">unmatched</span>: <span class="ident">stages</span> <span class="op">-</span> <span class="ident">used_stages</span>,
             });
@@ -1249,7 +1249,7 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> <span class="ident">Resource</span> <span class="kw">for</span> <span class="ident">PipelineLayout</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> <span class="ident">Resource</span> <span class="kw">for</span> <span class="ident">PipelineLayout</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
     <span class="kw">const</span> <span class="ident">TYPE</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;PipelineLayout&quot;</span>;
 
     <span class="kw">fn</span> <span class="ident">life_guard</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">LifeGuard</span> {
@@ -1263,15 +1263,15 @@
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferBinding</span> {
     <span class="kw">pub</span> <span class="ident">buffer_id</span>: <span class="ident">BufferId</span>,
-    <span class="kw">pub</span> <span class="ident">offset</span>: <span class="ident">wgt</span>::<span class="ident">BufferAddress</span>,
-    <span class="kw">pub</span> <span class="ident">size</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">BufferSize</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">offset</span>: <span class="ident">wgt::BufferAddress</span>,
+    <span class="kw">pub</span> <span class="ident">size</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">wgt::BufferSize</span><span class="op">&gt;</span>,
 }
 
 <span class="comment">// Note: Duplicated in `wgpu-rs` as `BindingResource`</span>
 <span class="comment">// They&#39;re different enough that it doesn&#39;t make sense to share a common type</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BindingResource</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">Buffer</span>(<span class="ident">BufferBinding</span>),
     <span class="ident">Sampler</span>(<span class="ident">SamplerId</span>),
@@ -1294,11 +1294,11 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroupDynamicBindingData</span> {
     <span class="doccomment">/// The maximum value the dynamic offset can have before running off the end of the buffer.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">maximum_dynamic_offset</span>: <span class="ident">wgt</span>::<span class="ident">BufferAddress</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">maximum_dynamic_offset</span>: <span class="ident">wgt::BufferAddress</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">DescriptorSet</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">device_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">DeviceId</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">layout_id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">BindGroupLayoutId</span><span class="op">&gt;</span>,
@@ -1308,13 +1308,13 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">dynamic_binding_info</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BindGroupDynamicBindingData</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> <span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> <span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">validate_dynamic_bindings</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">offsets</span>: <span class="kw-2">&amp;</span>[<span class="ident">wgt</span>::<span class="ident">DynamicOffset</span>],
+        <span class="ident">offsets</span>: <span class="kw-2">&amp;</span>[<span class="ident">wgt::DynamicOffset</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BindError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">dynamic_binding_info</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">offsets</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindError</span>::<span class="ident">MismatchedDynamicOffsetCount</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindError::MismatchedDynamicOffsetCount</span> {
                 <span class="ident">expected</span>: <span class="self">self</span>.<span class="ident">dynamic_binding_info</span>.<span class="ident">len</span>(),
                 <span class="ident">actual</span>: <span class="ident">offsets</span>.<span class="ident">len</span>(),
             });
@@ -1326,12 +1326,12 @@
             .<span class="ident">zip</span>(<span class="ident">offsets</span>.<span class="ident">iter</span>())
             .<span class="ident">enumerate</span>()
         {
-            <span class="kw">if</span> <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">wgt</span>::<span class="ident">BufferAddress</span> <span class="op">%</span> <span class="ident">wgt</span>::<span class="ident">BIND_BUFFER_ALIGNMENT</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindError</span>::<span class="ident">UnalignedDynamicBinding</span> { <span class="ident">idx</span>, <span class="ident">offset</span> });
+            <span class="kw">if</span> <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">wgt::BufferAddress</span> <span class="op">%</span> <span class="ident">wgt::BIND_BUFFER_ALIGNMENT</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindError::UnalignedDynamicBinding</span> { <span class="ident">idx</span>, <span class="ident">offset</span> });
             }
 
-            <span class="kw">if</span> <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">wgt</span>::<span class="ident">BufferAddress</span> <span class="op">&gt;</span> <span class="ident">info</span>.<span class="ident">maximum_dynamic_offset</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindError</span>::<span class="ident">DynamicBindingOutOfBounds</span> {
+            <span class="kw">if</span> <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">wgt::BufferAddress</span> <span class="op">&gt;</span> <span class="ident">info</span>.<span class="ident">maximum_dynamic_offset</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindError::DynamicBindingOutOfBounds</span> {
                     <span class="ident">idx</span>,
                     <span class="ident">offset</span>,
                     <span class="ident">max</span>: <span class="ident">info</span>.<span class="ident">maximum_dynamic_offset</span>,
@@ -1343,13 +1343,13 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> <span class="ident">Borrow</span><span class="op">&lt;</span>()<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> <span class="ident">Borrow</span><span class="op">&lt;</span>()<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">borrow</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>() {
         <span class="kw-2">&amp;</span><span class="ident">DUMMY_SELECTOR</span>
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> <span class="ident">Resource</span> <span class="kw">for</span> <span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> <span class="ident">Resource</span> <span class="kw">for</span> <span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
     <span class="kw">const</span> <span class="ident">TYPE</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;BindGroup&quot;</span>;
 
     <span class="kw">fn</span> <span class="ident">life_guard</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">LifeGuard</span> {

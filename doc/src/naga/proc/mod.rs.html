@@ -196,179 +196,179 @@
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">layouter</span>::{<span class="ident">Alignment</span>, <span class="ident">Layouter</span>, <span class="ident">TypeLayout</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">namer</span>::{<span class="ident">EntryPointIndex</span>, <span class="ident">NameKey</span>, <span class="ident">Namer</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">terminator</span>::<span class="ident">ensure_block_returns</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">terminator::ensure_block_returns</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">typifier</span>::{<span class="ident">ResolveContext</span>, <span class="ident">ResolveError</span>, <span class="ident">TypeResolution</span>};
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw">super</span>::<span class="ident">StorageFormat</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw">super</span>::<span class="ident">ScalarKind</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">format</span>: <span class="kw">super</span>::<span class="ident">StorageFormat</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::StorageFormat</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw">super</span><span class="ident">::ScalarKind</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">format</span>: <span class="kw">super</span><span class="ident">::StorageFormat</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">ScalarKind</span> <span class="kw">as</span> <span class="ident">Sk</span>, <span class="ident">StorageFormat</span> <span class="kw">as</span> <span class="ident">Sf</span>};
         <span class="kw">match</span> <span class="ident">format</span> {
-            <span class="ident">Sf</span>::<span class="ident">R8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">Sf</span>::<span class="ident">R8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">Sf</span>::<span class="ident">R8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">Sf</span>::<span class="ident">R8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">Sf</span>::<span class="ident">R16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">Sf</span>::<span class="ident">R16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">Sf</span>::<span class="ident">R16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rg8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rg8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rg8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rg8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">Sf</span>::<span class="ident">R32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">Sf</span>::<span class="ident">R32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">Sf</span>::<span class="ident">R32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rg16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rg16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rg16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rgba8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rgba8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rgba8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rgba8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rgb10a2Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rg11b10Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rg32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rg32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rg32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rgba16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rgba16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rgba16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rgba32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Uint</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rgba32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Sint</span>,
-            <span class="ident">Sf</span>::<span class="ident">Rgba32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk</span>::<span class="ident">Float</span>,
+            <span class="ident">Sf::R8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Float</span>,
+            <span class="ident">Sf::R8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Float</span>,
+            <span class="ident">Sf::R8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Uint</span>,
+            <span class="ident">Sf::R8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Sint</span>,
+            <span class="ident">Sf::R16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Uint</span>,
+            <span class="ident">Sf::R16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Sint</span>,
+            <span class="ident">Sf::R16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Float</span>,
+            <span class="ident">Sf::Rg8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Float</span>,
+            <span class="ident">Sf::Rg8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Float</span>,
+            <span class="ident">Sf::Rg8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Uint</span>,
+            <span class="ident">Sf::Rg8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Sint</span>,
+            <span class="ident">Sf::R32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Uint</span>,
+            <span class="ident">Sf::R32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Sint</span>,
+            <span class="ident">Sf::R32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Float</span>,
+            <span class="ident">Sf::Rg16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Uint</span>,
+            <span class="ident">Sf::Rg16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Sint</span>,
+            <span class="ident">Sf::Rg16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Float</span>,
+            <span class="ident">Sf::Rgba8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Float</span>,
+            <span class="ident">Sf::Rgba8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Float</span>,
+            <span class="ident">Sf::Rgba8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Uint</span>,
+            <span class="ident">Sf::Rgba8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Sint</span>,
+            <span class="ident">Sf::Rgb10a2Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Float</span>,
+            <span class="ident">Sf::Rg11b10Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Float</span>,
+            <span class="ident">Sf::Rg32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Uint</span>,
+            <span class="ident">Sf::Rg32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Sint</span>,
+            <span class="ident">Sf::Rg32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Float</span>,
+            <span class="ident">Sf::Rgba16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Uint</span>,
+            <span class="ident">Sf::Rgba16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Sint</span>,
+            <span class="ident">Sf::Rgba16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Float</span>,
+            <span class="ident">Sf::Rgba32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Uint</span>,
+            <span class="ident">Sf::Rgba32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Sint</span>,
+            <span class="ident">Sf::Rgba32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sk::Float</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="kw">super</span>::<span class="ident">ScalarValue</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scalar_kind</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">super</span>::<span class="ident">ScalarKind</span> {
+<span class="kw">impl</span> <span class="kw">super</span><span class="ident">::ScalarValue</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scalar_kind</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">super</span><span class="ident">::ScalarKind</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">Uint</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">super</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>,
-            <span class="self">Self</span>::<span class="ident">Sint</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">super</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>,
-            <span class="self">Self</span>::<span class="ident">Float</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">super</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
-            <span class="self">Self</span>::<span class="ident">Bool</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">super</span>::<span class="ident">ScalarKind</span>::<span class="ident">Bool</span>,
+            <span class="self">Self</span><span class="ident">::Uint</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">super</span><span class="ident">::ScalarKind::Uint</span>,
+            <span class="self">Self</span><span class="ident">::Sint</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">super</span><span class="ident">::ScalarKind::Sint</span>,
+            <span class="self">Self</span><span class="ident">::Float</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">super</span><span class="ident">::ScalarKind::Float</span>,
+            <span class="self">Self</span><span class="ident">::Bool</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">super</span><span class="ident">::ScalarKind::Bool</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="kw">super</span>::<span class="ident">TypeInner</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scalar_kind</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">super</span>::<span class="ident">ScalarKind</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="kw">super</span><span class="ident">::TypeInner</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">scalar_kind</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::ScalarKind</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="kw">super</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="kw">super</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">super</span><span class="ident">::TypeInner::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="kw">super</span><span class="ident">::TypeInner::Vector</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">kind</span>)
             }
-            <span class="kw">super</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="kw">super</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>),
+            <span class="kw">super</span><span class="ident">::TypeInner::Matrix</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="kw">super</span><span class="ident">::ScalarKind::Float</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="kw">super</span>::<span class="ident">MathFunction</span> {
+<span class="kw">impl</span> <span class="kw">super</span><span class="ident">::MathFunction</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">argument_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
             <span class="comment">// comparison</span>
-            <span class="self">Self</span>::<span class="ident">Abs</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Min</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-            <span class="self">Self</span>::<span class="ident">Max</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-            <span class="self">Self</span>::<span class="ident">Clamp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
+            <span class="self">Self</span><span class="ident">::Abs</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Min</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="self">Self</span><span class="ident">::Max</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="self">Self</span><span class="ident">::Clamp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
             <span class="comment">// trigonometry</span>
-            <span class="self">Self</span>::<span class="ident">Cos</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Cosh</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Sin</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Sinh</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Tan</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Tanh</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Acos</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Asin</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Atan</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Atan2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="self">Self</span><span class="ident">::Cos</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Cosh</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Sin</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Sinh</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Tan</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Tanh</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Acos</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Asin</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Atan</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Atan2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
             <span class="comment">// decomposition</span>
-            <span class="self">Self</span>::<span class="ident">Ceil</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Floor</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Round</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Fract</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Trunc</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Modf</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-            <span class="self">Self</span>::<span class="ident">Frexp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-            <span class="self">Self</span>::<span class="ident">Ldexp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="self">Self</span><span class="ident">::Ceil</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Floor</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Round</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Fract</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Trunc</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Modf</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="self">Self</span><span class="ident">::Frexp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="self">Self</span><span class="ident">::Ldexp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
             <span class="comment">// exponent</span>
-            <span class="self">Self</span>::<span class="ident">Exp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Exp2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Log</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Log2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Pow</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="self">Self</span><span class="ident">::Exp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Exp2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Log</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Log2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Pow</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
             <span class="comment">// geometry</span>
-            <span class="self">Self</span>::<span class="ident">Dot</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-            <span class="self">Self</span>::<span class="ident">Outer</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-            <span class="self">Self</span>::<span class="ident">Cross</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-            <span class="self">Self</span>::<span class="ident">Distance</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-            <span class="self">Self</span>::<span class="ident">Length</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Normalize</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">FaceForward</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
-            <span class="self">Self</span>::<span class="ident">Reflect</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="self">Self</span><span class="ident">::Dot</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="self">Self</span><span class="ident">::Outer</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="self">Self</span><span class="ident">::Cross</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="self">Self</span><span class="ident">::Distance</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="self">Self</span><span class="ident">::Length</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Normalize</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::FaceForward</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
+            <span class="self">Self</span><span class="ident">::Reflect</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
             <span class="comment">// computational</span>
-            <span class="self">Self</span>::<span class="ident">Sign</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Fma</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
-            <span class="self">Self</span>::<span class="ident">Mix</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
-            <span class="self">Self</span>::<span class="ident">Step</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-            <span class="self">Self</span>::<span class="ident">SmoothStep</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
-            <span class="self">Self</span>::<span class="ident">Sqrt</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">InverseSqrt</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Inverse</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Transpose</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">Determinant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Sign</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Fma</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
+            <span class="self">Self</span><span class="ident">::Mix</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
+            <span class="self">Self</span><span class="ident">::Step</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
+            <span class="self">Self</span><span class="ident">::SmoothStep</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
+            <span class="self">Self</span><span class="ident">::Sqrt</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::InverseSqrt</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Inverse</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Transpose</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::Determinant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
             <span class="comment">// bits</span>
-            <span class="self">Self</span>::<span class="ident">CountOneBits</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-            <span class="self">Self</span>::<span class="ident">ReverseBits</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::CountOneBits</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+            <span class="self">Self</span><span class="ident">::ReverseBits</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="kw">crate</span>::<span class="ident">Expression</span> {
+<span class="kw">impl</span> <span class="kw">crate</span><span class="ident">::Expression</span> {
     <span class="doccomment">/// Returns true if the expression is considered emitted at the start of a function.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">needs_pre_emit</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">Constant</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">FunctionArgument</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">GlobalVariable</span>(<span class="kw">_</span>)
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">LocalVariable</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+            <span class="self">Self</span><span class="ident">::Constant</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::FunctionArgument</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::GlobalVariable</span>(<span class="kw">_</span>)
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::LocalVariable</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="kw">crate</span>::<span class="ident">SampleLevel</span> {
+<span class="kw">impl</span> <span class="kw">crate</span><span class="ident">::SampleLevel</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">implicit_derivatives</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">Auto</span> <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Bias</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            <span class="self">Self</span>::<span class="ident">Zero</span> <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Exact</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Gradient</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="self">Self</span><span class="ident">::Auto</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::Bias</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+            <span class="self">Self</span><span class="ident">::Zero</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::Exact</span>(<span class="kw">_</span>) <span class="op">|</span> <span class="self">Self</span><span class="ident">::Gradient</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="kw">crate</span>::<span class="ident">Constant</span> {
+<span class="kw">impl</span> <span class="kw">crate</span><span class="ident">::Constant</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_array_length</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
-        <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">convert</span>::<span class="ident">TryInto</span>;
+        <span class="kw">use</span> <span class="ident">std::convert::TryInto</span>;
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">inner</span> {
-            <span class="kw">crate</span>::<span class="ident">ConstantInner</span>::<span class="ident">Scalar</span> { <span class="ident">value</span>, <span class="ident">width</span>: <span class="kw">_</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">value</span> {
-                <span class="kw">crate</span>::<span class="ident">ScalarValue</span>::<span class="ident">Uint</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">try_into</span>().<span class="ident">ok</span>(),
+            <span class="kw">crate</span><span class="ident">::ConstantInner::Scalar</span> { <span class="ident">value</span>, <span class="ident">width</span>: <span class="kw">_</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">value</span> {
+                <span class="kw">crate</span><span class="ident">::ScalarValue::Uint</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">try_into</span>().<span class="ident">ok</span>(),
                 <span class="comment">// Accept a signed integer size to avoid</span>
                 <span class="comment">// requiring an explicit uint</span>
                 <span class="comment">// literal. Type inference should make</span>
                 <span class="comment">// this unnecessary.</span>
-                <span class="kw">crate</span>::<span class="ident">ScalarValue</span>::<span class="ident">Sint</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">try_into</span>().<span class="ident">ok</span>(),
+                <span class="kw">crate</span><span class="ident">::ScalarValue::Sint</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>.<span class="ident">try_into</span>().<span class="ident">ok</span>(),
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
             },
             <span class="comment">// caught by type validation</span>
-            <span class="kw">crate</span>::<span class="ident">ConstantInner</span>::<span class="ident">Composite</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="kw">crate</span><span class="ident">::ConstantInner::Composite</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="kw">crate</span>::<span class="ident">Binding</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_built_in</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">BuiltIn</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="kw">crate</span><span class="ident">::Binding</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_built_in</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::BuiltIn</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">BuiltIn</span>(<span class="ident">bi</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">bi</span>),
-            <span class="self">Self</span>::<span class="ident">Location</span>(..) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+            <span class="self">Self</span><span class="ident">::BuiltIn</span>(<span class="ident">bi</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">bi</span>),
+            <span class="self">Self</span><span class="ident">::Location</span>(..) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
     }
 }

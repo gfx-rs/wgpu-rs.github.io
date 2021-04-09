@@ -496,15 +496,15 @@
         <span class="ident">align_down</span>,
         <span class="ident">block</span>::{<span class="ident">MemoryBlock</span>, <span class="ident">MemoryBlockFlavor</span>},
         <span class="ident">buddy</span>::{<span class="ident">BuddyAllocator</span>, <span class="ident">BuddyBlock</span>},
-        <span class="ident">config</span>::<span class="ident">Config</span>,
-        <span class="ident">error</span>::<span class="ident">AllocationError</span>,
-        <span class="ident">heap</span>::<span class="ident">Heap</span>,
+        <span class="ident">config::Config</span>,
+        <span class="ident">error::AllocationError</span>,
+        <span class="ident">heap::Heap</span>,
         <span class="ident">linear</span>::{<span class="ident">LinearAllocator</span>, <span class="ident">LinearBlock</span>},
         <span class="ident">usage</span>::{<span class="ident">MemoryForUsage</span>, <span class="ident">UsageFlags</span>},
         <span class="ident">MemoryBounds</span>, <span class="ident">Request</span>,
     },
-    <span class="ident">alloc</span>::<span class="ident">boxed</span>::<span class="ident">Box</span>,
-    <span class="ident">core</span>::<span class="ident">convert</span>::<span class="ident">TryFrom</span> <span class="kw">as</span> <span class="kw">_</span>,
+    <span class="ident">alloc::boxed::Box</span>,
+    <span class="ident">core::convert::TryFrom</span> <span class="kw">as</span> <span class="kw">_</span>,
     <span class="ident">gpu_alloc_types</span>::{
         <span class="ident">AllocationFlags</span>, <span class="ident">DeviceProperties</span>, <span class="ident">MemoryDevice</span>, <span class="ident">MemoryPropertyFlags</span>, <span class="ident">MemoryType</span>,
         <span class="ident">OutOfMemory</span>,
@@ -558,7 +558,7 @@
     <span class="doccomment">/// Creates  new instance of `GpuAllocator`.</span>
     <span class="doccomment">/// Provided `DeviceProperties` should match properties of `MemoryDevice` that will be used</span>
     <span class="doccomment">/// with created `GpuAllocator` instance.</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing</span>::<span class="ident">instrument</span>)]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing::instrument</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">config</span>: <span class="ident">Config</span>, <span class="ident">props</span>: <span class="ident">DeviceProperties</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="macro">assert!</span>(
             <span class="ident">props</span>.<span class="ident">non_coherent_atom_size</span>.<span class="ident">is_power_of_two</span>(),
@@ -566,7 +566,7 @@
         );
 
         <span class="macro">assert!</span>(
-            <span class="ident">isize</span>::<span class="ident">try_from</span>(<span class="ident">props</span>.<span class="ident">non_coherent_atom_size</span>).<span class="ident">is_ok</span>(),
+            <span class="ident">isize::try_from</span>(<span class="ident">props</span>.<span class="ident">non_coherent_atom_size</span>).<span class="ident">is_ok</span>(),
             <span class="string">&quot;`non_coherent_atom_size` must fit host address space&quot;</span>
         );
 
@@ -586,14 +586,14 @@
 
             <span class="ident">max_memory_allocation_size</span>: <span class="ident">props</span>.<span class="ident">max_memory_allocation_size</span>,
 
-            <span class="ident">memory_for_usage</span>: <span class="ident">MemoryForUsage</span>::<span class="ident">new</span>(<span class="ident">props</span>.<span class="ident">memory_types</span>.<span class="ident">as_ref</span>()),
+            <span class="ident">memory_for_usage</span>: <span class="ident">MemoryForUsage::new</span>(<span class="ident">props</span>.<span class="ident">memory_types</span>.<span class="ident">as_ref</span>()),
 
             <span class="ident">memory_types</span>: <span class="ident">props</span>.<span class="ident">memory_types</span>.<span class="ident">as_ref</span>().<span class="ident">iter</span>().<span class="ident">copied</span>().<span class="ident">collect</span>(),
             <span class="ident">memory_heaps</span>: <span class="ident">props</span>
                 .<span class="ident">memory_heaps</span>
                 .<span class="ident">as_ref</span>()
                 .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">heap</span><span class="op">|</span> <span class="ident">Heap</span>::<span class="ident">new</span>(<span class="ident">heap</span>.<span class="ident">size</span>))
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">heap</span><span class="op">|</span> <span class="ident">Heap::new</span>(<span class="ident">heap</span>.<span class="ident">size</span>))
                 .<span class="ident">collect</span>(),
 
             <span class="ident">buffer_device_address</span>: <span class="ident">props</span>.<span class="ident">buffer_device_address</span>,
@@ -618,7 +618,7 @@
     <span class="doccomment">/// * `device` must be one with `DeviceProperties` that were provided to create this `GpuAllocator` instance.</span>
     <span class="doccomment">/// * Same `device` instance must be used for all interactions with one `GpuAllocator` instance</span>
     <span class="doccomment">///   and memory blocks allocated from it.</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing</span>::<span class="ident">instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">device</span>)))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing::instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">device</span>)))]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">alloc</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">MemoryDevice</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>,
@@ -637,7 +637,7 @@
     <span class="doccomment">/// * `device` must be one with `DeviceProperties` that were provided to create this `GpuAllocator` instance.</span>
     <span class="doccomment">/// * Same `device` instance must be used for all interactions with one `GpuAllocator` instance</span>
     <span class="doccomment">///   and memory blocks allocated from it.</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing</span>::<span class="ident">instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">device</span>)))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing::instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">device</span>)))]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">alloc_with_dedicated</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">MemoryDevice</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>,
@@ -661,33 +661,33 @@
 
         <span class="ident">request</span>.<span class="ident">usage</span> <span class="op">=</span> <span class="ident">with_implicit_usage_flags</span>(<span class="ident">request</span>.<span class="ident">usage</span>);
 
-        <span class="kw">if</span> <span class="ident">request</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">UsageFlags</span>::<span class="ident">DEVICE_ADDRESS</span>) {
+        <span class="kw">if</span> <span class="ident">request</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">UsageFlags::DEVICE_ADDRESS</span>) {
             <span class="macro">assert!</span>(<span class="self">self</span>.<span class="ident">buffer_device_address</span>, <span class="string">&quot;`DEVICE_ADDRESS` cannot be requested when `DeviceProperties::buffer_device_address` is false&quot;</span>);
         }
 
         <span class="kw">if</span> <span class="ident">request</span>.<span class="ident">size</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">max_memory_allocation_size</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">OutOfDeviceMemory</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError::OutOfDeviceMemory</span>);
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Dedicated</span>::<span class="ident">Required</span>) <span class="op">=</span> <span class="ident">dedicated</span> {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">Dedicated::Required</span>) <span class="op">=</span> <span class="ident">dedicated</span> {
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">allocations_remains</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">TooManyObjects</span>);
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError::TooManyObjects</span>);
             }
         }
 
         <span class="kw">if</span> <span class="number">0</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">memory_for_usage</span>.<span class="ident">mask</span>(<span class="ident">request</span>.<span class="ident">usage</span>) <span class="op">&amp;</span> <span class="ident">request</span>.<span class="ident">memory_types</span> {
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>)]</span>
-            <span class="ident">tracing</span>::<span class="macro">error!</span>(
+            <span class="macro">tracing::error!</span>(
                 <span class="string">&quot;Cannot serve request {:?}, no memory among bitset `{}` support usage {:?}&quot;</span>,
                 <span class="ident">request</span>,
                 <span class="ident">request</span>.<span class="ident">memory_types</span>,
                 <span class="ident">request</span>.<span class="ident">usage</span>
             );
 
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">NoCompatibleMemoryTypes</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError::NoCompatibleMemoryTypes</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">transient</span> <span class="op">=</span> <span class="ident">request</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">UsageFlags</span>::<span class="ident">TRANSIENT</span>);
+        <span class="kw">let</span> <span class="ident">transient</span> <span class="op">=</span> <span class="ident">request</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">UsageFlags::TRANSIENT</span>);
 
         <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">index</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">memory_for_usage</span>.<span class="ident">types</span>(<span class="ident">request</span>.<span class="ident">usage</span>) {
             <span class="kw">if</span> <span class="number">0</span> <span class="op">=</span><span class="op">=</span> <span class="ident">request</span>.<span class="ident">memory_types</span> <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">index</span>) {
@@ -706,44 +706,44 @@
             };
 
             <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">buffer_device_address</span> {
-                <span class="ident">AllocationFlags</span>::<span class="ident">DEVICE_ADDRESS</span>
+                <span class="ident">AllocationFlags::DEVICE_ADDRESS</span>
             } <span class="kw">else</span> {
-                <span class="ident">AllocationFlags</span>::<span class="ident">empty</span>()
+                <span class="ident">AllocationFlags::empty</span>()
             };
 
             <span class="kw">let</span> <span class="ident">linear_chunk</span> <span class="op">=</span> <span class="ident">align_down</span>(<span class="self">self</span>.<span class="ident">linear_chunk</span>.<span class="ident">min</span>(<span class="ident">heap</span>.<span class="ident">size</span>() <span class="op">/</span> <span class="number">32</span>), <span class="ident">atom_mask</span>);
 
             <span class="kw">let</span> <span class="ident">strategy</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">dedicated</span>, <span class="ident">transient</span>) {
-                (<span class="prelude-val">Some</span>(<span class="ident">Dedicated</span>::<span class="ident">Required</span>), <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Strategy</span>::<span class="ident">Dedicated</span>,
-                (<span class="prelude-val">Some</span>(<span class="ident">Dedicated</span>::<span class="ident">Preferred</span>), <span class="kw">_</span>)
+                (<span class="prelude-val">Some</span>(<span class="ident">Dedicated::Required</span>), <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Strategy::Dedicated</span>,
+                (<span class="prelude-val">Some</span>(<span class="ident">Dedicated::Preferred</span>), <span class="kw">_</span>)
                     <span class="kw">if</span> <span class="ident">request</span>.<span class="ident">size</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">preferred_dedicated_threshold</span> <span class="op">=</span><span class="op">&gt;</span>
                 {
-                    <span class="ident">Strategy</span>::<span class="ident">Dedicated</span>
+                    <span class="ident">Strategy::Dedicated</span>
                 }
                 (<span class="kw">_</span>, <span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">threshold</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">transient_dedicated_threshold</span>.<span class="ident">min</span>(<span class="ident">linear_chunk</span>);
 
                     <span class="kw">if</span> <span class="ident">request</span>.<span class="ident">size</span> <span class="op">&lt;</span> <span class="ident">threshold</span> {
-                        <span class="ident">Strategy</span>::<span class="ident">Linear</span>
+                        <span class="ident">Strategy::Linear</span>
                     } <span class="kw">else</span> {
-                        <span class="ident">Strategy</span>::<span class="ident">Dedicated</span>
+                        <span class="ident">Strategy::Dedicated</span>
                     }
                 }
                 (<span class="kw">_</span>, <span class="bool-val">false</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">threshold</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">dedicated_threshold</span>.<span class="ident">min</span>(<span class="ident">heap</span>.<span class="ident">size</span>() <span class="op">/</span> <span class="number">32</span>);
 
                     <span class="kw">if</span> <span class="ident">request</span>.<span class="ident">size</span> <span class="op">&lt;</span> <span class="ident">threshold</span> {
-                        <span class="ident">Strategy</span>::<span class="ident">Buddy</span>
+                        <span class="ident">Strategy::Buddy</span>
                     } <span class="kw">else</span> {
-                        <span class="ident">Strategy</span>::<span class="ident">Dedicated</span>
+                        <span class="ident">Strategy::Dedicated</span>
                     }
                 }
             };
 
             <span class="kw">match</span> <span class="ident">strategy</span> {
-                <span class="ident">Strategy</span>::<span class="ident">Dedicated</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Strategy::Dedicated</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>)]</span>
-                    <span class="ident">tracing</span>::<span class="macro">debug!</span>(
+                    <span class="macro">tracing::debug!</span>(
                         <span class="string">&quot;Allocating memory object `{}@{:?}`&quot;</span>,
                         <span class="ident">request</span>.<span class="ident">size</span>,
                         <span class="ident">memory_type</span>
@@ -754,27 +754,27 @@
                             <span class="self">self</span>.<span class="ident">allocations_remains</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
                             <span class="ident">heap</span>.<span class="ident">alloc</span>(<span class="ident">request</span>.<span class="ident">size</span>);
 
-                            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">MemoryBlock</span>::<span class="ident">new</span>(
+                            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">MemoryBlock::new</span>(
                                 <span class="ident">index</span>,
                                 <span class="ident">memory_type</span>.<span class="ident">props</span>,
                                 <span class="number">0</span>,
                                 <span class="ident">request</span>.<span class="ident">size</span>,
                                 <span class="ident">atom_mask</span>,
-                                <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Dedicated</span> { <span class="ident">memory</span> },
+                                <span class="ident">MemoryBlockFlavor::Dedicated</span> { <span class="ident">memory</span> },
                             ));
                         }
-                        <span class="prelude-val">Err</span>(<span class="ident">OutOfMemory</span>::<span class="ident">OutOfDeviceMemory</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
-                        <span class="prelude-val">Err</span>(<span class="ident">OutOfMemory</span>::<span class="ident">OutOfHostMemory</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">OutOfHostMemory</span>)
+                        <span class="prelude-val">Err</span>(<span class="ident">OutOfMemory::OutOfDeviceMemory</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                        <span class="prelude-val">Err</span>(<span class="ident">OutOfMemory::OutOfHostMemory</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError::OutOfHostMemory</span>)
                         }
                     }
                 }
-                <span class="ident">Strategy</span>::<span class="ident">Linear</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Strategy::Linear</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">allocator</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">linear_allocators</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>] {
                         <span class="prelude-val">Some</span>(<span class="ident">allocator</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">allocator</span>,
                         <span class="ident">slot</span> <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="kw">let</span> <span class="ident">memory_type</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">memory_types</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>];
-                            <span class="ident">slot</span>.<span class="ident">get_or_insert</span>(<span class="ident">LinearAllocator</span>::<span class="ident">new</span>(
+                            <span class="ident">slot</span>.<span class="ident">get_or_insert</span>(<span class="ident">LinearAllocator::new</span>(
                                 <span class="ident">linear_chunk</span>,
                                 <span class="ident">index</span>,
                                 <span class="ident">memory_type</span>.<span class="ident">props</span>,
@@ -797,24 +797,24 @@
 
                     <span class="kw">match</span> <span class="ident">result</span> {
                         <span class="prelude-val">Ok</span>(<span class="ident">block</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">MemoryBlock</span>::<span class="ident">new</span>(
+                            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">MemoryBlock::new</span>(
                                 <span class="ident">index</span>,
                                 <span class="ident">memory_type</span>.<span class="ident">props</span>,
                                 <span class="ident">block</span>.<span class="ident">offset</span>,
                                 <span class="ident">block</span>.<span class="ident">size</span>,
                                 <span class="ident">atom_mask</span>,
-                                <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Linear</span> {
+                                <span class="ident">MemoryBlockFlavor::Linear</span> {
                                     <span class="ident">chunk</span>: <span class="ident">block</span>.<span class="ident">chunk</span>,
                                     <span class="ident">ptr</span>: <span class="ident">block</span>.<span class="ident">ptr</span>,
                                     <span class="ident">memory</span>: <span class="ident">block</span>.<span class="ident">memory</span>,
                                 },
                             ))
                         }
-                        <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">OutOfDeviceMemory</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                        <span class="prelude-val">Err</span>(<span class="ident">AllocationError::OutOfDeviceMemory</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
                         <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>),
                     }
                 }
-                <span class="ident">Strategy</span>::<span class="ident">Buddy</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Strategy::Buddy</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">allocator</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">buddy_allocators</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>] {
                         <span class="prelude-val">Some</span>(<span class="ident">allocator</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">allocator</span>,
                         <span class="ident">slot</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -829,7 +829,7 @@
                                 .<span class="ident">next_power_of_two</span>();
 
                             <span class="kw">let</span> <span class="ident">memory_type</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">memory_types</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>];
-                            <span class="ident">slot</span>.<span class="ident">get_or_insert</span>(<span class="ident">BuddyAllocator</span>::<span class="ident">new</span>(
+                            <span class="ident">slot</span>.<span class="ident">get_or_insert</span>(<span class="ident">BuddyAllocator::new</span>(
                                 <span class="ident">minimal_buddy_size</span>,
                                 <span class="ident">initial_buddy_dedicated_size</span>,
                                 <span class="ident">index</span>,
@@ -853,13 +853,13 @@
 
                     <span class="kw">match</span> <span class="ident">result</span> {
                         <span class="prelude-val">Ok</span>(<span class="ident">block</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">MemoryBlock</span>::<span class="ident">new</span>(
+                            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">MemoryBlock::new</span>(
                                 <span class="ident">index</span>,
                                 <span class="ident">memory_type</span>.<span class="ident">props</span>,
                                 <span class="ident">block</span>.<span class="ident">offset</span>,
                                 <span class="ident">block</span>.<span class="ident">size</span>,
                                 <span class="ident">atom_mask</span>,
-                                <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Buddy</span> {
+                                <span class="ident">MemoryBlockFlavor::Buddy</span> {
                                     <span class="ident">chunk</span>: <span class="ident">block</span>.<span class="ident">chunk</span>,
                                     <span class="ident">ptr</span>: <span class="ident">block</span>.<span class="ident">ptr</span>,
                                     <span class="ident">index</span>: <span class="ident">block</span>.<span class="ident">index</span>,
@@ -867,14 +867,14 @@
                                 },
                             ))
                         }
-                        <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">OutOfDeviceMemory</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                        <span class="prelude-val">Err</span>(<span class="ident">AllocationError::OutOfDeviceMemory</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
                         <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>),
                     }
                 }
             }
         }
 
-        <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">OutOfDeviceMemory</span>)
+        <span class="prelude-val">Err</span>(<span class="ident">AllocationError::OutOfDeviceMemory</span>)
     }
 
     <span class="doccomment">/// Deallocates memory block previously allocated from this `GpuAllocator` instance.</span>
@@ -885,20 +885,20 @@
     <span class="doccomment">/// * `device` must be one with `DeviceProperties` that were provided to create this `GpuAllocator` instance</span>
     <span class="doccomment">/// * Same `device` instance must be used for all interactions with one `GpuAllocator` instance</span>
     <span class="doccomment">///   and memory blocks allocated from it</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing</span>::<span class="ident">instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">device</span>)))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing::instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">device</span>)))]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">dealloc</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">MemoryDevice</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>, <span class="ident">block</span>: <span class="ident">MemoryBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) {
         <span class="kw">let</span> <span class="ident">memory_type</span> <span class="op">=</span> <span class="ident">block</span>.<span class="ident">memory_type</span>();
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">block</span>.<span class="ident">offset</span>();
         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">block</span>.<span class="ident">size</span>();
         <span class="kw">let</span> <span class="ident">flavor</span> <span class="op">=</span> <span class="ident">block</span>.<span class="ident">deallocate</span>();
         <span class="kw">match</span> <span class="ident">flavor</span> {
-            <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Dedicated</span> { <span class="ident">memory</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MemoryBlockFlavor::Dedicated</span> { <span class="ident">memory</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">heap</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">memory_types</span>[<span class="ident">memory_type</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">heap</span>;
                 <span class="ident">device</span>.<span class="ident">deallocate_memory</span>(<span class="ident">memory</span>);
                 <span class="self">self</span>.<span class="ident">allocations_remains</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                 <span class="self">self</span>.<span class="ident">memory_heaps</span>[<span class="ident">heap</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">dealloc</span>(<span class="ident">size</span>);
             }
-            <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Linear</span> { <span class="ident">chunk</span>, <span class="ident">ptr</span>, <span class="ident">memory</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MemoryBlockFlavor::Linear</span> { <span class="ident">chunk</span>, <span class="ident">ptr</span>, <span class="ident">memory</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">heap</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">memory_types</span>[<span class="ident">memory_type</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">heap</span>;
                 <span class="kw">let</span> <span class="ident">heap</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">memory_heaps</span>[<span class="ident">heap</span> <span class="kw">as</span> <span class="ident">usize</span>];
 
@@ -919,7 +919,7 @@
                     <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">allocations_remains</span>,
                 );
             }
-            <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Buddy</span> {
+            <span class="ident">MemoryBlockFlavor::Buddy</span> {
                 <span class="ident">chunk</span>,
                 <span class="ident">ptr</span>,
                 <span class="ident">index</span>,
@@ -958,24 +958,24 @@
     <span class="doccomment">/// * `device` must be one with `DeviceProperties` that were provided to create this `GpuAllocator` instance</span>
     <span class="doccomment">/// * Same `device` instance must be used for all interactions with one `GpuAllocator` instance</span>
     <span class="doccomment">///   and memory blocks allocated from it</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing</span>::<span class="ident">instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">device</span>)))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing::instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">device</span>)))]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">cleanup</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">MemoryDevice</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) {
-        <span class="kw">for</span> <span class="ident">allocator</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">linear_allocators</span>.<span class="ident">iter_mut</span>().<span class="ident">filter_map</span>(<span class="prelude-ty">Option</span>::<span class="ident">as_mut</span>) {
+        <span class="kw">for</span> <span class="ident">allocator</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">linear_allocators</span>.<span class="ident">iter_mut</span>().<span class="ident">filter_map</span>(<span class="ident">Option::as_mut</span>) {
             <span class="ident">allocator</span>.<span class="ident">cleanup</span>(<span class="ident">device</span>);
         }
     }
 }
 
 <span class="kw">fn</span> <span class="ident">host_visible_non_coherent</span>(<span class="ident">props</span>: <span class="ident">MemoryPropertyFlags</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-    (<span class="ident">props</span> <span class="op">&amp;</span> (<span class="ident">MemoryPropertyFlags</span>::<span class="ident">HOST_COHERENT</span> <span class="op">|</span> <span class="ident">MemoryPropertyFlags</span>::<span class="ident">HOST_VISIBLE</span>))
-        <span class="op">=</span><span class="op">=</span> <span class="ident">MemoryPropertyFlags</span>::<span class="ident">HOST_VISIBLE</span>
+    (<span class="ident">props</span> <span class="op">&amp;</span> (<span class="ident">MemoryPropertyFlags::HOST_COHERENT</span> <span class="op">|</span> <span class="ident">MemoryPropertyFlags::HOST_VISIBLE</span>))
+        <span class="op">=</span><span class="op">=</span> <span class="ident">MemoryPropertyFlags::HOST_VISIBLE</span>
 }
 
 <span class="kw">fn</span> <span class="ident">with_implicit_usage_flags</span>(<span class="ident">usage</span>: <span class="ident">UsageFlags</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">UsageFlags</span> {
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">is_empty</span>() {
-        <span class="ident">UsageFlags</span>::<span class="ident">FAST_DEVICE_ACCESS</span>
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident">UsageFlags</span>::<span class="ident">DOWNLOAD</span> <span class="op">|</span> <span class="ident">UsageFlags</span>::<span class="ident">UPLOAD</span>) {
-        <span class="ident">usage</span> <span class="op">|</span> <span class="ident">UsageFlags</span>::<span class="ident">HOST_ACCESS</span>
+        <span class="ident">UsageFlags::FAST_DEVICE_ACCESS</span>
+    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident">UsageFlags::DOWNLOAD</span> <span class="op">|</span> <span class="ident">UsageFlags::UPLOAD</span>) {
+        <span class="ident">usage</span> <span class="op">|</span> <span class="ident">UsageFlags::HOST_ACCESS</span>
     } <span class="kw">else</span> {
         <span class="ident">usage</span>
     }

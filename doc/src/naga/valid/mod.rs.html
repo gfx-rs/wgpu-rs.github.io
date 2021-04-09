@@ -309,25 +309,25 @@
 
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">arena</span>::{<span class="ident">Arena</span>, <span class="ident">Handle</span>},
-    <span class="ident">proc</span>::<span class="ident">Layouter</span>,
+    <span class="ident">proc::Layouter</span>,
     <span class="ident">FastHashSet</span>,
 };
-<span class="kw">use</span> <span class="ident">bit_set</span>::<span class="ident">BitSet</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>;
+<span class="kw">use</span> <span class="ident">bit_set::BitSet</span>;
+<span class="kw">use</span> <span class="ident">std::ops</span>;
 
 <span class="comment">//TODO: analyze the model at the same time as we validate it,</span>
 <span class="comment">// merge the corresponding matches over expressions and statements.</span>
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">analyzer</span>::{<span class="ident">ExpressionInfo</span>, <span class="ident">FunctionInfo</span>, <span class="ident">GlobalUse</span>, <span class="ident">Uniformity</span>, <span class="ident">UniformityRequirements</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">expression</span>::<span class="ident">ExpressionError</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">expression::ExpressionError</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">function</span>::{<span class="ident">CallError</span>, <span class="ident">FunctionError</span>, <span class="ident">LocalVariableError</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">interface</span>::{<span class="ident">EntryPointError</span>, <span class="ident">GlobalVariableError</span>, <span class="ident">VaryingError</span>};
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">r#type</span>::{<span class="ident">Disalignment</span>, <span class="ident">TypeError</span>, <span class="ident">TypeFlags</span>};
 
-<span class="ident">bitflags</span>::<span class="macro">bitflags!</span> {
+<span class="macro">bitflags::bitflags!</span> {
     <span class="doccomment">/// Validation flags.</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ValidationFlags</span>: <span class="ident">u8</span> {
         <span class="doccomment">/// Expressions.</span>
         <span class="kw">const</span> <span class="ident">EXPRESSIONS</span> <span class="op">=</span> <span class="number">0x1</span>;
@@ -340,10 +340,10 @@
     }
 }
 
-<span class="ident">bitflags</span>::<span class="macro">bitflags!</span> {
+<span class="macro">bitflags::bitflags!</span> {
     <span class="doccomment">/// Validation flags.</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderStages</span>: <span class="ident">u8</span> {
         <span class="kw">const</span> <span class="ident">VERTEX</span> <span class="op">=</span> <span class="number">0x1</span>;
         <span class="kw">const</span> <span class="ident">FRAGMENT</span> <span class="op">=</span> <span class="number">0x2</span>;
@@ -352,17 +352,17 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ModuleInfo</span> {
     <span class="ident">functions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FunctionInfo</span><span class="op">&gt;</span>,
     <span class="ident">entry_points</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">FunctionInfo</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">layouter</span>: <span class="ident">Layouter</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">ops</span>::<span class="ident">Index</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Function</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ModuleInfo</span> {
+<span class="kw">impl</span> <span class="ident">ops::Index</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Function</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ModuleInfo</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">FunctionInfo</span>;
-    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Function</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span>::<span class="ident">Output</span> {
+    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Function</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::Output</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">functions</span>[<span class="ident">handle</span>.<span class="ident">index</span>()]
     }
 }
@@ -370,57 +370,57 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Validator</span> {
     <span class="ident">flags</span>: <span class="ident">ValidationFlags</span>,
-    <span class="ident">types</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">r#type</span>::<span class="ident">TypeInfo</span><span class="op">&gt;</span>,
+    <span class="ident">types</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">r#type</span><span class="ident">::TypeInfo</span><span class="op">&gt;</span>,
     <span class="ident">location_mask</span>: <span class="ident">BitSet</span>,
     <span class="ident">bind_group_masks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BitSet</span><span class="op">&gt;</span>,
     <span class="ident">select_cases</span>: <span class="ident">FastHashSet</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>,
-    <span class="ident">valid_expression_list</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Expression</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">valid_expression_list</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Expression</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">valid_expression_set</span>: <span class="ident">BitSet</span>,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">thiserror</span>::<span class="ident">Error</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">thiserror::Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ConstantError</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The type doesn&#39;t match the constant&quot;</span>)]</span>
     <span class="ident">InvalidType</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The component handle {0:?} can not be resolved&quot;</span>)]</span>
-    <span class="ident">UnresolvedComponent</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Constant</span><span class="op">&gt;</span>),
+    <span class="ident">UnresolvedComponent</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Constant</span><span class="op">&gt;</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The array size handle {0:?} can not be resolved&quot;</span>)]</span>
-    <span class="ident">UnresolvedSize</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Constant</span><span class="op">&gt;</span>),
+    <span class="ident">UnresolvedSize</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Constant</span><span class="op">&gt;</span>),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">thiserror</span>::<span class="ident">Error</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">thiserror::Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ValidationError</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Type {handle:?} &#39;{name}&#39; is invalid&quot;</span>)]</span>
     <span class="ident">Type</span> {
-        <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>,
+        <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Type</span><span class="op">&gt;</span>,
         <span class="ident">name</span>: <span class="ident">String</span>,
         <span class="attribute">#[<span class="ident">source</span>]</span>
         <span class="ident">error</span>: <span class="ident">TypeError</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Constant {handle:?} &#39;{name}&#39; is invalid&quot;</span>)]</span>
     <span class="ident">Constant</span> {
-        <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Constant</span><span class="op">&gt;</span>,
+        <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Constant</span><span class="op">&gt;</span>,
         <span class="ident">name</span>: <span class="ident">String</span>,
         <span class="attribute">#[<span class="ident">source</span>]</span>
         <span class="ident">error</span>: <span class="ident">ConstantError</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Global variable {handle:?} &#39;{name}&#39; is invalid&quot;</span>)]</span>
     <span class="ident">GlobalVariable</span> {
-        <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">GlobalVariable</span><span class="op">&gt;</span>,
+        <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::GlobalVariable</span><span class="op">&gt;</span>,
         <span class="ident">name</span>: <span class="ident">String</span>,
         <span class="attribute">#[<span class="ident">source</span>]</span>
         <span class="ident">error</span>: <span class="ident">GlobalVariableError</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Function {handle:?} &#39;{name}&#39; is invalid&quot;</span>)]</span>
     <span class="ident">Function</span> {
-        <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Function</span><span class="op">&gt;</span>,
+        <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Function</span><span class="op">&gt;</span>,
         <span class="ident">name</span>: <span class="ident">String</span>,
         <span class="attribute">#[<span class="ident">source</span>]</span>
         <span class="ident">error</span>: <span class="ident">FunctionError</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Entry point {name} at {stage:?} is invalid&quot;</span>)]</span>
     <span class="ident">EntryPoint</span> {
-        <span class="ident">stage</span>: <span class="kw">crate</span>::<span class="ident">ShaderStage</span>,
+        <span class="ident">stage</span>: <span class="kw">crate</span><span class="ident">::ShaderStage</span>,
         <span class="ident">name</span>: <span class="ident">String</span>,
         <span class="attribute">#[<span class="ident">source</span>]</span>
         <span class="ident">error</span>: <span class="ident">EntryPointError</span>,
@@ -429,39 +429,39 @@
     <span class="ident">Corrupted</span>,
 }
 
-<span class="kw">impl</span> <span class="kw">crate</span>::<span class="ident">TypeInner</span> {
+<span class="kw">impl</span> <span class="kw">crate</span><span class="ident">::TypeInner</span> {
     <span class="kw">fn</span> <span class="ident">is_sized</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">Scalar</span> { .. }
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Vector</span> { .. }
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Matrix</span> { .. }
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Array</span> {
-                <span class="ident">size</span>: <span class="kw">crate</span>::<span class="ident">ArraySize</span>::<span class="ident">Constant</span>(<span class="kw">_</span>),
+            <span class="self">Self</span><span class="ident">::Scalar</span> { .. }
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::Vector</span> { .. }
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::Matrix</span> { .. }
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::Array</span> {
+                <span class="ident">size</span>: <span class="kw">crate</span><span class="ident">::ArraySize::Constant</span>(<span class="kw">_</span>),
                 ..
             }
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Pointer</span> { .. }
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">ValuePointer</span> { .. }
-            <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Struct</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            <span class="self">Self</span>::<span class="ident">Array</span> { .. } <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Image</span> { .. } <span class="op">|</span> <span class="self">Self</span>::<span class="ident">Sampler</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::Pointer</span> { .. }
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::ValuePointer</span> { .. }
+            <span class="op">|</span> <span class="self">Self</span><span class="ident">::Struct</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+            <span class="self">Self</span><span class="ident">::Array</span> { .. } <span class="op">|</span> <span class="self">Self</span><span class="ident">::Image</span> { .. } <span class="op">|</span> <span class="self">Self</span><span class="ident">::Sampler</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">image_storage_coordinates</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">ImageDimension</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">image_storage_coordinates</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::ImageDimension</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">Scalar</span> {
-                <span class="ident">kind</span>: <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>,
+            <span class="self">Self</span><span class="ident">::Scalar</span> {
+                <span class="ident">kind</span>: <span class="kw">crate</span><span class="ident">::ScalarKind::Sint</span>,
                 ..
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">D1</span>),
-            <span class="self">Self</span>::<span class="ident">Vector</span> {
-                <span class="ident">size</span>: <span class="kw">crate</span>::<span class="ident">VectorSize</span>::<span class="ident">Bi</span>,
-                <span class="ident">kind</span>: <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::ImageDimension::D1</span>),
+            <span class="self">Self</span><span class="ident">::Vector</span> {
+                <span class="ident">size</span>: <span class="kw">crate</span><span class="ident">::VectorSize::Bi</span>,
+                <span class="ident">kind</span>: <span class="kw">crate</span><span class="ident">::ScalarKind::Sint</span>,
                 ..
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">D2</span>),
-            <span class="self">Self</span>::<span class="ident">Vector</span> {
-                <span class="ident">size</span>: <span class="kw">crate</span>::<span class="ident">VectorSize</span>::<span class="ident">Tri</span>,
-                <span class="ident">kind</span>: <span class="kw">crate</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::ImageDimension::D2</span>),
+            <span class="self">Self</span><span class="ident">::Vector</span> {
+                <span class="ident">size</span>: <span class="kw">crate</span><span class="ident">::VectorSize::Tri</span>,
+                <span class="ident">kind</span>: <span class="kw">crate</span><span class="ident">::ScalarKind::Sint</span>,
                 ..
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span>::<span class="ident">ImageDimension</span>::<span class="ident">D3</span>),
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::ImageDimension::D3</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         }
     }
@@ -472,48 +472,48 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">flags</span>: <span class="ident">ValidationFlags</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Validator</span> {
             <span class="ident">flags</span>,
-            <span class="ident">types</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">location_mask</span>: <span class="ident">BitSet</span>::<span class="ident">new</span>(),
-            <span class="ident">bind_group_masks</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">select_cases</span>: <span class="ident">FastHashSet</span>::<span class="ident">default</span>(),
-            <span class="ident">valid_expression_list</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
-            <span class="ident">valid_expression_set</span>: <span class="ident">BitSet</span>::<span class="ident">new</span>(),
+            <span class="ident">types</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">location_mask</span>: <span class="ident">BitSet::new</span>(),
+            <span class="ident">bind_group_masks</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">select_cases</span>: <span class="ident">FastHashSet::default</span>(),
+            <span class="ident">valid_expression_list</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">valid_expression_set</span>: <span class="ident">BitSet::new</span>(),
         }
     }
 
     <span class="kw">fn</span> <span class="ident">validate_constant</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Constant</span><span class="op">&gt;</span>,
-        <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Constant</span><span class="op">&gt;</span>,
-        <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Type</span><span class="op">&gt;</span>,
+        <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Constant</span><span class="op">&gt;</span>,
+        <span class="ident">constants</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Constant</span><span class="op">&gt;</span>,
+        <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Type</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ConstantError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">con</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">constants</span>[<span class="ident">handle</span>];
         <span class="kw">match</span> <span class="ident">con</span>.<span class="ident">inner</span> {
-            <span class="kw">crate</span>::<span class="ident">ConstantInner</span>::<span class="ident">Scalar</span> { <span class="ident">width</span>, <span class="kw-2">ref</span> <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">if</span> <span class="op">!</span><span class="self">Self</span>::<span class="ident">check_width</span>(<span class="ident">value</span>.<span class="ident">scalar_kind</span>(), <span class="ident">width</span>) {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ConstantError</span>::<span class="ident">InvalidType</span>);
+            <span class="kw">crate</span><span class="ident">::ConstantInner::Scalar</span> { <span class="ident">width</span>, <span class="kw-2">ref</span> <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="op">!</span><span class="self">Self</span><span class="ident">::check_width</span>(<span class="ident">value</span>.<span class="ident">scalar_kind</span>(), <span class="ident">width</span>) {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ConstantError::InvalidType</span>);
                 }
             }
-            <span class="kw">crate</span>::<span class="ident">ConstantInner</span>::<span class="ident">Composite</span> { <span class="ident">ty</span>, <span class="kw-2">ref</span> <span class="ident">components</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">crate</span><span class="ident">::ConstantInner::Composite</span> { <span class="ident">ty</span>, <span class="kw-2">ref</span> <span class="ident">components</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">match</span> <span class="ident">types</span>[<span class="ident">ty</span>].<span class="ident">inner</span> {
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Array</span> {
-                        <span class="ident">size</span>: <span class="kw">crate</span>::<span class="ident">ArraySize</span>::<span class="ident">Dynamic</span>,
+                    <span class="kw">crate</span><span class="ident">::TypeInner::Array</span> {
+                        <span class="ident">size</span>: <span class="kw">crate</span><span class="ident">::ArraySize::Dynamic</span>,
                         ..
                     } <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ConstantError</span>::<span class="ident">InvalidType</span>);
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ConstantError::InvalidType</span>);
                     }
-                    <span class="kw">crate</span>::<span class="ident">TypeInner</span>::<span class="ident">Array</span> {
-                        <span class="ident">size</span>: <span class="kw">crate</span>::<span class="ident">ArraySize</span>::<span class="ident">Constant</span>(<span class="ident">size_handle</span>),
+                    <span class="kw">crate</span><span class="ident">::TypeInner::Array</span> {
+                        <span class="ident">size</span>: <span class="kw">crate</span><span class="ident">::ArraySize::Constant</span>(<span class="ident">size_handle</span>),
                         ..
                     } <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">if</span> <span class="ident">handle</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">size_handle</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ConstantError</span>::<span class="ident">UnresolvedSize</span>(<span class="ident">size_handle</span>));
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ConstantError::UnresolvedSize</span>(<span class="ident">size_handle</span>));
                         }
                     }
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {} <span class="comment">//TODO</span>
                 }
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">comp</span>) <span class="op">=</span> <span class="ident">components</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="op">&amp;&amp;</span><span class="ident">comp</span><span class="op">|</span> <span class="ident">handle</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">comp</span>) {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ConstantError</span>::<span class="ident">UnresolvedComponent</span>(<span class="ident">comp</span>));
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ConstantError::UnresolvedComponent</span>(<span class="ident">comp</span>));
                 }
             }
         }
@@ -521,14 +521,14 @@
     }
 
     <span class="doccomment">/// Check the given module to be valid.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ModuleInfo</span>, <span class="ident">ValidationError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">validate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ModuleInfo</span>, <span class="ident">ValidationError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">reset_types</span>(<span class="ident">module</span>.<span class="ident">types</span>.<span class="ident">len</span>());
 
-        <span class="kw">let</span> <span class="ident">layouter</span> <span class="op">=</span> <span class="ident">Layouter</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">types</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">constants</span>);
+        <span class="kw">let</span> <span class="ident">layouter</span> <span class="op">=</span> <span class="ident">Layouter::new</span>(<span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">types</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">constants</span>);
 
         <span class="kw">for</span> (<span class="ident">handle</span>, <span class="ident">constant</span>) <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">constants</span>.<span class="ident">iter</span>() {
             <span class="self">self</span>.<span class="ident">validate_constant</span>(<span class="ident">handle</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">constants</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">types</span>)
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">error</span><span class="op">|</span> <span class="ident">ValidationError</span>::<span class="ident">Constant</span> {
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">error</span><span class="op">|</span> <span class="ident">ValidationError::Constant</span> {
                     <span class="ident">handle</span>,
                     <span class="ident">name</span>: <span class="ident">constant</span>.<span class="ident">name</span>.<span class="ident">clone</span>().<span class="ident">unwrap_or_default</span>(),
                     <span class="ident">error</span>,
@@ -539,7 +539,7 @@
         <span class="kw">for</span> (<span class="ident">handle</span>, <span class="ident">ty</span>) <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">types</span>.<span class="ident">iter</span>() {
             <span class="kw">let</span> <span class="ident">ty_info</span> <span class="op">=</span> <span class="self">self</span>
                 .<span class="ident">validate_type</span>(<span class="ident">ty</span>, <span class="ident">handle</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">constants</span>, <span class="kw-2">&amp;</span><span class="ident">layouter</span>)
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">error</span><span class="op">|</span> <span class="ident">ValidationError</span>::<span class="ident">Type</span> {
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">error</span><span class="op">|</span> <span class="ident">ValidationError::Type</span> {
                     <span class="ident">handle</span>,
                     <span class="ident">name</span>: <span class="ident">ty</span>.<span class="ident">name</span>.<span class="ident">clone</span>().<span class="ident">unwrap_or_default</span>(),
                     <span class="ident">error</span>,
@@ -549,7 +549,7 @@
 
         <span class="kw">for</span> (<span class="ident">var_handle</span>, <span class="ident">var</span>) <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">global_variables</span>.<span class="ident">iter</span>() {
             <span class="self">self</span>.<span class="ident">validate_global_var</span>(<span class="ident">var</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">types</span>)
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">error</span><span class="op">|</span> <span class="ident">ValidationError</span>::<span class="ident">GlobalVariable</span> {
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">error</span><span class="op">|</span> <span class="ident">ValidationError::GlobalVariable</span> {
                     <span class="ident">handle</span>: <span class="ident">var_handle</span>,
                     <span class="ident">name</span>: <span class="ident">var</span>.<span class="ident">name</span>.<span class="ident">clone</span>().<span class="ident">unwrap_or_default</span>(),
                     <span class="ident">error</span>,
@@ -557,8 +557,8 @@
         }
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mod_info</span> <span class="op">=</span> <span class="ident">ModuleInfo</span> {
-            <span class="ident">functions</span>: <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">len</span>()),
-            <span class="ident">entry_points</span>: <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">module</span>.<span class="ident">entry_points</span>.<span class="ident">len</span>()),
+            <span class="ident">functions</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">module</span>.<span class="ident">functions</span>.<span class="ident">len</span>()),
+            <span class="ident">entry_points</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">module</span>.<span class="ident">entry_points</span>.<span class="ident">len</span>()),
             <span class="ident">layouter</span>,
         };
 
@@ -566,7 +566,7 @@
             <span class="kw">match</span> <span class="self">self</span>.<span class="ident">validate_function</span>(<span class="ident">fun</span>, <span class="ident">module</span>, <span class="kw-2">&amp;</span><span class="ident">mod_info</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">info</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">mod_info</span>.<span class="ident">functions</span>.<span class="ident">push</span>(<span class="ident">info</span>),
                 <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ValidationError</span>::<span class="ident">Function</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ValidationError::Function</span> {
                         <span class="ident">handle</span>,
                         <span class="ident">name</span>: <span class="ident">fun</span>.<span class="ident">name</span>.<span class="ident">clone</span>().<span class="ident">unwrap_or_default</span>(),
                         <span class="ident">error</span>,
@@ -575,20 +575,20 @@
             }
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ep_map</span> <span class="op">=</span> <span class="ident">FastHashSet</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ep_map</span> <span class="op">=</span> <span class="ident">FastHashSet::default</span>();
         <span class="kw">for</span> <span class="ident">ep</span> <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">entry_points</span>.<span class="ident">iter</span>() {
             <span class="kw">if</span> <span class="op">!</span><span class="ident">ep_map</span>.<span class="ident">insert</span>((<span class="ident">ep</span>.<span class="ident">stage</span>, <span class="kw-2">&amp;</span><span class="ident">ep</span>.<span class="ident">name</span>)) {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ValidationError</span>::<span class="ident">EntryPoint</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ValidationError::EntryPoint</span> {
                     <span class="ident">stage</span>: <span class="ident">ep</span>.<span class="ident">stage</span>,
                     <span class="ident">name</span>: <span class="ident">ep</span>.<span class="ident">name</span>.<span class="ident">clone</span>(),
-                    <span class="ident">error</span>: <span class="ident">EntryPointError</span>::<span class="ident">Conflict</span>,
+                    <span class="ident">error</span>: <span class="ident">EntryPointError::Conflict</span>,
                 });
             }
 
             <span class="kw">match</span> <span class="self">self</span>.<span class="ident">validate_entry_point</span>(<span class="ident">ep</span>, <span class="ident">module</span>, <span class="kw-2">&amp;</span><span class="ident">mod_info</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">info</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">mod_info</span>.<span class="ident">entry_points</span>.<span class="ident">push</span>(<span class="ident">info</span>),
                 <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ValidationError</span>::<span class="ident">EntryPoint</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ValidationError::EntryPoint</span> {
                         <span class="ident">stage</span>: <span class="ident">ep</span>.<span class="ident">stage</span>,
                         <span class="ident">name</span>: <span class="ident">ep</span>.<span class="ident">name</span>.<span class="ident">clone</span>(),
                         <span class="ident">error</span>,

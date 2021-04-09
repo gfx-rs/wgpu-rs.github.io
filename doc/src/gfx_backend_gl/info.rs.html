@@ -886,9 +886,9 @@
 <span id="883">883</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Error</span>, <span class="ident">GlContainer</span>, <span class="ident">MAX_COLOR_ATTACHMENTS</span>};
-<span class="kw">use</span> <span class="ident">glow</span>::<span class="ident">HasContext</span>;
+<span class="kw">use</span> <span class="ident">glow::HasContext</span>;
 <span class="kw">use</span> <span class="ident">hal</span>::{<span class="ident">DynamicStates</span>, <span class="ident">Features</span>, <span class="ident">Limits</span>, <span class="ident">PerformanceCaveats</span>, <span class="ident">PhysicalDeviceProperties</span>};
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections</span>::<span class="ident">HashSet</span>, <span class="ident">fmt</span>, <span class="ident">str</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashSet</span>, <span class="ident">fmt</span>, <span class="ident">str</span>};
 
 <span class="doccomment">/// A version number for a specific component of an OpenGL implementation</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">Ord</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>)]</span>
@@ -976,7 +976,7 @@
 
         <span class="kw">let</span> (<span class="ident">version</span>, <span class="ident">vendor_info</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">src</span>.<span class="ident">find</span>(<span class="string">&#39; &#39;</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="kw-2">&amp;</span><span class="ident">src</span>[..<span class="ident">i</span>], <span class="ident">src</span>[<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>..].<span class="ident">to_string</span>()),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">src</span>, <span class="ident">String</span>::<span class="ident">new</span>()),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">src</span>, <span class="ident">String::new</span>()),
         };
 
         <span class="comment">// TODO: make this even more lenient so that we can also accept</span>
@@ -1015,8 +1015,8 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Version</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Version</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="kw">match</span> (
             <span class="self">self</span>.<span class="ident">major</span>,
             <span class="self">self</span>.<span class="ident">minor</span>,
@@ -1035,8 +1035,8 @@
 
 <span class="kw">fn</span> <span class="ident">get_string</span>(<span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">GlContainer</span>, <span class="ident">name</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_parameter_string</span>(<span class="ident">name</span>) };
-    <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">Error</span>::<span class="ident">from_error_code</span>(<span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_error</span>() });
-    <span class="kw">if</span> <span class="ident">err</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Error</span>::<span class="ident">NoError</span> {
+    <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">Error::from_error_code</span>(<span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_error</span>() });
+    <span class="kw">if</span> <span class="ident">err</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Error::NoError</span> {
         <span class="prelude-val">Err</span>(<span class="ident">err</span>)
     } <span class="kw">else</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">value</span>)
@@ -1044,8 +1044,8 @@
 }
 <span class="kw">fn</span> <span class="ident">get_usize</span>(<span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">GlContainer</span>, <span class="ident">name</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">name</span>) };
-    <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">Error</span>::<span class="ident">from_error_code</span>(<span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_error</span>() });
-    <span class="kw">if</span> <span class="ident">err</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Error</span>::<span class="ident">NoError</span> {
+    <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">Error::from_error_code</span>(<span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_error</span>() });
+    <span class="kw">if</span> <span class="ident">err</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Error::NoError</span> {
         <span class="prelude-val">Err</span>(<span class="ident">err</span>)
     } <span class="kw">else</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="ident">usize</span>)
@@ -1053,8 +1053,8 @@
 }
 <span class="kw">fn</span> <span class="ident">get_u64</span>(<span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">GlContainer</span>, <span class="ident">name</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u64</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">name</span>) };
-    <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">Error</span>::<span class="ident">from_error_code</span>(<span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_error</span>() });
-    <span class="kw">if</span> <span class="ident">err</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Error</span>::<span class="ident">NoError</span> {
+    <span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">Error::from_error_code</span>(<span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_error</span>() });
+    <span class="kw">if</span> <span class="ident">err</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Error::NoError</span> {
         <span class="prelude-val">Err</span>(<span class="ident">err</span>)
     } <span class="kw">else</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="ident">u64</span>)
@@ -1073,8 +1073,8 @@
 <span class="kw">impl</span> <span class="ident">PlatformName</span> {
     <span class="kw">fn</span> <span class="ident">get</span>(<span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">GlContainer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">PlatformName</span> {
-            <span class="ident">vendor</span>: <span class="ident">get_string</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">VENDOR</span>).<span class="ident">unwrap_or_default</span>(),
-            <span class="ident">renderer</span>: <span class="ident">get_string</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">RENDERER</span>).<span class="ident">unwrap_or_default</span>(),
+            <span class="ident">vendor</span>: <span class="ident">get_string</span>(<span class="ident">gl</span>, <span class="ident">glow::VENDOR</span>).<span class="ident">unwrap_or_default</span>(),
+            <span class="ident">renderer</span>: <span class="ident">get_string</span>(<span class="ident">gl</span>, <span class="ident">glow::RENDERER</span>).<span class="ident">unwrap_or_default</span>(),
         }
     }
 }
@@ -1131,7 +1131,7 @@
     <span class="kw">pub</span> <span class="ident">extensions</span>: <span class="ident">HashSet</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
 }
 
-<span class="ident">bitflags</span>::<span class="macro">bitflags!</span> {
+<span class="macro">bitflags::bitflags!</span> {
     <span class="doccomment">/// Flags for features that are required for Vulkan but may not</span>
     <span class="doccomment">/// be supported by legacy backends (GL/DX11).</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LegacyFeatures</span>: <span class="ident">u32</span> {
@@ -1175,30 +1175,30 @@
 
 <span class="kw">impl</span> <span class="ident">Info</span> {
     <span class="kw">fn</span> <span class="ident">get</span>(<span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">GlContainer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Info</span> {
-        <span class="kw">let</span> <span class="ident">platform_name</span> <span class="op">=</span> <span class="ident">PlatformName</span>::<span class="ident">get</span>(<span class="ident">gl</span>);
-        <span class="kw">let</span> <span class="ident">raw_version</span> <span class="op">=</span> <span class="ident">get_string</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">VERSION</span>).<span class="ident">unwrap_or_default</span>();
-        <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="ident">raw_version</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">platform_name</span> <span class="op">=</span> <span class="ident">PlatformName::get</span>(<span class="ident">gl</span>);
+        <span class="kw">let</span> <span class="ident">raw_version</span> <span class="op">=</span> <span class="ident">get_string</span>(<span class="ident">gl</span>, <span class="ident">glow::VERSION</span>).<span class="ident">unwrap_or_default</span>();
+        <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">Version::parse</span>(<span class="kw-2">&amp;</span><span class="ident">raw_version</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">shading_language</span> <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">raw_shader_version</span> <span class="op">=</span>
-                <span class="ident">get_string</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">SHADING_LANGUAGE_VERSION</span>).<span class="ident">unwrap_or_default</span>();
-            <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="kw-2">&amp;</span><span class="ident">raw_shader_version</span>).<span class="ident">unwrap</span>()
+                <span class="ident">get_string</span>(<span class="ident">gl</span>, <span class="ident">glow::SHADING_LANGUAGE_VERSION</span>).<span class="ident">unwrap_or_default</span>();
+            <span class="ident">Version::parse</span>(<span class="kw-2">&amp;</span><span class="ident">raw_shader_version</span>).<span class="ident">unwrap</span>()
         };
 
         <span class="comment">// TODO: Use separate path for WebGL extensions in `glow` somehow</span>
         <span class="comment">// Perhaps automatic fallback for NUM_EXTENSIONS to EXTENSIONS on native</span>
-        <span class="kw">let</span> <span class="ident">extensions</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">crate</span>::<span class="ident">is_webgl</span>() {
-            <span class="ident">HashSet</span>::<span class="ident">new</span>()
-        } <span class="kw">else</span> <span class="kw">if</span> (<span class="ident">version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">Version</span>::<span class="ident">new</span>(<span class="number">3</span>, <span class="number">0</span>, <span class="prelude-val">None</span>, <span class="ident">String</span>::<span class="ident">from</span>(<span class="string">&quot;&quot;</span>)))
-            <span class="op">|</span><span class="op">|</span> (<span class="ident">version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">Version</span>::<span class="ident">new_embedded</span>(<span class="number">3</span>, <span class="number">0</span>, <span class="ident">String</span>::<span class="ident">from</span>(<span class="string">&quot;&quot;</span>)))
+        <span class="kw">let</span> <span class="ident">extensions</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">crate</span><span class="ident">::is_webgl</span>() {
+            <span class="ident">HashSet::new</span>()
+        } <span class="kw">else</span> <span class="kw">if</span> (<span class="ident">version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">Version::new</span>(<span class="number">3</span>, <span class="number">0</span>, <span class="prelude-val">None</span>, <span class="ident">String::from</span>(<span class="string">&quot;&quot;</span>)))
+            <span class="op">|</span><span class="op">|</span> (<span class="ident">version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">Version::new_embedded</span>(<span class="number">3</span>, <span class="number">0</span>, <span class="ident">String::from</span>(<span class="string">&quot;&quot;</span>)))
         {
-            <span class="kw">let</span> <span class="ident">num_exts</span> <span class="op">=</span> <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">NUM_EXTENSIONS</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">num_exts</span> <span class="op">=</span> <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow::NUM_EXTENSIONS</span>).<span class="ident">unwrap</span>();
             (<span class="number">0</span>..<span class="ident">num_exts</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_parameter_indexed_string</span>(<span class="ident">glow</span>::<span class="ident">EXTENSIONS</span>, <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>) })
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_parameter_indexed_string</span>(<span class="ident">glow::EXTENSIONS</span>, <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>) })
                 .<span class="ident">collect</span>()
         } <span class="kw">else</span> {
             <span class="comment">// Fallback</span>
-            <span class="ident">get_string</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">EXTENSIONS</span>)
-                .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">String</span>::<span class="ident">from</span>(<span class="string">&quot;&quot;</span>))
+            <span class="ident">get_string</span>(<span class="ident">gl</span>, <span class="ident">glow::EXTENSIONS</span>)
+                .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">String::from</span>(<span class="string">&quot;&quot;</span>))
                 .<span class="ident">split</span>(<span class="string">&#39; &#39;</span>)
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">to_string</span>())
                 .<span class="ident">collect</span>()
@@ -1214,12 +1214,12 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_version_supported</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">major</span>: <span class="ident">u32</span>, <span class="ident">minor</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="op">!</span><span class="self">self</span>.<span class="ident">version</span>.<span class="ident">is_embedded</span>
-            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">Version</span>::<span class="ident">new</span>(<span class="ident">major</span>, <span class="ident">minor</span>, <span class="prelude-val">None</span>, <span class="ident">String</span>::<span class="ident">from</span>(<span class="string">&quot;&quot;</span>))
+            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">Version::new</span>(<span class="ident">major</span>, <span class="ident">minor</span>, <span class="prelude-val">None</span>, <span class="ident">String::from</span>(<span class="string">&quot;&quot;</span>))
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_embedded_version_supported</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">major</span>: <span class="ident">u32</span>, <span class="ident">minor</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">version</span>.<span class="ident">is_embedded</span>
-            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">Version</span>::<span class="ident">new_embedded</span>(<span class="ident">major</span>, <span class="ident">minor</span>, <span class="ident">String</span>::<span class="ident">from</span>(<span class="string">&quot;&quot;</span>))
+            <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">Version::new_embedded</span>(<span class="ident">major</span>, <span class="ident">minor</span>, <span class="ident">String::from</span>(<span class="string">&quot;&quot;</span>))
     }
 
     <span class="doccomment">/// Returns `true` if the implementation supports the extension</span>
@@ -1236,7 +1236,7 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_supported</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">requirements</span>: <span class="kw-2">&amp;</span>[<span class="ident">Requirement</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="kw">use</span> <span class="self">self</span>::<span class="ident">Requirement</span>::<span class="kw-2">*</span>;
+        <span class="kw">use</span> <span class="self">self</span><span class="ident">::Requirement</span>::<span class="kw-2">*</span>;
         <span class="ident">requirements</span>.<span class="ident">iter</span>().<span class="ident">any</span>(<span class="op">|</span><span class="ident">r</span><span class="op">|</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">r</span> {
             <span class="ident">Core</span>(<span class="ident">major</span>, <span class="ident">minor</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">is_version_supported</span>(<span class="ident">major</span>, <span class="ident">minor</span>),
             <span class="ident">Es</span>(<span class="ident">major</span>, <span class="ident">minor</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">is_embedded_version_supported</span>(<span class="ident">major</span>, <span class="ident">minor</span>),
@@ -1283,122 +1283,122 @@
     <span class="doccomment">/// [the documentation of `glTexImage2D`]: https://www.khronos.org/registry/OpenGL-Refpages/es3/html/glTexImage2D.xhtml</span>
     <span class="kw">const</span> <span class="ident">ES3_TABLE</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [(<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>)] <span class="op">=</span> <span class="kw-2">&amp;</span>[
         <span class="comment">/* Taken from Table 1. Unsized Internal Formats. */</span>
-        (<span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_SHORT_5_6_5</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_SHORT_4_4_4_4</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_SHORT_5_5_5_1</span>),
+        (<span class="ident">glow::RGB</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::RGB</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::UNSIGNED_SHORT_5_6_5</span>),
+        (<span class="ident">glow::RGBA</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::RGBA</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_SHORT_4_4_4_4</span>),
+        (<span class="ident">glow::RGBA</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_SHORT_5_5_5_1</span>),
         (
-            <span class="ident">glow</span>::<span class="ident">LUMINANCE_ALPHA</span>,
-            <span class="ident">glow</span>::<span class="ident">LUMINANCE_ALPHA</span>,
-            <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>,
+            <span class="ident">glow::LUMINANCE_ALPHA</span>,
+            <span class="ident">glow::LUMINANCE_ALPHA</span>,
+            <span class="ident">glow::UNSIGNED_BYTE</span>,
         ),
-        (<span class="ident">glow</span>::<span class="ident">LUMINANCE</span>, <span class="ident">glow</span>::<span class="ident">LUMINANCE</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">ALPHA</span>, <span class="ident">glow</span>::<span class="ident">ALPHA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::LUMINANCE</span>, <span class="ident">glow::LUMINANCE</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::ALPHA</span>, <span class="ident">glow::ALPHA</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
         <span class="comment">/* Taken from Table 2. Sized Internal Formats. */</span>
-        (<span class="ident">glow</span>::<span class="ident">R8</span>, <span class="ident">glow</span>::<span class="ident">RED</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">R8_SNORM</span>, <span class="ident">glow</span>::<span class="ident">RED</span>, <span class="ident">glow</span>::<span class="ident">BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">R16F</span>, <span class="ident">glow</span>::<span class="ident">RED</span>, <span class="ident">glow</span>::<span class="ident">HALF_FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">R16F</span>, <span class="ident">glow</span>::<span class="ident">RED</span>, <span class="ident">glow</span>::<span class="ident">FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">R32F</span>, <span class="ident">glow</span>::<span class="ident">RED</span>, <span class="ident">glow</span>::<span class="ident">FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">R8UI</span>, <span class="ident">glow</span>::<span class="ident">RED_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">R8I</span>, <span class="ident">glow</span>::<span class="ident">RED_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">R16UI</span>, <span class="ident">glow</span>::<span class="ident">RED_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_SHORT</span>),
-        (<span class="ident">glow</span>::<span class="ident">R16I</span>, <span class="ident">glow</span>::<span class="ident">RED_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">SHORT</span>),
-        (<span class="ident">glow</span>::<span class="ident">R32UI</span>, <span class="ident">glow</span>::<span class="ident">RED_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_INT</span>),
-        (<span class="ident">glow</span>::<span class="ident">R32I</span>, <span class="ident">glow</span>::<span class="ident">RED_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">INT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RG8</span>, <span class="ident">glow</span>::<span class="ident">RG</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RG8_SNORM</span>, <span class="ident">glow</span>::<span class="ident">RG</span>, <span class="ident">glow</span>::<span class="ident">BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RG16F</span>, <span class="ident">glow</span>::<span class="ident">RG</span>, <span class="ident">glow</span>::<span class="ident">HALF_FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RG16F</span>, <span class="ident">glow</span>::<span class="ident">RG</span>, <span class="ident">glow</span>::<span class="ident">FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RG32F</span>, <span class="ident">glow</span>::<span class="ident">RG</span>, <span class="ident">glow</span>::<span class="ident">FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RG8UI</span>, <span class="ident">glow</span>::<span class="ident">RG_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RG8I</span>, <span class="ident">glow</span>::<span class="ident">RG_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RG16UI</span>, <span class="ident">glow</span>::<span class="ident">RG_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_SHORT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RG16I</span>, <span class="ident">glow</span>::<span class="ident">RG_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">SHORT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RG32UI</span>, <span class="ident">glow</span>::<span class="ident">RG_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_INT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RG32I</span>, <span class="ident">glow</span>::<span class="ident">RG_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">INT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB8</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">SRGB8</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB565</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB565</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_SHORT_5_6_5</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB8_SNORM</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">BYTE</span>),
+        (<span class="ident">glow::R8</span>, <span class="ident">glow::RED</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::R8_SNORM</span>, <span class="ident">glow::RED</span>, <span class="ident">glow::BYTE</span>),
+        (<span class="ident">glow::R16F</span>, <span class="ident">glow::RED</span>, <span class="ident">glow::HALF_FLOAT</span>),
+        (<span class="ident">glow::R16F</span>, <span class="ident">glow::RED</span>, <span class="ident">glow::FLOAT</span>),
+        (<span class="ident">glow::R32F</span>, <span class="ident">glow::RED</span>, <span class="ident">glow::FLOAT</span>),
+        (<span class="ident">glow::R8UI</span>, <span class="ident">glow::RED_INTEGER</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::R8I</span>, <span class="ident">glow::RED_INTEGER</span>, <span class="ident">glow::BYTE</span>),
+        (<span class="ident">glow::R16UI</span>, <span class="ident">glow::RED_INTEGER</span>, <span class="ident">glow::UNSIGNED_SHORT</span>),
+        (<span class="ident">glow::R16I</span>, <span class="ident">glow::RED_INTEGER</span>, <span class="ident">glow::SHORT</span>),
+        (<span class="ident">glow::R32UI</span>, <span class="ident">glow::RED_INTEGER</span>, <span class="ident">glow::UNSIGNED_INT</span>),
+        (<span class="ident">glow::R32I</span>, <span class="ident">glow::RED_INTEGER</span>, <span class="ident">glow::INT</span>),
+        (<span class="ident">glow::RG8</span>, <span class="ident">glow::RG</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::RG8_SNORM</span>, <span class="ident">glow::RG</span>, <span class="ident">glow::BYTE</span>),
+        (<span class="ident">glow::RG16F</span>, <span class="ident">glow::RG</span>, <span class="ident">glow::HALF_FLOAT</span>),
+        (<span class="ident">glow::RG16F</span>, <span class="ident">glow::RG</span>, <span class="ident">glow::FLOAT</span>),
+        (<span class="ident">glow::RG32F</span>, <span class="ident">glow::RG</span>, <span class="ident">glow::FLOAT</span>),
+        (<span class="ident">glow::RG8UI</span>, <span class="ident">glow::RG_INTEGER</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::RG8I</span>, <span class="ident">glow::RG_INTEGER</span>, <span class="ident">glow::BYTE</span>),
+        (<span class="ident">glow::RG16UI</span>, <span class="ident">glow::RG_INTEGER</span>, <span class="ident">glow::UNSIGNED_SHORT</span>),
+        (<span class="ident">glow::RG16I</span>, <span class="ident">glow::RG_INTEGER</span>, <span class="ident">glow::SHORT</span>),
+        (<span class="ident">glow::RG32UI</span>, <span class="ident">glow::RG_INTEGER</span>, <span class="ident">glow::UNSIGNED_INT</span>),
+        (<span class="ident">glow::RG32I</span>, <span class="ident">glow::RG_INTEGER</span>, <span class="ident">glow::INT</span>),
+        (<span class="ident">glow::RGB8</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::SRGB8</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::RGB565</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::RGB565</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::UNSIGNED_SHORT_5_6_5</span>),
+        (<span class="ident">glow::RGB8_SNORM</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::BYTE</span>),
         (
-            <span class="ident">glow</span>::<span class="ident">R11F_G11F_B10F</span>,
-            <span class="ident">glow</span>::<span class="ident">RGB</span>,
-            <span class="ident">glow</span>::<span class="ident">UNSIGNED_INT_10F_11F_11F_REV</span>,
+            <span class="ident">glow::R11F_G11F_B10F</span>,
+            <span class="ident">glow::RGB</span>,
+            <span class="ident">glow::UNSIGNED_INT_10F_11F_11F_REV</span>,
         ),
-        (<span class="ident">glow</span>::<span class="ident">R11F_G11F_B10F</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">HALF_FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">R11F_G11F_B10F</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB9_E5</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_INT_5_9_9_9_REV</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB9_E5</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">HALF_FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB9_E5</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB16F</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">HALF_FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB16F</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB32F</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB8UI</span>, <span class="ident">glow</span>::<span class="ident">RGB_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB8I</span>, <span class="ident">glow</span>::<span class="ident">RGB_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB16UI</span>, <span class="ident">glow</span>::<span class="ident">RGB_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_SHORT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB16I</span>, <span class="ident">glow</span>::<span class="ident">RGB_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">SHORT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB32UI</span>, <span class="ident">glow</span>::<span class="ident">RGB_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_INT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB32I</span>, <span class="ident">glow</span>::<span class="ident">RGB_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">INT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA8</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">SRGB8_ALPHA8</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA8_SNORM</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB5_A1</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB5_A1</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_SHORT_5_5_5_1</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB5_A1</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_INT_2_10_10_10_REV</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA4</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA4</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_SHORT_4_4_4_4</span>),
+        (<span class="ident">glow::R11F_G11F_B10F</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::HALF_FLOAT</span>),
+        (<span class="ident">glow::R11F_G11F_B10F</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::FLOAT</span>),
+        (<span class="ident">glow::RGB9_E5</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::UNSIGNED_INT_5_9_9_9_REV</span>),
+        (<span class="ident">glow::RGB9_E5</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::HALF_FLOAT</span>),
+        (<span class="ident">glow::RGB9_E5</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::FLOAT</span>),
+        (<span class="ident">glow::RGB16F</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::HALF_FLOAT</span>),
+        (<span class="ident">glow::RGB16F</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::FLOAT</span>),
+        (<span class="ident">glow::RGB32F</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::FLOAT</span>),
+        (<span class="ident">glow::RGB8UI</span>, <span class="ident">glow::RGB_INTEGER</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::RGB8I</span>, <span class="ident">glow::RGB_INTEGER</span>, <span class="ident">glow::BYTE</span>),
+        (<span class="ident">glow::RGB16UI</span>, <span class="ident">glow::RGB_INTEGER</span>, <span class="ident">glow::UNSIGNED_SHORT</span>),
+        (<span class="ident">glow::RGB16I</span>, <span class="ident">glow::RGB_INTEGER</span>, <span class="ident">glow::SHORT</span>),
+        (<span class="ident">glow::RGB32UI</span>, <span class="ident">glow::RGB_INTEGER</span>, <span class="ident">glow::UNSIGNED_INT</span>),
+        (<span class="ident">glow::RGB32I</span>, <span class="ident">glow::RGB_INTEGER</span>, <span class="ident">glow::INT</span>),
+        (<span class="ident">glow::RGBA8</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::SRGB8_ALPHA8</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::RGBA8_SNORM</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::BYTE</span>),
+        (<span class="ident">glow::RGB5_A1</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::RGB5_A1</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_SHORT_5_5_5_1</span>),
+        (<span class="ident">glow::RGB5_A1</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_INT_2_10_10_10_REV</span>),
+        (<span class="ident">glow::RGBA4</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::RGBA4</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_SHORT_4_4_4_4</span>),
         (
-            <span class="ident">glow</span>::<span class="ident">RGB10_A2</span>,
-            <span class="ident">glow</span>::<span class="ident">RGBA</span>,
-            <span class="ident">glow</span>::<span class="ident">UNSIGNED_INT_2_10_10_10_REV</span>,
+            <span class="ident">glow::RGB10_A2</span>,
+            <span class="ident">glow::RGBA</span>,
+            <span class="ident">glow::UNSIGNED_INT_2_10_10_10_REV</span>,
         ),
-        (<span class="ident">glow</span>::<span class="ident">RGBA16F</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">HALF_FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA16F</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA32F</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">FLOAT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA8UI</span>, <span class="ident">glow</span>::<span class="ident">RGBA_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA8I</span>, <span class="ident">glow</span>::<span class="ident">RGBA_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">BYTE</span>),
+        (<span class="ident">glow::RGBA16F</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::HALF_FLOAT</span>),
+        (<span class="ident">glow::RGBA16F</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::FLOAT</span>),
+        (<span class="ident">glow::RGBA32F</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::FLOAT</span>),
+        (<span class="ident">glow::RGBA8UI</span>, <span class="ident">glow::RGBA_INTEGER</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::RGBA8I</span>, <span class="ident">glow::RGBA_INTEGER</span>, <span class="ident">glow::BYTE</span>),
         (
-            <span class="ident">glow</span>::<span class="ident">RGB10_A2UI</span>,
-            <span class="ident">glow</span>::<span class="ident">RGBA_INTEGER</span>,
-            <span class="ident">glow</span>::<span class="ident">UNSIGNED_INT_2_10_10_10_REV</span>,
+            <span class="ident">glow::RGB10_A2UI</span>,
+            <span class="ident">glow::RGBA_INTEGER</span>,
+            <span class="ident">glow::UNSIGNED_INT_2_10_10_10_REV</span>,
         ),
-        (<span class="ident">glow</span>::<span class="ident">RGBA16UI</span>, <span class="ident">glow</span>::<span class="ident">RGBA_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_SHORT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA16I</span>, <span class="ident">glow</span>::<span class="ident">RGBA_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">SHORT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA32I</span>, <span class="ident">glow</span>::<span class="ident">RGBA_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">INT</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA32UI</span>, <span class="ident">glow</span>::<span class="ident">RGBA_INTEGER</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_INT</span>),
+        (<span class="ident">glow::RGBA16UI</span>, <span class="ident">glow::RGBA_INTEGER</span>, <span class="ident">glow::UNSIGNED_SHORT</span>),
+        (<span class="ident">glow::RGBA16I</span>, <span class="ident">glow::RGBA_INTEGER</span>, <span class="ident">glow::SHORT</span>),
+        (<span class="ident">glow::RGBA32I</span>, <span class="ident">glow::RGBA_INTEGER</span>, <span class="ident">glow::INT</span>),
+        (<span class="ident">glow::RGBA32UI</span>, <span class="ident">glow::RGBA_INTEGER</span>, <span class="ident">glow::UNSIGNED_INT</span>),
         (
-            <span class="ident">glow</span>::<span class="ident">DEPTH_COMPONENT16</span>,
-            <span class="ident">glow</span>::<span class="ident">DEPTH_COMPONENT</span>,
-            <span class="ident">glow</span>::<span class="ident">UNSIGNED_SHORT</span>,
-        ),
-        (
-            <span class="ident">glow</span>::<span class="ident">DEPTH_COMPONENT16</span>,
-            <span class="ident">glow</span>::<span class="ident">DEPTH_COMPONENT</span>,
-            <span class="ident">glow</span>::<span class="ident">UNSIGNED_INT</span>,
+            <span class="ident">glow::DEPTH_COMPONENT16</span>,
+            <span class="ident">glow::DEPTH_COMPONENT</span>,
+            <span class="ident">glow::UNSIGNED_SHORT</span>,
         ),
         (
-            <span class="ident">glow</span>::<span class="ident">DEPTH_COMPONENT24</span>,
-            <span class="ident">glow</span>::<span class="ident">DEPTH_COMPONENT</span>,
-            <span class="ident">glow</span>::<span class="ident">UNSIGNED_INT</span>,
-        ),
-        (<span class="ident">glow</span>::<span class="ident">DEPTH_COMPONENT32F</span>, <span class="ident">glow</span>::<span class="ident">DEPTH_COMPONENT</span>, <span class="ident">glow</span>::<span class="ident">FLOAT</span>),
-        (
-            <span class="ident">glow</span>::<span class="ident">DEPTH24_STENCIL8</span>,
-            <span class="ident">glow</span>::<span class="ident">DEPTH_STENCIL</span>,
-            <span class="ident">glow</span>::<span class="ident">UNSIGNED_INT_24_8</span>,
+            <span class="ident">glow::DEPTH_COMPONENT16</span>,
+            <span class="ident">glow::DEPTH_COMPONENT</span>,
+            <span class="ident">glow::UNSIGNED_INT</span>,
         ),
         (
-            <span class="ident">glow</span>::<span class="ident">DEPTH32F_STENCIL8</span>,
-            <span class="ident">glow</span>::<span class="ident">DEPTH_STENCIL</span>,
-            <span class="ident">glow</span>::<span class="ident">FLOAT_32_UNSIGNED_INT_24_8_REV</span>,
+            <span class="ident">glow::DEPTH_COMPONENT24</span>,
+            <span class="ident">glow::DEPTH_COMPONENT</span>,
+            <span class="ident">glow::UNSIGNED_INT</span>,
+        ),
+        (<span class="ident">glow::DEPTH_COMPONENT32F</span>, <span class="ident">glow::DEPTH_COMPONENT</span>, <span class="ident">glow::FLOAT</span>),
+        (
+            <span class="ident">glow::DEPTH24_STENCIL8</span>,
+            <span class="ident">glow::DEPTH_STENCIL</span>,
+            <span class="ident">glow::UNSIGNED_INT_24_8</span>,
         ),
         (
-            <span class="ident">glow</span>::<span class="ident">STENCIL_INDEX8</span>,
-            <span class="ident">glow</span>::<span class="ident">STENCIL_INDEX</span>,
-            <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>,
+            <span class="ident">glow::DEPTH32F_STENCIL8</span>,
+            <span class="ident">glow::DEPTH_STENCIL</span>,
+            <span class="ident">glow::FLOAT_32_UNSIGNED_INT_24_8_REV</span>,
+        ),
+        (
+            <span class="ident">glow::STENCIL_INDEX8</span>,
+            <span class="ident">glow::STENCIL_INDEX</span>,
+            <span class="ident">glow::UNSIGNED_BYTE</span>,
         ),
     ];
 
@@ -1413,26 +1413,26 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// [the documentation of `glTexImage2D`]: https://khronos.org/registry/OpenGL-Refpages/es1.1/xhtml/</span>
     <span class="kw">const</span> <span class="ident">ES1_ES2_TABLE</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [(<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>)] <span class="op">=</span> <span class="kw-2">&amp;</span>[
-        (<span class="ident">glow</span>::<span class="ident">ALPHA</span>, <span class="ident">glow</span>::<span class="ident">ALPHA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">RGB</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_SHORT_5_6_5</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_SHORT_4_4_4_4</span>),
-        (<span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">RGBA</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_SHORT_5_5_5_1</span>),
-        (<span class="ident">glow</span>::<span class="ident">LUMINANCE</span>, <span class="ident">glow</span>::<span class="ident">LUMINANCE</span>, <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::ALPHA</span>, <span class="ident">glow::ALPHA</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::RGB</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::RGB</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::UNSIGNED_SHORT_5_6_5</span>),
+        (<span class="ident">glow::RGBA</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
+        (<span class="ident">glow::RGBA</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_SHORT_4_4_4_4</span>),
+        (<span class="ident">glow::RGBA</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_SHORT_5_5_5_1</span>),
+        (<span class="ident">glow::LUMINANCE</span>, <span class="ident">glow::LUMINANCE</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
         (
-            <span class="ident">glow</span>::<span class="ident">LUMINANCE_ALPHA</span>,
-            <span class="ident">glow</span>::<span class="ident">LUMINANCE_ALPHA</span>,
-            <span class="ident">glow</span>::<span class="ident">UNSIGNED_BYTE</span>,
+            <span class="ident">glow::LUMINANCE_ALPHA</span>,
+            <span class="ident">glow::LUMINANCE_ALPHA</span>,
+            <span class="ident">glow::UNSIGNED_BYTE</span>,
         ),
     ];
 
     <span class="doccomment">/// Creates a new filter for OpenGL ES 3.</span>
     <span class="kw">fn</span> <span class="ident">new_es3</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>::<span class="ident">Whitelist</span> {
+        <span class="self">Self</span><span class="ident">::Whitelist</span> {
             <span class="ident">whitelist</span>: {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">whitelist</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>)<span class="op">&gt;</span>::<span class="ident">default</span>();
-                <span class="ident">whitelist</span>.<span class="ident">extend</span>(<span class="self">Self</span>::<span class="ident">ES3_TABLE</span>);
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">whitelist</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>)<span class="op">&gt;</span><span class="ident">::default</span>();
+                <span class="ident">whitelist</span>.<span class="ident">extend</span>(<span class="self">Self</span><span class="ident">::ES3_TABLE</span>);
 
                 <span class="ident">whitelist</span>
             },
@@ -1441,10 +1441,10 @@
 
     <span class="doccomment">/// Creates a new filter for OpenGL ES 2 and OpenGL ES 1.</span>
     <span class="kw">fn</span> <span class="ident">new_es1_es2</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>::<span class="ident">Whitelist</span> {
+        <span class="self">Self</span><span class="ident">::Whitelist</span> {
             <span class="ident">whitelist</span>: {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">whitelist</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>)<span class="op">&gt;</span>::<span class="ident">default</span>();
-                <span class="ident">whitelist</span>.<span class="ident">extend</span>(<span class="self">Self</span>::<span class="ident">ES1_ES2_TABLE</span>);
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">whitelist</span> <span class="op">=</span> <span class="ident">HashSet</span>::<span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>)<span class="op">&gt;</span><span class="ident">::default</span>();
+                <span class="ident">whitelist</span>.<span class="ident">extend</span>(<span class="self">Self</span><span class="ident">::ES1_ES2_TABLE</span>);
 
                 <span class="ident">whitelist</span>
             },
@@ -1453,15 +1453,15 @@
 
     <span class="doccomment">/// Creates a new, permissive filter.</span>
     <span class="kw">fn</span> <span class="ident">new_permissive</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>::<span class="ident">Permissive</span>
+        <span class="self">Self</span><span class="ident">::Permissive</span>
     }
 
     <span class="doccomment">/// This function checks whether a given format description is allowed by</span>
     <span class="doccomment">/// this filter.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">check</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">internal_format</span>: <span class="ident">u32</span>, <span class="ident">format</span>: <span class="ident">u32</span>, <span class="ident">type_</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="self">Self</span>::<span class="ident">Whitelist</span> { <span class="ident">whitelist</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">whitelist</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span>(<span class="ident">internal_format</span>, <span class="ident">format</span>, <span class="ident">type_</span>)),
-            <span class="self">Self</span>::<span class="ident">Permissive</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+            <span class="self">Self</span><span class="ident">::Whitelist</span> { <span class="ident">whitelist</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">whitelist</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span>(<span class="ident">internal_format</span>, <span class="ident">format</span>, <span class="ident">type_</span>)),
+            <span class="self">Self</span><span class="ident">::Permissive</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
         }
     }
 }
@@ -1478,20 +1478,20 @@
     <span class="ident">PrivateCaps</span>,
     <span class="ident">TextureFormatFilter</span>,
 ) {
-    <span class="kw">use</span> <span class="self">self</span>::<span class="ident">Requirement</span>::<span class="kw-2">*</span>;
-    <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">Info</span>::<span class="ident">get</span>(<span class="ident">gl</span>);
-    <span class="kw">let</span> <span class="ident">max_texture_size</span> <span class="op">=</span> <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">MAX_TEXTURE_SIZE</span>).<span class="ident">unwrap_or</span>(<span class="number">64</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">max_samples</span> <span class="op">=</span> <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">MAX_SAMPLES</span>).<span class="ident">unwrap_or</span>(<span class="number">8</span>);
+    <span class="kw">use</span> <span class="self">self</span><span class="ident">::Requirement</span>::<span class="kw-2">*</span>;
+    <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">Info::get</span>(<span class="ident">gl</span>);
+    <span class="kw">let</span> <span class="ident">max_texture_size</span> <span class="op">=</span> <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow::MAX_TEXTURE_SIZE</span>).<span class="ident">unwrap_or</span>(<span class="number">64</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+    <span class="kw">let</span> <span class="ident">max_samples</span> <span class="op">=</span> <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow::MAX_SAMPLES</span>).<span class="ident">unwrap_or</span>(<span class="number">8</span>);
     <span class="kw">let</span> <span class="ident">max_samples_mask</span> <span class="op">=</span> (<span class="ident">max_samples</span> <span class="op">*</span> <span class="number">2</span> <span class="op">-</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">u8</span>;
-    <span class="kw">let</span> <span class="ident">max_texel_elements</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">crate</span>::<span class="ident">is_webgl</span>() {
+    <span class="kw">let</span> <span class="ident">max_texel_elements</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">crate</span><span class="ident">::is_webgl</span>() {
         <span class="number">0</span>
     } <span class="kw">else</span> {
-        <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">MAX_TEXTURE_BUFFER_SIZE</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>)
+        <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow::MAX_TEXTURE_BUFFER_SIZE</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>)
     };
-    <span class="kw">let</span> <span class="ident">min_storage_buffer_offset_alignment</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">crate</span>::<span class="ident">is_webgl</span>() {
+    <span class="kw">let</span> <span class="ident">min_storage_buffer_offset_alignment</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">crate</span><span class="ident">::is_webgl</span>() {
         <span class="number">256</span>
     } <span class="kw">else</span> {
-        <span class="ident">get_u64</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT</span>).<span class="ident">unwrap_or</span>(<span class="number">256</span>)
+        <span class="ident">get_u64</span>(<span class="ident">gl</span>, <span class="ident">glow::SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT</span>).<span class="ident">unwrap_or</span>(<span class="number">256</span>)
     };
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">limits</span> <span class="op">=</span> <span class="ident">Limits</span> {
@@ -1499,29 +1499,29 @@
         <span class="ident">max_image_2d_size</span>: <span class="ident">max_texture_size</span>,
         <span class="ident">max_image_3d_size</span>: <span class="ident">max_texture_size</span>,
         <span class="ident">max_image_cube_size</span>: <span class="ident">max_texture_size</span>,
-        <span class="ident">max_image_array_layers</span>: <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">MAX_ARRAY_TEXTURE_LAYERS</span>).<span class="ident">unwrap_or</span>(<span class="number">1</span>) <span class="kw">as</span> <span class="ident">u16</span>,
+        <span class="ident">max_image_array_layers</span>: <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow::MAX_ARRAY_TEXTURE_LAYERS</span>).<span class="ident">unwrap_or</span>(<span class="number">1</span>) <span class="kw">as</span> <span class="ident">u16</span>,
         <span class="ident">max_texel_elements</span>,
         <span class="ident">max_viewports</span>: <span class="number">1</span>,
         <span class="ident">optimal_buffer_copy_offset_alignment</span>: <span class="number">1</span>,
         <span class="ident">optimal_buffer_copy_pitch_alignment</span>: <span class="number">1</span>,
         <span class="ident">min_texel_buffer_offset_alignment</span>: <span class="number">1</span>,
-        <span class="ident">min_uniform_buffer_offset_alignment</span>: <span class="ident">get_u64</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">UNIFORM_BUFFER_OFFSET_ALIGNMENT</span>)
+        <span class="ident">min_uniform_buffer_offset_alignment</span>: <span class="ident">get_u64</span>(<span class="ident">gl</span>, <span class="ident">glow::UNIFORM_BUFFER_OFFSET_ALIGNMENT</span>)
             .<span class="ident">unwrap_or</span>(<span class="number">1024</span>),
         <span class="ident">min_storage_buffer_offset_alignment</span>,
         <span class="ident">framebuffer_color_sample_counts</span>: <span class="ident">max_samples_mask</span>,
         <span class="ident">non_coherent_atom_size</span>: <span class="number">1</span>,
-        <span class="ident">max_color_attachments</span>: <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">MAX_COLOR_ATTACHMENTS</span>)
+        <span class="ident">max_color_attachments</span>: <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow::MAX_COLOR_ATTACHMENTS</span>)
             .<span class="ident">unwrap_or</span>(<span class="number">1</span>)
             .<span class="ident">min</span>(<span class="ident">MAX_COLOR_ATTACHMENTS</span>),
-        ..<span class="ident">Limits</span>::<span class="ident">default</span>()
+        ..<span class="ident">Limits::default</span>()
     };
 
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">4</span>, <span class="number">0</span>), <span class="ident">Ext</span>(<span class="string">&quot;GL_ARB_tessellation_shader&quot;</span>)]) {
-        <span class="ident">limits</span>.<span class="ident">max_patch_size</span> <span class="op">=</span> <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">MAX_PATCH_VERTICES</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>) <span class="kw">as</span> <span class="kw">_</span>;
+        <span class="ident">limits</span>.<span class="ident">max_patch_size</span> <span class="op">=</span> <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow::MAX_PATCH_VERTICES</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>) <span class="kw">as</span> <span class="kw">_</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">4</span>, <span class="number">1</span>)]) {
         <span class="comment">// TODO: extension</span>
-        <span class="ident">limits</span>.<span class="ident">max_viewports</span> <span class="op">=</span> <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow</span>::<span class="ident">MAX_VIEWPORTS</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>);
+        <span class="ident">limits</span>.<span class="ident">max_viewports</span> <span class="op">=</span> <span class="ident">get_usize</span>(<span class="ident">gl</span>, <span class="ident">glow::MAX_VIEWPORTS</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>);
     }
 
     <span class="comment">//TODO: technically compute is exposed in Es(3, 1), but GLES requires 3.2</span>
@@ -1536,76 +1536,76 @@
         {
             <span class="kw">unsafe</span> {
                 <span class="kw-2">*</span><span class="ident">count</span> <span class="op">=</span>
-                    <span class="ident">gl</span>.<span class="ident">get_parameter_indexed_i32</span>(<span class="ident">glow</span>::<span class="ident">MAX_COMPUTE_WORK_GROUP_COUNT</span>, <span class="ident">i</span> <span class="kw">as</span> <span class="kw">_</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+                    <span class="ident">gl</span>.<span class="ident">get_parameter_indexed_i32</span>(<span class="ident">glow::MAX_COMPUTE_WORK_GROUP_COUNT</span>, <span class="ident">i</span> <span class="kw">as</span> <span class="kw">_</span>) <span class="kw">as</span> <span class="ident">u32</span>;
                 <span class="kw-2">*</span><span class="ident">size</span> <span class="op">=</span>
-                    <span class="ident">gl</span>.<span class="ident">get_parameter_indexed_i32</span>(<span class="ident">glow</span>::<span class="ident">MAX_COMPUTE_WORK_GROUP_SIZE</span>, <span class="ident">i</span> <span class="kw">as</span> <span class="kw">_</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+                    <span class="ident">gl</span>.<span class="ident">get_parameter_indexed_i32</span>(<span class="ident">glow::MAX_COMPUTE_WORK_GROUP_SIZE</span>, <span class="ident">i</span> <span class="kw">as</span> <span class="kw">_</span>) <span class="kw">as</span> <span class="ident">u32</span>;
             }
         }
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">Features</span>::<span class="ident">NDC_Y_UP</span> <span class="op">|</span> <span class="ident">Features</span>::<span class="ident">MUTABLE_COMPARISON_SAMPLER</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">Features::NDC_Y_UP</span> <span class="op">|</span> <span class="ident">Features::MUTABLE_COMPARISON_SAMPLER</span>;
     <span class="comment">// TODO: Fill out downlevel features correctly.</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">downlevel</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">DownlevelProperties</span>::<span class="ident">all_enabled</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">downlevel</span> <span class="op">=</span> <span class="ident">hal::DownlevelProperties::all_enabled</span>();
     <span class="comment">// TODO: Merge downlevel/legacy features?</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">legacy</span> <span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">empty</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">legacy</span> <span class="op">=</span> <span class="ident">LegacyFeatures::empty</span>();
 
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[
         <span class="ident">Core</span>(<span class="number">4</span>, <span class="number">6</span>),
         <span class="ident">Ext</span>(<span class="string">&quot;GL_ARB_texture_filter_anisotropic&quot;</span>),
         <span class="ident">Ext</span>(<span class="string">&quot;GL_EXT_texture_filter_anisotropic&quot;</span>),
     ]) {
-        <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features</span>::<span class="ident">SAMPLER_ANISOTROPY</span>;
+        <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features::SAMPLER_ANISOTROPY</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">4</span>, <span class="number">2</span>), <span class="ident">Es</span>(<span class="number">3</span>, <span class="number">1</span>)]) {
-        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">EXPLICIT_LAYOUTS_IN_SHADER</span>;
+        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures::EXPLICIT_LAYOUTS_IN_SHADER</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">3</span>, <span class="number">3</span>), <span class="ident">Es</span>(<span class="number">3</span>, <span class="number">0</span>), <span class="ident">Ext</span>(<span class="string">&quot;GL_ARB_instanced_arrays&quot;</span>)]) {
-        <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features</span>::<span class="ident">INSTANCE_RATE</span>;
+        <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features::INSTANCE_RATE</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">3</span>, <span class="number">3</span>)]) {
         <span class="comment">// TODO: extension</span>
-        <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features</span>::<span class="ident">SAMPLER_MIP_LOD_BIAS</span>;
+        <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features::SAMPLER_MIP_LOD_BIAS</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">2</span>, <span class="number">1</span>)]) {
-        <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features</span>::<span class="ident">SAMPLER_BORDER_COLOR</span>;
+        <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features::SAMPLER_BORDER_COLOR</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">4</span>, <span class="number">4</span>), <span class="ident">Ext</span>(<span class="string">&quot;ARB_texture_mirror_clamp_to_edge&quot;</span>)]) {
-        <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features</span>::<span class="ident">SAMPLER_MIRROR_CLAMP_EDGE</span>;
+        <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features::SAMPLER_MIRROR_CLAMP_EDGE</span>;
     }
-    <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">4</span>, <span class="number">0</span>), <span class="ident">Es</span>(<span class="number">3</span>, <span class="number">2</span>), <span class="ident">Ext</span>(<span class="string">&quot;GL_EXT_draw_buffers2&quot;</span>)]) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="kw">crate</span>::<span class="ident">is_webgl</span>()
+    <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">4</span>, <span class="number">0</span>), <span class="ident">Es</span>(<span class="number">3</span>, <span class="number">2</span>), <span class="ident">Ext</span>(<span class="string">&quot;GL_EXT_draw_buffers2&quot;</span>)]) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="kw">crate</span><span class="ident">::is_webgl</span>()
     {
-        <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features</span>::<span class="ident">INDEPENDENT_BLENDING</span>;
+        <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">Features::INDEPENDENT_BLENDING</span>;
     }
 
     <span class="comment">// TODO</span>
     <span class="kw">if</span> <span class="bool-val">false</span> <span class="op">&amp;&amp;</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">4</span>, <span class="number">3</span>), <span class="ident">Es</span>(<span class="number">3</span>, <span class="number">1</span>)]) {
         <span class="comment">// TODO: extension</span>
-        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">INDIRECT_EXECUTION</span>;
+        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures::INDIRECT_EXECUTION</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">3</span>, <span class="number">1</span>), <span class="ident">Es</span>(<span class="number">3</span>, <span class="number">0</span>), <span class="ident">Ext</span>(<span class="string">&quot;GL_ARB_draw_instanced&quot;</span>)]) {
-        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">DRAW_INSTANCED</span>;
+        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures::DRAW_INSTANCED</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">4</span>, <span class="number">2</span>), <span class="ident">Ext</span>(<span class="string">&quot;GL_ARB_base_instance&quot;</span>)]) {
-        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">DRAW_INSTANCED_BASE</span>;
+        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures::DRAW_INSTANCED_BASE</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">3</span>, <span class="number">2</span>)]) {
         <span class="comment">// TODO: extension</span>
-        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">DRAW_INDEXED_BASE</span>;
+        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures::DRAW_INDEXED_BASE</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">3</span>, <span class="number">1</span>), <span class="ident">Es</span>(<span class="number">3</span>, <span class="number">0</span>)]) {
         <span class="comment">// TODO: extension</span>
-        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">DRAW_INDEXED_INSTANCED</span>;
+        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures::DRAW_INDEXED_INSTANCED</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">3</span>, <span class="number">2</span>)]) {
         <span class="comment">// TODO: extension</span>
-        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">DRAW_INDEXED_INSTANCED_BASE_VERTEX</span>;
+        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures::DRAW_INDEXED_INSTANCED_BASE_VERTEX</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[
         <span class="ident">Core</span>(<span class="number">3</span>, <span class="number">2</span>),
         <span class="ident">Es</span>(<span class="number">3</span>, <span class="number">2</span>),
         <span class="ident">Ext</span>(<span class="string">&quot;GL_ARB_draw_elements_base_vertex&quot;</span>),
     ]) {
-        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">VERTEX_BASE</span>;
+        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures::VERTEX_BASE</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[
         <span class="ident">Core</span>(<span class="number">3</span>, <span class="number">1</span>),
@@ -1613,14 +1613,14 @@
         <span class="ident">Ext</span>(<span class="string">&quot;GL_ARB_framebuffer_sRGB&quot;</span>),
         <span class="ident">Ext</span>(<span class="string">&quot;GL_EXT_sRGB&quot;</span>),
     ]) {
-        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">SRGB_COLOR</span>;
+        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures::SRGB_COLOR</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">3</span>, <span class="number">1</span>), <span class="ident">Es</span>(<span class="number">3</span>, <span class="number">0</span>), <span class="ident">Ext</span>(<span class="string">&quot;GL_ARB_uniform_buffer_object&quot;</span>)]) {
-        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">CONSTANT_BUFFER</span>;
+        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures::CONSTANT_BUFFER</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">4</span>, <span class="number">0</span>)]) {
         <span class="comment">// TODO: extension</span>
-        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">UNORDERED_ACCESS_VIEW</span>;
+        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures::UNORDERED_ACCESS_VIEW</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[
         <span class="ident">Core</span>(<span class="number">3</span>, <span class="number">1</span>),
@@ -1628,25 +1628,25 @@
         <span class="ident">Ext</span>(<span class="string">&quot;GL_ARB_copy_buffer&quot;</span>),
         <span class="ident">Ext</span>(<span class="string">&quot;GL_NV_copy_buffer&quot;</span>),
     ]) {
-        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">COPY_BUFFER</span>;
+        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures::COPY_BUFFER</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">3</span>, <span class="number">3</span>), <span class="ident">Es</span>(<span class="number">3</span>, <span class="number">0</span>), <span class="ident">Ext</span>(<span class="string">&quot;GL_ARB_sampler_objects&quot;</span>)]) {
-        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">SAMPLER_OBJECTS</span>;
+        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures::SAMPLER_OBJECTS</span>;
     }
     <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">3</span>, <span class="number">3</span>), <span class="ident">Es</span>(<span class="number">3</span>, <span class="number">0</span>)]) {
-        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures</span>::<span class="ident">INSTANCED_ATTRIBUTE_BINDING</span>;
+        <span class="ident">legacy</span> <span class="op">|</span><span class="op">=</span> <span class="ident">LegacyFeatures::INSTANCED_ATTRIBUTE_BINDING</span>;
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">performance_caveats</span> <span class="op">=</span> <span class="ident">PerformanceCaveats</span>::<span class="ident">empty</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">performance_caveats</span> <span class="op">=</span> <span class="ident">PerformanceCaveats::empty</span>();
     <span class="comment">//TODO: extension</span>
     <span class="kw">if</span> <span class="op">!</span><span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">4</span>, <span class="number">2</span>)]) {
-        <span class="ident">performance_caveats</span> <span class="op">|</span><span class="op">=</span> <span class="ident">PerformanceCaveats</span>::<span class="ident">BASE_VERTEX_INSTANCE_DRAWING</span>;
+        <span class="ident">performance_caveats</span> <span class="op">|</span><span class="op">=</span> <span class="ident">PerformanceCaveats::BASE_VERTEX_INSTANCE_DRAWING</span>;
     }
     <span class="kw">let</span> <span class="ident">properties</span> <span class="op">=</span> <span class="ident">PhysicalDeviceProperties</span> {
         <span class="ident">limits</span>,
         <span class="ident">performance_caveats</span>,
-        <span class="ident">dynamic_pipeline_states</span>: <span class="ident">DynamicStates</span>::<span class="ident">all</span>(),
-        ..<span class="ident">PhysicalDeviceProperties</span>::<span class="ident">default</span>()
+        <span class="ident">dynamic_pipeline_states</span>: <span class="ident">DynamicStates::all</span>(),
+        ..<span class="ident">PhysicalDeviceProperties::default</span>()
     };
 
     <span class="kw">let</span> <span class="ident">buffer_storage</span> <span class="op">=</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[
@@ -1655,7 +1655,7 @@
         <span class="ident">Ext</span>(<span class="string">&quot;GL_EXT_buffer_storage&quot;</span>),
     ]);
     <span class="comment">// See https://github.com/gfx-rs/gfx/issues/3453</span>
-    <span class="kw">let</span> <span class="ident">emulate_map</span> <span class="op">=</span> <span class="kw">crate</span>::<span class="ident">is_webgl</span>() <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="ident">buffer_storage</span>;
+    <span class="kw">let</span> <span class="ident">emulate_map</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::is_webgl</span>() <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="ident">buffer_storage</span>;
 
     <span class="kw">let</span> <span class="ident">private</span> <span class="op">=</span> <span class="ident">PrivateCaps</span> {
         <span class="ident">vertex_array</span>: <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">3</span>, <span class="number">0</span>), <span class="ident">Es</span>(<span class="number">3</span>, <span class="number">0</span>), <span class="ident">Ext</span>(<span class="string">&quot;GL_ARB_vertex_array_object&quot;</span>)]),
@@ -1664,7 +1664,7 @@
         <span class="comment">// TODO &amp;&amp; gl.GenFramebuffers.is_loaded(),</span>
         <span class="ident">framebuffer_texture</span>: <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">3</span>, <span class="number">0</span>)]), <span class="comment">//TODO: double check</span>
         <span class="comment">// `WebGL` Note: buffers bound to non ELEMENT_ARRAY_BUFFER targets can not be bound to ELEMENT_ARRAY_BUFFER target</span>
-        <span class="ident">index_buffer_role_change</span>: <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">2</span>, <span class="number">0</span>), <span class="ident">Es</span>(<span class="number">2</span>, <span class="number">0</span>)]) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="kw">crate</span>::<span class="ident">is_webgl</span>(),
+        <span class="ident">index_buffer_role_change</span>: <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">2</span>, <span class="number">0</span>), <span class="ident">Es</span>(<span class="number">2</span>, <span class="number">0</span>)]) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="kw">crate</span><span class="ident">::is_webgl</span>(),
         <span class="ident">image_storage</span>: <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">4</span>, <span class="number">2</span>), <span class="ident">Es</span>(<span class="number">3</span>, <span class="number">0</span>), <span class="ident">Ext</span>(<span class="string">&quot;GL_ARB_texture_storage&quot;</span>)]),
         <span class="ident">buffer_storage</span>,
         <span class="ident">clear_buffer</span>: <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Core</span>(<span class="number">3</span>, <span class="number">0</span>), <span class="ident">Es</span>(<span class="number">3</span>, <span class="number">0</span>)]),
@@ -1681,15 +1681,15 @@
 
     <span class="kw">let</span> <span class="ident">filter</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Es</span>(<span class="number">3</span>, <span class="number">0</span>)]) {
         <span class="comment">/* Use the OpenGL ES 3 format filter. */</span>
-        <span class="ident">TextureFormatFilter</span>::<span class="ident">new_es3</span>()
+        <span class="ident">TextureFormatFilter::new_es3</span>()
     } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">info</span>.<span class="ident">is_supported</span>(<span class="kw-2">&amp;</span>[<span class="ident">Es</span>(<span class="number">1</span>, <span class="number">0</span>)]) {
         <span class="comment">/* Use the OpenGL ES 1 and OpenGL ES 2 format filter. */</span>
-        <span class="ident">TextureFormatFilter</span>::<span class="ident">new_es1_es2</span>()
+        <span class="ident">TextureFormatFilter::new_es1_es2</span>()
     } <span class="kw">else</span> {
         <span class="comment">/* We&#39;re using the core specification. We can assume all of the
          * combinations are valid, provided the OpenGL enums values are also
          * valid for textures. */</span>
-        <span class="ident">TextureFormatFilter</span>::<span class="ident">new_permissive</span>()
+        <span class="ident">TextureFormatFilter::new_permissive</span>()
     };
 
     (<span class="ident">info</span>, <span class="ident">features</span>, <span class="ident">legacy</span>, <span class="ident">properties</span>, <span class="ident">private</span>, <span class="ident">filter</span>)
@@ -1697,70 +1697,70 @@
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Version</span>;
+    <span class="kw">use</span> <span class="kw">super</span><span class="ident">::Version</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_version_parse</span>() {
-        <span class="macro">assert_eq!</span>(<span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;1&quot;</span>), <span class="prelude-val">Err</span>(<span class="string">&quot;1&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;1.&quot;</span>), <span class="prelude-val">Err</span>(<span class="string">&quot;1.&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;1 h3l1o. W0rld&quot;</span>), <span class="prelude-val">Err</span>(<span class="string">&quot;1 h3l1o. W0rld&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;1. h3l1o. W0rld&quot;</span>), <span class="prelude-val">Err</span>(<span class="string">&quot;1. h3l1o. W0rld&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">Version::parse</span>(<span class="string">&quot;1&quot;</span>), <span class="prelude-val">Err</span>(<span class="string">&quot;1&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">Version::parse</span>(<span class="string">&quot;1.&quot;</span>), <span class="prelude-val">Err</span>(<span class="string">&quot;1.&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">Version::parse</span>(<span class="string">&quot;1 h3l1o. W0rld&quot;</span>), <span class="prelude-val">Err</span>(<span class="string">&quot;1 h3l1o. W0rld&quot;</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">Version::parse</span>(<span class="string">&quot;1. h3l1o. W0rld&quot;</span>), <span class="prelude-val">Err</span>(<span class="string">&quot;1. h3l1o. W0rld&quot;</span>));
         <span class="macro">assert_eq!</span>(
-            <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;1.2.3&quot;</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">Version</span>::<span class="ident">new</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="prelude-val">Some</span>(<span class="number">3</span>), <span class="ident">String</span>::<span class="ident">new</span>()))
+            <span class="ident">Version::parse</span>(<span class="string">&quot;1.2.3&quot;</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">Version::new</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="prelude-val">Some</span>(<span class="number">3</span>), <span class="ident">String::new</span>()))
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;1.2&quot;</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">Version</span>::<span class="ident">new</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="prelude-val">None</span>, <span class="ident">String</span>::<span class="ident">new</span>()))
+            <span class="ident">Version::parse</span>(<span class="string">&quot;1.2&quot;</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">Version::new</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="prelude-val">None</span>, <span class="ident">String::new</span>()))
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;1.2 h3l1o. W0rld&quot;</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">Version</span>::<span class="ident">new</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="prelude-val">None</span>, <span class="string">&quot;h3l1o. W0rld&quot;</span>.<span class="ident">to_string</span>()))
+            <span class="ident">Version::parse</span>(<span class="string">&quot;1.2 h3l1o. W0rld&quot;</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">Version::new</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="prelude-val">None</span>, <span class="string">&quot;h3l1o. W0rld&quot;</span>.<span class="ident">to_string</span>()))
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;1.2.h3l1o. W0rld&quot;</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">Version</span>::<span class="ident">new</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="prelude-val">None</span>, <span class="string">&quot;W0rld&quot;</span>.<span class="ident">to_string</span>()))
+            <span class="ident">Version::parse</span>(<span class="string">&quot;1.2.h3l1o. W0rld&quot;</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">Version::new</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="prelude-val">None</span>, <span class="string">&quot;W0rld&quot;</span>.<span class="ident">to_string</span>()))
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;1.2. h3l1o. W0rld&quot;</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">Version</span>::<span class="ident">new</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="prelude-val">None</span>, <span class="string">&quot;h3l1o. W0rld&quot;</span>.<span class="ident">to_string</span>()))
+            <span class="ident">Version::parse</span>(<span class="string">&quot;1.2. h3l1o. W0rld&quot;</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">Version::new</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="prelude-val">None</span>, <span class="string">&quot;h3l1o. W0rld&quot;</span>.<span class="ident">to_string</span>()))
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;1.2.3.h3l1o. W0rld&quot;</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">Version</span>::<span class="ident">new</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="prelude-val">Some</span>(<span class="number">3</span>), <span class="string">&quot;W0rld&quot;</span>.<span class="ident">to_string</span>()))
+            <span class="ident">Version::parse</span>(<span class="string">&quot;1.2.3.h3l1o. W0rld&quot;</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">Version::new</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="prelude-val">Some</span>(<span class="number">3</span>), <span class="string">&quot;W0rld&quot;</span>.<span class="ident">to_string</span>()))
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;1.2.3 h3l1o. W0rld&quot;</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">Version</span>::<span class="ident">new</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="prelude-val">Some</span>(<span class="number">3</span>), <span class="string">&quot;h3l1o. W0rld&quot;</span>.<span class="ident">to_string</span>()))
+            <span class="ident">Version::parse</span>(<span class="string">&quot;1.2.3 h3l1o. W0rld&quot;</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">Version::new</span>(<span class="number">1</span>, <span class="number">2</span>, <span class="prelude-val">Some</span>(<span class="number">3</span>), <span class="string">&quot;h3l1o. W0rld&quot;</span>.<span class="ident">to_string</span>()))
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;OpenGL ES 3.1&quot;</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">Version</span>::<span class="ident">new_embedded</span>(<span class="number">3</span>, <span class="number">1</span>, <span class="ident">String</span>::<span class="ident">new</span>()))
+            <span class="ident">Version::parse</span>(<span class="string">&quot;OpenGL ES 3.1&quot;</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">Version::new_embedded</span>(<span class="number">3</span>, <span class="number">1</span>, <span class="ident">String::new</span>()))
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;OpenGL ES 2.0 Google Nexus&quot;</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">Version</span>::<span class="ident">new_embedded</span>(<span class="number">2</span>, <span class="number">0</span>, <span class="string">&quot;Google Nexus&quot;</span>.<span class="ident">to_string</span>()))
+            <span class="ident">Version::parse</span>(<span class="string">&quot;OpenGL ES 2.0 Google Nexus&quot;</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">Version::new_embedded</span>(<span class="number">2</span>, <span class="number">0</span>, <span class="string">&quot;Google Nexus&quot;</span>.<span class="ident">to_string</span>()))
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;GLSL ES 1.1&quot;</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">Version</span>::<span class="ident">new_embedded</span>(<span class="number">1</span>, <span class="number">1</span>, <span class="ident">String</span>::<span class="ident">new</span>()))
+            <span class="ident">Version::parse</span>(<span class="string">&quot;GLSL ES 1.1&quot;</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">Version::new_embedded</span>(<span class="number">1</span>, <span class="number">1</span>, <span class="ident">String::new</span>()))
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;OpenGL ES GLSL ES 3.20&quot;</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">Version</span>::<span class="ident">new_embedded</span>(<span class="number">3</span>, <span class="number">2</span>, <span class="ident">String</span>::<span class="ident">new</span>()))
+            <span class="ident">Version::parse</span>(<span class="string">&quot;OpenGL ES GLSL ES 3.20&quot;</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">Version::new_embedded</span>(<span class="number">3</span>, <span class="number">2</span>, <span class="ident">String::new</span>()))
         );
         <span class="macro">assert_eq!</span>(
             <span class="comment">// WebGL 2.0 should parse as OpenGL ES 3.0</span>
-            <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;WebGL 2.0 (OpenGL ES 3.0 Chromium)&quot;</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">Version</span>::<span class="ident">new_embedded</span>(
+            <span class="ident">Version::parse</span>(<span class="string">&quot;WebGL 2.0 (OpenGL ES 3.0 Chromium)&quot;</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">Version::new_embedded</span>(
                 <span class="number">3</span>,
                 <span class="number">0</span>,
                 <span class="string">&quot;(OpenGL ES 3.0 Chromium)&quot;</span>.<span class="ident">to_string</span>()
             ))
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">Version</span>::<span class="ident">parse</span>(<span class="string">&quot;WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)&quot;</span>),
-            <span class="prelude-val">Ok</span>(<span class="ident">Version</span>::<span class="ident">new_embedded</span>(
+            <span class="ident">Version::parse</span>(<span class="string">&quot;WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)&quot;</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">Version::new_embedded</span>(
                 <span class="number">3</span>,
                 <span class="number">0</span>,
                 <span class="string">&quot;(OpenGL ES GLSL ES 3.0 Chromium)&quot;</span>.<span class="ident">to_string</span>()

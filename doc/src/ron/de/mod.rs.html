@@ -688,15 +688,15 @@
 <span id="685">685</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">/// Deserialization module.</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">error</span>::{<span class="ident">Error</span>, <span class="ident">ErrorCode</span>, <span class="prelude-ty">Result</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">parse</span>::<span class="ident">Position</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::error</span>::{<span class="ident">Error</span>, <span class="ident">ErrorCode</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::parse::Position</span>;
 
-<span class="kw">use</span> <span class="ident">serde</span>::<span class="ident">de</span>::{<span class="self">self</span>, <span class="ident">DeserializeSeed</span>, <span class="ident">Deserializer</span> <span class="kw">as</span> <span class="ident">SerdeError</span>, <span class="ident">Visitor</span>};
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow</span>::<span class="ident">Cow</span>, <span class="ident">io</span>, <span class="ident">str</span>};
+<span class="kw">use</span> <span class="ident">serde::de</span>::{<span class="self">self</span>, <span class="ident">DeserializeSeed</span>, <span class="ident">Deserializer</span> <span class="kw">as</span> <span class="ident">SerdeError</span>, <span class="ident">Visitor</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">io</span>, <span class="ident">str</span>};
 
-<span class="kw">use</span> <span class="self">self</span>::{<span class="ident">id</span>::<span class="ident">IdDeserializer</span>, <span class="ident">tag</span>::<span class="ident">TagDeserializer</span>};
+<span class="kw">use</span> <span class="self">self</span>::{<span class="ident">id::IdDeserializer</span>, <span class="ident">tag::TagDeserializer</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">extensions</span>::<span class="ident">Extensions</span>,
+    <span class="ident">extensions::Extensions</span>,
     <span class="ident">parse</span>::{<span class="ident">AnyNum</span>, <span class="ident">Bytes</span>, <span class="ident">ParsedStr</span>},
 };
 
@@ -716,19 +716,19 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> {
     <span class="comment">// Cannot implement trait here since output is tied to input lifetime &#39;de.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">should_implement_trait</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::should_implement_trait</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_str</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;de</span> <span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="ident">Deserializer</span>::<span class="ident">from_bytes</span>(<span class="ident">input</span>.<span class="ident">as_bytes</span>())
+        <span class="ident">Deserializer::from_bytes</span>(<span class="ident">input</span>.<span class="ident">as_bytes</span>())
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;de</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">Deserializer</span> {
-            <span class="ident">bytes</span>: <span class="ident">Bytes</span>::<span class="ident">new</span>(<span class="ident">input</span>)<span class="question-mark">?</span>,
+            <span class="ident">bytes</span>: <span class="ident">Bytes::new</span>(<span class="ident">input</span>)<span class="question-mark">?</span>,
         })
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">remainder</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="ident">String</span>::<span class="ident">from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">bytes</span>())
+        <span class="ident">String::from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">bytes</span>())
     }
 }
 
@@ -736,10 +736,10 @@
 <span class="doccomment">/// and feeding into a deserializer.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_reader</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">rdr</span>: <span class="ident">R</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">R</span>: <span class="ident">io</span>::<span class="ident">Read</span>,
-    <span class="ident">T</span>: <span class="ident">de</span>::<span class="ident">DeserializeOwned</span>,
+    <span class="ident">R</span>: <span class="ident">io::Read</span>,
+    <span class="ident">T</span>: <span class="ident">de::DeserializeOwned</span>,
 {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
     <span class="ident">rdr</span>.<span class="ident">read_to_end</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">bytes</span>)<span class="question-mark">?</span>;
 
     <span class="ident">from_bytes</span>(<span class="kw-2">&amp;</span><span class="ident">bytes</span>)
@@ -749,7 +749,7 @@
 <span class="doccomment">/// and deserializing a value of type `T` from a string.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_str</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">de</span>::<span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="ident">T</span>: <span class="ident">de::Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
 {
     <span class="ident">from_bytes</span>(<span class="ident">s</span>.<span class="ident">as_bytes</span>())
 }
@@ -758,10 +758,10 @@
 <span class="doccomment">/// and deserializing a value of type `T` from bytes.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_bytes</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">de</span>::<span class="ident">Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="ident">T</span>: <span class="ident">de::Deserialize</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
 {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">deserializer</span> <span class="op">=</span> <span class="ident">Deserializer</span>::<span class="ident">from_bytes</span>(<span class="ident">s</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">T</span>::<span class="ident">deserialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">deserializer</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">deserializer</span> <span class="op">=</span> <span class="ident">Deserializer::from_bytes</span>(<span class="ident">s</span>)<span class="question-mark">?</span>;
+    <span class="kw">let</span> <span class="ident">t</span> <span class="op">=</span> <span class="ident">T::deserialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">deserializer</span>)<span class="question-mark">?</span>;
 
     <span class="ident">deserializer</span>.<span class="ident">end</span>()<span class="question-mark">?</span>;
 
@@ -777,7 +777,7 @@
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">bytes</span>().<span class="ident">is_empty</span>() {
             <span class="prelude-val">Ok</span>(())
         } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">TrailingCharacters</span>)
+            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::TrailingCharacters</span>)
         }
     }
 
@@ -786,7 +786,7 @@
     <span class="doccomment">/// accordingly.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This method assumes there is no identifier left.</span>
-    <span class="kw">fn</span> <span class="ident">handle_any_struct</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">handle_any_struct</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
@@ -809,10 +809,10 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">de</span>::<span class="ident">Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">de::Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Deserializer</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
-    <span class="kw">fn</span> <span class="ident">deserialize_any</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_any</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
@@ -827,11 +827,11 @@
         } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;()&quot;</span>) {
             <span class="kw">return</span> <span class="ident">visitor</span>.<span class="ident">visit_unit</span>();
         } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume_ident</span>(<span class="string">&quot;inf&quot;</span>) {
-            <span class="kw">return</span> <span class="ident">visitor</span>.<span class="ident">visit_f64</span>(<span class="ident">std</span>::<span class="ident">f64</span>::<span class="ident">INFINITY</span>);
+            <span class="kw">return</span> <span class="ident">visitor</span>.<span class="ident">visit_f64</span>(<span class="ident">std::f64::INFINITY</span>);
         } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume_ident</span>(<span class="string">&quot;-inf&quot;</span>) {
-            <span class="kw">return</span> <span class="ident">visitor</span>.<span class="ident">visit_f64</span>(<span class="ident">std</span>::<span class="ident">f64</span>::<span class="ident">NEG_INFINITY</span>);
+            <span class="kw">return</span> <span class="ident">visitor</span>.<span class="ident">visit_f64</span>(<span class="ident">std::f64::NEG_INFINITY</span>);
         } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume_ident</span>(<span class="string">&quot;NaN&quot;</span>) {
-            <span class="kw">return</span> <span class="ident">visitor</span>.<span class="ident">visit_f64</span>(<span class="ident">std</span>::<span class="ident">f64</span>::<span class="ident">NAN</span>);
+            <span class="kw">return</span> <span class="ident">visitor</span>.<span class="ident">visit_f64</span>(<span class="ident">std::f64::NAN</span>);
         }
 
         <span class="comment">// `identifier` does not change state if it fails</span>
@@ -851,175 +851,175 @@
                 <span class="kw">let</span> <span class="ident">any_num</span>: <span class="ident">AnyNum</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">any_num</span>()<span class="question-mark">?</span>;
 
                 <span class="kw">match</span> <span class="ident">any_num</span> {
-                    <span class="ident">AnyNum</span>::<span class="ident">F32</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_f32</span>(<span class="ident">x</span>),
-                    <span class="ident">AnyNum</span>::<span class="ident">F64</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_f64</span>(<span class="ident">x</span>),
-                    <span class="ident">AnyNum</span>::<span class="ident">I8</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_i8</span>(<span class="ident">x</span>),
-                    <span class="ident">AnyNum</span>::<span class="ident">U8</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_u8</span>(<span class="ident">x</span>),
-                    <span class="ident">AnyNum</span>::<span class="ident">I16</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_i16</span>(<span class="ident">x</span>),
-                    <span class="ident">AnyNum</span>::<span class="ident">U16</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_u16</span>(<span class="ident">x</span>),
-                    <span class="ident">AnyNum</span>::<span class="ident">I32</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_i32</span>(<span class="ident">x</span>),
-                    <span class="ident">AnyNum</span>::<span class="ident">U32</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_u32</span>(<span class="ident">x</span>),
-                    <span class="ident">AnyNum</span>::<span class="ident">I64</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_i64</span>(<span class="ident">x</span>),
-                    <span class="ident">AnyNum</span>::<span class="ident">U64</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_u64</span>(<span class="ident">x</span>),
-                    <span class="ident">AnyNum</span>::<span class="ident">I128</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_i128</span>(<span class="ident">x</span>),
-                    <span class="ident">AnyNum</span>::<span class="ident">U128</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_u128</span>(<span class="ident">x</span>),
+                    <span class="ident">AnyNum::F32</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_f32</span>(<span class="ident">x</span>),
+                    <span class="ident">AnyNum::F64</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_f64</span>(<span class="ident">x</span>),
+                    <span class="ident">AnyNum::I8</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_i8</span>(<span class="ident">x</span>),
+                    <span class="ident">AnyNum::U8</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_u8</span>(<span class="ident">x</span>),
+                    <span class="ident">AnyNum::I16</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_i16</span>(<span class="ident">x</span>),
+                    <span class="ident">AnyNum::U16</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_u16</span>(<span class="ident">x</span>),
+                    <span class="ident">AnyNum::I32</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_i32</span>(<span class="ident">x</span>),
+                    <span class="ident">AnyNum::U32</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_u32</span>(<span class="ident">x</span>),
+                    <span class="ident">AnyNum::I64</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_i64</span>(<span class="ident">x</span>),
+                    <span class="ident">AnyNum::U64</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_u64</span>(<span class="ident">x</span>),
+                    <span class="ident">AnyNum::I128</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_i128</span>(<span class="ident">x</span>),
+                    <span class="ident">AnyNum::U128</span>(<span class="ident">x</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_u128</span>(<span class="ident">x</span>),
                 }
             }
             <span class="string">b&#39;.&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">deserialize_f64</span>(<span class="ident">visitor</span>),
             <span class="string">b&#39;&quot;&#39;</span> <span class="op">|</span> <span class="string">b&#39;r&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">deserialize_string</span>(<span class="ident">visitor</span>),
             <span class="string">b&#39;\&#39;&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">deserialize_char</span>(<span class="ident">visitor</span>),
-            <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">UnexpectedByte</span>(<span class="ident">other</span> <span class="kw">as</span> <span class="ident">char</span>)),
+            <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::UnexpectedByte</span>(<span class="ident">other</span> <span class="kw">as</span> <span class="ident">char</span>)),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_bool</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_bool</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_bool</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">bool</span>()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_i8</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_i8</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_i8</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">signed_integer</span>()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_i16</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_i16</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_i16</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">signed_integer</span>()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_i32</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_i32</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_i32</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">signed_integer</span>()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_i64</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_i64</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_i64</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">signed_integer</span>()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_i128</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_i128</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_i128</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">signed_integer</span>()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_u8</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_u8</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_u8</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">unsigned_integer</span>()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_u16</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_u16</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_u16</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">unsigned_integer</span>()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_u32</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_u32</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_u32</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">unsigned_integer</span>()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_u64</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_u64</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_u64</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">unsigned_integer</span>()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_u128</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_u128</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_u128</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">unsigned_integer</span>()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_f32</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_f32</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_f32</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">float</span>()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_f64</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_f64</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_f64</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">float</span>()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_char</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_char</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_char</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">char</span>()<span class="question-mark">?</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_str</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_str</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">string</span>()<span class="question-mark">?</span> {
-            <span class="ident">ParsedStr</span>::<span class="ident">Allocated</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_string</span>(<span class="ident">s</span>),
-            <span class="ident">ParsedStr</span>::<span class="ident">Slice</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_borrowed_str</span>(<span class="ident">s</span>),
+            <span class="ident">ParsedStr::Allocated</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_string</span>(<span class="ident">s</span>),
+            <span class="ident">ParsedStr::Slice</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_borrowed_str</span>(<span class="ident">s</span>),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_string</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_string</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="self">self</span>.<span class="ident">deserialize_str</span>(<span class="ident">visitor</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_bytes</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_bytes</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="self">self</span>.<span class="ident">deserialize_byte_buf</span>(<span class="ident">visitor</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_byte_buf</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_byte_buf</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">string</span>()<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">base64_str</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">string</span> {
-                <span class="ident">ParsedStr</span>::<span class="ident">Allocated</span>(<span class="kw-2">ref</span> <span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s</span>.<span class="ident">as_str</span>(),
-                <span class="ident">ParsedStr</span>::<span class="ident">Slice</span>(<span class="kw-2">ref</span> <span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s</span>,
+                <span class="ident">ParsedStr::Allocated</span>(<span class="kw-2">ref</span> <span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s</span>.<span class="ident">as_str</span>(),
+                <span class="ident">ParsedStr::Slice</span>(<span class="kw-2">ref</span> <span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s</span>,
             };
-            <span class="ident">base64</span>::<span class="ident">decode</span>(<span class="ident">base64_str</span>)
+            <span class="ident">base64::decode</span>(<span class="ident">base64_str</span>)
         };
 
         <span class="kw">match</span> <span class="ident">res</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">byte_buf</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">visitor</span>.<span class="ident">visit_byte_buf</span>(<span class="ident">byte_buf</span>),
-            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">Base64Error</span>(<span class="ident">err</span>)),
+            <span class="prelude-val">Err</span>(<span class="ident">err</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::Base64Error</span>(<span class="ident">err</span>)),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_option</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_option</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;None&quot;</span>) {
             <span class="ident">visitor</span>.<span class="ident">visit_none</span>()
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">exts</span>.<span class="ident">contains</span>(<span class="ident">Extensions</span>::<span class="ident">IMPLICIT_SOME</span>) {
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">exts</span>.<span class="ident">contains</span>(<span class="ident">Extensions::IMPLICIT_SOME</span>) {
             <span class="ident">visitor</span>.<span class="ident">visit_some</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="self">self</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;Some&quot;</span>) <span class="op">&amp;&amp;</span> {
             <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">skip_ws</span>()<span class="question-mark">?</span>;
@@ -1034,26 +1034,26 @@
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;)&quot;</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">v</span>)
             } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedOptionEnd</span>)
+                <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedOptionEnd</span>)
             }
         } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedOption</span>)
+            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedOption</span>)
         }
     }
 
     <span class="comment">// In Serde, unit means an anonymous value containing no data.</span>
-    <span class="kw">fn</span> <span class="ident">deserialize_unit</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_unit</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;()&quot;</span>) {
             <span class="ident">visitor</span>.<span class="ident">visit_unit</span>()
         } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedUnit</span>)
+            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedUnit</span>)
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_unit_struct</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_unit_struct</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
@@ -1064,11 +1064,11 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_newtype_struct</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_newtype_struct</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">exts</span>.<span class="ident">contains</span>(<span class="ident">Extensions</span>::<span class="ident">UNWRAP_NEWTYPES</span>) {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">exts</span>.<span class="ident">contains</span>(<span class="ident">Extensions::UNWRAP_NEWTYPES</span>) {
             <span class="kw">return</span> <span class="ident">visitor</span>.<span class="ident">visit_newtype_struct</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="self">self</span>);
         }
 
@@ -1084,46 +1084,46 @@
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;)&quot;</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">value</span>)
             } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedStructEnd</span>)
+                <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedStructEnd</span>)
             }
         } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedStruct</span>)
+            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedStruct</span>)
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_seq</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_seq</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;[&quot;</span>) {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">visitor</span>.<span class="ident">visit_seq</span>(<span class="ident">CommaSeparated</span>::<span class="ident">new</span>(<span class="string">b&#39;]&#39;</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>))<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">visitor</span>.<span class="ident">visit_seq</span>(<span class="ident">CommaSeparated::new</span>(<span class="string">b&#39;]&#39;</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>))<span class="question-mark">?</span>;
             <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">comma</span>()<span class="question-mark">?</span>;
 
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;]&quot;</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">value</span>)
             } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedArrayEnd</span>)
+                <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedArrayEnd</span>)
             }
         } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedArray</span>)
+            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedArray</span>)
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_tuple</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_len</span>: <span class="ident">usize</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_tuple</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">_len</span>: <span class="ident">usize</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;(&quot;</span>) {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">visitor</span>.<span class="ident">visit_seq</span>(<span class="ident">CommaSeparated</span>::<span class="ident">new</span>(<span class="string">b&#39;)&#39;</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>))<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">visitor</span>.<span class="ident">visit_seq</span>(<span class="ident">CommaSeparated::new</span>(<span class="string">b&#39;)&#39;</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>))<span class="question-mark">?</span>;
             <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">comma</span>()<span class="question-mark">?</span>;
 
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;)&quot;</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">value</span>)
             } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedArrayEnd</span>)
+                <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedArrayEnd</span>)
             }
         } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedArray</span>)
+            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedArray</span>)
         }
     }
 
@@ -1132,7 +1132,7 @@
         <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
         <span class="ident">len</span>: <span class="ident">usize</span>,
         <span class="ident">visitor</span>: <span class="ident">V</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
@@ -1140,21 +1140,21 @@
         <span class="self">self</span>.<span class="ident">deserialize_tuple</span>(<span class="ident">len</span>, <span class="ident">visitor</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_map</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_map</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;{&quot;</span>) {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">visitor</span>.<span class="ident">visit_map</span>(<span class="ident">CommaSeparated</span>::<span class="ident">new</span>(<span class="string">b&#39;}&#39;</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>))<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">visitor</span>.<span class="ident">visit_map</span>(<span class="ident">CommaSeparated::new</span>(<span class="string">b&#39;}&#39;</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>))<span class="question-mark">?</span>;
             <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">comma</span>()<span class="question-mark">?</span>;
 
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;}&quot;</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">value</span>)
             } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedMapEnd</span>)
+                <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedMapEnd</span>)
             }
         } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedMap</span>)
+            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedMap</span>)
         }
     }
 
@@ -1163,7 +1163,7 @@
         <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
         <span class="ident">_fields</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>],
         <span class="ident">visitor</span>: <span class="ident">V</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
@@ -1172,16 +1172,16 @@
         <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">skip_ws</span>()<span class="question-mark">?</span>;
 
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;(&quot;</span>) {
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">visitor</span>.<span class="ident">visit_map</span>(<span class="ident">CommaSeparated</span>::<span class="ident">new</span>(<span class="string">b&#39;)&#39;</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>))<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">visitor</span>.<span class="ident">visit_map</span>(<span class="ident">CommaSeparated::new</span>(<span class="string">b&#39;)&#39;</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>))<span class="question-mark">?</span>;
             <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">comma</span>()<span class="question-mark">?</span>;
 
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;)&quot;</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">value</span>)
             } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedStructEnd</span>)
+                <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedStructEnd</span>)
             }
         } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedStruct</span>)
+            <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedStruct</span>)
         }
     }
 
@@ -1190,23 +1190,23 @@
         <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
         <span class="ident">_variants</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>],
         <span class="ident">visitor</span>: <span class="ident">V</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
-        <span class="ident">visitor</span>.<span class="ident">visit_enum</span>(<span class="ident">Enum</span>::<span class="ident">new</span>(<span class="self">self</span>))
+        <span class="ident">visitor</span>.<span class="ident">visit_enum</span>(<span class="ident">Enum::new</span>(<span class="self">self</span>))
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_identifier</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_identifier</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="ident">visitor</span>.<span class="ident">visit_str</span>(
-            <span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">identifier</span>()<span class="question-mark">?</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">error</span>(<span class="ident">e</span>.<span class="ident">into</span>()))<span class="question-mark">?</span>,
+            <span class="ident">str::from_utf8</span>(<span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">identifier</span>()<span class="question-mark">?</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">bytes</span>.<span class="ident">error</span>(<span class="ident">e</span>.<span class="ident">into</span>()))<span class="question-mark">?</span>,
         )
     }
 
-    <span class="kw">fn</span> <span class="ident">deserialize_ignored_any</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">deserialize_ignored_any</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
@@ -1240,10 +1240,10 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">de</span>::<span class="ident">SeqAccess</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CommaSeparated</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">de::SeqAccess</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CommaSeparated</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
-    <span class="kw">fn</span> <span class="ident">next_element_seed</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">seed</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span>::<span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">next_element_seed</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">seed</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T::Value</span><span class="op">&gt;</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">DeserializeSeed</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
@@ -1259,16 +1259,16 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">de</span>::<span class="ident">MapAccess</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CommaSeparated</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">de::MapAccess</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CommaSeparated</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
-    <span class="kw">fn</span> <span class="ident">next_key_seed</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">seed</span>: <span class="ident">K</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">K</span>::<span class="ident">Value</span><span class="op">&gt;</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">next_key_seed</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">seed</span>: <span class="ident">K</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">K::Value</span><span class="op">&gt;</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">K</span>: <span class="ident">DeserializeSeed</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">has_element</span>()<span class="question-mark">?</span> {
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">terminator</span> <span class="op">=</span><span class="op">=</span> <span class="string">b&#39;)&#39;</span> {
-                <span class="ident">seed</span>.<span class="ident">deserialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">IdDeserializer</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">de</span>))
+                <span class="ident">seed</span>.<span class="ident">deserialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">IdDeserializer::new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">de</span>))
                     .<span class="ident">map</span>(<span class="prelude-val">Some</span>)
             } <span class="kw">else</span> {
                 <span class="ident">seed</span>.<span class="ident">deserialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">de</span>).<span class="ident">map</span>(<span class="prelude-val">Some</span>)
@@ -1278,7 +1278,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">next_value_seed</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">seed</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">next_value_seed</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">seed</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">DeserializeSeed</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
@@ -1287,13 +1287,13 @@
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">de</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;:&quot;</span>) {
             <span class="self">self</span>.<span class="ident">de</span>.<span class="ident">bytes</span>.<span class="ident">skip_ws</span>()<span class="question-mark">?</span>;
 
-            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">seed</span>.<span class="ident">deserialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TagDeserializer</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">de</span>))<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">seed</span>.<span class="ident">deserialize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TagDeserializer::new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">de</span>))<span class="question-mark">?</span>;
 
             <span class="self">self</span>.<span class="ident">had_comma</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">de</span>.<span class="ident">bytes</span>.<span class="ident">comma</span>()<span class="question-mark">?</span>;
 
             <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
         } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedMapColon</span>)
+            <span class="self">self</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedMapColon</span>)
         }
     }
 }
@@ -1308,11 +1308,11 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">de</span>::<span class="ident">EnumAccess</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Enum</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">de::EnumAccess</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Enum</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
     <span class="kw">type</span> <span class="ident">Variant</span> <span class="op">=</span> <span class="self">Self</span>;
 
-    <span class="kw">fn</span> <span class="ident">variant_seed</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">seed</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">V</span>::<span class="ident">Value</span>, <span class="self">Self</span>::<span class="ident">Variant</span>)<span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">variant_seed</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">seed</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">V::Value</span>, <span class="self">Self</span><span class="ident">::Variant</span>)<span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">DeserializeSeed</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
@@ -1324,14 +1324,14 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">de</span>::<span class="ident">VariantAccess</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Enum</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span>, <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">de::VariantAccess</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Enum</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">Error</span>;
 
     <span class="kw">fn</span> <span class="ident">unit_variant</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">newtype_variant_seed</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">seed</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">newtype_variant_seed</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">seed</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">DeserializeSeed</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
@@ -1347,14 +1347,14 @@
             <span class="kw">if</span> <span class="self">self</span>.<span class="ident">de</span>.<span class="ident">bytes</span>.<span class="ident">consume</span>(<span class="string">&quot;)&quot;</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">val</span>)
             } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">de</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedStructEnd</span>)
+                <span class="self">self</span>.<span class="ident">de</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedStructEnd</span>)
             }
         } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">de</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode</span>::<span class="ident">ExpectedStruct</span>)
+            <span class="self">self</span>.<span class="ident">de</span>.<span class="ident">bytes</span>.<span class="ident">err</span>(<span class="ident">ErrorCode::ExpectedStruct</span>)
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">tuple_variant</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">len</span>: <span class="ident">usize</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">tuple_variant</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">len</span>: <span class="ident">usize</span>, <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {
@@ -1363,7 +1363,7 @@
         <span class="self">self</span>.<span class="ident">de</span>.<span class="ident">deserialize_tuple</span>(<span class="ident">len</span>, <span class="ident">visitor</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">struct_variant</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">fields</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>], <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V</span>::<span class="ident">Value</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">struct_variant</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">fields</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>], <span class="ident">visitor</span>: <span class="ident">V</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">V::Value</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">V</span>: <span class="ident">Visitor</span><span class="op">&lt;</span><span class="lifetime">&#39;de</span><span class="op">&gt;</span>,
     {

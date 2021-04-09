@@ -327,8 +327,8 @@
 <span id="324">324</span>
 <span id="325">325</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">guards</span>::<span class="ident">UninitializedSliceMemoryGuard</span>;
-<span class="kw">use</span> <span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">MaybeUninit</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::guards::UninitializedSliceMemoryGuard</span>;
+<span class="kw">use</span> <span class="ident">core::mem::MaybeUninit</span>;
 
 <span class="doccomment">/// This trait is a extended copy of unstable</span>
 <span class="doccomment">/// [core::array::FixedSizeArray](core::array::FixedSizeArray).</span>
@@ -339,8 +339,8 @@
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">FixedArray</span> {
     <span class="kw">type</span> <span class="ident">Item</span>;
     <span class="kw">const</span> <span class="ident">LEN</span>: <span class="ident">usize</span>;
-    <span class="kw">fn</span> <span class="ident">as_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="self">Self</span>::<span class="ident">Item</span>];
-    <span class="kw">fn</span> <span class="ident">as_slice_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="self">Self</span>::<span class="ident">Item</span>];
+    <span class="kw">fn</span> <span class="ident">as_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="self">Self</span><span class="ident">::Item</span>];
+    <span class="kw">fn</span> <span class="ident">as_slice_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="self">Self</span><span class="ident">::Item</span>];
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_fixed_array_for_array</span> {
@@ -350,11 +350,11 @@
                 <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">T</span>;
                 <span class="kw">const</span> <span class="ident">LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">length</span>;
                 <span class="attribute">#[<span class="ident">inline</span>]</span>
-                <span class="kw">fn</span> <span class="ident">as_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="self">Self</span>::<span class="ident">Item</span>] {
+                <span class="kw">fn</span> <span class="ident">as_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="self">Self</span><span class="ident">::Item</span>] {
                     <span class="self">self</span>
                 }
                 <span class="attribute">#[<span class="ident">inline</span>]</span>
-                <span class="kw">fn</span> <span class="ident">as_slice_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="self">Self</span>::<span class="ident">Item</span>] {
+                <span class="kw">fn</span> <span class="ident">as_slice_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="self">Self</span><span class="ident">::Item</span>] {
                     <span class="self">self</span>
                 }
             }
@@ -436,8 +436,8 @@
     <span class="macro">macro_rules!</span> <span class="ident">inplace</span> {
         (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>: <span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {<span class="kw">unsafe</span> {
             <span class="ident">indirect</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">memory</span>: [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>] <span class="op">=</span> <span class="ident">MaybeUninit</span>::<span class="ident">uninit</span>().<span class="ident">assume_init</span>();
-                <span class="ident">consumer</span>(<span class="ident">UninitializedSliceMemoryGuard</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">memory</span>))
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">memory</span>: [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">size</span>] <span class="op">=</span> <span class="ident">MaybeUninit::uninit</span>().<span class="ident">assume_init</span>();
+                <span class="ident">consumer</span>(<span class="ident">UninitializedSliceMemoryGuard::new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">memory</span>))
             })
         }};
     }

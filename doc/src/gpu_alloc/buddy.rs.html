@@ -474,11 +474,11 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> {
     <span class="kw">crate</span>::{
-        <span class="ident">align_up</span>, <span class="ident">error</span>::<span class="ident">AllocationError</span>, <span class="ident">heap</span>::<span class="ident">Heap</span>, <span class="ident">slab</span>::<span class="ident">Slab</span>, <span class="ident">unreachable_unchecked</span>,
-        <span class="ident">util</span>::<span class="ident">try_arc_unwrap</span>, <span class="ident">MemoryBounds</span>,
+        <span class="ident">align_up</span>, <span class="ident">error::AllocationError</span>, <span class="ident">heap::Heap</span>, <span class="ident">slab::Slab</span>, <span class="ident">unreachable_unchecked</span>,
+        <span class="ident">util::try_arc_unwrap</span>, <span class="ident">MemoryBounds</span>,
     },
-    <span class="ident">alloc</span>::{<span class="ident">sync</span>::<span class="ident">Arc</span>, <span class="ident">vec</span>::<span class="ident">Vec</span>},
-    <span class="ident">core</span>::{<span class="ident">convert</span>::<span class="ident">TryFrom</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">mem</span>::<span class="ident">replace</span>, <span class="ident">ptr</span>::<span class="ident">NonNull</span>},
+    <span class="ident">alloc</span>::{<span class="ident">sync::Arc</span>, <span class="ident">vec::Vec</span>},
+    <span class="ident">core</span>::{<span class="ident">convert::TryFrom</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">mem::replace</span>, <span class="ident">ptr::NonNull</span>},
     <span class="ident">gpu_alloc_types</span>::{<span class="ident">AllocationFlags</span>, <span class="ident">DeviceMapError</span>, <span class="ident">MemoryDevice</span>, <span class="ident">MemoryPropertyFlags</span>},
 };
 
@@ -508,15 +508,15 @@
 <span class="kw">impl</span> <span class="ident">PairState</span> {
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">replace_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">PairState</span>::<span class="ident">Exhausted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unreachable_unchecked</span>(),
-            <span class="ident">PairState</span>::<span class="ident">Ready</span> { <span class="ident">next</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">replace</span>(<span class="ident">next</span>, <span class="ident">value</span>),
+            <span class="ident">PairState::Exhausted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unreachable_unchecked</span>(),
+            <span class="ident">PairState::Ready</span> { <span class="ident">next</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">replace</span>(<span class="ident">next</span>, <span class="ident">value</span>),
         }
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">replace_prev</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident">PairState</span>::<span class="ident">Exhausted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unreachable_unchecked</span>(),
-            <span class="ident">PairState</span>::<span class="ident">Ready</span> { <span class="ident">prev</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">replace</span>(<span class="ident">prev</span>, <span class="ident">value</span>),
+            <span class="ident">PairState::Exhausted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unreachable_unchecked</span>(),
+            <span class="ident">PairState::Ready</span> { <span class="ident">prev</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">replace</span>(<span class="ident">prev</span>, <span class="ident">value</span>),
         }
     }
 }
@@ -557,7 +557,7 @@
 <span class="kw">impl</span> <span class="ident">Size</span> {
     <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Size</span> {
-            <span class="ident">pairs</span>: <span class="ident">Slab</span>::<span class="ident">new</span>(),
+            <span class="ident">pairs</span>: <span class="ident">Slab::new</span>(),
             <span class="ident">next_ready</span>: <span class="number">0</span>,
         }
     }
@@ -573,14 +573,14 @@
         }
 
         <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pairs</span>.<span class="ident">insert</span>(<span class="ident">PairEntry</span> {
-            <span class="ident">state</span>: <span class="ident">PairState</span>::<span class="ident">Exhausted</span>,
+            <span class="ident">state</span>: <span class="ident">PairState::Exhausted</span>,
             <span class="ident">chunk</span>,
             <span class="ident">offset</span>,
             <span class="ident">parent</span>,
         });
 
         <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pairs</span>.<span class="ident">get_unchecked_mut</span>(<span class="ident">index</span>);
-        <span class="ident">entry</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">PairState</span>::<span class="ident">Ready</span> {
+        <span class="ident">entry</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">PairState::Ready</span> {
             <span class="ident">next</span>: <span class="ident">index</span>,
             <span class="ident">prev</span>: <span class="ident">index</span>,
             <span class="ident">ready</span>: <span class="ident">Right</span>, <span class="comment">// Left is allocated.</span>
@@ -606,9 +606,9 @@
         <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">entry</span>.<span class="ident">offset</span>;
 
         <span class="kw">let</span> <span class="ident">bit</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">state</span> {
-            <span class="ident">PairState</span>::<span class="ident">Exhausted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> { <span class="ident">unreachable_unchecked</span>() },
-            <span class="ident">PairState</span>::<span class="ident">Ready</span> { <span class="ident">ready</span>, <span class="ident">next</span>, <span class="ident">prev</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">entry</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">PairState</span>::<span class="ident">Exhausted</span>;
+            <span class="ident">PairState::Exhausted</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> { <span class="ident">unreachable_unchecked</span>() },
+            <span class="ident">PairState::Ready</span> { <span class="ident">ready</span>, <span class="ident">next</span>, <span class="ident">prev</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">entry</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">PairState::Exhausted</span>;
 
                 <span class="kw">if</span> <span class="ident">prev</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">next_ready</span> {
                     <span class="macro">debug_assert_eq!</span>(<span class="ident">next</span>, <span class="self">self</span>.<span class="ident">next_ready</span>);
@@ -641,8 +641,8 @@
 
     <span class="kw">fn</span> <span class="ident">release</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Release</span> {
         <span class="kw">let</span> <span class="ident">side</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">index</span> <span class="op">&amp;</span> <span class="number">1</span> {
-            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Side</span>::<span class="ident">Left</span>,
-            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Side</span>::<span class="ident">Right</span>,
+            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Side::Left</span>,
+            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Side::Right</span>,
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> { <span class="ident">unreachable_unchecked</span>() },
         };
         <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">index</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">1</span>;
@@ -656,9 +656,9 @@
         <span class="kw">let</span> <span class="ident">parent</span> <span class="op">=</span> <span class="ident">entry</span>.<span class="ident">parent</span>;
 
         <span class="kw">match</span> (<span class="ident">entry</span>.<span class="ident">state</span>, <span class="ident">side</span>) {
-            (<span class="ident">PairState</span>::<span class="ident">Exhausted</span>, <span class="ident">side</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            (<span class="ident">PairState::Exhausted</span>, <span class="ident">side</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">next_ready</span> <span class="op">=</span><span class="op">=</span> <span class="ident">len</span> {
-                    <span class="ident">entry</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">PairState</span>::<span class="ident">Ready</span> {
+                    <span class="ident">entry</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">PairState::Ready</span> {
                         <span class="ident">ready</span>: <span class="ident">side</span>,
                         <span class="ident">next</span>: <span class="ident">index</span>,
                         <span class="ident">prev</span>: <span class="ident">index</span>,
@@ -676,36 +676,36 @@
                     <span class="macro">debug_assert_eq!</span>(<span class="ident">prev_next</span>, <span class="ident">next</span>);
 
                     <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">pairs</span>.<span class="ident">get_unchecked_mut</span>(<span class="ident">index</span>) };
-                    <span class="ident">entry</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">PairState</span>::<span class="ident">Ready</span> {
+                    <span class="ident">entry</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">PairState::Ready</span> {
                         <span class="ident">ready</span>: <span class="ident">side</span>,
                         <span class="ident">next</span>,
                         <span class="ident">prev</span>,
                     };
                 }
-                <span class="ident">Release</span>::<span class="prelude-val">None</span>
+                <span class="ident">Release::None</span>
             }
-            (<span class="ident">PairState</span>::<span class="ident">Ready</span> { <span class="ident">ready</span>: <span class="ident">Left</span>, .. }, <span class="ident">Left</span>)
-            <span class="op">|</span> (<span class="ident">PairState</span>::<span class="ident">Ready</span> { <span class="ident">ready</span>: <span class="ident">Right</span>, .. }, <span class="ident">Right</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            (<span class="ident">PairState::Ready</span> { <span class="ident">ready</span>: <span class="ident">Left</span>, .. }, <span class="ident">Left</span>)
+            <span class="op">|</span> (<span class="ident">PairState::Ready</span> { <span class="ident">ready</span>: <span class="ident">Right</span>, .. }, <span class="ident">Right</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="macro">panic!</span>(<span class="string">&quot;Attempt to dealloate already free block&quot;</span>)
             }
 
             (
-                <span class="ident">PairState</span>::<span class="ident">Ready</span> {
+                <span class="ident">PairState::Ready</span> {
                     <span class="ident">ready</span>: <span class="ident">Left</span>,
                     <span class="ident">next</span>,
                     <span class="ident">prev</span>,
                 },
-                <span class="ident">Side</span>::<span class="ident">Right</span>,
+                <span class="ident">Side::Right</span>,
             )
             <span class="op">|</span> (
-                <span class="ident">PairState</span>::<span class="ident">Ready</span> {
+                <span class="ident">PairState::Ready</span> {
                     <span class="ident">ready</span>: <span class="ident">Right</span>,
                     <span class="ident">next</span>,
                     <span class="ident">prev</span>,
                 },
-                <span class="ident">Side</span>::<span class="ident">Left</span>,
+                <span class="ident">Side::Left</span>,
             ) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">entry</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">PairState</span>::<span class="ident">Exhausted</span>;
+                <span class="ident">entry</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">PairState::Exhausted</span>;
 
                 <span class="kw">if</span> <span class="ident">prev</span> <span class="op">=</span><span class="op">=</span> <span class="ident">index</span> {
                     <span class="macro">debug_assert_eq!</span>(<span class="ident">next</span>, <span class="ident">index</span>);
@@ -723,10 +723,10 @@
                 }
 
                 <span class="kw">match</span> <span class="ident">parent</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">parent</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Release</span>::<span class="ident">Parent</span>(<span class="ident">parent</span>),
+                    <span class="prelude-val">Some</span>(<span class="ident">parent</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Release::Parent</span>(<span class="ident">parent</span>),
                     <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="macro">debug_assert_eq!</span>(<span class="ident">offset</span>, <span class="number">0</span>);
-                        <span class="ident">Release</span>::<span class="ident">Chunk</span>(<span class="ident">chunk</span>)
+                        <span class="ident">Release::Chunk</span>(<span class="ident">chunk</span>)
                     }
                 }
             }
@@ -780,15 +780,15 @@
 
         <span class="ident">BuddyAllocator</span> {
             <span class="ident">minimal_size</span>,
-            <span class="ident">chunks</span>: <span class="ident">Slab</span>::<span class="ident">new</span>(),
-            <span class="ident">sizes</span>: (<span class="number">0</span>..<span class="ident">initial_sizes</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Size</span>::<span class="ident">new</span>()).<span class="ident">collect</span>(),
+            <span class="ident">chunks</span>: <span class="ident">Slab::new</span>(),
+            <span class="ident">sizes</span>: (<span class="number">0</span>..<span class="ident">initial_sizes</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Size::new</span>()).<span class="ident">collect</span>(),
             <span class="ident">memory_type</span>,
             <span class="ident">props</span>,
             <span class="ident">atom_mask</span>: <span class="ident">atom_mask</span> <span class="op">|</span> (<span class="ident">minimal_size</span> <span class="op">-</span> <span class="number">1</span>),
         }
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing</span>::<span class="ident">instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">device</span>)))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing::instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">device</span>)))]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">alloc</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">MemoryDevice</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>,
@@ -802,14 +802,14 @@
 
         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">align_up</span>(<span class="ident">size</span>, <span class="ident">align_mask</span>)
             .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">size</span><span class="op">|</span> <span class="ident">size</span>.<span class="ident">checked_next_power_of_two</span>())
-            .<span class="ident">ok_or</span>(<span class="ident">AllocationError</span>::<span class="ident">OutOfDeviceMemory</span>)<span class="question-mark">?</span>;
+            .<span class="ident">ok_or</span>(<span class="ident">AllocationError::OutOfDeviceMemory</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">size_index</span> <span class="op">=</span> <span class="ident">size</span>.<span class="ident">trailing_zeros</span>() <span class="op">-</span> <span class="self">self</span>.<span class="ident">minimal_size</span>.<span class="ident">trailing_zeros</span>();
         <span class="kw">let</span> <span class="ident">size_index</span> <span class="op">=</span>
-            <span class="ident">usize</span>::<span class="ident">try_from</span>(<span class="ident">size_index</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">AllocationError</span>::<span class="ident">OutOfDeviceMemory</span>)<span class="question-mark">?</span>;
+            <span class="ident">usize::try_from</span>(<span class="ident">size_index</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">AllocationError::OutOfDeviceMemory</span>)<span class="question-mark">?</span>;
 
         <span class="kw">while</span> <span class="self">self</span>.<span class="ident">sizes</span>.<span class="ident">len</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="ident">size_index</span> {
-            <span class="self">self</span>.<span class="ident">sizes</span>.<span class="ident">push</span>(<span class="ident">Size</span>::<span class="ident">new</span>());
+            <span class="self">self</span>.<span class="ident">sizes</span>.<span class="ident">push</span>(<span class="ident">Size::new</span>());
         }
 
         <span class="kw">let</span> <span class="ident">host_visible</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">host_visible</span>();
@@ -829,7 +829,7 @@
             <span class="kw">if</span> <span class="ident">sizes_len</span> <span class="op">=</span><span class="op">=</span> <span class="ident">candidate_size_index</span> <span class="op">+</span> <span class="number">1</span> {
                 <span class="comment">// That&#39;s size of device allocation.</span>
                 <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">allocations_remains</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">TooManyObjects</span>);
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError::TooManyObjects</span>);
                 }
 
                 <span class="kw">let</span> <span class="ident">chunk_size</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">minimal_size</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">candidate_size_index</span> <span class="op">+</span> <span class="number">1</span>);
@@ -840,11 +840,11 @@
                 <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">host_visible</span> {
                     <span class="kw">match</span> <span class="ident">device</span>.<span class="ident">map_memory</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">memory</span>, <span class="number">0</span>, <span class="ident">chunk_size</span>) {
                         <span class="prelude-val">Ok</span>(<span class="ident">ptr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">ptr</span>),
-                        <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError</span>::<span class="ident">OutOfDeviceMemory</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">OutOfDeviceMemory</span>)
+                        <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError::OutOfDeviceMemory</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError::OutOfDeviceMemory</span>)
                         }
-                        <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError</span>::<span class="ident">MapFailed</span>) <span class="op">|</span> <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError</span>::<span class="ident">OutOfHostMemory</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError</span>::<span class="ident">OutOfHostMemory</span>)
+                        <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError::MapFailed</span>) <span class="op">|</span> <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError::OutOfHostMemory</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError::OutOfHostMemory</span>)
                         }
                     }
                 } <span class="kw">else</span> {
@@ -852,7 +852,7 @@
                 };
 
                 <span class="kw">let</span> <span class="ident">chunk</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">chunks</span>.<span class="ident">insert</span>(<span class="ident">Chunk</span> {
-                    <span class="ident">memory</span>: <span class="ident">Arc</span>::<span class="ident">new</span>(<span class="ident">memory</span>),
+                    <span class="ident">memory</span>: <span class="ident">Arc::new</span>(<span class="ident">memory</span>),
                     <span class="ident">ptr</span>,
                     <span class="ident">size</span>: <span class="ident">chunk_size</span>,
                 });
@@ -885,7 +885,7 @@
             <span class="ident">memory</span>: <span class="ident">chunk_entry</span>.<span class="ident">memory</span>.<span class="ident">clone</span>(),
             <span class="ident">ptr</span>: <span class="ident">chunk_entry</span>
                 .<span class="ident">ptr</span>
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">ptr</span><span class="op">|</span> <span class="ident">NonNull</span>::<span class="ident">new_unchecked</span>(<span class="ident">ptr</span>.<span class="ident">as_ptr</span>().<span class="ident">add</span>(<span class="ident">entry</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">usize</span>))),
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">ptr</span><span class="op">|</span> <span class="ident">NonNull::new_unchecked</span>(<span class="ident">ptr</span>.<span class="ident">as_ptr</span>().<span class="ident">add</span>(<span class="ident">entry</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">usize</span>))),
             <span class="ident">offset</span>: <span class="ident">entry</span>.<span class="ident">offset</span>,
             <span class="ident">size</span>,
             <span class="ident">chunk</span>: <span class="ident">entry</span>.<span class="ident">chunk</span>,
@@ -893,7 +893,7 @@
         })
     }
 
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing</span>::<span class="ident">instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">device</span>)))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>, <span class="ident">tracing::instrument</span>(<span class="ident">skip</span>(<span class="self">self</span>, <span class="ident">device</span>)))]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">dealloc</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">MemoryDevice</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>,
@@ -911,11 +911,11 @@
 
         <span class="kw">loop</span> {
             <span class="kw">match</span> <span class="self">self</span>.<span class="ident">sizes</span>[<span class="ident">release_size_index</span>].<span class="ident">release</span>(<span class="ident">release_index</span>) {
-                <span class="ident">Release</span>::<span class="ident">Parent</span>(<span class="ident">parent</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Release::Parent</span>(<span class="ident">parent</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">release_size_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                     <span class="ident">release_index</span> <span class="op">=</span> <span class="ident">parent</span>;
                 }
-                <span class="ident">Release</span>::<span class="ident">Chunk</span>(<span class="ident">chunk</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Release::Chunk</span>(<span class="ident">chunk</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="macro">debug_assert_eq!</span>(<span class="ident">chunk</span>, <span class="ident">block</span>.<span class="ident">chunk</span>);
                     <span class="macro">debug_assert_eq!</span>(
                         <span class="self">self</span>.<span class="ident">chunks</span>.<span class="ident">get</span>(<span class="ident">chunk</span>).<span class="ident">size</span>,
@@ -933,13 +933,13 @@
 
                     <span class="kw">return</span>;
                 }
-                <span class="ident">Release</span>::<span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span>,
+                <span class="ident">Release::None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span>,
             }
         }
     }
 
     <span class="kw">fn</span> <span class="ident">host_visible</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">props</span>.<span class="ident">contains</span>(<span class="ident">MemoryPropertyFlags</span>::<span class="ident">HOST_VISIBLE</span>)
+        <span class="self">self</span>.<span class="ident">props</span>.<span class="ident">contains</span>(<span class="ident">MemoryPropertyFlags::HOST_VISIBLE</span>)
     }
 }
 </pre></div>

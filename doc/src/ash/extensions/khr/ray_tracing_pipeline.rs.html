@@ -184,23 +184,23 @@
 <span id="181">181</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">version</span>::{<span class="ident">DeviceV1_0</span>, <span class="ident">InstanceV1_0</span>, <span class="ident">InstanceV1_1</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vk</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">RawPtr</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">CStr</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::prelude</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::version</span>::{<span class="ident">DeviceV1_0</span>, <span class="ident">InstanceV1_0</span>, <span class="ident">InstanceV1_1</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::vk</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::RawPtr</span>;
+<span class="kw">use</span> <span class="ident">std::ffi::CStr</span>;
+<span class="kw">use</span> <span class="ident">std::mem</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RayTracingPipeline</span> {
-    <span class="ident">handle</span>: <span class="ident">vk</span>::<span class="ident">Device</span>,
-    <span class="ident">ray_tracing_fn</span>: <span class="ident">vk</span>::<span class="ident">KhrRayTracingPipelineFn</span>,
+    <span class="ident">handle</span>: <span class="ident">vk::Device</span>,
+    <span class="ident">ray_tracing_fn</span>: <span class="ident">vk::KhrRayTracingPipelineFn</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">RayTracingPipeline</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">InstanceV1_0</span>, <span class="ident">D</span>: <span class="ident">DeviceV1_0</span><span class="op">&gt;</span>(<span class="ident">instance</span>: <span class="kw-2">&amp;</span><span class="ident">I</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">D</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">ray_tracing_fn</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">KhrRayTracingPipelineFn</span>::<span class="ident">load</span>(<span class="op">|</span><span class="ident">name</span><span class="op">|</span> <span class="kw">unsafe</span> {
-            <span class="ident">mem</span>::<span class="ident">transmute</span>(<span class="ident">instance</span>.<span class="ident">get_device_proc_addr</span>(<span class="ident">device</span>.<span class="ident">handle</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>()))
+        <span class="kw">let</span> <span class="ident">ray_tracing_fn</span> <span class="op">=</span> <span class="ident">vk::KhrRayTracingPipelineFn::load</span>(<span class="op">|</span><span class="ident">name</span><span class="op">|</span> <span class="kw">unsafe</span> {
+            <span class="ident">mem::transmute</span>(<span class="ident">instance</span>.<span class="ident">get_device_proc_addr</span>(<span class="ident">device</span>.<span class="ident">handle</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>()))
         });
         <span class="self">Self</span> {
             <span class="ident">handle</span>: <span class="ident">device</span>.<span class="ident">handle</span>(),
@@ -210,11 +210,11 @@
 
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_properties</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">InstanceV1_1</span><span class="op">&gt;</span>(
         <span class="ident">instance</span>: <span class="kw-2">&amp;</span><span class="ident">I</span>,
-        <span class="ident">pdevice</span>: <span class="ident">vk</span>::<span class="ident">PhysicalDevice</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vk</span>::<span class="ident">PhysicalDeviceRayTracingPipelinePropertiesKHR</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">props_rt</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">PhysicalDeviceRayTracingPipelinePropertiesKHR</span>::<span class="ident">default</span>();
+        <span class="ident">pdevice</span>: <span class="ident">vk::PhysicalDevice</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vk::PhysicalDeviceRayTracingPipelinePropertiesKHR</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">props_rt</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceRayTracingPipelinePropertiesKHR::default</span>();
         {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">props</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">PhysicalDeviceProperties2</span>::<span class="ident">builder</span>().<span class="ident">push_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">props_rt</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">props</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceProperties2::builder</span>().<span class="ident">push_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">props_rt</span>);
             <span class="ident">instance</span>.<span class="ident">get_physical_device_properties2</span>(<span class="ident">pdevice</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">props</span>);
         }
         <span class="ident">props_rt</span>
@@ -223,11 +223,11 @@
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdTraceRaysKHR.html&gt;&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">cmd_trace_rays</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">command_buffer</span>: <span class="ident">vk</span>::<span class="ident">CommandBuffer</span>,
-        <span class="ident">raygen_shader_binding_tables</span>: <span class="kw-2">&amp;</span><span class="ident">vk</span>::<span class="ident">StridedDeviceAddressRegionKHR</span>,
-        <span class="ident">miss_shader_binding_tables</span>: <span class="kw-2">&amp;</span><span class="ident">vk</span>::<span class="ident">StridedDeviceAddressRegionKHR</span>,
-        <span class="ident">hit_shader_binding_tables</span>: <span class="kw-2">&amp;</span><span class="ident">vk</span>::<span class="ident">StridedDeviceAddressRegionKHR</span>,
-        <span class="ident">callable_shader_binding_tables</span>: <span class="kw-2">&amp;</span><span class="ident">vk</span>::<span class="ident">StridedDeviceAddressRegionKHR</span>,
+        <span class="ident">command_buffer</span>: <span class="ident">vk::CommandBuffer</span>,
+        <span class="ident">raygen_shader_binding_tables</span>: <span class="kw-2">&amp;</span><span class="ident">vk::StridedDeviceAddressRegionKHR</span>,
+        <span class="ident">miss_shader_binding_tables</span>: <span class="kw-2">&amp;</span><span class="ident">vk::StridedDeviceAddressRegionKHR</span>,
+        <span class="ident">hit_shader_binding_tables</span>: <span class="kw-2">&amp;</span><span class="ident">vk::StridedDeviceAddressRegionKHR</span>,
+        <span class="ident">callable_shader_binding_tables</span>: <span class="kw-2">&amp;</span><span class="ident">vk::StridedDeviceAddressRegionKHR</span>,
         <span class="ident">width</span>: <span class="ident">u32</span>,
         <span class="ident">height</span>: <span class="ident">u32</span>,
         <span class="ident">depth</span>: <span class="ident">u32</span>,
@@ -247,12 +247,12 @@
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateRayTracingPipelinesKHR.html&gt;&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_ray_tracing_pipelines</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">deferred_operation</span>: <span class="ident">vk</span>::<span class="ident">DeferredOperationKHR</span>,
-        <span class="ident">pipeline_cache</span>: <span class="ident">vk</span>::<span class="ident">PipelineCache</span>,
-        <span class="ident">create_info</span>: <span class="kw-2">&amp;</span>[<span class="ident">vk</span>::<span class="ident">RayTracingPipelineCreateInfoKHR</span>],
-        <span class="ident">allocation_callbacks</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">vk</span>::<span class="ident">AllocationCallbacks</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">VkResult</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">vk</span>::<span class="ident">Pipeline</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pipelines</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">mem</span>::<span class="ident">zeroed</span>(); <span class="ident">create_info</span>.<span class="ident">len</span>()];
+        <span class="ident">deferred_operation</span>: <span class="ident">vk::DeferredOperationKHR</span>,
+        <span class="ident">pipeline_cache</span>: <span class="ident">vk::PipelineCache</span>,
+        <span class="ident">create_info</span>: <span class="kw-2">&amp;</span>[<span class="ident">vk::RayTracingPipelineCreateInfoKHR</span>],
+        <span class="ident">allocation_callbacks</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">vk::AllocationCallbacks</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">VkResult</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">vk::Pipeline</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pipelines</span> <span class="op">=</span> <span class="macro">vec!</span>[<span class="ident">mem::zeroed</span>(); <span class="ident">create_info</span>.<span class="ident">len</span>()];
         <span class="self">self</span>.<span class="ident">ray_tracing_fn</span>
             .<span class="ident">create_ray_tracing_pipelines_khr</span>(
                 <span class="self">self</span>.<span class="ident">handle</span>,
@@ -269,12 +269,12 @@
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetRayTracingShaderGroupHandlesKHR.html&gt;&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_ray_tracing_shader_group_handles</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">pipeline</span>: <span class="ident">vk</span>::<span class="ident">Pipeline</span>,
+        <span class="ident">pipeline</span>: <span class="ident">vk::Pipeline</span>,
         <span class="ident">first_group</span>: <span class="ident">u32</span>,
         <span class="ident">group_count</span>: <span class="ident">u32</span>,
         <span class="ident">data_size</span>: <span class="ident">usize</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">VkResult</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>::<span class="ident">with_capacity</span>(<span class="ident">data_size</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="ident">::with_capacity</span>(<span class="ident">data_size</span>);
         <span class="kw">let</span> <span class="ident">err_code</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">ray_tracing_fn</span>
             .<span class="ident">get_ray_tracing_shader_group_handles_khr</span>(
@@ -283,7 +283,7 @@
                 <span class="ident">first_group</span>,
                 <span class="ident">group_count</span>,
                 <span class="ident">data_size</span>,
-                <span class="ident">data</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">c_void</span>,
+                <span class="ident">data</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
             );
         <span class="ident">data</span>.<span class="ident">set_len</span>(<span class="ident">data_size</span>);
         <span class="ident">err_code</span>.<span class="ident">result_with_success</span>(<span class="ident">data</span>)
@@ -292,12 +292,12 @@
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetRayTracingCaptureReplayShaderGroupHandlesKHR.html&gt;&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_ray_tracing_capture_replay_shader_group_handles</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">pipeline</span>: <span class="ident">vk</span>::<span class="ident">Pipeline</span>,
+        <span class="ident">pipeline</span>: <span class="ident">vk::Pipeline</span>,
         <span class="ident">first_group</span>: <span class="ident">u32</span>,
         <span class="ident">group_count</span>: <span class="ident">u32</span>,
         <span class="ident">data_size</span>: <span class="ident">usize</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">VkResult</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">data_size</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">data_size</span>);
 
         <span class="self">self</span>.<span class="ident">ray_tracing_fn</span>
             .<span class="ident">get_ray_tracing_capture_replay_shader_group_handles_khr</span>(
@@ -314,12 +314,12 @@
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdTraceRaysIndirectKHR.html&gt;&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">cmd_trace_rays_indirect</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">command_buffer</span>: <span class="ident">vk</span>::<span class="ident">CommandBuffer</span>,
-        <span class="ident">raygen_shader_binding_table</span>: <span class="kw-2">&amp;</span>[<span class="ident">vk</span>::<span class="ident">StridedDeviceAddressRegionKHR</span>],
-        <span class="ident">miss_shader_binding_table</span>: <span class="kw-2">&amp;</span>[<span class="ident">vk</span>::<span class="ident">StridedDeviceAddressRegionKHR</span>],
-        <span class="ident">hit_shader_binding_table</span>: <span class="kw-2">&amp;</span>[<span class="ident">vk</span>::<span class="ident">StridedDeviceAddressRegionKHR</span>],
-        <span class="ident">callable_shader_binding_table</span>: <span class="kw-2">&amp;</span>[<span class="ident">vk</span>::<span class="ident">StridedDeviceAddressRegionKHR</span>],
-        <span class="ident">indirect_device_address</span>: <span class="ident">vk</span>::<span class="ident">DeviceAddress</span>,
+        <span class="ident">command_buffer</span>: <span class="ident">vk::CommandBuffer</span>,
+        <span class="ident">raygen_shader_binding_table</span>: <span class="kw-2">&amp;</span>[<span class="ident">vk::StridedDeviceAddressRegionKHR</span>],
+        <span class="ident">miss_shader_binding_table</span>: <span class="kw-2">&amp;</span>[<span class="ident">vk::StridedDeviceAddressRegionKHR</span>],
+        <span class="ident">hit_shader_binding_table</span>: <span class="kw-2">&amp;</span>[<span class="ident">vk::StridedDeviceAddressRegionKHR</span>],
+        <span class="ident">callable_shader_binding_table</span>: <span class="kw-2">&amp;</span>[<span class="ident">vk::StridedDeviceAddressRegionKHR</span>],
+        <span class="ident">indirect_device_address</span>: <span class="ident">vk::DeviceAddress</span>,
     ) {
         <span class="self">self</span>.<span class="ident">ray_tracing_fn</span>.<span class="ident">cmd_trace_rays_indirect_khr</span>(
             <span class="ident">command_buffer</span>,
@@ -334,10 +334,10 @@
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetRayTracingShaderGroupStackSizeKHR.html&gt;&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_ray_tracing_shader_group_stack_size</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">pipeline</span>: <span class="ident">vk</span>::<span class="ident">Pipeline</span>,
+        <span class="ident">pipeline</span>: <span class="ident">vk::Pipeline</span>,
         <span class="ident">group</span>: <span class="ident">u32</span>,
-        <span class="ident">group_shader</span>: <span class="ident">vk</span>::<span class="ident">ShaderGroupShaderKHR</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vk</span>::<span class="ident">DeviceSize</span> {
+        <span class="ident">group_shader</span>: <span class="ident">vk::ShaderGroupShaderKHR</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vk::DeviceSize</span> {
         <span class="self">self</span>.<span class="ident">ray_tracing_fn</span>
             .<span class="ident">get_ray_tracing_shader_group_stack_size_khr</span>(<span class="self">self</span>.<span class="ident">handle</span>, <span class="ident">pipeline</span>, <span class="ident">group</span>, <span class="ident">group_shader</span>)
     }
@@ -345,7 +345,7 @@
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdSetRayTracingPipelineStackSizeKHR.html&gt;&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">cmd_set_ray_tracing_pipeline_stack_size</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">command_buffer</span>: <span class="ident">vk</span>::<span class="ident">CommandBuffer</span>,
+        <span class="ident">command_buffer</span>: <span class="ident">vk::CommandBuffer</span>,
         <span class="ident">pipeline_stack_size</span>: <span class="ident">u32</span>,
     ) {
         <span class="self">self</span>.<span class="ident">ray_tracing_fn</span>
@@ -353,14 +353,14 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">name</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span> {
-        <span class="ident">vk</span>::<span class="ident">KhrRayTracingPipelineFn</span>::<span class="ident">name</span>()
+        <span class="ident">vk::KhrRayTracingPipelineFn::name</span>()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">vk</span>::<span class="ident">KhrRayTracingPipelineFn</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">vk::KhrRayTracingPipelineFn</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ray_tracing_fn</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">device</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vk</span>::<span class="ident">Device</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">device</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vk::Device</span> {
         <span class="self">self</span>.<span class="ident">handle</span>
     }
 }

@@ -45,16 +45,16 @@
 <span id="42">42</span>
 <span id="43">43</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="ident">alloc</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>;
+<span class="kw">use</span> <span class="ident">alloc::sync::Arc</span>;
 
 <span class="doccomment">/// Guarantees uniqueness only if `Weak` pointers are never created</span>
 <span class="doccomment">/// from this `Arc` or clones.</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_arc_unique</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="ident">arc</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-    <span class="kw">let</span> <span class="ident">strong_count</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">strong_count</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">arc</span>);
+    <span class="kw">let</span> <span class="ident">strong_count</span> <span class="op">=</span> <span class="ident">Arc::strong_count</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">arc</span>);
     <span class="macro">debug_assert_ne!</span>(<span class="ident">strong_count</span>, <span class="number">0</span>, <span class="string">&quot;This Arc should exist&quot;</span>);
 
     <span class="macro">debug_assert!</span>(
-        <span class="ident">strong_count</span> <span class="op">&gt;</span> <span class="number">1</span> <span class="op">|</span><span class="op">|</span> <span class="ident">Arc</span>::<span class="ident">get_mut</span>(<span class="ident">arc</span>).<span class="ident">is_some</span>(),
+        <span class="ident">strong_count</span> <span class="op">&gt;</span> <span class="number">1</span> <span class="op">|</span><span class="op">|</span> <span class="ident">Arc::get_mut</span>(<span class="ident">arc</span>).<span class="ident">is_some</span>(),
         <span class="string">&quot;`Weak` pointer exists&quot;</span>
     );
 
@@ -64,10 +64,10 @@
 <span class="doccomment">/// Can be used instead of `Arc::try_unwrap(arc).unwrap()`</span>
 <span class="doccomment">/// when it is guaranteed to succeed.</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">arc_unwrap</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="ident">arc</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">M</span> {
-    <span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">mem</span>::<span class="ident">ManuallyDrop</span>, <span class="ident">ptr</span>::<span class="ident">read</span>};
+    <span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">mem::ManuallyDrop</span>, <span class="ident">ptr::read</span>};
 
     <span class="comment">// Get raw pointer to inner value.</span>
-    <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">Arc</span>::<span class="ident">into_raw</span>(<span class="ident">arc</span>);
+    <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">Arc::into_raw</span>(<span class="ident">arc</span>);
 
     <span class="comment">// As `Arc` is unique and no Weak pointers exist</span>
     <span class="comment">// it won&#39;t be dereferenced elsewhere.</span>
@@ -75,7 +75,7 @@
 
     <span class="comment">// Cast to `ManuallyDrop` which guarantees to have same layout</span>
     <span class="comment">// and will skip dropping.</span>
-    <span class="ident">drop</span>(<span class="ident">Arc</span>::<span class="ident">from_raw</span>(<span class="ident">raw</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ManuallyDrop</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>));
+    <span class="ident">drop</span>(<span class="ident">Arc::from_raw</span>(<span class="ident">raw</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ManuallyDrop</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>));
     <span class="ident">inner</span>
 }
 

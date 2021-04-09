@@ -108,34 +108,34 @@
 <span class="macro">macro_rules!</span> <span class="ident">check</span> {
     (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">check</span>:<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {{
         <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">check</span>;
-        <span class="kw">if</span> <span class="ident">br</span>::<span class="ident">ScInternalResult</span>::<span class="ident">Success</span> <span class="op">!</span><span class="op">=</span> <span class="ident">result</span> {
-            <span class="kw">if</span> <span class="ident">br</span>::<span class="ident">ScInternalResult</span>::<span class="ident">CompilationError</span> <span class="op">=</span><span class="op">=</span> <span class="ident">result</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message_ptr</span> <span class="op">=</span> <span class="ident">ptr</span>::<span class="ident">null</span>();
+        <span class="kw">if</span> <span class="ident">br::ScInternalResult::Success</span> <span class="op">!</span><span class="op">=</span> <span class="ident">result</span> {
+            <span class="kw">if</span> <span class="ident">br::ScInternalResult::CompilationError</span> <span class="op">=</span><span class="op">=</span> <span class="ident">result</span> {
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">message_ptr</span> <span class="op">=</span> <span class="ident">ptr::null</span>();
 
-                <span class="kw">if</span> <span class="ident">br</span>::<span class="ident">ScInternalResult</span>::<span class="ident">Success</span>
-                    <span class="op">!</span><span class="op">=</span> <span class="ident">br</span>::<span class="ident">sc_internal_get_latest_exception_message</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">message_ptr</span>)
+                <span class="kw">if</span> <span class="ident">br::ScInternalResult::Success</span>
+                    <span class="op">!</span><span class="op">=</span> <span class="ident">br::sc_internal_get_latest_exception_message</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">message_ptr</span>)
                 {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorCode</span>::<span class="ident">Unhandled</span>);
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorCode::Unhandled</span>);
                 }
 
-                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">CStr</span>::<span class="ident">from_ptr</span>(<span class="ident">message_ptr</span>)
+                <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">std::ffi::CStr::from_ptr</span>(<span class="ident">message_ptr</span>)
                     .<span class="ident">to_owned</span>()
                     .<span class="ident">into_string</span>()
                 {
-                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorCode</span>::<span class="ident">Unhandled</span>),
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorCode::Unhandled</span>),
                     <span class="prelude-val">Ok</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>,
                 };
 
-                <span class="kw">if</span> <span class="ident">br</span>::<span class="ident">ScInternalResult</span>::<span class="ident">Success</span>
-                    <span class="op">!</span><span class="op">=</span> <span class="ident">br</span>::<span class="ident">sc_internal_free_pointer</span>(<span class="ident">message_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_void</span>)
+                <span class="kw">if</span> <span class="ident">br::ScInternalResult::Success</span>
+                    <span class="op">!</span><span class="op">=</span> <span class="ident">br::sc_internal_free_pointer</span>(<span class="ident">message_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::os::raw::c_void</span>)
                 {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorCode</span>::<span class="ident">Unhandled</span>);
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorCode::Unhandled</span>);
                 }
 
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorCode</span>::<span class="ident">CompilationError</span>(<span class="ident">message</span>));
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorCode::CompilationError</span>(<span class="ident">message</span>));
             }
 
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorCode</span>::<span class="ident">Unhandled</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ErrorCode::Unhandled</span>);
         }
     }};
 }
@@ -165,7 +165,7 @@
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
     <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">non_snake_case</span>)]</span>
     <span class="macro">include!</span>(<span class="macro">concat!</span>(<span class="string">&quot;bindings_wasm.rs&quot;</span>));
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">bindings_wasm_functions</span>::<span class="kw-2">*</span>;
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::bindings_wasm_functions</span>::<span class="kw-2">*</span>;
     <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">root</span>::<span class="kw-2">*</span>;
 }
 
@@ -185,13 +185,13 @@
     <span class="ident">CompilationError</span>(<span class="ident">String</span>),
 }
 
-<span class="kw">impl</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">ErrorCode</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+<span class="kw">impl</span> <span class="ident">std::fmt::Display</span> <span class="kw">for</span> <span class="ident">ErrorCode</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{:?}&quot;</span>, <span class="self">self</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">std</span>::<span class="ident">error</span>::<span class="ident">Error</span> <span class="kw">for</span> <span class="ident">ErrorCode</span> {}
+<span class="kw">impl</span> <span class="ident">std::error::Error</span> <span class="kw">for</span> <span class="ident">ErrorCode</span> {}
 </pre></div>
 </section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spirv_cross" data-search-js="../../search-index.js"></div>
     <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

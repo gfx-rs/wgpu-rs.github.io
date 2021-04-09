@@ -63,27 +63,27 @@
 <span class="doccomment">//! Pointer utilities to abstract over native pointer access (i.e. `*const T`)</span>
 <span class="doccomment">//! and Emscripten pointer access (i.e. `u32` offset into the Emscripten heap).</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">ErrorCode</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">CStr</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">slice</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::ErrorCode</span>;
+<span class="kw">use</span> <span class="ident">std::ffi::CStr</span>;
+<span class="kw">use</span> <span class="ident">std::slice</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">emscripten</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::emscripten</span>;
 
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">read_string_from_ptr</span>(<span class="ident">ptr</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std</span>::<span class="ident">os</span>::<span class="ident">raw</span>::<span class="ident">c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">ErrorCode</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">read_string_from_ptr</span>(<span class="ident">ptr</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::os::raw::c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">ErrorCode</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>))]</span>
-    <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">CStr</span>::<span class="ident">from_ptr</span>(<span class="ident">ptr</span>)
+    <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="ident">CStr::from_ptr</span>(<span class="ident">ptr</span>)
         .<span class="ident">to_owned</span>()
         .<span class="ident">into_string</span>()
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ErrorCode</span>::<span class="ident">Unhandled</span>);
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ErrorCode::Unhandled</span>);
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
     <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> {
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">emscripten</span>::<span class="ident">get_module</span>().<span class="ident">read_bytes_into_vec_while</span>(
-            <span class="ident">emscripten</span>::<span class="ident">Pointer</span>::<span class="ident">from_offset</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">u32</span>),
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">emscripten::get_module</span>().<span class="ident">read_bytes_into_vec_while</span>(
+            <span class="ident">emscripten::Pointer::from_offset</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">u32</span>),
             <span class="op">|</span><span class="ident">byte</span>, <span class="kw">_</span><span class="op">|</span> <span class="number">0</span> <span class="op">!</span><span class="op">=</span> <span class="ident">byte</span>,
             <span class="bool-val">false</span>,
         );
-        <span class="ident">String</span>::<span class="ident">from_utf8</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ErrorCode</span>::<span class="ident">Unhandled</span>)
+        <span class="ident">String::from_utf8</span>(<span class="ident">bytes</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ErrorCode::Unhandled</span>)
     };
     <span class="ident">string</span>
 }
@@ -93,11 +93,11 @@
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">read</span>();
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
     <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> {
-        <span class="kw">let</span> <span class="ident">num_bytes_to_read</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t_val</span>: <span class="ident">T</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">uninitialized</span>();
+        <span class="kw">let</span> <span class="ident">num_bytes_to_read</span> <span class="op">=</span> <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t_val</span>: <span class="ident">T</span> <span class="op">=</span> <span class="ident">std::mem::uninitialized</span>();
         <span class="kw">let</span> <span class="ident">t_ptr</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">t_val</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">T</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>;
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">emscripten</span>::<span class="ident">get_module</span>().<span class="ident">read_bytes_into_vec_while</span>(
-            <span class="ident">emscripten</span>::<span class="ident">Pointer</span>::<span class="ident">from_offset</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">u32</span>),
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">emscripten::get_module</span>().<span class="ident">read_bytes_into_vec_while</span>(
+            <span class="ident">emscripten::Pointer::from_offset</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">u32</span>),
             <span class="op">|</span><span class="kw">_</span>, <span class="ident">bytes_read</span><span class="op">|</span> <span class="ident">bytes_read</span> <span class="op">&lt;</span> <span class="ident">num_bytes_to_read</span>,
             <span class="bool-val">false</span>,
         );
@@ -111,7 +111,7 @@
 
 <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">read_into_vec_from_ptr</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Clone</span><span class="op">&gt;</span>(<span class="ident">ptr</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">T</span>, <span class="ident">size</span>: <span class="ident">usize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>))]</span>
-    <span class="kw">let</span> <span class="ident">values</span> <span class="op">=</span> <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">size</span>).<span class="ident">to_vec</span>();
+    <span class="kw">let</span> <span class="ident">values</span> <span class="op">=</span> <span class="ident">slice::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">size</span>).<span class="ident">to_vec</span>();
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
     <span class="kw">let</span> <span class="ident">values</span> <span class="op">=</span> (<span class="number">0</span>..<span class="ident">size</span>)
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">offset</span><span class="op">|</span> <span class="ident">read_from_ptr</span>(<span class="ident">ptr</span>.<span class="ident">add</span>(<span class="ident">offset</span>)))

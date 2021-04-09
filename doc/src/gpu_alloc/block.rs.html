@@ -341,10 +341,10 @@
 <span id="338">338</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> {
-    <span class="kw">crate</span>::{<span class="ident">align_down</span>, <span class="ident">align_up</span>, <span class="ident">error</span>::<span class="ident">MapError</span>},
-    <span class="ident">alloc</span>::<span class="ident">sync</span>::<span class="ident">Arc</span>,
+    <span class="kw">crate</span>::{<span class="ident">align_down</span>, <span class="ident">align_up</span>, <span class="ident">error::MapError</span>},
+    <span class="ident">alloc::sync::Arc</span>,
     <span class="ident">core</span>::{
-        <span class="ident">convert</span>::<span class="ident">TryFrom</span> <span class="kw">as</span> <span class="kw">_</span>,
+        <span class="ident">convert::TryFrom</span> <span class="kw">as</span> <span class="kw">_</span>,
         <span class="ident">ptr</span>::{<span class="ident">copy_nonoverlapping</span>, <span class="ident">NonNull</span>},
         <span class="comment">// sync::atomic::{AtomicU8, Ordering::*},</span>
     },
@@ -357,7 +357,7 @@
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Relevant</span> {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>)]</span>
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="ident">tracing</span>::<span class="macro">error!</span>(<span class="string">&quot;Memory block wasn&#39;t deallocated&quot;</span>);
+        <span class="macro">tracing::error!</span>(<span class="string">&quot;Memory block wasn&#39;t deallocated&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>), <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;std&quot;</span>))]</span>
@@ -393,7 +393,7 @@
         <span class="ident">atom_mask</span>: <span class="ident">u64</span>,
         <span class="ident">flavor</span>: <span class="ident">MemoryBlockFlavor</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="ident">isize</span>::<span class="ident">try_from</span>(<span class="ident">atom_mask</span>).<span class="ident">expect</span>(<span class="string">&quot;`atom_mask` is too large&quot;</span>);
+        <span class="ident">isize::try_from</span>(<span class="ident">atom_mask</span>).<span class="ident">expect</span>(<span class="string">&quot;`atom_mask` is too large&quot;</span>);
         <span class="ident">MemoryBlock</span> {
             <span class="ident">memory_type</span>,
             <span class="ident">props</span>,
@@ -407,7 +407,7 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">deallocate</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MemoryBlockFlavor</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
-        <span class="ident">core</span>::<span class="ident">mem</span>::<span class="ident">forget</span>(<span class="self">self</span>.<span class="ident">relevant</span>);
+        <span class="ident">core::mem::forget</span>(<span class="self">self</span>.<span class="ident">relevant</span>);
         <span class="self">self</span>.<span class="ident">flavor</span>
     }
 }
@@ -438,9 +438,9 @@
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">memory</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">M</span> {
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">flavor</span> {
-            <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Dedicated</span> { <span class="ident">memory</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">memory</span>,
-            <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Buddy</span> { <span class="ident">memory</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">memory</span>,
-            <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Linear</span> { <span class="ident">memory</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">memory</span>,
+            <span class="ident">MemoryBlockFlavor::Dedicated</span> { <span class="ident">memory</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">memory</span>,
+            <span class="ident">MemoryBlockFlavor::Buddy</span> { <span class="ident">memory</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">memory</span>,
+            <span class="ident">MemoryBlockFlavor::Linear</span> { <span class="ident">memory</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="kw-2">*</span><span class="ident">memory</span>,
         }
     }
 
@@ -494,7 +494,7 @@
         <span class="ident">offset</span>: <span class="ident">u64</span>,
         <span class="ident">size</span>: <span class="ident">usize</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">MapError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">size_u64</span> <span class="op">=</span> <span class="ident">u64</span>::<span class="ident">try_from</span>(<span class="ident">size</span>).<span class="ident">expect</span>(<span class="string">&quot;`size` doesn&#39;t fit device address space&quot;</span>);
+        <span class="kw">let</span> <span class="ident">size_u64</span> <span class="op">=</span> <span class="ident">u64::try_from</span>(<span class="ident">size</span>).<span class="ident">expect</span>(<span class="string">&quot;`size` doesn&#39;t fit device address space&quot;</span>);
         <span class="macro">assert!</span>(<span class="ident">offset</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">size</span>, <span class="string">&quot;`offset` is out of memory block bounds&quot;</span>);
         <span class="macro">assert!</span>(
             <span class="ident">size_u64</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">size</span> <span class="op">-</span> <span class="ident">offset</span>,
@@ -502,13 +502,13 @@
         );
 
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">flavor</span> {
-            <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Dedicated</span> { <span class="ident">memory</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MemoryBlockFlavor::Dedicated</span> { <span class="ident">memory</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">align_up</span>(<span class="ident">offset</span> <span class="op">+</span> <span class="ident">size_u64</span>, <span class="self">self</span>.<span class="ident">atom_mask</span>)
                     .<span class="ident">expect</span>(<span class="string">&quot;mapping end doesn&#39;t fit device address space&quot;</span>);
                 <span class="kw">let</span> <span class="ident">aligned_offset</span> <span class="op">=</span> <span class="ident">align_down</span>(<span class="ident">offset</span>, <span class="self">self</span>.<span class="ident">atom_mask</span>);
 
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">acquire_mapping</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">mapped</span>) {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MapError</span>::<span class="ident">AlreadyMapped</span>);
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MapError::AlreadyMapped</span>);
                 }
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
                     <span class="ident">device</span>.<span class="ident">map_memory</span>(<span class="ident">memory</span>, <span class="self">self</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">aligned_offset</span>, <span class="ident">end</span> <span class="op">-</span> <span class="ident">aligned_offset</span>);
@@ -525,19 +525,19 @@
                     }
                 }
             }
-            <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Linear</span> { <span class="ident">ptr</span>: <span class="prelude-val">Some</span>(<span class="ident">ptr</span>), .. }
-            <span class="op">|</span> <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Buddy</span> { <span class="ident">ptr</span>: <span class="prelude-val">Some</span>(<span class="ident">ptr</span>), .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MemoryBlockFlavor::Linear</span> { <span class="ident">ptr</span>: <span class="prelude-val">Some</span>(<span class="ident">ptr</span>), .. }
+            <span class="op">|</span> <span class="ident">MemoryBlockFlavor::Buddy</span> { <span class="ident">ptr</span>: <span class="prelude-val">Some</span>(<span class="ident">ptr</span>), .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">acquire_mapping</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">mapped</span>) {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MapError</span>::<span class="ident">AlreadyMapped</span>);
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MapError::AlreadyMapped</span>);
                 }
-                <span class="kw">let</span> <span class="ident">offset_isize</span> <span class="op">=</span> <span class="ident">isize</span>::<span class="ident">try_from</span>(<span class="ident">offset</span>)
+                <span class="kw">let</span> <span class="ident">offset_isize</span> <span class="op">=</span> <span class="ident">isize::try_from</span>(<span class="ident">offset</span>)
                     .<span class="ident">expect</span>(<span class="string">&quot;Buddy and linear block should fit host address space&quot;</span>);
                 <span class="ident">ptr</span>.<span class="ident">as_ptr</span>().<span class="ident">offset</span>(<span class="ident">offset_isize</span>)
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MapError</span>::<span class="ident">NonHostVisible</span>),
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">MapError::NonHostVisible</span>),
         };
 
-        <span class="prelude-val">Ok</span>(<span class="ident">NonNull</span>::<span class="ident">new_unchecked</span>(<span class="ident">ptr</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">NonNull::new_unchecked</span>(<span class="ident">ptr</span>))
     }
 
     <span class="doccomment">/// Unmaps memory range of this block that was previously mapped with `Block::map`.</span>
@@ -556,11 +556,11 @@
             <span class="kw">return</span> <span class="bool-val">false</span>;
         }
         <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">flavor</span> {
-            <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Dedicated</span> { <span class="ident">memory</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MemoryBlockFlavor::Dedicated</span> { <span class="ident">memory</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">device</span>.<span class="ident">unmap_memory</span>(<span class="ident">memory</span>);
             }
-            <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Linear</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="ident">MemoryBlockFlavor</span>::<span class="ident">Buddy</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="ident">MemoryBlockFlavor::Linear</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
+            <span class="ident">MemoryBlockFlavor::Buddy</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
         }
         <span class="bool-val">true</span>
     }
@@ -601,7 +601,7 @@
         };
 
         <span class="self">self</span>.<span class="ident">unmap</span>(<span class="ident">device</span>);
-        <span class="ident">result</span>.<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+        <span class="ident">result</span>.<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
     }
 
     <span class="doccomment">/// Transiently maps block memory range and copies specified data</span>
@@ -625,7 +625,7 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>)]</span>
         {
             <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">cached</span>() {
-                <span class="ident">tracing</span>::<span class="macro">warn!</span>(<span class="string">&quot;Reading from non-cached memory may be slow. Consider allocating HOST_CACHED memory block for host reads.&quot;</span>)
+                <span class="macro">tracing::warn!</span>(<span class="string">&quot;Reading from non-cached memory may be slow. Consider allocating HOST_CACHED memory block for host reads.&quot;</span>)
             }
         }
 
@@ -648,16 +648,16 @@
         }
 
         <span class="self">self</span>.<span class="ident">unmap</span>(<span class="ident">device</span>);
-        <span class="ident">result</span>.<span class="ident">map_err</span>(<span class="ident">Into</span>::<span class="ident">into</span>)
+        <span class="ident">result</span>.<span class="ident">map_err</span>(<span class="ident">Into::into</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">coherent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">props</span>.<span class="ident">contains</span>(<span class="ident">MemoryPropertyFlags</span>::<span class="ident">HOST_COHERENT</span>)
+        <span class="self">self</span>.<span class="ident">props</span>.<span class="ident">contains</span>(<span class="ident">MemoryPropertyFlags::HOST_COHERENT</span>)
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>)]</span>
     <span class="kw">fn</span> <span class="ident">cached</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">props</span>.<span class="ident">contains</span>(<span class="ident">MemoryPropertyFlags</span>::<span class="ident">HOST_CACHED</span>)
+        <span class="self">self</span>.<span class="ident">props</span>.<span class="ident">contains</span>(<span class="ident">MemoryPropertyFlags::HOST_CACHED</span>)
     }
 }
 

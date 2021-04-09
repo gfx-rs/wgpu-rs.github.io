@@ -11,7 +11,7 @@ message than simply panicking the macro.</p>
 conversion to <code>compile_error!</code> automatically.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">proc_macro</span>::<span class="ident">TokenStream</span>;
+<span class="kw">use</span> <span class="ident">proc_macro::TokenStream</span>;
 <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">parse_macro_input</span>, <span class="ident">AttributeArgs</span>, <span class="ident">ItemFn</span>};
 
 <span class="attribute">#[<span class="ident">proc_macro_attribute</span>]</span>
@@ -31,7 +31,7 @@ to <code>compile_error!</code>.</p>
     <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">parse_macro_input!</span>(<span class="ident">input</span> <span class="kw">as</span> <span class="ident">DeriveInput</span>);
 
     <span class="comment">// fn(DeriveInput) -&gt; syn::Result&lt;proc_macro2::TokenStream&gt;</span>
-    <span class="ident">expand</span>::<span class="ident">my_derive</span>(<span class="ident">input</span>)
+    <span class="ident">expand::my_derive</span>(<span class="ident">input</span>)
         .<span class="ident">unwrap_or_else</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">err</span>.<span class="ident">to_compile_error</span>())
         .<span class="ident">into</span>()
 }</pre></div>
@@ -43,7 +43,7 @@ than where the parse stream is currently positioned.</p>
 <h1 id="example" class="section-header"><a href="#example">Example</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">Error</span>, <span class="ident">Ident</span>, <span class="ident">LitStr</span>, <span class="prelude-ty">Result</span>, <span class="ident">Token</span>};
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="ident">parse</span>::<span class="ident">ParseStream</span>;
+<span class="kw">use</span> <span class="ident">syn::parse::ParseStream</span>;
 
 <span class="comment">// Parses input that looks like `name = &quot;string&quot;` where the key must be</span>
 <span class="comment">// the identifier `name` and the value may be any string literal.</span>
@@ -53,7 +53,7 @@ than where the parse stream is currently positioned.</p>
     <span class="kw">if</span> <span class="ident">name_token</span> <span class="op">!</span><span class="op">=</span> <span class="string">&quot;name&quot;</span> {
         <span class="comment">// Trigger an error not on the current position of the stream,</span>
         <span class="comment">// but on the position of the unexpected identifier.</span>
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error</span>::<span class="ident">new</span>(<span class="ident">name_token</span>.<span class="ident">span</span>(), <span class="string">&quot;expected `name`&quot;</span>));
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::new</span>(<span class="ident">name_token</span>.<span class="ident">span</span>(), <span class="string">&quot;expected `name`&quot;</span>));
     }
     <span class="ident">input</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="macro">Token!</span>[<span class="op">=</span>]<span class="op">&gt;</span>()<span class="question-mark">?</span>;
     <span class="kw">let</span> <span class="ident">s</span>: <span class="ident">LitStr</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
@@ -80,19 +80,19 @@ this method correctly in a procedural macro.</p>
 </div><h4 id="method.into_compile_error" class="method"><code>pub fn <a href="#method.into_compile_error" class="fnname">into_compile_error</a>(self) -&gt; <a class="struct" href="../proc_macro2/struct.TokenStream.html" title="struct proc_macro2::TokenStream">TokenStream</a></code><a class="srclink" href="../src/syn/error.rs.html#232-234" title="goto source code">[src]</a></h4><div class="docblock"><p>Render the error as an invocation of <a href="https://doc.rust-lang.org/nightly/core/macro.compile_error.html"><code>compile_error!</code></a>.</p>
 <h1 id="example-1" class="section-header"><a href="#example-1">Example</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">proc_macro</span>::<span class="ident">TokenStream</span>;
+<span class="kw">use</span> <span class="ident">proc_macro::TokenStream</span>;
 <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">parse_macro_input</span>, <span class="ident">DeriveInput</span>, <span class="ident">Error</span>};
 
 <span class="attribute">#[<span class="ident">proc_macro_derive</span>(<span class="ident">MyTrait</span>)]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">derive_my_trait</span>(<span class="ident">input</span>: <span class="ident">TokenStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TokenStream</span> {
     <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="macro">parse_macro_input!</span>(<span class="ident">input</span> <span class="kw">as</span> <span class="ident">DeriveInput</span>);
-    <span class="ident">my_trait</span>::<span class="ident">expand</span>(<span class="ident">input</span>)
-        .<span class="ident">unwrap_or_else</span>(<span class="ident">Error</span>::<span class="ident">into_compile_error</span>)
+    <span class="ident">my_trait::expand</span>(<span class="ident">input</span>)
+        .<span class="ident">unwrap_or_else</span>(<span class="ident">Error::into_compile_error</span>)
         .<span class="ident">into</span>()
 }
 
 <span class="kw">mod</span> <span class="ident">my_trait</span> {
-    <span class="kw">use</span> <span class="ident">proc_macro2</span>::<span class="ident">TokenStream</span>;
+    <span class="kw">use</span> <span class="ident">proc_macro2::TokenStream</span>;
     <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">DeriveInput</span>, <span class="prelude-ty">Result</span>};
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">expand</span>(<span class="ident">input</span>: <span class="ident">DeriveInput</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">TokenStream</span><span class="op">&gt;</span> {

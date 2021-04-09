@@ -101,9 +101,9 @@
 <span class="doccomment">//! assert_eq!(&quot;base64: AAECAw==&quot;, format!(&quot;base64: {}&quot;, wrapper));</span>
 <span class="doccomment">//! ```</span>
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">chunked_encoder</span>::<span class="ident">ChunkedEncoder</span>;
-<span class="kw">use</span> <span class="kw">super</span>::<span class="ident">Config</span>;
-<span class="kw">use</span> <span class="ident">core</span>::<span class="ident">fmt</span>::{<span class="ident">Display</span>, <span class="ident">Formatter</span>};
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::chunked_encoder::ChunkedEncoder</span>;
+<span class="kw">use</span> <span class="kw">super</span><span class="ident">::Config</span>;
+<span class="kw">use</span> <span class="ident">core::fmt</span>::{<span class="ident">Display</span>, <span class="ident">Formatter</span>};
 <span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">fmt</span>, <span class="ident">str</span>};
 
 <span class="doccomment">/// A convenience wrapper for base64&#39;ing bytes into a format string without heap allocation.</span>
@@ -117,13 +117,13 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_config</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">config</span>: <span class="ident">Config</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Base64Display</span> {
         <span class="ident">Base64Display</span> {
             <span class="ident">bytes</span>,
-            <span class="ident">chunked_encoder</span>: <span class="ident">ChunkedEncoder</span>::<span class="ident">new</span>(<span class="ident">config</span>),
+            <span class="ident">chunked_encoder</span>: <span class="ident">ChunkedEncoder::new</span>(<span class="ident">config</span>),
         }
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Base64Display</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">fmt</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">fmt::Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sink</span> <span class="op">=</span> <span class="ident">FormatterSink</span> { <span class="ident">f</span>: <span class="ident">formatter</span> };
         <span class="self">self</span>.<span class="ident">chunked_encoder</span>.<span class="ident">encode</span>(<span class="self">self</span>.<span class="ident">bytes</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">sink</span>)
     }
@@ -133,20 +133,20 @@
     <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;b</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>: <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">super</span>::<span class="ident">chunked_encoder</span>::<span class="ident">Sink</span> <span class="kw">for</span> <span class="ident">FormatterSink</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">fmt</span>::<span class="ident">Error</span>;
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>: <span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">super</span><span class="ident">::chunked_encoder::Sink</span> <span class="kw">for</span> <span class="ident">FormatterSink</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span><span class="op">&gt;</span> {
+    <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> <span class="ident">fmt::Error</span>;
 
-    <span class="kw">fn</span> <span class="ident">write_encoded_bytes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">encoded</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span>::<span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">write_encoded_bytes</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">encoded</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="self">Self</span><span class="ident">::Error</span><span class="op">&gt;</span> {
         <span class="comment">// Avoid unsafe. If max performance is needed, write your own display wrapper that uses</span>
         <span class="comment">// unsafe here to gain about 10-15%.</span>
         <span class="self">self</span>.<span class="ident">f</span>
-            .<span class="ident">write_str</span>(<span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="ident">encoded</span>).<span class="ident">expect</span>(<span class="string">&quot;base64 data was not utf8&quot;</span>))
+            .<span class="ident">write_str</span>(<span class="ident">str::from_utf8</span>(<span class="ident">encoded</span>).<span class="ident">expect</span>(<span class="string">&quot;base64 data was not utf8&quot;</span>))
     }
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw">super</span>::<span class="ident">chunked_encoder</span>::<span class="ident">tests</span>::{
+    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw">super</span><span class="ident">::chunked_encoder::tests</span>::{
         <span class="ident">chunked_encode_matches_normal_encode_random</span>, <span class="ident">SinkTestHelper</span>,
     };
     <span class="kw">use</span> <span class="kw">super</span>::<span class="kw">super</span>::<span class="kw-2">*</span>;
@@ -156,11 +156,11 @@
     <span class="kw">fn</span> <span class="ident">basic_display</span>() {
         <span class="macro">assert_eq!</span>(
             <span class="string">&quot;~$Zm9vYmFy#*&quot;</span>,
-            <span class="macro">format!</span>(<span class="string">&quot;~${}#*&quot;</span>, <span class="ident">Base64Display</span>::<span class="ident">with_config</span>(<span class="string">b&quot;foobar&quot;</span>, <span class="ident">STANDARD</span>))
+            <span class="macro">format!</span>(<span class="string">&quot;~${}#*&quot;</span>, <span class="ident">Base64Display::with_config</span>(<span class="string">b&quot;foobar&quot;</span>, <span class="ident">STANDARD</span>))
         );
         <span class="macro">assert_eq!</span>(
             <span class="string">&quot;~$Zm9vYmFyZg==#*&quot;</span>,
-            <span class="macro">format!</span>(<span class="string">&quot;~${}#*&quot;</span>, <span class="ident">Base64Display</span>::<span class="ident">with_config</span>(<span class="string">b&quot;foobarf&quot;</span>, <span class="ident">STANDARD</span>))
+            <span class="macro">format!</span>(<span class="string">&quot;~${}#*&quot;</span>, <span class="ident">Base64Display::with_config</span>(<span class="string">b&quot;foobarf&quot;</span>, <span class="ident">STANDARD</span>))
         );
     }
 
@@ -174,7 +174,7 @@
 
     <span class="kw">impl</span> <span class="ident">SinkTestHelper</span> <span class="kw">for</span> <span class="ident">DisplaySinkTestHelper</span> {
         <span class="kw">fn</span> <span class="ident">encode_to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">config</span>: <span class="ident">Config</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-            <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Base64Display</span>::<span class="ident">with_config</span>(<span class="ident">bytes</span>, <span class="ident">config</span>))
+            <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">Base64Display::with_config</span>(<span class="ident">bytes</span>, <span class="ident">config</span>))
         }
     }
 }

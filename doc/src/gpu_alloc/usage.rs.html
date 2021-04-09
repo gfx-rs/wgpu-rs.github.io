@@ -170,14 +170,14 @@
 <span id="167">167</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> {
-    <span class="ident">core</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>},
+    <span class="ident">core::fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>},
     <span class="ident">gpu_alloc_types</span>::{<span class="ident">MemoryPropertyFlags</span>, <span class="ident">MemoryType</span>},
 };
 
-<span class="ident">bitflags</span>::<span class="macro">bitflags!</span> {
+<span class="macro">bitflags::bitflags!</span> {
     <span class="doccomment">/// Memory usage type.</span>
     <span class="doccomment">/// Bits set define intended usage for requested memory.</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>, <span class="ident">serde</span>::<span class="ident">Deserialize</span>))]</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>, <span class="ident">serde::Deserialize</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UsageFlags</span>: <span class="ident">u8</span> {
         <span class="doccomment">/// Hints for allocator to find memory with faster device access.</span>
         <span class="doccomment">/// If no flags is specified than `FAST_DEVICE_ACCESS` is implied.</span>
@@ -225,7 +225,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">MemoryForUsage</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fmt</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fmt</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="ident">fmt</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;MemoryForUsage&quot;</span>)
             .<span class="ident">field</span>(<span class="string">&quot;usages&quot;</span>, <span class="op">&amp;&amp;</span><span class="self">self</span>.<span class="ident">usages</span>[..])
             .<span class="ident">finish</span>()
@@ -249,7 +249,7 @@
 
         <span class="kw">for</span> <span class="ident">usage</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">64</span> {
             <span class="ident">mfu</span>.<span class="ident">usages</span>[<span class="ident">usage</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span>
-                <span class="ident">one_usage</span>(<span class="ident">UsageFlags</span>::<span class="ident">from_bits_truncate</span>(<span class="ident">usage</span>), <span class="ident">memory_types</span>);
+                <span class="ident">one_usage</span>(<span class="ident">UsageFlags::from_bits_truncate</span>(<span class="ident">usage</span>), <span class="ident">memory_types</span>);
         }
 
         <span class="ident">mfu</span>
@@ -296,13 +296,13 @@
 
 <span class="kw">fn</span> <span class="ident">compatible</span>(<span class="ident">usage</span>: <span class="ident">UsageFlags</span>, <span class="ident">flags</span>: <span class="ident">MemoryPropertyFlags</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
     <span class="kw">type</span> <span class="ident">Flags</span> <span class="op">=</span> <span class="ident">MemoryPropertyFlags</span>;
-    <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">Flags</span>::<span class="ident">LAZILY_ALLOCATED</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">Flags</span>::<span class="ident">PROTECTED</span>) {
+    <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">Flags::LAZILY_ALLOCATED</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">Flags::PROTECTED</span>) {
         <span class="comment">// Unsupported</span>
         <span class="bool-val">false</span>
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident">UsageFlags</span>::<span class="ident">HOST_ACCESS</span> <span class="op">|</span> <span class="ident">UsageFlags</span>::<span class="ident">UPLOAD</span> <span class="op">|</span> <span class="ident">UsageFlags</span>::<span class="ident">DOWNLOAD</span>)
+    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident">UsageFlags::HOST_ACCESS</span> <span class="op">|</span> <span class="ident">UsageFlags::UPLOAD</span> <span class="op">|</span> <span class="ident">UsageFlags::DOWNLOAD</span>)
     {
         <span class="comment">// Requires HOST_VISIBLE</span>
-        <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">Flags</span>::<span class="ident">HOST_VISIBLE</span>)
+        <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">Flags::HOST_VISIBLE</span>)
     } <span class="kw">else</span> {
         <span class="bool-val">true</span>
     }
@@ -315,23 +315,23 @@
 
     <span class="comment">// Highly prefer device local memory when `FAST_DEVICE_ACCESS` usage is specified</span>
     <span class="comment">// or usage is empty.</span>
-    <span class="kw">let</span> <span class="ident">device_local</span>: <span class="ident">bool</span> <span class="op">=</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">Flags</span>::<span class="ident">DEVICE_LOCAL</span>)
-        <span class="op">^</span> (<span class="ident">usage</span>.<span class="ident">is_empty</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">UsageFlags</span>::<span class="ident">FAST_DEVICE_ACCESS</span>));
+    <span class="kw">let</span> <span class="ident">device_local</span>: <span class="ident">bool</span> <span class="op">=</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">Flags::DEVICE_LOCAL</span>)
+        <span class="op">^</span> (<span class="ident">usage</span>.<span class="ident">is_empty</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">UsageFlags::FAST_DEVICE_ACCESS</span>));
 
     <span class="macro">assert!</span>(
-        <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">Flags</span>::<span class="ident">HOST_VISIBLE</span>)
+        <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">Flags::HOST_VISIBLE</span>)
             <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="ident">usage</span>
-                .<span class="ident">intersects</span>(<span class="ident">UsageFlags</span>::<span class="ident">HOST_ACCESS</span> <span class="op">|</span> <span class="ident">UsageFlags</span>::<span class="ident">UPLOAD</span> <span class="op">|</span> <span class="ident">UsageFlags</span>::<span class="ident">DOWNLOAD</span>)
+                .<span class="ident">intersects</span>(<span class="ident">UsageFlags::HOST_ACCESS</span> <span class="op">|</span> <span class="ident">UsageFlags::UPLOAD</span> <span class="op">|</span> <span class="ident">UsageFlags::DOWNLOAD</span>)
     );
 
     <span class="comment">// Prefer cached memory for downloads.</span>
     <span class="comment">// Or non-cached if downloads are not expected.</span>
-    <span class="kw">let</span> <span class="ident">cached</span>: <span class="ident">bool</span> <span class="op">=</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">Flags</span>::<span class="ident">HOST_CACHED</span>) <span class="op">^</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">UsageFlags</span>::<span class="ident">DOWNLOAD</span>);
+    <span class="kw">let</span> <span class="ident">cached</span>: <span class="ident">bool</span> <span class="op">=</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">Flags::HOST_CACHED</span>) <span class="op">^</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">UsageFlags::DOWNLOAD</span>);
 
     <span class="comment">// Prefer coherent for both uploads and downloads.</span>
     <span class="comment">// Prefer non-coherent if neither flags is set.</span>
-    <span class="kw">let</span> <span class="ident">coherent</span>: <span class="ident">bool</span> <span class="op">=</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">Flags</span>::<span class="ident">HOST_COHERENT</span>)
-        <span class="op">^</span> (<span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident">UsageFlags</span>::<span class="ident">UPLOAD</span> <span class="op">|</span> <span class="ident">UsageFlags</span>::<span class="ident">DOWNLOAD</span>));
+    <span class="kw">let</span> <span class="ident">coherent</span>: <span class="ident">bool</span> <span class="op">=</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">Flags::HOST_COHERENT</span>)
+        <span class="op">^</span> (<span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident">UsageFlags::UPLOAD</span> <span class="op">|</span> <span class="ident">UsageFlags::DOWNLOAD</span>));
 
     <span class="comment">// Each boolean is false if flags are preferred.</span>
     <span class="ident">device_local</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="number">4</span> <span class="op">+</span> <span class="ident">cached</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="number">2</span> <span class="op">+</span> <span class="ident">coherent</span> <span class="kw">as</span> <span class="ident">u32</span>

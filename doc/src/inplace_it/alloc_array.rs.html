@@ -110,9 +110,9 @@
 <span id="107">107</span>
 <span id="108">108</span>
 </pre><div class="example-wrap"><pre class="rust ">
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">guards</span>::<span class="ident">UninitializedSliceMemoryGuard</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">MaybeUninit</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">try_inplace_array</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::guards::UninitializedSliceMemoryGuard</span>;
+<span class="kw">use</span> <span class="ident">std::mem::MaybeUninit</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::try_inplace_array</span>;
 
 <span class="doccomment">/// `alloc_array` is used when `inplace_or_alloc_array` realize that the size of requested array of `T`</span>
 <span class="doccomment">/// is too large and should be replaced in the heap.</span>
@@ -122,9 +122,9 @@
 <span class="doccomment">/// `consumer`&#39;s result will be returned.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">alloc_array</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">R</span>, <span class="ident">Consumer</span>: <span class="ident">FnOnce</span>(<span class="ident">UninitializedSliceMemoryGuard</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">size</span>: <span class="ident">usize</span>, <span class="ident">consumer</span>: <span class="ident">Consumer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">R</span> {
     <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">memory_holder</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>::<span class="ident">with_capacity</span>(<span class="ident">size</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">memory_holder</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::with_capacity</span>(<span class="ident">size</span>);
         <span class="ident">memory_holder</span>.<span class="ident">set_len</span>(<span class="ident">size</span>);
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">consumer</span>(<span class="ident">UninitializedSliceMemoryGuard</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">memory_holder</span>));
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">consumer</span>(<span class="ident">UninitializedSliceMemoryGuard::new</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">memory_holder</span>));
         <span class="ident">memory_holder</span>.<span class="ident">set_len</span>(<span class="number">0</span>);
         <span class="ident">result</span>
     }
@@ -201,7 +201,7 @@
 <span class="doccomment">/// ```</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inplace_or_alloc_from_iter</span><span class="op">&lt;</span><span class="ident">Iter</span>, <span class="ident">R</span>, <span class="ident">Consumer</span><span class="op">&gt;</span>(<span class="ident">iter</span>: <span class="ident">Iter</span>, <span class="ident">consumer</span>: <span class="ident">Consumer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">R</span>
     <span class="kw">where</span> <span class="ident">Iter</span>: <span class="ident">Iterator</span>,
-          <span class="ident">Consumer</span>: <span class="ident">FnOnce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">Iter</span>::<span class="ident">Item</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">R</span>,
+          <span class="ident">Consumer</span>: <span class="ident">FnOnce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">Iter::Item</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">R</span>,
 {
     <span class="kw">match</span> <span class="ident">iter</span>.<span class="ident">size_hint</span>().<span class="number">1</span> {
         <span class="prelude-val">Some</span>(<span class="ident">upper_bound_hint</span>) <span class="op">=</span><span class="op">&gt;</span> {

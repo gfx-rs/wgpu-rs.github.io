@@ -915,7 +915,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */</span>
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">device</span>::<span class="ident">trace</span>::<span class="ident">Command</span> <span class="kw">as</span> <span class="ident">TraceCommand</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::device::trace::Command</span> <span class="kw">as</span> <span class="ident">TraceCommand</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">command</span>::{<span class="ident">CommandBuffer</span>, <span class="ident">CommandEncoderError</span>},
     <span class="ident">conv</span>,
@@ -924,19 +924,19 @@
     <span class="ident">id</span>::{<span class="ident">BufferId</span>, <span class="ident">CommandEncoderId</span>, <span class="ident">TextureId</span>},
     <span class="ident">memory_init_tracker</span>::{<span class="ident">MemoryInitKind</span>, <span class="ident">MemoryInitTrackerAction</span>},
     <span class="ident">resource</span>::{<span class="ident">BufferUse</span>, <span class="ident">Texture</span>, <span class="ident">TextureErrorDimension</span>, <span class="ident">TextureUse</span>},
-    <span class="ident">track</span>::<span class="ident">TextureSelector</span>,
+    <span class="ident">track::TextureSelector</span>,
 };
 
-<span class="kw">use</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">CommandBuffer</span> <span class="kw">as</span> <span class="kw">_</span>;
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">hal::command::CommandBuffer</span> <span class="kw">as</span> <span class="kw">_</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">wgt</span>::{<span class="ident">BufferAddress</span>, <span class="ident">BufferUsage</span>, <span class="ident">Extent3d</span>, <span class="ident">TextureUsage</span>};
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">iter</span>;
+<span class="kw">use</span> <span class="ident">std::iter</span>;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">BITS_PER_BYTE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">8</span>;
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ImageCopyBuffer</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">ImageCopyBuffer</span><span class="op">&lt;</span><span class="ident">BufferId</span><span class="op">&gt;</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ImageCopyTexture</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">ImageCopyTexture</span><span class="op">&lt;</span><span class="ident">TextureId</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ImageCopyBuffer</span> <span class="op">=</span> <span class="ident">wgt::ImageCopyBuffer</span><span class="op">&lt;</span><span class="ident">BufferId</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">ImageCopyTexture</span> <span class="op">=</span> <span class="ident">wgt::ImageCopyTexture</span><span class="op">&lt;</span><span class="ident">TextureId</span><span class="op">&gt;</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CopySide</span> {
@@ -1001,9 +1001,9 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;source and destination layers have different aspects&quot;</span>)]</span>
     <span class="ident">MismatchedAspects</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;copying from textures with format {0:?} is forbidden&quot;</span>)]</span>
-    <span class="ident">CopyFromForbiddenTextureFormat</span>(<span class="ident">wgt</span>::<span class="ident">TextureFormat</span>),
+    <span class="ident">CopyFromForbiddenTextureFormat</span>(<span class="ident">wgt::TextureFormat</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;copying to textures with format {0:?} is forbidden&quot;</span>)]</span>
-    <span class="ident">CopyToForbiddenTextureFormat</span>(<span class="ident">wgt</span>::<span class="ident">TextureFormat</span>),
+    <span class="ident">CopyToForbiddenTextureFormat</span>(<span class="ident">wgt::TextureFormat</span>),
 }
 
 <span class="doccomment">/// Error encountered while attempting to do a copy on a command encoder.</span>
@@ -1017,37 +1017,37 @@
 
 <span class="comment">//TODO: we currently access each texture twice for a transfer,</span>
 <span class="comment">// once only to get the aspect flags, which is unfortunate.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">texture_copy_view_to_hal</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span>(
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">texture_copy_view_to_hal</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span>(
     <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">ImageCopyTexture</span>,
     <span class="ident">size</span>: <span class="kw-2">&amp;</span><span class="ident">Extent3d</span>,
     <span class="ident">texture_guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">Texture</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">TextureId</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>
     (
-        <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">SubresourceLayers</span>,
+        <span class="ident">hal::image::SubresourceLayers</span>,
         <span class="ident">TextureSelector</span>,
-        <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Offset</span>,
+        <span class="ident">hal::image::Offset</span>,
     ),
     <span class="ident">TransferError</span>,
 <span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="ident">texture_guard</span>
         .<span class="ident">get</span>(<span class="ident">view</span>.<span class="ident">texture</span>)
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TransferError</span>::<span class="ident">InvalidTexture</span>(<span class="ident">view</span>.<span class="ident">texture</span>))<span class="question-mark">?</span>;
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">TransferError::InvalidTexture</span>(<span class="ident">view</span>.<span class="ident">texture</span>))<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">level</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Level</span>;
+    <span class="kw">let</span> <span class="ident">level</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">hal::image::Level</span>;
     <span class="kw">let</span> (<span class="ident">layer</span>, <span class="ident">layer_count</span>, <span class="ident">z</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">texture</span>.<span class="ident">dimension</span> {
-        <span class="ident">wgt</span>::<span class="ident">TextureDimension</span>::<span class="ident">D1</span> <span class="op">|</span> <span class="ident">wgt</span>::<span class="ident">TextureDimension</span>::<span class="ident">D2</span> <span class="op">=</span><span class="op">&gt;</span> (
-            <span class="ident">view</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Layer</span>,
-            <span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="kw">as</span> <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Layer</span>,
+        <span class="ident">wgt::TextureDimension::D1</span> <span class="op">|</span> <span class="ident">wgt::TextureDimension::D2</span> <span class="op">=</span><span class="op">&gt;</span> (
+            <span class="ident">view</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">hal::image::Layer</span>,
+            <span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="kw">as</span> <span class="ident">hal::image::Layer</span>,
             <span class="number">0</span>,
         ),
-        <span class="ident">wgt</span>::<span class="ident">TextureDimension</span>::<span class="ident">D3</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="number">0</span>, <span class="number">1</span>, <span class="ident">view</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">i32</span>),
+        <span class="ident">wgt::TextureDimension::D3</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="number">0</span>, <span class="number">1</span>, <span class="ident">view</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">i32</span>),
     };
 
     <span class="comment">// TODO: Can&#39;t satisfy clippy here unless we modify</span>
     <span class="comment">// `TextureSelector` to use `std::ops::RangeBounds`.</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy</span>::<span class="ident">range_plus_one</span>)]</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::range_plus_one</span>)]</span>
     <span class="prelude-val">Ok</span>((
-        <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">SubresourceLayers</span> {
+        <span class="ident">hal::image::SubresourceLayers</span> {
             <span class="ident">aspects</span>: <span class="ident">texture</span>.<span class="ident">aspects</span>,
             <span class="ident">level</span>,
             <span class="ident">layers</span>: <span class="ident">layer</span>..<span class="ident">layer</span> <span class="op">+</span> <span class="ident">layer_count</span>,
@@ -1056,7 +1056,7 @@
             <span class="ident">levels</span>: <span class="ident">level</span>..<span class="ident">level</span> <span class="op">+</span> <span class="number">1</span>,
             <span class="ident">layers</span>: <span class="ident">layer</span>..<span class="ident">layer</span> <span class="op">+</span> <span class="ident">layer_count</span>,
         },
-        <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Offset</span> {
+        <span class="ident">hal::image::Offset</span> {
             <span class="ident">x</span>: <span class="ident">view</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
             <span class="ident">y</span>: <span class="ident">view</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
             <span class="ident">z</span>,
@@ -1067,8 +1067,8 @@
 <span class="doccomment">/// Function copied with some modifications from webgpu standard &lt;https://gpuweb.github.io/gpuweb/#copy-between-buffer-texture&gt;</span>
 <span class="doccomment">/// If successful, returns number of buffer bytes required for this copy.</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">validate_linear_texture_data</span>(
-    <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident">wgt</span>::<span class="ident">ImageDataLayout</span>,
-    <span class="ident">format</span>: <span class="ident">wgt</span>::<span class="ident">TextureFormat</span>,
+    <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::ImageDataLayout</span>,
+    <span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>,
     <span class="ident">buffer_size</span>: <span class="ident">BufferAddress</span>,
     <span class="ident">buffer_side</span>: <span class="ident">CopySide</span>,
     <span class="ident">bytes_per_block</span>: <span class="ident">BufferAddress</span>,
@@ -1094,7 +1094,7 @@
         <span class="ident">bytes_per_row</span>.<span class="ident">get</span>() <span class="kw">as</span> <span class="ident">BufferAddress</span>
     } <span class="kw">else</span> {
         <span class="kw">if</span> <span class="ident">copy_depth</span> <span class="op">&gt;</span> <span class="number">1</span> <span class="op">|</span><span class="op">|</span> <span class="ident">height_in_blocks</span> <span class="op">&gt;</span> <span class="number">1</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnspecifiedBytesPerRow</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnspecifiedBytesPerRow</span>);
         }
         <span class="ident">bytes_per_block</span> <span class="op">*</span> <span class="ident">width_in_blocks</span>
     };
@@ -1102,29 +1102,29 @@
         <span class="ident">rows_per_image</span>.<span class="ident">get</span>() <span class="kw">as</span> <span class="ident">BufferAddress</span>
     } <span class="kw">else</span> {
         <span class="kw">if</span> <span class="ident">copy_depth</span> <span class="op">&gt;</span> <span class="number">1</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnspecifiedRowsPerImage</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnspecifiedRowsPerImage</span>);
         }
         <span class="ident">copy_height</span>
     };
 
     <span class="kw">if</span> <span class="ident">copy_width</span> <span class="op">%</span> <span class="ident">block_width</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedCopyWidth</span>);
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnalignedCopyWidth</span>);
     }
     <span class="kw">if</span> <span class="ident">copy_height</span> <span class="op">%</span> <span class="ident">block_height</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedCopyHeight</span>);
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnalignedCopyHeight</span>);
     }
     <span class="kw">if</span> <span class="ident">rows_per_image</span> <span class="op">%</span> <span class="ident">block_height</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedRowsPerImage</span>);
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnalignedRowsPerImage</span>);
     }
 
     <span class="kw">if</span> <span class="ident">need_copy_aligned_rows</span> {
-        <span class="kw">let</span> <span class="ident">bytes_per_row_alignment</span> <span class="op">=</span> <span class="ident">wgt</span>::<span class="ident">COPY_BYTES_PER_ROW_ALIGNMENT</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>;
+        <span class="kw">let</span> <span class="ident">bytes_per_row_alignment</span> <span class="op">=</span> <span class="ident">wgt::COPY_BYTES_PER_ROW_ALIGNMENT</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>;
 
         <span class="kw">if</span> <span class="ident">bytes_per_row_alignment</span> <span class="op">%</span> <span class="ident">bytes_per_block</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedBytesPerRow</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnalignedBytesPerRow</span>);
         }
         <span class="kw">if</span> <span class="ident">bytes_per_row</span> <span class="op">%</span> <span class="ident">bytes_per_row_alignment</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedBytesPerRow</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnalignedBytesPerRow</span>);
         }
     }
 
@@ -1139,10 +1139,10 @@
     };
 
     <span class="kw">if</span> <span class="ident">rows_per_image</span> <span class="op">&lt;</span> <span class="ident">copy_height</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidRowsPerImage</span>);
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::InvalidRowsPerImage</span>);
     }
     <span class="kw">if</span> <span class="ident">offset</span> <span class="op">+</span> <span class="ident">required_bytes_in_copy</span> <span class="op">&gt;</span> <span class="ident">buffer_size</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">BufferOverrun</span> {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::BufferOverrun</span> {
             <span class="ident">start_offset</span>: <span class="ident">offset</span>,
             <span class="ident">end_offset</span>: <span class="ident">offset</span> <span class="op">+</span> <span class="ident">required_bytes_in_copy</span>,
             <span class="ident">buffer_size</span>,
@@ -1150,10 +1150,10 @@
         });
     }
     <span class="kw">if</span> <span class="ident">offset</span> <span class="op">%</span> <span class="ident">block_size</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedBufferOffset</span>(<span class="ident">offset</span>));
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnalignedBufferOffset</span>(<span class="ident">offset</span>));
     }
     <span class="kw">if</span> <span class="ident">copy_height</span> <span class="op">&gt;</span> <span class="number">1</span> <span class="op">&amp;&amp;</span> <span class="ident">bytes_per_row</span> <span class="op">&lt;</span> <span class="ident">bytes_in_last_row</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidBytesPerRow</span>);
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::InvalidBytesPerRow</span>);
     }
     <span class="prelude-val">Ok</span>(<span class="ident">required_bytes_in_copy</span>)
 }
@@ -1161,8 +1161,8 @@
 <span class="doccomment">/// Function copied with minor modifications from webgpu standard &lt;https://gpuweb.github.io/gpuweb/#valid-texture-copy-range&gt;</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">validate_texture_copy_range</span>(
     <span class="ident">texture_copy_view</span>: <span class="kw-2">&amp;</span><span class="ident">ImageCopyTexture</span>,
-    <span class="ident">texture_format</span>: <span class="ident">wgt</span>::<span class="ident">TextureFormat</span>,
-    <span class="ident">texture_dimension</span>: <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Kind</span>,
+    <span class="ident">texture_format</span>: <span class="ident">wgt::TextureFormat</span>,
+    <span class="ident">texture_dimension</span>: <span class="ident">hal::image::Kind</span>,
     <span class="ident">texture_side</span>: <span class="ident">CopySide</span>,
     <span class="ident">copy_size</span>: <span class="kw-2">&amp;</span><span class="ident">Extent3d</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">TransferError</span><span class="op">&gt;</span> {
@@ -1174,64 +1174,64 @@
 
     <span class="comment">// Adjust extent for the physical size of mips</span>
     <span class="kw">if</span> <span class="ident">texture_copy_view</span>.<span class="ident">mip_level</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="ident">extent</span>.<span class="ident">width</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">align_up</span>(<span class="ident">extent</span>.<span class="ident">width</span>, <span class="ident">block_width</span>);
-        <span class="ident">extent</span>.<span class="ident">height</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">align_up</span>(<span class="ident">extent</span>.<span class="ident">height</span>, <span class="ident">block_height</span>);
+        <span class="ident">extent</span>.<span class="ident">width</span> <span class="op">=</span> <span class="ident">conv::align_up</span>(<span class="ident">extent</span>.<span class="ident">width</span>, <span class="ident">block_width</span>);
+        <span class="ident">extent</span>.<span class="ident">height</span> <span class="op">=</span> <span class="ident">conv::align_up</span>(<span class="ident">extent</span>.<span class="ident">height</span>, <span class="ident">block_height</span>);
     }
 
     <span class="kw">match</span> <span class="ident">texture_dimension</span> {
-        <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Kind</span>::<span class="ident">D1</span>(..) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">hal::image::Kind::D1</span>(..) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="kw">if</span> (<span class="ident">copy_size</span>.<span class="ident">height</span>, <span class="ident">copy_size</span>.<span class="ident">depth_or_array_layers</span>) <span class="op">!</span><span class="op">=</span> (<span class="number">1</span>, <span class="number">1</span>) {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidCopySize</span>);
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::InvalidCopySize</span>);
             }
         }
-        <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Kind</span>::<span class="ident">D2</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">array_layers</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">hal::image::Kind::D2</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">array_layers</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
             <span class="ident">extent</span>.<span class="ident">depth</span> <span class="op">=</span> <span class="ident">array_layers</span> <span class="kw">as</span> <span class="ident">u32</span>;
         }
-        <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Kind</span>::<span class="ident">D3</span>(..) <span class="op">=</span><span class="op">&gt;</span> {}
+        <span class="ident">hal::image::Kind::D3</span>(..) <span class="op">=</span><span class="op">&gt;</span> {}
     };
 
     <span class="kw">let</span> <span class="ident">x_copy_max</span> <span class="op">=</span> <span class="ident">texture_copy_view</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="op">+</span> <span class="ident">copy_size</span>.<span class="ident">width</span>;
     <span class="kw">if</span> <span class="ident">x_copy_max</span> <span class="op">&gt;</span> <span class="ident">extent</span>.<span class="ident">width</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">TextureOverrun</span> {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::TextureOverrun</span> {
             <span class="ident">start_offset</span>: <span class="ident">texture_copy_view</span>.<span class="ident">origin</span>.<span class="ident">x</span>,
             <span class="ident">end_offset</span>: <span class="ident">x_copy_max</span>,
             <span class="ident">texture_size</span>: <span class="ident">extent</span>.<span class="ident">width</span>,
-            <span class="ident">dimension</span>: <span class="ident">TextureErrorDimension</span>::<span class="ident">X</span>,
+            <span class="ident">dimension</span>: <span class="ident">TextureErrorDimension::X</span>,
             <span class="ident">side</span>: <span class="ident">texture_side</span>,
         });
     }
     <span class="kw">let</span> <span class="ident">y_copy_max</span> <span class="op">=</span> <span class="ident">texture_copy_view</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="op">+</span> <span class="ident">copy_size</span>.<span class="ident">height</span>;
     <span class="kw">if</span> <span class="ident">y_copy_max</span> <span class="op">&gt;</span> <span class="ident">extent</span>.<span class="ident">height</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">TextureOverrun</span> {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::TextureOverrun</span> {
             <span class="ident">start_offset</span>: <span class="ident">texture_copy_view</span>.<span class="ident">origin</span>.<span class="ident">y</span>,
             <span class="ident">end_offset</span>: <span class="ident">y_copy_max</span>,
             <span class="ident">texture_size</span>: <span class="ident">extent</span>.<span class="ident">height</span>,
-            <span class="ident">dimension</span>: <span class="ident">TextureErrorDimension</span>::<span class="ident">Y</span>,
+            <span class="ident">dimension</span>: <span class="ident">TextureErrorDimension::Y</span>,
             <span class="ident">side</span>: <span class="ident">texture_side</span>,
         });
     }
     <span class="kw">let</span> <span class="ident">z_copy_max</span> <span class="op">=</span> <span class="ident">texture_copy_view</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="op">+</span> <span class="ident">copy_size</span>.<span class="ident">depth_or_array_layers</span>;
     <span class="kw">if</span> <span class="ident">z_copy_max</span> <span class="op">&gt;</span> <span class="ident">extent</span>.<span class="ident">depth</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">TextureOverrun</span> {
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::TextureOverrun</span> {
             <span class="ident">start_offset</span>: <span class="ident">texture_copy_view</span>.<span class="ident">origin</span>.<span class="ident">z</span>,
             <span class="ident">end_offset</span>: <span class="ident">z_copy_max</span>,
             <span class="ident">texture_size</span>: <span class="ident">extent</span>.<span class="ident">depth</span>,
-            <span class="ident">dimension</span>: <span class="ident">TextureErrorDimension</span>::<span class="ident">Z</span>,
+            <span class="ident">dimension</span>: <span class="ident">TextureErrorDimension::Z</span>,
             <span class="ident">side</span>: <span class="ident">texture_side</span>,
         });
     }
 
     <span class="kw">if</span> <span class="ident">texture_copy_view</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="op">%</span> <span class="ident">block_width</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedCopyOriginX</span>);
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnalignedCopyOriginX</span>);
     }
     <span class="kw">if</span> <span class="ident">texture_copy_view</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="op">%</span> <span class="ident">block_height</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedCopyOriginY</span>);
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnalignedCopyOriginY</span>);
     }
     <span class="kw">if</span> <span class="ident">copy_size</span>.<span class="ident">width</span> <span class="op">%</span> <span class="ident">block_width</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedCopyWidth</span>);
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnalignedCopyWidth</span>);
     }
     <span class="kw">if</span> <span class="ident">copy_size</span>.<span class="ident">height</span> <span class="op">%</span> <span class="ident">block_height</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedCopyHeight</span>);
+        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnalignedCopyHeight</span>);
     }
     <span class="prelude-val">Ok</span>(())
 }
@@ -1246,21 +1246,21 @@
         <span class="ident">destination_offset</span>: <span class="ident">BufferAddress</span>,
         <span class="ident">size</span>: <span class="ident">BufferAddress</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CopyError</span><span class="op">&gt;</span> {
-        <span class="ident">profiling</span>::<span class="macro">scope!</span>(<span class="string">&quot;CommandEncoder::copy_buffer_to_buffer&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::copy_buffer_to_buffer&quot;</span>);
 
         <span class="kw">if</span> <span class="ident">source</span> <span class="op">=</span><span class="op">=</span> <span class="ident">destination</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">SameSourceDestinationBuffer</span>.<span class="ident">into</span>());
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::SameSourceDestinationBuffer</span>.<span class="ident">into</span>());
         }
-        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B::hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
 
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">cmd_buf_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">command_buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
-        <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer</span>::<span class="ident">get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">command_encoder_id</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer::get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">command_encoder_id</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> (<span class="ident">buffer_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">list</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">commands</span> {
-            <span class="ident">list</span>.<span class="ident">push</span>(<span class="ident">TraceCommand</span>::<span class="ident">CopyBufferToBuffer</span> {
+            <span class="ident">list</span>.<span class="ident">push</span>(<span class="ident">TraceCommand::CopyBufferToBuffer</span> {
                 <span class="ident">src</span>: <span class="ident">source</span>,
                 <span class="ident">src_offset</span>: <span class="ident">source_offset</span>,
                 <span class="ident">dst</span>: <span class="ident">destination</span>,
@@ -1272,14 +1272,14 @@
         <span class="kw">let</span> (<span class="ident">src_buffer</span>, <span class="ident">src_pending</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>
             .<span class="ident">trackers</span>
             .<span class="ident">buffers</span>
-            .<span class="ident">use_replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">source</span>, (), <span class="ident">BufferUse</span>::<span class="ident">COPY_SRC</span>)
-            .<span class="ident">map_err</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidBuffer</span>)<span class="question-mark">?</span>;
+            .<span class="ident">use_replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">source</span>, (), <span class="ident">BufferUse::COPY_SRC</span>)
+            .<span class="ident">map_err</span>(<span class="ident">TransferError::InvalidBuffer</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">src_raw</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">src_buffer</span>
             .<span class="ident">raw</span>
             .<span class="ident">as_ref</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidBuffer</span>(<span class="ident">source</span>))<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">src_buffer</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">BufferUsage</span>::<span class="ident">COPY_SRC</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">MissingCopySrcUsageFlag</span>.<span class="ident">into</span>());
+            .<span class="ident">ok_or</span>(<span class="ident">TransferError::InvalidBuffer</span>(<span class="ident">source</span>))<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">src_buffer</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">BufferUsage::COPY_SRC</span>) {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::MissingCopySrcUsageFlag</span>.<span class="ident">into</span>());
         }
         <span class="comment">// expecting only a single barrier</span>
         <span class="kw">let</span> <span class="ident">src_barrier</span> <span class="op">=</span> <span class="ident">src_pending</span>
@@ -1289,52 +1289,52 @@
         <span class="kw">let</span> (<span class="ident">dst_buffer</span>, <span class="ident">dst_pending</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>
             .<span class="ident">trackers</span>
             .<span class="ident">buffers</span>
-            .<span class="ident">use_replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">destination</span>, (), <span class="ident">BufferUse</span>::<span class="ident">COPY_DST</span>)
-            .<span class="ident">map_err</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidBuffer</span>)<span class="question-mark">?</span>;
+            .<span class="ident">use_replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">destination</span>, (), <span class="ident">BufferUse::COPY_DST</span>)
+            .<span class="ident">map_err</span>(<span class="ident">TransferError::InvalidBuffer</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">dst_raw</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">dst_buffer</span>
             .<span class="ident">raw</span>
             .<span class="ident">as_ref</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidBuffer</span>(<span class="ident">destination</span>))<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">dst_buffer</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">BufferUsage</span>::<span class="ident">COPY_DST</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">MissingCopyDstUsageFlag</span>(<span class="prelude-val">Some</span>(<span class="ident">destination</span>), <span class="prelude-val">None</span>).<span class="ident">into</span>());
+            .<span class="ident">ok_or</span>(<span class="ident">TransferError::InvalidBuffer</span>(<span class="ident">destination</span>))<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">dst_buffer</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">BufferUsage::COPY_DST</span>) {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::MissingCopyDstUsageFlag</span>(<span class="prelude-val">Some</span>(<span class="ident">destination</span>), <span class="prelude-val">None</span>).<span class="ident">into</span>());
         }
         <span class="kw">let</span> <span class="ident">dst_barrier</span> <span class="op">=</span> <span class="ident">dst_pending</span>
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">dst_buffer</span>))
             .<span class="ident">next</span>();
 
-        <span class="kw">if</span> <span class="ident">size</span> <span class="op">%</span> <span class="ident">wgt</span>::<span class="ident">COPY_BUFFER_ALIGNMENT</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedCopySize</span>(<span class="ident">size</span>).<span class="ident">into</span>());
+        <span class="kw">if</span> <span class="ident">size</span> <span class="op">%</span> <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnalignedCopySize</span>(<span class="ident">size</span>).<span class="ident">into</span>());
         }
-        <span class="kw">if</span> <span class="ident">source_offset</span> <span class="op">%</span> <span class="ident">wgt</span>::<span class="ident">COPY_BUFFER_ALIGNMENT</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedBufferOffset</span>(<span class="ident">source_offset</span>).<span class="ident">into</span>());
+        <span class="kw">if</span> <span class="ident">source_offset</span> <span class="op">%</span> <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnalignedBufferOffset</span>(<span class="ident">source_offset</span>).<span class="ident">into</span>());
         }
-        <span class="kw">if</span> <span class="ident">destination_offset</span> <span class="op">%</span> <span class="ident">wgt</span>::<span class="ident">COPY_BUFFER_ALIGNMENT</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">UnalignedBufferOffset</span>(<span class="ident">destination_offset</span>).<span class="ident">into</span>());
+        <span class="kw">if</span> <span class="ident">destination_offset</span> <span class="op">%</span> <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::UnalignedBufferOffset</span>(<span class="ident">destination_offset</span>).<span class="ident">into</span>());
         }
 
         <span class="kw">let</span> <span class="ident">source_end_offset</span> <span class="op">=</span> <span class="ident">source_offset</span> <span class="op">+</span> <span class="ident">size</span>;
         <span class="kw">let</span> <span class="ident">destination_end_offset</span> <span class="op">=</span> <span class="ident">destination_offset</span> <span class="op">+</span> <span class="ident">size</span>;
         <span class="kw">if</span> <span class="ident">source_end_offset</span> <span class="op">&gt;</span> <span class="ident">src_buffer</span>.<span class="ident">size</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">BufferOverrun</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::BufferOverrun</span> {
                 <span class="ident">start_offset</span>: <span class="ident">source_offset</span>,
                 <span class="ident">end_offset</span>: <span class="ident">source_end_offset</span>,
                 <span class="ident">buffer_size</span>: <span class="ident">src_buffer</span>.<span class="ident">size</span>,
-                <span class="ident">side</span>: <span class="ident">CopySide</span>::<span class="ident">Source</span>,
+                <span class="ident">side</span>: <span class="ident">CopySide::Source</span>,
             }
             .<span class="ident">into</span>());
         }
         <span class="kw">if</span> <span class="ident">destination_end_offset</span> <span class="op">&gt;</span> <span class="ident">dst_buffer</span>.<span class="ident">size</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">BufferOverrun</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::BufferOverrun</span> {
                 <span class="ident">start_offset</span>: <span class="ident">destination_offset</span>,
                 <span class="ident">end_offset</span>: <span class="ident">destination_end_offset</span>,
                 <span class="ident">buffer_size</span>: <span class="ident">dst_buffer</span>.<span class="ident">size</span>,
-                <span class="ident">side</span>: <span class="ident">CopySide</span>::<span class="ident">Destination</span>,
+                <span class="ident">side</span>: <span class="ident">CopySide::Destination</span>,
             }
             .<span class="ident">into</span>());
         }
 
         <span class="kw">if</span> <span class="ident">size</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">log</span>::<span class="macro">trace!</span>(<span class="string">&quot;Ignoring copy_buffer_to_buffer of size 0&quot;</span>);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Ignoring copy_buffer_to_buffer of size 0&quot;</span>);
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
         }
 
@@ -1346,7 +1346,7 @@
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">range</span><span class="op">|</span> <span class="ident">MemoryInitTrackerAction</span> {
                     <span class="ident">id</span>: <span class="ident">destination</span>,
                     <span class="ident">range</span>,
-                    <span class="ident">kind</span>: <span class="ident">MemoryInitKind</span>::<span class="ident">ImplicitlyInitialized</span>,
+                    <span class="ident">kind</span>: <span class="ident">MemoryInitKind::ImplicitlyInitialized</span>,
                 }),
         );
         <span class="ident">cmd_buf</span>.<span class="ident">buffer_memory_init_actions</span>.<span class="ident">extend</span>(
@@ -1356,11 +1356,11 @@
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">range</span><span class="op">|</span> <span class="ident">MemoryInitTrackerAction</span> {
                     <span class="ident">id</span>: <span class="ident">source</span>,
                     <span class="ident">range</span>,
-                    <span class="ident">kind</span>: <span class="ident">MemoryInitKind</span>::<span class="ident">NeedsInitializedMemory</span>,
+                    <span class="ident">kind</span>: <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
                 }),
         );
 
-        <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">BufferCopy</span> {
+        <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal::command::BufferCopy</span> {
             <span class="ident">src</span>: <span class="ident">source_offset</span>,
             <span class="ident">dst</span>: <span class="ident">destination_offset</span>,
             <span class="ident">size</span>,
@@ -1368,11 +1368,11 @@
         <span class="kw">let</span> <span class="ident">cmd_buf_raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">raw</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
         <span class="kw">unsafe</span> {
             <span class="ident">cmd_buf_raw</span>.<span class="ident">pipeline_barrier</span>(
-                <span class="ident">all_buffer_stages</span>()..<span class="ident">hal</span>::<span class="ident">pso</span>::<span class="ident">PipelineStage</span>::<span class="ident">TRANSFER</span>,
-                <span class="ident">hal</span>::<span class="ident">memory</span>::<span class="ident">Dependencies</span>::<span class="ident">empty</span>(),
+                <span class="ident">all_buffer_stages</span>()..<span class="ident">hal::pso::PipelineStage::TRANSFER</span>,
+                <span class="ident">hal::memory::Dependencies::empty</span>(),
                 <span class="ident">src_barrier</span>.<span class="ident">into_iter</span>().<span class="ident">chain</span>(<span class="ident">dst_barrier</span>),
             );
-            <span class="ident">cmd_buf_raw</span>.<span class="ident">copy_buffer</span>(<span class="ident">src_raw</span>, <span class="ident">dst_raw</span>, <span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">region</span>));
+            <span class="ident">cmd_buf_raw</span>.<span class="ident">copy_buffer</span>(<span class="ident">src_raw</span>, <span class="ident">dst_raw</span>, <span class="ident">iter::once</span>(<span class="ident">region</span>));
         }
         <span class="prelude-val">Ok</span>(())
     }
@@ -1384,12 +1384,12 @@
         <span class="ident">destination</span>: <span class="kw-2">&amp;</span><span class="ident">ImageCopyTexture</span>,
         <span class="ident">copy_size</span>: <span class="kw-2">&amp;</span><span class="ident">Extent3d</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CopyError</span><span class="op">&gt;</span> {
-        <span class="ident">profiling</span>::<span class="macro">scope!</span>(<span class="string">&quot;CommandEncoder::copy_buffer_to_texture&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::copy_buffer_to_texture&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B::hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">cmd_buf_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">command_buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
-        <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer</span>::<span class="ident">get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">command_encoder_id</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer::get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">command_encoder_id</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> (<span class="ident">buffer_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> (<span class="ident">texture_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> (<span class="ident">dst_layers</span>, <span class="ident">dst_selector</span>, <span class="ident">dst_offset</span>) <span class="op">=</span>
@@ -1397,7 +1397,7 @@
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">list</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">commands</span> {
-            <span class="ident">list</span>.<span class="ident">push</span>(<span class="ident">TraceCommand</span>::<span class="ident">CopyBufferToTexture</span> {
+            <span class="ident">list</span>.<span class="ident">push</span>(<span class="ident">TraceCommand::CopyBufferToTexture</span> {
                 <span class="ident">src</span>: <span class="ident">source</span>.<span class="ident">clone</span>(),
                 <span class="ident">dst</span>: <span class="ident">destination</span>.<span class="ident">clone</span>(),
                 <span class="ident">size</span>: <span class="kw-2">*</span><span class="ident">copy_size</span>,
@@ -1405,21 +1405,21 @@
         }
 
         <span class="kw">if</span> <span class="ident">copy_size</span>.<span class="ident">width</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">copy_size</span>.<span class="ident">height</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">copy_size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">log</span>::<span class="macro">trace!</span>(<span class="string">&quot;Ignoring copy_buffer_to_texture of size 0&quot;</span>);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Ignoring copy_buffer_to_texture of size 0&quot;</span>);
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
         }
 
         <span class="kw">let</span> (<span class="ident">src_buffer</span>, <span class="ident">src_pending</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>
             .<span class="ident">trackers</span>
             .<span class="ident">buffers</span>
-            .<span class="ident">use_replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">source</span>.<span class="ident">buffer</span>, (), <span class="ident">BufferUse</span>::<span class="ident">COPY_SRC</span>)
-            .<span class="ident">map_err</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidBuffer</span>)<span class="question-mark">?</span>;
+            .<span class="ident">use_replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">source</span>.<span class="ident">buffer</span>, (), <span class="ident">BufferUse::COPY_SRC</span>)
+            .<span class="ident">map_err</span>(<span class="ident">TransferError::InvalidBuffer</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">src_raw</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">src_buffer</span>
             .<span class="ident">raw</span>
             .<span class="ident">as_ref</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidBuffer</span>(<span class="ident">source</span>.<span class="ident">buffer</span>))<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">src_buffer</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">BufferUsage</span>::<span class="ident">COPY_SRC</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">MissingCopySrcUsageFlag</span>.<span class="ident">into</span>());
+            .<span class="ident">ok_or</span>(<span class="ident">TransferError::InvalidBuffer</span>(<span class="ident">source</span>.<span class="ident">buffer</span>))<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">src_buffer</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">BufferUsage::COPY_SRC</span>) {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::MissingCopySrcUsageFlag</span>.<span class="ident">into</span>());
         }
         <span class="kw">let</span> <span class="ident">src_barriers</span> <span class="op">=</span> <span class="ident">src_pending</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">src_buffer</span>));
 
@@ -1430,21 +1430,21 @@
                 <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>,
                 <span class="ident">destination</span>.<span class="ident">texture</span>,
                 <span class="ident">dst_selector</span>,
-                <span class="ident">TextureUse</span>::<span class="ident">COPY_DST</span>,
+                <span class="ident">TextureUse::COPY_DST</span>,
             )
             .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">dst_raw</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">dst_texture</span>
             .<span class="ident">raw</span>
             .<span class="ident">as_ref</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidTexture</span>(<span class="ident">destination</span>.<span class="ident">texture</span>))<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">dst_texture</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">TextureUsage</span>::<span class="ident">COPY_DST</span>) {
+            .<span class="ident">ok_or</span>(<span class="ident">TransferError::InvalidTexture</span>(<span class="ident">destination</span>.<span class="ident">texture</span>))<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">dst_texture</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">TextureUsage::COPY_DST</span>) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(
-                <span class="ident">TransferError</span>::<span class="ident">MissingCopyDstUsageFlag</span>(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">destination</span>.<span class="ident">texture</span>)).<span class="ident">into</span>(),
+                <span class="ident">TransferError::MissingCopyDstUsageFlag</span>(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">destination</span>.<span class="ident">texture</span>)).<span class="ident">into</span>(),
             );
         }
         <span class="kw">let</span> <span class="ident">dst_barriers</span> <span class="op">=</span> <span class="ident">dst_pending</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">dst_texture</span>));
 
-        <span class="kw">let</span> <span class="ident">bytes_per_block</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">map_texture_format</span>(<span class="ident">dst_texture</span>.<span class="ident">format</span>, <span class="ident">cmd_buf</span>.<span class="ident">private_features</span>)
+        <span class="kw">let</span> <span class="ident">bytes_per_block</span> <span class="op">=</span> <span class="ident">conv::map_texture_format</span>(<span class="ident">dst_texture</span>.<span class="ident">format</span>, <span class="ident">cmd_buf</span>.<span class="ident">private_features</span>)
             .<span class="ident">surface_desc</span>()
             .<span class="ident">bits</span> <span class="kw">as</span> <span class="ident">u32</span>
             <span class="op">/</span> <span class="ident">BITS_PER_BYTE</span>;
@@ -1452,14 +1452,14 @@
             <span class="ident">destination</span>,
             <span class="ident">dst_texture</span>.<span class="ident">format</span>,
             <span class="ident">dst_texture</span>.<span class="ident">kind</span>,
-            <span class="ident">CopySide</span>::<span class="ident">Destination</span>,
+            <span class="ident">CopySide::Destination</span>,
             <span class="ident">copy_size</span>,
         )<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">required_buffer_bytes_in_copy</span> <span class="op">=</span> <span class="ident">validate_linear_texture_data</span>(
             <span class="kw-2">&amp;</span><span class="ident">source</span>.<span class="ident">layout</span>,
             <span class="ident">dst_texture</span>.<span class="ident">format</span>,
             <span class="ident">src_buffer</span>.<span class="ident">size</span>,
-            <span class="ident">CopySide</span>::<span class="ident">Source</span>,
+            <span class="ident">CopySide::Source</span>,
             <span class="ident">bytes_per_block</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>,
             <span class="ident">copy_size</span>,
             <span class="bool-val">true</span>,
@@ -1472,13 +1472,13 @@
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">range</span><span class="op">|</span> <span class="ident">MemoryInitTrackerAction</span> {
                     <span class="ident">id</span>: <span class="ident">source</span>.<span class="ident">buffer</span>,
                     <span class="ident">range</span>,
-                    <span class="ident">kind</span>: <span class="ident">MemoryInitKind</span>::<span class="ident">NeedsInitializedMemory</span>,
+                    <span class="ident">kind</span>: <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
                 }),
         );
 
         <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">dst_texture</span>.<span class="ident">format</span>.<span class="ident">describe</span>().<span class="ident">block_dimensions</span>;
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">conv</span>::<span class="ident">is_valid_copy_dst_texture_format</span>(<span class="ident">dst_texture</span>.<span class="ident">format</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">CopyToForbiddenTextureFormat</span>(<span class="ident">dst_texture</span>.<span class="ident">format</span>).<span class="ident">into</span>());
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">conv::is_valid_copy_dst_texture_format</span>(<span class="ident">dst_texture</span>.<span class="ident">format</span>) {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::CopyToForbiddenTextureFormat</span>(<span class="ident">dst_texture</span>.<span class="ident">format</span>).<span class="ident">into</span>());
         }
 
         <span class="comment">// WebGPU uses the physical size of the texture for copies whereas vulkan uses</span>
@@ -1502,26 +1502,26 @@
         } <span class="kw">else</span> {
             <span class="number">0</span>
         };
-        <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">BufferImageCopy</span> {
+        <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal::command::BufferImageCopy</span> {
             <span class="ident">buffer_offset</span>: <span class="ident">source</span>.<span class="ident">layout</span>.<span class="ident">offset</span>,
             <span class="ident">buffer_width</span>,
             <span class="ident">buffer_height</span>,
             <span class="ident">image_layers</span>: <span class="ident">dst_layers</span>,
             <span class="ident">image_offset</span>: <span class="ident">dst_offset</span>,
-            <span class="ident">image_extent</span>: <span class="ident">conv</span>::<span class="ident">map_extent</span>(<span class="kw-2">&amp;</span><span class="ident">image_extent</span>, <span class="ident">dst_texture</span>.<span class="ident">dimension</span>),
+            <span class="ident">image_extent</span>: <span class="ident">conv::map_extent</span>(<span class="kw-2">&amp;</span><span class="ident">image_extent</span>, <span class="ident">dst_texture</span>.<span class="ident">dimension</span>),
         };
         <span class="kw">let</span> <span class="ident">cmd_buf_raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">raw</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
         <span class="kw">unsafe</span> {
             <span class="ident">cmd_buf_raw</span>.<span class="ident">pipeline_barrier</span>(
-                <span class="ident">all_buffer_stages</span>() <span class="op">|</span> <span class="ident">all_image_stages</span>()..<span class="ident">hal</span>::<span class="ident">pso</span>::<span class="ident">PipelineStage</span>::<span class="ident">TRANSFER</span>,
-                <span class="ident">hal</span>::<span class="ident">memory</span>::<span class="ident">Dependencies</span>::<span class="ident">empty</span>(),
+                <span class="ident">all_buffer_stages</span>() <span class="op">|</span> <span class="ident">all_image_stages</span>()..<span class="ident">hal::pso::PipelineStage::TRANSFER</span>,
+                <span class="ident">hal::memory::Dependencies::empty</span>(),
                 <span class="ident">src_barriers</span>.<span class="ident">chain</span>(<span class="ident">dst_barriers</span>),
             );
             <span class="ident">cmd_buf_raw</span>.<span class="ident">copy_buffer_to_image</span>(
                 <span class="ident">src_raw</span>,
                 <span class="ident">dst_raw</span>,
-                <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Layout</span>::<span class="ident">TransferDstOptimal</span>,
-                <span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">region</span>),
+                <span class="ident">hal::image::Layout::TransferDstOptimal</span>,
+                <span class="ident">iter::once</span>(<span class="ident">region</span>),
             );
         }
         <span class="prelude-val">Ok</span>(())
@@ -1534,12 +1534,12 @@
         <span class="ident">destination</span>: <span class="kw-2">&amp;</span><span class="ident">ImageCopyBuffer</span>,
         <span class="ident">copy_size</span>: <span class="kw-2">&amp;</span><span class="ident">Extent3d</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CopyError</span><span class="op">&gt;</span> {
-        <span class="ident">profiling</span>::<span class="macro">scope!</span>(<span class="string">&quot;CommandEncoder::copy_texture_to_buffer&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::copy_texture_to_buffer&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B::hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">cmd_buf_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">command_buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
-        <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer</span>::<span class="ident">get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">command_encoder_id</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer::get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">command_encoder_id</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> (<span class="ident">buffer_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> (<span class="ident">texture_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> (<span class="ident">src_layers</span>, <span class="ident">src_selector</span>, <span class="ident">src_offset</span>) <span class="op">=</span>
@@ -1547,7 +1547,7 @@
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">list</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">commands</span> {
-            <span class="ident">list</span>.<span class="ident">push</span>(<span class="ident">TraceCommand</span>::<span class="ident">CopyTextureToBuffer</span> {
+            <span class="ident">list</span>.<span class="ident">push</span>(<span class="ident">TraceCommand::CopyTextureToBuffer</span> {
                 <span class="ident">src</span>: <span class="ident">source</span>.<span class="ident">clone</span>(),
                 <span class="ident">dst</span>: <span class="ident">destination</span>.<span class="ident">clone</span>(),
                 <span class="ident">size</span>: <span class="kw-2">*</span><span class="ident">copy_size</span>,
@@ -1555,7 +1555,7 @@
         }
 
         <span class="kw">if</span> <span class="ident">copy_size</span>.<span class="ident">width</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">copy_size</span>.<span class="ident">height</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">copy_size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">log</span>::<span class="macro">trace!</span>(<span class="string">&quot;Ignoring copy_texture_to_buffer of size 0&quot;</span>);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Ignoring copy_texture_to_buffer of size 0&quot;</span>);
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
         }
 
@@ -1566,35 +1566,35 @@
                 <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>,
                 <span class="ident">source</span>.<span class="ident">texture</span>,
                 <span class="ident">src_selector</span>,
-                <span class="ident">TextureUse</span>::<span class="ident">COPY_SRC</span>,
+                <span class="ident">TextureUse::COPY_SRC</span>,
             )
             .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">src_raw</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">src_texture</span>
             .<span class="ident">raw</span>
             .<span class="ident">as_ref</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidTexture</span>(<span class="ident">source</span>.<span class="ident">texture</span>))<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">src_texture</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">TextureUsage</span>::<span class="ident">COPY_SRC</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">MissingCopySrcUsageFlag</span>.<span class="ident">into</span>());
+            .<span class="ident">ok_or</span>(<span class="ident">TransferError::InvalidTexture</span>(<span class="ident">source</span>.<span class="ident">texture</span>))<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">src_texture</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">TextureUsage::COPY_SRC</span>) {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::MissingCopySrcUsageFlag</span>.<span class="ident">into</span>());
         }
         <span class="kw">let</span> <span class="ident">src_barriers</span> <span class="op">=</span> <span class="ident">src_pending</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">src_texture</span>));
 
         <span class="kw">let</span> (<span class="ident">dst_buffer</span>, <span class="ident">dst_barriers</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>
             .<span class="ident">trackers</span>
             .<span class="ident">buffers</span>
-            .<span class="ident">use_replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">destination</span>.<span class="ident">buffer</span>, (), <span class="ident">BufferUse</span>::<span class="ident">COPY_DST</span>)
-            .<span class="ident">map_err</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidBuffer</span>)<span class="question-mark">?</span>;
+            .<span class="ident">use_replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">destination</span>.<span class="ident">buffer</span>, (), <span class="ident">BufferUse::COPY_DST</span>)
+            .<span class="ident">map_err</span>(<span class="ident">TransferError::InvalidBuffer</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">dst_raw</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">dst_buffer</span>
             .<span class="ident">raw</span>
             .<span class="ident">as_ref</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidBuffer</span>(<span class="ident">destination</span>.<span class="ident">buffer</span>))<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">dst_buffer</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">BufferUsage</span>::<span class="ident">COPY_DST</span>) {
+            .<span class="ident">ok_or</span>(<span class="ident">TransferError::InvalidBuffer</span>(<span class="ident">destination</span>.<span class="ident">buffer</span>))<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">dst_buffer</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">BufferUsage::COPY_DST</span>) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(
-                <span class="ident">TransferError</span>::<span class="ident">MissingCopyDstUsageFlag</span>(<span class="prelude-val">Some</span>(<span class="ident">destination</span>.<span class="ident">buffer</span>), <span class="prelude-val">None</span>).<span class="ident">into</span>(),
+                <span class="ident">TransferError::MissingCopyDstUsageFlag</span>(<span class="prelude-val">Some</span>(<span class="ident">destination</span>.<span class="ident">buffer</span>), <span class="prelude-val">None</span>).<span class="ident">into</span>(),
             );
         }
         <span class="kw">let</span> <span class="ident">dst_barrier</span> <span class="op">=</span> <span class="ident">dst_barriers</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">dst_buffer</span>));
 
-        <span class="kw">let</span> <span class="ident">bytes_per_block</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">map_texture_format</span>(<span class="ident">src_texture</span>.<span class="ident">format</span>, <span class="ident">cmd_buf</span>.<span class="ident">private_features</span>)
+        <span class="kw">let</span> <span class="ident">bytes_per_block</span> <span class="op">=</span> <span class="ident">conv::map_texture_format</span>(<span class="ident">src_texture</span>.<span class="ident">format</span>, <span class="ident">cmd_buf</span>.<span class="ident">private_features</span>)
             .<span class="ident">surface_desc</span>()
             .<span class="ident">bits</span> <span class="kw">as</span> <span class="ident">u32</span>
             <span class="op">/</span> <span class="ident">BITS_PER_BYTE</span>;
@@ -1602,22 +1602,22 @@
             <span class="ident">source</span>,
             <span class="ident">src_texture</span>.<span class="ident">format</span>,
             <span class="ident">src_texture</span>.<span class="ident">kind</span>,
-            <span class="ident">CopySide</span>::<span class="ident">Source</span>,
+            <span class="ident">CopySide::Source</span>,
             <span class="ident">copy_size</span>,
         )<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">required_buffer_bytes_in_copy</span> <span class="op">=</span> <span class="ident">validate_linear_texture_data</span>(
             <span class="kw-2">&amp;</span><span class="ident">destination</span>.<span class="ident">layout</span>,
             <span class="ident">src_texture</span>.<span class="ident">format</span>,
             <span class="ident">dst_buffer</span>.<span class="ident">size</span>,
-            <span class="ident">CopySide</span>::<span class="ident">Destination</span>,
+            <span class="ident">CopySide::Destination</span>,
             <span class="ident">bytes_per_block</span> <span class="kw">as</span> <span class="ident">BufferAddress</span>,
             <span class="ident">copy_size</span>,
             <span class="bool-val">true</span>,
         )<span class="question-mark">?</span>;
 
         <span class="kw">let</span> (<span class="ident">block_width</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">src_texture</span>.<span class="ident">format</span>.<span class="ident">describe</span>().<span class="ident">block_dimensions</span>;
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">conv</span>::<span class="ident">is_valid_copy_src_texture_format</span>(<span class="ident">src_texture</span>.<span class="ident">format</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">CopyFromForbiddenTextureFormat</span>(<span class="ident">src_texture</span>.<span class="ident">format</span>).<span class="ident">into</span>());
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">conv::is_valid_copy_src_texture_format</span>(<span class="ident">src_texture</span>.<span class="ident">format</span>) {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::CopyFromForbiddenTextureFormat</span>(<span class="ident">src_texture</span>.<span class="ident">format</span>).<span class="ident">into</span>());
         }
 
         <span class="ident">cmd_buf</span>.<span class="ident">buffer_memory_init_actions</span>.<span class="ident">extend</span>(
@@ -1630,7 +1630,7 @@
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">range</span><span class="op">|</span> <span class="ident">MemoryInitTrackerAction</span> {
                     <span class="ident">id</span>: <span class="ident">destination</span>.<span class="ident">buffer</span>,
                     <span class="ident">range</span>,
-                    <span class="ident">kind</span>: <span class="ident">MemoryInitKind</span>::<span class="ident">ImplicitlyInitialized</span>,
+                    <span class="ident">kind</span>: <span class="ident">MemoryInitKind::ImplicitlyInitialized</span>,
                 }),
         );
 
@@ -1655,26 +1655,26 @@
         } <span class="kw">else</span> {
             <span class="number">0</span>
         };
-        <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">BufferImageCopy</span> {
+        <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal::command::BufferImageCopy</span> {
             <span class="ident">buffer_offset</span>: <span class="ident">destination</span>.<span class="ident">layout</span>.<span class="ident">offset</span>,
             <span class="ident">buffer_width</span>,
             <span class="ident">buffer_height</span>,
             <span class="ident">image_layers</span>: <span class="ident">src_layers</span>,
             <span class="ident">image_offset</span>: <span class="ident">src_offset</span>,
-            <span class="ident">image_extent</span>: <span class="ident">conv</span>::<span class="ident">map_extent</span>(<span class="kw-2">&amp;</span><span class="ident">image_extent</span>, <span class="ident">src_texture</span>.<span class="ident">dimension</span>),
+            <span class="ident">image_extent</span>: <span class="ident">conv::map_extent</span>(<span class="kw-2">&amp;</span><span class="ident">image_extent</span>, <span class="ident">src_texture</span>.<span class="ident">dimension</span>),
         };
         <span class="kw">let</span> <span class="ident">cmd_buf_raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">raw</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
         <span class="kw">unsafe</span> {
             <span class="ident">cmd_buf_raw</span>.<span class="ident">pipeline_barrier</span>(
-                <span class="ident">all_buffer_stages</span>() <span class="op">|</span> <span class="ident">all_image_stages</span>()..<span class="ident">hal</span>::<span class="ident">pso</span>::<span class="ident">PipelineStage</span>::<span class="ident">TRANSFER</span>,
-                <span class="ident">hal</span>::<span class="ident">memory</span>::<span class="ident">Dependencies</span>::<span class="ident">empty</span>(),
+                <span class="ident">all_buffer_stages</span>() <span class="op">|</span> <span class="ident">all_image_stages</span>()..<span class="ident">hal::pso::PipelineStage::TRANSFER</span>,
+                <span class="ident">hal::memory::Dependencies::empty</span>(),
                 <span class="ident">src_barriers</span>.<span class="ident">chain</span>(<span class="ident">dst_barrier</span>),
             );
             <span class="ident">cmd_buf_raw</span>.<span class="ident">copy_image_to_buffer</span>(
                 <span class="ident">src_raw</span>,
-                <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Layout</span>::<span class="ident">TransferSrcOptimal</span>,
+                <span class="ident">hal::image::Layout::TransferSrcOptimal</span>,
                 <span class="ident">dst_raw</span>,
-                <span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">region</span>),
+                <span class="ident">iter::once</span>(<span class="ident">region</span>),
             );
         }
         <span class="prelude-val">Ok</span>(())
@@ -1687,13 +1687,13 @@
         <span class="ident">destination</span>: <span class="kw-2">&amp;</span><span class="ident">ImageCopyTexture</span>,
         <span class="ident">copy_size</span>: <span class="kw-2">&amp;</span><span class="ident">Extent3d</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">CopyError</span><span class="op">&gt;</span> {
-        <span class="ident">profiling</span>::<span class="macro">scope!</span>(<span class="string">&quot;CommandEncoder::copy_texture_to_texture&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::copy_texture_to_texture&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B::hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
 
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">cmd_buf_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">command_buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
-        <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer</span>::<span class="ident">get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">command_encoder_id</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer::get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">command_encoder_id</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> (<span class="kw">_</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>); <span class="comment">// skip token</span>
         <span class="kw">let</span> (<span class="ident">texture_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> (<span class="ident">src_layers</span>, <span class="ident">src_selector</span>, <span class="ident">src_offset</span>) <span class="op">=</span>
@@ -1701,12 +1701,12 @@
         <span class="kw">let</span> (<span class="ident">dst_layers</span>, <span class="ident">dst_selector</span>, <span class="ident">dst_offset</span>) <span class="op">=</span>
             <span class="ident">texture_copy_view_to_hal</span>(<span class="ident">destination</span>, <span class="ident">copy_size</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>)<span class="question-mark">?</span>;
         <span class="kw">if</span> <span class="ident">src_layers</span>.<span class="ident">aspects</span> <span class="op">!</span><span class="op">=</span> <span class="ident">dst_layers</span>.<span class="ident">aspects</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">MismatchedAspects</span>.<span class="ident">into</span>());
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::MismatchedAspects</span>.<span class="ident">into</span>());
         }
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">list</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">commands</span> {
-            <span class="ident">list</span>.<span class="ident">push</span>(<span class="ident">TraceCommand</span>::<span class="ident">CopyTextureToTexture</span> {
+            <span class="ident">list</span>.<span class="ident">push</span>(<span class="ident">TraceCommand::CopyTextureToTexture</span> {
                 <span class="ident">src</span>: <span class="ident">source</span>.<span class="ident">clone</span>(),
                 <span class="ident">dst</span>: <span class="ident">destination</span>.<span class="ident">clone</span>(),
                 <span class="ident">size</span>: <span class="kw-2">*</span><span class="ident">copy_size</span>,
@@ -1714,7 +1714,7 @@
         }
 
         <span class="kw">if</span> <span class="ident">copy_size</span>.<span class="ident">width</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">copy_size</span>.<span class="ident">height</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">copy_size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">log</span>::<span class="macro">trace!</span>(<span class="string">&quot;Ignoring copy_texture_to_texture of size 0&quot;</span>);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Ignoring copy_texture_to_texture of size 0&quot;</span>);
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
         }
 
@@ -1725,15 +1725,15 @@
                 <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>,
                 <span class="ident">source</span>.<span class="ident">texture</span>,
                 <span class="ident">src_selector</span>,
-                <span class="ident">TextureUse</span>::<span class="ident">COPY_SRC</span>,
+                <span class="ident">TextureUse::COPY_SRC</span>,
             )
             .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">src_raw</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">src_texture</span>
             .<span class="ident">raw</span>
             .<span class="ident">as_ref</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidTexture</span>(<span class="ident">source</span>.<span class="ident">texture</span>))<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">src_texture</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">TextureUsage</span>::<span class="ident">COPY_SRC</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError</span>::<span class="ident">MissingCopySrcUsageFlag</span>.<span class="ident">into</span>());
+            .<span class="ident">ok_or</span>(<span class="ident">TransferError::InvalidTexture</span>(<span class="ident">source</span>.<span class="ident">texture</span>))<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">src_texture</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">TextureUsage::COPY_SRC</span>) {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::MissingCopySrcUsageFlag</span>.<span class="ident">into</span>());
         }
         <span class="comment">//TODO: try to avoid this the collection. It&#39;s needed because both</span>
         <span class="comment">// `src_pending` and `dst_pending` try to hold `trackers.textures` mutably.</span>
@@ -1748,16 +1748,16 @@
                 <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>,
                 <span class="ident">destination</span>.<span class="ident">texture</span>,
                 <span class="ident">dst_selector</span>,
-                <span class="ident">TextureUse</span>::<span class="ident">COPY_DST</span>,
+                <span class="ident">TextureUse::COPY_DST</span>,
             )
             .<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">dst_raw</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">dst_texture</span>
             .<span class="ident">raw</span>
             .<span class="ident">as_ref</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">TransferError</span>::<span class="ident">InvalidTexture</span>(<span class="ident">destination</span>.<span class="ident">texture</span>))<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">dst_texture</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">TextureUsage</span>::<span class="ident">COPY_DST</span>) {
+            .<span class="ident">ok_or</span>(<span class="ident">TransferError::InvalidTexture</span>(<span class="ident">destination</span>.<span class="ident">texture</span>))<span class="question-mark">?</span>;
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">dst_texture</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">TextureUsage::COPY_DST</span>) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(
-                <span class="ident">TransferError</span>::<span class="ident">MissingCopyDstUsageFlag</span>(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">destination</span>.<span class="ident">texture</span>)).<span class="ident">into</span>(),
+                <span class="ident">TransferError::MissingCopyDstUsageFlag</span>(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">destination</span>.<span class="ident">texture</span>)).<span class="ident">into</span>(),
             );
         }
         <span class="ident">barriers</span>.<span class="ident">extend</span>(<span class="ident">dst_pending</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">dst_texture</span>)));
@@ -1766,14 +1766,14 @@
             <span class="ident">source</span>,
             <span class="ident">src_texture</span>.<span class="ident">format</span>,
             <span class="ident">src_texture</span>.<span class="ident">kind</span>,
-            <span class="ident">CopySide</span>::<span class="ident">Source</span>,
+            <span class="ident">CopySide::Source</span>,
             <span class="ident">copy_size</span>,
         )<span class="question-mark">?</span>;
         <span class="ident">validate_texture_copy_range</span>(
             <span class="ident">destination</span>,
             <span class="ident">dst_texture</span>.<span class="ident">format</span>,
             <span class="ident">dst_texture</span>.<span class="ident">kind</span>,
-            <span class="ident">CopySide</span>::<span class="ident">Destination</span>,
+            <span class="ident">CopySide::Destination</span>,
             <span class="ident">copy_size</span>,
         )<span class="question-mark">?</span>;
 
@@ -1793,26 +1793,26 @@
             <span class="ident">depth_or_array_layers</span>: <span class="ident">copy_size</span>.<span class="ident">depth_or_array_layers</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">ImageCopy</span> {
+        <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="ident">hal::command::ImageCopy</span> {
             <span class="ident">src_subresource</span>: <span class="ident">src_layers</span>,
             <span class="ident">src_offset</span>,
             <span class="ident">dst_subresource</span>: <span class="ident">dst_layers</span>,
             <span class="ident">dst_offset</span>,
-            <span class="ident">extent</span>: <span class="ident">conv</span>::<span class="ident">map_extent</span>(<span class="kw-2">&amp;</span><span class="ident">image_extent</span>, <span class="ident">src_texture</span>.<span class="ident">dimension</span>),
+            <span class="ident">extent</span>: <span class="ident">conv::map_extent</span>(<span class="kw-2">&amp;</span><span class="ident">image_extent</span>, <span class="ident">src_texture</span>.<span class="ident">dimension</span>),
         };
         <span class="kw">let</span> <span class="ident">cmd_buf_raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">raw</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
         <span class="kw">unsafe</span> {
             <span class="ident">cmd_buf_raw</span>.<span class="ident">pipeline_barrier</span>(
-                <span class="ident">all_image_stages</span>()..<span class="ident">hal</span>::<span class="ident">pso</span>::<span class="ident">PipelineStage</span>::<span class="ident">TRANSFER</span>,
-                <span class="ident">hal</span>::<span class="ident">memory</span>::<span class="ident">Dependencies</span>::<span class="ident">empty</span>(),
+                <span class="ident">all_image_stages</span>()..<span class="ident">hal::pso::PipelineStage::TRANSFER</span>,
+                <span class="ident">hal::memory::Dependencies::empty</span>(),
                 <span class="ident">barriers</span>.<span class="ident">into_iter</span>(),
             );
             <span class="ident">cmd_buf_raw</span>.<span class="ident">copy_image</span>(
                 <span class="ident">src_raw</span>,
-                <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Layout</span>::<span class="ident">TransferSrcOptimal</span>,
+                <span class="ident">hal::image::Layout::TransferSrcOptimal</span>,
                 <span class="ident">dst_raw</span>,
-                <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">Layout</span>::<span class="ident">TransferDstOptimal</span>,
-                <span class="ident">iter</span>::<span class="ident">once</span>(<span class="ident">region</span>),
+                <span class="ident">hal::image::Layout::TransferDstOptimal</span>,
+                <span class="ident">iter::once</span>(<span class="ident">region</span>),
             );
         }
         <span class="prelude-val">Ok</span>(())

@@ -334,9 +334,9 @@
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! Simple graphviz dot file format output.</span>
 
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::{<span class="self">self</span>, <span class="ident">Display</span>, <span class="ident">Write</span>};
+<span class="kw">use</span> <span class="ident">std::fmt</span>::{<span class="self">self</span>, <span class="ident">Display</span>, <span class="ident">Write</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">visit</span>::{
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::visit</span>::{
     <span class="ident">Data</span>, <span class="ident">EdgeRef</span>, <span class="ident">GraphBase</span>, <span class="ident">GraphProp</span>, <span class="ident">GraphRef</span>, <span class="ident">IntoEdgeReferences</span>, <span class="ident">IntoNodeReferences</span>,
     <span class="ident">NodeIndexable</span>, <span class="ident">NodeRef</span>,
 };
@@ -388,8 +388,8 @@
 {
     <span class="ident">graph</span>: <span class="ident">G</span>,
     <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Config</span>],
-    <span class="ident">get_edge_attributes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="ident">G</span>, <span class="ident">G</span>::<span class="ident">EdgeRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span>,
-    <span class="ident">get_node_attributes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="ident">G</span>, <span class="ident">G</span>::<span class="ident">NodeRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span>,
+    <span class="ident">get_edge_attributes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="ident">G</span>, <span class="ident">G::EdgeRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span>,
+    <span class="ident">get_node_attributes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="ident">G</span>, <span class="ident">G::NodeRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span>,
 }
 
 <span class="kw">static</span> <span class="ident">TYPE</span>: [<span class="kw-2">&amp;</span><span class="ident">str</span>; <span class="number">2</span>] <span class="op">=</span> [<span class="string">&quot;graph&quot;</span>, <span class="string">&quot;digraph&quot;</span>];
@@ -402,12 +402,12 @@
 {
     <span class="doccomment">/// Create a `Dot` formatting wrapper with default configuration.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">graph</span>: <span class="ident">G</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>::<span class="ident">with_config</span>(<span class="ident">graph</span>, <span class="kw-2">&amp;</span>[])
+        <span class="self">Self</span><span class="ident">::with_config</span>(<span class="ident">graph</span>, <span class="kw-2">&amp;</span>[])
     }
 
     <span class="doccomment">/// Create a `Dot` formatting wrapper with custom configuration.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_config</span>(<span class="ident">graph</span>: <span class="ident">G</span>, <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Config</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="self">Self</span>::<span class="ident">with_attr_getters</span>(<span class="ident">graph</span>, <span class="ident">config</span>, <span class="kw-2">&amp;</span><span class="op">|</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">|</span> <span class="string">&quot;&quot;</span>.<span class="ident">to_string</span>(), <span class="kw-2">&amp;</span><span class="op">|</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">|</span> {
+        <span class="self">Self</span><span class="ident">::with_attr_getters</span>(<span class="ident">graph</span>, <span class="ident">config</span>, <span class="kw-2">&amp;</span><span class="op">|</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">|</span> <span class="string">&quot;&quot;</span>.<span class="ident">to_string</span>(), <span class="kw-2">&amp;</span><span class="op">|</span><span class="kw">_</span>, <span class="kw">_</span><span class="op">|</span> {
             <span class="string">&quot;&quot;</span>.<span class="ident">to_string</span>()
         })
     }
@@ -415,8 +415,8 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">with_attr_getters</span>(
         <span class="ident">graph</span>: <span class="ident">G</span>,
         <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">Config</span>],
-        <span class="ident">get_edge_attributes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="ident">G</span>, <span class="ident">G</span>::<span class="ident">EdgeRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span>,
-        <span class="ident">get_node_attributes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="ident">G</span>, <span class="ident">G</span>::<span class="ident">NodeRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span>,
+        <span class="ident">get_edge_attributes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="ident">G</span>, <span class="ident">G::EdgeRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span>,
+        <span class="ident">get_node_attributes</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">dyn</span> <span class="ident">Fn</span>(<span class="ident">G</span>, <span class="ident">G::NodeRef</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">Dot</span> {
             <span class="ident">graph</span>,
@@ -453,27 +453,27 @@
     <span class="kw">fn</span> <span class="ident">graph_fmt</span><span class="op">&lt;</span><span class="ident">NF</span>, <span class="ident">EF</span>, <span class="ident">NW</span>, <span class="ident">EW</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">g</span>: <span class="ident">G</span>,
-        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>,
+        <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>,
         <span class="kw-2">mut</span> <span class="ident">node_fmt</span>: <span class="ident">NF</span>,
         <span class="kw-2">mut</span> <span class="ident">edge_fmt</span>: <span class="ident">EF</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span>
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span>
     <span class="kw">where</span>
         <span class="ident">G</span>: <span class="ident">NodeIndexable</span> <span class="op">+</span> <span class="ident">IntoNodeReferences</span> <span class="op">+</span> <span class="ident">IntoEdgeReferences</span>,
         <span class="ident">G</span>: <span class="ident">GraphProp</span> <span class="op">+</span> <span class="ident">GraphBase</span>,
         <span class="ident">G</span>: <span class="ident">Data</span><span class="op">&lt;</span><span class="ident">NodeWeight</span> <span class="op">=</span> <span class="ident">NW</span>, <span class="ident">EdgeWeight</span> <span class="op">=</span> <span class="ident">EW</span><span class="op">&gt;</span>,
-        <span class="ident">NF</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">NW</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Display</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span>,
-        <span class="ident">EF</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">EW</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Display</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span>,
+        <span class="ident">NF</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">NW</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Display</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span>,
+        <span class="ident">EF</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">EW</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">dyn</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="kw">dyn</span> <span class="ident">Display</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span>,
     {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">config</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">Config</span>::<span class="ident">GraphContentOnly</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">config</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">Config::GraphContentOnly</span>) {
             <span class="macro">writeln!</span>(<span class="ident">f</span>, <span class="string">&quot;{} {{&quot;</span>, <span class="ident">TYPE</span>[<span class="ident">g</span>.<span class="ident">is_directed</span>() <span class="kw">as</span> <span class="ident">usize</span>])<span class="question-mark">?</span>;
         }
 
         <span class="comment">// output all labels</span>
         <span class="kw">for</span> <span class="ident">node</span> <span class="kw">in</span> <span class="ident">g</span>.<span class="ident">node_references</span>() {
             <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}{} [ &quot;</span>, <span class="ident">INDENT</span>, <span class="ident">g</span>.<span class="ident">to_index</span>(<span class="ident">node</span>.<span class="ident">id</span>()),)<span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">config</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">Config</span>::<span class="ident">NodeNoLabel</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">config</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">Config::NodeNoLabel</span>) {
                 <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;label = \&quot;&quot;</span>)<span class="question-mark">?</span>;
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">Config</span>::<span class="ident">NodeIndexLabel</span>) {
+                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">Config::NodeIndexLabel</span>) {
                     <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">g</span>.<span class="ident">to_index</span>(<span class="ident">node</span>.<span class="ident">id</span>()))<span class="question-mark">?</span>;
                 } <span class="kw">else</span> {
                     <span class="ident">node_fmt</span>(<span class="ident">node</span>.<span class="ident">weight</span>(), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="op">|</span><span class="ident">d</span><span class="op">|</span> <span class="ident">Escaped</span>(<span class="ident">d</span>).<span class="ident">fmt</span>(<span class="ident">f</span>))<span class="question-mark">?</span>;
@@ -492,9 +492,9 @@
                 <span class="ident">EDGE</span>[<span class="ident">g</span>.<span class="ident">is_directed</span>() <span class="kw">as</span> <span class="ident">usize</span>],
                 <span class="ident">g</span>.<span class="ident">to_index</span>(<span class="ident">edge</span>.<span class="ident">target</span>()),
             )<span class="question-mark">?</span>;
-            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">config</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">Config</span>::<span class="ident">EdgeNoLabel</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">config</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">Config::EdgeNoLabel</span>) {
                 <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;label = \&quot;&quot;</span>)<span class="question-mark">?</span>;
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">Config</span>::<span class="ident">EdgeIndexLabel</span>) {
+                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">config</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">Config::EdgeIndexLabel</span>) {
                     <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;{}&quot;</span>, <span class="ident">i</span>)<span class="question-mark">?</span>;
                 } <span class="kw">else</span> {
                     <span class="ident">edge_fmt</span>(<span class="ident">edge</span>.<span class="ident">weight</span>(), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="op">|</span><span class="ident">d</span><span class="op">|</span> <span class="ident">Escaped</span>(<span class="ident">d</span>).<span class="ident">fmt</span>(<span class="ident">f</span>))<span class="question-mark">?</span>;
@@ -504,31 +504,31 @@
             <span class="macro">writeln!</span>(<span class="ident">f</span>, <span class="string">&quot;{}]&quot;</span>, (<span class="self">self</span>.<span class="ident">get_edge_attributes</span>)(<span class="ident">g</span>, <span class="ident">edge</span>))<span class="question-mark">?</span>;
         }
 
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">config</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">Config</span>::<span class="ident">GraphContentOnly</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">config</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">Config::GraphContentOnly</span>) {
             <span class="macro">writeln!</span>(<span class="ident">f</span>, <span class="string">&quot;}}&quot;</span>)<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">G</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Dot</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">G</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">G</span><span class="op">&gt;</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Dot</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">G</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">G</span>: <span class="ident">IntoEdgeReferences</span> <span class="op">+</span> <span class="ident">IntoNodeReferences</span> <span class="op">+</span> <span class="ident">NodeIndexable</span> <span class="op">+</span> <span class="ident">GraphProp</span>,
-    <span class="ident">G</span>::<span class="ident">EdgeWeight</span>: <span class="ident">fmt</span>::<span class="ident">Display</span>,
-    <span class="ident">G</span>::<span class="ident">NodeWeight</span>: <span class="ident">fmt</span>::<span class="ident">Display</span>,
+    <span class="ident">G::EdgeWeight</span>: <span class="ident">fmt::Display</span>,
+    <span class="ident">G::NodeWeight</span>: <span class="ident">fmt::Display</span>,
 {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="self">self</span>.<span class="ident">graph_fmt</span>(<span class="self">self</span>.<span class="ident">graph</span>, <span class="ident">f</span>, <span class="op">|</span><span class="ident">n</span>, <span class="ident">cb</span><span class="op">|</span> <span class="ident">cb</span>(<span class="ident">n</span>), <span class="op">|</span><span class="ident">e</span>, <span class="ident">cb</span><span class="op">|</span> <span class="ident">cb</span>(<span class="ident">e</span>))
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">G</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Dot</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">G</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">G</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Dot</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">G</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">G</span>: <span class="ident">IntoEdgeReferences</span> <span class="op">+</span> <span class="ident">IntoNodeReferences</span> <span class="op">+</span> <span class="ident">NodeIndexable</span> <span class="op">+</span> <span class="ident">GraphProp</span>,
-    <span class="ident">G</span>::<span class="ident">EdgeWeight</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span>,
-    <span class="ident">G</span>::<span class="ident">NodeWeight</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span>,
+    <span class="ident">G::EdgeWeight</span>: <span class="ident">fmt::Debug</span>,
+    <span class="ident">G::NodeWeight</span>: <span class="ident">fmt::Debug</span>,
 {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="self">self</span>.<span class="ident">graph_fmt</span>(
             <span class="self">self</span>.<span class="ident">graph</span>,
             <span class="ident">f</span>,
@@ -541,18 +541,18 @@
 <span class="doccomment">/// Escape for Graphviz</span>
 <span class="kw">struct</span> <span class="ident">Escaper</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>(<span class="ident">W</span>);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Write</span> <span class="kw">for</span> <span class="ident">Escaper</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span> <span class="ident">fmt::Write</span> <span class="kw">for</span> <span class="ident">Escaper</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">W</span>: <span class="ident">fmt</span>::<span class="ident">Write</span>,
+    <span class="ident">W</span>: <span class="ident">fmt::Write</span>,
 {
-    <span class="kw">fn</span> <span class="ident">write_str</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">write_str</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="kw">for</span> <span class="ident">c</span> <span class="kw">in</span> <span class="ident">s</span>.<span class="ident">chars</span>() {
             <span class="self">self</span>.<span class="ident">write_char</span>(<span class="ident">c</span>)<span class="question-mark">?</span>;
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">write_char</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">c</span>: <span class="ident">char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">write_char</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">c</span>: <span class="ident">char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="kw">match</span> <span class="ident">c</span> {
             <span class="string">&#39;&quot;&#39;</span> <span class="op">|</span> <span class="string">&#39;\\&#39;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write_char</span>(<span class="string">&#39;\\&#39;</span>)<span class="question-mark">?</span>,
             <span class="comment">// \l is for left justified linebreak</span>
@@ -566,11 +566,11 @@
 <span class="doccomment">/// Pass Display formatting through a simple escaping filter</span>
 <span class="kw">struct</span> <span class="ident">Escaped</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">T</span>);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">Escaped</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">Escaped</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">fmt</span>::<span class="ident">Display</span>,
+    <span class="ident">T</span>: <span class="ident">fmt::Display</span>,
 {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="kw">if</span> <span class="ident">f</span>.<span class="ident">alternate</span>() {
             <span class="macro">writeln!</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Escaper</span>(<span class="ident">f</span>), <span class="string">&quot;{:#}&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>)
         } <span class="kw">else</span> {
@@ -582,11 +582,11 @@
 <span class="doccomment">/// Pass Debug formatting to Display</span>
 <span class="kw">struct</span> <span class="ident">DebugFmt</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">T</span>);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Display</span> <span class="kw">for</span> <span class="ident">DebugFmt</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">DebugFmt</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span>,
+    <span class="ident">T</span>: <span class="ident">fmt::Debug</span>,
 {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">fmt</span>(<span class="ident">f</span>)
     }
 }
@@ -594,13 +594,13 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span> {
     <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Config</span>, <span class="ident">Dot</span>, <span class="ident">Escaper</span>};
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">prelude</span>::<span class="ident">Graph</span>;
-    <span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">visit</span>::<span class="ident">NodeRef</span>;
-    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">fmt</span>::<span class="ident">Write</span>;
+    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::prelude::Graph</span>;
+    <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::visit::NodeRef</span>;
+    <span class="kw">use</span> <span class="ident">std::fmt::Write</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_escape</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buff</span> <span class="op">=</span> <span class="ident">String</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buff</span> <span class="op">=</span> <span class="ident">String::new</span>();
         {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">Escaper</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buff</span>);
             <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">write_str</span>(<span class="string">&quot;\&quot; \\ \n&quot;</span>);
@@ -609,7 +609,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">simple_graph</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Graph</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">Graph</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">Graph</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span><span class="ident">::new</span>();
         <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">graph</span>.<span class="ident">add_node</span>(<span class="string">&quot;A&quot;</span>);
         <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">graph</span>.<span class="ident">add_node</span>(<span class="string">&quot;B&quot;</span>);
         <span class="ident">graph</span>.<span class="ident">add_edge</span>(<span class="ident">a</span>, <span class="ident">b</span>, <span class="string">&quot;edge_label&quot;</span>);
@@ -619,28 +619,28 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_nodeindexlable_option</span>() {
         <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">simple_graph</span>();
-        <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">Dot</span>::<span class="ident">with_config</span>(<span class="kw-2">&amp;</span><span class="ident">graph</span>, <span class="kw-2">&amp;</span>[<span class="ident">Config</span>::<span class="ident">NodeIndexLabel</span>]));
+        <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">Dot::with_config</span>(<span class="kw-2">&amp;</span><span class="ident">graph</span>, <span class="kw-2">&amp;</span>[<span class="ident">Config::NodeIndexLabel</span>]));
         <span class="macro">assert_eq!</span>(<span class="ident">dot</span>, <span class="string">&quot;digraph {\n    0 [ label = \&quot;0\&quot; ]\n    1 [ label = \&quot;1\&quot; ]\n    0 -&gt; 1 [ label = \&quot;\\\&quot;edge_label\\\&quot;\&quot; ]\n}\n&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_edgeindexlable_option</span>() {
         <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">simple_graph</span>();
-        <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">Dot</span>::<span class="ident">with_config</span>(<span class="kw-2">&amp;</span><span class="ident">graph</span>, <span class="kw-2">&amp;</span>[<span class="ident">Config</span>::<span class="ident">EdgeIndexLabel</span>]));
+        <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">Dot::with_config</span>(<span class="kw-2">&amp;</span><span class="ident">graph</span>, <span class="kw-2">&amp;</span>[<span class="ident">Config::EdgeIndexLabel</span>]));
         <span class="macro">assert_eq!</span>(<span class="ident">dot</span>, <span class="string">&quot;digraph {\n    0 [ label = \&quot;\\\&quot;A\\\&quot;\&quot; ]\n    1 [ label = \&quot;\\\&quot;B\\\&quot;\&quot; ]\n    0 -&gt; 1 [ label = \&quot;0\&quot; ]\n}\n&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_edgenolable_option</span>() {
         <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">simple_graph</span>();
-        <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">Dot</span>::<span class="ident">with_config</span>(<span class="kw-2">&amp;</span><span class="ident">graph</span>, <span class="kw-2">&amp;</span>[<span class="ident">Config</span>::<span class="ident">EdgeNoLabel</span>]));
+        <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">Dot::with_config</span>(<span class="kw-2">&amp;</span><span class="ident">graph</span>, <span class="kw-2">&amp;</span>[<span class="ident">Config::EdgeNoLabel</span>]));
         <span class="macro">assert_eq!</span>(<span class="ident">dot</span>, <span class="string">&quot;digraph {\n    0 [ label = \&quot;\\\&quot;A\\\&quot;\&quot; ]\n    1 [ label = \&quot;\\\&quot;B\\\&quot;\&quot; ]\n    0 -&gt; 1 [ ]\n}\n&quot;</span>);
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">test_nodenolable_option</span>() {
         <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">simple_graph</span>();
-        <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">Dot</span>::<span class="ident">with_config</span>(<span class="kw-2">&amp;</span><span class="ident">graph</span>, <span class="kw-2">&amp;</span>[<span class="ident">Config</span>::<span class="ident">NodeNoLabel</span>]));
+        <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, <span class="ident">Dot::with_config</span>(<span class="kw-2">&amp;</span><span class="ident">graph</span>, <span class="kw-2">&amp;</span>[<span class="ident">Config::NodeNoLabel</span>]));
         <span class="macro">assert_eq!</span>(
             <span class="ident">dot</span>,
             <span class="string">&quot;digraph {\n    0 [ ]\n    1 [ ]\n    0 -&gt; 1 [ label = \&quot;\\\&quot;edge_label\\\&quot;\&quot; ]\n}\n&quot;</span>
@@ -652,9 +652,9 @@
         <span class="kw">let</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident">simple_graph</span>();
         <span class="kw">let</span> <span class="ident">dot</span> <span class="op">=</span> <span class="macro">format!</span>(
             <span class="string">&quot;{:?}&quot;</span>,
-            <span class="ident">Dot</span>::<span class="ident">with_attr_getters</span>(
+            <span class="ident">Dot::with_attr_getters</span>(
                 <span class="kw-2">&amp;</span><span class="ident">graph</span>,
-                <span class="kw-2">&amp;</span>[<span class="ident">Config</span>::<span class="ident">NodeNoLabel</span>, <span class="ident">Config</span>::<span class="ident">EdgeNoLabel</span>],
+                <span class="kw-2">&amp;</span>[<span class="ident">Config::NodeNoLabel</span>, <span class="ident">Config::EdgeNoLabel</span>],
                 <span class="kw-2">&amp;</span><span class="op">|</span><span class="kw">_</span>, <span class="ident">er</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;label = \&quot;{}\&quot;&quot;</span>, <span class="ident">er</span>.<span class="ident">weight</span>().<span class="ident">to_uppercase</span>()),
                 <span class="kw-2">&amp;</span><span class="op">|</span><span class="kw">_</span>, <span class="ident">nr</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;label = \&quot;{}\&quot;&quot;</span>, <span class="ident">nr</span>.<span class="ident">weight</span>().<span class="ident">to_lowercase</span>()),
             ),

@@ -655,10 +655,10 @@
     <span class="ident">resource</span>, <span class="ident">Epoch</span>, <span class="ident">FastHashMap</span>, <span class="ident">Index</span>, <span class="ident">RefCount</span>,
 };
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections</span>::<span class="ident">hash_map</span>::<span class="ident">Entry</span>, <span class="ident">fmt</span>, <span class="ident">marker</span>::<span class="ident">PhantomData</span>, <span class="ident">ops</span>, <span class="ident">vec</span>::<span class="ident">Drain</span>};
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::hash_map::Entry</span>, <span class="ident">fmt</span>, <span class="ident">marker::PhantomData</span>, <span class="ident">ops</span>, <span class="ident">vec::Drain</span>};
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">buffer</span>::<span class="ident">BufferState</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">buffer::BufferState</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">texture</span>::{<span class="ident">TextureSelector</span>, <span class="ident">TextureState</span>};
 
 <span class="doccomment">/// A single unit of state tracking. It keeps an initial</span>
@@ -688,11 +688,11 @@
 <span class="doccomment">/// a particular resource type, like a buffer or a texture.</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait</span> <span class="ident">ResourceState</span>: <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Default</span> {
     <span class="doccomment">/// Corresponding `HUB` identifier.</span>
-    <span class="kw">type</span> <span class="ident">Id</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="op">+</span> <span class="ident">TypedId</span>;
+    <span class="kw">type</span> <span class="ident">Id</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">fmt::Debug</span> <span class="op">+</span> <span class="ident">TypedId</span>;
     <span class="doccomment">/// A type specifying the sub-resources.</span>
-    <span class="kw">type</span> <span class="ident">Selector</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span>;
+    <span class="kw">type</span> <span class="ident">Selector</span>: <span class="ident">fmt::Debug</span>;
     <span class="doccomment">/// Usage type for a `Unit` of a sub-resource.</span>
-    <span class="kw">type</span> <span class="ident">Usage</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span>;
+    <span class="kw">type</span> <span class="ident">Usage</span>: <span class="ident">fmt::Debug</span>;
 
     <span class="doccomment">/// Check if all the selected sub-resources have the same</span>
     <span class="doccomment">/// usage, and return it.</span>
@@ -700,7 +700,7 @@
     <span class="doccomment">/// Returns `None` if no sub-resources</span>
     <span class="doccomment">/// are intersecting with the selector, or their usage</span>
     <span class="doccomment">/// isn&#39;t consistent.</span>
-    <span class="kw">fn</span> <span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">selector</span>: <span class="self">Self</span>::<span class="ident">Selector</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Usage</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">selector</span>: <span class="self">Self</span><span class="ident">::Selector</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Usage</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Change the last usage of the selected sub-resources.</span>
     <span class="doccomment">///</span>
@@ -715,18 +715,18 @@
     <span class="doccomment">/// be done for read-only usages.</span>
     <span class="kw">fn</span> <span class="ident">change</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
-        <span class="ident">selector</span>: <span class="self">Self</span>::<span class="ident">Selector</span>,
-        <span class="ident">usage</span>: <span class="self">Self</span>::<span class="ident">Usage</span>,
+        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Id</span><span class="op">&gt;</span>,
+        <span class="ident">selector</span>: <span class="self">Self</span><span class="ident">::Selector</span>,
+        <span class="ident">usage</span>: <span class="self">Self</span><span class="ident">::Usage</span>,
         <span class="ident">output</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Sets up the first usage of the selected sub-resources.</span>
     <span class="kw">fn</span> <span class="ident">prepend</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
-        <span class="ident">selector</span>: <span class="self">Self</span>::<span class="ident">Selector</span>,
-        <span class="ident">usage</span>: <span class="self">Self</span>::<span class="ident">Usage</span>,
+        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Id</span><span class="op">&gt;</span>,
+        <span class="ident">selector</span>: <span class="self">Self</span><span class="ident">::Selector</span>,
+        <span class="ident">usage</span>: <span class="self">Self</span><span class="ident">::Usage</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Merge the state of this resource tracked by a different instance</span>
@@ -739,7 +739,7 @@
     <span class="doccomment">/// the error is generated (returning the conflict).</span>
     <span class="kw">fn</span> <span class="ident">merge</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
+        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Id</span><span class="op">&gt;</span>,
         <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>,
         <span class="ident">output</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>;
@@ -762,24 +762,24 @@
 <span class="doccomment">/// based on the contents.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">ResourceState</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">selector</span>: <span class="ident">S</span>::<span class="ident">Selector</span>,
-    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">ops</span>::<span class="ident">Range</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Usage</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">selector</span>: <span class="ident">S::Selector</span>,
+    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">ops::Range</span><span class="op">&lt;</span><span class="ident">S::Usage</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="ident">BufferState</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Produce the gfx-hal barrier corresponding to the transition.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_hal</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_hal</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span>(
         <span class="self">self</span>,
-        <span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">resource</span>::<span class="ident">Buffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">hal</span>::<span class="ident">memory</span>::<span class="ident">Barrier</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span> {
-        <span class="ident">log</span>::<span class="macro">trace!</span>(<span class="string">&quot;\tbuffer -&gt; {:?}&quot;</span>, <span class="self">self</span>);
+        <span class="ident">buf</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">resource::Buffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">hal::memory::Barrier</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span> {
+        <span class="macro">log::trace!</span>(<span class="string">&quot;\tbuffer -&gt; {:?}&quot;</span>, <span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">target</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">buf</span>.<span class="ident">raw</span>.<span class="ident">as_ref</span>().<span class="ident">expect</span>(<span class="string">&quot;Buffer is destroyed&quot;</span>);
-        <span class="ident">hal</span>::<span class="ident">memory</span>::<span class="ident">Barrier</span>::<span class="ident">Buffer</span> {
-            <span class="ident">states</span>: <span class="ident">conv</span>::<span class="ident">map_buffer_state</span>(<span class="self">self</span>.<span class="ident">usage</span>.<span class="ident">start</span>)
-                ..<span class="ident">conv</span>::<span class="ident">map_buffer_state</span>(<span class="self">self</span>.<span class="ident">usage</span>.<span class="ident">end</span>),
+        <span class="ident">hal::memory::Barrier::Buffer</span> {
+            <span class="ident">states</span>: <span class="ident">conv::map_buffer_state</span>(<span class="self">self</span>.<span class="ident">usage</span>.<span class="ident">start</span>)
+                ..<span class="ident">conv::map_buffer_state</span>(<span class="self">self</span>.<span class="ident">usage</span>.<span class="ident">end</span>),
             <span class="ident">target</span>,
-            <span class="ident">range</span>: <span class="ident">hal</span>::<span class="ident">buffer</span>::<span class="ident">SubRange</span>::<span class="ident">WHOLE</span>,
+            <span class="ident">range</span>: <span class="ident">hal::buffer::SubRange::WHOLE</span>,
             <span class="ident">families</span>: <span class="prelude-val">None</span>,
         }
     }
@@ -787,18 +787,18 @@
 
 <span class="kw">impl</span> <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="ident">TextureState</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Produce the gfx-hal barrier corresponding to the transition.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_hal</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_hal</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span>(
         <span class="self">self</span>,
-        <span class="ident">tex</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">resource</span>::<span class="ident">Texture</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">hal</span>::<span class="ident">memory</span>::<span class="ident">Barrier</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span> {
-        <span class="ident">log</span>::<span class="macro">trace!</span>(<span class="string">&quot;\ttexture -&gt; {:?}&quot;</span>, <span class="self">self</span>);
+        <span class="ident">tex</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">resource::Texture</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">hal::memory::Barrier</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span><span class="op">&gt;</span> {
+        <span class="macro">log::trace!</span>(<span class="string">&quot;\ttexture -&gt; {:?}&quot;</span>, <span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">target</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">tex</span>.<span class="ident">raw</span>.<span class="ident">as_ref</span>().<span class="ident">expect</span>(<span class="string">&quot;Texture is destroyed&quot;</span>);
         <span class="kw">let</span> <span class="ident">aspects</span> <span class="op">=</span> <span class="ident">tex</span>.<span class="ident">aspects</span>;
-        <span class="ident">hal</span>::<span class="ident">memory</span>::<span class="ident">Barrier</span>::<span class="ident">Image</span> {
-            <span class="ident">states</span>: <span class="ident">conv</span>::<span class="ident">map_texture_state</span>(<span class="self">self</span>.<span class="ident">usage</span>.<span class="ident">start</span>, <span class="ident">aspects</span>)
-                ..<span class="ident">conv</span>::<span class="ident">map_texture_state</span>(<span class="self">self</span>.<span class="ident">usage</span>.<span class="ident">end</span>, <span class="ident">aspects</span>),
+        <span class="ident">hal::memory::Barrier::Image</span> {
+            <span class="ident">states</span>: <span class="ident">conv::map_texture_state</span>(<span class="self">self</span>.<span class="ident">usage</span>.<span class="ident">start</span>, <span class="ident">aspects</span>)
+                ..<span class="ident">conv::map_texture_state</span>(<span class="self">self</span>.<span class="ident">usage</span>.<span class="ident">end</span>, <span class="ident">aspects</span>),
             <span class="ident">target</span>,
-            <span class="ident">range</span>: <span class="ident">hal</span>::<span class="ident">image</span>::<span class="ident">SubresourceRange</span> {
+            <span class="ident">range</span>: <span class="ident">hal::image::SubresourceRange</span> {
                 <span class="ident">aspects</span>,
                 <span class="ident">level_start</span>: <span class="self">self</span>.<span class="ident">selector</span>.<span class="ident">levels</span>.<span class="ident">start</span>,
                 <span class="ident">level_count</span>: <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">selector</span>.<span class="ident">levels</span>.<span class="ident">end</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">selector</span>.<span class="ident">levels</span>.<span class="ident">start</span>),
@@ -811,7 +811,7 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">UseExtendError</span><span class="op">&lt;</span><span class="ident">U</span>: <span class="ident">fmt</span>::<span class="ident">Debug</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">UseExtendError</span><span class="op">&lt;</span><span class="ident">U</span>: <span class="ident">fmt::Debug</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;resource is invalid&quot;</span>)]</span>
     <span class="ident">InvalidResource</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;total usage {0:?} is not valid&quot;</span>)]</span>
@@ -825,11 +825,11 @@
     <span class="doccomment">/// Temporary storage for collecting transitions.</span>
     <span class="ident">temp</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The backend variant for all the tracked resources.</span>
-    <span class="ident">backend</span>: <span class="ident">wgt</span>::<span class="ident">Backend</span>,
+    <span class="ident">backend</span>: <span class="ident">wgt::Backend</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">ResourceState</span> <span class="op">+</span> <span class="ident">fmt</span>::<span class="ident">Debug</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">ResourceState</span> <span class="op">+</span> <span class="ident">fmt::Debug</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="self">self</span>.<span class="ident">map</span>
             .<span class="ident">iter</span>()
             .<span class="ident">map</span>(<span class="op">|</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>, <span class="ident">res</span>)<span class="op">|</span> ((<span class="ident">index</span>, <span class="ident">res</span>.<span class="ident">epoch</span>), <span class="kw-2">&amp;</span><span class="ident">res</span>.<span class="ident">state</span>))
@@ -840,20 +840,20 @@
 
 <span class="attribute">#[<span class="ident">allow</span>(
     <span class="comment">// Explicit lifetimes are easier to reason about here.</span>
-    <span class="ident">clippy</span>::<span class="ident">needless_lifetimes</span>,
+    <span class="ident">clippy::needless_lifetimes</span>,
 )]</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">ResourceState</span><span class="op">&gt;</span> <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Create a new empty tracker.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">backend</span>: <span class="ident">wgt</span>::<span class="ident">Backend</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">backend</span>: <span class="ident">wgt::Backend</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">map</span>: <span class="ident">FastHashMap</span>::<span class="ident">default</span>(),
-            <span class="ident">temp</span>: <span class="ident">Vec</span>::<span class="ident">new</span>(),
+            <span class="ident">map</span>: <span class="ident">FastHashMap::default</span>(),
+            <span class="ident">temp</span>: <span class="ident">Vec::new</span>(),
             <span class="ident">backend</span>,
         }
     }
 
     <span class="doccomment">/// Remove an id from the tracked map.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">backend</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="number">0</span>.<span class="ident">unzip</span>();
         <span class="macro">debug_assert_eq!</span>(<span class="ident">backend</span>, <span class="self">self</span>.<span class="ident">backend</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>) {
@@ -866,11 +866,11 @@
     }
 
     <span class="doccomment">/// Removes the resource from the tracker if we are holding the last reference.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">remove_abandoned</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">remove_abandoned</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">backend</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="number">0</span>.<span class="ident">unzip</span>();
         <span class="macro">debug_assert_eq!</span>(<span class="ident">backend</span>, <span class="self">self</span>.<span class="ident">backend</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">entry</span>(<span class="ident">index</span>) {
-            <span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Entry::Occupied</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">get</span>().<span class="ident">ref_count</span>.<span class="ident">load</span>() <span class="op">=</span><span class="op">=</span> <span class="number">1</span> {
                     <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">remove</span>();
                     <span class="macro">assert_eq!</span>(<span class="ident">res</span>.<span class="ident">epoch</span>, <span class="ident">epoch</span>);
@@ -891,11 +891,11 @@
     }
 
     <span class="doccomment">/// Return an iterator over used resources keys.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">used</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">used</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">impl</span> <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">backend</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">backend</span>;
         <span class="self">self</span>.<span class="ident">map</span>
             .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(<span class="kw">move</span> <span class="op">|</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>, <span class="ident">resource</span>)<span class="op">|</span> <span class="ident">Valid</span>(<span class="ident">S</span>::<span class="ident">Id</span>::<span class="ident">zip</span>(<span class="ident">index</span>, <span class="ident">resource</span>.<span class="ident">epoch</span>, <span class="ident">backend</span>)))
+            .<span class="ident">map</span>(<span class="kw">move</span> <span class="op">|</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>, <span class="ident">resource</span>)<span class="op">|</span> <span class="ident">Valid</span>(<span class="ident">S::Id::zip</span>(<span class="ident">index</span>, <span class="ident">resource</span>.<span class="ident">epoch</span>, <span class="ident">backend</span>)))
     }
 
     <span class="doccomment">/// Clear the tracked contents.</span>
@@ -908,14 +908,14 @@
     <span class="doccomment">/// Returns false if the resource is already registered.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">init</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
+        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span>,
         <span class="ident">ref_count</span>: <span class="ident">RefCount</span>,
         <span class="ident">state</span>: <span class="ident">S</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="kw-2">&amp;</span><span class="ident">S</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">backend</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="number">0</span>.<span class="ident">unzip</span>();
         <span class="macro">debug_assert_eq!</span>(<span class="ident">backend</span>, <span class="self">self</span>.<span class="ident">backend</span>);
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">entry</span>(<span class="ident">index</span>) {
-            <span class="ident">Entry</span>::<span class="ident">Vacant</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Entry::Vacant</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">e</span>.<span class="ident">insert</span>(<span class="ident">Resource</span> {
                     <span class="ident">ref_count</span>,
                     <span class="ident">state</span>,
@@ -923,7 +923,7 @@
                 });
                 <span class="prelude-val">Ok</span>(())
             }
-            <span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="kw-2">&amp;</span><span class="ident">e</span>.<span class="ident">into_mut</span>().<span class="ident">state</span>),
+            <span class="ident">Entry::Occupied</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="kw-2">&amp;</span><span class="ident">e</span>.<span class="ident">into_mut</span>().<span class="ident">state</span>),
         }
     }
 
@@ -931,7 +931,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns `Some(Usage)` only if this usage is consistent</span>
     <span class="doccomment">/// across the given selector.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>, <span class="ident">selector</span>: <span class="ident">S</span>::<span class="ident">Selector</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Usage</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span>, <span class="ident">selector</span>: <span class="ident">S::Selector</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S::Usage</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">backend</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="number">0</span>.<span class="ident">unzip</span>();
         <span class="macro">debug_assert_eq!</span>(<span class="ident">backend</span>, <span class="self">self</span>.<span class="ident">backend</span>);
         <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>)<span class="question-mark">?</span>;
@@ -942,20 +942,20 @@
     <span class="doccomment">/// Make sure that a resource is tracked, and return a mutable</span>
     <span class="doccomment">/// reference to it.</span>
     <span class="kw">fn</span> <span class="ident">get_or_insert</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-        <span class="ident">self_backend</span>: <span class="ident">wgt</span>::<span class="ident">Backend</span>,
+        <span class="ident">self_backend</span>: <span class="ident">wgt::Backend</span>,
         <span class="ident">map</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">Index</span>, <span class="ident">Resource</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
+        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span>,
         <span class="ident">ref_count</span>: <span class="kw-2">&amp;</span><span class="ident">RefCount</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Resource</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">backend</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="number">0</span>.<span class="ident">unzip</span>();
         <span class="macro">debug_assert_eq!</span>(<span class="ident">self_backend</span>, <span class="ident">backend</span>);
         <span class="kw">match</span> <span class="ident">map</span>.<span class="ident">entry</span>(<span class="ident">index</span>) {
-            <span class="ident">Entry</span>::<span class="ident">Vacant</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">e</span>.<span class="ident">insert</span>(<span class="ident">Resource</span> {
+            <span class="ident">Entry::Vacant</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">e</span>.<span class="ident">insert</span>(<span class="ident">Resource</span> {
                 <span class="ident">ref_count</span>: <span class="ident">ref_count</span>.<span class="ident">clone</span>(),
-                <span class="ident">state</span>: <span class="ident">S</span>::<span class="ident">default</span>(),
+                <span class="ident">state</span>: <span class="ident">S::default</span>(),
                 <span class="ident">epoch</span>,
             }),
-            <span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Entry::Occupied</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="macro">assert_eq!</span>(<span class="ident">e</span>.<span class="ident">get</span>().<span class="ident">epoch</span>, <span class="ident">epoch</span>);
                 <span class="ident">e</span>.<span class="ident">into_mut</span>()
             }
@@ -963,9 +963,9 @@
     }
 
     <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-        <span class="ident">self_backend</span>: <span class="ident">wgt</span>::<span class="ident">Backend</span>,
+        <span class="ident">self_backend</span>: <span class="ident">wgt::Backend</span>,
         <span class="ident">map</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">Index</span>, <span class="ident">Resource</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
+        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Resource</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">backend</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="number">0</span>.<span class="ident">unzip</span>();
         <span class="macro">debug_assert_eq!</span>(<span class="ident">self_backend</span>, <span class="ident">backend</span>);
@@ -979,12 +979,12 @@
     <span class="doccomment">/// Returns conflicting transition as an error.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">change_extend</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
+        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span>,
         <span class="ident">ref_count</span>: <span class="kw-2">&amp;</span><span class="ident">RefCount</span>,
-        <span class="ident">selector</span>: <span class="ident">S</span>::<span class="ident">Selector</span>,
-        <span class="ident">usage</span>: <span class="ident">S</span>::<span class="ident">Usage</span>,
+        <span class="ident">selector</span>: <span class="ident">S::Selector</span>,
+        <span class="ident">usage</span>: <span class="ident">S::Usage</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">Self</span>::<span class="ident">get_or_insert</span>(<span class="self">self</span>.<span class="ident">backend</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>, <span class="ident">id</span>, <span class="ident">ref_count</span>)
+        <span class="self">Self</span><span class="ident">::get_or_insert</span>(<span class="self">self</span>.<span class="ident">backend</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>, <span class="ident">id</span>, <span class="ident">ref_count</span>)
             .<span class="ident">state</span>
             .<span class="ident">change</span>(<span class="ident">id</span>, <span class="ident">selector</span>, <span class="ident">usage</span>, <span class="prelude-val">None</span>)
     }
@@ -992,12 +992,12 @@
     <span class="doccomment">/// Replace the usage of a specified resource.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">change_replace</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
+        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span>,
         <span class="ident">ref_count</span>: <span class="kw-2">&amp;</span><span class="ident">RefCount</span>,
-        <span class="ident">selector</span>: <span class="ident">S</span>::<span class="ident">Selector</span>,
-        <span class="ident">usage</span>: <span class="ident">S</span>::<span class="ident">Usage</span>,
+        <span class="ident">selector</span>: <span class="ident">S::Selector</span>,
+        <span class="ident">usage</span>: <span class="ident">S::Usage</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Drain</span><span class="op">&lt;</span><span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">get_or_insert</span>(<span class="self">self</span>.<span class="ident">backend</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>, <span class="ident">id</span>, <span class="ident">ref_count</span>);
+        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get_or_insert</span>(<span class="self">self</span>.<span class="ident">backend</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>, <span class="ident">id</span>, <span class="ident">ref_count</span>);
         <span class="ident">res</span>.<span class="ident">state</span>
             .<span class="ident">change</span>(<span class="ident">id</span>, <span class="ident">selector</span>, <span class="ident">usage</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">temp</span>))
             .<span class="ident">ok</span>(); <span class="comment">//TODO: unwrap?</span>
@@ -1008,11 +1008,11 @@
     <span class="doccomment">/// (panics if the resource is not yet tracked)</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">change_replace_tracked</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
-        <span class="ident">selector</span>: <span class="ident">S</span>::<span class="ident">Selector</span>,
-        <span class="ident">usage</span>: <span class="ident">S</span>::<span class="ident">Usage</span>,
+        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span>,
+        <span class="ident">selector</span>: <span class="ident">S::Selector</span>,
+        <span class="ident">usage</span>: <span class="ident">S::Usage</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Drain</span><span class="op">&lt;</span><span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">Self</span>::<span class="ident">get</span>(<span class="self">self</span>.<span class="ident">backend</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>, <span class="ident">id</span>);
+        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::get</span>(<span class="self">self</span>.<span class="ident">backend</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>, <span class="ident">id</span>);
         <span class="ident">res</span>.<span class="ident">state</span>
             .<span class="ident">change</span>(<span class="ident">id</span>, <span class="ident">selector</span>, <span class="ident">usage</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">temp</span>))
             .<span class="ident">ok</span>();
@@ -1024,12 +1024,12 @@
     <span class="doccomment">/// This is a special operation only used by the render pass attachments.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">prepend</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
+        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span>,
         <span class="ident">ref_count</span>: <span class="kw-2">&amp;</span><span class="ident">RefCount</span>,
-        <span class="ident">selector</span>: <span class="ident">S</span>::<span class="ident">Selector</span>,
-        <span class="ident">usage</span>: <span class="ident">S</span>::<span class="ident">Usage</span>,
+        <span class="ident">selector</span>: <span class="ident">S::Selector</span>,
+        <span class="ident">usage</span>: <span class="ident">S::Usage</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">Self</span>::<span class="ident">get_or_insert</span>(<span class="self">self</span>.<span class="ident">backend</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>, <span class="ident">id</span>, <span class="ident">ref_count</span>)
+        <span class="self">Self</span><span class="ident">::get_or_insert</span>(<span class="self">self</span>.<span class="ident">backend</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>, <span class="ident">id</span>, <span class="ident">ref_count</span>)
             .<span class="ident">state</span>
             .<span class="ident">prepend</span>(<span class="ident">id</span>, <span class="ident">selector</span>, <span class="ident">usage</span>)
     }
@@ -1040,17 +1040,17 @@
         <span class="macro">debug_assert_eq!</span>(<span class="self">self</span>.<span class="ident">backend</span>, <span class="ident">other</span>.<span class="ident">backend</span>);
         <span class="kw">for</span> (<span class="kw-2">&amp;</span><span class="ident">index</span>, <span class="ident">new</span>) <span class="kw">in</span> <span class="ident">other</span>.<span class="ident">map</span>.<span class="ident">iter</span>() {
             <span class="kw">match</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">entry</span>(<span class="ident">index</span>) {
-                <span class="ident">Entry</span>::<span class="ident">Vacant</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Entry::Vacant</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">e</span>.<span class="ident">insert</span>(<span class="ident">new</span>.<span class="ident">clone</span>());
                 }
-                <span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Entry::Occupied</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="macro">assert_eq!</span>(
                         <span class="ident">e</span>.<span class="ident">get</span>().<span class="ident">epoch</span>,
                         <span class="ident">new</span>.<span class="ident">epoch</span>,
                         <span class="string">&quot;ID {:?} wasn&#39;t properly removed&quot;</span>,
-                        <span class="ident">S</span>::<span class="ident">Id</span>::<span class="ident">zip</span>(<span class="ident">index</span>, <span class="ident">e</span>.<span class="ident">get</span>().<span class="ident">epoch</span>, <span class="self">self</span>.<span class="ident">backend</span>)
+                        <span class="ident">S::Id::zip</span>(<span class="ident">index</span>, <span class="ident">e</span>.<span class="ident">get</span>().<span class="ident">epoch</span>, <span class="self">self</span>.<span class="ident">backend</span>)
                     );
-                    <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Valid</span>(<span class="ident">S</span>::<span class="ident">Id</span>::<span class="ident">zip</span>(<span class="ident">index</span>, <span class="ident">new</span>.<span class="ident">epoch</span>, <span class="self">self</span>.<span class="ident">backend</span>));
+                    <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Valid</span>(<span class="ident">S::Id::zip</span>(<span class="ident">index</span>, <span class="ident">new</span>.<span class="ident">epoch</span>, <span class="self">self</span>.<span class="ident">backend</span>));
                     <span class="ident">e</span>.<span class="ident">into_mut</span>().<span class="ident">state</span>.<span class="ident">merge</span>(<span class="ident">id</span>, <span class="kw-2">&amp;</span><span class="ident">new</span>.<span class="ident">state</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
                 }
             }
@@ -1063,17 +1063,17 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">merge_replace</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Drain</span><span class="op">&lt;</span><span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">for</span> (<span class="kw-2">&amp;</span><span class="ident">index</span>, <span class="ident">new</span>) <span class="kw">in</span> <span class="ident">other</span>.<span class="ident">map</span>.<span class="ident">iter</span>() {
             <span class="kw">match</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">entry</span>(<span class="ident">index</span>) {
-                <span class="ident">Entry</span>::<span class="ident">Vacant</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Entry::Vacant</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">e</span>.<span class="ident">insert</span>(<span class="ident">new</span>.<span class="ident">clone</span>());
                 }
-                <span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Entry::Occupied</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="macro">assert_eq!</span>(
                         <span class="ident">e</span>.<span class="ident">get</span>().<span class="ident">epoch</span>,
                         <span class="ident">new</span>.<span class="ident">epoch</span>,
                         <span class="string">&quot;ID {:?} wasn&#39;t properly removed&quot;</span>,
-                        <span class="ident">S</span>::<span class="ident">Id</span>::<span class="ident">zip</span>(<span class="ident">index</span>, <span class="ident">e</span>.<span class="ident">get</span>().<span class="ident">epoch</span>, <span class="self">self</span>.<span class="ident">backend</span>)
+                        <span class="ident">S::Id::zip</span>(<span class="ident">index</span>, <span class="ident">e</span>.<span class="ident">get</span>().<span class="ident">epoch</span>, <span class="self">self</span>.<span class="ident">backend</span>)
                     );
-                    <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Valid</span>(<span class="ident">S</span>::<span class="ident">Id</span>::<span class="ident">zip</span>(<span class="ident">index</span>, <span class="ident">new</span>.<span class="ident">epoch</span>, <span class="self">self</span>.<span class="ident">backend</span>));
+                    <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">Valid</span>(<span class="ident">S::Id::zip</span>(<span class="ident">index</span>, <span class="ident">new</span>.<span class="ident">epoch</span>, <span class="self">self</span>.<span class="ident">backend</span>));
                     <span class="ident">e</span>.<span class="ident">into_mut</span>()
                         .<span class="ident">state</span>
                         .<span class="ident">merge</span>(<span class="ident">id</span>, <span class="kw-2">&amp;</span><span class="ident">new</span>.<span class="ident">state</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">temp</span>))
@@ -1089,16 +1089,16 @@
     <span class="doccomment">/// the last read-only usage, if possible.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns the old usage as an error if there is a conflict.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">use_extend</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">hub</span>::<span class="ident">Resource</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">use_extend</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">hub::Resource</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">hub</span>::<span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
-        <span class="ident">id</span>: <span class="ident">S</span>::<span class="ident">Id</span>,
-        <span class="ident">selector</span>: <span class="ident">S</span>::<span class="ident">Selector</span>,
-        <span class="ident">usage</span>: <span class="ident">S</span>::<span class="ident">Usage</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span>, <span class="ident">UseExtendError</span><span class="op">&lt;</span><span class="ident">S</span>::<span class="ident">Usage</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">hub::Storage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">S::Id</span><span class="op">&gt;</span>,
+        <span class="ident">id</span>: <span class="ident">S::Id</span>,
+        <span class="ident">selector</span>: <span class="ident">S::Selector</span>,
+        <span class="ident">usage</span>: <span class="ident">S::Usage</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span>, <span class="ident">UseExtendError</span><span class="op">&lt;</span><span class="ident">S::Usage</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">item</span> <span class="op">=</span> <span class="ident">storage</span>
             .<span class="ident">get</span>(<span class="ident">id</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">UseExtendError</span>::<span class="ident">InvalidResource</span>)<span class="question-mark">?</span>;
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">UseExtendError::InvalidResource</span>)<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">change_extend</span>(
             <span class="ident">Valid</span>(<span class="ident">id</span>),
             <span class="ident">item</span>.<span class="ident">life_guard</span>().<span class="ident">ref_count</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
@@ -1106,20 +1106,20 @@
             <span class="ident">usage</span>,
         )
         .<span class="ident">map</span>(<span class="op">|</span>()<span class="op">|</span> <span class="ident">item</span>)
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">UseExtendError</span>::<span class="ident">Conflict</span>(<span class="ident">pending</span>.<span class="ident">usage</span>.<span class="ident">end</span>))
+        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">UseExtendError::Conflict</span>(<span class="ident">pending</span>.<span class="ident">usage</span>.<span class="ident">end</span>))
     }
 
     <span class="doccomment">/// Use a given resource provided by an `Id` with the specified usage.</span>
     <span class="doccomment">/// Combines storage access by &#39;Id&#39; with the transition that replaces</span>
     <span class="doccomment">/// the last usage with a new one, returning an iterator over these</span>
     <span class="doccomment">/// transitions.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">use_replace</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">hub</span>::<span class="ident">Resource</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">use_replace</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="lifetime">&#39;a</span> <span class="op">+</span> <span class="ident">hub::Resource</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">hub</span>::<span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
-        <span class="ident">id</span>: <span class="ident">S</span>::<span class="ident">Id</span>,
-        <span class="ident">selector</span>: <span class="ident">S</span>::<span class="ident">Selector</span>,
-        <span class="ident">usage</span>: <span class="ident">S</span>::<span class="ident">Usage</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span>, <span class="ident">Drain</span><span class="op">&lt;</span><span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span>), <span class="ident">S</span>::<span class="ident">Id</span><span class="op">&gt;</span> {
+        <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">hub::Storage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">S::Id</span><span class="op">&gt;</span>,
+        <span class="ident">id</span>: <span class="ident">S::Id</span>,
+        <span class="ident">selector</span>: <span class="ident">S::Selector</span>,
+        <span class="ident">usage</span>: <span class="ident">S::Usage</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span>, <span class="ident">Drain</span><span class="op">&lt;</span><span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span>), <span class="ident">S::Id</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">item</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get</span>(<span class="ident">id</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">id</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">drain</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">change_replace</span>(
             <span class="ident">Valid</span>(<span class="ident">id</span>),
@@ -1131,20 +1131,20 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="op">+</span> <span class="ident">TypedId</span><span class="op">&gt;</span> <span class="ident">ResourceState</span> <span class="kw">for</span> <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">fmt::Debug</span> <span class="op">+</span> <span class="ident">TypedId</span><span class="op">&gt;</span> <span class="ident">ResourceState</span> <span class="kw">for</span> <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Id</span> <span class="op">=</span> <span class="ident">I</span>;
     <span class="kw">type</span> <span class="ident">Selector</span> <span class="op">=</span> ();
     <span class="kw">type</span> <span class="ident">Usage</span> <span class="op">=</span> ();
 
-    <span class="kw">fn</span> <span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_selector</span>: <span class="self">Self</span>::<span class="ident">Selector</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Usage</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_selector</span>: <span class="self">Self</span><span class="ident">::Selector</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Usage</span><span class="op">&gt;</span> {
         <span class="prelude-val">Some</span>(())
     }
 
     <span class="kw">fn</span> <span class="ident">change</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">_id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
-        <span class="ident">_selector</span>: <span class="self">Self</span>::<span class="ident">Selector</span>,
-        <span class="ident">_usage</span>: <span class="self">Self</span>::<span class="ident">Usage</span>,
+        <span class="ident">_id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Id</span><span class="op">&gt;</span>,
+        <span class="ident">_selector</span>: <span class="self">Self</span><span class="ident">::Selector</span>,
+        <span class="ident">_usage</span>: <span class="self">Self</span><span class="ident">::Usage</span>,
         <span class="ident">_output</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(())
@@ -1152,16 +1152,16 @@
 
     <span class="kw">fn</span> <span class="ident">prepend</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">_id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
-        <span class="ident">_selector</span>: <span class="self">Self</span>::<span class="ident">Selector</span>,
-        <span class="ident">_usage</span>: <span class="self">Self</span>::<span class="ident">Usage</span>,
+        <span class="ident">_id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Id</span><span class="op">&gt;</span>,
+        <span class="ident">_selector</span>: <span class="self">Self</span><span class="ident">::Selector</span>,
+        <span class="ident">_usage</span>: <span class="self">Self</span><span class="ident">::Usage</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn</span> <span class="ident">merge</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">_id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span>::<span class="ident">Id</span><span class="op">&gt;</span>,
+        <span class="ident">_id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Id</span><span class="op">&gt;</span>,
         <span class="ident">_other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>,
         <span class="ident">_output</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span> {
@@ -1179,15 +1179,15 @@
         <span class="string">&quot;Attempted to use buffer {id:?} as a combination of {combined_use:?} within a usage scope.&quot;</span>
     )]</span>
     <span class="ident">Buffer</span> {
-        <span class="ident">id</span>: <span class="ident">id</span>::<span class="ident">BufferId</span>,
-        <span class="ident">combined_use</span>: <span class="ident">resource</span>::<span class="ident">BufferUse</span>,
+        <span class="ident">id</span>: <span class="ident">id::BufferId</span>,
+        <span class="ident">combined_use</span>: <span class="ident">resource::BufferUse</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Attempted to use texture {id:?} mips {mip_levels:?} layers {array_layers:?} as a combination of {combined_use:?} within a usage scope.&quot;</span>)]</span>
     <span class="ident">Texture</span> {
-        <span class="ident">id</span>: <span class="ident">id</span>::<span class="ident">TextureId</span>,
-        <span class="ident">mip_levels</span>: <span class="ident">ops</span>::<span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
-        <span class="ident">array_layers</span>: <span class="ident">ops</span>::<span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
-        <span class="ident">combined_use</span>: <span class="ident">resource</span>::<span class="ident">TextureUse</span>,
+        <span class="ident">id</span>: <span class="ident">id::TextureId</span>,
+        <span class="ident">mip_levels</span>: <span class="ident">ops::Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+        <span class="ident">array_layers</span>: <span class="ident">ops::Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+        <span class="ident">combined_use</span>: <span class="ident">resource::TextureUse</span>,
     },
 }
 
@@ -1196,28 +1196,28 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">TrackerSet</span> {
     <span class="kw">pub</span> <span class="ident">buffers</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">BufferState</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">textures</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">TextureState</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">views</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">TextureViewId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">bind_groups</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">BindGroupId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">samplers</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">SamplerId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">compute_pipes</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">ComputePipelineId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">render_pipes</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">RenderPipelineId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">bundles</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">RenderBundleId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">query_sets</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">QuerySetId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">views</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">id::TextureViewId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">bind_groups</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">id::BindGroupId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">samplers</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">id::SamplerId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">compute_pipes</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">id::ComputePipelineId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">render_pipes</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">id::RenderPipelineId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">bundles</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">id::RenderBundleId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">query_sets</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">id::QuerySetId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">TrackerSet</span> {
     <span class="doccomment">/// Create an empty set.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">backend</span>: <span class="ident">wgt</span>::<span class="ident">Backend</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">backend</span>: <span class="ident">wgt::Backend</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">buffers</span>: <span class="ident">ResourceTracker</span>::<span class="ident">new</span>(<span class="ident">backend</span>),
-            <span class="ident">textures</span>: <span class="ident">ResourceTracker</span>::<span class="ident">new</span>(<span class="ident">backend</span>),
-            <span class="ident">views</span>: <span class="ident">ResourceTracker</span>::<span class="ident">new</span>(<span class="ident">backend</span>),
-            <span class="ident">bind_groups</span>: <span class="ident">ResourceTracker</span>::<span class="ident">new</span>(<span class="ident">backend</span>),
-            <span class="ident">samplers</span>: <span class="ident">ResourceTracker</span>::<span class="ident">new</span>(<span class="ident">backend</span>),
-            <span class="ident">compute_pipes</span>: <span class="ident">ResourceTracker</span>::<span class="ident">new</span>(<span class="ident">backend</span>),
-            <span class="ident">render_pipes</span>: <span class="ident">ResourceTracker</span>::<span class="ident">new</span>(<span class="ident">backend</span>),
-            <span class="ident">bundles</span>: <span class="ident">ResourceTracker</span>::<span class="ident">new</span>(<span class="ident">backend</span>),
-            <span class="ident">query_sets</span>: <span class="ident">ResourceTracker</span>::<span class="ident">new</span>(<span class="ident">backend</span>),
+            <span class="ident">buffers</span>: <span class="ident">ResourceTracker::new</span>(<span class="ident">backend</span>),
+            <span class="ident">textures</span>: <span class="ident">ResourceTracker::new</span>(<span class="ident">backend</span>),
+            <span class="ident">views</span>: <span class="ident">ResourceTracker::new</span>(<span class="ident">backend</span>),
+            <span class="ident">bind_groups</span>: <span class="ident">ResourceTracker::new</span>(<span class="ident">backend</span>),
+            <span class="ident">samplers</span>: <span class="ident">ResourceTracker::new</span>(<span class="ident">backend</span>),
+            <span class="ident">compute_pipes</span>: <span class="ident">ResourceTracker::new</span>(<span class="ident">backend</span>),
+            <span class="ident">render_pipes</span>: <span class="ident">ResourceTracker::new</span>(<span class="ident">backend</span>),
+            <span class="ident">bundles</span>: <span class="ident">ResourceTracker::new</span>(<span class="ident">backend</span>),
+            <span class="ident">query_sets</span>: <span class="ident">ResourceTracker::new</span>(<span class="ident">backend</span>),
         }
     }
 
@@ -1252,13 +1252,13 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">merge_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UsageConflict</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">buffers</span>
             .<span class="ident">merge_extend</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">buffers</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">UsageConflict</span>::<span class="ident">Buffer</span> {
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">UsageConflict::Buffer</span> {
                 <span class="ident">id</span>: <span class="ident">e</span>.<span class="ident">id</span>.<span class="number">0</span>,
                 <span class="ident">combined_use</span>: <span class="ident">e</span>.<span class="ident">usage</span>.<span class="ident">end</span>,
             })<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">textures</span>
             .<span class="ident">merge_extend</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">textures</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">UsageConflict</span>::<span class="ident">Texture</span> {
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">UsageConflict::Texture</span> {
                 <span class="ident">id</span>: <span class="ident">e</span>.<span class="ident">id</span>.<span class="number">0</span>,
                 <span class="ident">mip_levels</span>: <span class="ident">e</span>.<span class="ident">selector</span>.<span class="ident">levels</span>.<span class="ident">start</span> <span class="kw">as</span> <span class="ident">u32</span>..<span class="ident">e</span>.<span class="ident">selector</span>.<span class="ident">levels</span>.<span class="ident">end</span> <span class="kw">as</span> <span class="ident">u32</span>,
                 <span class="ident">array_layers</span>: <span class="ident">e</span>.<span class="ident">selector</span>.<span class="ident">layers</span>.<span class="ident">start</span> <span class="kw">as</span> <span class="ident">u32</span>..<span class="ident">e</span>.<span class="ident">selector</span>.<span class="ident">layers</span>.<span class="ident">end</span> <span class="kw">as</span> <span class="ident">u32</span>,
@@ -1276,7 +1276,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">backend</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">wgt</span>::<span class="ident">Backend</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">backend</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">wgt::Backend</span> {
         <span class="self">self</span>.<span class="ident">buffers</span>.<span class="ident">backend</span>
     }
 }

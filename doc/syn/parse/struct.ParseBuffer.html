@@ -25,7 +25,7 @@ zero or more outer attributes.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">Attribute</span>, <span class="ident">Ident</span>, <span class="prelude-ty">Result</span>, <span class="ident">Token</span>};
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="ident">parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
+<span class="kw">use</span> <span class="ident">syn::parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
 
 <span class="comment">// Parses a unit struct with attributes.</span>
 <span class="comment">//</span>
@@ -41,7 +41,7 @@ zero or more outer attributes.</p>
 <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">UnitStruct</span> {
     <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="ident">UnitStruct</span> {
-            <span class="ident">attrs</span>: <span class="ident">input</span>.<span class="ident">call</span>(<span class="ident">Attribute</span>::<span class="ident">parse_outer</span>)<span class="question-mark">?</span>,
+            <span class="ident">attrs</span>: <span class="ident">input</span>.<span class="ident">call</span>(<span class="ident">Attribute::parse_outer</span>)<span class="question-mark">?</span>,
             <span class="ident">struct_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
             <span class="ident">name</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
             <span class="ident">semi_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
@@ -68,8 +68,8 @@ token in the input is either <code>where</code> or an opening curly brace.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">braced</span>, <span class="ident">token</span>, <span class="ident">Generics</span>, <span class="ident">Ident</span>, <span class="prelude-ty">Result</span>, <span class="ident">Token</span>, <span class="ident">TypeParamBound</span>};
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="ident">parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="ident">punctuated</span>::<span class="ident">Punctuated</span>;
+<span class="kw">use</span> <span class="ident">syn::parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
+<span class="kw">use</span> <span class="ident">syn::punctuated::Punctuated</span>;
 
 <span class="comment">// Parses a trait definition containing no associated items.</span>
 <span class="comment">//</span>
@@ -80,7 +80,7 @@ token in the input is either <code>where</code> or an opening curly brace.</p>
     <span class="ident">generics</span>: <span class="ident">Generics</span>,
     <span class="ident">colon_token</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro">Token!</span>[:]<span class="op">&gt;</span>,
     <span class="ident">supertraits</span>: <span class="ident">Punctuated</span><span class="op">&lt;</span><span class="ident">TypeParamBound</span>, <span class="macro">Token!</span>[<span class="op">+</span>]<span class="op">&gt;</span>,
-    <span class="ident">brace_token</span>: <span class="ident">token</span>::<span class="ident">Brace</span>,
+    <span class="ident">brace_token</span>: <span class="ident">token::Brace</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">MarkerTrait</span> {
@@ -90,11 +90,11 @@ token in the input is either <code>where</code> or an opening curly brace.</p>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">generics</span>: <span class="ident">Generics</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">colon_token</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro">Token!</span>[:]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">supertraits</span> <span class="op">=</span> <span class="ident">Punctuated</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">supertraits</span> <span class="op">=</span> <span class="ident">Punctuated::new</span>();
         <span class="kw">if</span> <span class="ident">colon_token</span>.<span class="ident">is_some</span>() {
             <span class="kw">loop</span> {
                 <span class="ident">supertraits</span>.<span class="ident">push_value</span>(<span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>);
-                <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="kw">where</span>]) <span class="op">|</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">token</span>::<span class="ident">Brace</span>) {
+                <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="kw">where</span>]) <span class="op">|</span><span class="op">|</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">token::Brace</span>) {
                     <span class="kw">break</span>;
                 }
                 <span class="ident">supertraits</span>.<span class="ident">push_punct</span>(<span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>);
@@ -124,7 +124,7 @@ the very next token is <code>union</code>, because someone is free to write a <c
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">Ident</span>, <span class="ident">ItemUnion</span>, <span class="ident">Macro</span>, <span class="prelude-ty">Result</span>, <span class="ident">Token</span>};
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="ident">parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
+<span class="kw">use</span> <span class="ident">syn::parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
 
 <span class="comment">// Parses either a union or a macro invocation.</span>
 <span class="kw">enum</span> <span class="ident">UnionOrMacro</span> {
@@ -137,9 +137,9 @@ the very next token is <code>union</code>, because someone is free to write a <c
 <span class="kw">impl</span> <span class="ident">Parse</span> <span class="kw">for</span> <span class="ident">UnionOrMacro</span> {
     <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="ident">union</span>]) <span class="op">&amp;&amp;</span> <span class="ident">input</span>.<span class="ident">peek2</span>(<span class="ident">Ident</span>) {
-            <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">UnionOrMacro</span>::<span class="ident">Union</span>)
+            <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">UnionOrMacro::Union</span>)
         } <span class="kw">else</span> {
-            <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">UnionOrMacro</span>::<span class="ident">Macro</span>)
+            <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">UnionOrMacro::Macro</span>)
         }
     }
 }</pre></div>
@@ -151,8 +151,8 @@ of this parse stream must consist of <code>T</code> and <code>P</code>.</p>
 <h1 id="example-3" class="section-header"><a href="#example-3">Example</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">parenthesized</span>, <span class="ident">token</span>, <span class="ident">Ident</span>, <span class="prelude-ty">Result</span>, <span class="ident">Token</span>, <span class="ident">Type</span>};
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="ident">parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="ident">punctuated</span>::<span class="ident">Punctuated</span>;
+<span class="kw">use</span> <span class="ident">syn::parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
+<span class="kw">use</span> <span class="ident">syn::punctuated::Punctuated</span>;
 
 <span class="comment">// Parse a simplified tuple struct syntax like:</span>
 <span class="comment">//</span>
@@ -160,7 +160,7 @@ of this parse stream must consist of <code>T</code> and <code>P</code>.</p>
 <span class="kw">struct</span> <span class="ident">TupleStruct</span> {
     <span class="ident">struct_token</span>: <span class="macro">Token!</span>[<span class="kw">struct</span>],
     <span class="ident">ident</span>: <span class="ident">Ident</span>,
-    <span class="ident">paren_token</span>: <span class="ident">token</span>::<span class="ident">Paren</span>,
+    <span class="ident">paren_token</span>: <span class="ident">token::Paren</span>,
     <span class="ident">fields</span>: <span class="ident">Punctuated</span><span class="op">&lt;</span><span class="ident">Type</span>, <span class="macro">Token!</span>[,]<span class="op">&gt;</span>,
     <span class="ident">semi_token</span>: <span class="macro">Token!</span>[;],
 }
@@ -172,7 +172,7 @@ of this parse stream must consist of <code>T</code> and <code>P</code>.</p>
             <span class="ident">struct_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
             <span class="ident">ident</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
             <span class="ident">paren_token</span>: <span class="macro">parenthesized!</span>(<span class="ident">content</span> <span class="kw">in</span> <span class="ident">input</span>),
-            <span class="ident">fields</span>: <span class="ident">content</span>.<span class="ident">parse_terminated</span>(<span class="ident">Type</span>::<span class="ident">parse</span>)<span class="question-mark">?</span>,
+            <span class="ident">fields</span>: <span class="ident">content</span>.<span class="ident">parse_terminated</span>(<span class="ident">Type::parse</span>)<span class="question-mark">?</span>,
             <span class="ident">semi_token</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
         })
     }
@@ -183,13 +183,13 @@ delimiters, as well as at the very end of the complete macro input.</p>
 <h1 id="example-4" class="section-header"><a href="#example-4">Example</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">braced</span>, <span class="ident">token</span>, <span class="ident">Ident</span>, <span class="ident">Item</span>, <span class="prelude-ty">Result</span>, <span class="ident">Token</span>};
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="ident">parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
+<span class="kw">use</span> <span class="ident">syn::parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
 
 <span class="comment">// Parses a Rust `mod m { ... }` containing zero or more items.</span>
 <span class="kw">struct</span> <span class="ident">Mod</span> {
     <span class="ident">mod_token</span>: <span class="macro">Token!</span>[<span class="kw">mod</span>],
     <span class="ident">name</span>: <span class="ident">Ident</span>,
-    <span class="ident">brace_token</span>: <span class="ident">token</span>::<span class="ident">Brace</span>,
+    <span class="ident">brace_token</span>: <span class="ident">token::Brace</span>,
     <span class="ident">items</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Item</span><span class="op">&gt;</span>,
 }
 
@@ -201,7 +201,7 @@ delimiters, as well as at the very end of the complete macro input.</p>
             <span class="ident">name</span>: <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>,
             <span class="ident">brace_token</span>: <span class="macro">braced!</span>(<span class="ident">content</span> <span class="kw">in</span> <span class="ident">input</span>),
             <span class="ident">items</span>: {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">items</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">items</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
                 <span class="kw">while</span> <span class="op">!</span><span class="ident">content</span>.<span class="ident">is_empty</span>() {
                     <span class="ident">items</span>.<span class="ident">push</span>(<span class="ident">content</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>);
                 }
@@ -215,7 +215,7 @@ building an error message if it is not one of a set of expected tokens.</p>
 <h1 id="example-5" class="section-header"><a href="#example-5">Example</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">ConstParam</span>, <span class="ident">Ident</span>, <span class="ident">Lifetime</span>, <span class="ident">LifetimeDef</span>, <span class="prelude-ty">Result</span>, <span class="ident">Token</span>, <span class="ident">TypeParam</span>};
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="ident">parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
+<span class="kw">use</span> <span class="ident">syn::parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
 
 <span class="comment">// A generic parameter, a single one of the comma-separated elements inside</span>
 <span class="comment">// angle brackets in:</span>
@@ -238,11 +238,11 @@ building an error message if it is not one of a set of expected tokens.</p>
     <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">lookahead</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">lookahead1</span>();
         <span class="kw">if</span> <span class="ident">lookahead</span>.<span class="ident">peek</span>(<span class="ident">Ident</span>) {
-            <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">GenericParam</span>::<span class="ident">Type</span>)
+            <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">GenericParam::Type</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">lookahead</span>.<span class="ident">peek</span>(<span class="ident">Lifetime</span>) {
-            <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">GenericParam</span>::<span class="ident">Lifetime</span>)
+            <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">GenericParam::Lifetime</span>)
         } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">lookahead</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="kw">const</span>]) {
-            <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">GenericParam</span>::<span class="ident">Const</span>)
+            <span class="ident">input</span>.<span class="ident">parse</span>().<span class="ident">map</span>(<span class="ident">GenericParam::Const</span>)
         } <span class="kw">else</span> {
             <span class="prelude-val">Err</span>(<span class="ident">lookahead</span>.<span class="ident">error</span>())
         }
@@ -296,8 +296,8 @@ work performed against the forked parse stream.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">parenthesized</span>, <span class="ident">token</span>, <span class="ident">Ident</span>, <span class="ident">Path</span>, <span class="prelude-ty">Result</span>, <span class="ident">Token</span>};
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="ident">ext</span>::<span class="ident">IdentExt</span>;
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="ident">parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
+<span class="kw">use</span> <span class="ident">syn::ext::IdentExt</span>;
+<span class="kw">use</span> <span class="ident">syn::parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
 
 <span class="kw">struct</span> <span class="ident">PubVisibility</span> {
     <span class="ident">pub_token</span>: <span class="macro">Token!</span>[<span class="kw">pub</span>],
@@ -305,7 +305,7 @@ work performed against the forked parse stream.</p>
 }
 
 <span class="kw">struct</span> <span class="ident">Restricted</span> {
-    <span class="ident">paren_token</span>: <span class="ident">token</span>::<span class="ident">Paren</span>,
+    <span class="ident">paren_token</span>: <span class="ident">token::Paren</span>,
     <span class="ident">in_token</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="macro">Token!</span>[<span class="kw">in</span>]<span class="op">&gt;</span>,
     <span class="ident">path</span>: <span class="ident">Path</span>,
 }
@@ -314,7 +314,7 @@ work performed against the forked parse stream.</p>
     <span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">input</span>: <span class="ident">ParseStream</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">pub_token</span>: <span class="macro">Token!</span>[<span class="kw">pub</span>] <span class="op">=</span> <span class="ident">input</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">token</span>::<span class="ident">Paren</span>) {
+        <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">peek</span>(<span class="ident">token::Paren</span>) {
             <span class="kw">let</span> <span class="ident">ahead</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">fork</span>();
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">content</span>;
             <span class="macro">parenthesized!</span>(<span class="ident">content</span> <span class="kw">in</span> <span class="ident">ahead</span>);
@@ -328,7 +328,7 @@ work performed against the forked parse stream.</p>
                     <span class="ident">restricted</span>: <span class="prelude-val">Some</span>(<span class="ident">Restricted</span> {
                         <span class="ident">paren_token</span>: <span class="macro">parenthesized!</span>(<span class="ident">content</span> <span class="kw">in</span> <span class="ident">input</span>),
                         <span class="ident">in_token</span>: <span class="prelude-val">None</span>,
-                        <span class="ident">path</span>: <span class="ident">Path</span>::<span class="ident">from</span>(<span class="ident">content</span>.<span class="ident">call</span>(<span class="ident">Ident</span>::<span class="ident">parse_any</span>)<span class="question-mark">?</span>),
+                        <span class="ident">path</span>: <span class="ident">Path::from</span>(<span class="ident">content</span>.<span class="ident">call</span>(<span class="ident">Ident::parse_any</span>)<span class="question-mark">?</span>),
                     }),
                 });
             } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">content</span>.<span class="ident">peek</span>(<span class="macro">Token!</span>[<span class="kw">in</span>]) {
@@ -337,7 +337,7 @@ work performed against the forked parse stream.</p>
                     <span class="ident">restricted</span>: <span class="prelude-val">Some</span>(<span class="ident">Restricted</span> {
                         <span class="ident">paren_token</span>: <span class="macro">parenthesized!</span>(<span class="ident">content</span> <span class="kw">in</span> <span class="ident">input</span>),
                         <span class="ident">in_token</span>: <span class="prelude-val">Some</span>(<span class="ident">content</span>.<span class="ident">parse</span>()<span class="question-mark">?</span>),
-                        <span class="ident">path</span>: <span class="ident">content</span>.<span class="ident">call</span>(<span class="ident">Path</span>::<span class="ident">parse_mod_style</span>)<span class="question-mark">?</span>,
+                        <span class="ident">path</span>: <span class="ident">content</span>.<span class="ident">call</span>(<span class="ident">Path::parse_mod_style</span>)<span class="question-mark">?</span>,
                     }),
                 });
             }
@@ -353,7 +353,7 @@ work performed against the forked parse stream.</p>
 <h1 id="example-7" class="section-header"><a href="#example-7">Example</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
 <span class="kw">use</span> <span class="ident">syn</span>::{<span class="ident">Expr</span>, <span class="prelude-ty">Result</span>, <span class="ident">Token</span>};
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="ident">parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
+<span class="kw">use</span> <span class="ident">syn::parse</span>::{<span class="ident">Parse</span>, <span class="ident">ParseStream</span>};
 
 <span class="comment">// Some kind of loop: `while` or `for` or `loop`.</span>
 <span class="kw">struct</span> <span class="ident">Loop</span> {
@@ -381,9 +381,9 @@ the basic built-in token types. It is not something that will be used
 widely outside of the Syn codebase.</p>
 <h1 id="example-8" class="section-header"><a href="#example-8">Example</a></h1>
 <div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">proc_macro2</span>::<span class="ident">TokenTree</span>;
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="prelude-ty">Result</span>;
-<span class="kw">use</span> <span class="ident">syn</span>::<span class="ident">parse</span>::<span class="ident">ParseStream</span>;
+<span class="kw">use</span> <span class="ident">proc_macro2::TokenTree</span>;
+<span class="kw">use</span> <span class="ident">syn::Result</span>;
+<span class="kw">use</span> <span class="ident">syn::parse::ParseStream</span>;
 
 <span class="comment">// This function advances the stream past the next occurrence of `@`. If</span>
 <span class="comment">// no `@` is present in the stream, the stream position is unchanged and</span>
@@ -393,7 +393,7 @@ widely outside of the Syn codebase.</p>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rest</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">cursor</span>;
         <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">tt</span>, <span class="ident">next</span>)) <span class="op">=</span> <span class="ident">rest</span>.<span class="ident">token_tree</span>() {
             <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">tt</span> {
-                <span class="ident">TokenTree</span>::<span class="ident">Punct</span>(<span class="ident">punct</span>) <span class="kw">if</span> <span class="ident">punct</span>.<span class="ident">as_char</span>() <span class="op">=</span><span class="op">=</span> <span class="string">&#39;@&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">TokenTree::Punct</span>(<span class="ident">punct</span>) <span class="kw">if</span> <span class="ident">punct</span>.<span class="ident">as_char</span>() <span class="op">=</span><span class="op">=</span> <span class="string">&#39;@&#39;</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">return</span> <span class="prelude-val">Ok</span>(((), <span class="ident">next</span>));
                 }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">rest</span> <span class="op">=</span> <span class="ident">next</span>,

@@ -669,39 +669,39 @@
 <span class="doccomment">//! EGL-based surface and swapchain.</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">conv</span>, <span class="ident">native</span>, <span class="ident">GlContainer</span>, <span class="ident">PhysicalDevice</span>, <span class="ident">Starc</span>};
-<span class="kw">use</span> <span class="ident">glow</span>::<span class="ident">HasContext</span>;
+<span class="kw">use</span> <span class="ident">glow::HasContext</span>;
 <span class="kw">use</span> <span class="ident">hal</span>::{<span class="ident">image</span>, <span class="ident">window</span> <span class="kw">as</span> <span class="ident">w</span>};
-<span class="kw">use</span> <span class="ident">parking_lot</span>::<span class="ident">Mutex</span>;
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">os</span>::<span class="ident">raw</span>, <span class="ident">ptr</span>};
+<span class="kw">use</span> <span class="ident">parking_lot::Mutex</span>;
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">os::raw</span>, <span class="ident">ptr</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Swapchain</span> {
-    <span class="ident">framebuffer</span>: <span class="ident">glow</span>::<span class="ident">Framebuffer</span>,
-    <span class="ident">renderbuffer</span>: <span class="ident">glow</span>::<span class="ident">Renderbuffer</span>,
+    <span class="ident">framebuffer</span>: <span class="ident">glow::Framebuffer</span>,
+    <span class="ident">renderbuffer</span>: <span class="ident">glow::Renderbuffer</span>,
     <span class="doccomment">/// Extent because the window lies</span>
-    <span class="ident">extent</span>: <span class="ident">w</span>::<span class="ident">Extent2D</span>,
-    <span class="ident">format</span>: <span class="ident">native</span>::<span class="ident">TextureFormat</span>,
-    <span class="ident">channel</span>: <span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">ChannelType</span>,
+    <span class="ident">extent</span>: <span class="ident">w::Extent2D</span>,
+    <span class="ident">format</span>: <span class="ident">native::TextureFormat</span>,
+    <span class="ident">channel</span>: <span class="ident">hal::format::ChannelType</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Instance</span> {
-    <span class="ident">wsi_library</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">libloading</span>::<span class="ident">Library</span><span class="op">&gt;</span>,
+    <span class="ident">wsi_library</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">libloading::Library</span><span class="op">&gt;</span>,
     <span class="ident">inner</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Inner</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Inner</span> {
-    <span class="ident">egl</span>: <span class="ident">Starc</span><span class="op">&lt;</span><span class="ident">egl</span>::<span class="ident">DynamicInstance</span><span class="op">&lt;</span><span class="ident">egl</span>::<span class="ident">EGL1_4</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">egl</span>: <span class="ident">Starc</span><span class="op">&lt;</span><span class="ident">egl::DynamicInstance</span><span class="op">&lt;</span><span class="ident">egl::EGL1_4</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">version</span>: (<span class="ident">i32</span>, <span class="ident">i32</span>),
     <span class="ident">supports_native_window</span>: <span class="ident">bool</span>,
-    <span class="ident">display</span>: <span class="ident">egl</span>::<span class="ident">Display</span>,
-    <span class="ident">config</span>: <span class="ident">egl</span>::<span class="ident">Config</span>,
-    <span class="ident">context</span>: <span class="ident">egl</span>::<span class="ident">Context</span>,
+    <span class="ident">display</span>: <span class="ident">egl::Display</span>,
+    <span class="ident">config</span>: <span class="ident">egl::Config</span>,
+    <span class="ident">context</span>: <span class="ident">egl::Context</span>,
     <span class="doccomment">/// Dummy pbuffer (1x1).</span>
     <span class="doccomment">/// Required for `eglMakeCurrent` on platforms that doesn&#39;t supports `EGL_KHR_surfaceless_context`.</span>
-    <span class="ident">pbuffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">egl</span>::<span class="ident">Surface</span><span class="op">&gt;</span>,
-    <span class="ident">wl_display</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw</span>::<span class="ident">c_void</span><span class="op">&gt;</span>,
+    <span class="ident">pbuffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">egl::Surface</span><span class="op">&gt;</span>,
+    <span class="ident">wl_display</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw::c_void</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">Instance</span> {}
@@ -711,166 +711,166 @@
 <span class="kw">const</span> <span class="ident">EGL_PLATFORM_X11_KHR</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x31D5</span>;
 
 <span class="kw">type</span> <span class="ident">XOpenDisplayFun</span> <span class="op">=</span>
-    <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(<span class="ident">display_name</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw</span>::<span class="ident">c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw</span>::<span class="ident">c_void</span>;
+    <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(<span class="ident">display_name</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw::c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw::c_void</span>;
 
 <span class="kw">type</span> <span class="ident">WlDisplayConnectFun</span> <span class="op">=</span>
-    <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(<span class="ident">display_name</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw</span>::<span class="ident">c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw</span>::<span class="ident">c_void</span>;
+    <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(<span class="ident">display_name</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw::c_char</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw::c_void</span>;
 
-<span class="kw">type</span> <span class="ident">WlDisplayDisconnectFun</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(<span class="ident">display</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw</span>::<span class="ident">c_void</span>);
+<span class="kw">type</span> <span class="ident">WlDisplayDisconnectFun</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(<span class="ident">display</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw::c_void</span>);
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
 <span class="kw">type</span> <span class="ident">WlEglWindowCreateFun</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(
-    <span class="ident">surface</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw</span>::<span class="ident">c_void</span>,
-    <span class="ident">width</span>: <span class="ident">raw</span>::<span class="ident">c_int</span>,
-    <span class="ident">height</span>: <span class="ident">raw</span>::<span class="ident">c_int</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw</span>::<span class="ident">c_void</span>;
+    <span class="ident">surface</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw::c_void</span>,
+    <span class="ident">width</span>: <span class="ident">raw::c_int</span>,
+    <span class="ident">height</span>: <span class="ident">raw::c_int</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw::c_void</span>;
 
 <span class="kw">type</span> <span class="ident">WlEglWindowResizeFun</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(
-    <span class="ident">window</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw</span>::<span class="ident">c_void</span>,
-    <span class="ident">width</span>: <span class="ident">raw</span>::<span class="ident">c_int</span>,
-    <span class="ident">height</span>: <span class="ident">raw</span>::<span class="ident">c_int</span>,
-    <span class="ident">dx</span>: <span class="ident">raw</span>::<span class="ident">c_int</span>,
-    <span class="ident">dy</span>: <span class="ident">raw</span>::<span class="ident">c_int</span>,
+    <span class="ident">window</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw::c_void</span>,
+    <span class="ident">width</span>: <span class="ident">raw::c_int</span>,
+    <span class="ident">height</span>: <span class="ident">raw::c_int</span>,
+    <span class="ident">dx</span>: <span class="ident">raw::c_int</span>,
+    <span class="ident">dy</span>: <span class="ident">raw::c_int</span>,
 );
 
-<span class="kw">type</span> <span class="ident">WlEglWindowDestroyFun</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(<span class="ident">window</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw</span>::<span class="ident">c_void</span>);
+<span class="kw">type</span> <span class="ident">WlEglWindowDestroyFun</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(<span class="ident">window</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw::c_void</span>);
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>)]</span>
 <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ANativeWindow_setBuffersGeometry</span>(
-        <span class="ident">window</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw</span>::<span class="ident">c_void</span>,
+        <span class="ident">window</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw::c_void</span>,
         <span class="ident">width</span>: <span class="ident">i32</span>,
         <span class="ident">height</span>: <span class="ident">i32</span>,
         <span class="ident">format</span>: <span class="ident">i32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">i32</span>;
 }
 
-<span class="kw">fn</span> <span class="ident">open_x_display</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">ptr</span>::<span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">raw</span>::<span class="ident">c_void</span><span class="op">&gt;</span>, <span class="ident">libloading</span>::<span class="ident">Library</span>)<span class="op">&gt;</span> {
-    <span class="ident">log</span>::<span class="macro">info!</span>(<span class="string">&quot;Loading X11 library to get the current display&quot;</span>);
+<span class="kw">fn</span> <span class="ident">open_x_display</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">ptr::NonNull</span><span class="op">&lt;</span><span class="ident">raw::c_void</span><span class="op">&gt;</span>, <span class="ident">libloading::Library</span>)<span class="op">&gt;</span> {
+    <span class="macro">log::info!</span>(<span class="string">&quot;Loading X11 library to get the current display&quot;</span>);
     <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="ident">library</span> <span class="op">=</span> <span class="ident">libloading</span>::<span class="ident">Library</span>::<span class="ident">new</span>(<span class="string">&quot;libX11.so&quot;</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">func</span>: <span class="ident">libloading</span>::<span class="ident">Symbol</span><span class="op">&lt;</span><span class="ident">XOpenDisplayFun</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">library</span>.<span class="ident">get</span>(<span class="string">b&quot;XOpenDisplay&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">func</span>(<span class="ident">ptr</span>::<span class="ident">null</span>());
-        <span class="ident">ptr</span>::<span class="ident">NonNull</span>::<span class="ident">new</span>(<span class="ident">result</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">ptr</span><span class="op">|</span> (<span class="ident">ptr</span>, <span class="ident">library</span>))
+        <span class="kw">let</span> <span class="ident">library</span> <span class="op">=</span> <span class="ident">libloading::Library::new</span>(<span class="string">&quot;libX11.so&quot;</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">func</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span><span class="ident">XOpenDisplayFun</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">library</span>.<span class="ident">get</span>(<span class="string">b&quot;XOpenDisplay&quot;</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">func</span>(<span class="ident">ptr::null</span>());
+        <span class="ident">ptr::NonNull::new</span>(<span class="ident">result</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">ptr</span><span class="op">|</span> (<span class="ident">ptr</span>, <span class="ident">library</span>))
     }
 }
 
-<span class="kw">fn</span> <span class="ident">test_wayland_display</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">libloading</span>::<span class="ident">Library</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">test_wayland_display</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">libloading::Library</span><span class="op">&gt;</span> {
     <span class="comment">/* We try to connect and disconnect here to simply ensure there
      * is an active wayland display available.
      */</span>
-    <span class="ident">log</span>::<span class="macro">info!</span>(<span class="string">&quot;Loading Wayland library to get the current display&quot;</span>);
+    <span class="macro">log::info!</span>(<span class="string">&quot;Loading Wayland library to get the current display&quot;</span>);
     <span class="kw">let</span> <span class="ident">library</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="ident">client_library</span> <span class="op">=</span> <span class="ident">libloading</span>::<span class="ident">Library</span>::<span class="ident">new</span>(<span class="string">&quot;libwayland-client.so&quot;</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">wl_display_connect</span>: <span class="ident">libloading</span>::<span class="ident">Symbol</span><span class="op">&lt;</span><span class="ident">WlDisplayConnectFun</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="kw">let</span> <span class="ident">client_library</span> <span class="op">=</span> <span class="ident">libloading::Library::new</span>(<span class="string">&quot;libwayland-client.so&quot;</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">wl_display_connect</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span><span class="ident">WlDisplayConnectFun</span><span class="op">&gt;</span> <span class="op">=</span>
             <span class="ident">client_library</span>.<span class="ident">get</span>(<span class="string">b&quot;wl_display_connect&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">wl_display_disconnect</span>: <span class="ident">libloading</span>::<span class="ident">Symbol</span><span class="op">&lt;</span><span class="ident">WlDisplayDisconnectFun</span><span class="op">&gt;</span> <span class="op">=</span>
+        <span class="kw">let</span> <span class="ident">wl_display_disconnect</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span><span class="ident">WlDisplayDisconnectFun</span><span class="op">&gt;</span> <span class="op">=</span>
             <span class="ident">client_library</span>.<span class="ident">get</span>(<span class="string">b&quot;wl_display_disconnect&quot;</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">display</span> <span class="op">=</span> <span class="ident">ptr</span>::<span class="ident">NonNull</span>::<span class="ident">new</span>(<span class="ident">wl_display_connect</span>(<span class="ident">ptr</span>::<span class="ident">null</span>()))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">display</span> <span class="op">=</span> <span class="ident">ptr::NonNull::new</span>(<span class="ident">wl_display_connect</span>(<span class="ident">ptr::null</span>()))<span class="question-mark">?</span>;
         <span class="ident">wl_display_disconnect</span>(<span class="ident">display</span>.<span class="ident">as_ptr</span>());
-        <span class="ident">libloading</span>::<span class="ident">Library</span>::<span class="ident">new</span>(<span class="string">&quot;libwayland-egl.so&quot;</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>
+        <span class="ident">libloading::Library::new</span>(<span class="string">&quot;libwayland-egl.so&quot;</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>
     };
     <span class="prelude-val">Some</span>(<span class="ident">library</span>)
 }
 
 <span class="doccomment">/// Choose GLES framebuffer configuration.</span>
 <span class="kw">fn</span> <span class="ident">choose_config</span>(
-    <span class="ident">egl</span>: <span class="kw-2">&amp;</span><span class="ident">egl</span>::<span class="ident">DynamicInstance</span><span class="op">&lt;</span><span class="ident">egl</span>::<span class="ident">EGL1_4</span><span class="op">&gt;</span>,
-    <span class="ident">display</span>: <span class="ident">egl</span>::<span class="ident">Display</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">egl</span>::<span class="ident">Config</span>, <span class="ident">bool</span>), <span class="ident">hal</span>::<span class="ident">UnsupportedBackend</span><span class="op">&gt;</span> {
+    <span class="ident">egl</span>: <span class="kw-2">&amp;</span><span class="ident">egl::DynamicInstance</span><span class="op">&lt;</span><span class="ident">egl::EGL1_4</span><span class="op">&gt;</span>,
+    <span class="ident">display</span>: <span class="ident">egl::Display</span>,
+) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">egl::Config</span>, <span class="ident">bool</span>), <span class="ident">hal::UnsupportedBackend</span><span class="op">&gt;</span> {
     <span class="comment">//TODO: EGL_SLOW_CONFIG</span>
     <span class="kw">let</span> <span class="ident">tiers</span> <span class="op">=</span> [
         (
             <span class="string">&quot;off-screen&quot;</span>,
-            <span class="kw-2">&amp;</span>[<span class="ident">egl</span>::<span class="ident">RENDERABLE_TYPE</span>, <span class="ident">egl</span>::<span class="ident">OPENGL_ES2_BIT</span>][..],
+            <span class="kw-2">&amp;</span>[<span class="ident">egl::RENDERABLE_TYPE</span>, <span class="ident">egl::OPENGL_ES2_BIT</span>][..],
         ),
-        (<span class="string">&quot;presentation&quot;</span>, <span class="kw-2">&amp;</span>[<span class="ident">egl</span>::<span class="ident">SURFACE_TYPE</span>, <span class="ident">egl</span>::<span class="ident">WINDOW_BIT</span>]),
+        (<span class="string">&quot;presentation&quot;</span>, <span class="kw-2">&amp;</span>[<span class="ident">egl::SURFACE_TYPE</span>, <span class="ident">egl::WINDOW_BIT</span>]),
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>))]</span>
-        (<span class="string">&quot;native-render&quot;</span>, <span class="kw-2">&amp;</span>[<span class="ident">egl</span>::<span class="ident">NATIVE_RENDERABLE</span>, <span class="ident">egl</span>::<span class="ident">TRUE</span> <span class="kw">as</span> <span class="kw">_</span>]),
+        (<span class="string">&quot;native-render&quot;</span>, <span class="kw-2">&amp;</span>[<span class="ident">egl::NATIVE_RENDERABLE</span>, <span class="ident">egl::TRUE</span> <span class="kw">as</span> <span class="kw">_</span>]),
     ];
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="number">7</span>);
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="number">7</span>);
     <span class="kw">for</span> <span class="ident">tier_max</span> <span class="kw">in</span> (<span class="number">0</span>..<span class="ident">tiers</span>.<span class="ident">len</span>()).<span class="ident">rev</span>() {
         <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">tiers</span>[<span class="ident">tier_max</span>].<span class="number">0</span>;
-        <span class="ident">log</span>::<span class="macro">info!</span>(<span class="string">&quot;Trying {}&quot;</span>, <span class="ident">name</span>);
+        <span class="macro">log::info!</span>(<span class="string">&quot;Trying {}&quot;</span>, <span class="ident">name</span>);
 
         <span class="ident">attributes</span>.<span class="ident">clear</span>();
         <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="kw">_</span>, <span class="ident">tier_attr</span>) <span class="kw">in</span> <span class="ident">tiers</span>[..<span class="op">=</span><span class="ident">tier_max</span>].<span class="ident">iter</span>() {
             <span class="ident">attributes</span>.<span class="ident">extend_from_slice</span>(<span class="ident">tier_attr</span>);
         }
-        <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">egl</span>::<span class="ident">NONE</span>);
+        <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">egl::NONE</span>);
 
         <span class="kw">match</span> <span class="ident">egl</span>.<span class="ident">choose_first_config</span>(<span class="ident">display</span>, <span class="kw-2">&amp;</span><span class="ident">attributes</span>) {
             <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">config</span>)) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>((<span class="ident">config</span>, <span class="ident">tier_max</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">1</span>));
             }
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">log</span>::<span class="macro">warn!</span>(<span class="string">&quot;No config found!&quot;</span>);
+                <span class="macro">log::warn!</span>(<span class="string">&quot;No config found!&quot;</span>);
             }
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">log</span>::<span class="macro">error!</span>(<span class="string">&quot;error in choose_first_config: {:?}&quot;</span>, <span class="ident">e</span>);
+                <span class="macro">log::error!</span>(<span class="string">&quot;error in choose_first_config: {:?}&quot;</span>, <span class="ident">e</span>);
             }
         }
     }
 
-    <span class="prelude-val">Err</span>(<span class="ident">hal</span>::<span class="ident">UnsupportedBackend</span>)
+    <span class="prelude-val">Err</span>(<span class="ident">hal::UnsupportedBackend</span>)
 }
 
 <span class="kw">impl</span> <span class="ident">Inner</span> {
     <span class="kw">fn</span> <span class="ident">create</span>(
-        <span class="ident">egl</span>: <span class="ident">Starc</span><span class="op">&lt;</span><span class="ident">egl</span>::<span class="ident">DynamicInstance</span><span class="op">&lt;</span><span class="ident">egl</span>::<span class="ident">EGL1_4</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">display</span>: <span class="ident">egl</span>::<span class="ident">Display</span>,
-        <span class="ident">wsi_library</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">libloading</span>::<span class="ident">Library</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">hal</span>::<span class="ident">UnsupportedBackend</span><span class="op">&gt;</span> {
+        <span class="ident">egl</span>: <span class="ident">Starc</span><span class="op">&lt;</span><span class="ident">egl::DynamicInstance</span><span class="op">&lt;</span><span class="ident">egl::EGL1_4</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">display</span>: <span class="ident">egl::Display</span>,
+        <span class="ident">wsi_library</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">libloading::Library</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">hal::UnsupportedBackend</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="ident">egl</span>
             .<span class="ident">initialize</span>(<span class="ident">display</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">hal</span>::<span class="ident">UnsupportedBackend</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">vendor</span> <span class="op">=</span> <span class="ident">egl</span>.<span class="ident">query_string</span>(<span class="prelude-val">Some</span>(<span class="ident">display</span>), <span class="ident">egl</span>::<span class="ident">VENDOR</span>).<span class="ident">unwrap</span>();
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">hal::UnsupportedBackend</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">vendor</span> <span class="op">=</span> <span class="ident">egl</span>.<span class="ident">query_string</span>(<span class="prelude-val">Some</span>(<span class="ident">display</span>), <span class="ident">egl::VENDOR</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">display_extensions</span> <span class="op">=</span> <span class="ident">egl</span>
-            .<span class="ident">query_string</span>(<span class="prelude-val">Some</span>(<span class="ident">display</span>), <span class="ident">egl</span>::<span class="ident">EXTENSIONS</span>)
+            .<span class="ident">query_string</span>(<span class="prelude-val">Some</span>(<span class="ident">display</span>), <span class="ident">egl::EXTENSIONS</span>)
             .<span class="ident">unwrap</span>()
             .<span class="ident">to_string_lossy</span>();
-        <span class="ident">log</span>::<span class="macro">info!</span>(
+        <span class="macro">log::info!</span>(
             <span class="string">&quot;Display vendor {:?}, version {:?}, extensions: {:?}&quot;</span>,
             <span class="ident">vendor</span>,
             <span class="ident">version</span>,
             <span class="ident">display_extensions</span>
         );
 
-        <span class="kw">if</span> <span class="ident">log</span>::<span class="ident">max_level</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">log</span>::<span class="ident">LevelFilter</span>::<span class="ident">Trace</span> {
-            <span class="ident">log</span>::<span class="macro">trace!</span>(<span class="string">&quot;Configurations:&quot;</span>);
+        <span class="kw">if</span> <span class="ident">log::max_level</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">log::LevelFilter::Trace</span> {
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Configurations:&quot;</span>);
             <span class="kw">let</span> <span class="ident">config_count</span> <span class="op">=</span> <span class="ident">egl</span>.<span class="ident">get_config_count</span>(<span class="ident">display</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">configurations</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">config_count</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">configurations</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">config_count</span>);
             <span class="ident">egl</span>.<span class="ident">get_configs</span>(<span class="ident">display</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">configurations</span>).<span class="ident">unwrap</span>();
             <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">config</span> <span class="kw">in</span> <span class="ident">configurations</span>.<span class="ident">iter</span>() {
-                <span class="ident">log</span>::<span class="macro">trace!</span>(<span class="string">&quot;\tCONFORMANT=0x{:X}, RENDERABLE=0x{:X}, NATIVE_RENDERABLE=0x{:X}, SURFACE_TYPE=0x{:X}&quot;</span>,
-                    <span class="ident">egl</span>.<span class="ident">get_config_attrib</span>(<span class="ident">display</span>, <span class="ident">config</span>, <span class="ident">egl</span>::<span class="ident">CONFORMANT</span>).<span class="ident">unwrap</span>(),
-                    <span class="ident">egl</span>.<span class="ident">get_config_attrib</span>(<span class="ident">display</span>, <span class="ident">config</span>, <span class="ident">egl</span>::<span class="ident">RENDERABLE_TYPE</span>).<span class="ident">unwrap</span>(),
-                    <span class="ident">egl</span>.<span class="ident">get_config_attrib</span>(<span class="ident">display</span>, <span class="ident">config</span>, <span class="ident">egl</span>::<span class="ident">NATIVE_RENDERABLE</span>).<span class="ident">unwrap</span>(),
-                    <span class="ident">egl</span>.<span class="ident">get_config_attrib</span>(<span class="ident">display</span>, <span class="ident">config</span>, <span class="ident">egl</span>::<span class="ident">SURFACE_TYPE</span>).<span class="ident">unwrap</span>(),
+                <span class="macro">log::trace!</span>(<span class="string">&quot;\tCONFORMANT=0x{:X}, RENDERABLE=0x{:X}, NATIVE_RENDERABLE=0x{:X}, SURFACE_TYPE=0x{:X}&quot;</span>,
+                    <span class="ident">egl</span>.<span class="ident">get_config_attrib</span>(<span class="ident">display</span>, <span class="ident">config</span>, <span class="ident">egl::CONFORMANT</span>).<span class="ident">unwrap</span>(),
+                    <span class="ident">egl</span>.<span class="ident">get_config_attrib</span>(<span class="ident">display</span>, <span class="ident">config</span>, <span class="ident">egl::RENDERABLE_TYPE</span>).<span class="ident">unwrap</span>(),
+                    <span class="ident">egl</span>.<span class="ident">get_config_attrib</span>(<span class="ident">display</span>, <span class="ident">config</span>, <span class="ident">egl::NATIVE_RENDERABLE</span>).<span class="ident">unwrap</span>(),
+                    <span class="ident">egl</span>.<span class="ident">get_config_attrib</span>(<span class="ident">display</span>, <span class="ident">config</span>, <span class="ident">egl::SURFACE_TYPE</span>).<span class="ident">unwrap</span>(),
                 );
             }
         }
 
         <span class="kw">let</span> (<span class="ident">config</span>, <span class="ident">supports_native_window</span>) <span class="op">=</span> <span class="ident">choose_config</span>(<span class="kw-2">&amp;</span><span class="ident">egl</span>, <span class="ident">display</span>)<span class="question-mark">?</span>;
-        <span class="ident">egl</span>.<span class="ident">bind_api</span>(<span class="ident">egl</span>::<span class="ident">OPENGL_ES_API</span>).<span class="ident">unwrap</span>();
+        <span class="ident">egl</span>.<span class="ident">bind_api</span>(<span class="ident">egl::OPENGL_ES_API</span>).<span class="ident">unwrap</span>();
 
         <span class="comment">//TODO: make it so `Device` == EGL Context</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">context_attributes</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">egl</span>::<span class="ident">CONTEXT_CLIENT_VERSION</span>,
+            <span class="ident">egl::CONTEXT_CLIENT_VERSION</span>,
             <span class="number">3</span>, <span class="comment">// Request GLES 3.0 or higher</span>
         ];
         <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">debug_assertions</span>) <span class="op">&amp;&amp;</span> <span class="ident">wsi_library</span>.<span class="ident">is_none</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>) {
             <span class="comment">//TODO: figure out why this is needed</span>
-            <span class="ident">context_attributes</span>.<span class="ident">push</span>(<span class="ident">egl</span>::<span class="ident">CONTEXT_OPENGL_DEBUG</span>);
-            <span class="ident">context_attributes</span>.<span class="ident">push</span>(<span class="ident">egl</span>::<span class="ident">TRUE</span> <span class="kw">as</span> <span class="kw">_</span>);
+            <span class="ident">context_attributes</span>.<span class="ident">push</span>(<span class="ident">egl::CONTEXT_OPENGL_DEBUG</span>);
+            <span class="ident">context_attributes</span>.<span class="ident">push</span>(<span class="ident">egl::TRUE</span> <span class="kw">as</span> <span class="kw">_</span>);
         }
-        <span class="ident">context_attributes</span>.<span class="ident">push</span>(<span class="ident">egl</span>::<span class="ident">NONE</span> <span class="kw">as</span> <span class="kw">_</span>);
+        <span class="ident">context_attributes</span>.<span class="ident">push</span>(<span class="ident">egl::NONE</span> <span class="kw">as</span> <span class="kw">_</span>);
         <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">egl</span>.<span class="ident">create_context</span>(<span class="ident">display</span>, <span class="ident">config</span>, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span><span class="ident">context_attributes</span>) {
             <span class="prelude-val">Ok</span>(<span class="ident">context</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">context</span>,
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">log</span>::<span class="macro">warn!</span>(<span class="string">&quot;unable to create GLES 3.x context: {:?}&quot;</span>, <span class="ident">e</span>);
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">hal</span>::<span class="ident">UnsupportedBackend</span>);
+                <span class="macro">log::warn!</span>(<span class="string">&quot;unable to create GLES 3.x context: {:?}&quot;</span>, <span class="ident">e</span>);
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">hal::UnsupportedBackend</span>);
             }
         };
 
@@ -879,15 +879,15 @@
         <span class="kw">let</span> <span class="ident">pbuffer</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">version</span> <span class="op">&lt;</span> (<span class="number">1</span>, <span class="number">5</span>)
             <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="ident">display_extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;EGL_KHR_surfaceless_context&quot;</span>)
         {
-            <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> [<span class="ident">egl</span>::<span class="ident">WIDTH</span>, <span class="number">1</span>, <span class="ident">egl</span>::<span class="ident">HEIGHT</span>, <span class="number">1</span>, <span class="ident">egl</span>::<span class="ident">NONE</span>];
+            <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> [<span class="ident">egl::WIDTH</span>, <span class="number">1</span>, <span class="ident">egl::HEIGHT</span>, <span class="number">1</span>, <span class="ident">egl::NONE</span>];
             <span class="ident">egl</span>.<span class="ident">create_pbuffer_surface</span>(<span class="ident">display</span>, <span class="ident">config</span>, <span class="kw-2">&amp;</span><span class="ident">attributes</span>)
                 .<span class="ident">map</span>(<span class="prelude-val">Some</span>)
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                    <span class="ident">log</span>::<span class="macro">warn!</span>(<span class="string">&quot;Error in create_pbuffer_surface: {:?}&quot;</span>, <span class="ident">e</span>);
-                    <span class="ident">hal</span>::<span class="ident">UnsupportedBackend</span>
+                    <span class="macro">log::warn!</span>(<span class="string">&quot;Error in create_pbuffer_surface: {:?}&quot;</span>, <span class="ident">e</span>);
+                    <span class="ident">hal::UnsupportedBackend</span>
                 })<span class="question-mark">?</span>
         } <span class="kw">else</span> {
-            <span class="ident">log</span>::<span class="macro">info!</span>(<span class="string">&quot;EGL_KHR_surfaceless_context is present. No need to create a dummy pbuffer&quot;</span>);
+            <span class="macro">log::info!</span>(<span class="string">&quot;EGL_KHR_surfaceless_context is present. No need to create a dummy pbuffer&quot;</span>);
             <span class="prelude-val">None</span>
         };
 
@@ -907,31 +907,31 @@
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Inner</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">egl</span>.<span class="ident">destroy_context</span>(<span class="self">self</span>.<span class="ident">display</span>, <span class="self">self</span>.<span class="ident">context</span>) {
-            <span class="ident">log</span>::<span class="macro">warn!</span>(<span class="string">&quot;Error in destroy_context: {:?}&quot;</span>, <span class="ident">e</span>);
+            <span class="macro">log::warn!</span>(<span class="string">&quot;Error in destroy_context: {:?}&quot;</span>, <span class="ident">e</span>);
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">egl</span>.<span class="ident">terminate</span>(<span class="self">self</span>.<span class="ident">display</span>) {
-            <span class="ident">log</span>::<span class="macro">warn!</span>(<span class="string">&quot;Error in terminate: {:?}&quot;</span>, <span class="ident">e</span>);
+            <span class="macro">log::warn!</span>(<span class="string">&quot;Error in terminate: {:?}&quot;</span>, <span class="ident">e</span>);
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">hal</span>::<span class="ident">Instance</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Backend</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Instance</span> {
-    <span class="kw">fn</span> <span class="ident">create</span>(<span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="kw">_</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">hal</span>::<span class="ident">UnsupportedBackend</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">egl</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">egl</span>::<span class="ident">DynamicInstance</span>::<span class="op">&lt;</span><span class="ident">egl</span>::<span class="ident">EGL1_4</span><span class="op">&gt;</span>::<span class="ident">load_required</span>() } {
-            <span class="prelude-val">Ok</span>(<span class="ident">egl</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Starc</span>::<span class="ident">new</span>(<span class="ident">egl</span>),
+<span class="kw">impl</span> <span class="ident">hal::Instance</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Backend</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Instance</span> {
+    <span class="kw">fn</span> <span class="ident">create</span>(<span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="kw">_</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">hal::UnsupportedBackend</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">egl</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw">unsafe</span> { <span class="ident">egl::DynamicInstance</span>::<span class="op">&lt;</span><span class="ident">egl::EGL1_4</span><span class="op">&gt;</span><span class="ident">::load_required</span>() } {
+            <span class="prelude-val">Ok</span>(<span class="ident">egl</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Starc::new</span>(<span class="ident">egl</span>),
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">log</span>::<span class="macro">warn!</span>(<span class="string">&quot;Unable to open libEGL.so: {:?}&quot;</span>, <span class="ident">e</span>);
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">hal</span>::<span class="ident">UnsupportedBackend</span>);
+                <span class="macro">log::warn!</span>(<span class="string">&quot;Unable to open libEGL.so: {:?}&quot;</span>, <span class="ident">e</span>);
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">hal::UnsupportedBackend</span>);
             }
         };
 
-        <span class="kw">let</span> <span class="ident">client_extensions</span> <span class="op">=</span> <span class="ident">egl</span>.<span class="ident">query_string</span>(<span class="prelude-val">None</span>, <span class="ident">egl</span>::<span class="ident">EXTENSIONS</span>);
+        <span class="kw">let</span> <span class="ident">client_extensions</span> <span class="op">=</span> <span class="ident">egl</span>.<span class="ident">query_string</span>(<span class="prelude-val">None</span>, <span class="ident">egl::EXTENSIONS</span>);
 
         <span class="kw">let</span> <span class="ident">client_ext_str</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">client_extensions</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">ext</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ext</span>.<span class="ident">to_string_lossy</span>().<span class="ident">into_owned</span>(),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">String</span>::<span class="ident">new</span>(),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">String::new</span>(),
         };
-        <span class="ident">log</span>::<span class="macro">info!</span>(<span class="string">&quot;Client extensions: {:?}&quot;</span>, <span class="ident">client_ext_str</span>);
+        <span class="macro">log::info!</span>(<span class="string">&quot;Client extensions: {:?}&quot;</span>, <span class="ident">client_ext_str</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wsi_library</span> <span class="op">=</span> <span class="prelude-val">None</span>;
 
@@ -948,39 +948,39 @@
         };
 
         <span class="kw">let</span> <span class="ident">display</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> (<span class="prelude-val">Some</span>(<span class="ident">library</span>), <span class="prelude-val">Some</span>(<span class="ident">egl</span>)) <span class="op">=</span>
-            (<span class="ident">wayland_library</span>, <span class="ident">egl</span>.<span class="ident">upcast</span>::<span class="op">&lt;</span><span class="ident">egl</span>::<span class="ident">EGL1_5</span><span class="op">&gt;</span>())
+            (<span class="ident">wayland_library</span>, <span class="ident">egl</span>.<span class="ident">upcast</span>::<span class="op">&lt;</span><span class="ident">egl::EGL1_5</span><span class="op">&gt;</span>())
         {
-            <span class="ident">log</span>::<span class="macro">info!</span>(<span class="string">&quot;Using Wayland platform&quot;</span>);
-            <span class="kw">let</span> <span class="ident">display_attributes</span> <span class="op">=</span> [<span class="ident">egl</span>::<span class="ident">ATTRIB_NONE</span>];
+            <span class="macro">log::info!</span>(<span class="string">&quot;Using Wayland platform&quot;</span>);
+            <span class="kw">let</span> <span class="ident">display_attributes</span> <span class="op">=</span> [<span class="ident">egl::ATTRIB_NONE</span>];
             <span class="ident">wsi_library</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">library</span>);
             <span class="ident">egl</span>.<span class="ident">get_platform_display</span>(
                 <span class="ident">EGL_PLATFORM_WAYLAND_KHR</span>,
-                <span class="ident">egl</span>::<span class="ident">DEFAULT_DISPLAY</span>,
+                <span class="ident">egl::DEFAULT_DISPLAY</span>,
                 <span class="kw-2">&amp;</span><span class="ident">display_attributes</span>,
             )
             .<span class="ident">unwrap</span>()
         } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> (<span class="prelude-val">Some</span>((<span class="ident">display</span>, <span class="ident">library</span>)), <span class="prelude-val">Some</span>(<span class="ident">egl</span>)) <span class="op">=</span>
-            (<span class="ident">x11_display_library</span>, <span class="ident">egl</span>.<span class="ident">upcast</span>::<span class="op">&lt;</span><span class="ident">egl</span>::<span class="ident">EGL1_5</span><span class="op">&gt;</span>())
+            (<span class="ident">x11_display_library</span>, <span class="ident">egl</span>.<span class="ident">upcast</span>::<span class="op">&lt;</span><span class="ident">egl::EGL1_5</span><span class="op">&gt;</span>())
         {
-            <span class="ident">log</span>::<span class="macro">info!</span>(<span class="string">&quot;Using X11 platform&quot;</span>);
-            <span class="kw">let</span> <span class="ident">display_attributes</span> <span class="op">=</span> [<span class="ident">egl</span>::<span class="ident">ATTRIB_NONE</span>];
+            <span class="macro">log::info!</span>(<span class="string">&quot;Using X11 platform&quot;</span>);
+            <span class="kw">let</span> <span class="ident">display_attributes</span> <span class="op">=</span> [<span class="ident">egl::ATTRIB_NONE</span>];
             <span class="ident">wsi_library</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">library</span>);
             <span class="ident">egl</span>.<span class="ident">get_platform_display</span>(<span class="ident">EGL_PLATFORM_X11_KHR</span>, <span class="ident">display</span>.<span class="ident">as_ptr</span>(), <span class="kw-2">&amp;</span><span class="ident">display_attributes</span>)
                 .<span class="ident">unwrap</span>()
         } <span class="kw">else</span> {
-            <span class="ident">log</span>::<span class="macro">info!</span>(<span class="string">&quot;Using default platform&quot;</span>);
-            <span class="ident">egl</span>.<span class="ident">get_display</span>(<span class="ident">egl</span>::<span class="ident">DEFAULT_DISPLAY</span>).<span class="ident">unwrap</span>()
+            <span class="macro">log::info!</span>(<span class="string">&quot;Using default platform&quot;</span>);
+            <span class="ident">egl</span>.<span class="ident">get_display</span>(<span class="ident">egl::DEFAULT_DISPLAY</span>).<span class="ident">unwrap</span>()
         };
 
-        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Inner</span>::<span class="ident">create</span>(<span class="ident">egl</span>.<span class="ident">clone</span>(), <span class="ident">display</span>, <span class="ident">wsi_library</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Inner::create</span>(<span class="ident">egl</span>.<span class="ident">clone</span>(), <span class="ident">display</span>, <span class="ident">wsi_library</span>.<span class="ident">as_ref</span>())<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="ident">Instance</span> {
-            <span class="ident">inner</span>: <span class="ident">Mutex</span>::<span class="ident">new</span>(<span class="ident">inner</span>),
+            <span class="ident">inner</span>: <span class="ident">Mutex::new</span>(<span class="ident">inner</span>),
             <span class="ident">wsi_library</span>,
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">enumerate_adapters</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">hal</span>::<span class="ident">adapter</span>::<span class="ident">Adapter</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Backend</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">enumerate_adapters</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">hal::adapter::Adapter</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Backend</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock</span>();
         <span class="ident">inner</span>
             .<span class="ident">egl</span>
@@ -993,23 +993,23 @@
             .<span class="ident">unwrap</span>();
 
         <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="ident">glow</span>::<span class="ident">Context</span>::<span class="ident">from_loader_function</span>(<span class="op">|</span><span class="ident">name</span><span class="op">|</span> {
+            <span class="ident">glow::Context::from_loader_function</span>(<span class="op">|</span><span class="ident">name</span><span class="op">|</span> {
                 <span class="ident">inner</span>
                     .<span class="ident">egl</span>
                     .<span class="ident">get_proc_address</span>(<span class="ident">name</span>)
-                    .<span class="ident">map_or</span>(<span class="ident">ptr</span>::<span class="ident">null</span>(), <span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>)
+                    .<span class="ident">map_or</span>(<span class="ident">ptr::null</span>(), <span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>)
             })
         };
         <span class="comment">// Create physical device</span>
-        <span class="macro">vec!</span>[<span class="ident">PhysicalDevice</span>::<span class="ident">new_adapter</span>(<span class="ident">context</span>)]
+        <span class="macro">vec!</span>[<span class="ident">PhysicalDevice::new_adapter</span>(<span class="ident">context</span>)]
     }
 
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">allow</span>(<span class="ident">unused</span>, <span class="ident">unused_mut</span>, <span class="ident">unreachable_code</span>))]</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_surface</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">has_handle</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">raw_window_handle</span>::<span class="ident">HasRawWindowHandle</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Surface</span>, <span class="ident">w</span>::<span class="ident">InitError</span><span class="op">&gt;</span> {
-        <span class="kw">use</span> <span class="ident">raw_window_handle</span>::<span class="ident">RawWindowHandle</span> <span class="kw">as</span> <span class="ident">Rwh</span>;
+        <span class="ident">has_handle</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">raw_window_handle::HasRawWindowHandle</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Surface</span>, <span class="ident">w::InitError</span><span class="op">&gt;</span> {
+        <span class="kw">use</span> <span class="ident">raw_window_handle::RawWindowHandle</span> <span class="kw">as</span> <span class="ident">Rwh</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wl_window</span> <span class="op">=</span> <span class="prelude-val">None</span>;
@@ -1017,19 +1017,19 @@
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">temp_xlib_handle</span>, <span class="kw-2">mut</span> <span class="ident">temp_xcb_handle</span>);
         <span class="kw">let</span> <span class="ident">native_window_ptr</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">has_handle</span>.<span class="ident">raw_window_handle</span>() {
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
-            <span class="ident">Rwh</span>::<span class="ident">Xlib</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Rwh::Xlib</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">temp_xlib_handle</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">window</span>;
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">temp_xlib_handle</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">c_void</span>
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">temp_xlib_handle</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
-            <span class="ident">Rwh</span>::<span class="ident">Xcb</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Rwh::Xcb</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">temp_xcb_handle</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">window</span>;
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">temp_xcb_handle</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">c_void</span>
+                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">temp_xcb_handle</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>)]</span>
-            <span class="ident">Rwh</span>::<span class="ident">Android</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">handle</span>.<span class="ident">a_native_window</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">c_void</span>,
+            <span class="ident">Rwh::Android</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">handle</span>.<span class="ident">a_native_window</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
-            <span class="ident">Rwh</span>::<span class="ident">Wayland</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Rwh::Wayland</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">/* Wayland displays are not sharable between surfaces so if the
                  * surface we receive from this handle is from a different
                  * display, we must re-initialize the context.
@@ -1041,11 +1041,11 @@
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">ptr</span><span class="op">|</span> <span class="ident">ptr</span> <span class="op">!</span><span class="op">=</span> <span class="ident">handle</span>.<span class="ident">display</span>)
                     .<span class="ident">unwrap_or</span>(<span class="bool-val">true</span>)
                 {
-                    <span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ops</span>::<span class="ident">DerefMut</span>;
-                    <span class="kw">let</span> <span class="ident">display_attributes</span> <span class="op">=</span> [<span class="ident">egl</span>::<span class="ident">ATTRIB_NONE</span>];
+                    <span class="kw">use</span> <span class="ident">std::ops::DerefMut</span>;
+                    <span class="kw">let</span> <span class="ident">display_attributes</span> <span class="op">=</span> [<span class="ident">egl::ATTRIB_NONE</span>];
                     <span class="kw">let</span> <span class="ident">display</span> <span class="op">=</span> <span class="ident">inner</span>
                         .<span class="ident">egl</span>
-                        .<span class="ident">upcast</span>::<span class="op">&lt;</span><span class="ident">egl</span>::<span class="ident">EGL1_5</span><span class="op">&gt;</span>()
+                        .<span class="ident">upcast</span>::<span class="op">&lt;</span><span class="ident">egl::EGL1_5</span><span class="op">&gt;</span>()
                         .<span class="ident">unwrap</span>()
                         .<span class="ident">get_platform_display</span>(
                             <span class="ident">EGL_PLATFORM_WAYLAND_KHR</span>,
@@ -1055,47 +1055,47 @@
                         .<span class="ident">unwrap</span>();
 
                     <span class="kw">let</span> <span class="ident">new_inner</span> <span class="op">=</span>
-                        <span class="ident">Inner</span>::<span class="ident">create</span>(<span class="ident">inner</span>.<span class="ident">egl</span>.<span class="ident">clone</span>(), <span class="ident">display</span>, <span class="self">self</span>.<span class="ident">wsi_library</span>.<span class="ident">as_ref</span>())
-                            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">w</span>::<span class="ident">InitError</span>::<span class="ident">UnsupportedWindowHandle</span>)<span class="question-mark">?</span>;
+                        <span class="ident">Inner::create</span>(<span class="ident">inner</span>.<span class="ident">egl</span>.<span class="ident">clone</span>(), <span class="ident">display</span>, <span class="self">self</span>.<span class="ident">wsi_library</span>.<span class="ident">as_ref</span>())
+                            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">w::InitError::UnsupportedWindowHandle</span>)<span class="question-mark">?</span>;
 
-                    <span class="kw">let</span> <span class="ident">old_inner</span> <span class="op">=</span> <span class="ident">std</span>::<span class="ident">mem</span>::<span class="ident">replace</span>(<span class="ident">inner</span>.<span class="ident">deref_mut</span>(), <span class="ident">new_inner</span>);
+                    <span class="kw">let</span> <span class="ident">old_inner</span> <span class="op">=</span> <span class="ident">std::mem::replace</span>(<span class="ident">inner</span>.<span class="ident">deref_mut</span>(), <span class="ident">new_inner</span>);
                     <span class="ident">inner</span>.<span class="ident">wl_display</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">handle</span>.<span class="ident">display</span>);
                     <span class="ident">drop</span>(<span class="ident">old_inner</span>);
                 }
 
-                <span class="kw">let</span> <span class="ident">wl_egl_window_create</span>: <span class="ident">libloading</span>::<span class="ident">Symbol</span><span class="op">&lt;</span><span class="ident">WlEglWindowCreateFun</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
+                <span class="kw">let</span> <span class="ident">wl_egl_window_create</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span><span class="ident">WlEglWindowCreateFun</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
                     .<span class="ident">wsi_library</span>
                     .<span class="ident">as_ref</span>()
                     .<span class="ident">expect</span>(<span class="string">&quot;unsupported window&quot;</span>)
                     .<span class="ident">get</span>(<span class="string">b&quot;wl_egl_window_create&quot;</span>)
                     .<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">wl_egl_window_create</span>(<span class="ident">handle</span>.<span class="ident">surface</span>, <span class="number">640</span>, <span class="number">480</span>) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>
-                    <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">c_void</span>;
+                    <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>;
                 <span class="ident">wl_window</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">result</span>);
                 <span class="ident">result</span>
             }
             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">log</span>::<span class="macro">error!</span>(<span class="string">&quot;Unsupported window: {:?}&quot;</span>, <span class="ident">other</span>);
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">w</span>::<span class="ident">InitError</span>::<span class="ident">UnsupportedWindowHandle</span>);
+                <span class="macro">log::error!</span>(<span class="string">&quot;Unsupported window: {:?}&quot;</span>, <span class="ident">other</span>);
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">w::InitError::UnsupportedWindowHandle</span>);
             }
         };
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">egl</span>::<span class="ident">RENDER_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>,
+            <span class="ident">egl::RENDER_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>,
             <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>) {
-                <span class="ident">egl</span>::<span class="ident">BACK_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>
+                <span class="ident">egl::BACK_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>
             } <span class="kw">else</span> {
-                <span class="ident">egl</span>::<span class="ident">SINGLE_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>
+                <span class="ident">egl::SINGLE_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>
             },
         ];
         <span class="kw">if</span> <span class="ident">inner</span>.<span class="ident">version</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">1</span>, <span class="number">5</span>) {
             <span class="comment">// Always enable sRGB in EGL 1.5</span>
-            <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">egl</span>::<span class="ident">GL_COLORSPACE</span> <span class="kw">as</span> <span class="ident">usize</span>);
-            <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">egl</span>::<span class="ident">GL_COLORSPACE_SRGB</span> <span class="kw">as</span> <span class="ident">usize</span>);
+            <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">egl::GL_COLORSPACE</span> <span class="kw">as</span> <span class="ident">usize</span>);
+            <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">egl::GL_COLORSPACE_SRGB</span> <span class="kw">as</span> <span class="ident">usize</span>);
         }
-        <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">egl</span>::<span class="ident">ATTRIB_NONE</span>);
+        <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">egl::ATTRIB_NONE</span>);
 
-        <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">egl</span>) <span class="op">=</span> <span class="ident">inner</span>.<span class="ident">egl</span>.<span class="ident">upcast</span>::<span class="op">&lt;</span><span class="ident">egl</span>::<span class="ident">EGL1_5</span><span class="op">&gt;</span>() {
+        <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">egl</span>) <span class="op">=</span> <span class="ident">inner</span>.<span class="ident">egl</span>.<span class="ident">upcast</span>::<span class="op">&lt;</span><span class="ident">egl::EGL1_5</span><span class="op">&gt;</span>() {
             <span class="ident">egl</span>.<span class="ident">create_platform_window_surface</span>(
                 <span class="ident">inner</span>.<span class="ident">display</span>,
                 <span class="ident">inner</span>.<span class="ident">config</span>,
@@ -1103,8 +1103,8 @@
                 <span class="kw-2">&amp;</span><span class="ident">attributes</span>,
             )
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="ident">log</span>::<span class="macro">warn!</span>(<span class="string">&quot;Error in create_platform_window_surface: {:?}&quot;</span>, <span class="ident">e</span>);
-                <span class="ident">w</span>::<span class="ident">InitError</span>::<span class="ident">UnsupportedWindowHandle</span>
+                <span class="macro">log::warn!</span>(<span class="string">&quot;Error in create_platform_window_surface: {:?}&quot;</span>, <span class="ident">e</span>);
+                <span class="ident">w::InitError::UnsupportedWindowHandle</span>
             })
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">attributes_i32</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">attributes</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> (<span class="kw-2">*</span><span class="ident">a</span> <span class="kw">as</span> <span class="ident">i32</span>).<span class="ident">into</span>()).<span class="ident">collect</span>();
@@ -1117,8 +1117,8 @@
                     <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">attributes_i32</span>),
                 )
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                    <span class="ident">log</span>::<span class="macro">warn!</span>(<span class="string">&quot;Error in create_platform_window_surface: {:?}&quot;</span>, <span class="ident">e</span>);
-                    <span class="ident">w</span>::<span class="ident">InitError</span>::<span class="ident">UnsupportedWindowHandle</span>
+                    <span class="macro">log::warn!</span>(<span class="string">&quot;Error in create_platform_window_surface: {:?}&quot;</span>, <span class="ident">e</span>);
+                    <span class="ident">w::InitError::UnsupportedWindowHandle</span>
                 })
         }<span class="question-mark">?</span>;
 
@@ -1126,14 +1126,14 @@
         {
             <span class="kw">let</span> <span class="ident">format</span> <span class="op">=</span> <span class="ident">inner</span>
                 .<span class="ident">egl</span>
-                .<span class="ident">get_config_attrib</span>(<span class="ident">inner</span>.<span class="ident">display</span>, <span class="ident">inner</span>.<span class="ident">config</span>, <span class="ident">egl</span>::<span class="ident">NATIVE_VISUAL_ID</span>)
+                .<span class="ident">get_config_attrib</span>(<span class="ident">inner</span>.<span class="ident">display</span>, <span class="ident">inner</span>.<span class="ident">config</span>, <span class="ident">egl::NATIVE_VISUAL_ID</span>)
                 .<span class="ident">unwrap</span>();
 
             <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">ANativeWindow_setBuffersGeometry</span>(<span class="ident">native_window_ptr</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="ident">format</span>);
 
             <span class="kw">if</span> <span class="ident">ret</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="ident">log</span>::<span class="macro">error!</span>(<span class="string">&quot;Error returned from ANativeWindow_setBuffersGeometry&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">w</span>::<span class="ident">InitError</span>::<span class="ident">UnsupportedWindowHandle</span>);
+                <span class="macro">log::error!</span>(<span class="string">&quot;Error returned from ANativeWindow_setBuffersGeometry&quot;</span>);
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">w::InitError::UnsupportedWindowHandle</span>);
             }
         }
 
@@ -1156,7 +1156,7 @@
             .<span class="ident">destroy_surface</span>(<span class="ident">inner</span>.<span class="ident">display</span>, <span class="ident">surface</span>.<span class="ident">raw</span>)
             .<span class="ident">unwrap</span>();
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">wl_window</span>) <span class="op">=</span> <span class="ident">surface</span>.<span class="ident">wl_window</span> {
-            <span class="kw">let</span> <span class="ident">wl_egl_window_destroy</span>: <span class="ident">libloading</span>::<span class="ident">Symbol</span><span class="op">&lt;</span><span class="ident">WlEglWindowDestroyFun</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
+            <span class="kw">let</span> <span class="ident">wl_egl_window_destroy</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span><span class="ident">WlEglWindowDestroyFun</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
                 .<span class="ident">wsi_library</span>
                 .<span class="ident">as_ref</span>()
                 .<span class="ident">expect</span>(<span class="string">&quot;unsupported window&quot;</span>)
@@ -1169,32 +1169,32 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Surface</span> {
-    <span class="ident">egl</span>: <span class="ident">Starc</span><span class="op">&lt;</span><span class="ident">egl</span>::<span class="ident">DynamicInstance</span><span class="op">&lt;</span><span class="ident">egl</span>::<span class="ident">EGL1_4</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">raw</span>: <span class="ident">egl</span>::<span class="ident">Surface</span>,
-    <span class="ident">display</span>: <span class="ident">egl</span>::<span class="ident">Display</span>,
-    <span class="ident">context</span>: <span class="ident">egl</span>::<span class="ident">Context</span>,
-    <span class="ident">pbuffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">egl</span>::<span class="ident">Surface</span><span class="op">&gt;</span>,
+    <span class="ident">egl</span>: <span class="ident">Starc</span><span class="op">&lt;</span><span class="ident">egl::DynamicInstance</span><span class="op">&lt;</span><span class="ident">egl::EGL1_4</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">raw</span>: <span class="ident">egl::Surface</span>,
+    <span class="ident">display</span>: <span class="ident">egl::Display</span>,
+    <span class="ident">context</span>: <span class="ident">egl::Context</span>,
+    <span class="ident">pbuffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">egl::Surface</span><span class="op">&gt;</span>,
     <span class="ident">presentable</span>: <span class="ident">bool</span>,
-    <span class="ident">wl_window</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw</span>::<span class="ident">c_void</span><span class="op">&gt;</span>,
+    <span class="ident">wl_window</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw::c_void</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">swapchain</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Swapchain</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">Surface</span> {}
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">Surface</span> {}
 
-<span class="kw">impl</span> <span class="ident">w</span>::<span class="ident">PresentationSurface</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Backend</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Surface</span> {
-    <span class="kw">type</span> <span class="ident">SwapchainImage</span> <span class="op">=</span> <span class="ident">native</span>::<span class="ident">SwapchainImage</span>;
+<span class="kw">impl</span> <span class="ident">w::PresentationSurface</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Backend</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Surface</span> {
+    <span class="kw">type</span> <span class="ident">SwapchainImage</span> <span class="op">=</span> <span class="ident">native::SwapchainImage</span>;
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">configure_swapchain</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">Device</span>,
-        <span class="ident">config</span>: <span class="ident">w</span>::<span class="ident">SwapchainConfig</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">w</span>::<span class="ident">SwapchainError</span><span class="op">&gt;</span> {
+        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::Device</span>,
+        <span class="ident">config</span>: <span class="ident">w::SwapchainConfig</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">w::SwapchainError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">unconfigure_swapchain</span>(<span class="ident">device</span>);
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">wl_window</span> {
-            <span class="kw">let</span> <span class="ident">library</span> <span class="op">=</span> <span class="ident">libloading</span>::<span class="ident">Library</span>::<span class="ident">new</span>(<span class="string">&quot;libwayland-egl.so&quot;</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">wl_egl_window_resize</span>: <span class="ident">libloading</span>::<span class="ident">Symbol</span><span class="op">&lt;</span><span class="ident">WlEglWindowResizeFun</span><span class="op">&gt;</span> <span class="op">=</span>
+            <span class="kw">let</span> <span class="ident">library</span> <span class="op">=</span> <span class="ident">libloading::Library::new</span>(<span class="string">&quot;libwayland-egl.so&quot;</span>).<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">wl_egl_window_resize</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span><span class="ident">WlEglWindowResizeFun</span><span class="op">&gt;</span> <span class="op">=</span>
                 <span class="ident">library</span>.<span class="ident">get</span>(<span class="string">b&quot;wl_egl_window_resize&quot;</span>).<span class="ident">unwrap</span>();
             <span class="ident">wl_egl_window_resize</span>(
                 <span class="ident">window</span>,
@@ -1205,27 +1205,27 @@
             );
         }
 
-        <span class="kw">let</span> <span class="ident">desc</span> <span class="op">=</span> <span class="ident">conv</span>::<span class="ident">describe_format</span>(<span class="ident">config</span>.<span class="ident">format</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">desc</span> <span class="op">=</span> <span class="ident">conv::describe_format</span>(<span class="ident">config</span>.<span class="ident">format</span>).<span class="ident">unwrap</span>();
 
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">share</span>.<span class="ident">context</span>;
         <span class="kw">let</span> <span class="ident">renderbuffer</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">create_renderbuffer</span>().<span class="ident">unwrap</span>();
-        <span class="ident">gl</span>.<span class="ident">bind_renderbuffer</span>(<span class="ident">glow</span>::<span class="ident">RENDERBUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">renderbuffer</span>));
+        <span class="ident">gl</span>.<span class="ident">bind_renderbuffer</span>(<span class="ident">glow::RENDERBUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">renderbuffer</span>));
         <span class="ident">gl</span>.<span class="ident">renderbuffer_storage</span>(
-            <span class="ident">glow</span>::<span class="ident">RENDERBUFFER</span>,
+            <span class="ident">glow::RENDERBUFFER</span>,
             <span class="ident">desc</span>.<span class="ident">tex_internal</span>,
             <span class="ident">config</span>.<span class="ident">extent</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="kw">_</span>,
             <span class="ident">config</span>.<span class="ident">extent</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="kw">_</span>,
         );
         <span class="kw">let</span> <span class="ident">framebuffer</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">create_framebuffer</span>().<span class="ident">unwrap</span>();
-        <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow</span>::<span class="ident">READ_FRAMEBUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">framebuffer</span>));
+        <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::READ_FRAMEBUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">framebuffer</span>));
         <span class="ident">gl</span>.<span class="ident">framebuffer_renderbuffer</span>(
-            <span class="ident">glow</span>::<span class="ident">READ_FRAMEBUFFER</span>,
-            <span class="ident">glow</span>::<span class="ident">COLOR_ATTACHMENT0</span>,
-            <span class="ident">glow</span>::<span class="ident">RENDERBUFFER</span>,
+            <span class="ident">glow::READ_FRAMEBUFFER</span>,
+            <span class="ident">glow::COLOR_ATTACHMENT0</span>,
+            <span class="ident">glow::RENDERBUFFER</span>,
             <span class="prelude-val">Some</span>(<span class="ident">renderbuffer</span>),
         );
-        <span class="ident">gl</span>.<span class="ident">bind_renderbuffer</span>(<span class="ident">glow</span>::<span class="ident">RENDERBUFFER</span>, <span class="prelude-val">None</span>);
-        <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow</span>::<span class="ident">READ_FRAMEBUFFER</span>, <span class="prelude-val">None</span>);
+        <span class="ident">gl</span>.<span class="ident">bind_renderbuffer</span>(<span class="ident">glow::RENDERBUFFER</span>, <span class="prelude-val">None</span>);
+        <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::READ_FRAMEBUFFER</span>, <span class="prelude-val">None</span>);
 
         <span class="self">self</span>.<span class="ident">swapchain</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Swapchain</span> {
             <span class="ident">renderbuffer</span>,
@@ -1238,7 +1238,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">unconfigure_swapchain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">Device</span>) {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">unconfigure_swapchain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::Device</span>) {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">share</span>.<span class="ident">context</span>;
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">sc</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">swapchain</span>.<span class="ident">take</span>() {
             <span class="ident">gl</span>.<span class="ident">delete_renderbuffer</span>(<span class="ident">sc</span>.<span class="ident">renderbuffer</span>);
@@ -1249,52 +1249,52 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">acquire_image</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">_timeout_ns</span>: <span class="ident">u64</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="self">Self</span>::<span class="ident">SwapchainImage</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">w</span>::<span class="ident">Suboptimal</span><span class="op">&gt;</span>), <span class="ident">w</span>::<span class="ident">AcquireError</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="self">Self</span><span class="ident">::SwapchainImage</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">w::Suboptimal</span><span class="op">&gt;</span>), <span class="ident">w::AcquireError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">sc</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">swapchain</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">sc_image</span> <span class="op">=</span>
-            <span class="ident">native</span>::<span class="ident">SwapchainImage</span>::<span class="ident">new</span>(<span class="ident">sc</span>.<span class="ident">renderbuffer</span>, <span class="ident">sc</span>.<span class="ident">format</span>, <span class="ident">sc</span>.<span class="ident">extent</span>, <span class="ident">sc</span>.<span class="ident">channel</span>);
+            <span class="ident">native::SwapchainImage::new</span>(<span class="ident">sc</span>.<span class="ident">renderbuffer</span>, <span class="ident">sc</span>.<span class="ident">format</span>, <span class="ident">sc</span>.<span class="ident">extent</span>, <span class="ident">sc</span>.<span class="ident">channel</span>);
         <span class="prelude-val">Ok</span>((<span class="ident">sc_image</span>, <span class="prelude-val">None</span>))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">w</span>::<span class="ident">Surface</span><span class="op">&lt;</span><span class="kw">crate</span>::<span class="ident">Backend</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Surface</span> {
-    <span class="kw">fn</span> <span class="ident">supports_queue_family</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span>::<span class="ident">QueueFamily</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">impl</span> <span class="ident">w::Surface</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Backend</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Surface</span> {
+    <span class="kw">fn</span> <span class="ident">supports_queue_family</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::QueueFamily</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">presentable</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">capabilities</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_physical_device</span>: <span class="kw-2">&amp;</span><span class="ident">PhysicalDevice</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">w</span>::<span class="ident">SurfaceCapabilities</span> {
-        <span class="ident">w</span>::<span class="ident">SurfaceCapabilities</span> {
-            <span class="ident">present_modes</span>: <span class="ident">w</span>::<span class="ident">PresentMode</span>::<span class="ident">FIFO</span>,                  <span class="comment">//TODO</span>
-            <span class="ident">composite_alpha_modes</span>: <span class="ident">w</span>::<span class="ident">CompositeAlphaMode</span>::<span class="ident">OPAQUE</span>, <span class="comment">//TODO</span>
+    <span class="kw">fn</span> <span class="ident">capabilities</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_physical_device</span>: <span class="kw-2">&amp;</span><span class="ident">PhysicalDevice</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">w::SurfaceCapabilities</span> {
+        <span class="ident">w::SurfaceCapabilities</span> {
+            <span class="ident">present_modes</span>: <span class="ident">w::PresentMode::FIFO</span>,                  <span class="comment">//TODO</span>
+            <span class="ident">composite_alpha_modes</span>: <span class="ident">w::CompositeAlphaMode::OPAQUE</span>, <span class="comment">//TODO</span>
             <span class="ident">image_count</span>: <span class="number">2</span>..<span class="op">=</span><span class="number">2</span>,
             <span class="ident">current_extent</span>: <span class="prelude-val">None</span>,
-            <span class="ident">extents</span>: <span class="ident">w</span>::<span class="ident">Extent2D</span> {
+            <span class="ident">extents</span>: <span class="ident">w::Extent2D</span> {
                 <span class="ident">width</span>: <span class="number">4</span>,
                 <span class="ident">height</span>: <span class="number">4</span>,
-            }..<span class="op">=</span><span class="ident">w</span>::<span class="ident">Extent2D</span> {
+            }..<span class="op">=</span><span class="ident">w::Extent2D</span> {
                 <span class="ident">width</span>: <span class="number">4096</span>,
                 <span class="ident">height</span>: <span class="number">4096</span>,
             },
             <span class="ident">max_image_layers</span>: <span class="number">1</span>,
-            <span class="ident">usage</span>: <span class="ident">image</span>::<span class="ident">Usage</span>::<span class="ident">COLOR_ATTACHMENT</span>,
+            <span class="ident">usage</span>: <span class="ident">image::Usage::COLOR_ATTACHMENT</span>,
         }
     }
 
     <span class="kw">fn</span> <span class="ident">supported_formats</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">_physical_device</span>: <span class="kw-2">&amp;</span><span class="ident">PhysicalDevice</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Format</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">use</span> <span class="ident">hal</span>::<span class="ident">format</span>::<span class="ident">Format</span>;
-        <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[<span class="ident">Format</span>::<span class="ident">Rgba8Srgb</span>, <span class="ident">Format</span>::<span class="ident">Bgra8Srgb</span>])
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">hal::format::Format</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">use</span> <span class="ident">hal::format::Format</span>;
+        <span class="prelude-val">Some</span>(<span class="macro">vec!</span>[<span class="ident">Format::Rgba8Srgb</span>, <span class="ident">Format::Bgra8Srgb</span>])
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Surface</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">present</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">_image</span>: <span class="ident">native</span>::<span class="ident">SwapchainImage</span>,
+        <span class="ident">_image</span>: <span class="ident">native::SwapchainImage</span>,
         <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">GlContainer</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">w</span>::<span class="ident">Suboptimal</span><span class="op">&gt;</span>, <span class="ident">w</span>::<span class="ident">PresentError</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">w::Suboptimal</span><span class="op">&gt;</span>, <span class="ident">w::PresentError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">sc</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">swapchain</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
 
         <span class="self">self</span>.<span class="ident">egl</span>
@@ -1305,8 +1305,8 @@
                 <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">context</span>),
             )
             .<span class="ident">unwrap</span>();
-        <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow</span>::<span class="ident">DRAW_FRAMEBUFFER</span>, <span class="prelude-val">None</span>);
-        <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow</span>::<span class="ident">READ_FRAMEBUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">sc</span>.<span class="ident">framebuffer</span>));
+        <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::DRAW_FRAMEBUFFER</span>, <span class="prelude-val">None</span>);
+        <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::READ_FRAMEBUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">sc</span>.<span class="ident">framebuffer</span>));
         <span class="ident">gl</span>.<span class="ident">blit_framebuffer</span>(
             <span class="number">0</span>,
             <span class="number">0</span>,
@@ -1316,10 +1316,10 @@
             <span class="number">0</span>,
             <span class="ident">sc</span>.<span class="ident">extent</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="kw">_</span>,
             <span class="ident">sc</span>.<span class="ident">extent</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="kw">_</span>,
-            <span class="ident">glow</span>::<span class="ident">COLOR_BUFFER_BIT</span>,
-            <span class="ident">glow</span>::<span class="ident">NEAREST</span>,
+            <span class="ident">glow::COLOR_BUFFER_BIT</span>,
+            <span class="ident">glow::NEAREST</span>,
         );
-        <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow</span>::<span class="ident">READ_FRAMEBUFFER</span>, <span class="prelude-val">None</span>);
+        <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::READ_FRAMEBUFFER</span>, <span class="prelude-val">None</span>);
 
         <span class="self">self</span>.<span class="ident">egl</span>.<span class="ident">swap_buffers</span>(<span class="self">self</span>.<span class="ident">display</span>, <span class="self">self</span>.<span class="ident">raw</span>).<span class="ident">unwrap</span>();
 

@@ -869,21 +869,21 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */</span>
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">binding_model</span>::<span class="ident">BindEntryMap</span>, <span class="ident">FastHashMap</span>};
-<span class="kw">use</span> <span class="ident">naga</span>::<span class="ident">valid</span>::<span class="ident">GlobalUse</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">collections</span>::<span class="ident">hash_map</span>::<span class="ident">Entry</span>;
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">binding_model::BindEntryMap</span>, <span class="ident">FastHashMap</span>};
+<span class="kw">use</span> <span class="ident">naga::valid::GlobalUse</span>;
+<span class="kw">use</span> <span class="ident">std::collections::hash_map::Entry</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">wgt</span>::{<span class="ident">BindGroupLayoutEntry</span>, <span class="ident">BindingType</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">enum</span> <span class="ident">ResourceType</span> {
     <span class="ident">Buffer</span> {
-        <span class="ident">size</span>: <span class="ident">wgt</span>::<span class="ident">BufferSize</span>,
+        <span class="ident">size</span>: <span class="ident">wgt::BufferSize</span>,
     },
     <span class="ident">Texture</span> {
-        <span class="ident">dim</span>: <span class="ident">naga</span>::<span class="ident">ImageDimension</span>,
+        <span class="ident">dim</span>: <span class="ident">naga::ImageDimension</span>,
         <span class="ident">arrayed</span>: <span class="ident">bool</span>,
-        <span class="ident">class</span>: <span class="ident">naga</span>::<span class="ident">ImageClass</span>,
+        <span class="ident">class</span>: <span class="ident">naga::ImageClass</span>,
     },
     <span class="ident">Sampler</span> {
         <span class="ident">comparison</span>: <span class="ident">bool</span>,
@@ -895,27 +895,27 @@
     <span class="ident">group</span>: <span class="ident">u32</span>,
     <span class="ident">binding</span>: <span class="ident">u32</span>,
     <span class="ident">ty</span>: <span class="ident">ResourceType</span>,
-    <span class="ident">class</span>: <span class="ident">naga</span>::<span class="ident">StorageClass</span>,
+    <span class="ident">class</span>: <span class="ident">naga::StorageClass</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">enum</span> <span class="ident">NumericDimension</span> {
     <span class="ident">Scalar</span>,
-    <span class="ident">Vector</span>(<span class="ident">naga</span>::<span class="ident">VectorSize</span>),
-    <span class="ident">Matrix</span>(<span class="ident">naga</span>::<span class="ident">VectorSize</span>, <span class="ident">naga</span>::<span class="ident">VectorSize</span>),
+    <span class="ident">Vector</span>(<span class="ident">naga::VectorSize</span>),
+    <span class="ident">Matrix</span>(<span class="ident">naga::VectorSize</span>, <span class="ident">naga::VectorSize</span>),
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NumericType</span> {
     <span class="ident">dim</span>: <span class="ident">NumericDimension</span>,
-    <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>,
-    <span class="ident">width</span>: <span class="ident">naga</span>::<span class="ident">Bytes</span>,
+    <span class="ident">kind</span>: <span class="ident">naga::ScalarKind</span>,
+    <span class="ident">width</span>: <span class="ident">naga::Bytes</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">enum</span> <span class="ident">Varying</span> {
     <span class="ident">Local</span> { <span class="ident">location</span>: <span class="ident">u32</span>, <span class="ident">ty</span>: <span class="ident">NumericType</span> },
-    <span class="ident">BuiltIn</span>(<span class="ident">naga</span>::<span class="ident">BuiltIn</span>),
+    <span class="ident">BuiltIn</span>(<span class="ident">naga::BuiltIn</span>),
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -928,28 +928,28 @@
 <span class="kw">struct</span> <span class="ident">EntryPoint</span> {
     <span class="ident">inputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Varying</span><span class="op">&gt;</span>,
     <span class="ident">outputs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Varying</span><span class="op">&gt;</span>,
-    <span class="ident">resources</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">naga</span>::<span class="ident">Handle</span><span class="op">&lt;</span><span class="ident">Resource</span><span class="op">&gt;</span>, <span class="ident">GlobalUse</span>)<span class="op">&gt;</span>,
+    <span class="ident">resources</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">naga::Handle</span><span class="op">&lt;</span><span class="ident">Resource</span><span class="op">&gt;</span>, <span class="ident">GlobalUse</span>)<span class="op">&gt;</span>,
     <span class="ident">spec_constants</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SpecializationConstant</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Interface</span> {
-    <span class="ident">resources</span>: <span class="ident">naga</span>::<span class="ident">Arena</span><span class="op">&lt;</span><span class="ident">Resource</span><span class="op">&gt;</span>,
-    <span class="ident">entry_points</span>: <span class="ident">FastHashMap</span><span class="op">&lt;</span>(<span class="ident">naga</span>::<span class="ident">ShaderStage</span>, <span class="ident">String</span>), <span class="ident">EntryPoint</span><span class="op">&gt;</span>,
+    <span class="ident">resources</span>: <span class="ident">naga::Arena</span><span class="op">&lt;</span><span class="ident">Resource</span><span class="op">&gt;</span>,
+    <span class="ident">entry_points</span>: <span class="ident">FastHashMap</span><span class="op">&lt;</span>(<span class="ident">naga::ShaderStage</span>, <span class="ident">String</span>), <span class="ident">EntryPoint</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
 <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;buffer usage is {actual:?} which does not contain required usage {expected:?}&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MissingBufferUsageError</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">actual</span>: <span class="ident">wgt</span>::<span class="ident">BufferUsage</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">expected</span>: <span class="ident">wgt</span>::<span class="ident">BufferUsage</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">actual</span>: <span class="ident">wgt::BufferUsage</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">expected</span>: <span class="ident">wgt::BufferUsage</span>,
 }
 
 <span class="doccomment">/// Checks that the given buffer usage contains the required buffer usage,</span>
 <span class="doccomment">/// returns an error otherwise.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">check_buffer_usage</span>(
-    <span class="ident">actual</span>: <span class="ident">wgt</span>::<span class="ident">BufferUsage</span>,
-    <span class="ident">expected</span>: <span class="ident">wgt</span>::<span class="ident">BufferUsage</span>,
+    <span class="ident">actual</span>: <span class="ident">wgt::BufferUsage</span>,
+    <span class="ident">expected</span>: <span class="ident">wgt::BufferUsage</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">MissingBufferUsageError</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="op">!</span><span class="ident">actual</span>.<span class="ident">contains</span>(<span class="ident">expected</span>) {
         <span class="prelude-val">Err</span>(<span class="ident">MissingBufferUsageError</span> { <span class="ident">actual</span>, <span class="ident">expected</span> })
@@ -961,15 +961,15 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
 <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;texture usage is {actual:?} which does not contain required usage {expected:?}&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MissingTextureUsageError</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">actual</span>: <span class="ident">wgt</span>::<span class="ident">TextureUsage</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">expected</span>: <span class="ident">wgt</span>::<span class="ident">TextureUsage</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">actual</span>: <span class="ident">wgt::TextureUsage</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">expected</span>: <span class="ident">wgt::TextureUsage</span>,
 }
 
 <span class="doccomment">/// Checks that the given texture usage contains the required texture usage,</span>
 <span class="doccomment">/// returns an error otherwise.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">check_texture_usage</span>(
-    <span class="ident">actual</span>: <span class="ident">wgt</span>::<span class="ident">TextureUsage</span>,
-    <span class="ident">expected</span>: <span class="ident">wgt</span>::<span class="ident">TextureUsage</span>,
+    <span class="ident">actual</span>: <span class="ident">wgt::TextureUsage</span>,
+    <span class="ident">expected</span>: <span class="ident">wgt::TextureUsage</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">MissingTextureUsageError</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="op">!</span><span class="ident">actual</span>.<span class="ident">contains</span>(<span class="ident">expected</span>) {
         <span class="prelude-val">Err</span>(<span class="ident">MissingTextureUsageError</span> { <span class="ident">actual</span>, <span class="ident">expected</span> })
@@ -989,24 +989,24 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;type on the shader side does not match the pipeline binding&quot;</span>)]</span>
     <span class="ident">WrongType</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;buffer structure size {0}, added to one element of an unbound array, if it&#39;s the last field, ended up greater than the given `min_binding_size`&quot;</span>)]</span>
-    <span class="ident">WrongBufferSize</span>(<span class="ident">wgt</span>::<span class="ident">BufferSize</span>),
+    <span class="ident">WrongBufferSize</span>(<span class="ident">wgt::BufferSize</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;view dimension {dim:?} (is array: {is_array}) doesn&#39;t match the binding {binding:?}&quot;</span>)]</span>
     <span class="ident">WrongTextureViewDimension</span> {
-        <span class="ident">dim</span>: <span class="ident">naga</span>::<span class="ident">ImageDimension</span>,
+        <span class="ident">dim</span>: <span class="ident">naga::ImageDimension</span>,
         <span class="ident">is_array</span>: <span class="ident">bool</span>,
         <span class="ident">binding</span>: <span class="ident">BindingType</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;texture class {binding:?} doesn&#39;t match the shader {shader:?}&quot;</span>)]</span>
     <span class="ident">WrongTextureClass</span> {
-        <span class="ident">binding</span>: <span class="ident">naga</span>::<span class="ident">ImageClass</span>,
-        <span class="ident">shader</span>: <span class="ident">naga</span>::<span class="ident">ImageClass</span>,
+        <span class="ident">binding</span>: <span class="ident">naga::ImageClass</span>,
+        <span class="ident">shader</span>: <span class="ident">naga::ImageClass</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;comparison flag doesn&#39;t match the shader&quot;</span>)]</span>
     <span class="ident">WrongSamplerComparison</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;derived bind group layout type is not consistent between stages&quot;</span>)]</span>
     <span class="ident">InconsistentlyDerivedType</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;texture format {0:?} is not supported for storage use&quot;</span>)]</span>
-    <span class="ident">BadStorageFormat</span>(<span class="ident">wgt</span>::<span class="ident">TextureFormat</span>),
+    <span class="ident">BadStorageFormat</span>(<span class="ident">wgt::TextureFormat</span>),
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
@@ -1034,72 +1034,72 @@
         <span class="string">&quot;error matching the stage input at {location} against the previous stage outputs: {error}&quot;</span>
     )]</span>
     <span class="ident">Input</span> {
-        <span class="ident">location</span>: <span class="ident">wgt</span>::<span class="ident">ShaderLocation</span>,
+        <span class="ident">location</span>: <span class="ident">wgt::ShaderLocation</span>,
         <span class="ident">error</span>: <span class="ident">InputError</span>,
     },
 }
 
-<span class="kw">fn</span> <span class="ident">map_storage_format_to_naga</span>(<span class="ident">format</span>: <span class="ident">wgt</span>::<span class="ident">TextureFormat</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">naga</span>::<span class="ident">StorageFormat</span><span class="op">&gt;</span> {
-    <span class="kw">use</span> <span class="ident">naga</span>::<span class="ident">StorageFormat</span> <span class="kw">as</span> <span class="ident">Sf</span>;
-    <span class="kw">use</span> <span class="ident">wgt</span>::<span class="ident">TextureFormat</span> <span class="kw">as</span> <span class="ident">Tf</span>;
+<span class="kw">fn</span> <span class="ident">map_storage_format_to_naga</span>(<span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">naga::StorageFormat</span><span class="op">&gt;</span> {
+    <span class="kw">use</span> <span class="ident">naga::StorageFormat</span> <span class="kw">as</span> <span class="ident">Sf</span>;
+    <span class="kw">use</span> <span class="ident">wgt::TextureFormat</span> <span class="kw">as</span> <span class="ident">Tf</span>;
     <span class="comment">// Using the table in https://gpuweb.github.io/gpuweb/#plain-color-formats</span>
     <span class="prelude-val">Some</span>(<span class="kw">match</span> <span class="ident">format</span> {
-        <span class="ident">Tf</span>::<span class="ident">R32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">R32Uint</span>,
-        <span class="ident">Tf</span>::<span class="ident">R32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">R32Sint</span>,
-        <span class="ident">Tf</span>::<span class="ident">R32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">R32Float</span>,
-        <span class="ident">Tf</span>::<span class="ident">Rgba8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">Rgba8Unorm</span>,
-        <span class="ident">Tf</span>::<span class="ident">Rgba8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">Rgba8Snorm</span>,
-        <span class="ident">Tf</span>::<span class="ident">Rgba8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">Rgba8Uint</span>,
-        <span class="ident">Tf</span>::<span class="ident">Rgba8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">Rgba8Sint</span>,
-        <span class="ident">Tf</span>::<span class="ident">Rg32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">Rg32Uint</span>,
-        <span class="ident">Tf</span>::<span class="ident">Rg32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">Rg32Sint</span>,
-        <span class="ident">Tf</span>::<span class="ident">Rg32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">Rg32Float</span>,
-        <span class="ident">Tf</span>::<span class="ident">Rgba16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">Rgba16Uint</span>,
-        <span class="ident">Tf</span>::<span class="ident">Rgba16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">Rgba16Sint</span>,
-        <span class="ident">Tf</span>::<span class="ident">Rgba16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">Rgba16Float</span>,
-        <span class="ident">Tf</span>::<span class="ident">Rgba32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">Rgba32Uint</span>,
-        <span class="ident">Tf</span>::<span class="ident">Rgba32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">Rgba32Sint</span>,
-        <span class="ident">Tf</span>::<span class="ident">Rgba32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf</span>::<span class="ident">Rgba32Float</span>,
+        <span class="ident">Tf::R32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::R32Uint</span>,
+        <span class="ident">Tf::R32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::R32Sint</span>,
+        <span class="ident">Tf::R32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::R32Float</span>,
+        <span class="ident">Tf::Rgba8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::Rgba8Unorm</span>,
+        <span class="ident">Tf::Rgba8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::Rgba8Snorm</span>,
+        <span class="ident">Tf::Rgba8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::Rgba8Uint</span>,
+        <span class="ident">Tf::Rgba8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::Rgba8Sint</span>,
+        <span class="ident">Tf::Rg32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::Rg32Uint</span>,
+        <span class="ident">Tf::Rg32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::Rg32Sint</span>,
+        <span class="ident">Tf::Rg32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::Rg32Float</span>,
+        <span class="ident">Tf::Rgba16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::Rgba16Uint</span>,
+        <span class="ident">Tf::Rgba16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::Rgba16Sint</span>,
+        <span class="ident">Tf::Rgba16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::Rgba16Float</span>,
+        <span class="ident">Tf::Rgba32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::Rgba32Uint</span>,
+        <span class="ident">Tf::Rgba32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::Rgba32Sint</span>,
+        <span class="ident">Tf::Rgba32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Sf::Rgba32Float</span>,
         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">None</span>,
     })
 }
 
-<span class="kw">fn</span> <span class="ident">map_storage_format_from_naga</span>(<span class="ident">format</span>: <span class="ident">naga</span>::<span class="ident">StorageFormat</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">wgt</span>::<span class="ident">TextureFormat</span> {
-    <span class="kw">use</span> <span class="ident">naga</span>::<span class="ident">StorageFormat</span> <span class="kw">as</span> <span class="ident">Sf</span>;
-    <span class="kw">use</span> <span class="ident">wgt</span>::<span class="ident">TextureFormat</span> <span class="kw">as</span> <span class="ident">Tf</span>;
+<span class="kw">fn</span> <span class="ident">map_storage_format_from_naga</span>(<span class="ident">format</span>: <span class="ident">naga::StorageFormat</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">wgt::TextureFormat</span> {
+    <span class="kw">use</span> <span class="ident">naga::StorageFormat</span> <span class="kw">as</span> <span class="ident">Sf</span>;
+    <span class="kw">use</span> <span class="ident">wgt::TextureFormat</span> <span class="kw">as</span> <span class="ident">Tf</span>;
     <span class="kw">match</span> <span class="ident">format</span> {
-        <span class="ident">Sf</span>::<span class="ident">R8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">R8Unorm</span>,
-        <span class="ident">Sf</span>::<span class="ident">R8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">R8Snorm</span>,
-        <span class="ident">Sf</span>::<span class="ident">R8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">R8Uint</span>,
-        <span class="ident">Sf</span>::<span class="ident">R8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">R8Sint</span>,
-        <span class="ident">Sf</span>::<span class="ident">R16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">R16Uint</span>,
-        <span class="ident">Sf</span>::<span class="ident">R16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">R16Sint</span>,
-        <span class="ident">Sf</span>::<span class="ident">R16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">R16Float</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rg8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rg8Unorm</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rg8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rg8Snorm</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rg8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rg8Uint</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rg8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rg8Sint</span>,
-        <span class="ident">Sf</span>::<span class="ident">R32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">R32Uint</span>,
-        <span class="ident">Sf</span>::<span class="ident">R32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">R32Sint</span>,
-        <span class="ident">Sf</span>::<span class="ident">R32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">R32Float</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rg16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rg16Uint</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rg16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rg16Sint</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rg16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rg16Float</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rgba8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rgba8Unorm</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rgba8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rgba8Snorm</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rgba8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rgba8Uint</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rgba8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rgba8Sint</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rgb10a2Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rgb10a2Unorm</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rg11b10Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rg11b10Float</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rg32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rg32Uint</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rg32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rg32Sint</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rg32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rg32Float</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rgba16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rgba16Uint</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rgba16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rgba16Sint</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rgba16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rgba16Float</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rgba32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rgba32Uint</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rgba32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rgba32Sint</span>,
-        <span class="ident">Sf</span>::<span class="ident">Rgba32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf</span>::<span class="ident">Rgba32Float</span>,
+        <span class="ident">Sf::R8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::R8Unorm</span>,
+        <span class="ident">Sf::R8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::R8Snorm</span>,
+        <span class="ident">Sf::R8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::R8Uint</span>,
+        <span class="ident">Sf::R8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::R8Sint</span>,
+        <span class="ident">Sf::R16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::R16Uint</span>,
+        <span class="ident">Sf::R16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::R16Sint</span>,
+        <span class="ident">Sf::R16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::R16Float</span>,
+        <span class="ident">Sf::Rg8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rg8Unorm</span>,
+        <span class="ident">Sf::Rg8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rg8Snorm</span>,
+        <span class="ident">Sf::Rg8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rg8Uint</span>,
+        <span class="ident">Sf::Rg8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rg8Sint</span>,
+        <span class="ident">Sf::R32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::R32Uint</span>,
+        <span class="ident">Sf::R32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::R32Sint</span>,
+        <span class="ident">Sf::R32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::R32Float</span>,
+        <span class="ident">Sf::Rg16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rg16Uint</span>,
+        <span class="ident">Sf::Rg16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rg16Sint</span>,
+        <span class="ident">Sf::Rg16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rg16Float</span>,
+        <span class="ident">Sf::Rgba8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rgba8Unorm</span>,
+        <span class="ident">Sf::Rgba8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rgba8Snorm</span>,
+        <span class="ident">Sf::Rgba8Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rgba8Uint</span>,
+        <span class="ident">Sf::Rgba8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rgba8Sint</span>,
+        <span class="ident">Sf::Rgb10a2Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rgb10a2Unorm</span>,
+        <span class="ident">Sf::Rg11b10Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rg11b10Float</span>,
+        <span class="ident">Sf::Rg32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rg32Uint</span>,
+        <span class="ident">Sf::Rg32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rg32Sint</span>,
+        <span class="ident">Sf::Rg32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rg32Float</span>,
+        <span class="ident">Sf::Rgba16Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rgba16Uint</span>,
+        <span class="ident">Sf::Rgba16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rgba16Sint</span>,
+        <span class="ident">Sf::Rgba16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rgba16Float</span>,
+        <span class="ident">Sf::Rgba32Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rgba32Uint</span>,
+        <span class="ident">Sf::Rgba32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rgba32Sint</span>,
+        <span class="ident">Sf::Rgba32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tf::Rgba32Float</span>,
     }
 }
 
@@ -1110,55 +1110,55 @@
         <span class="ident">shader_usage</span>: <span class="ident">GlobalUse</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BindingError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">allowed_usage</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ty</span> {
-            <span class="ident">ResourceType</span>::<span class="ident">Buffer</span> { <span class="ident">size</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">ResourceType::Buffer</span> { <span class="ident">size</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> (<span class="ident">allowed_usage</span>, <span class="ident">min_size</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">ty</span> {
-                    <span class="ident">BindingType</span>::<span class="ident">Buffer</span> {
+                    <span class="ident">BindingType::Buffer</span> {
                         <span class="ident">ty</span>,
                         <span class="ident">has_dynamic_offset</span>: <span class="kw">_</span>,
                         <span class="ident">min_binding_size</span>,
                     } <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">global_use</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ty</span> {
-                            <span class="ident">wgt</span>::<span class="ident">BufferBindingType</span>::<span class="ident">Uniform</span>
-                            <span class="op">|</span> <span class="ident">wgt</span>::<span class="ident">BufferBindingType</span>::<span class="ident">Storage</span> { <span class="ident">read_only</span>: <span class="bool-val">true</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="ident">GlobalUse</span>::<span class="ident">READ</span>
+                            <span class="ident">wgt::BufferBindingType::Uniform</span>
+                            <span class="op">|</span> <span class="ident">wgt::BufferBindingType::Storage</span> { <span class="ident">read_only</span>: <span class="bool-val">true</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">GlobalUse::READ</span>
                             }
-                            <span class="ident">wgt</span>::<span class="ident">BufferBindingType</span>::<span class="ident">Storage</span> { <span class="ident">read_only</span>: <span class="kw">_</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">GlobalUse</span>::<span class="ident">all</span>(),
+                            <span class="ident">wgt::BufferBindingType::Storage</span> { <span class="ident">read_only</span>: <span class="kw">_</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">GlobalUse::all</span>(),
                         };
                         (<span class="ident">global_use</span>, <span class="ident">min_binding_size</span>)
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError</span>::<span class="ident">WrongType</span>),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongType</span>),
                 };
                 <span class="kw">match</span> <span class="ident">min_size</span> {
                     <span class="prelude-val">Some</span>(<span class="ident">non_zero</span>) <span class="kw">if</span> <span class="ident">non_zero</span> <span class="op">&lt;</span> <span class="ident">size</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError</span>::<span class="ident">WrongBufferSize</span>(<span class="ident">size</span>))
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongBufferSize</span>(<span class="ident">size</span>))
                     }
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (),
                 }
                 <span class="ident">allowed_usage</span>
             }
-            <span class="ident">ResourceType</span>::<span class="ident">Sampler</span> { <span class="ident">comparison</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">ty</span> {
-                <span class="ident">BindingType</span>::<span class="ident">Sampler</span> {
+            <span class="ident">ResourceType::Sampler</span> { <span class="ident">comparison</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">ty</span> {
+                <span class="ident">BindingType::Sampler</span> {
                     <span class="ident">filtering</span>: <span class="kw">_</span>,
                     <span class="ident">comparison</span>: <span class="ident">cmp</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">if</span> <span class="ident">cmp</span> <span class="op">=</span><span class="op">=</span> <span class="ident">comparison</span> {
-                        <span class="ident">GlobalUse</span>::<span class="ident">READ</span>
+                        <span class="ident">GlobalUse::READ</span>
                     } <span class="kw">else</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError</span>::<span class="ident">WrongSamplerComparison</span>);
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongSamplerComparison</span>);
                     }
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError</span>::<span class="ident">WrongType</span>),
+                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongType</span>),
             },
-            <span class="ident">ResourceType</span>::<span class="ident">Texture</span> {
+            <span class="ident">ResourceType::Texture</span> {
                 <span class="ident">dim</span>,
                 <span class="ident">arrayed</span>,
                 <span class="ident">class</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">view_dimension</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">ty</span> {
-                    <span class="ident">BindingType</span>::<span class="ident">Texture</span> { <span class="ident">view_dimension</span>, .. }
-                    <span class="op">|</span> <span class="ident">BindingType</span>::<span class="ident">StorageTexture</span> { <span class="ident">view_dimension</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">view_dimension</span>,
+                    <span class="ident">BindingType::Texture</span> { <span class="ident">view_dimension</span>, .. }
+                    <span class="op">|</span> <span class="ident">BindingType::StorageTexture</span> { <span class="ident">view_dimension</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">view_dimension</span>,
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError</span>::<span class="ident">WrongTextureViewDimension</span> {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongTextureViewDimension</span> {
                             <span class="ident">dim</span>,
                             <span class="ident">is_array</span>: <span class="bool-val">false</span>,
                             <span class="ident">binding</span>: <span class="ident">entry</span>.<span class="ident">ty</span>,
@@ -1167,10 +1167,10 @@
                 };
                 <span class="kw">if</span> <span class="ident">arrayed</span> {
                     <span class="kw">match</span> (<span class="ident">dim</span>, <span class="ident">view_dimension</span>) {
-                        (<span class="ident">naga</span>::<span class="ident">ImageDimension</span>::<span class="ident">D2</span>, <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>::<span class="ident">D2Array</span>) <span class="op">=</span><span class="op">&gt;</span> (),
-                        (<span class="ident">naga</span>::<span class="ident">ImageDimension</span>::<span class="ident">Cube</span>, <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>::<span class="ident">CubeArray</span>) <span class="op">=</span><span class="op">&gt;</span> (),
+                        (<span class="ident">naga::ImageDimension::D2</span>, <span class="ident">wgt::TextureViewDimension::D2Array</span>) <span class="op">=</span><span class="op">&gt;</span> (),
+                        (<span class="ident">naga::ImageDimension::Cube</span>, <span class="ident">wgt::TextureViewDimension::CubeArray</span>) <span class="op">=</span><span class="op">&gt;</span> (),
                         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError</span>::<span class="ident">WrongTextureViewDimension</span> {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongTextureViewDimension</span> {
                                 <span class="ident">dim</span>,
                                 <span class="ident">is_array</span>: <span class="bool-val">true</span>,
                                 <span class="ident">binding</span>: <span class="ident">entry</span>.<span class="ident">ty</span>,
@@ -1179,12 +1179,12 @@
                     }
                 } <span class="kw">else</span> {
                     <span class="kw">match</span> (<span class="ident">dim</span>, <span class="ident">view_dimension</span>) {
-                        (<span class="ident">naga</span>::<span class="ident">ImageDimension</span>::<span class="ident">D1</span>, <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>::<span class="ident">D1</span>) <span class="op">=</span><span class="op">&gt;</span> (),
-                        (<span class="ident">naga</span>::<span class="ident">ImageDimension</span>::<span class="ident">D2</span>, <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>::<span class="ident">D2</span>) <span class="op">=</span><span class="op">&gt;</span> (),
-                        (<span class="ident">naga</span>::<span class="ident">ImageDimension</span>::<span class="ident">D3</span>, <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>::<span class="ident">D3</span>) <span class="op">=</span><span class="op">&gt;</span> (),
-                        (<span class="ident">naga</span>::<span class="ident">ImageDimension</span>::<span class="ident">Cube</span>, <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>::<span class="ident">Cube</span>) <span class="op">=</span><span class="op">&gt;</span> (),
+                        (<span class="ident">naga::ImageDimension::D1</span>, <span class="ident">wgt::TextureViewDimension::D1</span>) <span class="op">=</span><span class="op">&gt;</span> (),
+                        (<span class="ident">naga::ImageDimension::D2</span>, <span class="ident">wgt::TextureViewDimension::D2</span>) <span class="op">=</span><span class="op">&gt;</span> (),
+                        (<span class="ident">naga::ImageDimension::D3</span>, <span class="ident">wgt::TextureViewDimension::D3</span>) <span class="op">=</span><span class="op">&gt;</span> (),
+                        (<span class="ident">naga::ImageDimension::Cube</span>, <span class="ident">wgt::TextureViewDimension::Cube</span>) <span class="op">=</span><span class="op">&gt;</span> (),
                         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError</span>::<span class="ident">WrongTextureViewDimension</span> {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongTextureViewDimension</span> {
                                 <span class="ident">dim</span>,
                                 <span class="ident">is_array</span>: <span class="bool-val">false</span>,
                                 <span class="ident">binding</span>: <span class="ident">entry</span>.<span class="ident">ty</span>,
@@ -1193,46 +1193,46 @@
                     }
                 }
                 <span class="kw">let</span> (<span class="ident">expected_class</span>, <span class="ident">usage</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">ty</span> {
-                    <span class="ident">BindingType</span>::<span class="ident">Texture</span> {
+                    <span class="ident">BindingType::Texture</span> {
                         <span class="ident">sample_type</span>,
                         <span class="ident">view_dimension</span>: <span class="kw">_</span>,
                         <span class="ident">multisampled</span>: <span class="ident">multi</span>,
                     } <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">class</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">sample_type</span> {
-                            <span class="ident">wgt</span>::<span class="ident">TextureSampleType</span>::<span class="ident">Float</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga</span>::<span class="ident">ImageClass</span>::<span class="ident">Sampled</span> {
-                                <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
+                            <span class="ident">wgt::TextureSampleType::Float</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga::ImageClass::Sampled</span> {
+                                <span class="ident">kind</span>: <span class="ident">naga::ScalarKind::Float</span>,
                                 <span class="ident">multi</span>,
                             },
-                            <span class="ident">wgt</span>::<span class="ident">TextureSampleType</span>::<span class="ident">Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga</span>::<span class="ident">ImageClass</span>::<span class="ident">Sampled</span> {
-                                <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span>,
+                            <span class="ident">wgt::TextureSampleType::Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga::ImageClass::Sampled</span> {
+                                <span class="ident">kind</span>: <span class="ident">naga::ScalarKind::Sint</span>,
                                 <span class="ident">multi</span>,
                             },
-                            <span class="ident">wgt</span>::<span class="ident">TextureSampleType</span>::<span class="ident">Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga</span>::<span class="ident">ImageClass</span>::<span class="ident">Sampled</span> {
-                                <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span>,
+                            <span class="ident">wgt::TextureSampleType::Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga::ImageClass::Sampled</span> {
+                                <span class="ident">kind</span>: <span class="ident">naga::ScalarKind::Uint</span>,
                                 <span class="ident">multi</span>,
                             },
-                            <span class="ident">wgt</span>::<span class="ident">TextureSampleType</span>::<span class="ident">Depth</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga</span>::<span class="ident">ImageClass</span>::<span class="ident">Depth</span>,
+                            <span class="ident">wgt::TextureSampleType::Depth</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga::ImageClass::Depth</span>,
                         };
-                        (<span class="ident">class</span>, <span class="ident">GlobalUse</span>::<span class="ident">READ</span>)
+                        (<span class="ident">class</span>, <span class="ident">GlobalUse::READ</span>)
                     }
-                    <span class="ident">BindingType</span>::<span class="ident">StorageTexture</span> {
+                    <span class="ident">BindingType::StorageTexture</span> {
                         <span class="ident">access</span>,
                         <span class="ident">format</span>,
                         <span class="ident">view_dimension</span>: <span class="kw">_</span>,
                     } <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">naga_format</span> <span class="op">=</span> <span class="ident">map_storage_format_to_naga</span>(<span class="ident">format</span>)
-                            .<span class="ident">ok_or</span>(<span class="ident">BindingError</span>::<span class="ident">BadStorageFormat</span>(<span class="ident">format</span>))<span class="question-mark">?</span>;
+                            .<span class="ident">ok_or</span>(<span class="ident">BindingError::BadStorageFormat</span>(<span class="ident">format</span>))<span class="question-mark">?</span>;
                         <span class="kw">let</span> <span class="ident">usage</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">access</span> {
-                            <span class="ident">wgt</span>::<span class="ident">StorageTextureAccess</span>::<span class="ident">ReadOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">GlobalUse</span>::<span class="ident">READ</span>,
-                            <span class="ident">wgt</span>::<span class="ident">StorageTextureAccess</span>::<span class="ident">WriteOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">GlobalUse</span>::<span class="ident">WRITE</span>,
-                            <span class="ident">wgt</span>::<span class="ident">StorageTextureAccess</span>::<span class="ident">ReadWrite</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">GlobalUse</span>::<span class="ident">all</span>(),
+                            <span class="ident">wgt::StorageTextureAccess::ReadOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">GlobalUse::READ</span>,
+                            <span class="ident">wgt::StorageTextureAccess::WriteOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">GlobalUse::WRITE</span>,
+                            <span class="ident">wgt::StorageTextureAccess::ReadWrite</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">GlobalUse::all</span>(),
                         };
-                        (<span class="ident">naga</span>::<span class="ident">ImageClass</span>::<span class="ident">Storage</span>(<span class="ident">naga_format</span>), <span class="ident">usage</span>)
+                        (<span class="ident">naga::ImageClass::Storage</span>(<span class="ident">naga_format</span>), <span class="ident">usage</span>)
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError</span>::<span class="ident">WrongType</span>),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongType</span>),
                 };
                 <span class="kw">if</span> <span class="ident">class</span> <span class="op">!</span><span class="op">=</span> <span class="ident">expected_class</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError</span>::<span class="ident">WrongTextureClass</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongTextureClass</span> {
                         <span class="ident">binding</span>: <span class="ident">expected_class</span>,
                         <span class="ident">shader</span>: <span class="ident">class</span>,
                     });
@@ -1244,69 +1244,69 @@
         <span class="kw">if</span> <span class="ident">allowed_usage</span>.<span class="ident">contains</span>(<span class="ident">shader_usage</span>) {
             <span class="prelude-val">Ok</span>(())
         } <span class="kw">else</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">BindingError</span>::<span class="ident">WrongUsage</span>(<span class="ident">shader_usage</span>))
+            <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongUsage</span>(<span class="ident">shader_usage</span>))
         }
     }
 
     <span class="kw">fn</span> <span class="ident">derive_binding_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">shader_usage</span>: <span class="ident">GlobalUse</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BindingType</span>, <span class="ident">BindingError</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="self">self</span>.<span class="ident">ty</span> {
-            <span class="ident">ResourceType</span>::<span class="ident">Buffer</span> { <span class="ident">size</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BindingType</span>::<span class="ident">Buffer</span> {
+            <span class="ident">ResourceType::Buffer</span> { <span class="ident">size</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BindingType::Buffer</span> {
                 <span class="ident">ty</span>: <span class="kw">match</span> <span class="self">self</span>.<span class="ident">class</span> {
-                    <span class="ident">naga</span>::<span class="ident">StorageClass</span>::<span class="ident">Uniform</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt</span>::<span class="ident">BufferBindingType</span>::<span class="ident">Uniform</span>,
-                    <span class="ident">naga</span>::<span class="ident">StorageClass</span>::<span class="ident">Storage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt</span>::<span class="ident">BufferBindingType</span>::<span class="ident">Storage</span> {
-                        <span class="ident">read_only</span>: <span class="op">!</span><span class="ident">shader_usage</span>.<span class="ident">contains</span>(<span class="ident">GlobalUse</span>::<span class="ident">WRITE</span>),
+                    <span class="ident">naga::StorageClass::Uniform</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt::BufferBindingType::Uniform</span>,
+                    <span class="ident">naga::StorageClass::Storage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt::BufferBindingType::Storage</span> {
+                        <span class="ident">read_only</span>: <span class="op">!</span><span class="ident">shader_usage</span>.<span class="ident">contains</span>(<span class="ident">GlobalUse::WRITE</span>),
                     },
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError</span>::<span class="ident">WrongType</span>),
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongType</span>),
                 },
                 <span class="ident">has_dynamic_offset</span>: <span class="bool-val">false</span>,
                 <span class="ident">min_binding_size</span>: <span class="prelude-val">Some</span>(<span class="ident">size</span>),
             },
-            <span class="ident">ResourceType</span>::<span class="ident">Sampler</span> { <span class="ident">comparison</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BindingType</span>::<span class="ident">Sampler</span> {
+            <span class="ident">ResourceType::Sampler</span> { <span class="ident">comparison</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BindingType::Sampler</span> {
                 <span class="ident">filtering</span>: <span class="bool-val">true</span>,
                 <span class="ident">comparison</span>,
             },
-            <span class="ident">ResourceType</span>::<span class="ident">Texture</span> {
+            <span class="ident">ResourceType::Texture</span> {
                 <span class="ident">dim</span>,
                 <span class="ident">arrayed</span>,
                 <span class="ident">class</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">view_dimension</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">dim</span> {
-                    <span class="ident">naga</span>::<span class="ident">ImageDimension</span>::<span class="ident">D1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>::<span class="ident">D1</span>,
-                    <span class="ident">naga</span>::<span class="ident">ImageDimension</span>::<span class="ident">D2</span> <span class="kw">if</span> <span class="ident">arrayed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>::<span class="ident">D2Array</span>,
-                    <span class="ident">naga</span>::<span class="ident">ImageDimension</span>::<span class="ident">D2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>::<span class="ident">D2</span>,
-                    <span class="ident">naga</span>::<span class="ident">ImageDimension</span>::<span class="ident">D3</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>::<span class="ident">D3</span>,
-                    <span class="ident">naga</span>::<span class="ident">ImageDimension</span>::<span class="ident">Cube</span> <span class="kw">if</span> <span class="ident">arrayed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>::<span class="ident">CubeArray</span>,
-                    <span class="ident">naga</span>::<span class="ident">ImageDimension</span>::<span class="ident">Cube</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt</span>::<span class="ident">TextureViewDimension</span>::<span class="ident">Cube</span>,
+                    <span class="ident">naga::ImageDimension::D1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt::TextureViewDimension::D1</span>,
+                    <span class="ident">naga::ImageDimension::D2</span> <span class="kw">if</span> <span class="ident">arrayed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt::TextureViewDimension::D2Array</span>,
+                    <span class="ident">naga::ImageDimension::D2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt::TextureViewDimension::D2</span>,
+                    <span class="ident">naga::ImageDimension::D3</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt::TextureViewDimension::D3</span>,
+                    <span class="ident">naga::ImageDimension::Cube</span> <span class="kw">if</span> <span class="ident">arrayed</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt::TextureViewDimension::CubeArray</span>,
+                    <span class="ident">naga::ImageDimension::Cube</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt::TextureViewDimension::Cube</span>,
                 };
                 <span class="kw">match</span> <span class="ident">class</span> {
-                    <span class="ident">naga</span>::<span class="ident">ImageClass</span>::<span class="ident">Sampled</span> { <span class="ident">multi</span>, <span class="ident">kind</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BindingType</span>::<span class="ident">Texture</span> {
+                    <span class="ident">naga::ImageClass::Sampled</span> { <span class="ident">multi</span>, <span class="ident">kind</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BindingType::Texture</span> {
                         <span class="ident">sample_type</span>: <span class="kw">match</span> <span class="ident">kind</span> {
-                            <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="ident">wgt</span>::<span class="ident">TextureSampleType</span>::<span class="ident">Float</span> { <span class="ident">filterable</span>: <span class="bool-val">true</span> }
+                            <span class="ident">naga::ScalarKind::Float</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">wgt::TextureSampleType::Float</span> { <span class="ident">filterable</span>: <span class="bool-val">true</span> }
                             }
-                            <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt</span>::<span class="ident">TextureSampleType</span>::<span class="ident">Sint</span>,
-                            <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt</span>::<span class="ident">TextureSampleType</span>::<span class="ident">Uint</span>,
-                            <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                            <span class="ident">naga::ScalarKind::Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt::TextureSampleType::Sint</span>,
+                            <span class="ident">naga::ScalarKind::Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt::TextureSampleType::Uint</span>,
+                            <span class="ident">naga::ScalarKind::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
                         },
                         <span class="ident">view_dimension</span>,
                         <span class="ident">multisampled</span>: <span class="ident">multi</span>,
                     },
-                    <span class="ident">naga</span>::<span class="ident">ImageClass</span>::<span class="ident">Depth</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BindingType</span>::<span class="ident">Texture</span> {
-                        <span class="ident">sample_type</span>: <span class="ident">wgt</span>::<span class="ident">TextureSampleType</span>::<span class="ident">Depth</span>,
+                    <span class="ident">naga::ImageClass::Depth</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BindingType::Texture</span> {
+                        <span class="ident">sample_type</span>: <span class="ident">wgt::TextureSampleType::Depth</span>,
                         <span class="ident">view_dimension</span>,
                         <span class="ident">multisampled</span>: <span class="bool-val">false</span>,
                     },
-                    <span class="ident">naga</span>::<span class="ident">ImageClass</span>::<span class="ident">Storage</span>(<span class="ident">format</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BindingType</span>::<span class="ident">StorageTexture</span> {
-                        <span class="ident">access</span>: <span class="kw">if</span> <span class="ident">shader_usage</span>.<span class="ident">contains</span>(<span class="ident">GlobalUse</span>::<span class="ident">WRITE</span>) {
-                            <span class="ident">wgt</span>::<span class="ident">StorageTextureAccess</span>::<span class="ident">WriteOnly</span>
+                    <span class="ident">naga::ImageClass::Storage</span>(<span class="ident">format</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BindingType::StorageTexture</span> {
+                        <span class="ident">access</span>: <span class="kw">if</span> <span class="ident">shader_usage</span>.<span class="ident">contains</span>(<span class="ident">GlobalUse::WRITE</span>) {
+                            <span class="ident">wgt::StorageTextureAccess::WriteOnly</span>
                         } <span class="kw">else</span> {
-                            <span class="ident">wgt</span>::<span class="ident">StorageTextureAccess</span>::<span class="ident">ReadOnly</span>
+                            <span class="ident">wgt::StorageTextureAccess::ReadOnly</span>
                         },
                         <span class="ident">view_dimension</span>,
                         <span class="ident">format</span>: {
                             <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">map_storage_format_from_naga</span>(<span class="ident">format</span>);
                             <span class="kw">let</span> <span class="ident">original</span> <span class="op">=</span> <span class="ident">map_storage_format_to_naga</span>(<span class="ident">f</span>)
-                                .<span class="ident">ok_or</span>(<span class="ident">BindingError</span>::<span class="ident">BadStorageFormat</span>(<span class="ident">f</span>))<span class="question-mark">?</span>;
+                                .<span class="ident">ok_or</span>(<span class="ident">BindingError::BadStorageFormat</span>(<span class="ident">f</span>))<span class="question-mark">?</span>;
                             <span class="macro">debug_assert_eq!</span>(<span class="ident">format</span>, <span class="ident">original</span>);
                             <span class="ident">f</span>
                         },
@@ -1318,45 +1318,45 @@
 }
 
 <span class="kw">impl</span> <span class="ident">NumericType</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_vertex_format</span>(<span class="ident">format</span>: <span class="ident">wgt</span>::<span class="ident">VertexFormat</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_vertex_format</span>(<span class="ident">format</span>: <span class="ident">wgt::VertexFormat</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">use</span> <span class="ident">naga</span>::{<span class="ident">ScalarKind</span> <span class="kw">as</span> <span class="ident">Sk</span>, <span class="ident">VectorSize</span> <span class="kw">as</span> <span class="ident">Vs</span>};
-        <span class="kw">use</span> <span class="ident">wgt</span>::<span class="ident">VertexFormat</span> <span class="kw">as</span> <span class="ident">Vf</span>;
+        <span class="kw">use</span> <span class="ident">wgt::VertexFormat</span> <span class="kw">as</span> <span class="ident">Vf</span>;
 
         <span class="kw">let</span> (<span class="ident">dim</span>, <span class="ident">kind</span>, <span class="ident">width</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">format</span> {
-            <span class="ident">Vf</span>::<span class="ident">Uint32</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Scalar</span>, <span class="ident">Sk</span>::<span class="ident">Uint</span>, <span class="number">4</span>),
-            <span class="ident">Vf</span>::<span class="ident">Uint8x2</span> <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Uint16x2</span> <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Uint32x2</span> <span class="op">=</span><span class="op">&gt;</span> {
-                (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Bi</span>), <span class="ident">Sk</span>::<span class="ident">Uint</span>, <span class="number">4</span>)
+            <span class="ident">Vf::Uint32</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Scalar</span>, <span class="ident">Sk::Uint</span>, <span class="number">4</span>),
+            <span class="ident">Vf::Uint8x2</span> <span class="op">|</span> <span class="ident">Vf::Uint16x2</span> <span class="op">|</span> <span class="ident">Vf::Uint32x2</span> <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Bi</span>), <span class="ident">Sk::Uint</span>, <span class="number">4</span>)
             }
-            <span class="ident">Vf</span>::<span class="ident">Uint32x3</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Tri</span>), <span class="ident">Sk</span>::<span class="ident">Uint</span>, <span class="number">4</span>),
-            <span class="ident">Vf</span>::<span class="ident">Uint8x4</span> <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Uint16x4</span> <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Uint32x4</span> <span class="op">=</span><span class="op">&gt;</span> {
-                (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Quad</span>), <span class="ident">Sk</span>::<span class="ident">Uint</span>, <span class="number">4</span>)
+            <span class="ident">Vf::Uint32x3</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Tri</span>), <span class="ident">Sk::Uint</span>, <span class="number">4</span>),
+            <span class="ident">Vf::Uint8x4</span> <span class="op">|</span> <span class="ident">Vf::Uint16x4</span> <span class="op">|</span> <span class="ident">Vf::Uint32x4</span> <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Quad</span>), <span class="ident">Sk::Uint</span>, <span class="number">4</span>)
             }
-            <span class="ident">Vf</span>::<span class="ident">Sint32</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Scalar</span>, <span class="ident">Sk</span>::<span class="ident">Sint</span>, <span class="number">4</span>),
-            <span class="ident">Vf</span>::<span class="ident">Sint8x2</span> <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Sint16x2</span> <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Sint32x2</span> <span class="op">=</span><span class="op">&gt;</span> {
-                (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Bi</span>), <span class="ident">Sk</span>::<span class="ident">Sint</span>, <span class="number">4</span>)
+            <span class="ident">Vf::Sint32</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Scalar</span>, <span class="ident">Sk::Sint</span>, <span class="number">4</span>),
+            <span class="ident">Vf::Sint8x2</span> <span class="op">|</span> <span class="ident">Vf::Sint16x2</span> <span class="op">|</span> <span class="ident">Vf::Sint32x2</span> <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Bi</span>), <span class="ident">Sk::Sint</span>, <span class="number">4</span>)
             }
-            <span class="ident">Vf</span>::<span class="ident">Sint32x3</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Tri</span>), <span class="ident">Sk</span>::<span class="ident">Sint</span>, <span class="number">4</span>),
-            <span class="ident">Vf</span>::<span class="ident">Sint8x4</span> <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Sint16x4</span> <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Sint32x4</span> <span class="op">=</span><span class="op">&gt;</span> {
-                (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Quad</span>), <span class="ident">Sk</span>::<span class="ident">Sint</span>, <span class="number">4</span>)
+            <span class="ident">Vf::Sint32x3</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Tri</span>), <span class="ident">Sk::Sint</span>, <span class="number">4</span>),
+            <span class="ident">Vf::Sint8x4</span> <span class="op">|</span> <span class="ident">Vf::Sint16x4</span> <span class="op">|</span> <span class="ident">Vf::Sint32x4</span> <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Quad</span>), <span class="ident">Sk::Sint</span>, <span class="number">4</span>)
             }
-            <span class="ident">Vf</span>::<span class="ident">Float32</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Scalar</span>, <span class="ident">Sk</span>::<span class="ident">Float</span>, <span class="number">4</span>),
-            <span class="ident">Vf</span>::<span class="ident">Unorm8x2</span>
-            <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Snorm8x2</span>
-            <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Unorm16x2</span>
-            <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Snorm16x2</span>
-            <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Float16x2</span>
-            <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Float32x2</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Bi</span>), <span class="ident">Sk</span>::<span class="ident">Float</span>, <span class="number">4</span>),
-            <span class="ident">Vf</span>::<span class="ident">Float32x3</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Tri</span>), <span class="ident">Sk</span>::<span class="ident">Float</span>, <span class="number">4</span>),
-            <span class="ident">Vf</span>::<span class="ident">Unorm8x4</span>
-            <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Snorm8x4</span>
-            <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Unorm16x4</span>
-            <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Snorm16x4</span>
-            <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Float16x4</span>
-            <span class="op">|</span> <span class="ident">Vf</span>::<span class="ident">Float32x4</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Quad</span>), <span class="ident">Sk</span>::<span class="ident">Float</span>, <span class="number">4</span>),
-            <span class="ident">Vf</span>::<span class="ident">Float64</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Scalar</span>, <span class="ident">Sk</span>::<span class="ident">Float</span>, <span class="number">8</span>),
-            <span class="ident">Vf</span>::<span class="ident">Float64x2</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Bi</span>), <span class="ident">Sk</span>::<span class="ident">Float</span>, <span class="number">8</span>),
-            <span class="ident">Vf</span>::<span class="ident">Float64x3</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Tri</span>), <span class="ident">Sk</span>::<span class="ident">Float</span>, <span class="number">8</span>),
-            <span class="ident">Vf</span>::<span class="ident">Float64x4</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Quad</span>), <span class="ident">Sk</span>::<span class="ident">Float</span>, <span class="number">8</span>),
+            <span class="ident">Vf::Float32</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Scalar</span>, <span class="ident">Sk::Float</span>, <span class="number">4</span>),
+            <span class="ident">Vf::Unorm8x2</span>
+            <span class="op">|</span> <span class="ident">Vf::Snorm8x2</span>
+            <span class="op">|</span> <span class="ident">Vf::Unorm16x2</span>
+            <span class="op">|</span> <span class="ident">Vf::Snorm16x2</span>
+            <span class="op">|</span> <span class="ident">Vf::Float16x2</span>
+            <span class="op">|</span> <span class="ident">Vf::Float32x2</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Bi</span>), <span class="ident">Sk::Float</span>, <span class="number">4</span>),
+            <span class="ident">Vf::Float32x3</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Tri</span>), <span class="ident">Sk::Float</span>, <span class="number">4</span>),
+            <span class="ident">Vf::Unorm8x4</span>
+            <span class="op">|</span> <span class="ident">Vf::Snorm8x4</span>
+            <span class="op">|</span> <span class="ident">Vf::Unorm16x4</span>
+            <span class="op">|</span> <span class="ident">Vf::Snorm16x4</span>
+            <span class="op">|</span> <span class="ident">Vf::Float16x4</span>
+            <span class="op">|</span> <span class="ident">Vf::Float32x4</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Quad</span>), <span class="ident">Sk::Float</span>, <span class="number">4</span>),
+            <span class="ident">Vf::Float64</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Scalar</span>, <span class="ident">Sk::Float</span>, <span class="number">8</span>),
+            <span class="ident">Vf::Float64x2</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Bi</span>), <span class="ident">Sk::Float</span>, <span class="number">8</span>),
+            <span class="ident">Vf::Float64x3</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Tri</span>), <span class="ident">Sk::Float</span>, <span class="number">8</span>),
+            <span class="ident">Vf::Float64x4</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Quad</span>), <span class="ident">Sk::Float</span>, <span class="number">8</span>),
         };
 
         <span class="ident">NumericType</span> {
@@ -1368,91 +1368,91 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">from_texture_format</span>(<span class="ident">format</span>: <span class="ident">wgt</span>::<span class="ident">TextureFormat</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from_texture_format</span>(<span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">use</span> <span class="ident">naga</span>::{<span class="ident">ScalarKind</span> <span class="kw">as</span> <span class="ident">Sk</span>, <span class="ident">VectorSize</span> <span class="kw">as</span> <span class="ident">Vs</span>};
-        <span class="kw">use</span> <span class="ident">wgt</span>::<span class="ident">TextureFormat</span> <span class="kw">as</span> <span class="ident">Tf</span>;
+        <span class="kw">use</span> <span class="ident">wgt::TextureFormat</span> <span class="kw">as</span> <span class="ident">Tf</span>;
 
         <span class="kw">let</span> (<span class="ident">dim</span>, <span class="ident">kind</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">format</span> {
-            <span class="ident">Tf</span>::<span class="ident">R8Unorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">R8Snorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">R16Float</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">R32Float</span> <span class="op">=</span><span class="op">&gt;</span> {
-                (<span class="ident">NumericDimension</span>::<span class="ident">Scalar</span>, <span class="ident">Sk</span>::<span class="ident">Float</span>)
+            <span class="ident">Tf::R8Unorm</span> <span class="op">|</span> <span class="ident">Tf::R8Snorm</span> <span class="op">|</span> <span class="ident">Tf::R16Float</span> <span class="op">|</span> <span class="ident">Tf::R32Float</span> <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">NumericDimension::Scalar</span>, <span class="ident">Sk::Float</span>)
             }
-            <span class="ident">Tf</span>::<span class="ident">R8Uint</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">R16Uint</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">R32Uint</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Scalar</span>, <span class="ident">Sk</span>::<span class="ident">Uint</span>),
-            <span class="ident">Tf</span>::<span class="ident">R8Sint</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">R16Sint</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">R32Sint</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Scalar</span>, <span class="ident">Sk</span>::<span class="ident">Sint</span>),
-            <span class="ident">Tf</span>::<span class="ident">Rg8Unorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rg8Snorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rg16Float</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rg32Float</span> <span class="op">=</span><span class="op">&gt;</span> {
-                (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Bi</span>), <span class="ident">Sk</span>::<span class="ident">Float</span>)
+            <span class="ident">Tf::R8Uint</span> <span class="op">|</span> <span class="ident">Tf::R16Uint</span> <span class="op">|</span> <span class="ident">Tf::R32Uint</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Scalar</span>, <span class="ident">Sk::Uint</span>),
+            <span class="ident">Tf::R8Sint</span> <span class="op">|</span> <span class="ident">Tf::R16Sint</span> <span class="op">|</span> <span class="ident">Tf::R32Sint</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Scalar</span>, <span class="ident">Sk::Sint</span>),
+            <span class="ident">Tf::Rg8Unorm</span> <span class="op">|</span> <span class="ident">Tf::Rg8Snorm</span> <span class="op">|</span> <span class="ident">Tf::Rg16Float</span> <span class="op">|</span> <span class="ident">Tf::Rg32Float</span> <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Bi</span>), <span class="ident">Sk::Float</span>)
             }
-            <span class="ident">Tf</span>::<span class="ident">Rg8Uint</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rg16Uint</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rg32Uint</span> <span class="op">=</span><span class="op">&gt;</span> {
-                (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Bi</span>), <span class="ident">Sk</span>::<span class="ident">Uint</span>)
+            <span class="ident">Tf::Rg8Uint</span> <span class="op">|</span> <span class="ident">Tf::Rg16Uint</span> <span class="op">|</span> <span class="ident">Tf::Rg32Uint</span> <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Bi</span>), <span class="ident">Sk::Uint</span>)
             }
-            <span class="ident">Tf</span>::<span class="ident">Rg8Sint</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rg16Sint</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rg32Sint</span> <span class="op">=</span><span class="op">&gt;</span> {
-                (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Bi</span>), <span class="ident">Sk</span>::<span class="ident">Sint</span>)
+            <span class="ident">Tf::Rg8Sint</span> <span class="op">|</span> <span class="ident">Tf::Rg16Sint</span> <span class="op">|</span> <span class="ident">Tf::Rg32Sint</span> <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Bi</span>), <span class="ident">Sk::Sint</span>)
             }
-            <span class="ident">Tf</span>::<span class="ident">Rgba8Unorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rgba8UnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rgba8Snorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bgra8Unorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bgra8UnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rgb10a2Unorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rgba16Float</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rgba32Float</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Quad</span>), <span class="ident">Sk</span>::<span class="ident">Float</span>),
-            <span class="ident">Tf</span>::<span class="ident">Rgba8Uint</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rgba16Uint</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rgba32Uint</span> <span class="op">=</span><span class="op">&gt;</span> {
-                (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Quad</span>), <span class="ident">Sk</span>::<span class="ident">Uint</span>)
+            <span class="ident">Tf::Rgba8Unorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Rgba8UnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Rgba8Snorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Bgra8Unorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Bgra8UnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Rgb10a2Unorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Rgba16Float</span>
+            <span class="op">|</span> <span class="ident">Tf::Rgba32Float</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Quad</span>), <span class="ident">Sk::Float</span>),
+            <span class="ident">Tf::Rgba8Uint</span> <span class="op">|</span> <span class="ident">Tf::Rgba16Uint</span> <span class="op">|</span> <span class="ident">Tf::Rgba32Uint</span> <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Quad</span>), <span class="ident">Sk::Uint</span>)
             }
-            <span class="ident">Tf</span>::<span class="ident">Rgba8Sint</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rgba16Sint</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Rgba32Sint</span> <span class="op">=</span><span class="op">&gt;</span> {
-                (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Quad</span>), <span class="ident">Sk</span>::<span class="ident">Sint</span>)
+            <span class="ident">Tf::Rgba8Sint</span> <span class="op">|</span> <span class="ident">Tf::Rgba16Sint</span> <span class="op">|</span> <span class="ident">Tf::Rgba32Sint</span> <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Quad</span>), <span class="ident">Sk::Sint</span>)
             }
-            <span class="ident">Tf</span>::<span class="ident">Rg11b10Float</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Tri</span>), <span class="ident">Sk</span>::<span class="ident">Float</span>),
-            <span class="ident">Tf</span>::<span class="ident">Depth32Float</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Depth24Plus</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Depth24PlusStencil8</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Tf::Rg11b10Float</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Tri</span>), <span class="ident">Sk::Float</span>),
+            <span class="ident">Tf::Depth32Float</span> <span class="op">|</span> <span class="ident">Tf::Depth24Plus</span> <span class="op">|</span> <span class="ident">Tf::Depth24PlusStencil8</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="macro">panic!</span>(<span class="string">&quot;Unexpected depth format&quot;</span>)
             }
-            <span class="ident">Tf</span>::<span class="ident">Bc1RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bc1RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bc2RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bc2RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bc3RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bc3RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bc7RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bc7RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Etc2RgbA1Unorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Etc2RgbA1UnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Etc2RgbA8Unorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Etc2RgbA8UnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc4x4RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc4x4RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc5x4RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc5x4RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc5x5RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc5x5RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc6x5RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc6x5RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc6x6RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc6x6RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc8x5RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc8x5RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc8x6RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc8x6RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc10x5RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc10x5RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc10x6RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc10x6RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc8x8RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc8x8RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc10x8RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc10x8RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc10x10RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc10x10RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc12x10RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc12x10RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc12x12RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Astc12x12RgbaUnormSrgb</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Quad</span>), <span class="ident">Sk</span>::<span class="ident">Float</span>),
-            <span class="ident">Tf</span>::<span class="ident">Bc4RUnorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bc4RSnorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">EacRUnorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">EacRSnorm</span> <span class="op">=</span><span class="op">&gt;</span> {
-                (<span class="ident">NumericDimension</span>::<span class="ident">Scalar</span>, <span class="ident">Sk</span>::<span class="ident">Float</span>)
+            <span class="ident">Tf::Bc1RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Bc1RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Bc2RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Bc2RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Bc3RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Bc3RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Bc7RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Bc7RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Etc2RgbA1Unorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Etc2RgbA1UnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Etc2RgbA8Unorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Etc2RgbA8UnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc4x4RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc4x4RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc5x4RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc5x4RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc5x5RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc5x5RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc6x5RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc6x5RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc6x6RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc6x6RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc8x5RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc8x5RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc8x6RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc8x6RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc10x5RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc10x5RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc10x6RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc10x6RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc8x8RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc8x8RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc10x8RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc10x8RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc10x10RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc10x10RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc12x10RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc12x10RgbaUnormSrgb</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc12x12RgbaUnorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Astc12x12RgbaUnormSrgb</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Quad</span>), <span class="ident">Sk::Float</span>),
+            <span class="ident">Tf::Bc4RUnorm</span> <span class="op">|</span> <span class="ident">Tf::Bc4RSnorm</span> <span class="op">|</span> <span class="ident">Tf::EacRUnorm</span> <span class="op">|</span> <span class="ident">Tf::EacRSnorm</span> <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">NumericDimension::Scalar</span>, <span class="ident">Sk::Float</span>)
             }
-            <span class="ident">Tf</span>::<span class="ident">Bc5RgUnorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bc5RgSnorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">EtcRgUnorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">EtcRgSnorm</span> <span class="op">=</span><span class="op">&gt;</span> {
-                (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Bi</span>), <span class="ident">Sk</span>::<span class="ident">Float</span>)
+            <span class="ident">Tf::Bc5RgUnorm</span> <span class="op">|</span> <span class="ident">Tf::Bc5RgSnorm</span> <span class="op">|</span> <span class="ident">Tf::EtcRgUnorm</span> <span class="op">|</span> <span class="ident">Tf::EtcRgSnorm</span> <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Bi</span>), <span class="ident">Sk::Float</span>)
             }
-            <span class="ident">Tf</span>::<span class="ident">Bc6hRgbUfloat</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Bc6hRgbSfloat</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Etc2RgbUnorm</span> <span class="op">|</span> <span class="ident">Tf</span>::<span class="ident">Etc2RgbUnormSrgb</span> <span class="op">=</span><span class="op">&gt;</span> {
-                (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">Vs</span>::<span class="ident">Tri</span>), <span class="ident">Sk</span>::<span class="ident">Float</span>)
+            <span class="ident">Tf::Bc6hRgbUfloat</span> <span class="op">|</span> <span class="ident">Tf::Bc6hRgbSfloat</span> <span class="op">|</span> <span class="ident">Tf::Etc2RgbUnorm</span> <span class="op">|</span> <span class="ident">Tf::Etc2RgbUnormSrgb</span> <span class="op">=</span><span class="op">&gt;</span> {
+                (<span class="ident">NumericDimension::Vector</span>(<span class="ident">Vs::Tri</span>), <span class="ident">Sk::Float</span>)
             }
         };
 
@@ -1473,10 +1473,10 @@
             <span class="kw">return</span> <span class="bool-val">false</span>;
         }
         <span class="kw">match</span> (<span class="self">self</span>.<span class="ident">dim</span>, <span class="ident">other</span>.<span class="ident">dim</span>) {
-            (<span class="ident">NumericDimension</span>::<span class="ident">Scalar</span>, <span class="ident">NumericDimension</span>::<span class="ident">Scalar</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            (<span class="ident">NumericDimension</span>::<span class="ident">Scalar</span>, <span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-            (<span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">s0</span>), <span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">s1</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s0</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">s1</span>,
-            (<span class="ident">NumericDimension</span>::<span class="ident">Matrix</span>(<span class="ident">c0</span>, <span class="ident">r0</span>), <span class="ident">NumericDimension</span>::<span class="ident">Matrix</span>(<span class="ident">c1</span>, <span class="ident">r1</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            (<span class="ident">NumericDimension::Scalar</span>, <span class="ident">NumericDimension::Scalar</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+            (<span class="ident">NumericDimension::Scalar</span>, <span class="ident">NumericDimension::Vector</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+            (<span class="ident">NumericDimension::Vector</span>(<span class="ident">s0</span>), <span class="ident">NumericDimension::Vector</span>(<span class="ident">s1</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s0</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">s1</span>,
+            (<span class="ident">NumericDimension::Matrix</span>(<span class="ident">c0</span>, <span class="ident">r0</span>), <span class="ident">NumericDimension::Matrix</span>(<span class="ident">c1</span>, <span class="ident">r1</span>)) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">c0</span> <span class="op">=</span><span class="op">=</span> <span class="ident">c1</span> <span class="op">&amp;&amp;</span> <span class="ident">r0</span> <span class="op">=</span><span class="op">=</span> <span class="ident">r1</span>
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
@@ -1485,98 +1485,98 @@
 }
 
 <span class="doccomment">/// Return true if the fragment `format` is covered by the provided `output`.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">check_texture_format</span>(<span class="ident">format</span>: <span class="ident">wgt</span>::<span class="ident">TextureFormat</span>, <span class="ident">output</span>: <span class="kw-2">&amp;</span><span class="ident">NumericType</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-    <span class="ident">NumericType</span>::<span class="ident">from_texture_format</span>(<span class="ident">format</span>).<span class="ident">is_subtype_of</span>(<span class="ident">output</span>)
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">check_texture_format</span>(<span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>, <span class="ident">output</span>: <span class="kw-2">&amp;</span><span class="ident">NumericType</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="ident">NumericType::from_texture_format</span>(<span class="ident">format</span>).<span class="ident">is_subtype_of</span>(<span class="ident">output</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">StageIo</span> <span class="op">=</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">ShaderLocation</span>, <span class="ident">NumericType</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">StageIo</span> <span class="op">=</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">wgt::ShaderLocation</span>, <span class="ident">NumericType</span><span class="op">&gt;</span>;
 
 <span class="kw">impl</span> <span class="ident">Interface</span> {
     <span class="kw">fn</span> <span class="ident">populate</span>(
         <span class="ident">list</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Varying</span><span class="op">&gt;</span>,
-        <span class="ident">binding</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">naga</span>::<span class="ident">Binding</span><span class="op">&gt;</span>,
-        <span class="ident">ty</span>: <span class="ident">naga</span>::<span class="ident">Handle</span><span class="op">&lt;</span><span class="ident">naga</span>::<span class="ident">Type</span><span class="op">&gt;</span>,
-        <span class="ident">arena</span>: <span class="kw-2">&amp;</span><span class="ident">naga</span>::<span class="ident">Arena</span><span class="op">&lt;</span><span class="ident">naga</span>::<span class="ident">Type</span><span class="op">&gt;</span>,
+        <span class="ident">binding</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">naga::Binding</span><span class="op">&gt;</span>,
+        <span class="ident">ty</span>: <span class="ident">naga::Handle</span><span class="op">&lt;</span><span class="ident">naga::Type</span><span class="op">&gt;</span>,
+        <span class="ident">arena</span>: <span class="kw-2">&amp;</span><span class="ident">naga::Arena</span><span class="op">&lt;</span><span class="ident">naga::Type</span><span class="op">&gt;</span>,
     ) {
         <span class="kw">let</span> <span class="ident">numeric_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">arena</span>[<span class="ident">ty</span>].<span class="ident">inner</span> {
-            <span class="ident">naga</span>::<span class="ident">TypeInner</span>::<span class="ident">Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NumericType</span> {
-                <span class="ident">dim</span>: <span class="ident">NumericDimension</span>::<span class="ident">Scalar</span>,
+            <span class="ident">naga::TypeInner::Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NumericType</span> {
+                <span class="ident">dim</span>: <span class="ident">NumericDimension::Scalar</span>,
                 <span class="ident">kind</span>,
                 <span class="ident">width</span>,
             },
-            <span class="ident">naga</span>::<span class="ident">TypeInner</span>::<span class="ident">Vector</span> { <span class="ident">size</span>, <span class="ident">kind</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NumericType</span> {
-                <span class="ident">dim</span>: <span class="ident">NumericDimension</span>::<span class="ident">Vector</span>(<span class="ident">size</span>),
+            <span class="ident">naga::TypeInner::Vector</span> { <span class="ident">size</span>, <span class="ident">kind</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NumericType</span> {
+                <span class="ident">dim</span>: <span class="ident">NumericDimension::Vector</span>(<span class="ident">size</span>),
                 <span class="ident">kind</span>,
                 <span class="ident">width</span>,
             },
-            <span class="ident">naga</span>::<span class="ident">TypeInner</span>::<span class="ident">Matrix</span> {
+            <span class="ident">naga::TypeInner::Matrix</span> {
                 <span class="ident">columns</span>,
                 <span class="ident">rows</span>,
                 <span class="ident">width</span>,
             } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">NumericType</span> {
-                <span class="ident">dim</span>: <span class="ident">NumericDimension</span>::<span class="ident">Matrix</span>(<span class="ident">columns</span>, <span class="ident">rows</span>),
-                <span class="ident">kind</span>: <span class="ident">naga</span>::<span class="ident">ScalarKind</span>::<span class="ident">Float</span>,
+                <span class="ident">dim</span>: <span class="ident">NumericDimension::Matrix</span>(<span class="ident">columns</span>, <span class="ident">rows</span>),
+                <span class="ident">kind</span>: <span class="ident">naga::ScalarKind::Float</span>,
                 <span class="ident">width</span>,
             },
-            <span class="ident">naga</span>::<span class="ident">TypeInner</span>::<span class="ident">Struct</span> {
+            <span class="ident">naga::TypeInner::Struct</span> {
                 <span class="ident">block</span>: <span class="kw">_</span>,
                 <span class="kw-2">ref</span> <span class="ident">members</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">for</span> <span class="ident">member</span> <span class="kw">in</span> <span class="ident">members</span> {
-                    <span class="self">Self</span>::<span class="ident">populate</span>(<span class="ident">list</span>, <span class="ident">member</span>.<span class="ident">binding</span>.<span class="ident">as_ref</span>(), <span class="ident">member</span>.<span class="ident">ty</span>, <span class="ident">arena</span>);
+                    <span class="self">Self</span><span class="ident">::populate</span>(<span class="ident">list</span>, <span class="ident">member</span>.<span class="ident">binding</span>.<span class="ident">as_ref</span>(), <span class="ident">member</span>.<span class="ident">ty</span>, <span class="ident">arena</span>);
                 }
                 <span class="kw">return</span>;
             }
             <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">log</span>::<span class="macro">error!</span>(<span class="string">&quot;Unexpected varying type: {:?}&quot;</span>, <span class="ident">other</span>);
+                <span class="macro">log::error!</span>(<span class="string">&quot;Unexpected varying type: {:?}&quot;</span>, <span class="ident">other</span>);
                 <span class="kw">return</span>;
             }
         };
 
         <span class="kw">let</span> <span class="ident">varying</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">binding</span> {
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">naga</span>::<span class="ident">Binding</span>::<span class="ident">Location</span>(<span class="ident">location</span>, <span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Varying</span>::<span class="ident">Local</span> {
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">naga::Binding::Location</span>(<span class="ident">location</span>, <span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Varying::Local</span> {
                 <span class="ident">location</span>,
                 <span class="ident">ty</span>: <span class="ident">numeric_ty</span>,
             },
-            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">naga</span>::<span class="ident">Binding</span>::<span class="ident">BuiltIn</span>(<span class="ident">built_in</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Varying</span>::<span class="ident">BuiltIn</span>(<span class="ident">built_in</span>),
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">naga::Binding::BuiltIn</span>(<span class="ident">built_in</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Varying::BuiltIn</span>(<span class="ident">built_in</span>),
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">log</span>::<span class="macro">error!</span>(<span class="string">&quot;Missing binding for a varying&quot;</span>);
+                <span class="macro">log::error!</span>(<span class="string">&quot;Missing binding for a varying&quot;</span>);
                 <span class="kw">return</span>;
             }
         };
         <span class="ident">list</span>.<span class="ident">push</span>(<span class="ident">varying</span>);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">naga</span>::<span class="ident">Module</span>, <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">naga</span>::<span class="ident">valid</span>::<span class="ident">ModuleInfo</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resources</span> <span class="op">=</span> <span class="ident">naga</span>::<span class="ident">Arena</span>::<span class="ident">new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resource_mapping</span> <span class="op">=</span> <span class="ident">FastHashMap</span>::<span class="ident">default</span>();
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident">naga::Module</span>, <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">naga::valid::ModuleInfo</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resources</span> <span class="op">=</span> <span class="ident">naga::Arena::new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resource_mapping</span> <span class="op">=</span> <span class="ident">FastHashMap::default</span>();
         <span class="kw">for</span> (<span class="ident">var_handle</span>, <span class="ident">var</span>) <span class="kw">in</span> <span class="ident">module</span>.<span class="ident">global_variables</span>.<span class="ident">iter</span>() {
             <span class="kw">let</span> (<span class="ident">group</span>, <span class="ident">binding</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">binding</span> {
                 <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">br</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">br</span>.<span class="ident">group</span>, <span class="ident">br</span>.<span class="ident">binding</span>),
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
             };
             <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">var</span>.<span class="ident">ty</span>].<span class="ident">inner</span> {
-                <span class="ident">naga</span>::<span class="ident">TypeInner</span>::<span class="ident">Struct</span> {
+                <span class="ident">naga::TypeInner::Struct</span> {
                     <span class="ident">block</span>: <span class="bool-val">true</span>,
                     <span class="ident">members</span>: <span class="kw">_</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">actual_size</span> <span class="op">=</span> <span class="ident">info</span>.<span class="ident">layouter</span>[<span class="ident">var</span>.<span class="ident">ty</span>].<span class="ident">size</span>;
-                    <span class="ident">ResourceType</span>::<span class="ident">Buffer</span> {
-                        <span class="ident">size</span>: <span class="ident">wgt</span>::<span class="ident">BufferSize</span>::<span class="ident">new</span>(<span class="ident">actual_size</span> <span class="kw">as</span> <span class="ident">u64</span>).<span class="ident">unwrap</span>(),
+                    <span class="ident">ResourceType::Buffer</span> {
+                        <span class="ident">size</span>: <span class="ident">wgt::BufferSize::new</span>(<span class="ident">actual_size</span> <span class="kw">as</span> <span class="ident">u64</span>).<span class="ident">unwrap</span>(),
                     }
                 }
-                <span class="ident">naga</span>::<span class="ident">TypeInner</span>::<span class="ident">Image</span> {
+                <span class="ident">naga::TypeInner::Image</span> {
                     <span class="ident">dim</span>,
                     <span class="ident">arrayed</span>,
                     <span class="ident">class</span>,
-                } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ResourceType</span>::<span class="ident">Texture</span> {
+                } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ResourceType::Texture</span> {
                     <span class="ident">dim</span>,
                     <span class="ident">arrayed</span>,
                     <span class="ident">class</span>,
                 },
-                <span class="ident">naga</span>::<span class="ident">TypeInner</span>::<span class="ident">Sampler</span> { <span class="ident">comparison</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ResourceType</span>::<span class="ident">Sampler</span> { <span class="ident">comparison</span> },
+                <span class="ident">naga::TypeInner::Sampler</span> { <span class="ident">comparison</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ResourceType::Sampler</span> { <span class="ident">comparison</span> },
                 <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">log</span>::<span class="macro">error!</span>(<span class="string">&quot;Unexpected resource type: {:?}&quot;</span>, <span class="ident">other</span>);
+                    <span class="macro">log::error!</span>(<span class="string">&quot;Unexpected resource type: {:?}&quot;</span>, <span class="ident">other</span>);
                     <span class="kw">continue</span>;
                 }
             };
@@ -1589,16 +1589,16 @@
             <span class="ident">resource_mapping</span>.<span class="ident">insert</span>(<span class="ident">var_handle</span>, <span class="ident">handle</span>);
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entry_points</span> <span class="op">=</span> <span class="ident">FastHashMap</span>::<span class="ident">default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entry_points</span> <span class="op">=</span> <span class="ident">FastHashMap::default</span>();
         <span class="ident">entry_points</span>.<span class="ident">reserve</span>(<span class="ident">module</span>.<span class="ident">entry_points</span>.<span class="ident">len</span>());
         <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">entry_point</span>) <span class="kw">in</span> (<span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">entry_points</span>).<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
             <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">info</span>.<span class="ident">get_entry_point</span>(<span class="ident">index</span>);
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ep</span> <span class="op">=</span> <span class="ident">EntryPoint</span>::<span class="ident">default</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ep</span> <span class="op">=</span> <span class="ident">EntryPoint::default</span>();
             <span class="kw">for</span> <span class="ident">arg</span> <span class="kw">in</span> <span class="ident">entry_point</span>.<span class="ident">function</span>.<span class="ident">arguments</span>.<span class="ident">iter</span>() {
-                <span class="self">Self</span>::<span class="ident">populate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ep</span>.<span class="ident">inputs</span>, <span class="ident">arg</span>.<span class="ident">binding</span>.<span class="ident">as_ref</span>(), <span class="ident">arg</span>.<span class="ident">ty</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">types</span>);
+                <span class="self">Self</span><span class="ident">::populate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ep</span>.<span class="ident">inputs</span>, <span class="ident">arg</span>.<span class="ident">binding</span>.<span class="ident">as_ref</span>(), <span class="ident">arg</span>.<span class="ident">ty</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">types</span>);
             }
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">result</span>) <span class="op">=</span> <span class="ident">entry_point</span>.<span class="ident">function</span>.<span class="ident">result</span> {
-                <span class="self">Self</span>::<span class="ident">populate</span>(
+                <span class="self">Self</span><span class="ident">::populate</span>(
                     <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ep</span>.<span class="ident">outputs</span>,
                     <span class="ident">result</span>.<span class="ident">binding</span>.<span class="ident">as_ref</span>(),
                     <span class="ident">result</span>.<span class="ident">ty</span>,
@@ -1630,22 +1630,22 @@
         <span class="ident">given_layouts</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">BindEntryMap</span>]<span class="op">&gt;</span>,
         <span class="ident">derived_layouts</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">BindEntryMap</span>],
         <span class="ident">entry_point_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">stage_bit</span>: <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>,
+        <span class="ident">stage_bit</span>: <span class="ident">wgt::ShaderStage</span>,
         <span class="ident">inputs</span>: <span class="ident">StageIo</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">StageIo</span>, <span class="ident">StageError</span><span class="op">&gt;</span> {
         <span class="comment">// Since a shader module can have multiple entry points with the same name,</span>
         <span class="comment">// we need to look for one with the right execution model.</span>
         <span class="kw">let</span> <span class="ident">shader_stage</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">stage_bit</span> {
-            <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>::<span class="ident">VERTEX</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga</span>::<span class="ident">ShaderStage</span>::<span class="ident">Vertex</span>,
-            <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>::<span class="ident">FRAGMENT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga</span>::<span class="ident">ShaderStage</span>::<span class="ident">Fragment</span>,
-            <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>::<span class="ident">COMPUTE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga</span>::<span class="ident">ShaderStage</span>::<span class="ident">Compute</span>,
+            <span class="ident">wgt::ShaderStage::VERTEX</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga::ShaderStage::Vertex</span>,
+            <span class="ident">wgt::ShaderStage::FRAGMENT</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga::ShaderStage::Fragment</span>,
+            <span class="ident">wgt::ShaderStage::COMPUTE</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">naga::ShaderStage::Compute</span>,
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
         };
         <span class="kw">let</span> <span class="ident">pair</span> <span class="op">=</span> (<span class="ident">shader_stage</span>, <span class="ident">entry_point_name</span>.<span class="ident">to_string</span>());
         <span class="kw">let</span> <span class="ident">entry_point</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">entry_points</span>
             .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">pair</span>)
-            .<span class="ident">ok_or</span>(<span class="ident">StageError</span>::<span class="ident">MissingEntryPoint</span>(<span class="ident">pair</span>.<span class="number">1</span>))<span class="question-mark">?</span>;
+            .<span class="ident">ok_or</span>(<span class="ident">StageError::MissingEntryPoint</span>(<span class="ident">pair</span>.<span class="number">1</span>))<span class="question-mark">?</span>;
 
         <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="ident">handle</span>, <span class="ident">usage</span>) <span class="kw">in</span> <span class="ident">entry_point</span>.<span class="ident">resources</span>.<span class="ident">iter</span>() {
             <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">resources</span>[<span class="ident">handle</span>];
@@ -1653,28 +1653,28 @@
                 <span class="prelude-val">Some</span>(<span class="ident">layouts</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">layouts</span>
                     .<span class="ident">get</span>(<span class="ident">res</span>.<span class="ident">group</span> <span class="kw">as</span> <span class="ident">usize</span>)
                     .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">map</span><span class="op">|</span> <span class="ident">map</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">res</span>.<span class="ident">binding</span>))
-                    .<span class="ident">ok_or</span>(<span class="ident">BindingError</span>::<span class="ident">Missing</span>)
+                    .<span class="ident">ok_or</span>(<span class="ident">BindingError::Missing</span>)
                     .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> {
                         <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">visibility</span>.<span class="ident">contains</span>(<span class="ident">stage_bit</span>) {
                             <span class="prelude-val">Ok</span>(<span class="ident">entry</span>)
                         } <span class="kw">else</span> {
-                            <span class="prelude-val">Err</span>(<span class="ident">BindingError</span>::<span class="ident">Invisible</span>)
+                            <span class="prelude-val">Err</span>(<span class="ident">BindingError::Invisible</span>)
                         }
                     })
                     .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="ident">res</span>.<span class="ident">check_binding_use</span>(<span class="ident">entry</span>, <span class="ident">usage</span>)),
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">derived_layouts</span>
                     .<span class="ident">get_mut</span>(<span class="ident">res</span>.<span class="ident">group</span> <span class="kw">as</span> <span class="ident">usize</span>)
-                    .<span class="ident">ok_or</span>(<span class="ident">BindingError</span>::<span class="ident">Missing</span>)
+                    .<span class="ident">ok_or</span>(<span class="ident">BindingError::Missing</span>)
                     .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">set</span><span class="op">|</span> {
                         <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">derive_binding_type</span>(<span class="ident">usage</span>)<span class="question-mark">?</span>;
                         <span class="kw">match</span> <span class="ident">set</span>.<span class="ident">entry</span>(<span class="ident">res</span>.<span class="ident">binding</span>) {
-                            <span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="ident">e</span>) <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">get</span>().<span class="ident">ty</span> <span class="op">!</span><span class="op">=</span> <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError</span>::<span class="ident">InconsistentlyDerivedType</span>)
+                            <span class="ident">Entry::Occupied</span>(<span class="ident">e</span>) <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">get</span>().<span class="ident">ty</span> <span class="op">!</span><span class="op">=</span> <span class="ident">ty</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::InconsistentlyDerivedType</span>)
                             }
-                            <span class="ident">Entry</span>::<span class="ident">Occupied</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">Entry::Occupied</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
                                 <span class="ident">e</span>.<span class="ident">into_mut</span>().<span class="ident">visibility</span> <span class="op">|</span><span class="op">=</span> <span class="ident">stage_bit</span>;
                             }
-                            <span class="ident">Entry</span>::<span class="ident">Vacant</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">Entry::Vacant</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> {
                                 <span class="ident">e</span>.<span class="ident">insert</span>(<span class="ident">BindGroupLayoutEntry</span> {
                                     <span class="ident">binding</span>: <span class="ident">res</span>.<span class="ident">binding</span>,
                                     <span class="ident">ty</span>,
@@ -1687,7 +1687,7 @@
                     }),
             };
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span> <span class="ident">result</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">StageError</span>::<span class="ident">Binding</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">StageError::Binding</span> {
                     <span class="ident">group</span>: <span class="ident">res</span>.<span class="ident">group</span>,
                     <span class="ident">binding</span>: <span class="ident">res</span>.<span class="ident">binding</span>,
                     <span class="ident">error</span>,
@@ -1697,23 +1697,23 @@
 
         <span class="kw">for</span> <span class="ident">input</span> <span class="kw">in</span> <span class="ident">entry_point</span>.<span class="ident">inputs</span>.<span class="ident">iter</span>() {
             <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">input</span> {
-                <span class="ident">Varying</span>::<span class="ident">Local</span> { <span class="ident">location</span>, <span class="ident">ty</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">Varying::Local</span> { <span class="ident">location</span>, <span class="ident">ty</span> } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
                         <span class="ident">inputs</span>
                             .<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">location</span>)
-                            .<span class="ident">ok_or</span>(<span class="ident">InputError</span>::<span class="ident">Missing</span>)
+                            .<span class="ident">ok_or</span>(<span class="ident">InputError::Missing</span>)
                             .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">provided</span><span class="op">|</span> {
                                 <span class="kw">if</span> <span class="ident">ty</span>.<span class="ident">is_subtype_of</span>(<span class="ident">provided</span>) {
                                     <span class="prelude-val">Ok</span>(())
                                 } <span class="kw">else</span> {
-                                    <span class="prelude-val">Err</span>(<span class="ident">InputError</span>::<span class="ident">WrongType</span>)
+                                    <span class="prelude-val">Err</span>(<span class="ident">InputError::WrongType</span>)
                                 }
                             });
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span> <span class="ident">result</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">StageError</span>::<span class="ident">Input</span> { <span class="ident">location</span>, <span class="ident">error</span> });
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">StageError::Input</span> { <span class="ident">location</span>, <span class="ident">error</span> });
                     }
                 }
-                <span class="ident">Varying</span>::<span class="ident">BuiltIn</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {}
+                <span class="ident">Varying::BuiltIn</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {}
             }
         }
 
@@ -1721,8 +1721,8 @@
             .<span class="ident">outputs</span>
             .<span class="ident">iter</span>()
             .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">output</span><span class="op">|</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">output</span> {
-                <span class="ident">Varying</span>::<span class="ident">Local</span> { <span class="ident">location</span>, <span class="ident">ty</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>((<span class="ident">location</span>, <span class="ident">ty</span>)),
-                <span class="ident">Varying</span>::<span class="ident">BuiltIn</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+                <span class="ident">Varying::Local</span> { <span class="ident">location</span>, <span class="ident">ty</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>((<span class="ident">location</span>, <span class="ident">ty</span>)),
+                <span class="ident">Varying::BuiltIn</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
             })
             .<span class="ident">collect</span>();
         <span class="prelude-val">Ok</span>(<span class="ident">outputs</span>)

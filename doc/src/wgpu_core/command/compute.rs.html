@@ -851,7 +851,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{<span class="ident">BindError</span>, <span class="ident">BindGroup</span>, <span class="ident">PushConstantUploadError</span>},
     <span class="ident">command</span>::{
-        <span class="ident">bind</span>::<span class="ident">Binder</span>, <span class="ident">end_pipeline_statistics_query</span>, <span class="ident">BasePass</span>, <span class="ident">BasePassRef</span>, <span class="ident">CommandBuffer</span>,
+        <span class="ident">bind::Binder</span>, <span class="ident">end_pipeline_statistics_query</span>, <span class="ident">BasePass</span>, <span class="ident">BasePassRef</span>, <span class="ident">CommandBuffer</span>,
         <span class="ident">CommandEncoderError</span>, <span class="ident">MapPassErr</span>, <span class="ident">PassErrorScope</span>, <span class="ident">QueryUseError</span>, <span class="ident">StateChange</span>,
     },
     <span class="ident">hub</span>::{<span class="ident">GfxBackend</span>, <span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
@@ -863,30 +863,30 @@
     <span class="ident">Label</span>, <span class="ident">DOWNLEVEL_ERROR_WARNING_MESSAGE</span>,
 };
 
-<span class="kw">use</span> <span class="ident">hal</span>::<span class="ident">command</span>::<span class="ident">CommandBuffer</span> <span class="kw">as</span> <span class="kw">_</span>;
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">hal::command::CommandBuffer</span> <span class="kw">as</span> <span class="kw">_</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">wgt</span>::{<span class="ident">BufferAddress</span>, <span class="ident">BufferUsage</span>, <span class="ident">ShaderStage</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">track</span>::<span class="ident">UseExtendError</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::track::UseExtendError</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">mem</span>, <span class="ident">str</span>};
 
 <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(
     <span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serial-pass&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>),
-    <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>)
+    <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>)
 )]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(
     <span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serial-pass&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>),
-    <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>)
+    <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>)
 )]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ComputeCommand</span> {
     <span class="ident">SetBindGroup</span> {
         <span class="ident">index</span>: <span class="ident">u8</span>,
         <span class="ident">num_dynamic_offsets</span>: <span class="ident">u8</span>,
-        <span class="ident">bind_group_id</span>: <span class="ident">id</span>::<span class="ident">BindGroupId</span>,
+        <span class="ident">bind_group_id</span>: <span class="ident">id::BindGroupId</span>,
     },
-    <span class="ident">SetPipeline</span>(<span class="ident">id</span>::<span class="ident">ComputePipelineId</span>),
+    <span class="ident">SetPipeline</span>(<span class="ident">id::ComputePipelineId</span>),
     <span class="ident">SetPushConstant</span> {
         <span class="ident">offset</span>: <span class="ident">u32</span>,
         <span class="ident">size_bytes</span>: <span class="ident">u32</span>,
@@ -894,7 +894,7 @@
     },
     <span class="ident">Dispatch</span>([<span class="ident">u32</span>; <span class="number">3</span>]),
     <span class="ident">DispatchIndirect</span> {
-        <span class="ident">buffer_id</span>: <span class="ident">id</span>::<span class="ident">BufferId</span>,
+        <span class="ident">buffer_id</span>: <span class="ident">id::BufferId</span>,
         <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
     },
     <span class="ident">PushDebugGroup</span> {
@@ -907,42 +907,42 @@
         <span class="ident">len</span>: <span class="ident">usize</span>,
     },
     <span class="ident">WriteTimestamp</span> {
-        <span class="ident">query_set_id</span>: <span class="ident">id</span>::<span class="ident">QuerySetId</span>,
+        <span class="ident">query_set_id</span>: <span class="ident">id::QuerySetId</span>,
         <span class="ident">query_index</span>: <span class="ident">u32</span>,
     },
     <span class="ident">BeginPipelineStatisticsQuery</span> {
-        <span class="ident">query_set_id</span>: <span class="ident">id</span>::<span class="ident">QuerySetId</span>,
+        <span class="ident">query_set_id</span>: <span class="ident">id::QuerySetId</span>,
         <span class="ident">query_index</span>: <span class="ident">u32</span>,
     },
     <span class="ident">EndPipelineStatisticsQuery</span>,
 }
 
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serial-pass&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>, <span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serial-pass&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>, <span class="ident">serde::Serialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ComputePass</span> {
     <span class="ident">base</span>: <span class="ident">BasePass</span><span class="op">&lt;</span><span class="ident">ComputeCommand</span><span class="op">&gt;</span>,
-    <span class="ident">parent_id</span>: <span class="ident">id</span>::<span class="ident">CommandEncoderId</span>,
+    <span class="ident">parent_id</span>: <span class="ident">id::CommandEncoderId</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">ComputePass</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">parent_id</span>: <span class="ident">id</span>::<span class="ident">CommandEncoderId</span>, <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">ComputePassDescriptor</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">parent_id</span>: <span class="ident">id::CommandEncoderId</span>, <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">ComputePassDescriptor</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">base</span>: <span class="ident">BasePass</span>::<span class="ident">new</span>(<span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">label</span>),
+            <span class="ident">base</span>: <span class="ident">BasePass::new</span>(<span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">label</span>),
             <span class="ident">parent_id</span>,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parent_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">id</span>::<span class="ident">CommandEncoderId</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parent_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">id::CommandEncoderId</span> {
         <span class="self">self</span>.<span class="ident">parent_id</span>
     }
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_command</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span>::<span class="ident">device</span>::<span class="ident">trace</span>::<span class="ident">Command</span> {
-        <span class="kw">crate</span>::<span class="ident">device</span>::<span class="ident">trace</span>::<span class="ident">Command</span>::<span class="ident">RunComputePass</span> { <span class="ident">base</span>: <span class="self">self</span>.<span class="ident">base</span> }
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_command</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::device::trace::Command</span> {
+        <span class="kw">crate</span><span class="ident">::device::trace::Command::RunComputePass</span> { <span class="ident">base</span>: <span class="self">self</span>.<span class="ident">base</span> }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt</span>::<span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">ComputePass</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt</span>::<span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt</span>::<span class="prelude-ty">Result</span> {
+<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">ComputePass</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
         <span class="macro">write!</span>(
             <span class="ident">f</span>,
             <span class="string">&quot;ComputePass {{ encoder_id: {:?}, data: {:?} commands and {:?} dynamic offsets }}&quot;</span>,
@@ -976,15 +976,15 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">Encoder</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">CommandEncoderError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;bind group {0:?} is invalid&quot;</span>)]</span>
-    <span class="ident">InvalidBindGroup</span>(<span class="ident">id</span>::<span class="ident">BindGroupId</span>),
+    <span class="ident">InvalidBindGroup</span>(<span class="ident">id::BindGroupId</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;bind group index {index} is greater than the device&#39;s requested `max_bind_group` limit {max}&quot;</span>)]</span>
     <span class="ident">BindGroupIndexOutOfRange</span> { <span class="ident">index</span>: <span class="ident">u8</span>, <span class="ident">max</span>: <span class="ident">u32</span> },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;compute pipeline {0:?} is invalid&quot;</span>)]</span>
-    <span class="ident">InvalidPipeline</span>(<span class="ident">id</span>::<span class="ident">ComputePipelineId</span>),
+    <span class="ident">InvalidPipeline</span>(<span class="ident">id::ComputePipelineId</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;QuerySet {0:?} is invalid&quot;</span>)]</span>
-    <span class="ident">InvalidQuerySet</span>(<span class="ident">id</span>::<span class="ident">QuerySetId</span>),
+    <span class="ident">InvalidQuerySet</span>(<span class="ident">id::QuerySetId</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;indirect buffer {0:?} is invalid or destroyed&quot;</span>)]</span>
-    <span class="ident">InvalidIndirectBuffer</span>(<span class="ident">id</span>::<span class="ident">BufferId</span>),
+    <span class="ident">InvalidIndirectBuffer</span>(<span class="ident">id::BufferId</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;indirect buffer uses bytes {offset}..{end_offset} which overruns indirect buffer of size {buffer_size}&quot;</span>)]</span>
     <span class="ident">IndirectBufferOverrun</span> {
         <span class="ident">offset</span>: <span class="ident">u64</span>,
@@ -992,7 +992,7 @@
         <span class="ident">buffer_size</span>: <span class="ident">u64</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;buffer {0:?} is invalid or destroyed&quot;</span>)]</span>
-    <span class="ident">InvalidBuffer</span>(<span class="ident">id</span>::<span class="ident">BufferId</span>),
+    <span class="ident">InvalidBuffer</span>(<span class="ident">id::BufferId</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">ResourceUsageConflict</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">UsageConflict</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
@@ -1038,7 +1038,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">State</span> {
     <span class="ident">binder</span>: <span class="ident">Binder</span>,
-    <span class="ident">pipeline</span>: <span class="ident">StateChange</span><span class="op">&lt;</span><span class="ident">id</span>::<span class="ident">ComputePipelineId</span><span class="op">&gt;</span>,
+    <span class="ident">pipeline</span>: <span class="ident">StateChange</span><span class="op">&lt;</span><span class="ident">id::ComputePipelineId</span><span class="op">&gt;</span>,
     <span class="ident">trackers</span>: <span class="ident">TrackerSet</span>,
     <span class="ident">debug_scope_depth</span>: <span class="ident">u32</span>,
 }
@@ -1049,31 +1049,31 @@
         <span class="kw">let</span> <span class="ident">bind_mask</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">binder</span>.<span class="ident">invalid_mask</span>();
         <span class="kw">if</span> <span class="ident">bind_mask</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="comment">//let (expected, provided) = self.binder.entries[index as usize].info();</span>
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DispatchError</span>::<span class="ident">IncompatibleBindGroup</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DispatchError::IncompatibleBindGroup</span> {
                 <span class="ident">index</span>: <span class="ident">bind_mask</span>.<span class="ident">trailing_zeros</span>(),
             });
         }
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">pipeline</span>.<span class="ident">is_unset</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DispatchError</span>::<span class="ident">MissingPipeline</span>);
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DispatchError::MissingPipeline</span>);
         }
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn</span> <span class="ident">flush_states</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">raw_cmd_buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">B</span>::<span class="ident">CommandBuffer</span>,
+        <span class="ident">raw_cmd_buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">B::CommandBuffer</span>,
         <span class="ident">base_trackers</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TrackerSet</span>,
-        <span class="ident">bind_group_guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">id</span>::<span class="ident">BindGroupId</span><span class="op">&gt;</span>,
-        <span class="ident">buffer_guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">Buffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">id</span>::<span class="ident">BufferId</span><span class="op">&gt;</span>,
-        <span class="ident">texture_guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">Texture</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">id</span>::<span class="ident">TextureId</span><span class="op">&gt;</span>,
+        <span class="ident">bind_group_guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">id::BindGroupId</span><span class="op">&gt;</span>,
+        <span class="ident">buffer_guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">Buffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">id::BufferId</span><span class="op">&gt;</span>,
+        <span class="ident">texture_guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">Texture</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">id::TextureId</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UsageConflict</span><span class="op">&gt;</span> {
         <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">binder</span>.<span class="ident">list_active</span>() {
             <span class="self">self</span>.<span class="ident">trackers</span>.<span class="ident">merge_extend</span>(<span class="kw-2">&amp;</span><span class="ident">bind_group_guard</span>[<span class="ident">id</span>].<span class="ident">used</span>)<span class="question-mark">?</span>;
         }
 
-        <span class="ident">log</span>::<span class="macro">trace!</span>(<span class="string">&quot;Encoding dispatch barriers&quot;</span>);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Encoding dispatch barriers&quot;</span>);
 
-        <span class="ident">CommandBuffer</span>::<span class="ident">insert_barriers</span>(
+        <span class="ident">CommandBuffer::insert_barriers</span>(
             <span class="ident">raw_cmd_buf</span>,
             <span class="ident">base_trackers</span>,
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">trackers</span>,
@@ -1091,7 +1091,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span> <span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">command_encoder_run_compute_pass</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">encoder_id</span>: <span class="ident">id</span>::<span class="ident">CommandEncoderId</span>,
+        <span class="ident">encoder_id</span>: <span class="ident">id::CommandEncoderId</span>,
         <span class="ident">pass</span>: <span class="kw-2">&amp;</span><span class="ident">ComputePass</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ComputePassError</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">command_encoder_run_compute_pass_impl</span>::<span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>(<span class="ident">encoder_id</span>, <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">as_ref</span>())
@@ -1100,35 +1100,35 @@
     <span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">command_encoder_run_compute_pass_impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">encoder_id</span>: <span class="ident">id</span>::<span class="ident">CommandEncoderId</span>,
+        <span class="ident">encoder_id</span>: <span class="ident">id::CommandEncoderId</span>,
         <span class="ident">base</span>: <span class="ident">BasePassRef</span><span class="op">&lt;</span><span class="ident">ComputeCommand</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ComputePassError</span><span class="op">&gt;</span> {
-        <span class="ident">profiling</span>::<span class="macro">scope!</span>(<span class="string">&quot;CommandEncoder::run_compute_pass&quot;</span>);
-        <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">Pass</span>(<span class="ident">encoder_id</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::run_compute_pass&quot;</span>);
+        <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Pass</span>(<span class="ident">encoder_id</span>);
 
-        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B</span>::<span class="ident">hub</span>(<span class="self">self</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token</span>::<span class="ident">root</span>();
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B::hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
 
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">cmd_buf_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">command_buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span>
-            <span class="ident">CommandBuffer</span>::<span class="ident">get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">encoder_id</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
+            <span class="ident">CommandBuffer::get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">encoder_id</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">raw</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">list</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">commands</span> {
-            <span class="ident">list</span>.<span class="ident">push</span>(<span class="kw">crate</span>::<span class="ident">device</span>::<span class="ident">trace</span>::<span class="ident">Command</span>::<span class="ident">RunComputePass</span> {
-                <span class="ident">base</span>: <span class="ident">BasePass</span>::<span class="ident">from_ref</span>(<span class="ident">base</span>),
+            <span class="ident">list</span>.<span class="ident">push</span>(<span class="kw">crate</span><span class="ident">::device::trace::Command::RunComputePass</span> {
+                <span class="ident">base</span>: <span class="ident">BasePass::from_ref</span>(<span class="ident">base</span>),
             });
         }
 
         <span class="kw">if</span> <span class="op">!</span><span class="ident">cmd_buf</span>
             .<span class="ident">downlevel</span>
             .<span class="ident">flags</span>
-            .<span class="ident">contains</span>(<span class="ident">wgt</span>::<span class="ident">DownlevelFlags</span>::<span class="ident">COMPUTE_SHADERS</span>)
+            .<span class="ident">contains</span>(<span class="ident">wgt::DownlevelFlags::COMPUTE_SHADERS</span>)
         {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ComputePassError</span> {
-                <span class="ident">scope</span>: <span class="ident">PassErrorScope</span>::<span class="ident">Pass</span>(<span class="ident">encoder_id</span>),
-                <span class="ident">inner</span>: <span class="ident">ComputePassErrorInner</span>::<span class="ident">ComputeShadersUnsupported</span>,
+                <span class="ident">scope</span>: <span class="ident">PassErrorScope::Pass</span>(<span class="ident">encoder_id</span>),
+                <span class="ident">inner</span>: <span class="ident">ComputePassErrorInner::ComputeShadersUnsupported</span>,
             });
         }
 
@@ -1147,28 +1147,28 @@
         <span class="kw">let</span> (<span class="ident">texture_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">State</span> {
-            <span class="ident">binder</span>: <span class="ident">Binder</span>::<span class="ident">new</span>(),
-            <span class="ident">pipeline</span>: <span class="ident">StateChange</span>::<span class="ident">new</span>(),
-            <span class="ident">trackers</span>: <span class="ident">TrackerSet</span>::<span class="ident">new</span>(<span class="ident">B</span>::<span class="ident">VARIANT</span>),
+            <span class="ident">binder</span>: <span class="ident">Binder::new</span>(),
+            <span class="ident">pipeline</span>: <span class="ident">StateChange::new</span>(),
+            <span class="ident">trackers</span>: <span class="ident">TrackerSet::new</span>(<span class="ident">B::VARIANT</span>),
             <span class="ident">debug_scope_depth</span>: <span class="number">0</span>,
         };
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">temp_offsets</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">temp_offsets</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dynamic_offset_count</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">string_offset</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">active_query</span> <span class="op">=</span> <span class="prelude-val">None</span>;
 
         <span class="kw">for</span> <span class="ident">command</span> <span class="kw">in</span> <span class="ident">base</span>.<span class="ident">commands</span> {
             <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">command</span> {
-                <span class="ident">ComputeCommand</span>::<span class="ident">SetBindGroup</span> {
+                <span class="ident">ComputeCommand::SetBindGroup</span> {
                     <span class="ident">index</span>,
                     <span class="ident">num_dynamic_offsets</span>,
                     <span class="ident">bind_group_id</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">SetBindGroup</span>(<span class="ident">bind_group_id</span>);
+                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::SetBindGroup</span>(<span class="ident">bind_group_id</span>);
 
                     <span class="kw">let</span> <span class="ident">max_bind_groups</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">limits</span>.<span class="ident">max_bind_groups</span>;
                     <span class="kw">if</span> (<span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="ident">max_bind_groups</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ComputePassErrorInner</span>::<span class="ident">BindGroupIndexOutOfRange</span> {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ComputePassErrorInner::BindGroupIndexOutOfRange</span> {
                             <span class="ident">index</span>,
                             <span class="ident">max</span>: <span class="ident">max_bind_groups</span>,
                         })
@@ -1186,7 +1186,7 @@
                         .<span class="ident">trackers</span>
                         .<span class="ident">bind_groups</span>
                         .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">bind_group_guard</span>, <span class="ident">bind_group_id</span>, (), ())
-                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ComputePassErrorInner</span>::<span class="ident">InvalidBindGroup</span>(<span class="ident">bind_group_id</span>))
+                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ComputePassErrorInner::InvalidBindGroup</span>(<span class="ident">bind_group_id</span>))
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
                     <span class="ident">bind_group</span>
                         .<span class="ident">validate_dynamic_bindings</span>(<span class="kw-2">&amp;</span><span class="ident">temp_offsets</span>)
@@ -1211,7 +1211,7 @@
                     <span class="kw">let</span> <span class="ident">pipeline_layout_id</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">binder</span>.<span class="ident">pipeline_layout_id</span>;
                     <span class="kw">let</span> <span class="ident">entries</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">binder</span>.<span class="ident">assign_group</span>(
                         <span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>,
-                        <span class="ident">id</span>::<span class="ident">Valid</span>(<span class="ident">bind_group_id</span>),
+                        <span class="ident">id::Valid</span>(<span class="ident">bind_group_id</span>),
                         <span class="ident">bind_group</span>,
                         <span class="kw-2">&amp;</span><span class="ident">temp_offsets</span>,
                     );
@@ -1234,8 +1234,8 @@
                         }
                     }
                 }
-                <span class="ident">ComputeCommand</span>::<span class="ident">SetPipeline</span>(<span class="ident">pipeline_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">SetPipelineCompute</span>(<span class="ident">pipeline_id</span>);
+                <span class="ident">ComputeCommand::SetPipeline</span>(<span class="ident">pipeline_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::SetPipelineCompute</span>(<span class="ident">pipeline_id</span>);
 
                     <span class="kw">if</span> <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">set_and_check_redundant</span>(<span class="ident">pipeline_id</span>) {
                         <span class="kw">continue</span>;
@@ -1245,7 +1245,7 @@
                         .<span class="ident">trackers</span>
                         .<span class="ident">compute_pipes</span>
                         .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">pipeline_guard</span>, <span class="ident">pipeline_id</span>, (), ())
-                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ComputePassErrorInner</span>::<span class="ident">InvalidPipeline</span>(<span class="ident">pipeline_id</span>))
+                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ComputePassErrorInner::InvalidPipeline</span>(<span class="ident">pipeline_id</span>))
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
                     <span class="kw">unsafe</span> {
@@ -1278,13 +1278,13 @@
                         }
 
                         <span class="comment">// Clear push constant ranges</span>
-                        <span class="kw">let</span> <span class="ident">non_overlapping</span> <span class="op">=</span> <span class="kw">super</span>::<span class="ident">bind</span>::<span class="ident">compute_nonoverlapping_ranges</span>(
+                        <span class="kw">let</span> <span class="ident">non_overlapping</span> <span class="op">=</span> <span class="kw">super</span><span class="ident">::bind::compute_nonoverlapping_ranges</span>(
                             <span class="kw-2">&amp;</span><span class="ident">pipeline_layout</span>.<span class="ident">push_constant_ranges</span>,
                         );
                         <span class="kw">for</span> <span class="ident">range</span> <span class="kw">in</span> <span class="ident">non_overlapping</span> {
                             <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">range</span>.<span class="ident">range</span>.<span class="ident">start</span>;
                             <span class="kw">let</span> <span class="ident">size_bytes</span> <span class="op">=</span> <span class="ident">range</span>.<span class="ident">range</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">offset</span>;
-                            <span class="kw">super</span>::<span class="ident">push_constant_clear</span>(
+                            <span class="kw">super</span><span class="ident">::push_constant_clear</span>(
                                 <span class="ident">offset</span>,
                                 <span class="ident">size_bytes</span>,
                                 <span class="op">|</span><span class="ident">clear_offset</span>, <span class="ident">clear_data</span><span class="op">|</span> <span class="kw">unsafe</span> {
@@ -1298,16 +1298,16 @@
                         }
                     }
                 }
-                <span class="ident">ComputeCommand</span>::<span class="ident">SetPushConstant</span> {
+                <span class="ident">ComputeCommand::SetPushConstant</span> {
                     <span class="ident">offset</span>,
                     <span class="ident">size_bytes</span>,
                     <span class="ident">values_offset</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">SetPushConstant</span>;
+                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::SetPushConstant</span>;
 
                     <span class="kw">let</span> <span class="ident">end_offset_bytes</span> <span class="op">=</span> <span class="ident">offset</span> <span class="op">+</span> <span class="ident">size_bytes</span>;
                     <span class="kw">let</span> <span class="ident">values_end_offset</span> <span class="op">=</span>
-                        (<span class="ident">values_offset</span> <span class="op">+</span> <span class="ident">size_bytes</span> <span class="op">/</span> <span class="ident">wgt</span>::<span class="ident">PUSH_CONSTANT_ALIGNMENT</span>) <span class="kw">as</span> <span class="ident">usize</span>;
+                        (<span class="ident">values_offset</span> <span class="op">+</span> <span class="ident">size_bytes</span> <span class="op">/</span> <span class="ident">wgt::PUSH_CONSTANT_ALIGNMENT</span>) <span class="kw">as</span> <span class="ident">usize</span>;
                     <span class="kw">let</span> <span class="ident">data_slice</span> <span class="op">=</span>
                         <span class="kw-2">&amp;</span><span class="ident">base</span>.<span class="ident">push_constant_data</span>[(<span class="ident">values_offset</span> <span class="kw">as</span> <span class="ident">usize</span>)..<span class="ident">values_end_offset</span>];
 
@@ -1315,15 +1315,15 @@
                         .<span class="ident">binder</span>
                         .<span class="ident">pipeline_layout_id</span>
                         <span class="comment">//TODO: don&#39;t error here, lazily update the push constants</span>
-                        .<span class="ident">ok_or</span>(<span class="ident">ComputePassErrorInner</span>::<span class="ident">Dispatch</span>(
-                            <span class="ident">DispatchError</span>::<span class="ident">MissingPipeline</span>,
+                        .<span class="ident">ok_or</span>(<span class="ident">ComputePassErrorInner::Dispatch</span>(
+                            <span class="ident">DispatchError::MissingPipeline</span>,
                         ))
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
                     <span class="kw">let</span> <span class="ident">pipeline_layout</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">pipeline_layout_guard</span>[<span class="ident">pipeline_layout_id</span>];
 
                     <span class="ident">pipeline_layout</span>
                         .<span class="ident">validate_push_constant_ranges</span>(
-                            <span class="ident">ShaderStage</span>::<span class="ident">COMPUTE</span>,
+                            <span class="ident">ShaderStage::COMPUTE</span>,
                             <span class="ident">offset</span>,
                             <span class="ident">end_offset_bytes</span>,
                         )
@@ -1331,8 +1331,8 @@
 
                     <span class="kw">unsafe</span> { <span class="ident">raw</span>.<span class="ident">push_compute_constants</span>(<span class="kw-2">&amp;</span><span class="ident">pipeline_layout</span>.<span class="ident">raw</span>, <span class="ident">offset</span>, <span class="ident">data_slice</span>) }
                 }
-                <span class="ident">ComputeCommand</span>::<span class="ident">Dispatch</span>(<span class="ident">groups</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">Dispatch</span> {
+                <span class="ident">ComputeCommand::Dispatch</span>(<span class="ident">groups</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Dispatch</span> {
                         <span class="ident">indirect</span>: <span class="bool-val">false</span>,
                         <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
                     };
@@ -1351,8 +1351,8 @@
                         <span class="ident">raw</span>.<span class="ident">dispatch</span>(<span class="ident">groups</span>);
                     }
                 }
-                <span class="ident">ComputeCommand</span>::<span class="ident">DispatchIndirect</span> { <span class="ident">buffer_id</span>, <span class="ident">offset</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">Dispatch</span> {
+                <span class="ident">ComputeCommand::DispatchIndirect</span> { <span class="ident">buffer_id</span>, <span class="ident">offset</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Dispatch</span> {
                         <span class="ident">indirect</span>: <span class="bool-val">true</span>,
                         <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
                     };
@@ -1362,15 +1362,15 @@
                     <span class="kw">let</span> <span class="ident">indirect_buffer</span> <span class="op">=</span> <span class="ident">state</span>
                         .<span class="ident">trackers</span>
                         .<span class="ident">buffers</span>
-                        .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">buffer_id</span>, (), <span class="ident">BufferUse</span>::<span class="ident">INDIRECT</span>)
-                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ComputePassErrorInner</span>::<span class="ident">InvalidIndirectBuffer</span>(<span class="ident">buffer_id</span>))
+                        .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">buffer_id</span>, (), <span class="ident">BufferUse::INDIRECT</span>)
+                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ComputePassErrorInner::InvalidIndirectBuffer</span>(<span class="ident">buffer_id</span>))
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
-                    <span class="ident">check_buffer_usage</span>(<span class="ident">indirect_buffer</span>.<span class="ident">usage</span>, <span class="ident">BufferUsage</span>::<span class="ident">INDIRECT</span>)
+                    <span class="ident">check_buffer_usage</span>(<span class="ident">indirect_buffer</span>.<span class="ident">usage</span>, <span class="ident">BufferUsage::INDIRECT</span>)
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
-                    <span class="kw">let</span> <span class="ident">end_offset</span> <span class="op">=</span> <span class="ident">offset</span> <span class="op">+</span> <span class="ident">mem</span>::<span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">DispatchIndirectArgs</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>;
+                    <span class="kw">let</span> <span class="ident">end_offset</span> <span class="op">=</span> <span class="ident">offset</span> <span class="op">+</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">wgt::DispatchIndirectArgs</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>;
                     <span class="kw">if</span> <span class="ident">end_offset</span> <span class="op">&gt;</span> <span class="ident">indirect_buffer</span>.<span class="ident">size</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ComputePassErrorInner</span>::<span class="ident">IndirectBufferOverrun</span> {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ComputePassErrorInner::IndirectBufferOverrun</span> {
                             <span class="ident">offset</span>,
                             <span class="ident">end_offset</span>,
                             <span class="ident">buffer_size</span>: <span class="ident">indirect_buffer</span>.<span class="ident">size</span>,
@@ -1381,7 +1381,7 @@
                     <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">buf_raw</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">indirect_buffer</span>
                         .<span class="ident">raw</span>
                         .<span class="ident">as_ref</span>()
-                        .<span class="ident">ok_or</span>(<span class="ident">ComputePassErrorInner</span>::<span class="ident">InvalidIndirectBuffer</span>(<span class="ident">buffer_id</span>))
+                        .<span class="ident">ok_or</span>(<span class="ident">ComputePassErrorInner::InvalidIndirectBuffer</span>(<span class="ident">buffer_id</span>))
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
                     <span class="kw">let</span> <span class="ident">stride</span> <span class="op">=</span> <span class="number">3</span> <span class="op">*</span> <span class="number">4</span>; <span class="comment">// 3 integers, x/y/z group size</span>
@@ -1393,7 +1393,7 @@
                             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">range</span><span class="op">|</span> <span class="ident">MemoryInitTrackerAction</span> {
                                 <span class="ident">id</span>: <span class="ident">buffer_id</span>,
                                 <span class="ident">range</span>,
-                                <span class="ident">kind</span>: <span class="ident">MemoryInitKind</span>::<span class="ident">NeedsInitializedMemory</span>,
+                                <span class="ident">kind</span>: <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
                             }),
                     );
 
@@ -1410,21 +1410,21 @@
                         <span class="ident">raw</span>.<span class="ident">dispatch_indirect</span>(<span class="ident">buf_raw</span>, <span class="ident">offset</span>);
                     }
                 }
-                <span class="ident">ComputeCommand</span>::<span class="ident">PushDebugGroup</span> { <span class="ident">color</span>, <span class="ident">len</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ComputeCommand::PushDebugGroup</span> { <span class="ident">color</span>, <span class="ident">len</span> } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">state</span>.<span class="ident">debug_scope_depth</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                     <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span>
-                        <span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">base</span>.<span class="ident">string_data</span>[<span class="ident">string_offset</span>..<span class="ident">string_offset</span> <span class="op">+</span> <span class="ident">len</span>])
+                        <span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">base</span>.<span class="ident">string_data</span>[<span class="ident">string_offset</span>..<span class="ident">string_offset</span> <span class="op">+</span> <span class="ident">len</span>])
                             .<span class="ident">unwrap</span>();
                     <span class="ident">string_offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">len</span>;
                     <span class="kw">unsafe</span> {
                         <span class="ident">raw</span>.<span class="ident">begin_debug_marker</span>(<span class="ident">label</span>, <span class="ident">color</span>);
                     }
                 }
-                <span class="ident">ComputeCommand</span>::<span class="ident">PopDebugGroup</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">PopDebugGroup</span>;
+                <span class="ident">ComputeCommand::PopDebugGroup</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::PopDebugGroup</span>;
 
                     <span class="kw">if</span> <span class="ident">state</span>.<span class="ident">debug_scope_depth</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ComputePassErrorInner</span>::<span class="ident">InvalidPopDebugGroup</span>)
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ComputePassErrorInner::InvalidPopDebugGroup</span>)
                             .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>);
                     }
                     <span class="ident">state</span>.<span class="ident">debug_scope_depth</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
@@ -1432,26 +1432,26 @@
                         <span class="ident">raw</span>.<span class="ident">end_debug_marker</span>();
                     }
                 }
-                <span class="ident">ComputeCommand</span>::<span class="ident">InsertDebugMarker</span> { <span class="ident">color</span>, <span class="ident">len</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">ComputeCommand::InsertDebugMarker</span> { <span class="ident">color</span>, <span class="ident">len</span> } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span>
-                        <span class="ident">str</span>::<span class="ident">from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">base</span>.<span class="ident">string_data</span>[<span class="ident">string_offset</span>..<span class="ident">string_offset</span> <span class="op">+</span> <span class="ident">len</span>])
+                        <span class="ident">str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">base</span>.<span class="ident">string_data</span>[<span class="ident">string_offset</span>..<span class="ident">string_offset</span> <span class="op">+</span> <span class="ident">len</span>])
                             .<span class="ident">unwrap</span>();
                     <span class="ident">string_offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">len</span>;
                     <span class="kw">unsafe</span> { <span class="ident">raw</span>.<span class="ident">insert_debug_marker</span>(<span class="ident">label</span>, <span class="ident">color</span>) }
                 }
-                <span class="ident">ComputeCommand</span>::<span class="ident">WriteTimestamp</span> {
+                <span class="ident">ComputeCommand::WriteTimestamp</span> {
                     <span class="ident">query_set_id</span>,
                     <span class="ident">query_index</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">WriteTimestamp</span>;
+                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::WriteTimestamp</span>;
 
                     <span class="kw">let</span> <span class="ident">query_set</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
                         .<span class="ident">trackers</span>
                         .<span class="ident">query_sets</span>
                         .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">query_set_guard</span>, <span class="ident">query_set_id</span>, (), ())
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">e</span> {
-                            <span class="ident">UseExtendError</span>::<span class="ident">InvalidResource</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="ident">ComputePassErrorInner</span>::<span class="ident">InvalidQuerySet</span>(<span class="ident">query_set_id</span>)
+                            <span class="ident">UseExtendError::InvalidResource</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">ComputePassErrorInner::InvalidQuerySet</span>(<span class="ident">query_set_id</span>)
                             }
                             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
                         })
@@ -1461,19 +1461,19 @@
                         .<span class="ident">validate_and_write_timestamp</span>(<span class="ident">raw</span>, <span class="ident">query_set_id</span>, <span class="ident">query_index</span>, <span class="prelude-val">None</span>)
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
                 }
-                <span class="ident">ComputeCommand</span>::<span class="ident">BeginPipelineStatisticsQuery</span> {
+                <span class="ident">ComputeCommand::BeginPipelineStatisticsQuery</span> {
                     <span class="ident">query_set_id</span>,
                     <span class="ident">query_index</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">BeginPipelineStatisticsQuery</span>;
+                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::BeginPipelineStatisticsQuery</span>;
 
                     <span class="kw">let</span> <span class="ident">query_set</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
                         .<span class="ident">trackers</span>
                         .<span class="ident">query_sets</span>
                         .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">query_set_guard</span>, <span class="ident">query_set_id</span>, (), ())
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">e</span> {
-                            <span class="ident">UseExtendError</span>::<span class="ident">InvalidResource</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="ident">ComputePassErrorInner</span>::<span class="ident">InvalidQuerySet</span>(<span class="ident">query_set_id</span>)
+                            <span class="ident">UseExtendError::InvalidResource</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">ComputePassErrorInner::InvalidQuerySet</span>(<span class="ident">query_set_id</span>)
                             }
                             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
                         })
@@ -1489,8 +1489,8 @@
                         )
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
                 }
-                <span class="ident">ComputeCommand</span>::<span class="ident">EndPipelineStatisticsQuery</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope</span>::<span class="ident">EndPipelineStatisticsQuery</span>;
+                <span class="ident">ComputeCommand::EndPipelineStatisticsQuery</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::EndPipelineStatisticsQuery</span>;
 
                     <span class="ident">end_pipeline_statistics_query</span>(<span class="ident">raw</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">query_set_guard</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">active_query</span>)
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
@@ -1511,7 +1511,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">compute_ffi</span> {
     <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">ComputeCommand</span>, <span class="ident">ComputePass</span>};
     <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">id</span>, <span class="ident">RawString</span>};
-    <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">convert</span>::<span class="ident">TryInto</span>, <span class="ident">ffi</span>, <span class="ident">slice</span>};
+    <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">convert::TryInto</span>, <span class="ident">ffi</span>, <span class="ident">slice</span>};
     <span class="kw">use</span> <span class="ident">wgt</span>::{<span class="ident">BufferAddress</span>, <span class="ident">DynamicOffset</span>};
 
     <span class="doccomment">/// # Safety</span>
@@ -1522,11 +1522,11 @@
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">wgpu_compute_pass_set_bind_group</span>(
         <span class="ident">pass</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ComputePass</span>,
         <span class="ident">index</span>: <span class="ident">u32</span>,
-        <span class="ident">bind_group_id</span>: <span class="ident">id</span>::<span class="ident">BindGroupId</span>,
+        <span class="ident">bind_group_id</span>: <span class="ident">id::BindGroupId</span>,
         <span class="ident">offsets</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">DynamicOffset</span>,
         <span class="ident">offset_length</span>: <span class="ident">usize</span>,
     ) {
-        <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">SetBindGroup</span> {
+        <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand::SetBindGroup</span> {
             <span class="ident">index</span>: <span class="ident">index</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
             <span class="ident">num_dynamic_offsets</span>: <span class="ident">offset_length</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
             <span class="ident">bind_group_id</span>,
@@ -1534,18 +1534,18 @@
         <span class="kw">if</span> <span class="ident">offset_length</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="ident">pass</span>.<span class="ident">base</span>
                 .<span class="ident">dynamic_offsets</span>
-                .<span class="ident">extend_from_slice</span>(<span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">offsets</span>, <span class="ident">offset_length</span>));
+                .<span class="ident">extend_from_slice</span>(<span class="ident">slice::from_raw_parts</span>(<span class="ident">offsets</span>, <span class="ident">offset_length</span>));
         }
     }
 
     <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
     <span class="kw">pub</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">wgpu_compute_pass_set_pipeline</span>(
         <span class="ident">pass</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ComputePass</span>,
-        <span class="ident">pipeline_id</span>: <span class="ident">id</span>::<span class="ident">ComputePipelineId</span>,
+        <span class="ident">pipeline_id</span>: <span class="ident">id::ComputePipelineId</span>,
     ) {
         <span class="ident">pass</span>.<span class="ident">base</span>
             .<span class="ident">commands</span>
-            .<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">SetPipeline</span>(<span class="ident">pipeline_id</span>));
+            .<span class="ident">push</span>(<span class="ident">ComputeCommand::SetPipeline</span>(<span class="ident">pipeline_id</span>));
     }
 
     <span class="doccomment">/// # Safety</span>
@@ -1560,27 +1560,27 @@
         <span class="ident">data</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>,
     ) {
         <span class="macro">assert_eq!</span>(
-            <span class="ident">offset</span> <span class="op">&amp;</span> (<span class="ident">wgt</span>::<span class="ident">PUSH_CONSTANT_ALIGNMENT</span> <span class="op">-</span> <span class="number">1</span>),
+            <span class="ident">offset</span> <span class="op">&amp;</span> (<span class="ident">wgt::PUSH_CONSTANT_ALIGNMENT</span> <span class="op">-</span> <span class="number">1</span>),
             <span class="number">0</span>,
             <span class="string">&quot;Push constant offset must be aligned to 4 bytes.&quot;</span>
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">size_bytes</span> <span class="op">&amp;</span> (<span class="ident">wgt</span>::<span class="ident">PUSH_CONSTANT_ALIGNMENT</span> <span class="op">-</span> <span class="number">1</span>),
+            <span class="ident">size_bytes</span> <span class="op">&amp;</span> (<span class="ident">wgt::PUSH_CONSTANT_ALIGNMENT</span> <span class="op">-</span> <span class="number">1</span>),
             <span class="number">0</span>,
             <span class="string">&quot;Push constant size must be aligned to 4 bytes.&quot;</span>
         );
-        <span class="kw">let</span> <span class="ident">data_slice</span> <span class="op">=</span> <span class="ident">slice</span>::<span class="ident">from_raw_parts</span>(<span class="ident">data</span>, <span class="ident">size_bytes</span> <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="kw">let</span> <span class="ident">data_slice</span> <span class="op">=</span> <span class="ident">slice::from_raw_parts</span>(<span class="ident">data</span>, <span class="ident">size_bytes</span> <span class="kw">as</span> <span class="ident">usize</span>);
         <span class="kw">let</span> <span class="ident">value_offset</span> <span class="op">=</span> <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">push_constant_data</span>.<span class="ident">len</span>().<span class="ident">try_into</span>().<span class="ident">expect</span>(
             <span class="string">&quot;Ran out of push constant space. Don&#39;t set 4gb of push constants per ComputePass.&quot;</span>,
         );
 
         <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">push_constant_data</span>.<span class="ident">extend</span>(
             <span class="ident">data_slice</span>
-                .<span class="ident">chunks_exact</span>(<span class="ident">wgt</span>::<span class="ident">PUSH_CONSTANT_ALIGNMENT</span> <span class="kw">as</span> <span class="ident">usize</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">arr</span><span class="op">|</span> <span class="ident">u32</span>::<span class="ident">from_ne_bytes</span>([<span class="ident">arr</span>[<span class="number">0</span>], <span class="ident">arr</span>[<span class="number">1</span>], <span class="ident">arr</span>[<span class="number">2</span>], <span class="ident">arr</span>[<span class="number">3</span>]])),
+                .<span class="ident">chunks_exact</span>(<span class="ident">wgt::PUSH_CONSTANT_ALIGNMENT</span> <span class="kw">as</span> <span class="ident">usize</span>)
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">arr</span><span class="op">|</span> <span class="ident">u32::from_ne_bytes</span>([<span class="ident">arr</span>[<span class="number">0</span>], <span class="ident">arr</span>[<span class="number">1</span>], <span class="ident">arr</span>[<span class="number">2</span>], <span class="ident">arr</span>[<span class="number">3</span>]])),
         );
 
-        <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">SetPushConstant</span> {
+        <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand::SetPushConstant</span> {
             <span class="ident">offset</span>,
             <span class="ident">size_bytes</span>,
             <span class="ident">values_offset</span>: <span class="ident">value_offset</span>,
@@ -1596,18 +1596,18 @@
     ) {
         <span class="ident">pass</span>.<span class="ident">base</span>
             .<span class="ident">commands</span>
-            .<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">Dispatch</span>([<span class="ident">groups_x</span>, <span class="ident">groups_y</span>, <span class="ident">groups_z</span>]));
+            .<span class="ident">push</span>(<span class="ident">ComputeCommand::Dispatch</span>([<span class="ident">groups_x</span>, <span class="ident">groups_y</span>, <span class="ident">groups_z</span>]));
     }
 
     <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
     <span class="kw">pub</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">wgpu_compute_pass_dispatch_indirect</span>(
         <span class="ident">pass</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ComputePass</span>,
-        <span class="ident">buffer_id</span>: <span class="ident">id</span>::<span class="ident">BufferId</span>,
+        <span class="ident">buffer_id</span>: <span class="ident">id::BufferId</span>,
         <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
     ) {
         <span class="ident">pass</span>.<span class="ident">base</span>
             .<span class="ident">commands</span>
-            .<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">DispatchIndirect</span> { <span class="ident">buffer_id</span>, <span class="ident">offset</span> });
+            .<span class="ident">push</span>(<span class="ident">ComputeCommand::DispatchIndirect</span> { <span class="ident">buffer_id</span>, <span class="ident">offset</span> });
     }
 
     <span class="doccomment">/// # Safety</span>
@@ -1620,10 +1620,10 @@
         <span class="ident">label</span>: <span class="ident">RawString</span>,
         <span class="ident">color</span>: <span class="ident">u32</span>,
     ) {
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">CStr</span>::<span class="ident">from_ptr</span>(<span class="ident">label</span>).<span class="ident">to_bytes</span>();
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">ffi::CStr::from_ptr</span>(<span class="ident">label</span>).<span class="ident">to_bytes</span>();
         <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">string_data</span>.<span class="ident">extend_from_slice</span>(<span class="ident">bytes</span>);
 
-        <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">PushDebugGroup</span> {
+        <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand::PushDebugGroup</span> {
             <span class="ident">color</span>,
             <span class="ident">len</span>: <span class="ident">bytes</span>.<span class="ident">len</span>(),
         });
@@ -1631,7 +1631,7 @@
 
     <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
     <span class="kw">pub</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">wgpu_compute_pass_pop_debug_group</span>(<span class="ident">pass</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ComputePass</span>) {
-        <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">PopDebugGroup</span>);
+        <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand::PopDebugGroup</span>);
     }
 
     <span class="doccomment">/// # Safety</span>
@@ -1644,10 +1644,10 @@
         <span class="ident">label</span>: <span class="ident">RawString</span>,
         <span class="ident">color</span>: <span class="ident">u32</span>,
     ) {
-        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">ffi</span>::<span class="ident">CStr</span>::<span class="ident">from_ptr</span>(<span class="ident">label</span>).<span class="ident">to_bytes</span>();
+        <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">ffi::CStr::from_ptr</span>(<span class="ident">label</span>).<span class="ident">to_bytes</span>();
         <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">string_data</span>.<span class="ident">extend_from_slice</span>(<span class="ident">bytes</span>);
 
-        <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">InsertDebugMarker</span> {
+        <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand::InsertDebugMarker</span> {
             <span class="ident">color</span>,
             <span class="ident">len</span>: <span class="ident">bytes</span>.<span class="ident">len</span>(),
         });
@@ -1656,10 +1656,10 @@
     <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
     <span class="kw">pub</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">wgpu_compute_pass_write_timestamp</span>(
         <span class="ident">pass</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ComputePass</span>,
-        <span class="ident">query_set_id</span>: <span class="ident">id</span>::<span class="ident">QuerySetId</span>,
+        <span class="ident">query_set_id</span>: <span class="ident">id::QuerySetId</span>,
         <span class="ident">query_index</span>: <span class="ident">u32</span>,
     ) {
-        <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">WriteTimestamp</span> {
+        <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand::WriteTimestamp</span> {
             <span class="ident">query_set_id</span>,
             <span class="ident">query_index</span>,
         });
@@ -1668,12 +1668,12 @@
     <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
     <span class="kw">pub</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">wgpu_compute_pass_begin_pipeline_statistics_query</span>(
         <span class="ident">pass</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ComputePass</span>,
-        <span class="ident">query_set_id</span>: <span class="ident">id</span>::<span class="ident">QuerySetId</span>,
+        <span class="ident">query_set_id</span>: <span class="ident">id::QuerySetId</span>,
         <span class="ident">query_index</span>: <span class="ident">u32</span>,
     ) {
         <span class="ident">pass</span>.<span class="ident">base</span>
             .<span class="ident">commands</span>
-            .<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">BeginPipelineStatisticsQuery</span> {
+            .<span class="ident">push</span>(<span class="ident">ComputeCommand::BeginPipelineStatisticsQuery</span> {
                 <span class="ident">query_set_id</span>,
                 <span class="ident">query_index</span>,
             });
@@ -1683,7 +1683,7 @@
     <span class="kw">pub</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">wgpu_compute_pass_end_pipeline_statistics_query</span>(<span class="ident">pass</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ComputePass</span>) {
         <span class="ident">pass</span>.<span class="ident">base</span>
             .<span class="ident">commands</span>
-            .<span class="ident">push</span>(<span class="ident">ComputeCommand</span>::<span class="ident">EndPipelineStatisticsQuery</span>);
+            .<span class="ident">push</span>(<span class="ident">ComputeCommand::EndPipelineStatisticsQuery</span>);
     }
 }
 </pre></div>

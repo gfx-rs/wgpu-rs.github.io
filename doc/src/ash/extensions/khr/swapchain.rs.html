@@ -132,24 +132,24 @@
 <span id="129">129</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">prelude</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">version</span>::{<span class="ident">DeviceV1_0</span>, <span class="ident">InstanceV1_0</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">vk</span>;
-<span class="kw">use</span> <span class="kw">crate</span>::<span class="ident">RawPtr</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ffi</span>::<span class="ident">CStr</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">mem</span>;
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">ptr</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::prelude</span>::<span class="kw-2">*</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::version</span>::{<span class="ident">DeviceV1_0</span>, <span class="ident">InstanceV1_0</span>};
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::vk</span>;
+<span class="kw">use</span> <span class="kw">crate</span><span class="ident">::RawPtr</span>;
+<span class="kw">use</span> <span class="ident">std::ffi::CStr</span>;
+<span class="kw">use</span> <span class="ident">std::mem</span>;
+<span class="kw">use</span> <span class="ident">std::ptr</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Swapchain</span> {
-    <span class="ident">handle</span>: <span class="ident">vk</span>::<span class="ident">Device</span>,
-    <span class="ident">swapchain_fn</span>: <span class="ident">vk</span>::<span class="ident">KhrSwapchainFn</span>,
+    <span class="ident">handle</span>: <span class="ident">vk::Device</span>,
+    <span class="ident">swapchain_fn</span>: <span class="ident">vk::KhrSwapchainFn</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Swapchain</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">InstanceV1_0</span>, <span class="ident">D</span>: <span class="ident">DeviceV1_0</span><span class="op">&gt;</span>(<span class="ident">instance</span>: <span class="kw-2">&amp;</span><span class="ident">I</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">D</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Swapchain</span> {
-        <span class="kw">let</span> <span class="ident">swapchain_fn</span> <span class="op">=</span> <span class="ident">vk</span>::<span class="ident">KhrSwapchainFn</span>::<span class="ident">load</span>(<span class="op">|</span><span class="ident">name</span><span class="op">|</span> <span class="kw">unsafe</span> {
-            <span class="ident">mem</span>::<span class="ident">transmute</span>(<span class="ident">instance</span>.<span class="ident">get_device_proc_addr</span>(<span class="ident">device</span>.<span class="ident">handle</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>()))
+        <span class="kw">let</span> <span class="ident">swapchain_fn</span> <span class="op">=</span> <span class="ident">vk::KhrSwapchainFn::load</span>(<span class="op">|</span><span class="ident">name</span><span class="op">|</span> <span class="kw">unsafe</span> {
+            <span class="ident">mem::transmute</span>(<span class="ident">instance</span>.<span class="ident">get_device_proc_addr</span>(<span class="ident">device</span>.<span class="ident">handle</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>()))
         });
         <span class="ident">Swapchain</span> {
             <span class="ident">handle</span>: <span class="ident">device</span>.<span class="ident">handle</span>(),
@@ -158,14 +158,14 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">name</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span> {
-        <span class="ident">vk</span>::<span class="ident">KhrSwapchainFn</span>::<span class="ident">name</span>()
+        <span class="ident">vk::KhrSwapchainFn::name</span>()
     }
 
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkDestroySwapchainKHR.html&gt;&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_swapchain</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">swapchain</span>: <span class="ident">vk</span>::<span class="ident">SwapchainKHR</span>,
-        <span class="ident">allocation_callbacks</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">vk</span>::<span class="ident">AllocationCallbacks</span><span class="op">&gt;</span>,
+        <span class="ident">swapchain</span>: <span class="ident">vk::SwapchainKHR</span>,
+        <span class="ident">allocation_callbacks</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">vk::AllocationCallbacks</span><span class="op">&gt;</span>,
     ) {
         <span class="self">self</span>.<span class="ident">swapchain_fn</span>.<span class="ident">destroy_swapchain_khr</span>(
             <span class="self">self</span>.<span class="ident">handle</span>,
@@ -178,12 +178,12 @@
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkAcquireNextImageKHR.html&gt;&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">acquire_next_image</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">swapchain</span>: <span class="ident">vk</span>::<span class="ident">SwapchainKHR</span>,
+        <span class="ident">swapchain</span>: <span class="ident">vk::SwapchainKHR</span>,
         <span class="ident">timeout</span>: <span class="ident">u64</span>,
-        <span class="ident">semaphore</span>: <span class="ident">vk</span>::<span class="ident">Semaphore</span>,
-        <span class="ident">fence</span>: <span class="ident">vk</span>::<span class="ident">Fence</span>,
+        <span class="ident">semaphore</span>: <span class="ident">vk::Semaphore</span>,
+        <span class="ident">fence</span>: <span class="ident">vk::Fence</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">VkResult</span><span class="op">&lt;</span>(<span class="ident">u32</span>, <span class="ident">bool</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">mem</span>::<span class="ident">zeroed</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">index</span> <span class="op">=</span> <span class="ident">mem::zeroed</span>();
         <span class="kw">let</span> <span class="ident">err_code</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">swapchain_fn</span>.<span class="ident">acquire_next_image_khr</span>(
             <span class="self">self</span>.<span class="ident">handle</span>,
             <span class="ident">swapchain</span>,
@@ -193,8 +193,8 @@
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">index</span>,
         );
         <span class="kw">match</span> <span class="ident">err_code</span> {
-            <span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">SUCCESS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>((<span class="ident">index</span>, <span class="bool-val">false</span>)),
-            <span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">SUBOPTIMAL_KHR</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>((<span class="ident">index</span>, <span class="bool-val">true</span>)),
+            <span class="ident">vk::Result::SUCCESS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>((<span class="ident">index</span>, <span class="bool-val">false</span>)),
+            <span class="ident">vk::Result::SUBOPTIMAL_KHR</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>((<span class="ident">index</span>, <span class="bool-val">true</span>)),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">err_code</span>),
         }
     }
@@ -202,10 +202,10 @@
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCreateSwapchainKHR.html&gt;&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_swapchain</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">create_info</span>: <span class="kw-2">&amp;</span><span class="ident">vk</span>::<span class="ident">SwapchainCreateInfoKHR</span>,
-        <span class="ident">allocation_callbacks</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">vk</span>::<span class="ident">AllocationCallbacks</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">VkResult</span><span class="op">&lt;</span><span class="ident">vk</span>::<span class="ident">SwapchainKHR</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">swapchain</span> <span class="op">=</span> <span class="ident">mem</span>::<span class="ident">zeroed</span>();
+        <span class="ident">create_info</span>: <span class="kw-2">&amp;</span><span class="ident">vk::SwapchainCreateInfoKHR</span>,
+        <span class="ident">allocation_callbacks</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">vk::AllocationCallbacks</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">VkResult</span><span class="op">&lt;</span><span class="ident">vk::SwapchainKHR</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">swapchain</span> <span class="op">=</span> <span class="ident">mem::zeroed</span>();
         <span class="self">self</span>.<span class="ident">swapchain_fn</span>
             .<span class="ident">create_swapchain_khr</span>(
                 <span class="self">self</span>.<span class="ident">handle</span>,
@@ -220,13 +220,13 @@
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkQueuePresentKHR.html&gt;&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">queue_present</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">queue</span>: <span class="ident">vk</span>::<span class="ident">Queue</span>,
-        <span class="ident">create_info</span>: <span class="kw-2">&amp;</span><span class="ident">vk</span>::<span class="ident">PresentInfoKHR</span>,
+        <span class="ident">queue</span>: <span class="ident">vk::Queue</span>,
+        <span class="ident">create_info</span>: <span class="kw-2">&amp;</span><span class="ident">vk::PresentInfoKHR</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">VkResult</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">err_code</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">swapchain_fn</span>.<span class="ident">queue_present_khr</span>(<span class="ident">queue</span>, <span class="ident">create_info</span>);
         <span class="kw">match</span> <span class="ident">err_code</span> {
-            <span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">SUCCESS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
-            <span class="ident">vk</span>::<span class="prelude-ty">Result</span>::<span class="ident">SUBOPTIMAL_KHR</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+            <span class="ident">vk::Result::SUCCESS</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
+            <span class="ident">vk::Result::SUBOPTIMAL_KHR</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">err_code</span>),
         }
     }
@@ -234,14 +234,14 @@
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetSwapchainImagesKHR.html&gt;&quot;</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_swapchain_images</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">swapchain</span>: <span class="ident">vk</span>::<span class="ident">SwapchainKHR</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">VkResult</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">vk</span>::<span class="ident">Image</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="ident">swapchain</span>: <span class="ident">vk::SwapchainKHR</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">VkResult</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">vk::Image</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">count</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="self">self</span>.<span class="ident">swapchain_fn</span>
-            .<span class="ident">get_swapchain_images_khr</span>(<span class="self">self</span>.<span class="ident">handle</span>, <span class="ident">swapchain</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">count</span>, <span class="ident">ptr</span>::<span class="ident">null_mut</span>())
+            .<span class="ident">get_swapchain_images_khr</span>(<span class="self">self</span>.<span class="ident">handle</span>, <span class="ident">swapchain</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">count</span>, <span class="ident">ptr::null_mut</span>())
             .<span class="ident">result</span>()<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="ident">with_capacity</span>(<span class="ident">count</span> <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">count</span> <span class="kw">as</span> <span class="ident">usize</span>);
         <span class="kw">let</span> <span class="ident">err_code</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">swapchain_fn</span>.<span class="ident">get_swapchain_images_khr</span>(
             <span class="self">self</span>.<span class="ident">handle</span>,
             <span class="ident">swapchain</span>,
@@ -252,11 +252,11 @@
         <span class="ident">err_code</span>.<span class="ident">result_with_success</span>(<span class="ident">v</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">vk</span>::<span class="ident">KhrSwapchainFn</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">vk::KhrSwapchainFn</span> {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">swapchain_fn</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">device</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vk</span>::<span class="ident">Device</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">device</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vk::Device</span> {
         <span class="self">self</span>.<span class="ident">handle</span>
     }
 }

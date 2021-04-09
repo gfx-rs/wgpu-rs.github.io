@@ -287,39 +287,39 @@
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{<span class="ident">CreateBindGroupLayoutError</span>, <span class="ident">CreatePipelineLayoutError</span>},
     <span class="ident">device</span>::{<span class="ident">DeviceError</span>, <span class="ident">RenderPassContext</span>},
-    <span class="ident">hub</span>::<span class="ident">Resource</span>,
+    <span class="ident">hub::Resource</span>,
     <span class="ident">id</span>::{<span class="ident">DeviceId</span>, <span class="ident">PipelineLayoutId</span>, <span class="ident">ShaderModuleId</span>},
     <span class="ident">validation</span>, <span class="ident">Label</span>, <span class="ident">LifeGuard</span>, <span class="ident">Stored</span>, <span class="ident">DOWNLEVEL_ERROR_WARNING_MESSAGE</span>,
 };
-<span class="kw">use</span> <span class="ident">std</span>::<span class="ident">borrow</span>::<span class="ident">Cow</span>;
-<span class="kw">use</span> <span class="ident">thiserror</span>::<span class="ident">Error</span>;
+<span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
+<span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ShaderModuleSource</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">SpirV</span>(<span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, [<span class="ident">u32</span>]<span class="op">&gt;</span>),
     <span class="ident">Wgsl</span>(<span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">str</span><span class="op">&gt;</span>),
-    <span class="ident">Naga</span>(<span class="ident">naga</span>::<span class="ident">Module</span>),
+    <span class="ident">Naga</span>(<span class="ident">naga::Module</span>),
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderModuleDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>), <span class="ident">serde</span>(<span class="ident">default</span>))]</span>
-    <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">wgt</span>::<span class="ident">ShaderFlags</span>,
+    <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">wgt::ShaderFlags</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderModule</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">B</span>::<span class="ident">ShaderModule</span>,
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderModule</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">B::ShaderModule</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">device_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">DeviceId</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">interface</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">validation</span>::<span class="ident">Interface</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">interface</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">validation::Interface</span><span class="op">&gt;</span>,
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertions</span>)]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">label</span>: <span class="ident">String</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> <span class="ident">Resource</span> <span class="kw">for</span> <span class="ident">ShaderModule</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> <span class="ident">Resource</span> <span class="kw">for</span> <span class="ident">ShaderModule</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
     <span class="kw">const</span> <span class="ident">TYPE</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;ShaderModule&quot;</span>;
 
     <span class="kw">fn</span> <span class="ident">life_guard</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">LifeGuard</span> {
@@ -341,15 +341,15 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">Device</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">DeviceError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">Validation</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">naga</span>::<span class="ident">valid</span>::<span class="ident">ValidationError</span>),
+    <span class="ident">Validation</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">naga::valid::ValidationError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;missing required device features {0:?}&quot;</span>)]</span>
-    <span class="ident">MissingFeature</span>(<span class="ident">wgt</span>::<span class="ident">Features</span>),
+    <span class="ident">MissingFeature</span>(<span class="ident">wgt::Features</span>),
 }
 
 <span class="doccomment">/// Describes a programmable pipeline stage.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ProgrammableStageDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// The compiled shader module for this stage.</span>
     <span class="kw">pub</span> <span class="ident">module</span>: <span class="ident">ShaderModuleId</span>,
@@ -366,7 +366,7 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;missing IDs for deriving {0} bind groups&quot;</span>)]</span>
     <span class="ident">MissingIds</span>(<span class="ident">ImplicitBindGroupCount</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;unable to reflect the shader {0:?} interface&quot;</span>)]</span>
-    <span class="ident">ReflectionError</span>(<span class="ident">wgt</span>::<span class="ident">ShaderStage</span>),
+    <span class="ident">ReflectionError</span>(<span class="ident">wgt::ShaderStage</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">BindGroup</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">CreateBindGroupLayoutError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
@@ -375,8 +375,8 @@
 
 <span class="doccomment">/// Describes a compute pipeline.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ComputePipelineDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The layout of bind groups for this pipeline.</span>
@@ -394,7 +394,7 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;unable to derive an implicit layout&quot;</span>)]</span>
     <span class="ident">Implicit</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">ImplicitLayoutError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">Stage</span>(<span class="ident">validation</span>::<span class="ident">StageError</span>),
+    <span class="ident">Stage</span>(<span class="ident">validation::StageError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Internal error: {0}&quot;</span>)]</span>
     <span class="ident">Internal</span>(<span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(
@@ -405,14 +405,14 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ComputePipeline</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">B</span>::<span class="ident">ComputePipeline</span>,
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ComputePipeline</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">B::ComputePipeline</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">layout_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">PipelineLayoutId</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">device_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">DeviceId</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> <span class="ident">Resource</span> <span class="kw">for</span> <span class="ident">ComputePipeline</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> <span class="ident">Resource</span> <span class="kw">for</span> <span class="ident">ComputePipeline</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
     <span class="kw">const</span> <span class="ident">TYPE</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;ComputePipeline&quot;</span>;
 
     <span class="kw">fn</span> <span class="ident">life_guard</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">LifeGuard</span> {
@@ -422,21 +422,21 @@
 
 <span class="doccomment">/// Describes how the vertex buffer is interpreted.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VertexBufferLayout</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// The stride, in bytes, between elements of this buffer.</span>
-    <span class="kw">pub</span> <span class="ident">array_stride</span>: <span class="ident">wgt</span>::<span class="ident">BufferAddress</span>,
+    <span class="kw">pub</span> <span class="ident">array_stride</span>: <span class="ident">wgt::BufferAddress</span>,
     <span class="doccomment">/// How often this vertex buffer is &quot;stepped&quot; forward.</span>
-    <span class="kw">pub</span> <span class="ident">step_mode</span>: <span class="ident">wgt</span>::<span class="ident">InputStepMode</span>,
+    <span class="kw">pub</span> <span class="ident">step_mode</span>: <span class="ident">wgt::InputStepMode</span>,
     <span class="doccomment">/// The list of attributes which comprise a single vertex.</span>
-    <span class="kw">pub</span> <span class="ident">attributes</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, [<span class="ident">wgt</span>::<span class="ident">VertexAttribute</span>]<span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">attributes</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, [<span class="ident">wgt::VertexAttribute</span>]<span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// Describes the vertex process in a render pipeline.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VertexState</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// The compiled vertex stage and its entry point.</span>
     <span class="kw">pub</span> <span class="ident">stage</span>: <span class="ident">ProgrammableStageDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
@@ -446,19 +446,19 @@
 
 <span class="doccomment">/// Describes fragment processing in a render pipeline.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FragmentState</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// The compiled fragment stage and its entry point.</span>
     <span class="kw">pub</span> <span class="ident">stage</span>: <span class="ident">ProgrammableStageDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The effect of draw calls on the color aspect of the output target.</span>
-    <span class="kw">pub</span> <span class="ident">targets</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, [<span class="ident">wgt</span>::<span class="ident">ColorTargetState</span>]<span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">targets</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, [<span class="ident">wgt::ColorTargetState</span>]<span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// Describes a render (graphics) pipeline.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Serialize</span>))]</span>
-<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde</span>::<span class="ident">Deserialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderPipelineDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The layout of bind groups for this pipeline.</span>
@@ -467,13 +467,13 @@
     <span class="kw">pub</span> <span class="ident">vertex</span>: <span class="ident">VertexState</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The properties of the pipeline at the primitive assembly and rasterization level.</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>), <span class="ident">serde</span>(<span class="ident">default</span>))]</span>
-    <span class="kw">pub</span> <span class="ident">primitive</span>: <span class="ident">wgt</span>::<span class="ident">PrimitiveState</span>,
+    <span class="kw">pub</span> <span class="ident">primitive</span>: <span class="ident">wgt::PrimitiveState</span>,
     <span class="doccomment">/// The effect of draw calls on the depth and stencil aspects of the output target, if any.</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>), <span class="ident">serde</span>(<span class="ident">default</span>))]</span>
-    <span class="kw">pub</span> <span class="ident">depth_stencil</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">DepthStencilState</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">depth_stencil</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">wgt::DepthStencilState</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The multi-sampling properties of the pipeline.</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>), <span class="ident">serde</span>(<span class="ident">default</span>))]</span>
-    <span class="kw">pub</span> <span class="ident">multisample</span>: <span class="ident">wgt</span>::<span class="ident">MultisampleState</span>,
+    <span class="kw">pub</span> <span class="ident">multisample</span>: <span class="ident">wgt::MultisampleState</span>,
     <span class="doccomment">/// The fragment processing state for this pipeline.</span>
     <span class="kw">pub</span> <span class="ident">fragment</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FragmentState</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
@@ -501,36 +501,36 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;vertex buffer {index} stride {stride} does not respect `VERTEX_STRIDE_ALIGNMENT`&quot;</span>)]</span>
     <span class="ident">UnalignedVertexStride</span> {
         <span class="ident">index</span>: <span class="ident">u32</span>,
-        <span class="ident">stride</span>: <span class="ident">wgt</span>::<span class="ident">BufferAddress</span>,
+        <span class="ident">stride</span>: <span class="ident">wgt::BufferAddress</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;vertex attribute at location {location} has invalid offset {offset}&quot;</span>)]</span>
     <span class="ident">InvalidVertexAttributeOffset</span> {
-        <span class="ident">location</span>: <span class="ident">wgt</span>::<span class="ident">ShaderLocation</span>,
-        <span class="ident">offset</span>: <span class="ident">wgt</span>::<span class="ident">BufferAddress</span>,
+        <span class="ident">location</span>: <span class="ident">wgt::ShaderLocation</span>,
+        <span class="ident">offset</span>: <span class="ident">wgt::BufferAddress</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;strip index format was not set to None but to {strip_index_format:?} while using the non-strip topology {topology:?}&quot;</span>)]</span>
     <span class="ident">StripIndexFormatForNonStripTopology</span> {
-        <span class="ident">strip_index_format</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">IndexFormat</span><span class="op">&gt;</span>,
-        <span class="ident">topology</span>: <span class="ident">wgt</span>::<span class="ident">PrimitiveTopology</span>,
+        <span class="ident">strip_index_format</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">wgt::IndexFormat</span><span class="op">&gt;</span>,
+        <span class="ident">topology</span>: <span class="ident">wgt::PrimitiveTopology</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Conservative Rasterization is only supported for wgt::PolygonMode::Fill&quot;</span>)]</span>
     <span class="ident">ConservativeRasterizationNonFillPolygonMode</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;missing required device features {0:?}&quot;</span>)]</span>
-    <span class="ident">MissingFeature</span>(<span class="ident">wgt</span>::<span class="ident">Features</span>),
+    <span class="ident">MissingFeature</span>(<span class="ident">wgt::Features</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;error in stage {flag:?}&quot;</span>)]</span>
     <span class="ident">Stage</span> {
-        <span class="ident">flag</span>: <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>,
+        <span class="ident">flag</span>: <span class="ident">wgt::ShaderStage</span>,
         <span class="attribute">#[<span class="ident">source</span>]</span>
-        <span class="ident">error</span>: <span class="ident">validation</span>::<span class="ident">StageError</span>,
+        <span class="ident">error</span>: <span class="ident">validation::StageError</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Internal error in stage {stage:?}: {error}&quot;</span>)]</span>
     <span class="ident">Internal</span> {
-        <span class="ident">stage</span>: <span class="ident">wgt</span>::<span class="ident">ShaderStage</span>,
+        <span class="ident">stage</span>: <span class="ident">wgt::ShaderStage</span>,
         <span class="ident">error</span>: <span class="ident">String</span>,
     },
 }
 
-<span class="ident">bitflags</span>::<span class="macro">bitflags!</span> {
+<span class="macro">bitflags::bitflags!</span> {
     <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PipelineFlags</span>: <span class="ident">u32</span> {
         <span class="kw">const</span> <span class="ident">BLEND_COLOR</span> <span class="op">=</span> <span class="number">1</span>;
@@ -540,18 +540,18 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderPipeline</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">B</span>::<span class="ident">GraphicsPipeline</span>,
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderPipeline</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">B::GraphicsPipeline</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">layout_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">PipelineLayoutId</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">device_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">DeviceId</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">pass_context</span>: <span class="ident">RenderPassContext</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">flags</span>: <span class="ident">PipelineFlags</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">strip_index_format</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">wgt</span>::<span class="ident">IndexFormat</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">vertex_strides</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">wgt</span>::<span class="ident">BufferAddress</span>, <span class="ident">wgt</span>::<span class="ident">InputStepMode</span>)<span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">strip_index_format</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">wgt::IndexFormat</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">vertex_strides</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">wgt::BufferAddress</span>, <span class="ident">wgt::InputStepMode</span>)<span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal</span>::<span class="ident">Backend</span><span class="op">&gt;</span> <span class="ident">Resource</span> <span class="kw">for</span> <span class="ident">RenderPipeline</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> <span class="ident">Resource</span> <span class="kw">for</span> <span class="ident">RenderPipeline</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
     <span class="kw">const</span> <span class="ident">TYPE</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;RenderPipeline&quot;</span>;
 
     <span class="kw">fn</span> <span class="ident">life_guard</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">LifeGuard</span> {
