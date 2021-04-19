@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/98252cf/src/back/spv/writer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>writer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/9cd6fd9/src/back/spv/writer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>writer.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 8]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">   1</span>
@@ -2637,6 +2637,91 @@
 <span id="2634">2634</span>
 <span id="2635">2635</span>
 <span id="2636">2636</span>
+<span id="2637">2637</span>
+<span id="2638">2638</span>
+<span id="2639">2639</span>
+<span id="2640">2640</span>
+<span id="2641">2641</span>
+<span id="2642">2642</span>
+<span id="2643">2643</span>
+<span id="2644">2644</span>
+<span id="2645">2645</span>
+<span id="2646">2646</span>
+<span id="2647">2647</span>
+<span id="2648">2648</span>
+<span id="2649">2649</span>
+<span id="2650">2650</span>
+<span id="2651">2651</span>
+<span id="2652">2652</span>
+<span id="2653">2653</span>
+<span id="2654">2654</span>
+<span id="2655">2655</span>
+<span id="2656">2656</span>
+<span id="2657">2657</span>
+<span id="2658">2658</span>
+<span id="2659">2659</span>
+<span id="2660">2660</span>
+<span id="2661">2661</span>
+<span id="2662">2662</span>
+<span id="2663">2663</span>
+<span id="2664">2664</span>
+<span id="2665">2665</span>
+<span id="2666">2666</span>
+<span id="2667">2667</span>
+<span id="2668">2668</span>
+<span id="2669">2669</span>
+<span id="2670">2670</span>
+<span id="2671">2671</span>
+<span id="2672">2672</span>
+<span id="2673">2673</span>
+<span id="2674">2674</span>
+<span id="2675">2675</span>
+<span id="2676">2676</span>
+<span id="2677">2677</span>
+<span id="2678">2678</span>
+<span id="2679">2679</span>
+<span id="2680">2680</span>
+<span id="2681">2681</span>
+<span id="2682">2682</span>
+<span id="2683">2683</span>
+<span id="2684">2684</span>
+<span id="2685">2685</span>
+<span id="2686">2686</span>
+<span id="2687">2687</span>
+<span id="2688">2688</span>
+<span id="2689">2689</span>
+<span id="2690">2690</span>
+<span id="2691">2691</span>
+<span id="2692">2692</span>
+<span id="2693">2693</span>
+<span id="2694">2694</span>
+<span id="2695">2695</span>
+<span id="2696">2696</span>
+<span id="2697">2697</span>
+<span id="2698">2698</span>
+<span id="2699">2699</span>
+<span id="2700">2700</span>
+<span id="2701">2701</span>
+<span id="2702">2702</span>
+<span id="2703">2703</span>
+<span id="2704">2704</span>
+<span id="2705">2705</span>
+<span id="2706">2706</span>
+<span id="2707">2707</span>
+<span id="2708">2708</span>
+<span id="2709">2709</span>
+<span id="2710">2710</span>
+<span id="2711">2711</span>
+<span id="2712">2712</span>
+<span id="2713">2713</span>
+<span id="2714">2714</span>
+<span id="2715">2715</span>
+<span id="2716">2716</span>
+<span id="2717">2717</span>
+<span id="2718">2718</span>
+<span id="2719">2719</span>
+<span id="2720">2720</span>
+<span id="2721">2721</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">super</span>::{
     <span class="ident">helpers::map_storage_class</span>, <span class="ident">Instruction</span>, <span class="ident">LogicalLayout</span>, <span class="ident">Options</span>, <span class="ident">PhysicalLayout</span>, <span class="ident">WriterFlags</span>,
@@ -2710,6 +2795,7 @@
     <span class="ident">signature</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
     <span class="ident">parameters</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Instruction</span><span class="op">&gt;</span>,
     <span class="ident">variables</span>: <span class="kw">crate</span><span class="ident">::FastHashMap</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::LocalVariable</span><span class="op">&gt;</span>, <span class="ident">LocalVariable</span><span class="op">&gt;</span>,
+    <span class="ident">internal_variables</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">LocalVariable</span><span class="op">&gt;</span>,
     <span class="ident">blocks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Block</span><span class="op">&gt;</span>,
     <span class="ident">entry_point_context</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">EntryPointContext</span><span class="op">&gt;</span>,
 }
@@ -2725,6 +2811,9 @@
             <span class="kw">if</span> <span class="ident">index</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
                 <span class="kw">for</span> <span class="ident">local_var</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">variables</span>.<span class="ident">values</span>() {
                     <span class="ident">local_var</span>.<span class="ident">instruction</span>.<span class="ident">to_words</span>(<span class="ident">sink</span>);
+                }
+                <span class="kw">for</span> <span class="ident">internal_var</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">internal_variables</span>.<span class="ident">iter</span>() {
+                    <span class="ident">internal_var</span>.<span class="ident">instruction</span>.<span class="ident">to_words</span>(<span class="ident">sink</span>);
                 }
             }
             <span class="kw">for</span> <span class="ident">instruction</span> <span class="kw">in</span> <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">iter</span>() {
@@ -2915,7 +3004,8 @@
     <span class="ident">global_variables</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">GlobalVariable</span><span class="op">&gt;</span>,
     <span class="ident">cached</span>: <span class="ident">CachedExpressions</span>,
     <span class="ident">gl450_ext_inst_id</span>: <span class="ident">Word</span>,
-    <span class="ident">temp_chain</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
+    <span class="comment">// Just a temporary list of SPIR-V ids</span>
+    <span class="ident">temp_list</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Writer</span> {
@@ -2947,7 +3037,7 @@
             <span class="ident">global_variables</span>: <span class="ident">Vec::new</span>(),
             <span class="ident">cached</span>: <span class="ident">CachedExpressions::default</span>(),
             <span class="ident">gl450_ext_inst_id</span>,
-            <span class="ident">temp_chain</span>: <span class="ident">Vec::new</span>(),
+            <span class="ident">temp_list</span>: <span class="ident">Vec::new</span>(),
         })
     }
 
@@ -2976,6 +3066,20 @@
                 <span class="ident">LookupType::Local</span>(<span class="ident">local_ty</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">write_type_declaration_local</span>(<span class="ident">arena</span>, <span class="ident">local_ty</span>),
             }
         }
+    }
+
+    <span class="kw">fn</span> <span class="ident">get_expression_type_id</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">arena</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Type</span><span class="op">&gt;</span>,
+        <span class="ident">tr</span>: <span class="kw-2">&amp;</span><span class="ident">TypeResolution</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">lookup_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">tr</span> {
+            <span class="ident">TypeResolution::Handle</span>(<span class="ident">ty_handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LookupType::Handle</span>(<span class="ident">ty_handle</span>),
+            <span class="ident">TypeResolution::Value</span>(<span class="kw-2">ref</span> <span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">LookupType::Local</span>(<span class="self">self</span>.<span class="ident">physical_layout</span>.<span class="ident">make_local</span>(<span class="ident">inner</span>).<span class="ident">unwrap</span>())
+            }
+        };
+        <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="ident">arena</span>, <span class="ident">lookup_ty</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">get_pointer_id</span>(
@@ -3036,6 +3140,10 @@
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_constant</span>(<span class="ident">type_id</span>, <span class="kw-2">&amp;</span>[<span class="ident">index</span>]);
         <span class="self">self</span>.<span class="ident">index_constant_ids</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="ident">id</span>;
         <span class="prelude-val">Ok</span>(<span class="ident">id</span>)
+    }
+
+    <span class="kw">fn</span> <span class="ident">decorate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Word</span>, <span class="ident">decoration</span>: <span class="ident">spirv::Decoration</span>, <span class="ident">operands</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>]) {
+        <span class="self">self</span>.<span class="ident">annotations</span>.<span class="ident">push</span>(<span class="ident">Instruction::decorate</span>(<span class="ident">id</span>, <span class="ident">decoration</span>, <span class="ident">operands</span>));
     }
 
     <span class="kw">fn</span> <span class="ident">write_function</span>(
@@ -3288,11 +3396,6 @@
         };
         <span class="self">self</span>.<span class="ident">check</span>(<span class="ident">exec_model</span>.<span class="ident">required_capabilities</span>())<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">WriterFlags::DEBUG</span>) {
-            <span class="self">self</span>.<span class="ident">debugs</span>
-                .<span class="ident">push</span>(<span class="ident">Instruction::name</span>(<span class="ident">function_id</span>, <span class="kw-2">&amp;</span><span class="ident">entry_point</span>.<span class="ident">name</span>));
-        }
-
         <span class="prelude-val">Ok</span>(<span class="ident">Instruction::entry_point</span>(
             <span class="ident">exec_model</span>,
             <span class="ident">function_id</span>,
@@ -3482,11 +3585,7 @@
             <span class="kw">crate</span><span class="ident">::TypeInner::Sampler</span> { <span class="ident">comparison</span>: <span class="kw">_</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Instruction::type_sampler</span>(<span class="ident">id</span>),
             <span class="kw">crate</span><span class="ident">::TypeInner::Array</span> { <span class="ident">base</span>, <span class="ident">size</span>, <span class="ident">stride</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="ident">decorate_layout</span> {
-                    <span class="self">self</span>.<span class="ident">annotations</span>.<span class="ident">push</span>(<span class="ident">Instruction::decorate</span>(
-                        <span class="ident">id</span>,
-                        <span class="ident">Decoration::ArrayStride</span>,
-                        <span class="kw-2">&amp;</span>[<span class="ident">stride</span>],
-                    ));
+                    <span class="self">self</span>.<span class="ident">decorate</span>(<span class="ident">id</span>, <span class="ident">Decoration::ArrayStride</span>, <span class="kw-2">&amp;</span>[<span class="ident">stride</span>]);
                 }
 
                 <span class="kw">let</span> <span class="ident">type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="ident">arena</span>, <span class="ident">LookupType::Handle</span>(<span class="ident">base</span>))<span class="question-mark">?</span>;
@@ -3504,8 +3603,7 @@
                 <span class="ident">span</span>: <span class="kw">_</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span><span class="ident">::StructLevel::Root</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">level</span> {
-                    <span class="self">self</span>.<span class="ident">annotations</span>
-                        .<span class="ident">push</span>(<span class="ident">Instruction::decorate</span>(<span class="ident">id</span>, <span class="ident">Decoration::Block</span>, <span class="kw-2">&amp;</span>[]));
+                    <span class="self">self</span>.<span class="ident">decorate</span>(<span class="ident">id</span>, <span class="ident">Decoration::Block</span>, <span class="kw-2">&amp;</span>[]);
                 }
 
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">member_ids</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">members</span>.<span class="ident">len</span>());
@@ -3526,11 +3624,17 @@
                         }
                     }
 
+                    <span class="comment">// The matrix decorations also go on arrays of matrices,</span>
+                    <span class="comment">// so lets check this first.</span>
+                    <span class="kw">let</span> <span class="ident">member_array_subty_inner</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">arena</span>[<span class="ident">member</span>.<span class="ident">ty</span>].<span class="ident">inner</span> {
+                        <span class="kw">crate</span><span class="ident">::TypeInner::Array</span> { <span class="ident">base</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">arena</span>[<span class="ident">base</span>].<span class="ident">inner</span>,
+                        <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">other</span>,
+                    };
                     <span class="kw">if</span> <span class="kw">let</span> <span class="kw">crate</span><span class="ident">::TypeInner::Matrix</span> {
                         <span class="ident">columns</span>,
                         <span class="ident">rows</span>: <span class="kw">_</span>,
                         <span class="ident">width</span>,
-                    } <span class="op">=</span> <span class="ident">arena</span>[<span class="ident">member</span>.<span class="ident">ty</span>].<span class="ident">inner</span>
+                    } <span class="op">=</span> <span class="kw-2">*</span><span class="ident">member_array_subty_inner</span>
                     {
                         <span class="kw">let</span> <span class="ident">byte_stride</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">columns</span> {
                             <span class="kw">crate</span><span class="ident">::VectorSize::Bi</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span> <span class="op">*</span> <span class="ident">width</span>,
@@ -3711,19 +3815,29 @@
         <span class="kw">use</span> <span class="ident">spirv</span>::{<span class="ident">BuiltIn</span>, <span class="ident">Decoration</span>};
 
         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">binding</span> {
-            <span class="kw">crate</span><span class="ident">::Binding::Location</span>(<span class="ident">location</span>, <span class="ident">interpolation</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">annotations</span>
-                    .<span class="ident">push</span>(<span class="ident">Instruction::decorate</span>(<span class="ident">id</span>, <span class="ident">Decoration::Location</span>, <span class="kw-2">&amp;</span>[<span class="ident">location</span>]));
-                <span class="kw">let</span> <span class="ident">interp_decoration</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">interpolation</span> {
-                    <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::Interpolation::Linear</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Decoration::NoPerspective</span>),
-                    <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::Interpolation::Flat</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Decoration::Flat</span>),
-                    <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::Interpolation::Centroid</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Decoration::Centroid</span>),
-                    <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::Interpolation::Sample</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">Decoration::Sample</span>),
-                    <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::Interpolation::Perspective</span>) <span class="op">|</span> <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-                };
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">decoration</span>) <span class="op">=</span> <span class="ident">interp_decoration</span> {
-                    <span class="self">self</span>.<span class="ident">annotations</span>
-                        .<span class="ident">push</span>(<span class="ident">Instruction::decorate</span>(<span class="ident">id</span>, <span class="ident">decoration</span>, <span class="kw-2">&amp;</span>[]));
+            <span class="kw">crate</span><span class="ident">::Binding::Location</span> { <span class="ident">location</span>, <span class="ident">interpolation</span>, <span class="ident">sampling</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">decorate</span>(<span class="ident">id</span>, <span class="ident">Decoration::Location</span>, <span class="kw-2">&amp;</span>[<span class="ident">location</span>]);
+
+                <span class="kw">match</span> <span class="ident">interpolation</span> {
+                    <span class="comment">// Perspective-correct interpolation is the default in SPIR-V.</span>
+                    <span class="prelude-val">None</span> <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::Interpolation::Perspective</span>) <span class="op">=</span><span class="op">&gt;</span> (),
+                    <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::Interpolation::Flat</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="self">self</span>.<span class="ident">decorate</span>(<span class="ident">id</span>, <span class="ident">Decoration::Flat</span>, <span class="kw-2">&amp;</span>[]);
+                    }
+                    <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::Interpolation::Linear</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="self">self</span>.<span class="ident">decorate</span>(<span class="ident">id</span>, <span class="ident">Decoration::NoPerspective</span>, <span class="kw-2">&amp;</span>[]);
+                    }
+                }
+
+                <span class="kw">match</span> <span class="ident">sampling</span> {
+                    <span class="comment">// Center sampling is the default in SPIR-V.</span>
+                    <span class="prelude-val">None</span> <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::Sampling::Center</span>) <span class="op">=</span><span class="op">&gt;</span> (),
+                    <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::Sampling::Centroid</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="self">self</span>.<span class="ident">decorate</span>(<span class="ident">id</span>, <span class="ident">Decoration::Centroid</span>, <span class="kw-2">&amp;</span>[]);
+                    }
+                    <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::Sampling::Sample</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="self">self</span>.<span class="ident">decorate</span>(<span class="ident">id</span>, <span class="ident">Decoration::Sample</span>, <span class="kw-2">&amp;</span>[]);
+                    }
                 }
             }
             <span class="kw">crate</span><span class="ident">::Binding::BuiltIn</span>(<span class="ident">built_in</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -3756,11 +3870,7 @@
                     <span class="ident">Bi::WorkGroupSize</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BuiltIn::WorkgroupSize</span>,
                 };
 
-                <span class="self">self</span>.<span class="ident">annotations</span>.<span class="ident">push</span>(<span class="ident">Instruction::decorate</span>(
-                    <span class="ident">id</span>,
-                    <span class="ident">Decoration::BuiltIn</span>,
-                    <span class="kw-2">&amp;</span>[<span class="ident">built_in</span> <span class="kw">as</span> <span class="ident">u32</span>],
-                ));
+                <span class="self">self</span>.<span class="ident">decorate</span>(<span class="ident">id</span>, <span class="ident">Decoration::BuiltIn</span>, <span class="kw-2">&amp;</span>[<span class="ident">built_in</span> <span class="kw">as</span> <span class="ident">u32</span>]);
             }
         }
 
@@ -3797,21 +3907,12 @@
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
         };
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">decoration</span>) <span class="op">=</span> <span class="ident">access_decoration</span> {
-            <span class="self">self</span>.<span class="ident">annotations</span>
-                .<span class="ident">push</span>(<span class="ident">Instruction::decorate</span>(<span class="ident">id</span>, <span class="ident">decoration</span>, <span class="kw-2">&amp;</span>[]));
+            <span class="self">self</span>.<span class="ident">decorate</span>(<span class="ident">id</span>, <span class="ident">decoration</span>, <span class="kw-2">&amp;</span>[]);
         }
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">res_binding</span>) <span class="op">=</span> <span class="ident">global_variable</span>.<span class="ident">binding</span> {
-            <span class="self">self</span>.<span class="ident">annotations</span>.<span class="ident">push</span>(<span class="ident">Instruction::decorate</span>(
-                <span class="ident">id</span>,
-                <span class="ident">Decoration::DescriptorSet</span>,
-                <span class="kw-2">&amp;</span>[<span class="ident">res_binding</span>.<span class="ident">group</span>],
-            ));
-            <span class="self">self</span>.<span class="ident">annotations</span>.<span class="ident">push</span>(<span class="ident">Instruction::decorate</span>(
-                <span class="ident">id</span>,
-                <span class="ident">Decoration::Binding</span>,
-                <span class="kw-2">&amp;</span>[<span class="ident">res_binding</span>.<span class="ident">binding</span>],
-            ));
+            <span class="self">self</span>.<span class="ident">decorate</span>(<span class="ident">id</span>, <span class="ident">Decoration::DescriptorSet</span>, <span class="kw-2">&amp;</span>[<span class="ident">res_binding</span>.<span class="ident">group</span>]);
+            <span class="self">self</span>.<span class="ident">decorate</span>(<span class="ident">id</span>, <span class="ident">Decoration::Binding</span>, <span class="kw-2">&amp;</span>[<span class="ident">res_binding</span>.<span class="ident">binding</span>]);
         }
 
         <span class="comment">// TODO Initializer is optional and not (yet) included in the IR</span>
@@ -3836,21 +3937,6 @@
                 <span class="ident">id</span>
             }
         }
-    }
-
-    <span class="kw">fn</span> <span class="ident">write_composite_construct</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">base_type_id</span>: <span class="ident">Word</span>,
-        <span class="ident">constituent_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">Word</span>],
-        <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id_gen</span>.<span class="ident">next</span>();
-        <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">Instruction::composite_construct</span>(
-            <span class="ident">base_type_id</span>,
-            <span class="ident">id</span>,
-            <span class="ident">constituent_ids</span>,
-        ));
-        <span class="ident">id</span>
     }
 
     <span class="kw">fn</span> <span class="ident">write_texture_coordinates</span>(
@@ -3924,33 +4010,86 @@
                 }),
             )<span class="question-mark">?</span>;
 
-            <span class="self">self</span>.<span class="ident">write_composite_construct</span>(
+            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id_gen</span>.<span class="ident">next</span>();
+            <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">Instruction::composite_construct</span>(
                 <span class="ident">extended_coordinate_type_id</span>,
+                <span class="ident">id</span>,
                 <span class="kw-2">&amp;</span><span class="ident">constituent_ids</span>[..<span class="ident">size</span> <span class="kw">as</span> <span class="ident">usize</span>],
-                <span class="ident">block</span>,
-            )
+            ));
+            <span class="ident">id</span>
         } <span class="kw">else</span> {
             <span class="ident">coordinate_id</span>
         })
     }
 
-    <span class="doccomment">/// Cache an expression for a value.</span>
-    <span class="kw">fn</span> <span class="ident">cache_expression_value</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::too_many_arguments</span>)]</span>
+    <span class="kw">fn</span> <span class="ident">promote_access_expression_to_variable</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">ir_module</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw">crate</span><span class="ident">::Module</span>,
+        <span class="ident">ir_types</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Type</span><span class="op">&gt;</span>,
+        <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
+        <span class="ident">container_id</span>: <span class="ident">Word</span>,
+        <span class="ident">container_resolution</span>: <span class="kw-2">&amp;</span><span class="ident">TypeResolution</span>,
+        <span class="ident">index_id</span>: <span class="ident">Word</span>,
+        <span class="ident">element_ty</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Type</span><span class="op">&gt;</span>,
+        <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Word</span>, <span class="ident">LocalVariable</span>), <span class="ident">Error</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">container_type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_expression_type_id</span>(<span class="ident">ir_types</span>, <span class="ident">container_resolution</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">pointer_type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id_gen</span>.<span class="ident">next</span>();
+        <span class="ident">Instruction::type_pointer</span>(
+            <span class="ident">pointer_type_id</span>,
+            <span class="ident">spirv::StorageClass::Function</span>,
+            <span class="ident">container_type_id</span>,
+        )
+        .<span class="ident">to_words</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">logical_layout</span>.<span class="ident">declarations</span>);
+
+        <span class="kw">let</span> <span class="ident">variable</span> <span class="op">=</span> {
+            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id_gen</span>.<span class="ident">next</span>();
+            <span class="ident">LocalVariable</span> {
+                <span class="ident">id</span>,
+                <span class="ident">instruction</span>: <span class="ident">Instruction::variable</span>(
+                    <span class="ident">pointer_type_id</span>,
+                    <span class="ident">id</span>,
+                    <span class="ident">spirv::StorageClass::Function</span>,
+                    <span class="prelude-val">None</span>,
+                ),
+            }
+        };
+        <span class="ident">block</span>
+            .<span class="ident">body</span>
+            .<span class="ident">push</span>(<span class="ident">Instruction::store</span>(<span class="ident">variable</span>.<span class="ident">id</span>, <span class="ident">container_id</span>, <span class="prelude-val">None</span>));
+
+        <span class="kw">let</span> <span class="ident">element_pointer_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id_gen</span>.<span class="ident">next</span>();
+        <span class="kw">let</span> <span class="ident">element_pointer_type_id</span> <span class="op">=</span>
+            <span class="self">self</span>.<span class="ident">get_pointer_id</span>(<span class="ident">ir_types</span>, <span class="ident">element_ty</span>, <span class="ident">spirv::StorageClass::Function</span>)<span class="question-mark">?</span>;
+        <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">Instruction::access_chain</span>(
+            <span class="ident">element_pointer_type_id</span>,
+            <span class="ident">element_pointer_id</span>,
+            <span class="ident">variable</span>.<span class="ident">id</span>,
+            <span class="kw-2">&amp;</span>[<span class="ident">index_id</span>],
+        ));
+        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id_gen</span>.<span class="ident">next</span>();
+        <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">Instruction::load</span>(
+            <span class="ident">result_type_id</span>,
+            <span class="ident">id</span>,
+            <span class="ident">element_pointer_id</span>,
+            <span class="prelude-val">None</span>,
+        ));
+
+        <span class="prelude-val">Ok</span>((<span class="ident">id</span>, <span class="ident">variable</span>))
+    }
+
+    <span class="doccomment">/// Cache an expression for a value.</span>
+    <span class="kw">fn</span> <span class="ident">cache_expression_value</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">ir_module</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::Module</span>,
         <span class="ident">ir_function</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::Function</span>,
         <span class="ident">fun_info</span>: <span class="kw-2">&amp;</span><span class="ident">FunctionInfo</span>,
         <span class="ident">expr_handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Expression</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
         <span class="ident">function</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Function</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">result_lookup_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">fun_info</span>[<span class="ident">expr_handle</span>].<span class="ident">ty</span> {
-            <span class="ident">TypeResolution::Handle</span>(<span class="ident">ty_handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">LookupType::Handle</span>(<span class="ident">ty_handle</span>),
-            <span class="ident">TypeResolution::Value</span>(<span class="kw-2">ref</span> <span class="ident">inner</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">LookupType::Local</span>(<span class="self">self</span>.<span class="ident">physical_layout</span>.<span class="ident">make_local</span>(<span class="ident">inner</span>).<span class="ident">unwrap</span>())
-            }
-        };
-        <span class="kw">let</span> <span class="ident">result_type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">result_lookup_ty</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">result_type_id</span> <span class="op">=</span>
+            <span class="self">self</span>.<span class="ident">get_expression_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="kw-2">&amp;</span><span class="ident">fun_info</span>[<span class="ident">expr_handle</span>].<span class="ident">ty</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ir_function</span>.<span class="ident">expressions</span>[<span class="ident">expr_handle</span>] {
             <span class="kw">crate</span><span class="ident">::Expression::Access</span> { <span class="ident">base</span>, <span class="ident">index</span> } <span class="op">=</span><span class="op">&gt;</span> {
@@ -3964,10 +4103,10 @@
                     <span class="number">0</span>
                 } <span class="kw">else</span> {
                     <span class="kw">let</span> <span class="ident">index_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">index</span>];
+                    <span class="kw">let</span> <span class="ident">base_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">base</span>];
                     <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">fun_info</span>[<span class="ident">base</span>].<span class="ident">ty</span>.<span class="ident">inner_with</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>) {
                         <span class="kw">crate</span><span class="ident">::TypeInner::Vector</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id_gen</span>.<span class="ident">next</span>();
-                            <span class="kw">let</span> <span class="ident">base_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">base</span>];
                             <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">Instruction::vector_extract_dynamic</span>(
                                 <span class="ident">result_type_id</span>,
                                 <span class="ident">id</span>,
@@ -3976,7 +4115,21 @@
                             ));
                             <span class="ident">id</span>
                         }
-                        <span class="comment">//TODO: support `crate::TypeInner::Array { .. }` ?</span>
+                        <span class="kw">crate</span><span class="ident">::TypeInner::Array</span> {
+                            <span class="ident">base</span>: <span class="ident">ty_element</span>, ..
+                        } <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">let</span> (<span class="ident">id</span>, <span class="ident">variable</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">promote_access_expression_to_variable</span>(
+                                <span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>,
+                                <span class="ident">result_type_id</span>,
+                                <span class="ident">base_id</span>,
+                                <span class="kw-2">&amp;</span><span class="ident">fun_info</span>[<span class="ident">base</span>].<span class="ident">ty</span>,
+                                <span class="ident">index_id</span>,
+                                <span class="ident">ty_element</span>,
+                                <span class="ident">block</span>,
+                            )<span class="question-mark">?</span>;
+                            <span class="ident">function</span>.<span class="ident">internal_variables</span>.<span class="ident">push</span>(<span class="ident">variable</span>);
+                            <span class="ident">id</span>
+                        }
                         <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="macro">log::error!</span>(<span class="string">&quot;Unable to access {:?}&quot;</span>, <span class="ident">other</span>);
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::FeatureNotImplemented</span>(<span class="string">&quot;access for type&quot;</span>));
@@ -4018,17 +4171,35 @@
             }
             <span class="kw">crate</span><span class="ident">::Expression::GlobalVariable</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">global_variables</span>[<span class="ident">handle</span>.<span class="ident">index</span>()].<span class="ident">id</span>,
             <span class="kw">crate</span><span class="ident">::Expression::Constant</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">constant_ids</span>[<span class="ident">handle</span>.<span class="ident">index</span>()],
+            <span class="kw">crate</span><span class="ident">::Expression::Splat</span> { <span class="ident">size</span>, <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">value_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">value</span>];
+                <span class="self">self</span>.<span class="ident">temp_list</span>.<span class="ident">clear</span>();
+                <span class="self">self</span>.<span class="ident">temp_list</span>.<span class="ident">resize</span>(<span class="ident">size</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">value_id</span>);
+
+                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id_gen</span>.<span class="ident">next</span>();
+                <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">Instruction::composite_construct</span>(
+                    <span class="ident">result_type_id</span>,
+                    <span class="ident">id</span>,
+                    <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">temp_list</span>,
+                ));
+                <span class="ident">id</span>
+            }
             <span class="kw">crate</span><span class="ident">::Expression::Compose</span> {
                 <span class="ident">ty</span>: <span class="kw">_</span>,
                 <span class="kw-2">ref</span> <span class="ident">components</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="comment">//TODO: avoid allocation</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">constituent_ids</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">components</span>.<span class="ident">len</span>());
+                <span class="self">self</span>.<span class="ident">temp_list</span>.<span class="ident">clear</span>();
                 <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">component</span> <span class="kw">in</span> <span class="ident">components</span> {
-                    <span class="kw">let</span> <span class="ident">component_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">component</span>];
-                    <span class="ident">constituent_ids</span>.<span class="ident">push</span>(<span class="ident">component_id</span>);
+                    <span class="self">self</span>.<span class="ident">temp_list</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">component</span>]);
                 }
-                <span class="self">self</span>.<span class="ident">write_composite_construct</span>(<span class="ident">result_type_id</span>, <span class="kw-2">&amp;</span><span class="ident">constituent_ids</span>, <span class="ident">block</span>)
+
+                <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id_gen</span>.<span class="ident">next</span>();
+                <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">Instruction::composite_construct</span>(
+                    <span class="ident">result_type_id</span>,
+                    <span class="ident">id</span>,
+                    <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">temp_list</span>,
+                ));
+                <span class="ident">id</span>
             }
             <span class="kw">crate</span><span class="ident">::Expression::Unary</span> { <span class="ident">op</span>, <span class="ident">expr</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id_gen</span>.<span class="ident">next</span>();
@@ -4627,8 +4798,10 @@
                 });
                 <span class="ident">id</span>
             }
-            <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">log::error!</span>(<span class="string">&quot;unimplemented {:?}&quot;</span>, <span class="ident">other</span>);
+            <span class="kw">crate</span><span class="ident">::Expression::ImageQuery</span> { .. }
+            <span class="op">|</span> <span class="kw">crate</span><span class="ident">::Expression::Relational</span> { .. }
+            <span class="op">|</span> <span class="kw">crate</span><span class="ident">::Expression::ArrayLength</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">log::error!</span>(<span class="string">&quot;unimplemented {:?}&quot;</span>, <span class="ident">ir_function</span>.<span class="ident">expressions</span>[<span class="ident">expr_handle</span>]);
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::FeatureNotImplemented</span>(<span class="string">&quot;expression&quot;</span>));
             }
         };
@@ -4655,17 +4828,17 @@
         };
         <span class="kw">let</span> <span class="ident">result_type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>, <span class="ident">result_lookup_ty</span>)<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.<span class="ident">temp_chain</span>.<span class="ident">clear</span>();
+        <span class="self">self</span>.<span class="ident">temp_list</span>.<span class="ident">clear</span>();
         <span class="kw">let</span> (<span class="ident">root_id</span>, <span class="ident">class</span>) <span class="op">=</span> <span class="kw">loop</span> {
             <span class="ident">expr_handle</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ir_function</span>.<span class="ident">expressions</span>[<span class="ident">expr_handle</span>] {
                 <span class="kw">crate</span><span class="ident">::Expression::Access</span> { <span class="ident">base</span>, <span class="ident">index</span> } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">index_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">index</span>];
-                    <span class="self">self</span>.<span class="ident">temp_chain</span>.<span class="ident">push</span>(<span class="ident">index_id</span>);
+                    <span class="self">self</span>.<span class="ident">temp_list</span>.<span class="ident">push</span>(<span class="ident">index_id</span>);
                     <span class="ident">base</span>
                 }
                 <span class="kw">crate</span><span class="ident">::Expression::AccessIndex</span> { <span class="ident">base</span>, <span class="ident">index</span> } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">const_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_index_constant</span>(<span class="ident">index</span>, <span class="kw-2">&amp;</span><span class="ident">ir_module</span>.<span class="ident">types</span>)<span class="question-mark">?</span>;
-                    <span class="self">self</span>.<span class="ident">temp_chain</span>.<span class="ident">push</span>(<span class="ident">const_id</span>);
+                    <span class="self">self</span>.<span class="ident">temp_list</span>.<span class="ident">push</span>(<span class="ident">const_id</span>);
                     <span class="ident">base</span>
                 }
                 <span class="kw">crate</span><span class="ident">::Expression::GlobalVariable</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -4680,16 +4853,16 @@
             }
         };
 
-        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">temp_chain</span>.<span class="ident">is_empty</span>() {
+        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">temp_list</span>.<span class="ident">is_empty</span>() {
             <span class="ident">root_id</span>
         } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">temp_chain</span>.<span class="ident">reverse</span>();
+            <span class="self">self</span>.<span class="ident">temp_list</span>.<span class="ident">reverse</span>();
             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id_gen</span>.<span class="ident">next</span>();
             <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">Instruction::access_chain</span>(
                 <span class="ident">result_type_id</span>,
                 <span class="ident">id</span>,
                 <span class="ident">root_id</span>,
-                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">temp_chain</span>,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">temp_list</span>,
             ));
             <span class="ident">id</span>
         };
@@ -5081,12 +5254,9 @@
                     <span class="ident">result</span>,
                 } <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id_gen</span>.<span class="ident">next</span>();
-                    <span class="comment">//TODO: avoid heap allocation</span>
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">argument_ids</span> <span class="op">=</span> <span class="macro">vec!</span>[];
-
+                    <span class="self">self</span>.<span class="ident">temp_list</span>.<span class="ident">clear</span>();
                     <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">argument</span> <span class="kw">in</span> <span class="ident">arguments</span> {
-                        <span class="kw">let</span> <span class="ident">arg_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">argument</span>];
-                        <span class="ident">argument_ids</span>.<span class="ident">push</span>(<span class="ident">arg_id</span>);
+                        <span class="self">self</span>.<span class="ident">temp_list</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">argument</span>]);
                     }
 
                     <span class="kw">let</span> <span class="ident">type_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">result</span> {
@@ -5107,7 +5277,7 @@
                         <span class="ident">type_id</span>,
                         <span class="ident">id</span>,
                         <span class="self">self</span>.<span class="ident">lookup_function</span>[<span class="kw-2">&amp;</span><span class="ident">local_function</span>],
-                        <span class="ident">argument_ids</span>.<span class="ident">as_slice</span>(),
+                        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">temp_list</span>,
                     ));
                 }
             }
@@ -5275,5 +5445,5 @@
     <span class="macro">assert_eq!</span>(<span class="ident">writer</span>.<span class="ident">physical_layout</span>.<span class="ident">bound</span>, <span class="number">3</span>);
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="naga" data-search-js="../../../../search-index.js"></div>
+</section><section id="search" class="content hidden"></section><section class="footer"></section><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="naga" data-search-index-js="../../../../search-index.js" data-search-js="../../../../search.js"></div>
     <script src="../../../../main.js"></script><script src="../../../../source-script.js"></script><script src="../../../../source-files.js"></script></body></html>
