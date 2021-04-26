@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/9cd6fd9/src/back/msl/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/4a5ff9a/src/back/msl/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" class="help-button">?</button>
                 <a id="settings-menu" href="../../../../settings.html"><img src="../../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><pre class="line-numbers"><span id="1">  1</span>
@@ -406,6 +406,14 @@
 <span id="403">403</span>
 <span id="404">404</span>
 <span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">/*! Metal Shading Language (MSL) backend
 
@@ -496,7 +504,7 @@ holding the result.
     <span class="ident">User</span> {
         <span class="ident">prefix</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
         <span class="ident">index</span>: <span class="ident">u32</span>,
-        <span class="ident">interpolation</span>: <span class="ident">ResolvedInterpolation</span>
+        <span class="ident">interpolation</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ResolvedInterpolation</span><span class="op">&gt;</span>,
     },
     <span class="ident">Resource</span>(<span class="ident">BindTarget</span>),
 }
@@ -607,7 +615,11 @@ holding the result.
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ResolvedBinding</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">binding</span> {
             <span class="kw">crate</span><span class="ident">::Binding::BuiltIn</span>(<span class="ident">built_in</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResolvedBinding::BuiltIn</span>(<span class="ident">built_in</span>)),
-            <span class="kw">crate</span><span class="ident">::Binding::Location</span> { <span class="ident">location</span>, <span class="ident">interpolation</span>, <span class="ident">sampling</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">mode</span> {
+            <span class="kw">crate</span><span class="ident">::Binding::Location</span> {
+                <span class="ident">location</span>,
+                <span class="ident">interpolation</span>,
+                <span class="ident">sampling</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">mode</span> {
                 <span class="ident">LocationMode::VertexInput</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResolvedBinding::Attribute</span>(<span class="ident">location</span>)),
                 <span class="ident">LocationMode::FragmentOutput</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResolvedBinding::Color</span>(<span class="ident">location</span>)),
                 <span class="ident">LocationMode::Intermediate</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResolvedBinding::User</span> {
@@ -623,8 +635,8 @@ holding the result.
                         <span class="comment">// sampling is `None` only for Flat interpolation.</span>
                         <span class="kw">let</span> <span class="ident">interpolation</span> <span class="op">=</span> <span class="ident">interpolation</span>.<span class="ident">unwrap</span>();
                         <span class="kw">let</span> <span class="ident">sampling</span> <span class="op">=</span> <span class="ident">sampling</span>.<span class="ident">unwrap_or</span>(<span class="kw">crate</span><span class="ident">::Sampling::Center</span>);
-                        <span class="ident">ResolvedInterpolation::from_binding</span>(<span class="ident">interpolation</span>, <span class="ident">sampling</span>)
-                    }
+                        <span class="prelude-val">Some</span>(<span class="ident">ResolvedInterpolation::from_binding</span>(<span class="ident">interpolation</span>, <span class="ident">sampling</span>))
+                    },
                 }),
                 <span class="ident">LocationMode::Uniform</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="macro">log::error!</span>(
@@ -652,7 +664,7 @@ holding the result.
             <span class="prelude-val">None</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">fake_missing_bindings</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResolvedBinding::User</span> {
                 <span class="ident">prefix</span>: <span class="string">&quot;fake&quot;</span>,
                 <span class="ident">index</span>: <span class="number">0</span>,
-                <span class="ident">interpolation</span>: <span class="ident">ResolvedInterpolation::CenterPerspective</span>,
+                <span class="ident">interpolation</span>: <span class="prelude-val">None</span>,
             }),
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">EntryPointError::MissingBinding</span>(<span class="ident">source</span>)),
         }
@@ -677,7 +689,7 @@ holding the result.
             <span class="prelude-val">None</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">fake_missing_bindings</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">ResolvedBinding::User</span> {
                 <span class="ident">prefix</span>: <span class="string">&quot;fake&quot;</span>,
                 <span class="ident">index</span>: <span class="number">0</span>,
-                <span class="ident">interpolation</span>: <span class="ident">ResolvedInterpolation::CenterPerspective</span>,
+                <span class="ident">interpolation</span>: <span class="prelude-val">None</span>,
             }),
             <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">EntryPointError::MissingPushConstants</span>(<span class="ident">stage</span>)),
         }
@@ -724,9 +736,16 @@ holding the result.
             }
             <span class="self">Self</span><span class="ident">::Attribute</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">out</span>, <span class="string">&quot;attribute({})&quot;</span>, <span class="ident">index</span>)<span class="question-mark">?</span>,
             <span class="self">Self</span><span class="ident">::Color</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">write!</span>(<span class="ident">out</span>, <span class="string">&quot;color({})&quot;</span>, <span class="ident">index</span>)<span class="question-mark">?</span>,
-            <span class="self">Self</span><span class="ident">::User</span> { <span class="ident">prefix</span>, <span class="ident">index</span>, <span class="ident">interpolation</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">write!</span>(<span class="ident">out</span>, <span class="string">&quot;user({}{}), &quot;</span>, <span class="ident">prefix</span>, <span class="ident">index</span>)<span class="question-mark">?</span>;
-                <span class="ident">interpolation</span>.<span class="ident">try_fmt</span>(<span class="ident">out</span>)<span class="question-mark">?</span>;
+            <span class="self">Self</span><span class="ident">::User</span> {
+                <span class="ident">prefix</span>,
+                <span class="ident">index</span>,
+                <span class="ident">interpolation</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">write!</span>(<span class="ident">out</span>, <span class="string">&quot;user({}{})&quot;</span>, <span class="ident">prefix</span>, <span class="ident">index</span>)<span class="question-mark">?</span>;
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">interpolation</span>) <span class="op">=</span> <span class="ident">interpolation</span> {
+                    <span class="macro">write!</span>(<span class="ident">out</span>, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                    <span class="ident">interpolation</span>.<span class="ident">try_fmt</span>(<span class="ident">out</span>)<span class="question-mark">?</span>;
+                }
             }
             <span class="self">Self</span><span class="ident">::Resource</span>(<span class="kw-2">ref</span> <span class="ident">target</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="ident">target</span>.<span class="ident">buffer</span> {
@@ -753,21 +772,18 @@ holding the result.
 }
 
 <span class="kw">impl</span> <span class="ident">ResolvedInterpolation</span> {
-    <span class="kw">fn</span> <span class="ident">from_binding</span>(<span class="ident">interpolation</span>: <span class="kw">crate</span><span class="ident">::Interpolation</span>,
-                    <span class="ident">sampling</span>: <span class="kw">crate</span><span class="ident">::Sampling</span>)
-                    <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>
-{
+    <span class="kw">fn</span> <span class="ident">from_binding</span>(<span class="ident">interpolation</span>: <span class="kw">crate</span><span class="ident">::Interpolation</span>, <span class="ident">sampling</span>: <span class="kw">crate</span><span class="ident">::Sampling</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::Interpolation</span> <span class="kw">as</span> <span class="ident">I</span>;
         <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::Sampling</span> <span class="kw">as</span> <span class="ident">S</span>;
 
         <span class="kw">match</span> (<span class="ident">interpolation</span>, <span class="ident">sampling</span>) {
-            (<span class="ident">I::Perspective</span>, <span class="ident">S::Center</span>)   <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::CenterPerspective</span>,
+            (<span class="ident">I::Perspective</span>, <span class="ident">S::Center</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::CenterPerspective</span>,
             (<span class="ident">I::Perspective</span>, <span class="ident">S::Centroid</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::CentroidPerspective</span>,
-            (<span class="ident">I::Perspective</span>, <span class="ident">S::Sample</span>)   <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::SamplePerspective</span>,
-            (<span class="ident">I::Linear</span>,      <span class="ident">S::Center</span>)   <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::CenterNoPerspective</span>,
-            (<span class="ident">I::Linear</span>,      <span class="ident">S::Centroid</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::CentroidNoPerspective</span>,
-            (<span class="ident">I::Linear</span>,      <span class="ident">S::Sample</span>)   <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::SampleNoPerspective</span>,
-            (<span class="ident">I::Flat</span>, <span class="kw">_</span>)                        <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Flat</span>,
+            (<span class="ident">I::Perspective</span>, <span class="ident">S::Sample</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::SamplePerspective</span>,
+            (<span class="ident">I::Linear</span>, <span class="ident">S::Center</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::CenterNoPerspective</span>,
+            (<span class="ident">I::Linear</span>, <span class="ident">S::Centroid</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::CentroidNoPerspective</span>,
+            (<span class="ident">I::Linear</span>, <span class="ident">S::Sample</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::SampleNoPerspective</span>,
+            (<span class="ident">I::Flat</span>, <span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::Flat</span>,
         }
     }
 
