@@ -2957,6 +2957,22 @@
 <span id="2954">2954</span>
 <span id="2955">2955</span>
 <span id="2956">2956</span>
+<span id="2957">2957</span>
+<span id="2958">2958</span>
+<span id="2959">2959</span>
+<span id="2960">2960</span>
+<span id="2961">2961</span>
+<span id="2962">2962</span>
+<span id="2963">2963</span>
+<span id="2964">2964</span>
+<span id="2965">2965</span>
+<span id="2966">2966</span>
+<span id="2967">2967</span>
+<span id="2968">2968</span>
+<span id="2969">2969</span>
+<span id="2970">2970</span>
+<span id="2971">2971</span>
+<span id="2972">2972</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).</span>
 <span class="doccomment">//!</span>
@@ -3909,17 +3925,14 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Corresponds to [`wgt::BufferBindingType::Uniform`] and [`wgt::BufferBindingType::Storage`]</span>
     <span class="doccomment">/// with [`BindGroupLayoutEntry::count`] set to None.</span>
-    <span class="ident">Buffer</span> {
-        <span class="doccomment">/// The buffer to bind.</span>
-        <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Buffer</span>,
-        <span class="doccomment">/// Base offset of the buffer. For bindings with `dynamic == true`, this offset</span>
-        <span class="doccomment">/// will be added to the dynamic offset provided in [`RenderPass::set_bind_group`].</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// The offset has to be aligned to [`BIND_BUFFER_ALIGNMENT`].</span>
-        <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
-        <span class="doccomment">/// Size of the binding, or `None` for using the rest of the buffer.</span>
-        <span class="ident">size</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BufferSize</span><span class="op">&gt;</span>,
-    },
+    <span class="ident">Buffer</span>(<span class="ident">BufferBinding</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// Binding is backed by an array of buffers.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`Features::BUFFER_BINDING_ARRAY`] must be supported to use this feature.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Corresponds to [`wgt::BufferBindingType::Uniform`] and [`wgt::BufferBindingType::Storage`]</span>
+    <span class="doccomment">/// with [`BindGroupLayoutEntry::count`] set to Some.</span>
+    <span class="ident">BufferArray</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">BufferBinding</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>]),
     <span class="doccomment">/// Binding is a sampler.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Corresponds to [`wgt::BindingType::Sampler`] with [`BindGroupLayoutEntry::count`] set to None.</span>
@@ -3936,6 +3949,20 @@
     <span class="doccomment">/// Corresponds to [`wgt::BindingType::Texture`] and [`wgt::BindingType::StorageTexture`] with</span>
     <span class="doccomment">/// [`BindGroupLayoutEntry::count`] set to Some.</span>
     <span class="ident">TextureViewArray</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TextureView</span>]),
+}
+
+<span class="doccomment">/// Describes the segment of a buffer to bind.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferBinding</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// The buffer to bind.</span>
+    <span class="kw">pub</span> <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Buffer</span>,
+    <span class="doccomment">/// Base offset of the buffer. For bindings with `dynamic == true`, this offset</span>
+    <span class="doccomment">/// will be added to the dynamic offset provided in [`RenderPass::set_bind_group`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The offset has to be aligned to [`BIND_BUFFER_ALIGNMENT`].</span>
+    <span class="kw">pub</span> <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
+    <span class="doccomment">/// Size of the binding, or `None` for using the rest of the buffer.</span>
+    <span class="kw">pub</span> <span class="ident">size</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BufferSize</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// Operation to perform to the output attachment at the start of a renderpass.</span>
@@ -4793,7 +4820,12 @@
 <span class="kw">impl</span> <span class="ident">Buffer</span> {
     <span class="doccomment">/// Return the binding view of the entire buffer.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_entire_binding</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BindingResource</span> {
-        <span class="ident">BindingResource::Buffer</span> {
+        <span class="ident">BindingResource::Buffer</span>(<span class="self">self</span>.<span class="ident">as_entire_buffer_binding</span>())
+    }
+
+    <span class="doccomment">/// Return the binding view of the entire buffer.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_entire_buffer_binding</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BufferBinding</span> {
+        <span class="ident">BufferBinding</span> {
             <span class="ident">buffer</span>: <span class="self">self</span>,
             <span class="ident">offset</span>: <span class="number">0</span>,
             <span class="ident">size</span>: <span class="prelude-val">None</span>,

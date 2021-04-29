@@ -1970,10 +1970,31 @@
 <span id="1967">1967</span>
 <span id="1968">1968</span>
 <span id="1969">1969</span>
+<span id="1970">1970</span>
+<span id="1971">1971</span>
+<span id="1972">1972</span>
+<span id="1973">1973</span>
+<span id="1974">1974</span>
+<span id="1975">1975</span>
+<span id="1976">1976</span>
+<span id="1977">1977</span>
+<span id="1978">1978</span>
+<span id="1979">1979</span>
+<span id="1980">1980</span>
+<span id="1981">1981</span>
+<span id="1982">1982</span>
+<span id="1983">1983</span>
+<span id="1984">1984</span>
+<span id="1985">1985</span>
+<span id="1986">1986</span>
+<span id="1987">1987</span>
+<span id="1988">1988</span>
+<span id="1989">1989</span>
+<span id="1990">1990</span>
 </pre><div class="example-wrap"><pre class="rust ">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">backend</span>::{<span class="ident">error::ContextError</span>, <span class="ident">native_gpu_future</span>},
-    <span class="ident">AdapterInfo</span>, <span class="ident">BindGroupDescriptor</span>, <span class="ident">BindGroupLayoutDescriptor</span>, <span class="ident">BindingResource</span>,
+    <span class="ident">AdapterInfo</span>, <span class="ident">BindGroupDescriptor</span>, <span class="ident">BindGroupLayoutDescriptor</span>, <span class="ident">BindingResource</span>, <span class="ident">BufferBinding</span>,
     <span class="ident">CommandEncoderDescriptor</span>, <span class="ident">ComputePassDescriptor</span>, <span class="ident">ComputePipelineDescriptor</span>,
     <span class="ident">DownlevelProperties</span>, <span class="ident">Features</span>, <span class="ident">Label</span>, <span class="ident">Limits</span>, <span class="ident">LoadOp</span>, <span class="ident">MapMode</span>, <span class="ident">Operations</span>,
     <span class="ident">PipelineLayoutDescriptor</span>, <span class="ident">RenderBundleEncoderDescriptor</span>, <span class="ident">RenderPipelineDescriptor</span>,
@@ -2848,21 +2869,42 @@
         }
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">remaining_arrayed_texture_views</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">arrayed_texture_views</span>[..];
 
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">arrayed_buffer_bindings</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+        <span class="kw">if</span> <span class="ident">device</span>.<span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">Features::BUFFER_BINDING_ARRAY</span>) {
+            <span class="comment">// gather all the buffers first</span>
+            <span class="kw">for</span> <span class="ident">entry</span> <span class="kw">in</span> <span class="ident">desc</span>.<span class="ident">entries</span>.<span class="ident">iter</span>() {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="ident">BindingResource::BufferArray</span>(<span class="ident">array</span>) <span class="op">=</span> <span class="ident">entry</span>.<span class="ident">resource</span> {
+                    <span class="ident">arrayed_buffer_bindings</span>.<span class="ident">extend</span>(<span class="ident">array</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">binding</span><span class="op">|</span> <span class="ident">bm::BufferBinding</span> {
+                        <span class="ident">buffer_id</span>: <span class="ident">binding</span>.<span class="ident">buffer</span>.<span class="ident">id</span>.<span class="ident">id</span>,
+                        <span class="ident">offset</span>: <span class="ident">binding</span>.<span class="ident">offset</span>,
+                        <span class="ident">size</span>: <span class="ident">binding</span>.<span class="ident">size</span>,
+                    }));
+                }
+            }
+        }
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">remaining_arrayed_buffer_bindings</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">arrayed_buffer_bindings</span>[..];
+
         <span class="kw">let</span> <span class="ident">entries</span> <span class="op">=</span> <span class="ident">desc</span>
             .<span class="ident">entries</span>
             .<span class="ident">iter</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="ident">bm::BindGroupEntry</span> {
                 <span class="ident">binding</span>: <span class="ident">entry</span>.<span class="ident">binding</span>,
                 <span class="ident">resource</span>: <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">resource</span> {
-                    <span class="ident">BindingResource::Buffer</span> {
+                    <span class="ident">BindingResource::Buffer</span>(<span class="ident">BufferBinding</span> {
                         <span class="ident">buffer</span>,
                         <span class="ident">offset</span>,
                         <span class="ident">size</span>,
-                    } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bm::BindingResource::Buffer</span>(<span class="ident">bm::BufferBinding</span> {
+                    }) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bm::BindingResource::Buffer</span>(<span class="ident">bm::BufferBinding</span> {
                         <span class="ident">buffer_id</span>: <span class="ident">buffer</span>.<span class="ident">id</span>.<span class="ident">id</span>,
                         <span class="ident">offset</span>,
                         <span class="ident">size</span>,
                     }),
+                    <span class="ident">BindingResource::BufferArray</span>(<span class="ident">array</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">remaining_arrayed_buffer_bindings</span>[..<span class="ident">array</span>.<span class="ident">len</span>()];
+                        <span class="ident">remaining_arrayed_buffer_bindings</span> <span class="op">=</span>
+                            <span class="kw-2">&amp;</span><span class="ident">remaining_arrayed_buffer_bindings</span>[<span class="ident">array</span>.<span class="ident">len</span>()..];
+                        <span class="ident">bm::BindingResource::BufferArray</span>(<span class="ident">Borrowed</span>(<span class="ident">slice</span>))
+                    }
                     <span class="ident">BindingResource::Sampler</span>(<span class="ident">sampler</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">bm::BindingResource::Sampler</span>(<span class="ident">sampler</span>.<span class="ident">id</span>),
                     <span class="ident">BindingResource::TextureView</span>(<span class="ident">texture_view</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">bm::BindingResource::TextureView</span>(<span class="ident">texture_view</span>.<span class="ident">id</span>)
