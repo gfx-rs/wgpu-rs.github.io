@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/7ce535c/wgpu-core/src/device/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/eadaa1b/wgpu-core/src/device/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
@@ -4890,6 +4890,18 @@
 <span id="4887">4887</span>
 <span id="4888">4888</span>
 <span id="4889">4889</span>
+<span id="4890">4890</span>
+<span id="4891">4891</span>
+<span id="4892">4892</span>
+<span id="4893">4893</span>
+<span id="4894">4894</span>
+<span id="4895">4895</span>
+<span id="4896">4896</span>
+<span id="4897">4897</span>
+<span id="4898">4898</span>
+<span id="4899">4899</span>
+<span id="4900">4900</span>
+<span id="4901">4901</span>
 </pre><pre class="rust">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -5211,9 +5223,8 @@
         <span class="kw">let</span> <span class="ident">mem_allocator</span> <span class="op">=</span> <span class="ident">alloc::MemoryAllocator::new</span>(<span class="ident">mem_props</span>, <span class="ident">hal_limits</span>);
         <span class="kw">let</span> <span class="ident">descriptors</span> <span class="op">=</span> <span class="ident">descriptor::DescriptorAllocator::new</span>();
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>))]</span>
-        <span class="kw">match</span> <span class="ident">trace_path</span> {
-            <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">log::error!</span>(<span class="string">&quot;Feature &#39;trace&#39; is not enabled&quot;</span>),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (),
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="ident">trace_path</span> {
+            <span class="macro">log::error!</span>(<span class="string">&quot;Feature &#39;trace&#39; is not enabled&quot;</span>);
         }
 
         <span class="kw">let</span> <span class="ident">spv_options</span> <span class="op">=</span> {
@@ -5575,7 +5586,14 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">view_caps</span> <span class="op">=</span> <span class="ident">hal::image::ViewCapabilities::empty</span>();
         <span class="comment">// 2D textures with array layer counts that are multiples of 6 could be cubemaps</span>
         <span class="comment">// Following gpuweb/gpuweb#68 always add the hint in that case</span>
-        <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">dimension</span> <span class="op">=</span><span class="op">=</span> <span class="ident">TextureDimension::D2</span> <span class="op">&amp;&amp;</span> <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">%</span> <span class="number">6</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">dimension</span> <span class="op">=</span><span class="op">=</span> <span class="ident">TextureDimension::D2</span>
+            <span class="op">&amp;&amp;</span> <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">%</span> <span class="number">6</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>
+            <span class="op">&amp;&amp;</span> (<span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">=</span><span class="op">=</span> <span class="number">6</span>
+                <span class="op">|</span><span class="op">|</span> <span class="self">self</span>
+                    .<span class="ident">downlevel</span>
+                    .<span class="ident">flags</span>
+                    .<span class="ident">contains</span>(<span class="ident">wgt::DownlevelFlags::CUBE_ARRAY_TEXTURES</span>))
+        {
             <span class="ident">view_caps</span> <span class="op">|</span><span class="op">=</span> <span class="ident">hal::image::ViewCapabilities::KIND_CUBE</span>;
         };
 
@@ -5686,7 +5704,7 @@
                 <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">texture</span>.<span class="ident">kind</span> {
                     <span class="ident">hal::image::Kind::D1</span>(..) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt::TextureViewDimension::D1</span>,
                     <span class="ident">hal::image::Kind::D2</span>(<span class="kw">_</span>, <span class="kw">_</span>, <span class="ident">depth</span>, <span class="kw">_</span>)
-                        <span class="kw">if</span> <span class="ident">depth</span> <span class="op">&gt;</span> <span class="number">1</span> <span class="op">&amp;&amp;</span> <span class="ident">desc</span>.<span class="ident">array_layer_count</span>.<span class="ident">is_none</span>() <span class="op">=</span><span class="op">&gt;</span>
+                        <span class="kw">if</span> <span class="ident">depth</span> <span class="op">&gt;</span> <span class="number">1</span> <span class="op">&amp;&amp;</span> <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">array_layer_count</span>.<span class="ident">is_none</span>() <span class="op">=</span><span class="op">&gt;</span>
                     {
                         <span class="ident">wgt::TextureViewDimension::D2Array</span>
                     }
@@ -5696,9 +5714,9 @@
             };
 
         <span class="kw">let</span> <span class="ident">required_level_count</span> <span class="op">=</span>
-            <span class="ident">desc</span>.<span class="ident">base_mip_level</span> <span class="op">+</span> <span class="ident">desc</span>.<span class="ident">mip_level_count</span>.<span class="ident">map_or</span>(<span class="number">1</span>, <span class="op">|</span><span class="ident">count</span><span class="op">|</span> <span class="ident">count</span>.<span class="ident">get</span>());
-        <span class="kw">let</span> <span class="ident">required_layer_count</span> <span class="op">=</span>
-            <span class="ident">desc</span>.<span class="ident">base_array_layer</span> <span class="op">+</span> <span class="ident">desc</span>.<span class="ident">array_layer_count</span>.<span class="ident">map_or</span>(<span class="number">1</span>, <span class="op">|</span><span class="ident">count</span><span class="op">|</span> <span class="ident">count</span>.<span class="ident">get</span>());
+            <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">base_mip_level</span> <span class="op">+</span> <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">mip_level_count</span>.<span class="ident">map_or</span>(<span class="number">1</span>, <span class="op">|</span><span class="ident">count</span><span class="op">|</span> <span class="ident">count</span>.<span class="ident">get</span>());
+        <span class="kw">let</span> <span class="ident">required_layer_count</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">base_array_layer</span>
+            <span class="op">+</span> <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">array_layer_count</span>.<span class="ident">map_or</span>(<span class="number">1</span>, <span class="op">|</span><span class="ident">count</span><span class="op">|</span> <span class="ident">count</span>.<span class="ident">get</span>());
         <span class="kw">let</span> <span class="ident">level_end</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">full_range</span>.<span class="ident">levels</span>.<span class="ident">end</span>;
         <span class="kw">let</span> <span class="ident">layer_end</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">full_range</span>.<span class="ident">layers</span>.<span class="ident">end</span>;
         <span class="kw">if</span> <span class="ident">required_level_count</span> <span class="op">&gt;</span> <span class="ident">level_end</span> <span class="kw">as</span> <span class="ident">u32</span> {
@@ -5714,7 +5732,7 @@
             });
         };
 
-        <span class="kw">let</span> <span class="ident">aspects</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">aspect</span> {
+        <span class="kw">let</span> <span class="ident">aspects</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">aspect</span> {
             <span class="ident">wgt::TextureAspect::All</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">texture</span>.<span class="ident">aspects</span>,
             <span class="ident">wgt::TextureAspect::DepthOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">hal::format::Aspects::DEPTH</span>,
             <span class="ident">wgt::TextureAspect::StencilOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">hal::format::Aspects::STENCIL</span>,
@@ -5727,14 +5745,16 @@
         }
 
         <span class="kw">let</span> <span class="ident">end_level</span> <span class="op">=</span> <span class="ident">desc</span>
+            .<span class="ident">range</span>
             .<span class="ident">mip_level_count</span>
             .<span class="ident">map_or</span>(<span class="ident">level_end</span>, <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">required_level_count</span> <span class="kw">as</span> <span class="ident">u8</span>);
         <span class="kw">let</span> <span class="ident">end_layer</span> <span class="op">=</span> <span class="ident">desc</span>
+            .<span class="ident">range</span>
             .<span class="ident">array_layer_count</span>
             .<span class="ident">map_or</span>(<span class="ident">layer_end</span>, <span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">required_layer_count</span> <span class="kw">as</span> <span class="ident">u16</span>);
         <span class="kw">let</span> <span class="ident">selector</span> <span class="op">=</span> <span class="ident">TextureSelector</span> {
-            <span class="ident">levels</span>: <span class="ident">desc</span>.<span class="ident">base_mip_level</span> <span class="kw">as</span> <span class="ident">u8</span>..<span class="ident">end_level</span>,
-            <span class="ident">layers</span>: <span class="ident">desc</span>.<span class="ident">base_array_layer</span> <span class="kw">as</span> <span class="ident">u16</span>..<span class="ident">end_layer</span>,
+            <span class="ident">levels</span>: <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">base_mip_level</span> <span class="kw">as</span> <span class="ident">u8</span>..<span class="ident">end_level</span>,
+            <span class="ident">layers</span>: <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">base_array_layer</span> <span class="kw">as</span> <span class="ident">u16</span>..<span class="ident">end_layer</span>,
         };
 
         <span class="kw">let</span> <span class="ident">view_layer_count</span> <span class="op">=</span> (<span class="ident">selector</span>.<span class="ident">layers</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">selector</span>.<span class="ident">layers</span>.<span class="ident">start</span>) <span class="kw">as</span> <span class="ident">u32</span>;
@@ -5756,12 +5776,15 @@
         <span class="kw">let</span> <span class="ident">format</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">format</span>.<span class="ident">unwrap_or</span>(<span class="ident">texture</span>.<span class="ident">format</span>);
         <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="ident">hal::image::SubresourceRange</span> {
             <span class="ident">aspects</span>,
-            <span class="ident">level_start</span>: <span class="ident">desc</span>.<span class="ident">base_mip_level</span> <span class="kw">as</span> <span class="kw">_</span>,
-            <span class="ident">level_count</span>: <span class="ident">desc</span>.<span class="ident">mip_level_count</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">get</span>() <span class="kw">as</span> <span class="kw">_</span>),
-            <span class="ident">layer_start</span>: <span class="ident">desc</span>.<span class="ident">base_array_layer</span> <span class="kw">as</span> <span class="kw">_</span>,
-            <span class="ident">layer_count</span>: <span class="ident">desc</span>.<span class="ident">array_layer_count</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">get</span>() <span class="kw">as</span> <span class="kw">_</span>),
+            <span class="ident">level_start</span>: <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">base_mip_level</span> <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident">level_count</span>: <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">mip_level_count</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">get</span>() <span class="kw">as</span> <span class="kw">_</span>),
+            <span class="ident">layer_start</span>: <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">base_array_layer</span> <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident">layer_count</span>: <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">array_layer_count</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">get</span>() <span class="kw">as</span> <span class="kw">_</span>),
         };
-        <span class="kw">let</span> <span class="ident">hal_extent</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">kind</span>.<span class="ident">extent</span>().<span class="ident">at_level</span>(<span class="ident">desc</span>.<span class="ident">base_mip_level</span> <span class="kw">as</span> <span class="kw">_</span>);
+        <span class="kw">let</span> <span class="ident">hal_extent</span> <span class="op">=</span> <span class="ident">texture</span>
+            .<span class="ident">kind</span>
+            .<span class="ident">extent</span>()
+            .<span class="ident">at_level</span>(<span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">base_mip_level</span> <span class="kw">as</span> <span class="kw">_</span>);
 
         <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="kw">unsafe</span> {
             <span class="self">self</span>.<span class="ident">raw</span>
@@ -8765,6 +8788,7 @@
                 <span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">raw</span>,
                 <span class="ident">device</span>.<span class="ident">limits</span>.<span class="ident">clone</span>(),
                 <span class="ident">device</span>.<span class="ident">downlevel</span>,
+                <span class="ident">device</span>.<span class="ident">features</span>,
                 <span class="ident">device</span>.<span class="ident">private_features</span>,
                 <span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">label</span>,
                 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>

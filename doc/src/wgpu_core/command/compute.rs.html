@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/7ce535c/wgpu-core/src/command/compute.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>compute.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/eadaa1b/wgpu-core/src/command/compute.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>compute.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
@@ -843,6 +843,12 @@
 <span id="840">840</span>
 <span id="841">841</span>
 <span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
 </pre><pre class="rust">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -852,13 +858,14 @@
     <span class="ident">binding_model</span>::{<span class="ident">BindError</span>, <span class="ident">BindGroup</span>, <span class="ident">PushConstantUploadError</span>},
     <span class="ident">command</span>::{
         <span class="ident">bind::Binder</span>, <span class="ident">end_pipeline_statistics_query</span>, <span class="ident">BasePass</span>, <span class="ident">BasePassRef</span>, <span class="ident">CommandBuffer</span>,
-        <span class="ident">CommandEncoderError</span>, <span class="ident">MapPassErr</span>, <span class="ident">PassErrorScope</span>, <span class="ident">QueryUseError</span>, <span class="ident">StateChange</span>,
+        <span class="ident">CommandEncoderError</span>, <span class="ident">CommandEncoderStatus</span>, <span class="ident">MapPassErr</span>, <span class="ident">PassErrorScope</span>, <span class="ident">QueryUseError</span>,
+        <span class="ident">StateChange</span>,
     },
     <span class="ident">hub</span>::{<span class="ident">GfxBackend</span>, <span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>,
     <span class="ident">memory_init_tracker</span>::{<span class="ident">MemoryInitKind</span>, <span class="ident">MemoryInitTrackerAction</span>},
     <span class="ident">resource</span>::{<span class="ident">Buffer</span>, <span class="ident">BufferUse</span>, <span class="ident">Texture</span>},
-    <span class="ident">track</span>::{<span class="ident">TrackerSet</span>, <span class="ident">UsageConflict</span>},
+    <span class="ident">track</span>::{<span class="ident">StatefulTrackerSubset</span>, <span class="ident">TrackerSet</span>, <span class="ident">UsageConflict</span>},
     <span class="ident">validation</span>::{<span class="ident">check_buffer_usage</span>, <span class="ident">MissingBufferUsageError</span>},
     <span class="ident">Label</span>, <span class="ident">DOWNLEVEL_ERROR_WARNING_MESSAGE</span>,
 };
@@ -1039,7 +1046,7 @@
 <span class="kw">struct</span> <span class="ident">State</span> {
     <span class="ident">binder</span>: <span class="ident">Binder</span>,
     <span class="ident">pipeline</span>: <span class="ident">StateChange</span><span class="op">&lt;</span><span class="ident">id::ComputePipelineId</span><span class="op">&gt;</span>,
-    <span class="ident">trackers</span>: <span class="ident">TrackerSet</span>,
+    <span class="ident">trackers</span>: <span class="ident">StatefulTrackerSubset</span>,
     <span class="ident">debug_scope_depth</span>: <span class="ident">u32</span>,
 }
 
@@ -1069,6 +1076,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UsageConflict</span><span class="op">&gt;</span> {
         <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">binder</span>.<span class="ident">list_active</span>() {
             <span class="self">self</span>.<span class="ident">trackers</span>.<span class="ident">merge_extend</span>(<span class="kw-2">&amp;</span><span class="ident">bind_group_guard</span>[<span class="ident">id</span>].<span class="ident">used</span>)<span class="question-mark">?</span>;
+            <span class="ident">base_trackers</span>.<span class="ident">merge_extend_stateless</span>(<span class="kw-2">&amp;</span><span class="ident">bind_group_guard</span>[<span class="ident">id</span>].<span class="ident">used</span>);
         }
 
         <span class="macro">log::trace!</span>(<span class="string">&quot;Encoding dispatch barriers&quot;</span>);
@@ -1076,7 +1084,8 @@
         <span class="ident">CommandBuffer::insert_barriers</span>(
             <span class="ident">raw_cmd_buf</span>,
             <span class="ident">base_trackers</span>,
-            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">trackers</span>,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">trackers</span>.<span class="ident">buffers</span>,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">trackers</span>.<span class="ident">textures</span>,
             <span class="ident">buffer_guard</span>,
             <span class="ident">texture_guard</span>,
         );
@@ -1112,6 +1121,8 @@
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">cmd_buf_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">command_buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span>
             <span class="ident">CommandBuffer::get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">encoder_id</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
+        <span class="comment">// will be reset to true if recording is done without errors</span>
+        <span class="ident">cmd_buf</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">CommandEncoderStatus::Error</span>;
         <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">raw</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
@@ -1149,7 +1160,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">State</span> {
             <span class="ident">binder</span>: <span class="ident">Binder::new</span>(),
             <span class="ident">pipeline</span>: <span class="ident">StateChange::new</span>(),
-            <span class="ident">trackers</span>: <span class="ident">TrackerSet::new</span>(<span class="ident">B::VARIANT</span>),
+            <span class="ident">trackers</span>: <span class="ident">StatefulTrackerSubset::new</span>(<span class="ident">B::VARIANT</span>),
             <span class="ident">debug_scope_depth</span>: <span class="number">0</span>,
         };
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">temp_offsets</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
@@ -1503,6 +1514,7 @@
                 <span class="ident">raw</span>.<span class="ident">end_debug_marker</span>();
             }
         }
+        <span class="ident">cmd_buf</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">CommandEncoderStatus::Recording</span>;
 
         <span class="prelude-val">Ok</span>(())
     }

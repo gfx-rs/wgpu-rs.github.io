@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/7ce535c/wgpu-core/src/command/render.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>render.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/wgpu-53e70f8674b08dd4/eadaa1b/wgpu-core/src/command/render.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>render.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button">?</button>
                 <a id="settings-menu" href="../../../settings.html"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
@@ -2371,6 +2371,15 @@
 <span id="2368">2368</span>
 <span id="2369">2369</span>
 <span id="2370">2370</span>
+<span id="2371">2371</span>
+<span id="2372">2372</span>
+<span id="2373">2373</span>
+<span id="2374">2374</span>
+<span id="2375">2375</span>
+<span id="2376">2376</span>
+<span id="2377">2377</span>
+<span id="2378">2378</span>
+<span id="2379">2379</span>
 </pre><pre class="rust">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -2380,8 +2389,9 @@
     <span class="ident">binding_model::BindError</span>,
     <span class="ident">command</span>::{
         <span class="ident">bind::Binder</span>, <span class="ident">end_pipeline_statistics_query</span>, <span class="ident">BasePass</span>, <span class="ident">BasePassRef</span>, <span class="ident">CommandBuffer</span>,
-        <span class="ident">CommandEncoderError</span>, <span class="ident">DrawError</span>, <span class="ident">ExecutionError</span>, <span class="ident">MapPassErr</span>, <span class="ident">PassErrorScope</span>, <span class="ident">QueryResetMap</span>,
-        <span class="ident">QueryUseError</span>, <span class="ident">RenderCommand</span>, <span class="ident">RenderCommandError</span>, <span class="ident">StateChange</span>,
+        <span class="ident">CommandEncoderError</span>, <span class="ident">CommandEncoderStatus</span>, <span class="ident">DrawError</span>, <span class="ident">ExecutionError</span>, <span class="ident">MapPassErr</span>,
+        <span class="ident">PassErrorScope</span>, <span class="ident">QueryResetMap</span>, <span class="ident">QueryUseError</span>, <span class="ident">RenderCommand</span>, <span class="ident">RenderCommandError</span>,
+        <span class="ident">StateChange</span>,
     },
     <span class="ident">conv</span>,
     <span class="ident">device</span>::{
@@ -2393,7 +2403,7 @@
     <span class="ident">memory_init_tracker</span>::{<span class="ident">MemoryInitKind</span>, <span class="ident">MemoryInitTrackerAction</span>},
     <span class="ident">pipeline::PipelineFlags</span>,
     <span class="ident">resource</span>::{<span class="ident">BufferUse</span>, <span class="ident">Texture</span>, <span class="ident">TextureUse</span>, <span class="ident">TextureView</span>, <span class="ident">TextureViewInner</span>},
-    <span class="ident">track</span>::{<span class="ident">TextureSelector</span>, <span class="ident">TrackerSet</span>, <span class="ident">UsageConflict</span>},
+    <span class="ident">track</span>::{<span class="ident">StatefulTrackerSubset</span>, <span class="ident">TextureSelector</span>, <span class="ident">UsageConflict</span>},
     <span class="ident">validation</span>::{
         <span class="ident">check_buffer_usage</span>, <span class="ident">check_texture_usage</span>, <span class="ident">MissingBufferUsageError</span>, <span class="ident">MissingTextureUsageError</span>,
     },
@@ -2878,7 +2888,7 @@
 
 <span class="kw">struct</span> <span class="ident">RenderPassInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> {
     <span class="ident">context</span>: <span class="ident">RenderPassContext</span>,
-    <span class="ident">trackers</span>: <span class="ident">TrackerSet</span>,
+    <span class="ident">trackers</span>: <span class="ident">StatefulTrackerSubset</span>,
     <span class="ident">render_attachments</span>: <span class="ident">AttachmentDataVec</span><span class="op">&lt;</span><span class="ident">RenderAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">used_swap_chain</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::SwapChainId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">is_ds_read_only</span>: <span class="ident">bool</span>,
@@ -2891,7 +2901,7 @@
         <span class="ident">raw</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">B::CommandBuffer</span>,
         <span class="ident">color_attachments</span>: <span class="kw-2">&amp;</span>[<span class="ident">RenderPassColorAttachment</span>],
         <span class="ident">depth_stencil_attachment</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">RenderPassDepthStencilAttachment</span><span class="op">&gt;</span>,
-        <span class="ident">cmd_buf</span>: <span class="kw-2">&amp;</span><span class="ident">CommandBuffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
+        <span class="ident">cmd_buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">CommandBuffer</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
         <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">Device</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
         <span class="ident">view_guard</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">TextureView</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">id::TextureViewId</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">RenderPassErrorInner</span><span class="op">&gt;</span> {
@@ -2910,7 +2920,6 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sample_count</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">depth_stencil_aspects</span> <span class="op">=</span> <span class="ident">hal::format::Aspects::empty</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">used_swap_chain</span> <span class="op">=</span> <span class="prelude-val">None</span>::<span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::SwapChainId</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">trackers</span> <span class="op">=</span> <span class="ident">TrackerSet::new</span>(<span class="ident">B::VARIANT</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">add_view</span> <span class="op">=</span> <span class="op">|</span><span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">TextureView</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">type_name</span><span class="op">|</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ex</span>) <span class="op">=</span> <span class="ident">extent</span> {
@@ -2938,7 +2947,8 @@
         <span class="kw">let</span> <span class="ident">rp_key</span> <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">depth_stencil</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">depth_stencil_attachment</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">at</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">view</span> <span class="op">=</span> <span class="ident">trackers</span>
+                    <span class="kw">let</span> <span class="ident">view</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
+                        .<span class="ident">trackers</span>
                         .<span class="ident">views</span>
                         .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">view_guard</span>, <span class="ident">at</span>.<span class="ident">view</span>, (), ())
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">RenderPassErrorInner::InvalidAttachment</span>(<span class="ident">at</span>.<span class="ident">view</span>))<span class="question-mark">?</span>;
@@ -3001,7 +3011,8 @@
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">resolves</span> <span class="op">=</span> <span class="ident">ArrayVec::new</span>();
 
             <span class="kw">for</span> <span class="ident">at</span> <span class="kw">in</span> <span class="ident">color_attachments</span> {
-                <span class="kw">let</span> <span class="ident">view</span> <span class="op">=</span> <span class="ident">trackers</span>
+                <span class="kw">let</span> <span class="ident">view</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
+                    .<span class="ident">trackers</span>
                     .<span class="ident">views</span>
                     .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">view_guard</span>, <span class="ident">at</span>.<span class="ident">view</span>, (), ())
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">RenderPassErrorInner::InvalidAttachment</span>(<span class="ident">at</span>.<span class="ident">view</span>))<span class="question-mark">?</span>;
@@ -3064,7 +3075,8 @@
             }
 
             <span class="kw">for</span> <span class="ident">resolve_target</span> <span class="kw">in</span> <span class="ident">color_attachments</span>.<span class="ident">iter</span>().<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">at</span><span class="op">|</span> <span class="ident">at</span>.<span class="ident">resolve_target</span>) {
-                <span class="kw">let</span> <span class="ident">view</span> <span class="op">=</span> <span class="ident">trackers</span>
+                <span class="kw">let</span> <span class="ident">view</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
+                    .<span class="ident">trackers</span>
                     .<span class="ident">views</span>
                     .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">view_guard</span>, <span class="ident">resolve_target</span>, (), ())
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">RenderPassErrorInner::InvalidAttachment</span>(<span class="ident">resolve_target</span>))<span class="question-mark">?</span>;
@@ -3335,7 +3347,7 @@
 
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
             <span class="ident">context</span>,
-            <span class="ident">trackers</span>,
+            <span class="ident">trackers</span>: <span class="ident">StatefulTrackerSubset::new</span>(<span class="ident">B::VARIANT</span>),
             <span class="ident">render_attachments</span>,
             <span class="ident">used_swap_chain</span>,
             <span class="ident">is_ds_read_only</span>,
@@ -3347,7 +3359,8 @@
     <span class="kw">fn</span> <span class="ident">finish</span>(
         <span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">texture_guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">Texture</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">id::TextureId</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">TrackerSet</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::SwapChainId</span><span class="op">&gt;</span><span class="op">&gt;</span>), <span class="ident">RenderPassErrorInner</span><span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">StatefulTrackerSubset</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::SwapChainId</span><span class="op">&gt;</span><span class="op">&gt;</span>), <span class="ident">RenderPassErrorInner</span><span class="op">&gt;</span>
+    {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;finish&quot;</span>, <span class="string">&quot;RenderPassInfo&quot;</span>);
 
         <span class="kw">for</span> <span class="ident">ra</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">render_attachments</span> {
@@ -3416,17 +3429,28 @@
 
         <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
 
-        <span class="kw">let</span> (<span class="ident">cmd_buf_raw</span>, <span class="ident">trackers</span>, <span class="ident">used_swapchain</span>, <span class="ident">query_reset_state</span>) <span class="op">=</span> {
+        <span class="kw">let</span> (<span class="ident">cmd_buf_raw</span>, <span class="ident">trackers</span>, <span class="ident">query_reset_state</span>) <span class="op">=</span> {
             <span class="comment">// read-only lock guard</span>
             <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">cmb_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">command_buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
 
             <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span>
                 <span class="ident">CommandBuffer::get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmb_guard</span>, <span class="ident">encoder_id</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
+            <span class="comment">// will be reset to true if recording is done without errors</span>
+            <span class="ident">cmd_buf</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">CommandEncoderStatus::Error</span>;
+            <span class="ident">cmd_buf</span>.<span class="ident">has_labels</span> <span class="op">|</span><span class="op">=</span> <span class="ident">base</span>.<span class="ident">label</span>.<span class="ident">is_some</span>();
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">list</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">commands</span> {
+                <span class="ident">list</span>.<span class="ident">push</span>(<span class="kw">crate</span><span class="ident">::device::trace::Command::RunRenderPass</span> {
+                    <span class="ident">base</span>: <span class="ident">BasePass::from_ref</span>(<span class="ident">base</span>),
+                    <span class="ident">target_colors</span>: <span class="ident">color_attachments</span>.<span class="ident">to_vec</span>(),
+                    <span class="ident">target_depth_stencil</span>: <span class="ident">depth_stencil_attachment</span>.<span class="ident">cloned</span>(),
+                });
+            }
+
             <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">device_guard</span>[<span class="ident">cmd_buf</span>.<span class="ident">device_id</span>.<span class="ident">value</span>];
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">cmd_allocator</span>.<span class="ident">extend</span>(<span class="ident">cmd_buf</span>);
             <span class="kw">unsafe</span> {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">label</span>) <span class="op">=</span> <span class="ident">base</span>.<span class="ident">label</span> {
-                    <span class="comment">// cmd_buf.has_labels = true; this is done later</span>
                     <span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">set_command_buffer_name</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">raw</span>, <span class="ident">label</span>);
                 }
                 <span class="ident">raw</span>.<span class="ident">begin_primary</span>(<span class="ident">hal::command::CommandBufferFlags::ONE_TIME_SUBMIT</span>);
@@ -3496,7 +3520,7 @@
                         );
                         <span class="ident">dynamic_offset_count</span> <span class="op">+</span><span class="op">=</span> <span class="ident">num_dynamic_offsets</span> <span class="kw">as</span> <span class="ident">usize</span>;
 
-                        <span class="kw">let</span> <span class="ident">bind_group</span> <span class="op">=</span> <span class="ident">info</span>
+                        <span class="kw">let</span> <span class="ident">bind_group</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
                             .<span class="ident">trackers</span>
                             .<span class="ident">bind_groups</span>
                             .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">bind_group_guard</span>, <span class="ident">bind_group_id</span>, (), ())
@@ -3506,9 +3530,11 @@
                             .<span class="ident">validate_dynamic_bindings</span>(<span class="kw-2">&amp;</span><span class="ident">temp_offsets</span>)
                             .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
+                        <span class="comment">// merge the resource tracker in</span>
                         <span class="ident">info</span>.<span class="ident">trackers</span>
                             .<span class="ident">merge_extend</span>(<span class="kw-2">&amp;</span><span class="ident">bind_group</span>.<span class="ident">used</span>)
                             .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
+                        <span class="ident">cmd_buf</span>.<span class="ident">trackers</span>.<span class="ident">merge_extend_stateless</span>(<span class="kw-2">&amp;</span><span class="ident">bind_group</span>.<span class="ident">used</span>);
 
                         <span class="ident">cmd_buf</span>.<span class="ident">buffer_memory_init_actions</span>.<span class="ident">extend</span>(
                             <span class="ident">bind_group</span>.<span class="ident">used_buffer_ranges</span>.<span class="ident">iter</span>().<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">action</span><span class="op">|</span> {
@@ -3558,7 +3584,7 @@
                             <span class="kw">continue</span>;
                         }
 
-                        <span class="kw">let</span> <span class="ident">pipeline</span> <span class="op">=</span> <span class="ident">info</span>
+                        <span class="kw">let</span> <span class="ident">pipeline</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
                             .<span class="ident">trackers</span>
                             .<span class="ident">render_pipes</span>
                             .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">pipeline_guard</span>, <span class="ident">pipeline_id</span>, (), ())
@@ -4200,7 +4226,7 @@
                     } <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::WriteTimestamp</span>;
 
-                        <span class="kw">let</span> <span class="ident">query_set</span> <span class="op">=</span> <span class="ident">info</span>
+                        <span class="kw">let</span> <span class="ident">query_set</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
                             .<span class="ident">trackers</span>
                             .<span class="ident">query_sets</span>
                             .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">query_set_guard</span>, <span class="ident">query_set_id</span>, (), ())
@@ -4227,7 +4253,7 @@
                     } <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::BeginPipelineStatisticsQuery</span>;
 
-                        <span class="kw">let</span> <span class="ident">query_set</span> <span class="op">=</span> <span class="ident">info</span>
+                        <span class="kw">let</span> <span class="ident">query_set</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
                             .<span class="ident">trackers</span>
                             .<span class="ident">query_sets</span>
                             .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">query_set_guard</span>, <span class="ident">query_set_id</span>, (), ())
@@ -4261,7 +4287,7 @@
                     }
                     <span class="ident">RenderCommand::ExecuteBundle</span>(<span class="ident">bundle_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::ExecuteBundle</span>;
-                        <span class="kw">let</span> <span class="ident">bundle</span> <span class="op">=</span> <span class="ident">info</span>
+                        <span class="kw">let</span> <span class="ident">bundle</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
                             .<span class="ident">trackers</span>
                             .<span class="ident">bundles</span>
                             .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">bundle_guard</span>, <span class="ident">bundle_id</span>, (), ())
@@ -4323,27 +4349,18 @@
             }
 
             <span class="kw">let</span> (<span class="ident">trackers</span>, <span class="ident">used_swapchain</span>) <span class="op">=</span> <span class="ident">info</span>.<span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
-            (<span class="ident">raw</span>, <span class="ident">trackers</span>, <span class="ident">used_swapchain</span>, <span class="ident">query_reset_state</span>)
+            <span class="ident">cmd_buf</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">CommandEncoderStatus::Recording</span>;
+            <span class="ident">cmd_buf</span>.<span class="ident">used_swap_chains</span>.<span class="ident">extend</span>(<span class="ident">used_swapchain</span>);
+            (<span class="ident">raw</span>, <span class="ident">trackers</span>, <span class="ident">query_reset_state</span>)
         };
 
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">cmb_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">command_buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> (<span class="ident">query_set_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">query_sets</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> (<span class="ident">buffer_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> (<span class="ident">texture_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+
         <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span>
             <span class="ident">CommandBuffer::get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmb_guard</span>, <span class="ident">encoder_id</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
-        <span class="ident">cmd_buf</span>.<span class="ident">has_labels</span> <span class="op">|</span><span class="op">=</span> <span class="ident">base</span>.<span class="ident">label</span>.<span class="ident">is_some</span>();
-        <span class="ident">cmd_buf</span>.<span class="ident">used_swap_chains</span>.<span class="ident">extend</span>(<span class="ident">used_swapchain</span>);
-
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">list</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">commands</span> {
-            <span class="ident">list</span>.<span class="ident">push</span>(<span class="kw">crate</span><span class="ident">::device::trace::Command::RunRenderPass</span> {
-                <span class="ident">base</span>: <span class="ident">BasePass::from_ref</span>(<span class="ident">base</span>),
-                <span class="ident">target_colors</span>: <span class="ident">color_attachments</span>.<span class="ident">to_vec</span>(),
-                <span class="ident">target_depth_stencil</span>: <span class="ident">depth_stencil_attachment</span>.<span class="ident">cloned</span>(),
-            });
-        }
-
         <span class="kw">let</span> <span class="ident">last_cmd_buf</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">raw</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
 
         <span class="ident">query_reset_state</span>
@@ -4358,7 +4375,8 @@
         <span class="kw">super</span><span class="ident">::CommandBuffer::insert_barriers</span>(
             <span class="ident">last_cmd_buf</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">cmd_buf</span>.<span class="ident">trackers</span>,
-            <span class="kw-2">&amp;</span><span class="ident">trackers</span>,
+            <span class="kw-2">&amp;</span><span class="ident">trackers</span>.<span class="ident">buffers</span>,
+            <span class="kw-2">&amp;</span><span class="ident">trackers</span>.<span class="ident">textures</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>,
             <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>,
         );
