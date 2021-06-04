@@ -4902,6 +4902,63 @@
 <span id="4899">4899</span>
 <span id="4900">4900</span>
 <span id="4901">4901</span>
+<span id="4902">4902</span>
+<span id="4903">4903</span>
+<span id="4904">4904</span>
+<span id="4905">4905</span>
+<span id="4906">4906</span>
+<span id="4907">4907</span>
+<span id="4908">4908</span>
+<span id="4909">4909</span>
+<span id="4910">4910</span>
+<span id="4911">4911</span>
+<span id="4912">4912</span>
+<span id="4913">4913</span>
+<span id="4914">4914</span>
+<span id="4915">4915</span>
+<span id="4916">4916</span>
+<span id="4917">4917</span>
+<span id="4918">4918</span>
+<span id="4919">4919</span>
+<span id="4920">4920</span>
+<span id="4921">4921</span>
+<span id="4922">4922</span>
+<span id="4923">4923</span>
+<span id="4924">4924</span>
+<span id="4925">4925</span>
+<span id="4926">4926</span>
+<span id="4927">4927</span>
+<span id="4928">4928</span>
+<span id="4929">4929</span>
+<span id="4930">4930</span>
+<span id="4931">4931</span>
+<span id="4932">4932</span>
+<span id="4933">4933</span>
+<span id="4934">4934</span>
+<span id="4935">4935</span>
+<span id="4936">4936</span>
+<span id="4937">4937</span>
+<span id="4938">4938</span>
+<span id="4939">4939</span>
+<span id="4940">4940</span>
+<span id="4941">4941</span>
+<span id="4942">4942</span>
+<span id="4943">4943</span>
+<span id="4944">4944</span>
+<span id="4945">4945</span>
+<span id="4946">4946</span>
+<span id="4947">4947</span>
+<span id="4948">4948</span>
+<span id="4949">4949</span>
+<span id="4950">4950</span>
+<span id="4951">4951</span>
+<span id="4952">4952</span>
+<span id="4953">4953</span>
+<span id="4954">4954</span>
+<span id="4955">4955</span>
+<span id="4956">4956</span>
+<span id="4957">4957</span>
+<span id="4958">4958</span>
 </pre><pre class="rust">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7160,11 +7217,68 @@
             <span class="ident">targets</span>: <span class="ident">Vec::with_capacity</span>(<span class="ident">color_states</span>.<span class="ident">len</span>()),
         };
         <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">cs</span>) <span class="kw">in</span> <span class="ident">color_states</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="kw">let</span> <span class="ident">bt</span> <span class="op">=</span> <span class="ident">conv::map_color_target_state</span>(<span class="ident">cs</span>)
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">error</span><span class="op">|</span> <span class="ident">pipeline::CreateRenderPipelineError::ColorState</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u8</span>, <span class="ident">error</span>))<span class="question-mark">?</span>;
-            <span class="ident">blender</span>.<span class="ident">targets</span>.<span class="ident">push</span>(<span class="ident">bt</span>);
+            <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="kw">loop</span> {
+                <span class="kw">let</span> <span class="ident">format_desc</span> <span class="op">=</span> <span class="ident">cs</span>.<span class="ident">format</span>.<span class="ident">describe</span>();
+                <span class="self">self</span>.<span class="ident">require_features</span>(<span class="ident">format_desc</span>.<span class="ident">required_features</span>)<span class="question-mark">?</span>;
+                <span class="kw">if</span> <span class="op">!</span><span class="ident">format_desc</span>
+                    .<span class="ident">guaranteed_format_features</span>
+                    .<span class="ident">allowed_usages</span>
+                    .<span class="ident">contains</span>(<span class="ident">wgt::TextureUsage::RENDER_ATTACHMENT</span>)
+                {
+                    <span class="kw">break</span> <span class="prelude-val">Some</span>(<span class="ident">pipeline::ColorStateError::FormatNotRenderable</span>(<span class="ident">cs</span>.<span class="ident">format</span>));
+                }
+                <span class="kw">if</span> <span class="ident">cs</span>.<span class="ident">blend</span>.<span class="ident">is_some</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">format_desc</span>.<span class="ident">guaranteed_format_features</span>.<span class="ident">filterable</span> {
+                    <span class="kw">break</span> <span class="prelude-val">Some</span>(<span class="ident">pipeline::ColorStateError::FormatNotBlendable</span>(<span class="ident">cs</span>.<span class="ident">format</span>));
+                }
+                <span class="kw">let</span> <span class="ident">hal_format</span> <span class="op">=</span> <span class="ident">conv::map_texture_format</span>(<span class="ident">cs</span>.<span class="ident">format</span>, <span class="self">self</span>.<span class="ident">private_features</span>);
+                <span class="kw">if</span> <span class="op">!</span><span class="ident">hal_format</span>
+                    .<span class="ident">surface_desc</span>()
+                    .<span class="ident">aspects</span>
+                    .<span class="ident">contains</span>(<span class="ident">hal::format::Aspects::COLOR</span>)
+                {
+                    <span class="kw">break</span> <span class="prelude-val">Some</span>(<span class="ident">pipeline::ColorStateError::FormatNotColor</span>(<span class="ident">cs</span>.<span class="ident">format</span>));
+                }
+
+                <span class="kw">match</span> <span class="ident">conv::map_color_target_state</span>(<span class="ident">cs</span>) {
+                    <span class="prelude-val">Ok</span>(<span class="ident">bt</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">blender</span>.<span class="ident">targets</span>.<span class="ident">push</span>(<span class="ident">bt</span>),
+                    <span class="prelude-val">Err</span>(<span class="ident">e</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span> <span class="prelude-val">Some</span>(<span class="ident">e</span>),
+                }
+                <span class="kw">break</span> <span class="prelude-val">None</span>;
+            };
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">error</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">pipeline::CreateRenderPipelineError::ColorState</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u8</span>, <span class="ident">e</span>));
+            }
         }
 
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ds</span>) <span class="op">=</span> <span class="ident">depth_stencil_state</span> {
+            <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="kw">loop</span> {
+                <span class="kw">let</span> <span class="ident">format_desc</span> <span class="op">=</span> <span class="ident">ds</span>.<span class="ident">format</span>.<span class="ident">describe</span>();
+                <span class="self">self</span>.<span class="ident">require_features</span>(<span class="ident">format_desc</span>.<span class="ident">required_features</span>)<span class="question-mark">?</span>;
+                <span class="kw">if</span> <span class="op">!</span><span class="ident">format_desc</span>
+                    .<span class="ident">guaranteed_format_features</span>
+                    .<span class="ident">allowed_usages</span>
+                    .<span class="ident">contains</span>(<span class="ident">wgt::TextureUsage::RENDER_ATTACHMENT</span>)
+                {
+                    <span class="kw">break</span> <span class="prelude-val">Some</span>(<span class="ident">pipeline::DepthStencilStateError::FormatNotRenderable</span>(
+                        <span class="ident">ds</span>.<span class="ident">format</span>,
+                    ));
+                }
+                <span class="kw">let</span> <span class="ident">hal_format</span> <span class="op">=</span> <span class="ident">conv::map_texture_format</span>(<span class="ident">ds</span>.<span class="ident">format</span>, <span class="self">self</span>.<span class="ident">private_features</span>);
+                <span class="kw">let</span> <span class="ident">aspects</span> <span class="op">=</span> <span class="ident">hal_format</span>.<span class="ident">surface_desc</span>().<span class="ident">aspects</span>;
+                <span class="kw">if</span> <span class="ident">ds</span>.<span class="ident">is_depth_enabled</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="ident">hal::format::Aspects::DEPTH</span>) {
+                    <span class="kw">break</span> <span class="prelude-val">Some</span>(<span class="ident">pipeline::DepthStencilStateError::FormatNotDepth</span>(<span class="ident">ds</span>.<span class="ident">format</span>));
+                }
+                <span class="kw">if</span> <span class="ident">ds</span>.<span class="ident">stencil</span>.<span class="ident">is_enabled</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="ident">hal::format::Aspects::STENCIL</span>) {
+                    <span class="kw">break</span> <span class="prelude-val">Some</span>(<span class="ident">pipeline::DepthStencilStateError::FormatNotStencil</span>(
+                        <span class="ident">ds</span>.<span class="ident">format</span>,
+                    ));
+                }
+                <span class="kw">break</span> <span class="prelude-val">None</span>;
+            };
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">e</span>) <span class="op">=</span> <span class="ident">error</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">pipeline::CreateRenderPipelineError::DepthStencilState</span>(<span class="ident">e</span>));
+            }
+        }
         <span class="kw">let</span> <span class="ident">depth_stencil</span> <span class="op">=</span> <span class="ident">depth_stencil_state</span>
             .<span class="ident">map</span>(<span class="ident">conv::map_depth_stencil_state</span>)
             .<span class="ident">unwrap_or_default</span>();
@@ -9805,5 +9919,4 @@
     }
 }
 </pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
-    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div><script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script></body></html>
