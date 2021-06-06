@@ -2972,6 +2972,62 @@
 <span id="2969">2969</span>
 <span id="2970">2970</span>
 <span id="2971">2971</span>
+<span id="2972">2972</span>
+<span id="2973">2973</span>
+<span id="2974">2974</span>
+<span id="2975">2975</span>
+<span id="2976">2976</span>
+<span id="2977">2977</span>
+<span id="2978">2978</span>
+<span id="2979">2979</span>
+<span id="2980">2980</span>
+<span id="2981">2981</span>
+<span id="2982">2982</span>
+<span id="2983">2983</span>
+<span id="2984">2984</span>
+<span id="2985">2985</span>
+<span id="2986">2986</span>
+<span id="2987">2987</span>
+<span id="2988">2988</span>
+<span id="2989">2989</span>
+<span id="2990">2990</span>
+<span id="2991">2991</span>
+<span id="2992">2992</span>
+<span id="2993">2993</span>
+<span id="2994">2994</span>
+<span id="2995">2995</span>
+<span id="2996">2996</span>
+<span id="2997">2997</span>
+<span id="2998">2998</span>
+<span id="2999">2999</span>
+<span id="3000">3000</span>
+<span id="3001">3001</span>
+<span id="3002">3002</span>
+<span id="3003">3003</span>
+<span id="3004">3004</span>
+<span id="3005">3005</span>
+<span id="3006">3006</span>
+<span id="3007">3007</span>
+<span id="3008">3008</span>
+<span id="3009">3009</span>
+<span id="3010">3010</span>
+<span id="3011">3011</span>
+<span id="3012">3012</span>
+<span id="3013">3013</span>
+<span id="3014">3014</span>
+<span id="3015">3015</span>
+<span id="3016">3016</span>
+<span id="3017">3017</span>
+<span id="3018">3018</span>
+<span id="3019">3019</span>
+<span id="3020">3020</span>
+<span id="3021">3021</span>
+<span id="3022">3022</span>
+<span id="3023">3023</span>
+<span id="3024">3024</span>
+<span id="3025">3025</span>
+<span id="3026">3026</span>
+<span id="3027">3027</span>
 </pre><pre class="rust">
 <span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).</span>
 <span class="doccomment">//!</span>
@@ -3375,6 +3431,20 @@
         <span class="ident">pass</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span><span class="ident">::RenderPassId</span>,
     );
     <span class="kw">fn</span> <span class="ident">command_encoder_finish</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">encoder</span>: <span class="self">Self</span><span class="ident">::CommandEncoderId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::CommandBufferId</span>;
+
+    <span class="kw">fn</span> <span class="ident">command_encoder_clear_image</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">encoder</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::CommandEncoderId</span>,
+        <span class="ident">texture</span>: <span class="kw-2">&amp;</span><span class="ident">Texture</span>,
+        <span class="ident">subresource_range</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::ImageSubresourceRange</span>,
+    );
+    <span class="kw">fn</span> <span class="ident">command_encoder_clear_buffer</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">encoder</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::CommandEncoderId</span>,
+        <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident">Buffer</span>,
+        <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
+        <span class="ident">size</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BufferSize</span><span class="op">&gt;</span>,
+    );
 
     <span class="kw">fn</span> <span class="ident">command_encoder_insert_debug_marker</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">encoder</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::CommandEncoderId</span>, <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>);
     <span class="kw">fn</span> <span class="ident">command_encoder_push_debug_group</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">encoder</span>: <span class="kw-2">&amp;</span><span class="self">Self</span><span class="ident">::CommandEncoderId</span>, <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>);
@@ -5083,6 +5153,48 @@
             <span class="ident">source</span>,
             <span class="ident">destination</span>,
             <span class="ident">copy_size</span>,
+        );
+    }
+
+    <span class="doccomment">/// Clears texture to zero.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Panics</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// - `CLEAR_COMMANDS` extension not enabled</span>
+    <span class="doccomment">/// - Texture does not have `COPY_DST` usage.</span>
+    <span class="doccomment">/// - Range it out of bounds</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear_texture</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">texture</span>: <span class="kw-2">&amp;</span><span class="ident">Texture</span>,
+        <span class="ident">subresource_range</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::ImageSubresourceRange</span>,
+    ) {
+        <span class="ident">Context::command_encoder_clear_image</span>(
+            <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>,
+            <span class="self">self</span>.<span class="ident">id</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+            <span class="ident">texture</span>,
+            <span class="ident">subresource_range</span>,
+        );
+    }
+
+    <span class="doccomment">/// Clears buffer to zero.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Panics</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// - `CLEAR_COMMANDS` extension not enabled</span>
+    <span class="doccomment">/// - Buffer does not have `COPY_DST` usage.</span>
+    <span class="doccomment">/// - Range it out of bounds</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear_buffer</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident">Buffer</span>,
+        <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
+        <span class="ident">size</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BufferSize</span><span class="op">&gt;</span>,
+    ) {
+        <span class="ident">Context::command_encoder_clear_buffer</span>(
+            <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>,
+            <span class="self">self</span>.<span class="ident">id</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
+            <span class="ident">buffer</span>,
+            <span class="ident">offset</span>,
+            <span class="ident">size</span>,
         );
     }
 
