@@ -280,9 +280,9 @@
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{<span class="ident">BindGroup</span>, <span class="ident">PipelineLayout</span>},
     <span class="ident">device::SHADER_STAGE_COUNT</span>,
-    <span class="ident">hub</span>::{<span class="ident">GfxBackend</span>, <span class="ident">Storage</span>},
+    <span class="ident">hub</span>::{<span class="ident">HalApi</span>, <span class="ident">Storage</span>},
     <span class="ident">id</span>::{<span class="ident">BindGroupId</span>, <span class="ident">BindGroupLayoutId</span>, <span class="ident">PipelineLayoutId</span>, <span class="ident">Valid</span>},
-    <span class="ident">Stored</span>, <span class="ident">MAX_BIND_GROUPS</span>,
+    <span class="ident">Stored</span>,
 };
 
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
@@ -317,7 +317,7 @@
 
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Manager</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="ident">entries</span>: [<span class="ident">Entry</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>; <span class="kw">crate</span><span class="ident">::MAX_BIND_GROUPS</span>],
+        <span class="ident">entries</span>: [<span class="ident">Entry</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>; <span class="ident">hal::MAX_BIND_GROUPS</span>],
     }
 
     <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">PartialEq</span><span class="op">&gt;</span> <span class="ident">Manager</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
@@ -420,7 +420,7 @@
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">Binder</span> {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">pipeline_layout_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">PipelineLayoutId</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="comment">//TODO: strongly `Stored`</span>
     <span class="ident">manager</span>: <span class="ident">compat::Manager</span><span class="op">&lt;</span><span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">BindGroupLayoutId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">payloads</span>: [<span class="ident">EntryPayload</span>; <span class="ident">MAX_BIND_GROUPS</span>],
+    <span class="ident">payloads</span>: [<span class="ident">EntryPayload</span>; <span class="ident">hal::MAX_BIND_GROUPS</span>],
 }
 
 <span class="kw">impl</span> <span class="ident">Binder</span> {
@@ -441,9 +441,9 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">change_pipeline_layout</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">change_pipeline_layout</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">PipelineLayout</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">PipelineLayoutId</span><span class="op">&gt;</span>,
+        <span class="ident">guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">PipelineLayout</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">PipelineLayoutId</span><span class="op">&gt;</span>,
         <span class="ident">new_id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">PipelineLayoutId</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">usize</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">EntryPayload</span>]) {
         <span class="kw">let</span> <span class="ident">old_id_opt</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">pipeline_layout_id</span>.<span class="ident">replace</span>(<span class="ident">new_id</span>);
@@ -462,15 +462,15 @@
         (<span class="ident">bind_range</span>.<span class="ident">start</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">payloads</span>[<span class="ident">bind_range</span>])
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">assign_group</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">assign_group</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">index</span>: <span class="ident">usize</span>,
         <span class="ident">bind_group_id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">BindGroupId</span><span class="op">&gt;</span>,
-        <span class="ident">bind_group</span>: <span class="kw-2">&amp;</span><span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
+        <span class="ident">bind_group</span>: <span class="kw-2">&amp;</span><span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
         <span class="ident">offsets</span>: <span class="kw-2">&amp;</span>[<span class="ident">wgt::DynamicOffset</span>],
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">EntryPayload</span>] {
         <span class="macro">log::trace!</span>(<span class="string">&quot;\tBinding [{}] = group {:?}&quot;</span>, <span class="ident">index</span>, <span class="ident">bind_group_id</span>);
-        <span class="macro">debug_assert_eq!</span>(<span class="ident">B::VARIANT</span>, <span class="ident">bind_group_id</span>.<span class="number">0</span>.<span class="ident">backend</span>());
+        <span class="macro">debug_assert_eq!</span>(<span class="ident">A::VARIANT</span>, <span class="ident">bind_group_id</span>.<span class="number">0</span>.<span class="ident">backend</span>());
 
         <span class="kw">let</span> <span class="ident">payload</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">payloads</span>[<span class="ident">index</span>];
         <span class="ident">payload</span>.<span class="ident">group_id</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Stored</span> {

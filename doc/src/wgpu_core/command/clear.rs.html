@@ -272,29 +272,6 @@
 <span id="270">270</span>
 <span id="271">271</span>
 <span id="272">272</span>
-<span id="273">273</span>
-<span id="274">274</span>
-<span id="275">275</span>
-<span id="276">276</span>
-<span id="277">277</span>
-<span id="278">278</span>
-<span id="279">279</span>
-<span id="280">280</span>
-<span id="281">281</span>
-<span id="282">282</span>
-<span id="283">283</span>
-<span id="284">284</span>
-<span id="285">285</span>
-<span id="286">286</span>
-<span id="287">287</span>
-<span id="288">288</span>
-<span id="289">289</span>
-<span id="290">290</span>
-<span id="291">291</span>
-<span id="292">292</span>
-<span id="293">293</span>
-<span id="294">294</span>
-<span id="295">295</span>
 </pre><pre class="rust">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -306,16 +283,13 @@
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::device::trace::Command</span> <span class="kw">as</span> <span class="ident">TraceCommand</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">command::CommandBuffer</span>,
-    <span class="ident">conv</span>,
-    <span class="ident">device::all_buffer_stages</span>,
-    <span class="ident">hub</span>::{<span class="ident">GfxBackend</span>, <span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">Token</span>},
+    <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>::{<span class="ident">BufferId</span>, <span class="ident">CommandEncoderId</span>, <span class="ident">TextureId</span>},
     <span class="ident">memory_init_tracker</span>::{<span class="ident">MemoryInitKind</span>, <span class="ident">MemoryInitTrackerAction</span>},
-    <span class="ident">resource</span>::{<span class="ident">BufferUse</span>, <span class="ident">TextureUse</span>},
     <span class="ident">track::TextureSelector</span>,
 };
 
-<span class="kw">use</span> <span class="ident">hal::command::CommandBuffer</span> <span class="kw">as</span> <span class="kw">_</span>;
+<span class="kw">use</span> <span class="ident">hal::CommandEncoder</span> <span class="kw">as</span> <span class="kw">_</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">wgt</span>::{
     <span class="ident">BufferAddress</span>, <span class="ident">BufferSize</span>, <span class="ident">BufferUsage</span>, <span class="ident">ImageSubresourceRange</span>, <span class="ident">TextureAspect</span>, <span class="ident">TextureUsage</span>,
@@ -344,29 +318,29 @@
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;destination buffer/texture is missing the `COPY_DST` usage flag&quot;</span>)]</span>
     <span class="ident">MissingCopyDstUsageFlag</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">BufferId</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TextureId</span><span class="op">&gt;</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;texture lacks the aspects that were specified in the image subresource range. Texture has {texture_aspects:?}, specified was {subresource_range_aspects:?}&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;texture lacks the aspects that were specified in the image subresource range. Texture with format {texture_format:?}, specified was {subresource_range_aspects:?}&quot;</span>)]</span>
     <span class="ident">MissingTextureAspect</span> {
-        <span class="ident">texture_aspects</span>: <span class="ident">hal::format::Aspects</span>,
+        <span class="ident">texture_format</span>: <span class="ident">wgt::TextureFormat</span>,
         <span class="ident">subresource_range_aspects</span>: <span class="ident">TextureAspect</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;image subresource level range is outside of the texture&#39;s level range. texture range is {texture_level_range:?},  \
 whereas subesource range specified start {subresource_base_mip_level} and count {subresource_mip_level_count:?}&quot;</span>)]</span>
     <span class="ident">InvalidTextureLevelRange</span> {
-        <span class="ident">texture_level_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">hal::image::Level</span><span class="op">&gt;</span>,
+        <span class="ident">texture_level_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
         <span class="ident">subresource_base_mip_level</span>: <span class="ident">u32</span>,
         <span class="ident">subresource_mip_level_count</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonZeroU32</span><span class="op">&gt;</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;image subresource layer range is outside of the texture&#39;s layer range. texture range is {texture_layer_range:?},  \
 whereas subesource range specified start {subresource_base_array_layer} and count {subresource_array_layer_count:?}&quot;</span>)]</span>
     <span class="ident">InvalidTextureLayerRange</span> {
-        <span class="ident">texture_layer_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">hal::image::Layer</span><span class="op">&gt;</span>,
+        <span class="ident">texture_layer_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
         <span class="ident">subresource_base_array_layer</span>: <span class="ident">u32</span>,
         <span class="ident">subresource_array_layer_count</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonZeroU32</span><span class="op">&gt;</span>,
     },
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span> <span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">command_encoder_clear_buffer</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">command_encoder_clear_buffer</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">command_encoder_id</span>: <span class="ident">CommandEncoderId</span>,
         <span class="ident">dst</span>: <span class="ident">BufferId</span>,
@@ -375,7 +349,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ClearError</span><span class="op">&gt;</span> {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::fill_buffer&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B::hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">cmd_buf_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">command_buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer::get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">command_encoder_id</span>)
@@ -394,9 +368,9 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         <span class="kw">let</span> (<span class="ident">dst_buffer</span>, <span class="ident">dst_pending</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>
             .<span class="ident">trackers</span>
             .<span class="ident">buffers</span>
-            .<span class="ident">use_replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">dst</span>, (), <span class="ident">BufferUse::COPY_DST</span>)
+            .<span class="ident">use_replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">dst</span>, (), <span class="ident">hal::BufferUse::COPY_DST</span>)
             .<span class="ident">map_err</span>(<span class="ident">ClearError::InvalidBuffer</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">dst_raw</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">dst_buffer</span>
+        <span class="kw">let</span> <span class="ident">dst_raw</span> <span class="op">=</span> <span class="ident">dst_buffer</span>
             .<span class="ident">raw</span>
             .<span class="ident">as_ref</span>()
             .<span class="ident">ok_or</span>(<span class="ident">ClearError::InvalidBuffer</span>(<span class="ident">dst</span>))<span class="question-mark">?</span>;
@@ -422,8 +396,11 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             }
         }
 
-        <span class="kw">let</span> <span class="ident">num_bytes_filled</span> <span class="op">=</span> <span class="ident">size</span>.<span class="ident">map_or</span>(<span class="ident">dst_buffer</span>.<span class="ident">size</span> <span class="op">-</span> <span class="ident">offset</span>, <span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">get</span>());
-        <span class="kw">if</span> <span class="ident">num_bytes_filled</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">size</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">size</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">offset</span> <span class="op">+</span> <span class="ident">size</span>.<span class="ident">get</span>(),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">dst_buffer</span>.<span class="ident">size</span>,
+        };
+        <span class="kw">if</span> <span class="ident">offset</span> <span class="op">=</span><span class="op">=</span> <span class="ident">end</span> {
             <span class="macro">log::trace!</span>(<span class="string">&quot;Ignoring fill_buffer of size 0&quot;</span>);
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
         }
@@ -432,7 +409,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         <span class="ident">cmd_buf</span>.<span class="ident">buffer_memory_init_actions</span>.<span class="ident">extend</span>(
             <span class="ident">dst_buffer</span>
                 .<span class="ident">initialization_status</span>
-                .<span class="ident">check</span>(<span class="ident">offset</span>..(<span class="ident">offset</span> <span class="op">+</span> <span class="ident">num_bytes_filled</span>))
+                .<span class="ident">check</span>(<span class="ident">offset</span>..<span class="ident">end</span>)
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">range</span><span class="op">|</span> <span class="ident">MemoryInitTrackerAction</span> {
                     <span class="ident">id</span>: <span class="ident">dst</span>,
                     <span class="ident">range</span>,
@@ -441,29 +418,16 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         );
 
         <span class="comment">// actual hal barrier &amp; operation</span>
-        <span class="kw">let</span> <span class="ident">dst_barrier</span> <span class="op">=</span> <span class="ident">dst_pending</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">dst_buffer</span>))
-            .<span class="ident">next</span>();
-        <span class="kw">let</span> <span class="ident">cmd_buf_raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">raw</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">dst_barrier</span> <span class="op">=</span> <span class="ident">dst_pending</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">dst_buffer</span>));
+        <span class="kw">let</span> <span class="ident">cmd_buf_raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">encoder</span>.<span class="ident">open</span>();
         <span class="kw">unsafe</span> {
-            <span class="ident">cmd_buf_raw</span>.<span class="ident">pipeline_barrier</span>(
-                <span class="ident">all_buffer_stages</span>()..<span class="ident">hal::pso::PipelineStage::TRANSFER</span>,
-                <span class="ident">hal::memory::Dependencies::empty</span>(),
-                <span class="ident">dst_barrier</span>.<span class="ident">into_iter</span>(),
-            );
-            <span class="ident">cmd_buf_raw</span>.<span class="ident">fill_buffer</span>(
-                <span class="ident">dst_raw</span>,
-                <span class="ident">hal::buffer::SubRange</span> {
-                    <span class="ident">offset</span>,
-                    <span class="ident">size</span>: <span class="ident">size</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">s</span><span class="op">|</span> <span class="ident">s</span>.<span class="ident">get</span>()),
-                },
-                <span class="number">0</span>,
-            );
+            <span class="ident">cmd_buf_raw</span>.<span class="ident">transition_buffers</span>(<span class="ident">dst_barrier</span>);
+            <span class="ident">cmd_buf_raw</span>.<span class="ident">fill_buffer</span>(<span class="ident">dst_raw</span>, <span class="ident">offset</span>..<span class="ident">end</span>, <span class="number">0</span>);
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">command_encoder_clear_image</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">command_encoder_clear_image</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">command_encoder_id</span>: <span class="ident">CommandEncoderId</span>,
         <span class="ident">dst</span>: <span class="ident">TextureId</span>,
@@ -471,7 +435,7 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ClearError</span><span class="op">&gt;</span> {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::clear_image&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B::hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">cmd_buf_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">command_buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer::get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">command_encoder_id</span>)
@@ -496,24 +460,20 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ClearError::InvalidTexture</span>(<span class="ident">dst</span>))<span class="question-mark">?</span>;
 
         <span class="comment">// Check if subresource aspects are valid.</span>
-        <span class="kw">let</span> <span class="ident">aspects</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">subresource_range</span>.<span class="ident">aspect</span> {
-            <span class="ident">wgt::TextureAspect::All</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">dst_texture</span>.<span class="ident">aspects</span>,
-            <span class="ident">wgt::TextureAspect::DepthOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">hal::format::Aspects::DEPTH</span>,
-            <span class="ident">wgt::TextureAspect::StencilOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">hal::format::Aspects::STENCIL</span>,
-        };
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">dst_texture</span>.<span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="ident">aspects</span>) {
+        <span class="kw">let</span> <span class="ident">requested_aspects</span> <span class="op">=</span> <span class="ident">hal::FormatAspect::from</span>(<span class="ident">subresource_range</span>.<span class="ident">aspect</span>);
+        <span class="kw">let</span> <span class="ident">clear_aspects</span> <span class="op">=</span> <span class="ident">hal::FormatAspect::from</span>(<span class="ident">dst_texture</span>.<span class="ident">desc</span>.<span class="ident">format</span>) <span class="op">&amp;</span> <span class="ident">requested_aspects</span>;
+        <span class="kw">if</span> <span class="ident">clear_aspects</span>.<span class="ident">is_empty</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ClearError::MissingTextureAspect</span> {
-                <span class="ident">texture_aspects</span>: <span class="ident">dst_texture</span>.<span class="ident">aspects</span>,
+                <span class="ident">texture_format</span>: <span class="ident">dst_texture</span>.<span class="ident">desc</span>.<span class="ident">format</span>,
                 <span class="ident">subresource_range_aspects</span>: <span class="ident">subresource_range</span>.<span class="ident">aspect</span>,
             });
         };
         <span class="comment">// Check if subresource level range is valid</span>
-        <span class="kw">let</span> <span class="ident">subresource_level_end</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">count</span>) <span class="op">=</span> <span class="ident">subresource_range</span>.<span class="ident">mip_level_count</span> {
-            (<span class="ident">subresource_range</span>.<span class="ident">base_mip_level</span> <span class="op">+</span> <span class="ident">count</span>.<span class="ident">get</span>()) <span class="kw">as</span> <span class="ident">u8</span>
-        } <span class="kw">else</span> {
-            <span class="ident">dst_texture</span>.<span class="ident">full_range</span>.<span class="ident">levels</span>.<span class="ident">end</span>
+        <span class="kw">let</span> <span class="ident">subresource_level_end</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">subresource_range</span>.<span class="ident">mip_level_count</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">count</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">subresource_range</span>.<span class="ident">base_mip_level</span> <span class="op">+</span> <span class="ident">count</span>.<span class="ident">get</span>(),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">dst_texture</span>.<span class="ident">full_range</span>.<span class="ident">levels</span>.<span class="ident">end</span>,
         };
-        <span class="kw">if</span> <span class="ident">dst_texture</span>.<span class="ident">full_range</span>.<span class="ident">levels</span>.<span class="ident">start</span> <span class="op">&gt;</span> <span class="ident">subresource_range</span>.<span class="ident">base_mip_level</span> <span class="kw">as</span> <span class="ident">u8</span>
+        <span class="kw">if</span> <span class="ident">dst_texture</span>.<span class="ident">full_range</span>.<span class="ident">levels</span>.<span class="ident">start</span> <span class="op">&gt;</span> <span class="ident">subresource_range</span>.<span class="ident">base_mip_level</span>
             <span class="op">|</span><span class="op">|</span> <span class="ident">dst_texture</span>.<span class="ident">full_range</span>.<span class="ident">levels</span>.<span class="ident">end</span> <span class="op">&lt;</span> <span class="ident">subresource_level_end</span>
         {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ClearError::InvalidTextureLevelRange</span> {
@@ -523,12 +483,11 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
             });
         }
         <span class="comment">// Check if subresource layer range is valid</span>
-        <span class="kw">let</span> <span class="ident">subresource_layer_end</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">count</span>) <span class="op">=</span> <span class="ident">subresource_range</span>.<span class="ident">array_layer_count</span> {
-            (<span class="ident">subresource_range</span>.<span class="ident">base_array_layer</span> <span class="op">+</span> <span class="ident">count</span>.<span class="ident">get</span>()) <span class="kw">as</span> <span class="ident">u16</span>
-        } <span class="kw">else</span> {
-            <span class="ident">dst_texture</span>.<span class="ident">full_range</span>.<span class="ident">layers</span>.<span class="ident">end</span>
+        <span class="kw">let</span> <span class="ident">subresource_layer_end</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">subresource_range</span>.<span class="ident">array_layer_count</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">count</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">subresource_range</span>.<span class="ident">base_array_layer</span> <span class="op">+</span> <span class="ident">count</span>.<span class="ident">get</span>(),
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">dst_texture</span>.<span class="ident">full_range</span>.<span class="ident">layers</span>.<span class="ident">end</span>,
         };
-        <span class="kw">if</span> <span class="ident">dst_texture</span>.<span class="ident">full_range</span>.<span class="ident">layers</span>.<span class="ident">start</span> <span class="op">&gt;</span> <span class="ident">subresource_range</span>.<span class="ident">base_array_layer</span> <span class="kw">as</span> <span class="ident">u16</span>
+        <span class="kw">if</span> <span class="ident">dst_texture</span>.<span class="ident">full_range</span>.<span class="ident">layers</span>.<span class="ident">start</span> <span class="op">&gt;</span> <span class="ident">subresource_range</span>.<span class="ident">base_array_layer</span>
             <span class="op">|</span><span class="op">|</span> <span class="ident">dst_texture</span>.<span class="ident">full_range</span>.<span class="ident">layers</span>.<span class="ident">end</span> <span class="op">&lt;</span> <span class="ident">subresource_layer_end</span>
         {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ClearError::InvalidTextureLayerRange</span> {
@@ -546,47 +505,42 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
                 <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>,
                 <span class="ident">dst</span>,
                 <span class="ident">TextureSelector</span> {
-                    <span class="ident">levels</span>: <span class="ident">subresource_range</span>.<span class="ident">base_mip_level</span> <span class="kw">as</span> <span class="ident">u8</span>..<span class="ident">subresource_level_end</span>,
-                    <span class="ident">layers</span>: <span class="ident">subresource_range</span>.<span class="ident">base_array_layer</span> <span class="kw">as</span> <span class="ident">u16</span>..<span class="ident">subresource_layer_end</span>,
+                    <span class="ident">levels</span>: <span class="ident">subresource_range</span>.<span class="ident">base_mip_level</span>..<span class="ident">subresource_level_end</span>,
+                    <span class="ident">layers</span>: <span class="ident">subresource_range</span>.<span class="ident">base_array_layer</span>..<span class="ident">subresource_layer_end</span>,
                 },
-                <span class="ident">TextureUse::COPY_DST</span>,
+                <span class="ident">hal::TextureUse::COPY_DST</span>,
             )
             .<span class="ident">map_err</span>(<span class="ident">ClearError::InvalidTexture</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">dst_raw</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">dst_texture</span>
+        <span class="kw">let</span> <span class="ident">_dst_raw</span> <span class="op">=</span> <span class="ident">dst_texture</span>
             .<span class="ident">raw</span>
             .<span class="ident">as_ref</span>()
             .<span class="ident">ok_or</span>(<span class="ident">ClearError::InvalidTexture</span>(<span class="ident">dst</span>))<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">dst_texture</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">TextureUsage::COPY_DST</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">dst_texture</span>.<span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">TextureUsage::COPY_DST</span>) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ClearError::MissingCopyDstUsageFlag</span>(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">dst</span>)));
         }
 
         <span class="comment">// actual hal barrier &amp; operation</span>
-        <span class="kw">let</span> <span class="ident">dst_barrier</span> <span class="op">=</span> <span class="ident">dst_pending</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">dst_texture</span>))
-            .<span class="ident">next</span>();
-        <span class="kw">let</span> <span class="ident">cmd_buf_raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">raw</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">dst_barrier</span> <span class="op">=</span> <span class="ident">dst_pending</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">dst_texture</span>));
+        <span class="kw">let</span> <span class="ident">cmd_buf_raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">encoder</span>.<span class="ident">open</span>();
         <span class="kw">unsafe</span> {
-            <span class="ident">cmd_buf_raw</span>.<span class="ident">pipeline_barrier</span>(
-                <span class="ident">all_buffer_stages</span>()..<span class="ident">hal::pso::PipelineStage::TRANSFER</span>,
-                <span class="ident">hal::memory::Dependencies::empty</span>(),
-                <span class="ident">dst_barrier</span>.<span class="ident">into_iter</span>(),
-            );
-            <span class="ident">cmd_buf_raw</span>.<span class="ident">clear_image</span>(
-                <span class="ident">dst_raw</span>,
-                <span class="ident">hal::image::Layout::TransferDstOptimal</span>,
-                <span class="ident">hal::command::ClearValue</span> {
-                    <span class="ident">color</span>: <span class="ident">hal::command::ClearColor</span> {
-                        <span class="ident">float32</span>: <span class="ident">conv::map_color_f32</span>(<span class="kw-2">&amp;</span><span class="ident">wgt::Color::TRANSPARENT</span>),
+            <span class="ident">cmd_buf_raw</span>.<span class="ident">transition_textures</span>(<span class="ident">dst_barrier</span>);
+            <span class="comment">/*TODO: image clears
+            cmd_buf_raw.clear_image(
+                dst_raw,
+                hal::image::Layout::TransferDstOptimal,
+                hal::command::ClearValue {
+                    color: hal::command::ClearColor {
+                        float32: conv::map_color_f32(&amp;wgt::Color::TRANSPARENT),
                     },
                 },
-                <span class="ident">std::iter::once</span>(<span class="ident">hal::image::SubresourceRange</span> {
-                    <span class="ident">aspects</span>,
-                    <span class="ident">level_start</span>: <span class="ident">subresource_range</span>.<span class="ident">base_mip_level</span> <span class="kw">as</span> <span class="ident">u8</span>,
-                    <span class="ident">level_count</span>: <span class="ident">subresource_range</span>.<span class="ident">mip_level_count</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">get</span>() <span class="kw">as</span> <span class="ident">u8</span>),
-                    <span class="ident">layer_start</span>: <span class="ident">subresource_range</span>.<span class="ident">base_array_layer</span> <span class="kw">as</span> <span class="ident">u16</span>,
-                    <span class="ident">layer_count</span>: <span class="ident">subresource_range</span>.<span class="ident">array_layer_count</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">get</span>() <span class="kw">as</span> <span class="ident">u16</span>),
+                std::iter::once(hal::image::SubresourceRange {
+                    aspects,
+                    level_start: subresource_range.base_mip_level as u8,
+                    level_count: subresource_range.mip_level_count.map(|c| c.get() as u8),
+                    layer_start: subresource_range.base_array_layer as u16,
+                    layer_count: subresource_range.array_layer_count.map(|c| c.get() as u16),
                 }),
-            );
+            );*/</span>
         }
         <span class="prelude-val">Ok</span>(())
     }

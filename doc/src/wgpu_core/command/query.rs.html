@@ -403,38 +403,20 @@
 <span id="401">401</span>
 <span id="402">402</span>
 <span id="403">403</span>
-<span id="404">404</span>
-<span id="405">405</span>
-<span id="406">406</span>
-<span id="407">407</span>
-<span id="408">408</span>
-<span id="409">409</span>
-<span id="410">410</span>
-<span id="411">411</span>
-<span id="412">412</span>
-<span id="413">413</span>
-<span id="414">414</span>
-<span id="415">415</span>
-<span id="416">416</span>
-<span id="417">417</span>
-<span id="418">418</span>
-<span id="419">419</span>
-<span id="420">420</span>
 </pre><pre class="rust">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */</span>
 
-<span class="kw">use</span> <span class="ident">hal::command::CommandBuffer</span> <span class="kw">as</span> <span class="kw">_</span>;
+<span class="kw">use</span> <span class="ident">hal::CommandEncoder</span> <span class="kw">as</span> <span class="kw">_</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::device::trace::Command</span> <span class="kw">as</span> <span class="ident">TraceCommand</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">command</span>::{<span class="ident">CommandBuffer</span>, <span class="ident">CommandEncoderError</span>},
-    <span class="ident">device::all_buffer_stages</span>,
-    <span class="ident">hub</span>::{<span class="ident">GfxBackend</span>, <span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
+    <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>::{<span class="self">self</span>, <span class="ident">Id</span>, <span class="ident">TypedId</span>},
-    <span class="ident">resource</span>::{<span class="ident">BufferUse</span>, <span class="ident">QuerySet</span>},
+    <span class="ident">resource::QuerySet</span>,
     <span class="ident">track::UseExtendError</span>,
     <span class="ident">Epoch</span>, <span class="ident">FastHashMap</span>, <span class="ident">Index</span>,
 };
@@ -443,11 +425,11 @@
 <span class="kw">use</span> <span class="ident">wgt::BufferAddress</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">QueryResetMap</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> {
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">QueryResetMap</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> {
     <span class="ident">map</span>: <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">Index</span>, (<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">bool</span><span class="op">&gt;</span>, <span class="ident">Epoch</span>)<span class="op">&gt;</span>,
-    <span class="ident">_phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
+    <span class="ident">_phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
 }
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">hal::Backend</span><span class="op">&gt;</span> <span class="ident">QueryResetMap</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">QueryResetMap</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">map</span>: <span class="ident">FastHashMap::default</span>(),
@@ -458,7 +440,7 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">use_query_set</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">id</span>: <span class="ident">id::QuerySetId</span>,
-        <span class="ident">query_set</span>: <span class="kw-2">&amp;</span><span class="ident">QuerySet</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>,
+        <span class="ident">query_set</span>: <span class="kw-2">&amp;</span><span class="ident">QuerySet</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
         <span class="ident">query</span>: <span class="ident">u32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">unzip</span>();
@@ -472,8 +454,8 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset_queries</span>(
         <span class="self">self</span>,
-        <span class="ident">cmd_buf_raw</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">B::CommandBuffer</span>,
-        <span class="ident">query_set_storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">QuerySet</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">id::QuerySetId</span><span class="op">&gt;</span>,
+        <span class="ident">raw_encoder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">A::CommandEncoder</span>,
+        <span class="ident">query_set_storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">QuerySet</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::QuerySetId</span><span class="op">&gt;</span>,
         <span class="ident">backend</span>: <span class="ident">wgt::Backend</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">id::QuerySetId</span><span class="op">&gt;</span> {
         <span class="kw">for</span> (<span class="ident">query_set_id</span>, (<span class="ident">state</span>, <span class="ident">epoch</span>)) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">into_iter</span>() {
@@ -493,7 +475,7 @@
                     <span class="comment">// We&#39;ve hit the end of a run, dispatch a reset</span>
                     (<span class="prelude-val">Some</span>(<span class="ident">start</span>), <span class="bool-val">false</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">run_start</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-                        <span class="kw">unsafe</span> { <span class="ident">cmd_buf_raw</span>.<span class="ident">reset_query_pool</span>(<span class="kw-2">&amp;</span><span class="ident">query_set</span>.<span class="ident">raw</span>, <span class="ident">start</span>..<span class="ident">idx</span> <span class="kw">as</span> <span class="ident">u32</span>) };
+                        <span class="kw">unsafe</span> { <span class="ident">raw_encoder</span>.<span class="ident">reset_queries</span>(<span class="kw-2">&amp;</span><span class="ident">query_set</span>.<span class="ident">raw</span>, <span class="ident">start</span>..<span class="ident">idx</span> <span class="kw">as</span> <span class="ident">u32</span>) };
                     }
                     <span class="comment">// We&#39;re starting a run</span>
                     (<span class="prelude-val">None</span>, <span class="bool-val">true</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -511,12 +493,14 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SimplifiedQueryType</span> {
+    <span class="ident">Occlusion</span>,
     <span class="ident">Timestamp</span>,
     <span class="ident">PipelineStatistics</span>,
 }
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">wgt::QueryType</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SimplifiedQueryType</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">q</span>: <span class="ident">wgt::QueryType</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">q</span> {
+            <span class="ident">wgt::QueryType::Occlusion</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SimplifiedQueryType::Occlusion</span>,
             <span class="ident">wgt::QueryType::Timestamp</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SimplifiedQueryType::Timestamp</span>,
             <span class="ident">wgt::QueryType::PipelineStatistics</span>(..) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">SimplifiedQueryType::PipelineStatistics</span>,
         }
@@ -584,14 +568,14 @@
     },
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span> <span class="ident">QuerySet</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span> <span class="ident">QuerySet</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">validate_query</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">query_set_id</span>: <span class="ident">id::QuerySetId</span>,
         <span class="ident">query_type</span>: <span class="ident">SimplifiedQueryType</span>,
         <span class="ident">query_index</span>: <span class="ident">u32</span>,
-        <span class="ident">reset_state</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">QueryResetMap</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">hal::query::Query</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">QueryUseError</span><span class="op">&gt;</span> {
+        <span class="ident">reset_state</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">QueryResetMap</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">A::QuerySet</span>, <span class="ident">QueryUseError</span><span class="op">&gt;</span> {
         <span class="comment">// We need to defer our resets because we are in a renderpass, add the usage to the reset map.</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">reset</span>) <span class="op">=</span> <span class="ident">reset_state</span> {
             <span class="kw">let</span> <span class="ident">used</span> <span class="op">=</span> <span class="ident">reset</span>.<span class="ident">use_query_set</span>(<span class="ident">query_set_id</span>, <span class="self">self</span>, <span class="ident">query_index</span>);
@@ -615,23 +599,18 @@
             });
         }
 
-        <span class="kw">let</span> <span class="ident">hal_query</span> <span class="op">=</span> <span class="ident">hal::query::Query</span>::<span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
-            <span class="ident">pool</span>: <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>,
-            <span class="ident">id</span>: <span class="ident">query_index</span>,
-        };
-
-        <span class="prelude-val">Ok</span>(<span class="ident">hal_query</span>)
+        <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>)
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">validate_and_write_timestamp</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">cmd_buf_raw</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">B::CommandBuffer</span>,
+        <span class="ident">raw_encoder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">A::CommandEncoder</span>,
         <span class="ident">query_set_id</span>: <span class="ident">id::QuerySetId</span>,
         <span class="ident">query_index</span>: <span class="ident">u32</span>,
-        <span class="ident">reset_state</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">QueryResetMap</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">reset_state</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">QueryResetMap</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">QueryUseError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">needs_reset</span> <span class="op">=</span> <span class="ident">reset_state</span>.<span class="ident">is_none</span>();
-        <span class="kw">let</span> <span class="ident">hal_query</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">validate_query</span>(
+        <span class="kw">let</span> <span class="ident">query_set</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">validate_query</span>(
             <span class="ident">query_set_id</span>,
             <span class="ident">SimplifiedQueryType::Timestamp</span>,
             <span class="ident">query_index</span>,
@@ -641,9 +620,9 @@
         <span class="kw">unsafe</span> {
             <span class="comment">// If we don&#39;t have a reset state tracker which can defer resets, we must reset now.</span>
             <span class="kw">if</span> <span class="ident">needs_reset</span> {
-                <span class="ident">cmd_buf_raw</span>.<span class="ident">reset_query_pool</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>, <span class="ident">query_index</span>..(<span class="ident">query_index</span> <span class="op">+</span> <span class="number">1</span>));
+                <span class="ident">raw_encoder</span>.<span class="ident">reset_queries</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>, <span class="ident">query_index</span>..(<span class="ident">query_index</span> <span class="op">+</span> <span class="number">1</span>));
             }
-            <span class="ident">cmd_buf_raw</span>.<span class="ident">write_timestamp</span>(<span class="ident">hal::pso::PipelineStage::BOTTOM_OF_PIPE</span>, <span class="ident">hal_query</span>);
+            <span class="ident">raw_encoder</span>.<span class="ident">write_timestamp</span>(<span class="ident">query_set</span>, <span class="ident">query_index</span>);
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -651,14 +630,14 @@
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">validate_and_begin_pipeline_statistics_query</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">cmd_buf_raw</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">B::CommandBuffer</span>,
+        <span class="ident">raw_encoder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">A::CommandEncoder</span>,
         <span class="ident">query_set_id</span>: <span class="ident">id::QuerySetId</span>,
         <span class="ident">query_index</span>: <span class="ident">u32</span>,
-        <span class="ident">reset_state</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">QueryResetMap</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">reset_state</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">QueryResetMap</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">active_query</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">id::QuerySetId</span>, <span class="ident">u32</span>)<span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">QueryUseError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">needs_reset</span> <span class="op">=</span> <span class="ident">reset_state</span>.<span class="ident">is_none</span>();
-        <span class="kw">let</span> <span class="ident">hal_query</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">validate_query</span>(
+        <span class="kw">let</span> <span class="ident">query_set</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">validate_query</span>(
             <span class="ident">query_set_id</span>,
             <span class="ident">SimplifiedQueryType::PipelineStatistics</span>,
             <span class="ident">query_index</span>,
@@ -675,30 +654,25 @@
         <span class="kw">unsafe</span> {
             <span class="comment">// If we don&#39;t have a reset state tracker which can defer resets, we must reset now.</span>
             <span class="kw">if</span> <span class="ident">needs_reset</span> {
-                <span class="ident">cmd_buf_raw</span>.<span class="ident">reset_query_pool</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>, <span class="ident">query_index</span>..(<span class="ident">query_index</span> <span class="op">+</span> <span class="number">1</span>));
+                <span class="ident">raw_encoder</span>.<span class="ident">reset_queries</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>, <span class="ident">query_index</span>..(<span class="ident">query_index</span> <span class="op">+</span> <span class="number">1</span>));
             }
-            <span class="ident">cmd_buf_raw</span>.<span class="ident">begin_query</span>(<span class="ident">hal_query</span>, <span class="ident">hal::query::ControlFlags::empty</span>());
+            <span class="ident">raw_encoder</span>.<span class="ident">begin_query</span>(<span class="ident">query_set</span>, <span class="ident">query_index</span>);
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">end_pipeline_statistics_query</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
-    <span class="ident">cmd_buf_raw</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">B::CommandBuffer</span>,
-    <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">QuerySet</span><span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span>, <span class="ident">id::QuerySetId</span><span class="op">&gt;</span>,
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">end_pipeline_statistics_query</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
+    <span class="ident">raw_encoder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">A::CommandEncoder</span>,
+    <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">QuerySet</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::QuerySetId</span><span class="op">&gt;</span>,
     <span class="ident">active_query</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">id::QuerySetId</span>, <span class="ident">u32</span>)<span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">QueryUseError</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">query_set_id</span>, <span class="ident">query_index</span>)) <span class="op">=</span> <span class="ident">active_query</span>.<span class="ident">take</span>() {
         <span class="comment">// We can unwrap here as the validity was validated when the active query was set</span>
         <span class="kw">let</span> <span class="ident">query_set</span> <span class="op">=</span> <span class="ident">storage</span>.<span class="ident">get</span>(<span class="ident">query_set_id</span>).<span class="ident">unwrap</span>();
 
-        <span class="kw">let</span> <span class="ident">hal_query</span> <span class="op">=</span> <span class="ident">hal::query::Query</span>::<span class="op">&lt;</span><span class="ident">B</span><span class="op">&gt;</span> {
-            <span class="ident">pool</span>: <span class="kw-2">&amp;</span><span class="ident">query_set</span>.<span class="ident">raw</span>,
-            <span class="ident">id</span>: <span class="ident">query_index</span>,
-        };
-
-        <span class="kw">unsafe</span> { <span class="ident">cmd_buf_raw</span>.<span class="ident">end_query</span>(<span class="ident">hal_query</span>) }
+        <span class="kw">unsafe</span> { <span class="ident">raw_encoder</span>.<span class="ident">end_query</span>(<span class="kw-2">&amp;</span><span class="ident">query_set</span>.<span class="ident">raw</span>, <span class="ident">query_index</span>) };
 
         <span class="prelude-val">Ok</span>(())
     } <span class="kw">else</span> {
@@ -707,20 +681,20 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span> <span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">command_encoder_write_timestamp</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">command_encoder_write_timestamp</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">command_encoder_id</span>: <span class="ident">id::CommandEncoderId</span>,
         <span class="ident">query_set_id</span>: <span class="ident">id::QuerySetId</span>,
         <span class="ident">query_index</span>: <span class="ident">u32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">QueryError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B::hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
 
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">cmd_buf_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">command_buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> (<span class="ident">query_set_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">query_sets</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
 
         <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer::get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">cmd_buf_guard</span>, <span class="ident">command_encoder_id</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">cmd_buf_raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">raw</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">raw_encoder</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">encoder</span>.<span class="ident">open</span>();
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">list</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">commands</span> {
@@ -739,12 +713,12 @@
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
             })<span class="question-mark">?</span>;
 
-        <span class="ident">query_set</span>.<span class="ident">validate_and_write_timestamp</span>(<span class="ident">cmd_buf_raw</span>, <span class="ident">query_set_id</span>, <span class="ident">query_index</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+        <span class="ident">query_set</span>.<span class="ident">validate_and_write_timestamp</span>(<span class="ident">raw_encoder</span>, <span class="ident">query_set_id</span>, <span class="ident">query_index</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">command_encoder_resolve_query_set</span><span class="op">&lt;</span><span class="ident">B</span>: <span class="ident">GfxBackend</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">command_encoder_resolve_query_set</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">command_encoder_id</span>: <span class="ident">id::CommandEncoderId</span>,
         <span class="ident">query_set_id</span>: <span class="ident">id::QuerySetId</span>,
@@ -753,7 +727,7 @@
         <span class="ident">destination</span>: <span class="ident">id::BufferId</span>,
         <span class="ident">destination_offset</span>: <span class="ident">BufferAddress</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">QueryError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">B::hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
 
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">cmd_buf_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">command_buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
@@ -761,7 +735,7 @@
         <span class="kw">let</span> (<span class="ident">buffer_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
 
         <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer::get_encoder_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">cmd_buf_guard</span>, <span class="ident">command_encoder_id</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">cmd_buf_raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">raw</span>.<span class="ident">last_mut</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="ident">raw_encoder</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">encoder</span>.<span class="ident">open</span>();
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">list</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">commands</span> {
@@ -786,7 +760,7 @@
         <span class="kw">let</span> (<span class="ident">dst_buffer</span>, <span class="ident">dst_pending</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>
             .<span class="ident">trackers</span>
             .<span class="ident">buffers</span>
-            .<span class="ident">use_replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">destination</span>, (), <span class="ident">BufferUse::COPY_DST</span>)
+            .<span class="ident">use_replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">destination</span>, (), <span class="ident">hal::BufferUse::COPY_DST</span>)
             .<span class="ident">map_err</span>(<span class="ident">QueryError::InvalidBuffer</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">dst_barrier</span> <span class="op">=</span> <span class="ident">dst_pending</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">dst_buffer</span>));
 
@@ -804,9 +778,7 @@
             .<span class="ident">into</span>());
         }
 
-        <span class="kw">let</span> <span class="ident">stride</span> <span class="op">=</span> <span class="ident">query_set</span>.<span class="ident">elements</span> <span class="op">*</span> <span class="ident">wgt::QUERY_SIZE</span>;
-        <span class="kw">let</span> <span class="ident">bytes_used</span> <span class="op">=</span> (<span class="ident">stride</span> <span class="op">*</span> <span class="ident">query_count</span>) <span class="kw">as</span> <span class="ident">BufferAddress</span>;
-
+        <span class="kw">let</span> <span class="ident">bytes_used</span> <span class="op">=</span> (<span class="ident">wgt::QUERY_SIZE</span> <span class="op">*</span> <span class="ident">query_count</span>) <span class="kw">as</span> <span class="ident">BufferAddress</span>;
         <span class="kw">let</span> <span class="ident">buffer_start_offset</span> <span class="op">=</span> <span class="ident">destination_offset</span>;
         <span class="kw">let</span> <span class="ident">buffer_end_offset</span> <span class="op">=</span> <span class="ident">buffer_start_offset</span> <span class="op">+</span> <span class="ident">bytes_used</span>;
 
@@ -814,7 +786,7 @@
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ResolveError::BufferOverrun</span> {
                 <span class="ident">start_query</span>,
                 <span class="ident">end_query</span>,
-                <span class="ident">stride</span>,
+                <span class="ident">stride</span>: <span class="ident">wgt::QUERY_SIZE</span>,
                 <span class="ident">buffer_size</span>: <span class="ident">dst_buffer</span>.<span class="ident">size</span>,
                 <span class="ident">buffer_start_offset</span>,
                 <span class="ident">buffer_end_offset</span>,
@@ -823,18 +795,12 @@
         }
 
         <span class="kw">unsafe</span> {
-            <span class="ident">cmd_buf_raw</span>.<span class="ident">pipeline_barrier</span>(
-                <span class="ident">all_buffer_stages</span>()..<span class="ident">hal::pso::PipelineStage::TRANSFER</span>,
-                <span class="ident">hal::memory::Dependencies::empty</span>(),
-                <span class="ident">dst_barrier</span>,
-            );
-            <span class="ident">cmd_buf_raw</span>.<span class="ident">copy_query_pool_results</span>(
+            <span class="ident">raw_encoder</span>.<span class="ident">transition_buffers</span>(<span class="ident">dst_barrier</span>);
+            <span class="ident">raw_encoder</span>.<span class="ident">copy_query_results</span>(
                 <span class="kw-2">&amp;</span><span class="ident">query_set</span>.<span class="ident">raw</span>,
                 <span class="ident">start_query</span>..<span class="ident">end_query</span>,
-                <span class="kw-2">&amp;</span><span class="ident">dst_buffer</span>.<span class="ident">raw</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>().<span class="number">0</span>,
+                <span class="ident">dst_buffer</span>.<span class="ident">raw</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>(),
                 <span class="ident">destination_offset</span>,
-                <span class="ident">stride</span>,
-                <span class="ident">hal::query::ResultFlags::WAIT</span> <span class="op">|</span> <span class="ident">hal::query::ResultFlags::BITS_64</span>,
             );
         }
 

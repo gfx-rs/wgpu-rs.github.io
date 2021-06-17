@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["FILE_NAME",""]],"enum":[["Action",""],["Command",""]],"struct":[["Trace",""]]});
+initSidebarItems({"constant":[["FILE_NAME",""]],"enum":[["Action",""],["Command",""]]});

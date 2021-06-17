@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["Precision",""],["Target","A GLSL target."],["Version",""]],"struct":[["CompilerFragmentOptions",""],["CompilerOptions","GLSL compiler options."],["CompilerVertexOptions",""],["TargetData",""]]});

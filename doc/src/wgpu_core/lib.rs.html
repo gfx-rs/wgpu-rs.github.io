@@ -259,33 +259,15 @@
 <span id="257">257</span>
 <span id="258">258</span>
 <span id="259">259</span>
-<span id="260">260</span>
-<span id="261">261</span>
-<span id="262">262</span>
-<span id="263">263</span>
-<span id="264">264</span>
-<span id="265">265</span>
-<span id="266">266</span>
-<span id="267">267</span>
-<span id="268">268</span>
-<span id="269">269</span>
-<span id="270">270</span>
-<span id="271">271</span>
-<span id="272">272</span>
-<span id="273">273</span>
-<span id="274">274</span>
-<span id="275">275</span>
-<span id="276">276</span>
-<span id="277">277</span>
-<span id="278">278</span>
-<span id="279">279</span>
-<span id="280">280</span>
-<span id="281">281</span>
-<span id="282">282</span>
 </pre><pre class="rust">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */</span>
+
+<span class="doccomment">/*! This library safely implements WebGPU on native platforms.
+ *  It is designed for integration into browsers, as well as wrapping
+ *  into other language-specific user-friendly libraries.
+ */</span>
 
 <span class="attribute">#![<span class="ident">allow</span>(
     <span class="comment">// We use loops for getting early-out of scope without closures.</span>
@@ -311,21 +293,6 @@
 <span class="attribute">#[<span class="ident">macro_use</span>]</span>
 <span class="kw">mod</span> <span class="ident">macros</span>;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">backend</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">gfx_backend_empty::Backend</span> <span class="kw">as</span> <span class="ident">Empty</span>;
-
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">dx11</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">gfx_backend_dx11::Backend</span> <span class="kw">as</span> <span class="ident">Dx11</span>;
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">dx12</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">gfx_backend_dx12::Backend</span> <span class="kw">as</span> <span class="ident">Dx12</span>;
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">gl</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">gfx_backend_gl::Backend</span> <span class="kw">as</span> <span class="ident">Gl</span>;
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">metal</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">gfx_backend_metal::Backend</span> <span class="kw">as</span> <span class="ident">Metal</span>;
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">vulkan</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">gfx_backend_vulkan::Backend</span> <span class="kw">as</span> <span class="ident">Vulkan</span>;
-}
-
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">binding_model</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">command</span>;
 <span class="kw">mod</span> <span class="ident">conv</span>;
@@ -340,18 +307,18 @@
 <span class="kw">mod</span> <span class="ident">track</span>;
 <span class="kw">mod</span> <span class="ident">validation</span>;
 
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">hal::api</span>;
+
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">use</span> <span class="ident">loom::sync::atomic</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">test</span>))]</span>
 <span class="kw">use</span> <span class="ident">std::sync::atomic</span>;
 
-<span class="kw">use</span> <span class="ident">atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
+<span class="kw">use</span> <span class="ident">atomic</span>::{<span class="ident">AtomicU64</span>, <span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">os::raw::c_char</span>, <span class="ident">ptr</span>};
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAX_BIND_GROUPS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
-
-<span class="kw">type</span> <span class="ident">SubmissionIndex</span> <span class="op">=</span> <span class="ident">usize</span>;
+<span class="kw">type</span> <span class="ident">SubmissionIndex</span> <span class="op">=</span> <span class="ident">hal::FenceValue</span>;
 <span class="kw">type</span> <span class="ident">Index</span> <span class="op">=</span> <span class="ident">u32</span>;
 <span class="kw">type</span> <span class="ident">Epoch</span> <span class="op">=</span> <span class="ident">u32</span>;
 
@@ -359,18 +326,15 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
 <span class="kw">trait</span> <span class="ident">LabelHelpers</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">to_string_or_default</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span>;
+    <span class="kw">fn</span> <span class="ident">borrow_option</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span><span class="op">&gt;</span>;
     <span class="kw">fn</span> <span class="ident">borrow_or_default</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>;
 }
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">LabelHelpers</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">borrow_or_default</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span> {
-        <span class="self">self</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">cow</span><span class="op">|</span> <span class="ident">cow</span>.<span class="ident">as_ref</span>()).<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>)
+    <span class="kw">fn</span> <span class="ident">borrow_option</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">cow</span><span class="op">|</span> <span class="ident">cow</span>.<span class="ident">as_ref</span>())
     }
-    <span class="kw">fn</span> <span class="ident">to_string_or_default</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
-        <span class="self">self</span>.<span class="ident">as_ref</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">cow</span><span class="op">|</span> <span class="ident">cow</span>.<span class="ident">as_ref</span>())
-            .<span class="ident">unwrap_or</span>(<span class="string">&quot;&quot;</span>)
-            .<span class="ident">to_string</span>()
+    <span class="kw">fn</span> <span class="ident">borrow_or_default</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span> {
+        <span class="self">self</span>.<span class="ident">borrow_option</span>().<span class="ident">unwrap_or_default</span>()
     }
 }
 
@@ -481,7 +445,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LifeGuard</span> {
     <span class="ident">ref_count</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">RefCount</span><span class="op">&gt;</span>,
-    <span class="ident">submission_index</span>: <span class="ident">AtomicUsize</span>,
+    <span class="ident">submission_index</span>: <span class="ident">AtomicU64</span>,
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertions</span>)]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">label</span>: <span class="ident">String</span>,
 }
@@ -492,7 +456,7 @@
         <span class="kw">let</span> <span class="ident">bx</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">AtomicUsize::new</span>(<span class="number">1</span>));
         <span class="self">Self</span> {
             <span class="ident">ref_count</span>: <span class="ident">ptr::NonNull::new</span>(<span class="ident">Box::into_raw</span>(<span class="ident">bx</span>)).<span class="ident">map</span>(<span class="ident">RefCount</span>),
-            <span class="ident">submission_index</span>: <span class="ident">AtomicUsize::new</span>(<span class="number">0</span>),
+            <span class="ident">submission_index</span>: <span class="ident">AtomicU64::new</span>(<span class="number">0</span>),
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertions</span>)]</span>
             <span class="ident">label</span>: <span class="ident">label</span>.<span class="ident">to_string</span>(),
         }
@@ -515,13 +479,6 @@
     <span class="ident">ref_count</span>: <span class="ident">RefCount</span>,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">PrivateFeatures</span> {
-    <span class="ident">anisotropic_filtering</span>: <span class="ident">bool</span>,
-    <span class="ident">texture_d24</span>: <span class="ident">bool</span>,
-    <span class="ident">texture_d24_s8</span>: <span class="ident">bool</span>,
-}
-
 <span class="kw">const</span> <span class="ident">DOWNLEVEL_WARNING_MESSAGE</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;The underlying API or device in use does not \
 support enough features to be a fully compliant implementation of WebGPU. A subset of the features can still be used. \
 If you are running this program on native and not in a browser and wish to limit the features you use to the supported subset, \
@@ -540,16 +497,19 @@ platform supports.&quot;</span>;
         <span class="comment">// macro so we must specify their equivalents manually</span>
         <span class="kw">match</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">id</span>.<span class="ident">backend</span>() {
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>), <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>), <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
-            <span class="ident">wgt::Backend::Vulkan</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">global</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">method</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="kw">crate</span><span class="macro-nonterminal">::backend::Vulkan</span><span class="op">&gt;</span>( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span>),<span class="op">*</span> ),
+            <span class="ident">wgt::Backend::Vulkan</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">global</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">method</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="kw">crate</span><span class="macro-nonterminal">::api::Vulkan</span><span class="op">&gt;</span>( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span>),<span class="op">*</span> ),
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>), <span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
-            <span class="ident">wgt::Backend::Metal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">global</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">method</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="kw">crate</span><span class="macro-nonterminal">::backend::Metal</span><span class="op">&gt;</span>( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span>),<span class="op">*</span> ),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>), <span class="ident">windows</span>))]</span>
-            <span class="ident">wgt::Backend::Dx12</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">global</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">method</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="kw">crate</span><span class="macro-nonterminal">::backend::Dx12</span><span class="op">&gt;</span>( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span>),<span class="op">*</span> ),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>), <span class="ident">windows</span>))]</span>
-            <span class="ident">wgt::Backend::Dx11</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">global</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">method</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="kw">crate</span><span class="macro-nonterminal">::backend::Dx11</span><span class="op">&gt;</span>( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span>),<span class="op">*</span> ),
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>, <span class="ident">all</span>(<span class="ident">unix</span>, <span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))))]</span>
-            <span class="ident">wgt::Backend::Gl</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">global</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">method</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="kw">crate</span><span class="macro-nonterminal">::backend::Gl</span><span class="op">&gt;</span>( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span>),<span class="op">+</span> ),
+            <span class="ident">wgt::Backend::Metal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">global</span>.<span class="macro-nonterminal">$</span><span class="macro-nonterminal">method</span>::<span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="kw">crate</span><span class="macro-nonterminal">::api::Metal</span><span class="op">&gt;</span>( $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">param</span>),<span class="op">*</span> ),
+            <span class="comment">/*
+            #[cfg(all(not(target_arch = &quot;wasm32&quot;), windows))]
+            wgt::Backend::Dx12 =&gt; $global.$method::&lt;$crate::backend::Dx12&gt;( $($param),* ),
+            #[cfg(all(not(target_arch = &quot;wasm32&quot;), windows))]
+            wgt::Backend::Dx11 =&gt; $global.$method::&lt;$crate::backend::Dx11&gt;( $($param),* ),
+            #[cfg(any(target_arch = &quot;wasm32&quot;, all(unix, not(any(target_os = &quot;ios&quot;, target_os = &quot;macos&quot;)))))]
+            wgt::Backend::Gl =&gt; $global.$method::&lt;$crate::backend::Gl&gt;( $($param),+ ),
+            */</span>
             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;Unexpected backend {:?}&quot;</span>, <span class="ident">other</span>),
+
         }
     };
 }
@@ -559,11 +519,5 @@ platform supports.&quot;</span>;
     <span class="ident">std::collections::HashMap</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">V</span>, <span class="ident">std::hash::BuildHasherDefault</span><span class="op">&lt;</span><span class="ident">fxhash::FxHasher</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 <span class="doccomment">/// Fast hash set used internally.</span>
 <span class="kw">type</span> <span class="ident">FastHashSet</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">std::collections::HashSet</span><span class="op">&lt;</span><span class="ident">K</span>, <span class="ident">std::hash::BuildHasherDefault</span><span class="op">&lt;</span><span class="ident">fxhash::FxHasher</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-
-<span class="attribute">#[<span class="ident">test</span>]</span>
-<span class="kw">fn</span> <span class="ident">test_default_limits</span>() {
-    <span class="kw">let</span> <span class="ident">limits</span> <span class="op">=</span> <span class="ident">wgt::Limits::default</span>();
-    <span class="macro">assert!</span>(<span class="ident">limits</span>.<span class="ident">max_bind_groups</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">MAX_BIND_GROUPS</span> <span class="kw">as</span> <span class="ident">u32</span>);
-}
 </pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu_core" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div><script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script></body></html>

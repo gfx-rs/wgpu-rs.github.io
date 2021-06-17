@@ -3153,6 +3153,31 @@
 <span id="3151">3151</span>
 <span id="3152">3152</span>
 <span id="3153">3153</span>
+<span id="3154">3154</span>
+<span id="3155">3155</span>
+<span id="3156">3156</span>
+<span id="3157">3157</span>
+<span id="3158">3158</span>
+<span id="3159">3159</span>
+<span id="3160">3160</span>
+<span id="3161">3161</span>
+<span id="3162">3162</span>
+<span id="3163">3163</span>
+<span id="3164">3164</span>
+<span id="3165">3165</span>
+<span id="3166">3166</span>
+<span id="3167">3167</span>
+<span id="3168">3168</span>
+<span id="3169">3169</span>
+<span id="3170">3170</span>
+<span id="3171">3171</span>
+<span id="3172">3172</span>
+<span id="3173">3173</span>
+<span id="3174">3174</span>
+<span id="3175">3175</span>
+<span id="3176">3176</span>
+<span id="3177">3177</span>
+<span id="3178">3178</span>
 </pre><pre class="rust">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -3307,6 +3332,8 @@
         }
     }
 }
+
+<span class="comment">//TODO: make robust resource access configurable</span>
 
 <span class="macro">bitflags::bitflags!</span> {
     <span class="doccomment">/// Features that are not guaranteed to be supported.</span>
@@ -3806,16 +3833,14 @@
 
 <span class="doccomment">/// Lists various ways the underlying platform does not conform to the WebGPU standard.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DownlevelProperties</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DownlevelCapabilities</span> {
     <span class="doccomment">/// Combined boolean flags.</span>
     <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">DownlevelFlags</span>,
     <span class="doccomment">/// Which collections of features shaders support. Defined in terms of D3D&#39;s shader models.</span>
     <span class="kw">pub</span> <span class="ident">shader_model</span>: <span class="ident">ShaderModel</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">DownlevelProperties</span> {
-    <span class="comment">// Note, this defaults to all on, as that is the default assumption in wgpu.</span>
-    <span class="comment">// gfx-hal&#39;s equivalent structure defaults to all off.</span>
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">DownlevelCapabilities</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">flags</span>: <span class="ident">DownlevelFlags::COMPLIANT</span>,
@@ -3824,7 +3849,7 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">DownlevelProperties</span> {
+<span class="kw">impl</span> <span class="ident">DownlevelCapabilities</span> {
     <span class="doccomment">/// Returns true if the underlying platform offers complete support of the baseline WebGPU standard.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// If this returns false, some parts of the API will result in validation errors where they would not normally.</span>
@@ -3851,10 +3876,12 @@
         <span class="kw">const</span> <span class="ident">NON_POWER_OF_TWO_MIPMAPPED_TEXTURES</span> <span class="op">=</span> <span class="number">0x0000_0010</span>;
         <span class="doccomment">/// Supports textures that are cube arrays.</span>
         <span class="kw">const</span> <span class="ident">CUBE_ARRAY_TEXTURES</span> <span class="op">=</span> <span class="number">0x0000_0020</span>;
+        <span class="doccomment">/// Supports comparison samplers.</span>
+        <span class="kw">const</span> <span class="ident">COMPARISON_SAMPLERS</span> <span class="op">=</span> <span class="number">0x0000_0040</span>;
         <span class="doccomment">/// Supports samplers with anisotropic filtering</span>
         <span class="kw">const</span> <span class="ident">ANISOTROPIC_FILTERING</span> <span class="op">=</span> <span class="number">0x0001_0000</span>;
         <span class="doccomment">/// All flags are in their compliant state.</span>
-        <span class="kw">const</span> <span class="ident">COMPLIANT</span> <span class="op">=</span> <span class="number">0x0000_003F</span>;
+        <span class="kw">const</span> <span class="ident">COMPLIANT</span> <span class="op">=</span> <span class="number">0x0000_007F</span>;
     }
 }
 
@@ -3951,26 +3978,6 @@
         <span class="kw">const</span> <span class="ident">VERTEX_FRAGMENT</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::VERTEX</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::FRAGMENT</span>.<span class="ident">bits</span>;
         <span class="doccomment">/// Binding is visible from the compute shader of a compute pipeline.</span>
         <span class="kw">const</span> <span class="ident">COMPUTE</span> <span class="op">=</span> <span class="number">4</span>;
-    }
-}
-
-<span class="macro">bitflags::bitflags!</span> {
-    <span class="doccomment">/// Flags controlling the shader processing.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note: These flags are internal tweaks, they don&#39;t affect the API.</span>
-    <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderFlags</span>: <span class="ident">u32</span> {
-        <span class="doccomment">/// If enabled, `wgpu` will parse the shader with `Naga`</span>
-        <span class="doccomment">/// and validate it both internally and with regards to</span>
-        <span class="doccomment">/// the given pipeline interface.</span>
-        <span class="kw">const</span> <span class="ident">VALIDATION</span> <span class="op">=</span> <span class="number">1</span>;
-        <span class="doccomment">/// If enabled, `wgpu` will attempt to operate on `Naga`&#39;s internal</span>
-        <span class="doccomment">/// representation of the shader module for both validation and translation</span>
-        <span class="doccomment">/// into the backend shader language, on backends where `gfx-hal` supports this.</span>
-        <span class="kw">const</span> <span class="ident">EXPERIMENTAL_TRANSLATION</span> <span class="op">=</span> <span class="number">2</span>;
     }
 }
 
@@ -4216,6 +4223,16 @@
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">PrimitiveTopology</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="ident">PrimitiveTopology::TriangleList</span>
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">PrimitiveTopology</span> {
+    <span class="doccomment">/// Returns true for strip topologies.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_strip</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+            <span class="self">Self</span><span class="ident">::PointList</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::LineList</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::TriangleList</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="self">Self</span><span class="ident">::LineStrip</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::TriangleStrip</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+        }
     }
 }
 
@@ -4602,12 +4619,12 @@
     <span class="doccomment">/// [0, 255] converted to/from float [0, 1] in shader.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`Features::TEXTURE_COMPRESSION_ETC2`] must be enabled to use this texture format.</span>
-    <span class="ident">Etc2RgbA8Unorm</span> <span class="op">=</span> <span class="number">56</span>,
+    <span class="comment">//Etc2RgbA8Unorm = 56,</span>
     <span class="doccomment">/// 4x4 block compressed texture. 16 bytes per block (8 bit/px). Complex pallet. 8 bit integer RGB + 8 bit alpha.</span>
     <span class="doccomment">/// Srgb-color [0, 255] converted to/from linear-color float [0, 1] in shader.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`Features::TEXTURE_COMPRESSION_ETC2`] must be enabled to use this texture format.</span>
-    <span class="ident">Etc2RgbA8UnormSrgb</span> <span class="op">=</span> <span class="number">57</span>,
+    <span class="comment">//Etc2RgbA8UnormSrgb = 57,</span>
     <span class="doccomment">/// 4x4 block compressed texture. 8 bytes per block (4 bit/px). Complex pallet. 8 bit integer R.</span>
     <span class="doccomment">/// [0, 255] converted to/from float [0, 1] in shader.</span>
     <span class="doccomment">///</span>
@@ -4872,8 +4889,8 @@
                 <span class="self">Self</span><span class="ident">::Etc2RgbUnormSrgb</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">srgb</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>),
                 <span class="self">Self</span><span class="ident">::Etc2RgbA1Unorm</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">linear</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>),
                 <span class="self">Self</span><span class="ident">::Etc2RgbA1UnormSrgb</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">srgb</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>),
-                <span class="self">Self</span><span class="ident">::Etc2RgbA8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">linear</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>),
-                <span class="self">Self</span><span class="ident">::Etc2RgbA8UnormSrgb</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">srgb</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>),
+                <span class="comment">//Self::Etc2RgbA8Unorm =&gt; (etc2, float, linear, (4, 4), 16, basic),</span>
+                <span class="comment">//Self::Etc2RgbA8UnormSrgb =&gt; (etc2, float, srgb, (4, 4), 16, basic),</span>
                 <span class="self">Self</span><span class="ident">::EacRUnorm</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">linear</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>),
                 <span class="self">Self</span><span class="ident">::EacRSnorm</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">linear</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>),
                 <span class="self">Self</span><span class="ident">::EtcRgUnorm</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">linear</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>),
@@ -5654,45 +5671,9 @@
     <span class="doccomment">/// assert_eq!(wgpu::Extent3d { width: 60, height: 60, depth_or_array_layers: 1 }.max_mips(), 6);</span>
     <span class="doccomment">/// assert_eq!(wgpu::Extent3d { width: 240, height: 1, depth_or_array_layers: 1 }.max_mips(), 8);</span>
     <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">max_mips</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u8</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">max_mips</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">max_dim</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>.<span class="ident">max</span>(<span class="self">self</span>.<span class="ident">height</span>.<span class="ident">max</span>(<span class="self">self</span>.<span class="ident">depth_or_array_layers</span>));
-        <span class="kw">let</span> <span class="ident">max_levels</span> <span class="op">=</span> <span class="number">32</span> <span class="op">-</span> <span class="ident">max_dim</span>.<span class="ident">leading_zeros</span>();
-
-        <span class="ident">max_levels</span> <span class="kw">as</span> <span class="ident">u8</span>
-    }
-
-    <span class="doccomment">/// Calculates the extent at a given mip level.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the given mip level is larger than possible, returns None.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Treats the depth as part of the mipmaps. If calculating</span>
-    <span class="doccomment">/// for a 2DArray texture, which does not mipmap depth, set depth to 1.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```rust</span>
-    <span class="doccomment">/// # use wgpu_types as wgpu;</span>
-    <span class="doccomment">/// let extent = wgpu::Extent3d { width: 100, height: 60, depth_or_array_layers: 1 };</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// assert_eq!(extent.at_mip_level(0), Some(wgpu::Extent3d { width: 100, height: 60, depth_or_array_layers: 1 }));</span>
-    <span class="doccomment">/// assert_eq!(extent.at_mip_level(1), Some(wgpu::Extent3d { width: 50, height: 30, depth_or_array_layers: 1 }));</span>
-    <span class="doccomment">/// assert_eq!(extent.at_mip_level(2), Some(wgpu::Extent3d { width: 25, height: 15, depth_or_array_layers: 1 }));</span>
-    <span class="doccomment">/// assert_eq!(extent.at_mip_level(3), Some(wgpu::Extent3d { width: 12, height: 7, depth_or_array_layers: 1 }));</span>
-    <span class="doccomment">/// assert_eq!(extent.at_mip_level(4), Some(wgpu::Extent3d { width: 6, height: 3, depth_or_array_layers: 1 }));</span>
-    <span class="doccomment">/// assert_eq!(extent.at_mip_level(5), Some(wgpu::Extent3d { width: 3, height: 1, depth_or_array_layers: 1 }));</span>
-    <span class="doccomment">/// assert_eq!(extent.at_mip_level(6), Some(wgpu::Extent3d { width: 1, height: 1, depth_or_array_layers: 1 }));</span>
-    <span class="doccomment">/// assert_eq!(extent.at_mip_level(7), None);</span>
-    <span class="doccomment">/// ```</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">at_mip_level</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">level</span>: <span class="ident">u8</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">mip_count</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">max_mips</span>();
-
-        <span class="kw">if</span> <span class="ident">level</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">mip_count</span> {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
-        }
-
-        <span class="prelude-val">Some</span>(<span class="self">Self</span> {
-            <span class="ident">width</span>: <span class="ident">u32::max</span>(<span class="number">1</span>, <span class="self">self</span>.<span class="ident">width</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">level</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">height</span>: <span class="ident">u32::max</span>(<span class="number">1</span>, <span class="self">self</span>.<span class="ident">height</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">level</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">depth_or_array_layers</span>: <span class="ident">u32::max</span>(<span class="number">1</span>, <span class="self">self</span>.<span class="ident">depth_or_array_layers</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">level</span> <span class="kw">as</span> <span class="ident">u32</span>),
-        })
+        <span class="number">32</span> <span class="op">-</span> <span class="ident">max_dim</span>.<span class="ident">leading_zeros</span>()
     }
 }
 
@@ -5730,6 +5711,57 @@
             <span class="ident">dimension</span>: <span class="self">self</span>.<span class="ident">dimension</span>,
             <span class="ident">format</span>: <span class="self">self</span>.<span class="ident">format</span>,
             <span class="ident">usage</span>: <span class="self">self</span>.<span class="ident">usage</span>,
+        }
+    }
+
+    <span class="doccomment">/// Calculates the extent at a given mip level.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If the given mip level is larger than possible, returns None.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Treats the depth as part of the mipmaps. If calculating</span>
+    <span class="doccomment">/// for a 2DArray texture, which does not mipmap depth, set depth to 1.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ```rust</span>
+    <span class="doccomment">/// # use wgpu_types as wgpu;</span>
+    <span class="doccomment">/// let desc = wgpu::TextureDescriptor {</span>
+    <span class="doccomment">///   label: (),</span>
+    <span class="doccomment">///   size: Extent3d { width: 100, height: 60, depth_or_array_layers: 2 },</span>
+    <span class="doccomment">///   mip_level_count: 7,</span>
+    <span class="doccomment">///   sample_count: 1,</span>
+    <span class="doccomment">///   dimension: wgpu::TextureDimension::D3,</span>
+    <span class="doccomment">///   format: wgpu::TextureFormat::Rgba8Sint,</span>
+    <span class="doccomment">///   usage: wgpu::TextureUsage::empty(),</span>
+    <span class="doccomment">/// };</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// assert_eq!(desc.mip_level_size(0), Some(wgpu::Extent3d { width: 100, height: 60, depth_or_array_layers: 1 }));</span>
+    <span class="doccomment">/// assert_eq!(desc.mip_level_size(1), Some(wgpu::Extent3d { width: 50, height: 30, depth_or_array_layers: 1 }));</span>
+    <span class="doccomment">/// assert_eq!(desc.mip_level_size(2), Some(wgpu::Extent3d { width: 25, height: 15, depth_or_array_layers: 1 }));</span>
+    <span class="doccomment">/// assert_eq!(desc.mip_level_size(3), Some(wgpu::Extent3d { width: 12, height: 7, depth_or_array_layers: 1 }));</span>
+    <span class="doccomment">/// assert_eq!(desc.mip_level_size(4), Some(wgpu::Extent3d { width: 6, height: 3, depth_or_array_layers: 1 }));</span>
+    <span class="doccomment">/// assert_eq!(desc.mip_level_size(5), Some(wgpu::Extent3d { width: 3, height: 1, depth_or_array_layers: 1 }));</span>
+    <span class="doccomment">/// assert_eq!(desc.mip_level_size(6), Some(wgpu::Extent3d { width: 1, height: 1, depth_or_array_layers: 1 }));</span>
+    <span class="doccomment">/// assert_eq!(desc.mip_level_size(7), None);</span>
+    <span class="doccomment">/// ```</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mip_level_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">level</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Extent3d</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="ident">level</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">mip_level_count</span> {
+            <span class="kw">return</span> <span class="prelude-val">None</span>;
+        }
+
+        <span class="prelude-val">Some</span>(<span class="ident">Extent3d</span> {
+            <span class="ident">width</span>: <span class="ident">u32::max</span>(<span class="number">1</span>, <span class="self">self</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">level</span>),
+            <span class="ident">height</span>: <span class="ident">u32::max</span>(<span class="number">1</span>, <span class="self">self</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">level</span>),
+            <span class="ident">depth_or_array_layers</span>: <span class="kw">match</span> <span class="self">self</span>.<span class="ident">dimension</span> {
+                <span class="ident">TextureDimension::D1</span> <span class="op">|</span> <span class="ident">TextureDimension::D2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span>,
+                <span class="ident">TextureDimension::D3</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u32::max</span>(<span class="number">1</span>, <span class="self">self</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">level</span>),
+            },
+        })
+    }
+
+    <span class="doccomment">/// Returns the number of array layers.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">array_layer_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">dimension</span> {
+            <span class="ident">TextureDimension::D1</span> <span class="op">|</span> <span class="ident">TextureDimension::D2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span>,
+            <span class="ident">TextureDimension::D3</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
         }
     }
 }
@@ -6156,6 +6188,9 @@
     <span class="doccomment">/// The base texel of the texture in the selected `mip_level`.</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>), <span class="ident">serde</span>(<span class="ident">default</span>))]</span>
     <span class="kw">pub</span> <span class="ident">origin</span>: <span class="ident">Origin3d</span>,
+    <span class="doccomment">/// The copy aspect.</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>), <span class="ident">serde</span>(<span class="ident">default</span>))]</span>
+    <span class="kw">pub</span> <span class="ident">aspect</span>: <span class="ident">TextureAspect</span>,
 }
 
 <span class="doccomment">/// Subresource range within an image</span>
@@ -6198,7 +6233,9 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QuerySetDescriptor</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QuerySetDescriptor</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Debug label for the query set.</span>
+    <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident">L</span>,
     <span class="doccomment">/// Kind of query that this query set should contain.</span>
     <span class="kw">pub</span> <span class="ident">ty</span>: <span class="ident">QueryType</span>,
     <span class="doccomment">/// Total count of queries the set contains. Must not be zero.</span>
@@ -6206,11 +6243,24 @@
     <span class="kw">pub</span> <span class="ident">count</span>: <span class="ident">u32</span>,
 }
 
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span> <span class="ident">QuerySetDescriptor</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span> {
+    <span class="doccomment">///</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="self">self</span>, <span class="ident">fun</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">L</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">K</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">QuerySetDescriptor</span><span class="op">&lt;</span><span class="ident">K</span><span class="op">&gt;</span> {
+        <span class="ident">QuerySetDescriptor</span> {
+            <span class="ident">label</span>: <span class="ident">fun</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">label</span>),
+            <span class="ident">ty</span>: <span class="self">self</span>.<span class="ident">ty</span>,
+            <span class="ident">count</span>: <span class="self">self</span>.<span class="ident">count</span>,
+        }
+    }
+}
+
 <span class="doccomment">/// Type of query contained in a QuerySet.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">QueryType</span> {
+    <span class="doccomment">/// Query returns a single 64-bit number, serving as an occlusion boolean.</span>
+    <span class="ident">Occlusion</span>,
     <span class="doccomment">/// Query returns up to 5 64-bit numbers based on the given flags.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// See [`PipelineStatisticsTypes`]&#39;s documentation for more information</span>

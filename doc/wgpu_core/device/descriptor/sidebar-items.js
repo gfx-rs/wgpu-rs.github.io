@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["DescriptorAllocator",""],["DescriptorTotalCount","Number of descriptors of each type."]],"type":[["DescriptorSet",""]]});

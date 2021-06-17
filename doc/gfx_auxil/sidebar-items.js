@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["ShaderStage",""]],"fn":[["read_spirv","Safely read SPIR-V"],["spirv_cross_specialize_ast",""]],"type":[["FastHashMap","Fast hash map used internally."],["FastHashSet",""]]});
