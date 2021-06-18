@@ -4525,6 +4525,8 @@
 <span id="4523">4523</span>
 <span id="4524">4524</span>
 <span id="4525">4525</span>
+<span id="4526">4526</span>
+<span id="4527">4527</span>
 </pre><pre class="rust">
 <span class="comment">/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -5515,7 +5517,7 @@
                 <span class="ident">Bt::Sampler</span> { .. } <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-val">None</span>, <span class="bool-val">false</span>),
                 <span class="ident">Bt::Texture</span> { .. } <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-val">Some</span>(<span class="ident">wgt::Features::SAMPLED_TEXTURE_BINDING_ARRAY</span>), <span class="bool-val">false</span>),
                 <span class="ident">Bt::StorageTexture</span> { <span class="ident">access</span>, .. } <span class="op">=</span><span class="op">&gt;</span> (
-                    <span class="prelude-val">None</span>,
+                    <span class="prelude-val">Some</span>(<span class="ident">wgt::Features::STORAGE_TEXTURE_BINDING_ARRAY</span>),
                     <span class="kw">match</span> <span class="ident">access</span> {
                         <span class="ident">wgt::StorageTextureAccess::ReadOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
                         <span class="ident">wgt::StorageTextureAccess::WriteOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
@@ -5837,104 +5839,13 @@
                         .<span class="ident">views</span>
                         .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_view_guard</span>, <span class="ident">id</span>, (), ())
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error::InvalidTextureView</span>(<span class="ident">id</span>))<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">format_info</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">format</span>.<span class="ident">describe</span>();
-                    <span class="kw">let</span> (<span class="ident">pub_usage</span>, <span class="ident">internal_use</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">decl</span>.<span class="ident">ty</span> {
-                        <span class="ident">wgt::BindingType::Texture</span> {
-                            <span class="ident">sample_type</span>,
-                            <span class="ident">view_dimension</span>,
-                            <span class="ident">multisampled</span>,
-                        } <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">use</span> <span class="ident">wgt::TextureSampleType</span> <span class="kw">as</span> <span class="ident">Tst</span>;
-                            <span class="kw">if</span> <span class="ident">multisampled</span> <span class="op">!</span><span class="op">=</span> (<span class="ident">view</span>.<span class="ident">samples</span> <span class="op">!</span><span class="op">=</span> <span class="number">1</span>) {
-                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidTextureMultisample</span> {
-                                    <span class="ident">binding</span>,
-                                    <span class="ident">layout_multisampled</span>: <span class="ident">multisampled</span>,
-                                    <span class="ident">view_samples</span>: <span class="ident">view</span>.<span class="ident">samples</span>,
-                                });
-                            }
-                            <span class="kw">match</span> (<span class="ident">sample_type</span>, <span class="ident">format_info</span>.<span class="ident">sample_type</span>, <span class="ident">view</span>.<span class="ident">format_features</span>.<span class="ident">filterable</span> ) {
-                                (<span class="ident">Tst::Uint</span>, <span class="ident">Tst::Uint</span>, ..) <span class="op">|</span>
-                                (<span class="ident">Tst::Sint</span>, <span class="ident">Tst::Sint</span>, ..) <span class="op">|</span>
-                                (<span class="ident">Tst::Depth</span>, <span class="ident">Tst::Depth</span>, ..) <span class="op">|</span>
-                                <span class="comment">// if we expect non-filterable, accept anything float</span>
-                                (<span class="ident">Tst::Float</span> { <span class="ident">filterable</span>: <span class="bool-val">false</span> }, <span class="ident">Tst::Float</span> { .. }, ..) <span class="op">|</span>
-                                <span class="comment">// if we expect filterable, require it</span>
-                                (<span class="ident">Tst::Float</span> { <span class="ident">filterable</span>: <span class="bool-val">true</span> }, <span class="ident">Tst::Float</span> { <span class="ident">filterable</span>: <span class="bool-val">true</span> }, ..) <span class="op">|</span>
-                                <span class="comment">// if we expect filterable, also accept Float that is defined as unfilterable if filterable feature is explicitly enabled</span>
-                                <span class="comment">// (only hit if wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES is enabled)</span>
-                                (<span class="ident">Tst::Float</span> { <span class="ident">filterable</span>: <span class="bool-val">true</span> }, <span class="ident">Tst::Float</span> { .. }, <span class="bool-val">true</span>) <span class="op">|</span>
-                                <span class="comment">// if we expect float, also accept depth</span>
-                                (<span class="ident">Tst::Float</span> { .. }, <span class="ident">Tst::Depth</span>, ..) <span class="op">=</span><span class="op">&gt;</span> {}
-                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidTextureSampleType</span> {
-                                        <span class="ident">binding</span>,
-                                        <span class="ident">layout_sample_type</span>: <span class="ident">sample_type</span>,
-                                        <span class="ident">view_format</span>: <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">format</span>,
-                                    })
-                                }
-                            }
-                            <span class="kw">if</span> <span class="ident">view_dimension</span> <span class="op">!</span><span class="op">=</span> <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">dimension</span> {
-                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidTextureDimension</span> {
-                                    <span class="ident">binding</span>,
-                                    <span class="ident">layout_dimension</span>: <span class="ident">view_dimension</span>,
-                                    <span class="ident">view_dimension</span>: <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">dimension</span>,
-                                });
-                            }
-                            (<span class="ident">wgt::TextureUsage::SAMPLED</span>, <span class="ident">view</span>.<span class="ident">sampled_internal_use</span>)
-                        }
-                        <span class="ident">wgt::BindingType::StorageTexture</span> {
-                            <span class="ident">access</span>,
-                            <span class="ident">format</span>,
-                            <span class="ident">view_dimension</span>,
-                        } <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">if</span> <span class="ident">format</span> <span class="op">!</span><span class="op">=</span> <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">format</span> {
-                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStorageTextureFormat</span> {
-                                    <span class="ident">binding</span>,
-                                    <span class="ident">layout_format</span>: <span class="ident">format</span>,
-                                    <span class="ident">view_format</span>: <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">format</span>,
-                                });
-                            }
-                            <span class="kw">if</span> <span class="ident">view_dimension</span> <span class="op">!</span><span class="op">=</span> <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">dimension</span> {
-                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidTextureDimension</span> {
-                                    <span class="ident">binding</span>,
-                                    <span class="ident">layout_dimension</span>: <span class="ident">view_dimension</span>,
-                                    <span class="ident">view_dimension</span>: <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">dimension</span>,
-                                });
-                            }
-                            <span class="kw">let</span> <span class="ident">internal_use</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">access</span> {
-                                <span class="ident">wgt::StorageTextureAccess::ReadOnly</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                    <span class="ident">hal::TextureUse::STORAGE_LOAD</span>
-                                }
-                                <span class="ident">wgt::StorageTextureAccess::WriteOnly</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                    <span class="ident">hal::TextureUse::STORAGE_STORE</span>
-                                }
-                                <span class="ident">wgt::StorageTextureAccess::ReadWrite</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                    <span class="kw">if</span> <span class="op">!</span><span class="ident">view</span>.<span class="ident">format_features</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(
-                                        <span class="ident">wgt::TextureFormatFeatureFlags::STORAGE_READ_WRITE</span>,
-                                    ) {
-                                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::StorageReadWriteNotSupported</span>(
-                                            <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">format</span>,
-                                        ));
-                                    }
+                    <span class="kw">let</span> (<span class="ident">pub_usage</span>, <span class="ident">internal_use</span>) <span class="op">=</span> <span class="self">Self</span><span class="ident">::texture_use_parameters</span>(
+                        <span class="ident">binding</span>,
+                        <span class="ident">decl</span>,
+                        <span class="ident">view</span>,
+                        <span class="string">&quot;SampledTexture, ReadonlyStorageTexture or WriteonlyStorageTexture&quot;</span>,
+                    )<span class="question-mark">?</span>;
 
-                                    <span class="ident">hal::TextureUse::STORAGE_STORE</span> <span class="op">|</span> <span class="ident">hal::TextureUse::STORAGE_LOAD</span>
-                                }
-                            };
-                            (<span class="ident">wgt::TextureUsage::STORAGE</span>, <span class="ident">internal_use</span>)
-                        }
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::WrongBindingType</span> {
-                            <span class="ident">binding</span>,
-                            <span class="ident">actual</span>: <span class="ident">decl</span>.<span class="ident">ty</span>,
-                            <span class="ident">expected</span>:
-                                <span class="string">&quot;SampledTexture, ReadonlyStorageTexture or WriteonlyStorageTexture&quot;</span>,
-                        }),
-                    };
-
-                    <span class="kw">if</span> <span class="ident">hal::FormatAspect::from</span>(<span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">format</span>)
-                        .<span class="ident">contains</span>(<span class="ident">hal::FormatAspect::DEPTH</span> <span class="op">|</span> <span class="ident">hal::FormatAspect::STENCIL</span>)
-                    {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DepthStencilAspect</span>);
-                    }
                     <span class="kw">match</span> <span class="ident">view</span>.<span class="ident">source</span> {
                         <span class="ident">resource::TextureViewSource::Native</span>(<span class="kw-2">ref</span> <span class="ident">source_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="comment">// Careful here: the texture may no longer have its own ref count,</span>
@@ -5982,18 +5893,10 @@
                             .<span class="ident">views</span>
                             .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_view_guard</span>, <span class="ident">id</span>, (), ())
                             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error::InvalidTextureView</span>(<span class="ident">id</span>))<span class="question-mark">?</span>;
-                        <span class="kw">let</span> (<span class="ident">pub_usage</span>, <span class="ident">internal_use</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">decl</span>.<span class="ident">ty</span> {
-                            <span class="ident">wgt::BindingType::Texture</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
-                                (<span class="ident">wgt::TextureUsage::SAMPLED</span>, <span class="ident">view</span>.<span class="ident">sampled_internal_use</span>)
-                            }
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::WrongBindingType</span> {
-                                    <span class="ident">binding</span>,
-                                    <span class="ident">actual</span>: <span class="ident">decl</span>.<span class="ident">ty</span>,
-                                    <span class="ident">expected</span>: <span class="string">&quot;SampledTextureArray&quot;</span>,
-                                })
-                            }
-                        };
+                        <span class="kw">let</span> (<span class="ident">pub_usage</span>, <span class="ident">internal_use</span>) <span class="op">=</span>
+                            <span class="self">Self</span><span class="ident">::texture_use_parameters</span>(<span class="ident">binding</span>, <span class="ident">decl</span>, <span class="ident">view</span>,
+                                                         <span class="string">&quot;SampledTextureArray, ReadonlyStorageTextureArray or WriteonlyStorageTextureArray&quot;</span>
+)<span class="question-mark">?</span>;
 
                         <span class="kw">match</span> <span class="ident">view</span>.<span class="ident">source</span> {
                             <span class="ident">resource::TextureViewSource::Native</span>(<span class="kw-2">ref</span> <span class="ident">source_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -6064,6 +5967,107 @@
             <span class="ident">used_buffer_ranges</span>,
             <span class="ident">dynamic_binding_info</span>,
         })
+    }
+
+    <span class="kw">fn</span> <span class="ident">texture_use_parameters</span>(
+        <span class="ident">binding</span>: <span class="ident">u32</span>,
+        <span class="ident">decl</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::BindGroupLayoutEntry</span>,
+        <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::resource::TextureView</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
+        <span class="ident">expected</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">wgt::TextureUsage</span>, <span class="ident">hal::TextureUse</span>), <span class="ident">binding_model::CreateBindGroupError</span><span class="op">&gt;</span> {
+        <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::binding_model::CreateBindGroupError</span> <span class="kw">as</span> <span class="ident">Error</span>;
+        <span class="kw">if</span> <span class="ident">hal::FormatAspect::from</span>(<span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">format</span>)
+            .<span class="ident">contains</span>(<span class="ident">hal::FormatAspect::DEPTH</span> <span class="op">|</span> <span class="ident">hal::FormatAspect::STENCIL</span>)
+        {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::DepthStencilAspect</span>);
+        }
+        <span class="kw">let</span> <span class="ident">format_info</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">format</span>.<span class="ident">describe</span>();
+        <span class="kw">match</span> <span class="ident">decl</span>.<span class="ident">ty</span> {
+            <span class="ident">wgt::BindingType::Texture</span> {
+                <span class="ident">sample_type</span>,
+                <span class="ident">view_dimension</span>,
+                <span class="ident">multisampled</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">use</span> <span class="ident">wgt::TextureSampleType</span> <span class="kw">as</span> <span class="ident">Tst</span>;
+                <span class="kw">if</span> <span class="ident">multisampled</span> <span class="op">!</span><span class="op">=</span> (<span class="ident">view</span>.<span class="ident">samples</span> <span class="op">!</span><span class="op">=</span> <span class="number">1</span>) {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidTextureMultisample</span> {
+                        <span class="ident">binding</span>,
+                        <span class="ident">layout_multisampled</span>: <span class="ident">multisampled</span>,
+                        <span class="ident">view_samples</span>: <span class="ident">view</span>.<span class="ident">samples</span>,
+                    });
+                }
+                <span class="kw">match</span> (<span class="ident">sample_type</span>, <span class="ident">format_info</span>.<span class="ident">sample_type</span>, <span class="ident">view</span>.<span class="ident">format_features</span>.<span class="ident">filterable</span>) {
+                    (<span class="ident">Tst::Uint</span>, <span class="ident">Tst::Uint</span>, ..) <span class="op">|</span>
+                    (<span class="ident">Tst::Sint</span>, <span class="ident">Tst::Sint</span>, ..) <span class="op">|</span>
+                    (<span class="ident">Tst::Depth</span>, <span class="ident">Tst::Depth</span>, ..) <span class="op">|</span>
+                    <span class="comment">// if we expect non-filterable, accept anything float</span>
+                    (<span class="ident">Tst::Float</span> { <span class="ident">filterable</span>: <span class="bool-val">false</span> }, <span class="ident">Tst::Float</span> { .. }, ..) <span class="op">|</span>
+                    <span class="comment">// if we expect filterable, require it</span>
+                    (<span class="ident">Tst::Float</span> { <span class="ident">filterable</span>: <span class="bool-val">true</span> }, <span class="ident">Tst::Float</span> { <span class="ident">filterable</span>: <span class="bool-val">true</span> }, ..) <span class="op">|</span>
+                    <span class="comment">// if we expect filterable, also accept Float that is defined as unfilterable if filterable feature is explicitly enabled</span>
+                    <span class="comment">// (only hit if wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES is enabled)</span>
+                    (<span class="ident">Tst::Float</span> { <span class="ident">filterable</span>: <span class="bool-val">true</span> }, <span class="ident">Tst::Float</span> { .. }, <span class="bool-val">true</span>) <span class="op">|</span>
+                    <span class="comment">// if we expect float, also accept depth</span>
+                    (<span class="ident">Tst::Float</span> { .. }, <span class="ident">Tst::Depth</span>, ..) <span class="op">=</span><span class="op">&gt;</span> {}
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidTextureSampleType</span> {
+                            <span class="ident">binding</span>,
+                            <span class="ident">layout_sample_type</span>: <span class="ident">sample_type</span>,
+                            <span class="ident">view_format</span>: <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">format</span>,
+                        })
+                    }
+                }
+                <span class="kw">if</span> <span class="ident">view_dimension</span> <span class="op">!</span><span class="op">=</span> <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">dimension</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidTextureDimension</span> {
+                        <span class="ident">binding</span>,
+                        <span class="ident">layout_dimension</span>: <span class="ident">view_dimension</span>,
+                        <span class="ident">view_dimension</span>: <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">dimension</span>,
+                    });
+                }
+                <span class="prelude-val">Ok</span>((<span class="ident">wgt::TextureUsage::SAMPLED</span>, <span class="ident">view</span>.<span class="ident">sampled_internal_use</span>))
+            }
+            <span class="ident">wgt::BindingType::StorageTexture</span> {
+                <span class="ident">access</span>,
+                <span class="ident">format</span>,
+                <span class="ident">view_dimension</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">format</span> <span class="op">!</span><span class="op">=</span> <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">format</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStorageTextureFormat</span> {
+                        <span class="ident">binding</span>,
+                        <span class="ident">layout_format</span>: <span class="ident">format</span>,
+                        <span class="ident">view_format</span>: <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">format</span>,
+                    });
+                }
+                <span class="kw">if</span> <span class="ident">view_dimension</span> <span class="op">!</span><span class="op">=</span> <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">dimension</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidTextureDimension</span> {
+                        <span class="ident">binding</span>,
+                        <span class="ident">layout_dimension</span>: <span class="ident">view_dimension</span>,
+                        <span class="ident">view_dimension</span>: <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">dimension</span>,
+                    });
+                }
+                <span class="kw">let</span> <span class="ident">internal_use</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">access</span> {
+                    <span class="ident">wgt::StorageTextureAccess::ReadOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">hal::TextureUse::STORAGE_LOAD</span>,
+                    <span class="ident">wgt::StorageTextureAccess::WriteOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">hal::TextureUse::STORAGE_STORE</span>,
+                    <span class="ident">wgt::StorageTextureAccess::ReadWrite</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">if</span> <span class="op">!</span><span class="ident">view</span>
+                            .<span class="ident">format_features</span>
+                            .<span class="ident">flags</span>
+                            .<span class="ident">contains</span>(<span class="ident">wgt::TextureFormatFeatureFlags::STORAGE_READ_WRITE</span>)
+                        {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::StorageReadWriteNotSupported</span>(<span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">format</span>));
+                        }
+
+                        <span class="ident">hal::TextureUse::STORAGE_STORE</span> <span class="op">|</span> <span class="ident">hal::TextureUse::STORAGE_LOAD</span>
+                    }
+                };
+                <span class="prelude-val">Ok</span>((<span class="ident">wgt::TextureUsage::STORAGE</span>, <span class="ident">internal_use</span>))
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::WrongBindingType</span> {
+                <span class="ident">binding</span>,
+                <span class="ident">actual</span>: <span class="ident">decl</span>.<span class="ident">ty</span>,
+                <span class="ident">expected</span>,
+            }),
+        }
     }
 
     <span class="kw">fn</span> <span class="ident">create_pipeline_layout</span>(

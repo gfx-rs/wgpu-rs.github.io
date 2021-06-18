@@ -950,6 +950,23 @@
 <span id="948">948</span>
 <span id="949">949</span>
 <span id="950">950</span>
+<span id="951">951</span>
+<span id="952">952</span>
+<span id="953">953</span>
+<span id="954">954</span>
+<span id="955">955</span>
+<span id="956">956</span>
+<span id="957">957</span>
+<span id="958">958</span>
+<span id="959">959</span>
+<span id="960">960</span>
+<span id="961">961</span>
+<span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::conv</span>;
 
@@ -1091,7 +1108,11 @@
                                 <span class="ident">wgt::Features::SAMPLED_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</span>,
                             ),
                         )
-                        <span class="comment">//.shader_storage_image_array_non_uniform_indexing(</span>
+                        .<span class="ident">shader_storage_image_array_non_uniform_indexing</span>(
+                            <span class="ident">requested_features</span>.<span class="ident">contains</span>(
+                                <span class="ident">wgt::Features::STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</span>,
+                            ),
+                        )
                         <span class="comment">//.shader_storage_buffer_array_non_uniform_indexing(</span>
                         .<span class="ident">shader_uniform_buffer_array_non_uniform_indexing</span>(
                             <span class="ident">requested_features</span>
@@ -1117,7 +1138,11 @@
                                 <span class="ident">wgt::Features::SAMPLED_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</span>,
                             ),
                         )
-                        <span class="comment">//.shader_storage_image_array_non_uniform_indexing(</span>
+                        .<span class="ident">shader_storage_image_array_non_uniform_indexing</span>(
+                            <span class="ident">requested_features</span>.<span class="ident">contains</span>(
+                                <span class="ident">wgt::Features::STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</span>,
+                            ),
+                        )
                         <span class="comment">//.shader_storage_buffer_array_non_uniform_indexing(</span>
                         .<span class="ident">shader_uniform_buffer_array_non_uniform_indexing</span>(
                             <span class="ident">requested_features</span>
@@ -1152,6 +1177,7 @@
             <span class="op">|</span> <span class="ident">F::PUSH_CONSTANTS</span>
             <span class="op">|</span> <span class="ident">F::ADDRESS_MODE_CLAMP_TO_BORDER</span>
             <span class="op">|</span> <span class="ident">F::SAMPLED_TEXTURE_BINDING_ARRAY</span>
+            <span class="op">|</span> <span class="ident">F::STORAGE_TEXTURE_BINDING_ARRAY</span>
             <span class="op">|</span> <span class="ident">F::BUFFER_BINDING_ARRAY</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dl_flags</span> <span class="op">=</span> <span class="ident">Df::all</span>();
 
@@ -1198,6 +1224,10 @@
             <span class="self">self</span>.<span class="ident">core</span>.<span class="ident">shader_sampled_image_array_dynamic_indexing</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
         );
         <span class="ident">features</span>.<span class="ident">set</span>(
+            <span class="ident">F::STORAGE_TEXTURE_ARRAY_DYNAMIC_INDEXING</span>,
+            <span class="self">self</span>.<span class="ident">core</span>.<span class="ident">shader_storage_image_array_dynamic_indexing</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
+        );
+        <span class="ident">features</span>.<span class="ident">set</span>(
             <span class="ident">F::STORAGE_BUFFER_ARRAY_DYNAMIC_INDEXING</span>,
             <span class="self">self</span>.<span class="ident">core</span>.<span class="ident">shader_storage_buffer_array_dynamic_indexing</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
         );
@@ -1223,7 +1253,9 @@
             <span class="kw">if</span> <span class="ident">vulkan_1_2</span>.<span class="ident">shader_sampled_image_array_non_uniform_indexing</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
                 <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">F::SAMPLED_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</span>;
             }
-            <span class="comment">//if vulkan_1_2.shader_storage_image_array_non_uniform_indexing != 0 {</span>
+            <span class="kw">if</span> <span class="ident">vulkan_1_2</span>.<span class="ident">shader_storage_image_array_non_uniform_indexing</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+                <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">F::STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</span>;
+            }
             <span class="comment">//if vulkan_1_2.shader_storage_buffer_array_non_uniform_indexing != 0 {</span>
             <span class="kw">if</span> <span class="ident">vulkan_1_2</span>.<span class="ident">shader_uniform_buffer_array_non_uniform_indexing</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
                 <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">F::UNIFORM_BUFFER_ARRAY_NON_UNIFORM_INDEXING</span>;
@@ -1242,7 +1274,9 @@
             <span class="kw">if</span> <span class="ident">descriptor_indexing</span>.<span class="ident">shader_sampled_image_array_non_uniform_indexing</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
                 <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">F::SAMPLED_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</span>;
             }
-            <span class="comment">//if descriptor_indexing.shader_storage_image_array_non_uniform_indexing != 0 {</span>
+            <span class="kw">if</span> <span class="ident">descriptor_indexing</span>.<span class="ident">shader_storage_image_array_non_uniform_indexing</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+                <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">F::STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</span>;
+            }
             <span class="comment">//if descriptor_indexing.shader_storage_buffer_array_non_uniform_indexing != 0 {</span>
             <span class="kw">if</span> <span class="ident">descriptor_indexing</span>.<span class="ident">shader_uniform_buffer_array_non_uniform_indexing</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
                 <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">F::UNIFORM_BUFFER_ARRAY_NON_UNIFORM_INDEXING</span>;
