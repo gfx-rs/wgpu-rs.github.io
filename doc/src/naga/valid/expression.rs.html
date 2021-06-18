@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/057d03a/src/valid/expression.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>expression.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/e3827f8/src/valid/expression.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>expression.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings"></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="icon" type="image/svg+xml" href="../../../favicon.svg">
 <link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png">
 <link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../naga/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img src="../../../brush.svg" width="18" height="18" alt="Pick another theme!"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img src="../../../wheel.svg" width="18" height="18" alt="Change settings"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">   1</span>
 <span id="2">   2</span>
@@ -1138,6 +1138,20 @@
 <span id="1136">1136</span>
 <span id="1137">1137</span>
 <span id="1138">1138</span>
+<span id="1139">1139</span>
+<span id="1140">1140</span>
+<span id="1141">1141</span>
+<span id="1142">1142</span>
+<span id="1143">1143</span>
+<span id="1144">1144</span>
+<span id="1145">1145</span>
+<span id="1146">1146</span>
+<span id="1147">1147</span>
+<span id="1148">1148</span>
+<span id="1149">1149</span>
+<span id="1150">1150</span>
+<span id="1151">1151</span>
+<span id="1152">1152</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">compose::validate_compose</span>, <span class="ident">ComposeError</span>, <span class="ident">FunctionInfo</span>, <span class="ident">ShaderStages</span>, <span class="ident">TypeFlags</span>};
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -1160,6 +1174,8 @@
     <span class="ident">InvalidIndexType</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Expression</span><span class="op">&gt;</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Accessing index {1} is out of {0:?} bounds&quot;</span>)]</span>
     <span class="ident">IndexOutOfBounds</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Expression</span><span class="op">&gt;</span>, <span class="ident">u32</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;The expression {0:?} may only be indexed by a constant&quot;</span>)]</span>
+    <span class="ident">IndexMustBeConstant</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Expression</span><span class="op">&gt;</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Function argument {0:?} doesn&#39;t exist&quot;</span>)]</span>
     <span class="ident">FunctionArgumentDoesntExist</span>(<span class="ident">u32</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Constant {0:?} doesn&#39;t exist&quot;</span>)]</span>
@@ -1283,17 +1299,16 @@
 
         <span class="kw">let</span> <span class="ident">stages</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">expression</span> {
             <span class="ident">E::Access</span> { <span class="ident">base</span>, <span class="ident">index</span> } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">base</span>)<span class="question-mark">?</span> {
-                    <span class="ident">Ti::Vector</span> { .. }
-                    <span class="op">|</span> <span class="ident">Ti::Matrix</span> { .. }
-                    <span class="op">|</span> <span class="ident">Ti::Array</span> { .. }
-                    <span class="op">|</span> <span class="ident">Ti::Pointer</span> { .. }
-                    <span class="op">|</span> <span class="ident">Ti::ValuePointer</span> { <span class="ident">size</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>), .. } <span class="op">=</span><span class="op">&gt;</span> {}
+                <span class="comment">// See the documentation for `Expression::Access`.</span>
+                <span class="kw">let</span> <span class="ident">dynamic_indexing_restricted</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">base</span>)<span class="question-mark">?</span> {
+                    <span class="ident">Ti::Vector</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                    <span class="ident">Ti::Matrix</span> { .. } <span class="op">|</span> <span class="ident">Ti::Array</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+                    <span class="ident">Ti::Pointer</span> { .. } <span class="op">|</span> <span class="ident">Ti::ValuePointer</span> { <span class="ident">size</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>), .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
                     <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="macro">log::error!</span>(<span class="string">&quot;Indexing of {:?}&quot;</span>, <span class="ident">other</span>);
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidBaseType</span>(<span class="ident">base</span>));
                     }
-                }
+                };
                 <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">index</span>)<span class="question-mark">?</span> {
                     <span class="comment">//TODO: only allow one of these</span>
                     <span class="ident">Ti::Scalar</span> {
@@ -1308,6 +1323,11 @@
                         <span class="macro">log::error!</span>(<span class="string">&quot;Indexing by {:?}&quot;</span>, <span class="ident">other</span>);
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidIndexType</span>(<span class="ident">index</span>));
                     }
+                }
+                <span class="kw">if</span> <span class="ident">dynamic_indexing_restricted</span>
+                    <span class="op">&amp;&amp;</span> <span class="ident">function</span>.<span class="ident">expressions</span>[<span class="ident">index</span>].<span class="ident">is_dynamic_index</span>(<span class="ident">module</span>)
+                {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::IndexMustBeConstant</span>(<span class="ident">base</span>));
                 }
                 <span class="ident">ShaderStages::all</span>()
             }
@@ -1717,7 +1737,15 @@
                 <span class="kw">let</span> <span class="ident">left_inner</span> <span class="op">=</span> <span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">left</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">right_inner</span> <span class="op">=</span> <span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">right</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">good</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">op</span> {
-                    <span class="ident">Bo::Add</span> <span class="op">|</span> <span class="ident">Bo::Subtract</span> <span class="op">|</span> <span class="ident">Bo::Divide</span> <span class="op">|</span> <span class="ident">Bo::Modulo</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">left_inner</span> {
+                    <span class="ident">Bo::Add</span> <span class="op">|</span> <span class="ident">Bo::Subtract</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">left_inner</span> {
+                        <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">kind</span> {
+                            <span class="ident">Sk::Uint</span> <span class="op">|</span> <span class="ident">Sk::Sint</span> <span class="op">|</span> <span class="ident">Sk::Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">left_inner</span> <span class="op">=</span><span class="op">=</span> <span class="ident">right_inner</span>,
+                            <span class="ident">Sk::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                        },
+                        <span class="ident">Ti::Matrix</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">left_inner</span> <span class="op">=</span><span class="op">=</span> <span class="ident">right_inner</span>,
+                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                    },
+                    <span class="ident">Bo::Divide</span> <span class="op">|</span> <span class="ident">Bo::Modulo</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">left_inner</span> {
                         <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">kind</span> {
                             <span class="ident">Sk::Uint</span> <span class="op">|</span> <span class="ident">Sk::Sint</span> <span class="op">|</span> <span class="ident">Sk::Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">left_inner</span> <span class="op">=</span><span class="op">=</span> <span class="ident">right_inner</span>,
                             <span class="ident">Sk::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
