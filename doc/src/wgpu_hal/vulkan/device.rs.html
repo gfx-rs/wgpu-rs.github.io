@@ -1469,6 +1469,15 @@
 <span id="1467">1467</span>
 <span id="1468">1468</span>
 <span id="1469">1469</span>
+<span id="1470">1470</span>
+<span id="1471">1471</span>
+<span id="1472">1472</span>
+<span id="1473">1473</span>
+<span id="1474">1474</span>
+<span id="1475">1475</span>
+<span id="1476">1476</span>
+<span id="1477">1477</span>
+<span id="1478">1478</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::conv</span>;
 
@@ -1477,7 +1486,7 @@
 <span class="kw">use</span> <span class="ident">inplace_it::inplace_or_alloc_from_iter</span>;
 <span class="kw">use</span> <span class="ident">parking_lot::Mutex</span>;
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">cmp</span>, <span class="ident">collections::hash_map::Entry</span>, <span class="ident">ffi::CString</span>, <span class="ident">ptr</span>, <span class="ident">sync::Arc</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">cmp</span>, <span class="ident">collections::hash_map::Entry</span>, <span class="ident">ffi::CString</span>, <span class="ident">ptr</span>, <span class="ident">sync::Arc</span>};
 
 <span class="kw">impl</span> <span class="kw">super</span><span class="ident">::DeviceShared</span> {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_object_name</span>(
@@ -2550,10 +2559,19 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_shader_module</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::ShaderModuleDescriptor</span>,
-        <span class="ident">shader</span>: <span class="kw">crate</span><span class="ident">::NagaShader</span>,
+        <span class="ident">shader</span>: <span class="kw">crate</span><span class="ident">::ShaderInput</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::ShaderModule</span>, <span class="kw">crate</span><span class="ident">::ShaderError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">spv</span> <span class="op">=</span> <span class="ident">naga::back::spv::write_vec</span>(<span class="kw-2">&amp;</span><span class="ident">shader</span>.<span class="ident">module</span>, <span class="kw-2">&amp;</span><span class="ident">shader</span>.<span class="ident">info</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">naga_options</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::ShaderError::Compilation</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">spv</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">shader</span> {
+            <span class="kw">crate</span><span class="ident">::ShaderInput::Naga</span>(<span class="ident">naga_shader</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Owned</span>(
+                <span class="ident">naga::back::spv::write_vec</span>(
+                    <span class="kw-2">&amp;</span><span class="ident">naga_shader</span>.<span class="ident">module</span>,
+                    <span class="kw-2">&amp;</span><span class="ident">naga_shader</span>.<span class="ident">info</span>,
+                    <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">naga_options</span>,
+                )
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw">crate</span><span class="ident">::ShaderError::Compilation</span>(<span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">e</span>)))<span class="question-mark">?</span>,
+            ),
+            <span class="kw">crate</span><span class="ident">::ShaderInput::SpirV</span>(<span class="ident">spv</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Cow::Borrowed</span>(<span class="ident">spv</span>),
+        };
 
         <span class="kw">let</span> <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk::ShaderModuleCreateInfo::builder</span>()
             .<span class="ident">flags</span>(<span class="ident">vk::ShaderModuleCreateFlags::empty</span>())
