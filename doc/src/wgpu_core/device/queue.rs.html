@@ -875,6 +875,28 @@
 <span id="875">875</span>
 <span id="876">876</span>
 <span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
 </pre><pre class="rust">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::device::trace::Action</span>;
@@ -1494,7 +1516,8 @@
                     <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">buffer_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
                     <span class="kw">let</span> (<span class="ident">texture_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
                     <span class="kw">let</span> (<span class="ident">texture_view_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">texture_views</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
-                    <span class="kw">let</span> (<span class="ident">sampler_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">samplers</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+                    <span class="kw">let</span> (<span class="ident">sampler_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">samplers</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+                    <span class="kw">let</span> (<span class="ident">query_set_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">query_sets</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
 
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">required_buffer_inits</span> <span class="op">=</span> <span class="ident">RequiredBufferInits::default</span>();
                     <span class="comment">//Note: locking the trackers has to be done after the storages</span>
@@ -1581,15 +1604,21 @@
                             }
                         }
                         <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="ident">cmdbuf</span>.<span class="ident">trackers</span>.<span class="ident">bind_groups</span>.<span class="ident">used</span>() {
-                            <span class="kw">if</span> <span class="op">!</span><span class="ident">bind_group_guard</span>[<span class="ident">id</span>].<span class="ident">life_guard</span>.<span class="ident">use_at</span>(<span class="ident">submit_index</span>) {
+                            <span class="kw">let</span> <span class="ident">bg</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">bind_group_guard</span>[<span class="ident">id</span>];
+                            <span class="kw">if</span> <span class="op">!</span><span class="ident">bg</span>.<span class="ident">life_guard</span>.<span class="ident">use_at</span>(<span class="ident">submit_index</span>) {
                                 <span class="ident">device</span>.<span class="ident">temp_suspected</span>.<span class="ident">bind_groups</span>.<span class="ident">push</span>(<span class="ident">id</span>);
                             }
-                        }
-                        <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="ident">cmdbuf</span>.<span class="ident">trackers</span>.<span class="ident">samplers</span>.<span class="ident">used</span>() {
-                            <span class="kw">if</span> <span class="op">!</span><span class="ident">sampler_guard</span>[<span class="ident">id</span>].<span class="ident">life_guard</span>.<span class="ident">use_at</span>(<span class="ident">submit_index</span>) {
-                                <span class="ident">device</span>.<span class="ident">temp_suspected</span>.<span class="ident">samplers</span>.<span class="ident">push</span>(<span class="ident">id</span>);
+                            <span class="comment">// We need to update the submission indices for the contained</span>
+                            <span class="comment">// state-less (!) resources as well, so that they don&#39;t get</span>
+                            <span class="comment">// deleted too early if the parent bind group goes out of scope.</span>
+                            <span class="kw">for</span> <span class="ident">sub_id</span> <span class="kw">in</span> <span class="ident">bg</span>.<span class="ident">used</span>.<span class="ident">views</span>.<span class="ident">used</span>() {
+                                <span class="ident">texture_view_guard</span>[<span class="ident">sub_id</span>].<span class="ident">life_guard</span>.<span class="ident">use_at</span>(<span class="ident">submit_index</span>);
+                            }
+                            <span class="kw">for</span> <span class="ident">sub_id</span> <span class="kw">in</span> <span class="ident">bg</span>.<span class="ident">used</span>.<span class="ident">samplers</span>.<span class="ident">used</span>() {
+                                <span class="ident">sampler_guard</span>[<span class="ident">sub_id</span>].<span class="ident">life_guard</span>.<span class="ident">use_at</span>(<span class="ident">submit_index</span>);
                             }
                         }
+                        <span class="macro">assert!</span>(<span class="ident">cmdbuf</span>.<span class="ident">trackers</span>.<span class="ident">samplers</span>.<span class="ident">is_empty</span>());
                         <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="ident">cmdbuf</span>.<span class="ident">trackers</span>.<span class="ident">compute_pipes</span>.<span class="ident">used</span>() {
                             <span class="kw">if</span> <span class="op">!</span><span class="ident">compute_pipe_guard</span>[<span class="ident">id</span>].<span class="ident">life_guard</span>.<span class="ident">use_at</span>(<span class="ident">submit_index</span>) {
                                 <span class="ident">device</span>.<span class="ident">temp_suspected</span>.<span class="ident">compute_pipelines</span>.<span class="ident">push</span>(<span class="ident">id</span>);
@@ -1600,9 +1629,24 @@
                                 <span class="ident">device</span>.<span class="ident">temp_suspected</span>.<span class="ident">render_pipelines</span>.<span class="ident">push</span>(<span class="ident">id</span>);
                             }
                         }
+                        <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="ident">cmdbuf</span>.<span class="ident">trackers</span>.<span class="ident">query_sets</span>.<span class="ident">used</span>() {
+                            <span class="kw">if</span> <span class="op">!</span><span class="ident">query_set_guard</span>[<span class="ident">id</span>].<span class="ident">life_guard</span>.<span class="ident">use_at</span>(<span class="ident">submit_index</span>) {
+                                <span class="ident">device</span>.<span class="ident">temp_suspected</span>.<span class="ident">query_sets</span>.<span class="ident">push</span>(<span class="ident">id</span>);
+                            }
+                        }
                         <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="ident">cmdbuf</span>.<span class="ident">trackers</span>.<span class="ident">bundles</span>.<span class="ident">used</span>() {
-                            <span class="kw">if</span> <span class="op">!</span><span class="ident">render_bundle_guard</span>[<span class="ident">id</span>].<span class="ident">life_guard</span>.<span class="ident">use_at</span>(<span class="ident">submit_index</span>) {
+                            <span class="kw">let</span> <span class="ident">bundle</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">render_bundle_guard</span>[<span class="ident">id</span>];
+                            <span class="kw">if</span> <span class="op">!</span><span class="ident">bundle</span>.<span class="ident">life_guard</span>.<span class="ident">use_at</span>(<span class="ident">submit_index</span>) {
                                 <span class="ident">device</span>.<span class="ident">temp_suspected</span>.<span class="ident">render_bundles</span>.<span class="ident">push</span>(<span class="ident">id</span>);
+                            }
+                            <span class="comment">// We need to update the submission indices for the contained</span>
+                            <span class="comment">// state-less (!) resources as well, excluding the bind groups.</span>
+                            <span class="comment">// They don&#39;t get deleted too early if the bundle goes out of scope.</span>
+                            <span class="kw">for</span> <span class="ident">sub_id</span> <span class="kw">in</span> <span class="ident">bundle</span>.<span class="ident">used</span>.<span class="ident">compute_pipes</span>.<span class="ident">used</span>() {
+                                <span class="ident">compute_pipe_guard</span>[<span class="ident">sub_id</span>].<span class="ident">life_guard</span>.<span class="ident">use_at</span>(<span class="ident">submit_index</span>);
+                            }
+                            <span class="kw">for</span> <span class="ident">sub_id</span> <span class="kw">in</span> <span class="ident">bundle</span>.<span class="ident">used</span>.<span class="ident">render_pipes</span>.<span class="ident">used</span>() {
+                                <span class="ident">render_pipe_guard</span>[<span class="ident">sub_id</span>].<span class="ident">life_guard</span>.<span class="ident">use_at</span>(<span class="ident">submit_index</span>);
                             }
                         }
 
