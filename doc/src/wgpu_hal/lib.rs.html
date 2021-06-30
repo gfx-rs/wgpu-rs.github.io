@@ -1196,7 +1196,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PipelineError</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;linkage failed for stage {0:?}: {1}&quot;</span>)]</span>
-    <span class="ident">Linkage</span>(<span class="ident">wgt::ShaderStage</span>, <span class="ident">String</span>),
+    <span class="ident">Linkage</span>(<span class="ident">wgt::ShaderStages</span>, <span class="ident">String</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;entry point for stage {0:?} is invalid&quot;</span>)]</span>
     <span class="ident">EntryPoint</span>(<span class="ident">naga::ShaderStage</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
@@ -1279,7 +1279,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">texture_format_capabilities</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TextureFormatCapability</span>;
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">TextureFormatCapabilities</span>;
 
     <span class="doccomment">/// Returns the capabilities of working with a specified surface.</span>
     <span class="doccomment">///</span>
@@ -1292,7 +1292,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">exit</span>(<span class="self">self</span>);
     <span class="doccomment">/// Creates a new buffer.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// The initial usage is `BufferUse::empty()`.</span>
+    <span class="doccomment">/// The initial usage is `BufferUses::empty()`.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">BufferDescriptor</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">A::Buffer</span>, <span class="ident">DeviceError</span><span class="op">&gt;</span>;
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_buffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buffer</span>: <span class="ident">A::Buffer</span>);
     <span class="comment">//TODO: clarify if zero-sized mapping is allowed</span>
@@ -1311,7 +1311,7 @@
 
     <span class="doccomment">/// Creates a new texture.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// The initial usage for all subresources is `TextureUse::UNINITIALIZED`.</span>
+    <span class="doccomment">/// The initial usage for all subresources is `TextureUses::UNINITIALIZED`.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_texture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">TextureDescriptor</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">A::Texture</span>, <span class="ident">DeviceError</span><span class="op">&gt;</span>;
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_texture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">texture</span>: <span class="ident">A::Texture</span>);
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_texture_view</span>(
@@ -1436,17 +1436,17 @@
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">BufferCopy</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// Note: `dst` current usage has to be `TextureUse::COPY_DST`.</span>
+    <span class="doccomment">/// Note: `dst` current usage has to be `TextureUses::COPY_DST`.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">copy_texture_to_texture</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">A::Texture</span>,
-        <span class="ident">src_usage</span>: <span class="ident">TextureUse</span>,
+        <span class="ident">src_usage</span>: <span class="ident">TextureUses</span>,
         <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">A::Texture</span>,
         <span class="ident">regions</span>: <span class="ident">T</span>,
     ) <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">TextureCopy</span><span class="op">&gt;</span>;
 
-    <span class="doccomment">/// Note: `dst` current usage has to be `TextureUse::COPY_DST`.</span>
+    <span class="doccomment">/// Note: `dst` current usage has to be `TextureUses::COPY_DST`.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">copy_buffer_to_texture</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">A::Buffer</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">A::Texture</span>, <span class="ident">regions</span>: <span class="ident">T</span>)
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">BufferTextureCopy</span><span class="op">&gt;</span>;
@@ -1454,7 +1454,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">copy_texture_to_buffer</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">A::Texture</span>,
-        <span class="ident">src_usage</span>: <span class="ident">TextureUse</span>,
+        <span class="ident">src_usage</span>: <span class="ident">TextureUses</span>,
         <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">A::Buffer</span>,
         <span class="ident">regions</span>: <span class="ident">T</span>,
     ) <span class="kw">where</span>
@@ -1475,7 +1475,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_push_constants</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident">A::PipelineLayout</span>,
-        <span class="ident">stages</span>: <span class="ident">wgt::ShaderStage</span>,
+        <span class="ident">stages</span>: <span class="ident">wgt::ShaderStages</span>,
         <span class="ident">offset</span>: <span class="ident">u32</span>,
         <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>],
     );
@@ -1576,7 +1576,7 @@
 
 <span class="macro">bitflags!</span>(
     <span class="doccomment">/// Instance initialization flags.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InstanceFlag</span>: <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InstanceFlags</span>: <span class="ident">u32</span> {
         <span class="doccomment">/// Generate debug information in shaders and objects.</span>
         <span class="kw">const</span> <span class="ident">DEBUG</span> <span class="op">=</span> <span class="number">0x1</span>;
         <span class="doccomment">/// Enable validation, if possible.</span>
@@ -1586,7 +1586,7 @@
 
 <span class="macro">bitflags!</span>(
     <span class="doccomment">/// Texture format capability flags.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureFormatCapability</span>: <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureFormatCapabilities</span>: <span class="ident">u32</span> {
         <span class="doccomment">/// Format can be sampled.</span>
         <span class="kw">const</span> <span class="ident">SAMPLED</span> <span class="op">=</span> <span class="number">0x1</span>;
         <span class="doccomment">/// Format can be sampled with a linear sampler.</span>
@@ -1617,14 +1617,14 @@
 
 <span class="macro">bitflags!</span>(
     <span class="doccomment">/// Texture format capability flags.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FormatAspect</span>: <span class="ident">u8</span> {
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FormatAspects</span>: <span class="ident">u8</span> {
         <span class="kw">const</span> <span class="ident">COLOR</span> <span class="op">=</span> <span class="number">1</span>;
         <span class="kw">const</span> <span class="ident">DEPTH</span> <span class="op">=</span> <span class="number">2</span>;
         <span class="kw">const</span> <span class="ident">STENCIL</span> <span class="op">=</span> <span class="number">4</span>;
     }
 );
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">wgt::TextureAspect</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">FormatAspect</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">wgt::TextureAspect</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">FormatAspects</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">aspect</span>: <span class="ident">wgt::TextureAspect</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">aspect</span> {
             <span class="ident">wgt::TextureAspect::All</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::all</span>(),
@@ -1634,7 +1634,7 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">wgt::TextureFormat</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">FormatAspect</span> {
+<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">wgt::TextureFormat</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">FormatAspects</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">format</span> {
             <span class="ident">wgt::TextureFormat::Depth32Float</span> <span class="op">|</span> <span class="ident">wgt::TextureFormat::Depth24Plus</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">Self</span><span class="ident">::DEPTH</span>,
@@ -1645,7 +1645,7 @@
 }
 
 <span class="macro">bitflags!</span>(
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MemoryFlag</span>: <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MemoryFlags</span>: <span class="ident">u32</span> {
         <span class="kw">const</span> <span class="ident">TRANSIENT</span> <span class="op">=</span> <span class="number">1</span>;
         <span class="kw">const</span> <span class="ident">PREFER_COHERENT</span> <span class="op">=</span> <span class="number">2</span>;
     }
@@ -1654,15 +1654,15 @@
 <span class="comment">//TODO: it&#39;s not intuitive for the backends to consider `LOAD` being optional.</span>
 
 <span class="macro">bitflags!</span>(
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AttachmentOp</span>: <span class="ident">u8</span> {
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AttachmentOps</span>: <span class="ident">u8</span> {
         <span class="kw">const</span> <span class="ident">LOAD</span> <span class="op">=</span> <span class="number">1</span>;
         <span class="kw">const</span> <span class="ident">STORE</span> <span class="op">=</span> <span class="number">2</span>;
     }
 );
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="doccomment">/// Similar to `wgt::BufferUsage` but for internal use.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferUse</span>: <span class="ident">u32</span> {
+    <span class="doccomment">/// Similar to `wgt::BufferUsages` but for internal use.</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferUses</span>: <span class="ident">u32</span> {
         <span class="kw">const</span> <span class="ident">MAP_READ</span> <span class="op">=</span> <span class="number">1</span>;
         <span class="kw">const</span> <span class="ident">MAP_WRITE</span> <span class="op">=</span> <span class="number">2</span>;
         <span class="kw">const</span> <span class="ident">COPY_SRC</span> <span class="op">=</span> <span class="number">4</span>;
@@ -1687,8 +1687,8 @@
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="doccomment">/// Similar to `wgt::TextureUsage` but for internal use.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureUse</span>: <span class="ident">u32</span> {
+    <span class="doccomment">/// Similar to `wgt::TextureUsages` but for internal use.</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureUses</span>: <span class="ident">u32</span> {
         <span class="kw">const</span> <span class="ident">COPY_SRC</span> <span class="op">=</span> <span class="number">1</span>;
         <span class="kw">const</span> <span class="ident">COPY_DST</span> <span class="op">=</span> <span class="number">2</span>;
         <span class="kw">const</span> <span class="ident">SAMPLED</span> <span class="op">=</span> <span class="number">4</span>;
@@ -1712,7 +1712,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InstanceDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>,
-    <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">InstanceFlag</span>,
+    <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">InstanceFlags</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
@@ -1766,8 +1766,8 @@
 
     <span class="doccomment">/// Supported texture usage flags.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Must have at least `TextureUse::COLOR_TARGET`</span>
-    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">TextureUse</span>,
+    <span class="doccomment">/// Must have at least `TextureUses::COLOR_TARGET`</span>
+    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">TextureUses</span>,
 
     <span class="doccomment">/// List of supported V-sync modes.</span>
     <span class="doccomment">///</span>
@@ -1805,8 +1805,8 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">size</span>: <span class="ident">wgt::BufferAddress</span>,
-    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">BufferUse</span>,
-    <span class="kw">pub</span> <span class="ident">memory_flags</span>: <span class="ident">MemoryFlag</span>,
+    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">BufferUses</span>,
+    <span class="kw">pub</span> <span class="ident">memory_flags</span>: <span class="ident">MemoryFlags</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
@@ -1817,8 +1817,8 @@
     <span class="kw">pub</span> <span class="ident">sample_count</span>: <span class="ident">u32</span>,
     <span class="kw">pub</span> <span class="ident">dimension</span>: <span class="ident">wgt::TextureDimension</span>,
     <span class="kw">pub</span> <span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>,
-    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">TextureUse</span>,
-    <span class="kw">pub</span> <span class="ident">memory_flags</span>: <span class="ident">MemoryFlag</span>,
+    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">TextureUses</span>,
+    <span class="kw">pub</span> <span class="ident">memory_flags</span>: <span class="ident">MemoryFlags</span>,
 }
 
 <span class="doccomment">/// TextureView descriptor.</span>
@@ -1833,7 +1833,7 @@
     <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>,
     <span class="kw">pub</span> <span class="ident">dimension</span>: <span class="ident">wgt::TextureViewDimension</span>,
-    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">TextureUse</span>,
+    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">TextureUses</span>,
     <span class="kw">pub</span> <span class="ident">range</span>: <span class="ident">wgt::ImageSubresourceRange</span>,
 }
 
@@ -1888,7 +1888,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureBinding</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span>: <span class="ident">Api</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">A::TextureView</span>,
-    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">TextureUse</span>,
+    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">TextureUses</span>,
 }
 
 <span class="comment">// Rust gets confused about the impl requirements for `A`</span>
@@ -2057,7 +2057,7 @@
     <span class="doccomment">/// `SurfaceCapabilities::extents` range.</span>
     <span class="kw">pub</span> <span class="ident">extent</span>: <span class="ident">wgt::Extent3d</span>,
     <span class="doccomment">/// Allowed usage of surface textures,</span>
-    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">TextureUse</span>,
+    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">TextureUses</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
@@ -2071,14 +2071,14 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferBarrier</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span>: <span class="ident">Api</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">A::Buffer</span>,
-    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">BufferUse</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">BufferUses</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureBarrier</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span>: <span class="ident">Api</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">texture</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">A::Texture</span>,
     <span class="kw">pub</span> <span class="ident">range</span>: <span class="ident">wgt::ImageSubresourceRange</span>,
-    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">TextureUse</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">TextureUses</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
@@ -2092,7 +2092,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureCopyBase</span> {
     <span class="kw">pub</span> <span class="ident">origin</span>: <span class="ident">wgt::Origin3d</span>,
     <span class="kw">pub</span> <span class="ident">mip_level</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">aspect</span>: <span class="ident">FormatAspect</span>,
+    <span class="kw">pub</span> <span class="ident">aspect</span>: <span class="ident">FormatAspects</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
@@ -2114,11 +2114,11 @@
     <span class="kw">pub</span> <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">A::TextureView</span>,
     <span class="doccomment">/// Contains either a single mutating usage as a target, or a valid combination</span>
     <span class="doccomment">/// of read-only usages.</span>
-    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">TextureUse</span>,
+    <span class="kw">pub</span> <span class="ident">usage</span>: <span class="ident">TextureUses</span>,
     <span class="doccomment">/// Defines the boundary usages for the attachment.</span>
     <span class="doccomment">/// It is expected to begin a render pass with `boundary_usage.start` usage,</span>
     <span class="doccomment">/// and will end it with `boundary_usage.end` usage.</span>
-    <span class="kw">pub</span> <span class="ident">boundary_usage</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">TextureUse</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">boundary_usage</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">TextureUses</span><span class="op">&gt;</span>,
 }
 
 <span class="comment">// Rust gets confused about the impl requirements for `A`</span>
@@ -2136,7 +2136,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ColorAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span>: <span class="ident">Api</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">target</span>: <span class="ident">Attachment</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">resolve_target</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Attachment</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">ops</span>: <span class="ident">AttachmentOp</span>,
+    <span class="kw">pub</span> <span class="ident">ops</span>: <span class="ident">AttachmentOps</span>,
     <span class="kw">pub</span> <span class="ident">clear_value</span>: <span class="ident">wgt::Color</span>,
 }
 
@@ -2155,8 +2155,8 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DepthStencilAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span>: <span class="ident">Api</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">target</span>: <span class="ident">Attachment</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">depth_ops</span>: <span class="ident">AttachmentOp</span>,
-    <span class="kw">pub</span> <span class="ident">stencil_ops</span>: <span class="ident">AttachmentOp</span>,
+    <span class="kw">pub</span> <span class="ident">depth_ops</span>: <span class="ident">AttachmentOps</span>,
+    <span class="kw">pub</span> <span class="ident">stencil_ops</span>: <span class="ident">AttachmentOps</span>,
     <span class="kw">pub</span> <span class="ident">clear_value</span>: (<span class="ident">f32</span>, <span class="ident">u32</span>),
 }
 

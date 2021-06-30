@@ -857,7 +857,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BindingZone</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;stage {0:?}&quot;</span>)]</span>
-    <span class="ident">Stage</span>(<span class="ident">wgt::ShaderStage</span>),
+    <span class="ident">Stage</span>(<span class="ident">wgt::ShaderStages</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;whole pipeline&quot;</span>)]</span>
     <span class="ident">Pipeline</span>,
 }
@@ -890,29 +890,29 @@
 }
 
 <span class="kw">impl</span> <span class="ident">PerStageBindingTypeCounter</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">stage</span>: <span class="ident">wgt::ShaderStage</span>, <span class="ident">count</span>: <span class="ident">u32</span>) {
-        <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt::ShaderStage::VERTEX</span>) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">stage</span>: <span class="ident">wgt::ShaderStages</span>, <span class="ident">count</span>: <span class="ident">u32</span>) {
+        <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt::ShaderStages::VERTEX</span>) {
             <span class="self">self</span>.<span class="ident">vertex</span> <span class="op">+</span><span class="op">=</span> <span class="ident">count</span>;
         }
-        <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt::ShaderStage::FRAGMENT</span>) {
+        <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt::ShaderStages::FRAGMENT</span>) {
             <span class="self">self</span>.<span class="ident">fragment</span> <span class="op">+</span><span class="op">=</span> <span class="ident">count</span>;
         }
-        <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt::ShaderStage::COMPUTE</span>) {
+        <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt::ShaderStages::COMPUTE</span>) {
             <span class="self">self</span>.<span class="ident">compute</span> <span class="op">+</span><span class="op">=</span> <span class="ident">count</span>;
         }
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">max</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">BindingZone</span>, <span class="ident">u32</span>) {
         <span class="kw">let</span> <span class="ident">max_value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">vertex</span>.<span class="ident">max</span>(<span class="self">self</span>.<span class="ident">fragment</span>.<span class="ident">max</span>(<span class="self">self</span>.<span class="ident">compute</span>));
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stage</span> <span class="op">=</span> <span class="ident">wgt::ShaderStage::NONE</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stage</span> <span class="op">=</span> <span class="ident">wgt::ShaderStages::NONE</span>;
         <span class="kw">if</span> <span class="ident">max_value</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">vertex</span> {
-            <span class="ident">stage</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt::ShaderStage::VERTEX</span>
+            <span class="ident">stage</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt::ShaderStages::VERTEX</span>
         }
         <span class="kw">if</span> <span class="ident">max_value</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">fragment</span> {
-            <span class="ident">stage</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt::ShaderStage::FRAGMENT</span>
+            <span class="ident">stage</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt::ShaderStages::FRAGMENT</span>
         }
         <span class="kw">if</span> <span class="ident">max_value</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">compute</span> {
-            <span class="ident">stage</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt::ShaderStage::COMPUTE</span>
+            <span class="ident">stage</span> <span class="op">|</span><span class="op">=</span> <span class="ident">wgt::ShaderStages::COMPUTE</span>
         }
         (<span class="ident">BindingZone::Stage</span>(<span class="ident">stage</span>), <span class="ident">max_value</span>)
     }
@@ -1125,8 +1125,8 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;push constant range (index {index}) provides for stage(s) {provided:?} but there exists another range that provides stage(s) {intersected:?}. Each stage may only be provided by one range&quot;</span>)]</span>
     <span class="ident">MoreThanOnePushConstantRangePerStage</span> {
         <span class="ident">index</span>: <span class="ident">usize</span>,
-        <span class="ident">provided</span>: <span class="ident">wgt::ShaderStage</span>,
-        <span class="ident">intersected</span>: <span class="ident">wgt::ShaderStage</span>,
+        <span class="ident">provided</span>: <span class="ident">wgt::ShaderStages</span>,
+        <span class="ident">intersected</span>: <span class="ident">wgt::ShaderStages</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;push constant at index {index} has range {}..{} which exceeds device push constant size limit 0..{max}&quot;</span>, <span class="ident">range</span>.<span class="ident">start</span>, <span class="ident">range</span>.<span class="ident">end</span>)]</span>
     <span class="ident">PushConstantRangeTooLarge</span> {
@@ -1151,20 +1151,20 @@
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;provided push constant is for stage(s) {actual:?}, stage with a partial match found at index {idx} with stage(s) {matched:?}, however push constants must be complete matches&quot;</span>)]</span>
     <span class="ident">PartialRangeMatch</span> {
-        <span class="ident">actual</span>: <span class="ident">wgt::ShaderStage</span>,
+        <span class="ident">actual</span>: <span class="ident">wgt::ShaderStages</span>,
         <span class="ident">idx</span>: <span class="ident">usize</span>,
-        <span class="ident">matched</span>: <span class="ident">wgt::ShaderStage</span>,
+        <span class="ident">matched</span>: <span class="ident">wgt::ShaderStages</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;provided push constant is for stage(s) {actual:?}, but intersects a push constant range (at index {idx}) with stage(s) {missing:?}. Push constants must provide the stages for all ranges they intersect&quot;</span>)]</span>
     <span class="ident">MissingStages</span> {
-        <span class="ident">actual</span>: <span class="ident">wgt::ShaderStage</span>,
+        <span class="ident">actual</span>: <span class="ident">wgt::ShaderStages</span>,
         <span class="ident">idx</span>: <span class="ident">usize</span>,
-        <span class="ident">missing</span>: <span class="ident">wgt::ShaderStage</span>,
+        <span class="ident">missing</span>: <span class="ident">wgt::ShaderStages</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;provided push constant is for stage(s) {actual:?}, however the pipeline layout has no push constant range for the stage(s) {unmatched:?}&quot;</span>)]</span>
     <span class="ident">UnmatchedStages</span> {
-        <span class="ident">actual</span>: <span class="ident">wgt::ShaderStage</span>,
-        <span class="ident">unmatched</span>: <span class="ident">wgt::ShaderStage</span>,
+        <span class="ident">actual</span>: <span class="ident">wgt::ShaderStages</span>,
+        <span class="ident">unmatched</span>: <span class="ident">wgt::ShaderStages</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;provided push constant offset {0} does not respect `PUSH_CONSTANT_ALIGNMENT`&quot;</span>)]</span>
     <span class="ident">Unaligned</span>(<span class="ident">u32</span>),
@@ -1203,7 +1203,7 @@
     <span class="doccomment">/// Validate push constants match up with expected ranges.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">validate_push_constant_ranges</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">stages</span>: <span class="ident">wgt::ShaderStage</span>,
+        <span class="ident">stages</span>: <span class="ident">wgt::ShaderStages</span>,
         <span class="ident">offset</span>: <span class="ident">u32</span>,
         <span class="ident">end_offset</span>: <span class="ident">u32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PushConstantUploadError</span><span class="op">&gt;</span> {
@@ -1234,7 +1234,7 @@
         <span class="comment">//   when we check for 1, we can simply check that our entire updated range</span>
         <span class="comment">//   is within a push constant range. i.e. our range for a specific stage cannot</span>
         <span class="comment">//   intersect more than one push constant range.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">used_stages</span> <span class="op">=</span> <span class="ident">wgt::ShaderStage::NONE</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">used_stages</span> <span class="op">=</span> <span class="ident">wgt::ShaderStages::NONE</span>;
         <span class="kw">for</span> (<span class="ident">idx</span>, <span class="ident">range</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">push_constant_ranges</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
             <span class="comment">// contains not intersects due to 2</span>
             <span class="kw">if</span> <span class="ident">stages</span>.<span class="ident">contains</span>(<span class="ident">range</span>.<span class="ident">stages</span>) {

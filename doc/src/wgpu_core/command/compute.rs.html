@@ -836,7 +836,6 @@
 <span id="836">836</span>
 <span id="837">837</span>
 <span id="838">838</span>
-<span id="839">839</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{<span class="ident">BindError</span>, <span class="ident">BindGroup</span>, <span class="ident">PushConstantUploadError</span>},
@@ -857,7 +856,6 @@
 
 <span class="kw">use</span> <span class="ident">hal::CommandEncoder</span> <span class="kw">as</span> <span class="kw">_</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
-<span class="kw">use</span> <span class="ident">wgt</span>::{<span class="ident">BufferAddress</span>, <span class="ident">BufferUsage</span>, <span class="ident">ShaderStage</span>};
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">mem</span>, <span class="ident">str</span>};
 
@@ -886,7 +884,7 @@
     <span class="ident">Dispatch</span>([<span class="ident">u32</span>; <span class="number">3</span>]),
     <span class="ident">DispatchIndirect</span> {
         <span class="ident">buffer_id</span>: <span class="ident">id::BufferId</span>,
-        <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
+        <span class="ident">offset</span>: <span class="ident">wgt::BufferAddress</span>,
     },
     <span class="ident">PushDebugGroup</span> {
         <span class="ident">color</span>: <span class="ident">u32</span>,
@@ -1270,7 +1268,7 @@
                                 <span class="op">|</span><span class="ident">clear_offset</span>, <span class="ident">clear_data</span><span class="op">|</span> <span class="kw">unsafe</span> {
                                     <span class="ident">raw</span>.<span class="ident">set_push_constants</span>(
                                         <span class="kw-2">&amp;</span><span class="ident">pipeline_layout</span>.<span class="ident">raw</span>,
-                                        <span class="ident">wgt::ShaderStage::COMPUTE</span>,
+                                        <span class="ident">wgt::ShaderStages::COMPUTE</span>,
                                         <span class="ident">clear_offset</span>,
                                         <span class="ident">clear_data</span>,
                                     );
@@ -1304,7 +1302,7 @@
 
                     <span class="ident">pipeline_layout</span>
                         .<span class="ident">validate_push_constant_ranges</span>(
-                            <span class="ident">ShaderStage::COMPUTE</span>,
+                            <span class="ident">wgt::ShaderStages::COMPUTE</span>,
                             <span class="ident">offset</span>,
                             <span class="ident">end_offset_bytes</span>,
                         )
@@ -1313,7 +1311,7 @@
                     <span class="kw">unsafe</span> {
                         <span class="ident">raw</span>.<span class="ident">set_push_constants</span>(
                             <span class="kw-2">&amp;</span><span class="ident">pipeline_layout</span>.<span class="ident">raw</span>,
-                            <span class="ident">wgt::ShaderStage::COMPUTE</span>,
+                            <span class="ident">wgt::ShaderStages::COMPUTE</span>,
                             <span class="ident">offset</span>,
                             <span class="ident">data_slice</span>,
                         );
@@ -1354,10 +1352,10 @@
                     <span class="kw">let</span> <span class="ident">indirect_buffer</span> <span class="op">=</span> <span class="ident">state</span>
                         .<span class="ident">trackers</span>
                         .<span class="ident">buffers</span>
-                        .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">buffer_id</span>, (), <span class="ident">hal::BufferUse::INDIRECT</span>)
+                        .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">buffer_id</span>, (), <span class="ident">hal::BufferUses::INDIRECT</span>)
                         .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">ComputePassErrorInner::InvalidIndirectBuffer</span>(<span class="ident">buffer_id</span>))
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
-                    <span class="ident">check_buffer_usage</span>(<span class="ident">indirect_buffer</span>.<span class="ident">usage</span>, <span class="ident">BufferUsage::INDIRECT</span>)
+                    <span class="ident">check_buffer_usage</span>(<span class="ident">indirect_buffer</span>.<span class="ident">usage</span>, <span class="ident">wgt::BufferUsages::INDIRECT</span>)
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
                     <span class="kw">let</span> <span class="ident">end_offset</span> <span class="op">=</span> <span class="ident">offset</span> <span class="op">+</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">wgt::DispatchIndirectArgs</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>;

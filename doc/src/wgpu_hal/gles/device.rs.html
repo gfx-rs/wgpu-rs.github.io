@@ -1199,7 +1199,7 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name_binding_map</span> <span class="op">=</span> <span class="ident">NameBindingMap::default</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sampler_map</span> <span class="op">=</span> [<span class="prelude-val">None</span>; <span class="kw">super</span><span class="ident">::MAX_TEXTURE_SLOTS</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">has_stages</span> <span class="op">=</span> <span class="ident">wgt::ShaderStage::empty</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">has_stages</span> <span class="op">=</span> <span class="ident">wgt::ShaderStages::empty</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">shaders_to_delete</span> <span class="op">=</span> <span class="ident">arrayvec::ArrayVec</span>::<span class="op">&lt;</span>[<span class="kw">_</span>; <span class="number">3</span>]<span class="op">&gt;</span><span class="ident">::new</span>();
 
         <span class="kw">for</span> (<span class="ident">naga_stage</span>, <span class="ident">stage</span>) <span class="kw">in</span> <span class="ident">shaders</span> {
@@ -1215,7 +1215,7 @@
         }
 
         <span class="comment">// Create empty fragment shader if only vertex shader is present</span>
-        <span class="kw">if</span> <span class="ident">has_stages</span> <span class="op">=</span><span class="op">=</span> <span class="ident">wgt::ShaderStage::VERTEX</span> {
+        <span class="kw">if</span> <span class="ident">has_stages</span> <span class="op">=</span><span class="op">=</span> <span class="ident">wgt::ShaderStages::VERTEX</span> {
             <span class="kw">let</span> <span class="ident">version</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">shading_language_version</span> {
                 <span class="ident">naga::back::glsl::Version::Embedded</span>(<span class="ident">v</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">v</span>,
                 <span class="ident">naga::back::glsl::Version::Desktop</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
@@ -1250,7 +1250,7 @@
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>
             .<span class="ident">shared</span>
             .<span class="ident">private_caps</span>
-            .<span class="ident">contains</span>(<span class="kw">super</span><span class="ident">::PrivateCapability::SHADER_BINDING_LAYOUT</span>)
+            .<span class="ident">contains</span>(<span class="kw">super</span><span class="ident">::PrivateCapabilities::SHADER_BINDING_LAYOUT</span>)
         {
             <span class="comment">// This remapping is only needed if we aren&#39;t able to put the binding layout</span>
             <span class="comment">// in the shader. We can&#39;t remap storage buffers this way.</span>
@@ -1324,7 +1324,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Buffer</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
 
-        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::BufferUse::INDEX</span>) {
+        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::BufferUses::INDEX</span>) {
             <span class="ident">glow::ELEMENT_ARRAY_BUFFER</span>
         } <span class="kw">else</span> {
             <span class="ident">glow::ARRAY_BUFFER</span>
@@ -1332,10 +1332,10 @@
 
         <span class="kw">let</span> <span class="ident">is_host_visible</span> <span class="op">=</span> <span class="ident">desc</span>
             .<span class="ident">usage</span>
-            .<span class="ident">intersects</span>(<span class="kw">crate</span><span class="ident">::BufferUse::MAP_READ</span> <span class="op">|</span> <span class="kw">crate</span><span class="ident">::BufferUse::MAP_WRITE</span>);
+            .<span class="ident">intersects</span>(<span class="kw">crate</span><span class="ident">::BufferUses::MAP_READ</span> <span class="op">|</span> <span class="kw">crate</span><span class="ident">::BufferUses::MAP_WRITE</span>);
         <span class="kw">let</span> <span class="ident">is_coherent</span> <span class="op">=</span> <span class="ident">desc</span>
             .<span class="ident">memory_flags</span>
-            .<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::MemoryFlag::PREFER_COHERENT</span>);
+            .<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::MemoryFlags::PREFER_COHERENT</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">map_flags</span> <span class="op">=</span> <span class="number">0</span>;
 
         <span class="kw">if</span> <span class="ident">is_host_visible</span> {
@@ -1344,10 +1344,10 @@
                 <span class="ident">map_flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">glow::MAP_COHERENT_BIT</span>;
             }
         }
-        <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::BufferUse::MAP_READ</span>) {
+        <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::BufferUses::MAP_READ</span>) {
             <span class="ident">map_flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">glow::MAP_READ_BIT</span>;
         }
-        <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::BufferUse::MAP_WRITE</span>) {
+        <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::BufferUses::MAP_WRITE</span>) {
             <span class="ident">map_flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">glow::MAP_WRITE_BIT</span>;
         }
 
@@ -1360,7 +1360,7 @@
         <span class="ident">gl</span>.<span class="ident">buffer_storage</span>(<span class="ident">target</span>, <span class="ident">raw_size</span>, <span class="prelude-val">None</span>, <span class="ident">map_flags</span>);
         <span class="ident">gl</span>.<span class="ident">bind_buffer</span>(<span class="ident">target</span>, <span class="prelude-val">None</span>);
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">is_coherent</span> <span class="op">&amp;&amp;</span> <span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::BufferUse::MAP_WRITE</span>) {
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">is_coherent</span> <span class="op">&amp;&amp;</span> <span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::BufferUses::MAP_WRITE</span>) {
             <span class="ident">map_flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">glow::MAP_FLUSH_EXPLICIT_BIT</span>;
         }
         <span class="comment">//TODO: do we need `glow::MAP_UNSYNCHRONIZED_BIT`?</span>
@@ -1437,9 +1437,9 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Texture</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
 
-        <span class="kw">let</span> <span class="ident">render_usage</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::TextureUse::COLOR_TARGET</span>
-            <span class="op">|</span> <span class="kw">crate</span><span class="ident">::TextureUse::DEPTH_STENCIL_WRITE</span>
-            <span class="op">|</span> <span class="kw">crate</span><span class="ident">::TextureUse::DEPTH_STENCIL_READ</span>;
+        <span class="kw">let</span> <span class="ident">render_usage</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::TextureUses::COLOR_TARGET</span>
+            <span class="op">|</span> <span class="kw">crate</span><span class="ident">::TextureUses::DEPTH_STENCIL_WRITE</span>
+            <span class="op">|</span> <span class="kw">crate</span><span class="ident">::TextureUses::DEPTH_STENCIL_READ</span>;
         <span class="kw">let</span> <span class="ident">format_desc</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">describe_texture_format</span>(<span class="ident">desc</span>.<span class="ident">format</span>);
 
         <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">render_usage</span>.<span class="ident">contains</span>(<span class="ident">desc</span>.<span class="ident">usage</span>)
@@ -1606,8 +1606,8 @@
             <span class="comment">//TODO: use `conv::map_view_dimension(desc.dimension)`?</span>
             <span class="ident">inner</span>: <span class="ident">texture</span>.<span class="ident">inner</span>.<span class="ident">clone</span>(),
             <span class="ident">sample_type</span>: <span class="ident">texture</span>.<span class="ident">format</span>.<span class="ident">describe</span>().<span class="ident">sample_type</span>,
-            <span class="ident">aspects</span>: <span class="kw">crate</span><span class="ident">::FormatAspect::from</span>(<span class="ident">texture</span>.<span class="ident">format</span>)
-                <span class="op">&amp;</span> <span class="kw">crate</span><span class="ident">::FormatAspect::from</span>(<span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">aspect</span>),
+            <span class="ident">aspects</span>: <span class="kw">crate</span><span class="ident">::FormatAspects::from</span>(<span class="ident">texture</span>.<span class="ident">format</span>)
+                <span class="op">&amp;</span> <span class="kw">crate</span><span class="ident">::FormatAspects::from</span>(<span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">aspect</span>),
             <span class="ident">mip_levels</span>: <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">base_mip_level</span>..<span class="ident">end_mip_level</span>,
             <span class="ident">array_layers</span>: <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">base_array_layer</span>..<span class="ident">end_array_layer</span>,
         })
@@ -1729,7 +1729,7 @@
             <span class="ident">glsl::WriterFlags::TEXTURE_SHADOW_LOD</span>,
             <span class="self">self</span>.<span class="ident">shared</span>
                 .<span class="ident">private_caps</span>
-                .<span class="ident">contains</span>(<span class="kw">super</span><span class="ident">::PrivateCapability::SHADER_TEXTURE_SHADOW_LOD</span>),
+                .<span class="ident">contains</span>(<span class="kw">super</span><span class="ident">::PrivateCapabilities::SHADER_TEXTURE_SHADOW_LOD</span>),
         );
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">binding_map</span> <span class="op">=</span> <span class="ident">glsl::BindingMap::default</span>();
 

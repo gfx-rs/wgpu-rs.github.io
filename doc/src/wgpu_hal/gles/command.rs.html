@@ -980,7 +980,7 @@
     <span class="kw">fn</span> <span class="ident">rebind_vertex_data</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">first_instance</span>: <span class="ident">u32</span>) {
         <span class="kw">if</span> <span class="self">self</span>
             .<span class="ident">private_caps</span>
-            .<span class="ident">contains</span>(<span class="kw">super</span><span class="ident">::PrivateCapability::VERTEX_BUFFER_LAYOUT</span>)
+            .<span class="ident">contains</span>(<span class="kw">super</span><span class="ident">::PrivateCapabilities::VERTEX_BUFFER_LAYOUT</span>)
         {
             <span class="kw">for</span> (<span class="ident">index</span>, <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">vb_desc</span>, <span class="kw-2">ref</span> <span class="ident">vb</span>)) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">vertex_buffers</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">dirty_vbuf_mask</span> <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">index</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
@@ -1098,13 +1098,13 @@
     {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>
             .<span class="ident">private_caps</span>
-            .<span class="ident">contains</span>(<span class="kw">super</span><span class="ident">::PrivateCapability::MEMORY_BARRIERS</span>)
+            .<span class="ident">contains</span>(<span class="kw">super</span><span class="ident">::PrivateCapabilities::MEMORY_BARRIERS</span>)
         {
             <span class="kw">return</span>;
         }
         <span class="kw">for</span> <span class="ident">bar</span> <span class="kw">in</span> <span class="ident">barriers</span> {
             <span class="comment">// GLES only synchronizes storage -&gt; anything explicitly</span>
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">bar</span>.<span class="ident">usage</span>.<span class="ident">start</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::BufferUse::STORAGE_STORE</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">bar</span>.<span class="ident">usage</span>.<span class="ident">start</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::BufferUses::STORAGE_STORE</span>) {
                 <span class="kw">continue</span>;
             }
             <span class="self">self</span>.<span class="ident">cmd_buffer</span>
@@ -1119,15 +1119,15 @@
     {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>
             .<span class="ident">private_caps</span>
-            .<span class="ident">contains</span>(<span class="kw">super</span><span class="ident">::PrivateCapability::MEMORY_BARRIERS</span>)
+            .<span class="ident">contains</span>(<span class="kw">super</span><span class="ident">::PrivateCapabilities::MEMORY_BARRIERS</span>)
         {
             <span class="kw">return</span>;
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">combined_usage</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::TextureUse::empty</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">combined_usage</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::TextureUses::empty</span>();
         <span class="kw">for</span> <span class="ident">bar</span> <span class="kw">in</span> <span class="ident">barriers</span> {
             <span class="comment">// GLES only synchronizes storage -&gt; anything explicitly</span>
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">bar</span>.<span class="ident">usage</span>.<span class="ident">start</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::TextureUse::STORAGE_STORE</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">bar</span>.<span class="ident">usage</span>.<span class="ident">start</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::TextureUses::STORAGE_STORE</span>) {
                 <span class="kw">continue</span>;
             }
             <span class="comment">// unlike buffers, there is no need for a concrete texture</span>
@@ -1175,7 +1175,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">copy_texture_to_texture</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="kw">super</span><span class="ident">::Texture</span>,
-        <span class="ident">_src_usage</span>: <span class="kw">crate</span><span class="ident">::TextureUse</span>,
+        <span class="ident">_src_usage</span>: <span class="kw">crate</span><span class="ident">::TextureUses</span>,
         <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="kw">super</span><span class="ident">::Texture</span>,
         <span class="ident">regions</span>: <span class="ident">T</span>,
     ) <span class="kw">where</span>
@@ -1218,7 +1218,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">copy_texture_to_buffer</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="kw">super</span><span class="ident">::Texture</span>,
-        <span class="ident">_src_usage</span>: <span class="kw">crate</span><span class="ident">::TextureUse</span>,
+        <span class="ident">_src_usage</span>: <span class="kw">crate</span><span class="ident">::TextureUses</span>,
         <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="kw">super</span><span class="ident">::Buffer</span>,
         <span class="ident">regions</span>: <span class="ident">T</span>,
     ) <span class="kw">where</span>
@@ -1298,30 +1298,30 @@
                     .<span class="ident">resolve_attachments</span>
                     .<span class="ident">push</span>((<span class="ident">attachment</span>, <span class="ident">rat</span>.<span class="ident">view</span>.<span class="ident">clone</span>()));
             }
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">cat</span>.<span class="ident">ops</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::AttachmentOp::STORE</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">cat</span>.<span class="ident">ops</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::AttachmentOps::STORE</span>) {
                 <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">invalidate_attachments</span>.<span class="ident">push</span>(<span class="ident">attachment</span>);
             }
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">dsat</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">depth_stencil_attachment</span> {
             <span class="kw">let</span> <span class="ident">aspects</span> <span class="op">=</span> <span class="ident">dsat</span>.<span class="ident">target</span>.<span class="ident">view</span>.<span class="ident">aspects</span>;
             <span class="kw">let</span> <span class="ident">attachment</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">aspects</span> {
-                <span class="kw">crate</span><span class="ident">::FormatAspect::DEPTH</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">glow::DEPTH_ATTACHMENT</span>,
-                <span class="kw">crate</span><span class="ident">::FormatAspect::STENCIL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">glow::STENCIL_ATTACHMENT</span>,
+                <span class="kw">crate</span><span class="ident">::FormatAspects::DEPTH</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">glow::DEPTH_ATTACHMENT</span>,
+                <span class="kw">crate</span><span class="ident">::FormatAspects::STENCIL</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">glow::STENCIL_ATTACHMENT</span>,
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">glow::DEPTH_STENCIL_ATTACHMENT</span>,
             };
             <span class="self">self</span>.<span class="ident">cmd_buffer</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">C::BindAttachment</span> {
                 <span class="ident">attachment</span>,
                 <span class="ident">view</span>: <span class="ident">dsat</span>.<span class="ident">target</span>.<span class="ident">view</span>.<span class="ident">clone</span>(),
             });
-            <span class="kw">if</span> <span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::FormatAspect::DEPTH</span>)
-                <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">dsat</span>.<span class="ident">depth_ops</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::AttachmentOp::STORE</span>)
+            <span class="kw">if</span> <span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::FormatAspects::DEPTH</span>)
+                <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">dsat</span>.<span class="ident">depth_ops</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::AttachmentOps::STORE</span>)
             {
                 <span class="self">self</span>.<span class="ident">state</span>
                     .<span class="ident">invalidate_attachments</span>
                     .<span class="ident">push</span>(<span class="ident">glow::DEPTH_ATTACHMENT</span>);
             }
-            <span class="kw">if</span> <span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::FormatAspect::STENCIL</span>)
-                <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">dsat</span>.<span class="ident">stencil_ops</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::AttachmentOp::STORE</span>)
+            <span class="kw">if</span> <span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::FormatAspects::STENCIL</span>)
+                <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">dsat</span>.<span class="ident">stencil_ops</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::AttachmentOps::STORE</span>)
             {
                 <span class="self">self</span>.<span class="ident">state</span>
                     .<span class="ident">invalidate_attachments</span>
@@ -1347,7 +1347,7 @@
 
         <span class="comment">// issue the clears</span>
         <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">cat</span>) <span class="kw">in</span> <span class="ident">desc</span>.<span class="ident">color_attachments</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">cat</span>.<span class="ident">ops</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::AttachmentOp::LOAD</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">cat</span>.<span class="ident">ops</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::AttachmentOps::LOAD</span>) {
                 <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">cat</span>.<span class="ident">clear_value</span>;
                 <span class="self">self</span>.<span class="ident">cmd_buffer</span>
                     .<span class="ident">commands</span>
@@ -1369,12 +1369,12 @@
             }
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">dsat</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">depth_stencil_attachment</span> {
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">dsat</span>.<span class="ident">depth_ops</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::AttachmentOp::LOAD</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">dsat</span>.<span class="ident">depth_ops</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::AttachmentOps::LOAD</span>) {
                 <span class="self">self</span>.<span class="ident">cmd_buffer</span>
                     .<span class="ident">commands</span>
                     .<span class="ident">push</span>(<span class="ident">C::ClearDepth</span>(<span class="ident">dsat</span>.<span class="ident">clear_value</span>.<span class="number">0</span>));
             }
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">dsat</span>.<span class="ident">stencil_ops</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::AttachmentOp::LOAD</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">dsat</span>.<span class="ident">stencil_ops</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::AttachmentOps::LOAD</span>) {
                 <span class="self">self</span>.<span class="ident">cmd_buffer</span>
                     .<span class="ident">commands</span>
                     .<span class="ident">push</span>(<span class="ident">C::ClearStencil</span>(<span class="ident">dsat</span>.<span class="ident">clear_value</span>.<span class="number">1</span>));
@@ -1482,7 +1482,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_push_constants</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">_layout</span>: <span class="kw-2">&amp;</span><span class="kw">super</span><span class="ident">::PipelineLayout</span>,
-        <span class="ident">_stages</span>: <span class="ident">wgt::ShaderStage</span>,
+        <span class="ident">_stages</span>: <span class="ident">wgt::ShaderStages</span>,
         <span class="ident">_offset</span>: <span class="ident">u32</span>,
         <span class="ident">_data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>],
     ) {
@@ -1512,7 +1512,7 @@
 
         <span class="kw">if</span> <span class="self">self</span>
             .<span class="ident">private_caps</span>
-            .<span class="ident">contains</span>(<span class="kw">super</span><span class="ident">::PrivateCapability::VERTEX_BUFFER_LAYOUT</span>)
+            .<span class="ident">contains</span>(<span class="kw">super</span><span class="ident">::PrivateCapabilities::VERTEX_BUFFER_LAYOUT</span>)
         {
             <span class="kw">for</span> <span class="ident">vat</span> <span class="kw">in</span> <span class="ident">pipeline</span>.<span class="ident">vertex_attributes</span>.<span class="ident">iter</span>() {
                 <span class="kw">let</span> <span class="ident">vb</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">pipeline</span>.<span class="ident">vertex_buffers</span>[<span class="ident">vat</span>.<span class="ident">buffer_index</span> <span class="kw">as</span> <span class="ident">usize</span>];
@@ -1563,7 +1563,7 @@
         }
 
         <span class="comment">// set depth/stencil states</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">aspects</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::FormatAspect::empty</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">aspects</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::FormatAspects::empty</span>();
         <span class="kw">if</span> <span class="ident">pipeline</span>.<span class="ident">depth_bias</span> <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">depth_bias</span> {
             <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">depth_bias</span> <span class="op">=</span> <span class="ident">pipeline</span>.<span class="ident">depth_bias</span>;
             <span class="self">self</span>.<span class="ident">cmd_buffer</span>
@@ -1571,11 +1571,11 @@
                 .<span class="ident">push</span>(<span class="ident">C::SetDepthBias</span>(<span class="ident">pipeline</span>.<span class="ident">depth_bias</span>));
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">depth</span>) <span class="op">=</span> <span class="ident">pipeline</span>.<span class="ident">depth</span> {
-            <span class="ident">aspects</span> <span class="op">|</span><span class="op">=</span> <span class="kw">crate</span><span class="ident">::FormatAspect::DEPTH</span>;
+            <span class="ident">aspects</span> <span class="op">|</span><span class="op">=</span> <span class="kw">crate</span><span class="ident">::FormatAspects::DEPTH</span>;
             <span class="self">self</span>.<span class="ident">cmd_buffer</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">C::SetDepth</span>(<span class="ident">depth</span>.<span class="ident">clone</span>()));
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">stencil</span>) <span class="op">=</span> <span class="ident">pipeline</span>.<span class="ident">stencil</span> {
-            <span class="ident">aspects</span> <span class="op">|</span><span class="op">=</span> <span class="kw">crate</span><span class="ident">::FormatAspect::STENCIL</span>;
+            <span class="ident">aspects</span> <span class="op">|</span><span class="op">=</span> <span class="kw">crate</span><span class="ident">::FormatAspects::STENCIL</span>;
             <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">stencil</span> <span class="op">=</span> <span class="ident">stencil</span>.<span class="ident">clone</span>();
             <span class="self">self</span>.<span class="ident">rebind_stencil_func</span>();
             <span class="kw">if</span> <span class="ident">stencil</span>.<span class="ident">front</span>.<span class="ident">ops</span> <span class="op">=</span><span class="op">=</span> <span class="ident">stencil</span>.<span class="ident">back</span>.<span class="ident">ops</span>

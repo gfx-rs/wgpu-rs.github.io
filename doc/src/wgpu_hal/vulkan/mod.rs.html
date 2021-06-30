@@ -546,7 +546,7 @@ then the actual views are excluded from the framebuffer key.
 
 <span class="kw">struct</span> <span class="ident">InstanceShared</span> {
     <span class="ident">raw</span>: <span class="ident">ash::Instance</span>,
-    <span class="ident">flags</span>: <span class="kw">crate</span><span class="ident">::InstanceFlag</span>,
+    <span class="ident">flags</span>: <span class="kw">crate</span><span class="ident">::InstanceFlags</span>,
     <span class="ident">debug_utils</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DebugUtils</span><span class="op">&gt;</span>,
     <span class="ident">get_physical_device_properties</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">vk::KhrGetPhysicalDeviceProperties2Fn</span><span class="op">&gt;</span>,
 }
@@ -629,7 +629,7 @@ then the actual views are excluded from the framebuffer key.
     <span class="ident">layout_pre</span>: <span class="ident">vk::ImageLayout</span>,
     <span class="ident">layout_in</span>: <span class="ident">vk::ImageLayout</span>,
     <span class="ident">layout_post</span>: <span class="ident">vk::ImageLayout</span>,
-    <span class="ident">ops</span>: <span class="kw">crate</span><span class="ident">::AttachmentOp</span>,
+    <span class="ident">ops</span>: <span class="kw">crate</span><span class="ident">::AttachmentOps</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">AttachmentKey</span> {
@@ -640,7 +640,7 @@ then the actual views are excluded from the framebuffer key.
             <span class="ident">layout_pre</span>: <span class="ident">vk::ImageLayout::GENERAL</span>,
             <span class="ident">layout_in</span>,
             <span class="ident">layout_post</span>: <span class="ident">vk::ImageLayout::GENERAL</span>,
-            <span class="ident">ops</span>: <span class="kw">crate</span><span class="ident">::AttachmentOp::all</span>(),
+            <span class="ident">ops</span>: <span class="kw">crate</span><span class="ident">::AttachmentOps::all</span>(),
         }
     }
 }
@@ -654,7 +654,7 @@ then the actual views are excluded from the framebuffer key.
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">struct</span> <span class="ident">DepthStencilAttachmentKey</span> {
     <span class="ident">base</span>: <span class="ident">AttachmentKey</span>,
-    <span class="ident">stencil_ops</span>: <span class="kw">crate</span><span class="ident">::AttachmentOp</span>,
+    <span class="ident">stencil_ops</span>: <span class="kw">crate</span><span class="ident">::AttachmentOps</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">Default</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
@@ -668,7 +668,7 @@ then the actual views are excluded from the framebuffer key.
 <span class="kw">struct</span> <span class="ident">FramebufferAttachment</span> {
     <span class="doccomment">/// Can be NULL if the framebuffer is image-less</span>
     <span class="ident">raw</span>: <span class="ident">vk::ImageView</span>,
-    <span class="ident">texture_usage</span>: <span class="kw">crate</span><span class="ident">::TextureUse</span>,
+    <span class="ident">texture_usage</span>: <span class="kw">crate</span><span class="ident">::TextureUses</span>,
     <span class="ident">raw_image_flags</span>: <span class="ident">vk::ImageCreateFlags</span>,
     <span class="ident">view_format</span>: <span class="ident">wgt::TextureFormat</span>,
 }
@@ -718,9 +718,9 @@ then the actual views are excluded from the framebuffer key.
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Texture</span> {
     <span class="ident">raw</span>: <span class="ident">vk::Image</span>,
     <span class="ident">block</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">gpu_alloc::MemoryBlock</span><span class="op">&lt;</span><span class="ident">vk::DeviceMemory</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">usage</span>: <span class="kw">crate</span><span class="ident">::TextureUse</span>,
+    <span class="ident">usage</span>: <span class="kw">crate</span><span class="ident">::TextureUses</span>,
     <span class="ident">dim</span>: <span class="ident">wgt::TextureDimension</span>,
-    <span class="ident">aspects</span>: <span class="kw">crate</span><span class="ident">::FormatAspect</span>,
+    <span class="ident">aspects</span>: <span class="kw">crate</span><span class="ident">::FormatAspects</span>,
     <span class="ident">format_info</span>: <span class="ident">wgt::TextureFormatInfo</span>,
     <span class="ident">raw_flags</span>: <span class="ident">vk::ImageCreateFlags</span>,
 }
@@ -732,7 +732,7 @@ then the actual views are excluded from the framebuffer key.
 }
 
 <span class="kw">impl</span> <span class="ident">TextureView</span> {
-    <span class="kw">fn</span> <span class="ident">aspects</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::FormatAspect</span> {
+    <span class="kw">fn</span> <span class="ident">aspects</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw">crate</span><span class="ident">::FormatAspects</span> {
         <span class="self">self</span>.<span class="ident">attachment</span>.<span class="ident">view_format</span>.<span class="ident">into</span>()
     }
 }

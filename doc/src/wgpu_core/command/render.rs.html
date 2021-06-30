@@ -2150,6 +2150,11 @@
 <span id="2150">2150</span>
 <span id="2151">2151</span>
 <span id="2152">2152</span>
+<span id="2153">2153</span>
+<span id="2154">2154</span>
+<span id="2155">2155</span>
+<span id="2156">2156</span>
+<span id="2157">2157</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model::BindError</span>,
@@ -2179,7 +2184,7 @@
 <span class="kw">use</span> <span class="ident">hal::CommandEncoder</span> <span class="kw">as</span> <span class="kw">_</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">wgt</span>::{
-    <span class="ident">BufferAddress</span>, <span class="ident">BufferSize</span>, <span class="ident">BufferUsage</span>, <span class="ident">Color</span>, <span class="ident">IndexFormat</span>, <span class="ident">InputStepMode</span>, <span class="ident">TextureUsage</span>,
+    <span class="ident">BufferAddress</span>, <span class="ident">BufferSize</span>, <span class="ident">BufferUsages</span>, <span class="ident">Color</span>, <span class="ident">IndexFormat</span>, <span class="ident">InputStepMode</span>, <span class="ident">TextureUsages</span>,
 };
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serial-pass&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>))]</span>
@@ -2233,14 +2238,14 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span> <span class="ident">PassChannel</span><span class="op">&lt;</span><span class="ident">V</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">hal_ops</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">hal::AttachmentOp</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ops</span> <span class="op">=</span> <span class="ident">hal::AttachmentOp::empty</span>();
+    <span class="kw">fn</span> <span class="ident">hal_ops</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">hal::AttachmentOps</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ops</span> <span class="op">=</span> <span class="ident">hal::AttachmentOps::empty</span>();
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">load_op</span> {
-            <span class="ident">LoadOp::Load</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ops</span> <span class="op">|</span><span class="op">=</span> <span class="ident">hal::AttachmentOp::LOAD</span>,
+            <span class="ident">LoadOp::Load</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ops</span> <span class="op">|</span><span class="op">=</span> <span class="ident">hal::AttachmentOps::LOAD</span>,
             <span class="ident">LoadOp::Clear</span> <span class="op">=</span><span class="op">&gt;</span> (),
         };
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">store_op</span> {
-            <span class="ident">StoreOp::Store</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ops</span> <span class="op">|</span><span class="op">=</span> <span class="ident">hal::AttachmentOp::STORE</span>,
+            <span class="ident">StoreOp::Store</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ops</span> <span class="op">|</span><span class="op">=</span> <span class="ident">hal::AttachmentOps::STORE</span>,
             <span class="ident">StoreOp::Clear</span> <span class="op">=</span><span class="op">&gt;</span> (),
         };
         <span class="ident">ops</span>
@@ -2276,14 +2281,14 @@
 }
 
 <span class="kw">impl</span> <span class="ident">RenderPassDepthStencilAttachment</span> {
-    <span class="kw">fn</span> <span class="ident">is_read_only</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">aspects</span>: <span class="ident">hal::FormatAspect</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">RenderPassErrorInner</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="ident">hal::FormatAspect::DEPTH</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">depth</span>.<span class="ident">read_only</span> {
+    <span class="kw">fn</span> <span class="ident">is_read_only</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">aspects</span>: <span class="ident">hal::FormatAspects</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">RenderPassErrorInner</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="ident">hal::FormatAspects::DEPTH</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">depth</span>.<span class="ident">read_only</span> {
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
         }
         <span class="kw">if</span> (<span class="self">self</span>.<span class="ident">depth</span>.<span class="ident">load_op</span>, <span class="self">self</span>.<span class="ident">depth</span>.<span class="ident">store_op</span>) <span class="op">!</span><span class="op">=</span> (<span class="ident">LoadOp::Load</span>, <span class="ident">StoreOp::Store</span>) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::InvalidDepthOps</span>);
         }
-        <span class="kw">if</span> <span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="ident">hal::FormatAspect::STENCIL</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">stencil</span>.<span class="ident">read_only</span> {
+        <span class="kw">if</span> <span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="ident">hal::FormatAspects::STENCIL</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">stencil</span>.<span class="ident">read_only</span> {
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>);
         }
         <span class="kw">if</span> (<span class="self">self</span>.<span class="ident">stencil</span>.<span class="ident">load_op</span>, <span class="self">self</span>.<span class="ident">stencil</span>.<span class="ident">store_op</span>) <span class="op">!</span><span class="op">=</span> (<span class="ident">LoadOp::Load</span>, <span class="ident">StoreOp::Store</span>) {
@@ -2644,8 +2649,8 @@
 <span class="kw">struct</span> <span class="ident">RenderAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">texture_id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::TextureId</span><span class="op">&gt;</span>,
     <span class="ident">selector</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TextureSelector</span>,
-    <span class="ident">previous_use</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">hal::TextureUse</span><span class="op">&gt;</span>,
-    <span class="ident">new_use</span>: <span class="ident">hal::TextureUse</span>,
+    <span class="ident">previous_use</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">hal::TextureUses</span><span class="op">&gt;</span>,
+    <span class="ident">new_use</span>: <span class="ident">hal::TextureUses</span>,
 }
 
 <span class="kw">type</span> <span class="ident">AttachmentDataVec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="ident">T</span>; <span class="ident">hal::MAX_COLOR_TARGETS</span> <span class="op">+</span> <span class="ident">hal::MAX_COLOR_TARGETS</span> <span class="op">+</span> <span class="number">1</span>]<span class="op">&gt;</span>;
@@ -2717,7 +2722,7 @@
             <span class="ident">add_view</span>(<span class="ident">view</span>, <span class="string">&quot;depth&quot;</span>)<span class="question-mark">?</span>;
 
             <span class="kw">let</span> <span class="ident">ds_aspects</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">aspects</span>();
-            <span class="kw">if</span> <span class="ident">ds_aspects</span>.<span class="ident">contains</span>(<span class="ident">hal::FormatAspect::COLOR</span>) {
+            <span class="kw">if</span> <span class="ident">ds_aspects</span>.<span class="ident">contains</span>(<span class="ident">hal::FormatAspects::COLOR</span>) {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::InvalidDepthStencilAttachmentFormat</span>(
                     <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">format</span>,
                 ));
@@ -2737,9 +2742,9 @@
                 .<span class="ident">query</span>(<span class="ident">source_id</span>.<span class="ident">value</span>, <span class="ident">view</span>.<span class="ident">selector</span>.<span class="ident">clone</span>());
             <span class="kw">let</span> <span class="ident">new_use</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">at</span>.<span class="ident">is_read_only</span>(<span class="ident">ds_aspects</span>)<span class="question-mark">?</span> {
                 <span class="ident">is_ds_read_only</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                <span class="ident">hal::TextureUse::DEPTH_STENCIL_READ</span> <span class="op">|</span> <span class="ident">hal::TextureUse::SAMPLED</span>
+                <span class="ident">hal::TextureUses::DEPTH_STENCIL_READ</span> <span class="op">|</span> <span class="ident">hal::TextureUses::SAMPLED</span>
             } <span class="kw">else</span> {
-                <span class="ident">hal::TextureUse::DEPTH_STENCIL_WRITE</span>
+                <span class="ident">hal::TextureUses::DEPTH_STENCIL_WRITE</span>
             };
             <span class="ident">render_attachments</span>.<span class="ident">push</span>(<span class="ident">RenderAttachment</span> {
                 <span class="ident">texture_id</span>: <span class="ident">source_id</span>,
@@ -2769,7 +2774,11 @@
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">RenderPassErrorInner::InvalidAttachment</span>(<span class="ident">at</span>.<span class="ident">view</span>))<span class="question-mark">?</span>;
             <span class="ident">add_view</span>(<span class="ident">color_view</span>, <span class="string">&quot;color&quot;</span>)<span class="question-mark">?</span>;
 
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">color_view</span>.<span class="ident">desc</span>.<span class="ident">aspects</span>().<span class="ident">contains</span>(<span class="ident">hal::FormatAspect::COLOR</span>) {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">color_view</span>
+                .<span class="ident">desc</span>
+                .<span class="ident">aspects</span>()
+                .<span class="ident">contains</span>(<span class="ident">hal::FormatAspects::COLOR</span>)
+            {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::InvalidColorAttachmentFormat</span>(
                     <span class="ident">color_view</span>.<span class="ident">desc</span>.<span class="ident">format</span>,
                 ));
@@ -2781,7 +2790,7 @@
                         .<span class="ident">trackers</span>
                         .<span class="ident">textures</span>
                         .<span class="ident">query</span>(<span class="ident">source_id</span>.<span class="ident">value</span>, <span class="ident">color_view</span>.<span class="ident">selector</span>.<span class="ident">clone</span>());
-                    <span class="kw">let</span> <span class="ident">new_use</span> <span class="op">=</span> <span class="ident">hal::TextureUse::COLOR_TARGET</span>;
+                    <span class="kw">let</span> <span class="ident">new_use</span> <span class="op">=</span> <span class="ident">hal::TextureUses::COLOR_TARGET</span>;
                     <span class="ident">render_attachments</span>.<span class="ident">push</span>(<span class="ident">RenderAttachment</span> {
                         <span class="ident">texture_id</span>: <span class="ident">source_id</span>,
                         <span class="ident">selector</span>: <span class="kw-2">&amp;</span><span class="ident">color_view</span>.<span class="ident">selector</span>,
@@ -2796,9 +2805,9 @@
                     <span class="macro">assert!</span>(<span class="ident">used_swap_chain</span>.<span class="ident">is_none</span>());
                     <span class="ident">used_swap_chain</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">source_id</span>.<span class="ident">clone</span>());
 
-                    <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">hal::TextureUse::empty</span>();
+                    <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">hal::TextureUses::empty</span>();
                     <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">at</span>.<span class="ident">channel</span>.<span class="ident">load_op</span> {
-                        <span class="ident">LoadOp::Clear</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">hal::TextureUse::UNINITIALIZED</span>,
+                        <span class="ident">LoadOp::Clear</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">hal::TextureUses::UNINITIALIZED</span>,
                         <span class="ident">LoadOp::Load</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">end</span>,
                     };
                     <span class="ident">start</span>..<span class="ident">end</span>
@@ -2831,7 +2840,7 @@
                             .<span class="ident">trackers</span>
                             .<span class="ident">textures</span>
                             .<span class="ident">query</span>(<span class="ident">source_id</span>.<span class="ident">value</span>, <span class="ident">resolve_view</span>.<span class="ident">selector</span>.<span class="ident">clone</span>());
-                        <span class="kw">let</span> <span class="ident">new_use</span> <span class="op">=</span> <span class="ident">hal::TextureUse::COLOR_TARGET</span>;
+                        <span class="kw">let</span> <span class="ident">new_use</span> <span class="op">=</span> <span class="ident">hal::TextureUses::COLOR_TARGET</span>;
                         <span class="ident">render_attachments</span>.<span class="ident">push</span>(<span class="ident">RenderAttachment</span> {
                             <span class="ident">texture_id</span>: <span class="ident">source_id</span>,
                             <span class="ident">selector</span>: <span class="kw-2">&amp;</span><span class="ident">resolve_view</span>.<span class="ident">selector</span>,
@@ -2845,13 +2854,13 @@
                     <span class="ident">TextureViewSource::SwapChain</span>(<span class="kw-2">ref</span> <span class="ident">source_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="macro">assert!</span>(<span class="ident">used_swap_chain</span>.<span class="ident">is_none</span>());
                         <span class="ident">used_swap_chain</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">source_id</span>.<span class="ident">clone</span>());
-                        <span class="ident">hal::TextureUse::UNINITIALIZED</span>..<span class="ident">hal::TextureUse::empty</span>()
+                        <span class="ident">hal::TextureUses::UNINITIALIZED</span>..<span class="ident">hal::TextureUses::empty</span>()
                     }
                 };
 
                 <span class="ident">hal_resolve_target</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">hal::Attachment</span> {
                     <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">resolve_view</span>.<span class="ident">raw</span>,
-                    <span class="ident">usage</span>: <span class="ident">hal::TextureUse::COLOR_TARGET</span>,
+                    <span class="ident">usage</span>: <span class="ident">hal::TextureUses::COLOR_TARGET</span>,
                     <span class="ident">boundary_usage</span>,
                 });
             }
@@ -2859,7 +2868,7 @@
             <span class="ident">colors</span>.<span class="ident">push</span>(<span class="ident">hal::ColorAttachment</span> {
                 <span class="ident">target</span>: <span class="ident">hal::Attachment</span> {
                     <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">color_view</span>.<span class="ident">raw</span>,
-                    <span class="ident">usage</span>: <span class="ident">hal::TextureUse::COLOR_TARGET</span>,
+                    <span class="ident">usage</span>: <span class="ident">hal::TextureUses::COLOR_TARGET</span>,
                     <span class="ident">boundary_usage</span>,
                 },
                 <span class="ident">resolve_target</span>: <span class="ident">hal_resolve_target</span>,
@@ -2922,7 +2931,7 @@
 
         <span class="kw">for</span> <span class="ident">ra</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">render_attachments</span> {
             <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">texture_guard</span>[<span class="ident">ra</span>.<span class="ident">texture_id</span>.<span class="ident">value</span>];
-            <span class="ident">check_texture_usage</span>(<span class="ident">texture</span>.<span class="ident">desc</span>.<span class="ident">usage</span>, <span class="ident">TextureUsage::RENDER_ATTACHMENT</span>)<span class="question-mark">?</span>;
+            <span class="ident">check_texture_usage</span>(<span class="ident">texture</span>.<span class="ident">desc</span>.<span class="ident">usage</span>, <span class="ident">TextureUsages::RENDER_ATTACHMENT</span>)<span class="question-mark">?</span>;
 
             <span class="comment">// the tracker set of the pass is always in &quot;extend&quot; mode</span>
             <span class="self">self</span>.<span class="ident">trackers</span>
@@ -3257,10 +3266,11 @@
                         <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">info</span>
                             .<span class="ident">trackers</span>
                             .<span class="ident">buffers</span>
-                            .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">buffer_id</span>, (), <span class="ident">hal::BufferUse::INDEX</span>)
+                            .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">buffer_id</span>, (), <span class="ident">hal::BufferUses::INDEX</span>)
                             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">RenderCommandError::Buffer</span>(<span class="ident">buffer_id</span>, <span class="ident">e</span>))
                             .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
-                        <span class="ident">check_buffer_usage</span>(<span class="ident">buffer</span>.<span class="ident">usage</span>, <span class="ident">BufferUsage::INDEX</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
+                        <span class="ident">check_buffer_usage</span>(<span class="ident">buffer</span>.<span class="ident">usage</span>, <span class="ident">BufferUsages::INDEX</span>)
+                            .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
                         <span class="kw">let</span> <span class="ident">buf_raw</span> <span class="op">=</span> <span class="ident">buffer</span>
                             .<span class="ident">raw</span>
                             .<span class="ident">as_ref</span>()
@@ -3306,10 +3316,10 @@
                         <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">info</span>
                             .<span class="ident">trackers</span>
                             .<span class="ident">buffers</span>
-                            .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">buffer_id</span>, (), <span class="ident">hal::BufferUse::VERTEX</span>)
+                            .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">buffer_id</span>, (), <span class="ident">hal::BufferUses::VERTEX</span>)
                             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">RenderCommandError::Buffer</span>(<span class="ident">buffer_id</span>, <span class="ident">e</span>))
                             .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
-                        <span class="ident">check_buffer_usage</span>(<span class="ident">buffer</span>.<span class="ident">usage</span>, <span class="ident">BufferUsage::VERTEX</span>)
+                        <span class="ident">check_buffer_usage</span>(<span class="ident">buffer</span>.<span class="ident">usage</span>, <span class="ident">BufferUsages::VERTEX</span>)
                             .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
                         <span class="kw">let</span> <span class="ident">buf_raw</span> <span class="op">=</span> <span class="ident">buffer</span>
                             .<span class="ident">raw</span>
@@ -3561,10 +3571,10 @@
                         <span class="kw">let</span> <span class="ident">indirect_buffer</span> <span class="op">=</span> <span class="ident">info</span>
                             .<span class="ident">trackers</span>
                             .<span class="ident">buffers</span>
-                            .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">buffer_id</span>, (), <span class="ident">hal::BufferUse::INDIRECT</span>)
+                            .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">buffer_id</span>, (), <span class="ident">hal::BufferUses::INDIRECT</span>)
                             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">RenderCommandError::Buffer</span>(<span class="ident">buffer_id</span>, <span class="ident">e</span>))
                             .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
-                        <span class="ident">check_buffer_usage</span>(<span class="ident">indirect_buffer</span>.<span class="ident">usage</span>, <span class="ident">BufferUsage::INDIRECT</span>)
+                        <span class="ident">check_buffer_usage</span>(<span class="ident">indirect_buffer</span>.<span class="ident">usage</span>, <span class="ident">BufferUsages::INDIRECT</span>)
                             .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
                         <span class="kw">let</span> <span class="ident">indirect_raw</span> <span class="op">=</span> <span class="ident">indirect_buffer</span>
                             .<span class="ident">raw</span>
@@ -3635,10 +3645,10 @@
                         <span class="kw">let</span> <span class="ident">indirect_buffer</span> <span class="op">=</span> <span class="ident">info</span>
                             .<span class="ident">trackers</span>
                             .<span class="ident">buffers</span>
-                            .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">buffer_id</span>, (), <span class="ident">hal::BufferUse::INDIRECT</span>)
+                            .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>, <span class="ident">buffer_id</span>, (), <span class="ident">hal::BufferUses::INDIRECT</span>)
                             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">RenderCommandError::Buffer</span>(<span class="ident">buffer_id</span>, <span class="ident">e</span>))
                             .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
-                        <span class="ident">check_buffer_usage</span>(<span class="ident">indirect_buffer</span>.<span class="ident">usage</span>, <span class="ident">BufferUsage::INDIRECT</span>)
+                        <span class="ident">check_buffer_usage</span>(<span class="ident">indirect_buffer</span>.<span class="ident">usage</span>, <span class="ident">BufferUsages::INDIRECT</span>)
                             .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
                         <span class="kw">let</span> <span class="ident">indirect_raw</span> <span class="op">=</span> <span class="ident">indirect_buffer</span>
                             .<span class="ident">raw</span>
@@ -3653,11 +3663,11 @@
                                 <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>,
                                 <span class="ident">count_buffer_id</span>,
                                 (),
-                                <span class="ident">hal::BufferUse::INDIRECT</span>,
+                                <span class="ident">hal::BufferUses::INDIRECT</span>,
                             )
                             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">RenderCommandError::Buffer</span>(<span class="ident">count_buffer_id</span>, <span class="ident">e</span>))
                             .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
-                        <span class="ident">check_buffer_usage</span>(<span class="ident">count_buffer</span>.<span class="ident">usage</span>, <span class="ident">BufferUsage::INDIRECT</span>)
+                        <span class="ident">check_buffer_usage</span>(<span class="ident">count_buffer</span>.<span class="ident">usage</span>, <span class="ident">BufferUsages::INDIRECT</span>)
                             .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
                         <span class="kw">let</span> <span class="ident">count_raw</span> <span class="op">=</span> <span class="ident">count_buffer</span>
                             .<span class="ident">raw</span>
@@ -4042,7 +4052,7 @@
     <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">wgpu_render_pass_set_push_constants</span>(
         <span class="ident">pass</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">RenderPass</span>,
-        <span class="ident">stages</span>: <span class="ident">wgt::ShaderStage</span>,
+        <span class="ident">stages</span>: <span class="ident">wgt::ShaderStages</span>,
         <span class="ident">offset</span>: <span class="ident">u32</span>,
         <span class="ident">size_bytes</span>: <span class="ident">u32</span>,
         <span class="ident">data</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>,
