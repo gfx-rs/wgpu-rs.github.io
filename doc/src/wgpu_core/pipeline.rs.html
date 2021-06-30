@@ -298,14 +298,13 @@
 <span id="298">298</span>
 <span id="299">299</span>
 <span id="300">300</span>
-<span id="301">301</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{<span class="ident">CreateBindGroupLayoutError</span>, <span class="ident">CreatePipelineLayoutError</span>},
-    <span class="ident">device</span>::{<span class="ident">DeviceError</span>, <span class="ident">MissingFeatures</span>, <span class="ident">RenderPassContext</span>},
+    <span class="ident">device</span>::{<span class="ident">DeviceError</span>, <span class="ident">MissingDownlevelFlags</span>, <span class="ident">MissingFeatures</span>, <span class="ident">RenderPassContext</span>},
     <span class="ident">hub::Resource</span>,
     <span class="ident">id</span>::{<span class="ident">DeviceId</span>, <span class="ident">PipelineLayoutId</span>, <span class="ident">ShaderModuleId</span>},
-    <span class="ident">validation</span>, <span class="ident">Label</span>, <span class="ident">LifeGuard</span>, <span class="ident">Stored</span>, <span class="ident">DOWNLEVEL_ERROR_WARNING_MESSAGE</span>,
+    <span class="ident">validation</span>, <span class="ident">Label</span>, <span class="ident">LifeGuard</span>, <span class="ident">Stored</span>,
 };
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
@@ -411,11 +410,8 @@
     <span class="ident">Stage</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">validation::StageError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Internal error: {0}&quot;</span>)]</span>
     <span class="ident">Internal</span>(<span class="ident">String</span>),
-    <span class="attribute">#[<span class="ident">error</span>(
-        <span class="string">&quot;Compute shaders are not supported by the underlying platform. {}&quot;</span>,
-        <span class="ident">DOWNLEVEL_ERROR_WARNING_MESSAGE</span>
-    )]</span>
-    <span class="ident">ComputeShadersUnsupported</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">MissingDownlevelFlags</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">MissingDownlevelFlags</span>),
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -560,6 +556,8 @@
     <span class="ident">ConservativeRasterizationNonFillPolygonMode</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">MissingFeatures</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">MissingFeatures</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">MissingDownlevelFlags</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">MissingDownlevelFlags</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;error matching {stage:?} shader requirements against the pipeline&quot;</span>)]</span>
     <span class="ident">Stage</span> {
         <span class="ident">stage</span>: <span class="ident">wgt::ShaderStage</span>,

@@ -1065,6 +1065,29 @@
 <span id="1065">1065</span>
 <span id="1066">1066</span>
 <span id="1067">1067</span>
+<span id="1068">1068</span>
+<span id="1069">1069</span>
+<span id="1070">1070</span>
+<span id="1071">1071</span>
+<span id="1072">1072</span>
+<span id="1073">1073</span>
+<span id="1074">1074</span>
+<span id="1075">1075</span>
+<span id="1076">1076</span>
+<span id="1077">1077</span>
+<span id="1078">1078</span>
+<span id="1079">1079</span>
+<span id="1080">1080</span>
+<span id="1081">1081</span>
+<span id="1082">1082</span>
+<span id="1083">1083</span>
+<span id="1084">1084</span>
+<span id="1085">1085</span>
+<span id="1086">1086</span>
+<span id="1087">1087</span>
+<span id="1088">1088</span>
+<span id="1089">1089</span>
+<span id="1090">1090</span>
 </pre><pre class="rust">
 <span class="doccomment">/*! This library describes the internal unsafe graphics abstraction API.
  *  It follows WebGPU for the most part, re-using wgpu-types,
@@ -1113,6 +1136,8 @@
 <span class="macro">compile_error!</span>(<span class="string">&quot;Metal backend enabled on non-Apple OS. If your project is not using resolver=\&quot;2\&quot; in Cargo.toml, it should.&quot;</span>);
 
 <span class="kw">mod</span> <span class="ident">empty</span>;
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gles&quot;</span>)]</span>
+<span class="kw">mod</span> <span class="ident">gles</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;metal&quot;</span>, <span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>)))]</span>
 <span class="kw">mod</span> <span class="ident">metal</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;vulkan&quot;</span>)]</span>
@@ -1121,6 +1146,8 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">util</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">api</span> {
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span><span class="ident">::empty::Api</span> <span class="kw">as</span> <span class="ident">Empty</span>;
+    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;gles&quot;</span>)]</span>
+    <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span><span class="ident">::gles::Api</span> <span class="kw">as</span> <span class="ident">Gles</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;metal&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">use</span> <span class="kw">super</span><span class="ident">::metal::Api</span> <span class="kw">as</span> <span class="ident">Metal</span>;
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;vulkan&quot;</span>)]</span>
@@ -1302,6 +1329,7 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">A::CommandEncoder</span>, <span class="ident">DeviceError</span><span class="op">&gt;</span>;
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_command_encoder</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pool</span>: <span class="ident">A::CommandEncoder</span>);
 
+    <span class="doccomment">/// Creates a bind group layout.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_bind_group_layout</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">BindGroupLayoutDescriptor</span>,
@@ -1400,6 +1428,8 @@
 
     <span class="comment">// copy operations</span>
 
+    <span class="doccomment">/// This is valid to call with `value == 0`.</span>
+    <span class="doccomment">/// Otherwise `wgt::Features::CLEAR_COMMANDS` is required.</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">fill_buffer</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident">A::Buffer</span>, <span class="ident">range</span>: <span class="ident">MemoryRange</span>, <span class="ident">value</span>: <span class="ident">u8</span>);
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">copy_buffer_to_buffer</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">A::Buffer</span>, <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident">A::Buffer</span>, <span class="ident">regions</span>: <span class="ident">T</span>)
@@ -1617,8 +1647,11 @@
 <span class="macro">bitflags!</span>(
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MemoryFlag</span>: <span class="ident">u32</span> {
         <span class="kw">const</span> <span class="ident">TRANSIENT</span> <span class="op">=</span> <span class="number">1</span>;
+        <span class="kw">const</span> <span class="ident">PREFER_COHERENT</span> <span class="op">=</span> <span class="number">2</span>;
     }
 );
+
+<span class="comment">//TODO: it&#39;s not intuitive for the backends to consider `LOAD` being optional.</span>
 
 <span class="macro">bitflags!</span>(
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AttachmentOp</span>: <span class="ident">u8</span> {
@@ -1689,8 +1722,8 @@
     <span class="doccomment">/// The alignment of the row pitch of the texture data stored in a buffer that is</span>
     <span class="doccomment">/// used in a GPU copy operation.</span>
     <span class="kw">pub</span> <span class="ident">buffer_copy_pitch</span>: <span class="ident">wgt::BufferSize</span>,
-    <span class="kw">pub</span> <span class="ident">storage_buffer_offset</span>: <span class="ident">wgt::BufferSize</span>,
     <span class="kw">pub</span> <span class="ident">uniform_buffer_offset</span>: <span class="ident">wgt::BufferSize</span>,
+    <span class="kw">pub</span> <span class="ident">storage_buffer_offset</span>: <span class="ident">wgt::BufferSize</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
@@ -1817,6 +1850,10 @@
     <span class="kw">pub</span> <span class="ident">border_color</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">wgt::SamplerBorderColor</span><span class="op">&gt;</span>,
 }
 
+<span class="doccomment">/// BindGroupLayout descriptor.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Valid usage:</span>
+<span class="doccomment">/// - `entries` are sorted by ascending `wgt::BindGroupLayoutEntry::binding`</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroupLayoutDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
@@ -1896,12 +1933,19 @@
 }
 
 <span class="doccomment">/// Naga shader module.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NagaShader</span> {
     <span class="doccomment">/// Shader module IR.</span>
     <span class="kw">pub</span> <span class="ident">module</span>: <span class="ident">naga::Module</span>,
     <span class="doccomment">/// Analysis information of the module.</span>
     <span class="kw">pub</span> <span class="ident">info</span>: <span class="ident">naga::valid::ModuleInfo</span>,
+}
+
+<span class="comment">// Custom implementation avoids the need to generate Debug impl code</span>
+<span class="comment">// for the whole Naga module and info.</span>
+<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">NagaShader</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+        <span class="macro">write!</span>(<span class="ident">formatter</span>, <span class="string">&quot;Naga shader&quot;</span>)
+    }
 }
 
 <span class="doccomment">/// Shader input.</span>
@@ -2119,6 +2163,8 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderPassDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span>: <span class="ident">Api</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">extent</span>: <span class="ident">wgt::Extent3d</span>,
+    <span class="kw">pub</span> <span class="ident">sample_count</span>: <span class="ident">u32</span>,
     <span class="kw">pub</span> <span class="ident">color_attachments</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">ColorAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span><span class="op">&gt;</span>],
     <span class="kw">pub</span> <span class="ident">depth_stencil_attachment</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DepthStencilAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }

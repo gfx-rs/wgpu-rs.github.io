@@ -746,6 +746,10 @@
 <span id="746">746</span>
 <span id="747">747</span>
 <span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::conv</span>;
 
@@ -1100,7 +1104,11 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_clear_values</span> <span class="op">=</span> <span class="ident">ArrayVec</span>::<span class="op">&lt;</span>[<span class="ident">vk::ClearValue</span>; <span class="kw">super</span><span class="ident">::MAX_TOTAL_ATTACHMENTS</span>]<span class="op">&gt;</span><span class="ident">::new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_image_views</span> <span class="op">=</span> <span class="ident">ArrayVec</span>::<span class="op">&lt;</span>[<span class="ident">vk::ImageView</span>; <span class="kw">super</span><span class="ident">::MAX_TOTAL_ATTACHMENTS</span>]<span class="op">&gt;</span><span class="ident">::new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rp_key</span> <span class="op">=</span> <span class="kw">super</span><span class="ident">::RenderPassKey::default</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fb_key</span> <span class="op">=</span> <span class="kw">super</span><span class="ident">::FramebufferKey::default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fb_key</span> <span class="op">=</span> <span class="kw">super</span><span class="ident">::FramebufferKey</span> {
+            <span class="ident">attachments</span>: <span class="ident">ArrayVec::default</span>(),
+            <span class="ident">extent</span>: <span class="ident">desc</span>.<span class="ident">extent</span>,
+            <span class="ident">sample_count</span>: <span class="ident">desc</span>.<span class="ident">sample_count</span>,
+        };
         <span class="kw">let</span> <span class="ident">caps</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">device</span>.<span class="ident">private_caps</span>;
 
         <span class="kw">for</span> <span class="ident">cat</span> <span class="kw">in</span> <span class="ident">desc</span>.<span class="ident">color_attachments</span> {
@@ -1115,11 +1123,11 @@
                     .<span class="ident">as_ref</span>()
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">target</span><span class="op">|</span> <span class="ident">target</span>.<span class="ident">make_attachment_key</span>(<span class="kw">crate</span><span class="ident">::AttachmentOp::STORE</span>, <span class="ident">caps</span>)),
             });
-            <span class="ident">fb_key</span>.<span class="ident">add</span>(<span class="ident">cat</span>.<span class="ident">target</span>.<span class="ident">view</span>);
+            <span class="ident">fb_key</span>.<span class="ident">attachments</span>.<span class="ident">push</span>(<span class="ident">cat</span>.<span class="ident">target</span>.<span class="ident">view</span>.<span class="ident">attachment</span>.<span class="ident">clone</span>());
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">at</span>) <span class="op">=</span> <span class="ident">cat</span>.<span class="ident">resolve_target</span> {
                 <span class="ident">vk_clear_values</span>.<span class="ident">push</span>(<span class="ident">mem::zeroed</span>());
                 <span class="ident">vk_image_views</span>.<span class="ident">push</span>(<span class="ident">at</span>.<span class="ident">view</span>.<span class="ident">raw</span>);
-                <span class="ident">fb_key</span>.<span class="ident">add</span>(<span class="ident">at</span>.<span class="ident">view</span>);
+                <span class="ident">fb_key</span>.<span class="ident">attachments</span>.<span class="ident">push</span>(<span class="ident">at</span>.<span class="ident">view</span>.<span class="ident">attachment</span>.<span class="ident">clone</span>());
             }
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">ds</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">depth_stencil_attachment</span> {
@@ -1134,26 +1142,26 @@
                 <span class="ident">base</span>: <span class="ident">ds</span>.<span class="ident">target</span>.<span class="ident">make_attachment_key</span>(<span class="ident">ds</span>.<span class="ident">depth_ops</span>, <span class="ident">caps</span>),
                 <span class="ident">stencil_ops</span>: <span class="ident">ds</span>.<span class="ident">stencil_ops</span>,
             });
-            <span class="ident">fb_key</span>.<span class="ident">add</span>(<span class="ident">ds</span>.<span class="ident">target</span>.<span class="ident">view</span>);
+            <span class="ident">fb_key</span>.<span class="ident">attachments</span>.<span class="ident">push</span>(<span class="ident">ds</span>.<span class="ident">target</span>.<span class="ident">view</span>.<span class="ident">attachment</span>.<span class="ident">clone</span>());
         }
         <span class="ident">rp_key</span>.<span class="ident">sample_count</span> <span class="op">=</span> <span class="ident">fb_key</span>.<span class="ident">sample_count</span>;
 
         <span class="kw">let</span> <span class="ident">render_area</span> <span class="op">=</span> <span class="ident">vk::Rect2D</span> {
             <span class="ident">offset</span>: <span class="ident">vk::Offset2D</span> { <span class="ident">x</span>: <span class="number">0</span>, <span class="ident">y</span>: <span class="number">0</span> },
             <span class="ident">extent</span>: <span class="ident">vk::Extent2D</span> {
-                <span class="ident">width</span>: <span class="ident">fb_key</span>.<span class="ident">extent</span>.<span class="ident">width</span>,
-                <span class="ident">height</span>: <span class="ident">fb_key</span>.<span class="ident">extent</span>.<span class="ident">height</span>,
+                <span class="ident">width</span>: <span class="ident">desc</span>.<span class="ident">extent</span>.<span class="ident">width</span>,
+                <span class="ident">height</span>: <span class="ident">desc</span>.<span class="ident">extent</span>.<span class="ident">height</span>,
             },
         };
         <span class="kw">let</span> <span class="ident">vk_viewports</span> <span class="op">=</span> [<span class="ident">vk::Viewport</span> {
             <span class="ident">x</span>: <span class="number">0.0</span>,
             <span class="ident">y</span>: <span class="kw">if</span> <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">private_caps</span>.<span class="ident">flip_y_requires_shift</span> {
-                <span class="ident">fb_key</span>.<span class="ident">extent</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">f32</span>
+                <span class="ident">desc</span>.<span class="ident">extent</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">f32</span>
             } <span class="kw">else</span> {
                 <span class="number">0.0</span>
             },
-            <span class="ident">width</span>: <span class="ident">fb_key</span>.<span class="ident">extent</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">f32</span>,
-            <span class="ident">height</span>: <span class="op">-</span>(<span class="ident">fb_key</span>.<span class="ident">extent</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">f32</span>),
+            <span class="ident">width</span>: <span class="ident">desc</span>.<span class="ident">extent</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">f32</span>,
+            <span class="ident">height</span>: <span class="op">-</span>(<span class="ident">desc</span>.<span class="ident">extent</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">f32</span>),
             <span class="ident">min_depth</span>: <span class="number">0.0</span>,
             <span class="ident">max_depth</span>: <span class="number">1.0</span>,
         }];

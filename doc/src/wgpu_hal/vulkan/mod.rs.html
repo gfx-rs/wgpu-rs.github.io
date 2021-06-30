@@ -464,7 +464,33 @@
 <span id="464">464</span>
 <span id="465">465</span>
 <span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
 </pre><pre class="rust">
+<span class="doccomment">/*!
+# Vulkan API internals.
+
+## Stack memory
+
+Ash expects slices, which we don&#39;t generally have available.
+We cope with this requirement by the combination of the following ways:
+  - temporarily allocating `Vec` on heap, where overhead is permitted
+  - growing temporary local storage
+  - using `implace_it` on iterators
+
+## Framebuffers and Render passes
+
+Render passes are cached on the device and kept forever.
+
+Framebuffers are also cached on the device, but they are removed when
+any of the image views (they have) gets removed.
+If Vulkan supports image-less framebuffers,
+then the actual views are excluded from the framebuffer key.
+
+!*/</span>
+
 <span class="kw">mod</span> <span class="ident">adapter</span>;
 <span class="kw">mod</span> <span class="ident">command</span>;
 <span class="kw">mod</span> <span class="ident">conv</span>;
@@ -515,7 +541,6 @@
 
 <span class="kw">struct</span> <span class="ident">DebugUtils</span> {
     <span class="ident">extension</span>: <span class="ident">ext::DebugUtils</span>,
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
     <span class="ident">messenger</span>: <span class="ident">vk::DebugUtilsMessengerEXT</span>,
 }
 
@@ -648,24 +673,11 @@
     <span class="ident">view_format</span>: <span class="ident">wgt::TextureFormat</span>,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">Default</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">struct</span> <span class="ident">FramebufferKey</span> {
     <span class="ident">attachments</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="ident">FramebufferAttachment</span>; <span class="ident">MAX_TOTAL_ATTACHMENTS</span>]<span class="op">&gt;</span>,
     <span class="ident">extent</span>: <span class="ident">wgt::Extent3d</span>,
     <span class="ident">sample_count</span>: <span class="ident">u32</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">FramebufferKey</span> {
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">TextureView</span>) {
-        <span class="self">self</span>.<span class="ident">extent</span>.<span class="ident">width</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">extent</span>.<span class="ident">width</span>.<span class="ident">max</span>(<span class="ident">view</span>.<span class="ident">render_size</span>.<span class="ident">width</span>);
-        <span class="self">self</span>.<span class="ident">extent</span>.<span class="ident">height</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">extent</span>.<span class="ident">height</span>.<span class="ident">max</span>(<span class="ident">view</span>.<span class="ident">render_size</span>.<span class="ident">height</span>);
-        <span class="self">self</span>.<span class="ident">extent</span>.<span class="ident">depth_or_array_layers</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">extent</span>
-            .<span class="ident">depth_or_array_layers</span>
-            .<span class="ident">max</span>(<span class="ident">view</span>.<span class="ident">render_size</span>.<span class="ident">depth_or_array_layers</span>);
-        <span class="self">self</span>.<span class="ident">sample_count</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">sample_count</span>.<span class="ident">max</span>(<span class="ident">view</span>.<span class="ident">sample_count</span>);
-        <span class="self">self</span>.<span class="ident">attachments</span>.<span class="ident">push</span>(<span class="ident">view</span>.<span class="ident">attachment</span>.<span class="ident">clone</span>());
-    }
 }
 
 <span class="kw">struct</span> <span class="ident">DeviceShared</span> {
@@ -710,8 +722,6 @@
     <span class="ident">dim</span>: <span class="ident">wgt::TextureDimension</span>,
     <span class="ident">aspects</span>: <span class="kw">crate</span><span class="ident">::FormatAspect</span>,
     <span class="ident">format_info</span>: <span class="ident">wgt::TextureFormatInfo</span>,
-    <span class="ident">sample_count</span>: <span class="ident">u32</span>,
-    <span class="ident">size</span>: <span class="ident">wgt::Extent3d</span>,
     <span class="ident">raw_flags</span>: <span class="ident">vk::ImageCreateFlags</span>,
 }
 
@@ -719,8 +729,6 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureView</span> {
     <span class="ident">raw</span>: <span class="ident">vk::ImageView</span>,
     <span class="ident">attachment</span>: <span class="ident">FramebufferAttachment</span>,
-    <span class="ident">sample_count</span>: <span class="ident">u32</span>,
-    <span class="ident">render_size</span>: <span class="ident">wgt::Extent3d</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">TextureView</span> {
@@ -738,7 +746,7 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroupLayout</span> {
     <span class="ident">raw</span>: <span class="ident">vk::DescriptorSetLayout</span>,
     <span class="ident">desc_count</span>: <span class="ident">gpu_descriptor::DescriptorTotalCount</span>,
-    <span class="ident">types</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">vk::DescriptorType</span>, <span class="ident">u32</span>)<span class="op">&gt;</span>,
+    <span class="ident">types</span>: <span class="ident">Box</span><span class="op">&lt;</span>[(<span class="ident">vk::DescriptorType</span>, <span class="ident">u32</span>)]<span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
