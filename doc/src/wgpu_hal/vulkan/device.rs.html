@@ -1471,6 +1471,8 @@
 <span id="1471">1471</span>
 <span id="1472">1472</span>
 <span id="1473">1473</span>
+<span id="1474">1474</span>
+<span id="1475">1475</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::conv</span>;
 
@@ -2239,6 +2241,8 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::SamplerDescriptor</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Sampler</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">lod_range</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">lod_clamp</span>.<span class="ident">clone</span>().<span class="ident">unwrap_or</span>(<span class="number">0.0</span>..<span class="number">16.0</span>);
+
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk::SamplerCreateInfo::builder</span>()
             .<span class="ident">flags</span>(<span class="ident">vk::SamplerCreateFlags::empty</span>())
             .<span class="ident">mag_filter</span>(<span class="ident">conv::map_filter_mode</span>(<span class="ident">desc</span>.<span class="ident">mag_filter</span>))
@@ -2246,16 +2250,16 @@
             .<span class="ident">mipmap_mode</span>(<span class="ident">conv::map_mip_filter_mode</span>(<span class="ident">desc</span>.<span class="ident">mipmap_filter</span>))
             .<span class="ident">address_mode_u</span>(<span class="ident">conv::map_address_mode</span>(<span class="ident">desc</span>.<span class="ident">address_modes</span>[<span class="number">0</span>]))
             .<span class="ident">address_mode_v</span>(<span class="ident">conv::map_address_mode</span>(<span class="ident">desc</span>.<span class="ident">address_modes</span>[<span class="number">1</span>]))
-            .<span class="ident">address_mode_w</span>(<span class="ident">conv::map_address_mode</span>(<span class="ident">desc</span>.<span class="ident">address_modes</span>[<span class="number">2</span>]));
+            .<span class="ident">address_mode_w</span>(<span class="ident">conv::map_address_mode</span>(<span class="ident">desc</span>.<span class="ident">address_modes</span>[<span class="number">2</span>]))
+            .<span class="ident">min_lod</span>(<span class="ident">lod_range</span>.<span class="ident">start</span>)
+            .<span class="ident">max_lod</span>(<span class="ident">lod_range</span>.<span class="ident">end</span>);
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">fun</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">compare</span> {
             <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk_info</span>
                 .<span class="ident">compare_enable</span>(<span class="bool-val">true</span>)
                 .<span class="ident">compare_op</span>(<span class="ident">conv::map_comparison</span>(<span class="ident">fun</span>));
         }
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">range</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">lod_clamp</span> {
-            <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk_info</span>.<span class="ident">min_lod</span>(<span class="ident">range</span>.<span class="ident">start</span>).<span class="ident">max_lod</span>(<span class="ident">range</span>.<span class="ident">end</span>);
-        }
+
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">aniso</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">anisotropy_clamp</span> {
             <span class="kw">if</span> <span class="self">self</span>
                 .<span class="ident">shared</span>
