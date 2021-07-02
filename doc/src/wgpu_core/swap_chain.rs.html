@@ -568,11 +568,11 @@
                 .<span class="ident">ok_or</span>(<span class="ident">SwapChainError::AlreadyAcquired</span>)<span class="question-mark">?</span>;
 
             <span class="ident">drop</span>(<span class="ident">swap_chain_guard</span>);
-            <span class="ident">device</span>.<span class="ident">suspect_texture_view_for_destruction</span>(<span class="ident">view_id</span>.<span class="ident">value</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
 
-            <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">view_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">texture_views</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
-            <span class="kw">let</span> <span class="ident">view</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">view_guard</span>[<span class="ident">view_id</span>.<span class="ident">value</span>];
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">life_guard</span>.<span class="ident">ref_count</span>.<span class="ident">take</span>();
+            <span class="kw">let</span> (<span class="ident">view</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">texture_views</span>.<span class="ident">unregister</span>(<span class="ident">view_id</span>.<span class="ident">value</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">view</span>) <span class="op">=</span> <span class="ident">view</span> {
+                <span class="ident">device</span>.<span class="ident">schedule_rogue_texture_view_for_destruction</span>(<span class="ident">view_id</span>.<span class="ident">value</span>, <span class="ident">view</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+            }
 
             <span class="ident">suf_texture</span>
         };

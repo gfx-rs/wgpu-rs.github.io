@@ -4636,14 +4636,6 @@
 <span id="4636">4636</span>
 <span id="4637">4637</span>
 <span id="4638">4638</span>
-<span id="4639">4639</span>
-<span id="4640">4640</span>
-<span id="4641">4641</span>
-<span id="4642">4642</span>
-<span id="4643">4643</span>
-<span id="4644">4644</span>
-<span id="4645">4645</span>
-<span id="4646">4646</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
@@ -4980,30 +4972,22 @@
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">lock_life_internal</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span>, <span class="lifetime">&#39;token</span>: <span class="lifetime">&#39;this</span><span class="op">&gt;</span>(
-        <span class="ident">tracker</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;this</span> <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">life::LifetimeTracker</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">_token</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;token</span>, <span class="self">Self</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MutexGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span>, <span class="ident">life::LifetimeTracker</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="ident">tracker</span>.<span class="ident">lock</span>()
-    }
-
     <span class="kw">fn</span> <span class="ident">lock_life</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span>, <span class="lifetime">&#39;token</span>: <span class="lifetime">&#39;this</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;this</span> <span class="self">self</span>,
         <span class="comment">//TODO: fix this - the token has to be borrowed for the lock</span>
-        <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;token</span>, <span class="self">Self</span><span class="op">&gt;</span>,
+        <span class="ident">_token</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;token</span>, <span class="self">Self</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MutexGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span>, <span class="ident">life::LifetimeTracker</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">Self</span><span class="ident">::lock_life_internal</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">life_tracker</span>, <span class="ident">token</span>)
+        <span class="self">self</span>.<span class="ident">life_tracker</span>.<span class="ident">lock</span>()
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">suspect_texture_view_for_destruction</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span>, <span class="lifetime">&#39;token</span>: <span class="lifetime">&#39;this</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">schedule_rogue_texture_view_for_destruction</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span>, <span class="lifetime">&#39;token</span>: <span class="lifetime">&#39;this</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;this</span> <span class="self">self</span>,
         <span class="ident">view_id</span>: <span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::TextureViewId</span><span class="op">&gt;</span>,
+        <span class="ident">view</span>: <span class="ident">resource::TextureView</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
         <span class="ident">token</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;token</span>, <span class="self">Self</span><span class="op">&gt;</span>,
     ) {
         <span class="self">self</span>.<span class="ident">lock_life</span>(<span class="ident">token</span>)
-            .<span class="ident">suspected_resources</span>
-            .<span class="ident">texture_views</span>
-            .<span class="ident">push</span>(<span class="ident">view_id</span>);
+            .<span class="ident">schedule_texture_view_for_destruction</span>(<span class="ident">view_id</span>, <span class="ident">view</span>);
     }
 
     <span class="kw">fn</span> <span class="ident">maintain</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span>, <span class="lifetime">&#39;token</span>: <span class="lifetime">&#39;this</span>, <span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(
