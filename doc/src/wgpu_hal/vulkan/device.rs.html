@@ -1473,11 +1473,71 @@
 <span id="1473">1473</span>
 <span id="1474">1474</span>
 <span id="1475">1475</span>
+<span id="1476">1476</span>
+<span id="1477">1477</span>
+<span id="1478">1478</span>
+<span id="1479">1479</span>
+<span id="1480">1480</span>
+<span id="1481">1481</span>
+<span id="1482">1482</span>
+<span id="1483">1483</span>
+<span id="1484">1484</span>
+<span id="1485">1485</span>
+<span id="1486">1486</span>
+<span id="1487">1487</span>
+<span id="1488">1488</span>
+<span id="1489">1489</span>
+<span id="1490">1490</span>
+<span id="1491">1491</span>
+<span id="1492">1492</span>
+<span id="1493">1493</span>
+<span id="1494">1494</span>
+<span id="1495">1495</span>
+<span id="1496">1496</span>
+<span id="1497">1497</span>
+<span id="1498">1498</span>
+<span id="1499">1499</span>
+<span id="1500">1500</span>
+<span id="1501">1501</span>
+<span id="1502">1502</span>
+<span id="1503">1503</span>
+<span id="1504">1504</span>
+<span id="1505">1505</span>
+<span id="1506">1506</span>
+<span id="1507">1507</span>
+<span id="1508">1508</span>
+<span id="1509">1509</span>
+<span id="1510">1510</span>
+<span id="1511">1511</span>
+<span id="1512">1512</span>
+<span id="1513">1513</span>
+<span id="1514">1514</span>
+<span id="1515">1515</span>
+<span id="1516">1516</span>
+<span id="1517">1517</span>
+<span id="1518">1518</span>
+<span id="1519">1519</span>
+<span id="1520">1520</span>
+<span id="1521">1521</span>
+<span id="1522">1522</span>
+<span id="1523">1523</span>
+<span id="1524">1524</span>
+<span id="1525">1525</span>
+<span id="1526">1526</span>
+<span id="1527">1527</span>
+<span id="1528">1528</span>
+<span id="1529">1529</span>
+<span id="1530">1530</span>
+<span id="1531">1531</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::conv</span>;
 
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
-<span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">extensions::khr</span>, <span class="ident">version::DeviceV1_0</span>, <span class="ident">vk</span>};
+<span class="kw">use</span> <span class="ident">ash</span>::{
+    <span class="ident">extensions::khr</span>,
+    <span class="ident">version</span>::{<span class="ident">DeviceV1_0</span>, <span class="ident">DeviceV1_2</span>},
+    <span class="ident">vk</span>,
+};
 <span class="kw">use</span> <span class="ident">inplace_it::inplace_or_alloc_from_iter</span>;
 <span class="kw">use</span> <span class="ident">parking_lot::Mutex</span>;
 
@@ -2866,26 +2926,49 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_query_set</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">set</span>: <span class="kw">super</span><span class="ident">::QuerySet</span>) {
         <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">destroy_query_pool</span>(<span class="ident">set</span>.<span class="ident">raw</span>, <span class="prelude-val">None</span>);
     }
+
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_fence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Fence</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="kw">super</span><span class="ident">::Fence</span> {
-            <span class="ident">last_completed</span>: <span class="number">0</span>,
-            <span class="ident">active</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">free</span>: <span class="ident">Vec::new</span>(),
+        <span class="prelude-val">Ok</span>(<span class="kw">if</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">private_caps</span>.<span class="ident">timeline_semaphores</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sem_type_info</span> <span class="op">=</span>
+                <span class="ident">vk::SemaphoreTypeCreateInfo::builder</span>().<span class="ident">semaphore_type</span>(<span class="ident">vk::SemaphoreType::TIMELINE</span>);
+            <span class="kw">let</span> <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk::SemaphoreCreateInfo::builder</span>().<span class="ident">push_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">sem_type_info</span>);
+            <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">create_semaphore</span>(<span class="kw-2">&amp;</span><span class="ident">vk_info</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+            <span class="kw">super</span><span class="ident">::Fence::TimelineSemaphore</span>(<span class="ident">raw</span>)
+        } <span class="kw">else</span> {
+            <span class="kw">super</span><span class="ident">::Fence::FencePool</span> {
+                <span class="ident">last_completed</span>: <span class="number">0</span>,
+                <span class="ident">active</span>: <span class="ident">Vec::new</span>(),
+                <span class="ident">free</span>: <span class="ident">Vec::new</span>(),
+            }
         })
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_fence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fence</span>: <span class="kw">super</span><span class="ident">::Fence</span>) {
-        <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">raw</span>) <span class="kw">in</span> <span class="ident">fence</span>.<span class="ident">active</span> {
-            <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">destroy_fence</span>(<span class="ident">raw</span>, <span class="prelude-val">None</span>);
-        }
-        <span class="kw">for</span> <span class="ident">raw</span> <span class="kw">in</span> <span class="ident">fence</span>.<span class="ident">free</span> {
-            <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">destroy_fence</span>(<span class="ident">raw</span>, <span class="prelude-val">None</span>);
+        <span class="kw">match</span> <span class="ident">fence</span> {
+            <span class="kw">super</span><span class="ident">::Fence::TimelineSemaphore</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">destroy_semaphore</span>(<span class="ident">raw</span>, <span class="prelude-val">None</span>);
+            }
+            <span class="kw">super</span><span class="ident">::Fence::FencePool</span> {
+                <span class="ident">active</span>,
+                <span class="ident">free</span>,
+                <span class="ident">last_completed</span>: <span class="kw">_</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">raw</span>) <span class="kw">in</span> <span class="ident">active</span> {
+                    <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">destroy_fence</span>(<span class="ident">raw</span>, <span class="prelude-val">None</span>);
+                }
+                <span class="kw">for</span> <span class="ident">raw</span> <span class="kw">in</span> <span class="ident">free</span> {
+                    <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">destroy_fence</span>(<span class="ident">raw</span>, <span class="prelude-val">None</span>);
+                }
+            }
         }
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_fence_value</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">fence</span>: <span class="kw-2">&amp;</span><span class="kw">super</span><span class="ident">::Fence</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::FenceValue</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
-        <span class="ident">fence</span>.<span class="ident">get_latest</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>)
+        <span class="ident">fence</span>.<span class="ident">get_latest</span>(
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>,
+            <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">extension_fns</span>.<span class="ident">timeline_semaphore</span>.<span class="ident">as_ref</span>(),
+        )
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">wait</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -2893,21 +2976,50 @@
         <span class="ident">wait_value</span>: <span class="kw">crate</span><span class="ident">::FenceValue</span>,
         <span class="ident">timeout_ms</span>: <span class="ident">u32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">wait_value</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">fence</span>.<span class="ident">last_completed</span> {
-            <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
-        } <span class="kw">else</span> {
-            <span class="kw">match</span> <span class="ident">fence</span>.<span class="ident">active</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="op">&amp;&amp;</span>(<span class="ident">value</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">value</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">wait_value</span>) {
-                <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(<span class="kw">_</span>, <span class="ident">raw</span>)) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">timeout_us</span> <span class="op">=</span> <span class="ident">timeout_ms</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="kw">super</span><span class="ident">::MILLIS_TO_NANOS</span>;
-                    <span class="kw">match</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">wait_for_fences</span>(<span class="kw-2">&amp;</span>[<span class="ident">raw</span>], <span class="bool-val">true</span>, <span class="ident">timeout_us</span>) {
-                        <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
-                        <span class="prelude-val">Err</span>(<span class="ident">vk::Result::TIMEOUT</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
-                        <span class="prelude-val">Err</span>(<span class="ident">other</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">other</span>.<span class="ident">into</span>()),
+        <span class="kw">let</span> <span class="ident">timeout_us</span> <span class="op">=</span> <span class="ident">timeout_ms</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="kw">super</span><span class="ident">::MILLIS_TO_NANOS</span>;
+        <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">fence</span> {
+            <span class="kw">super</span><span class="ident">::Fence::TimelineSemaphore</span>(<span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">semaphores</span> <span class="op">=</span> [<span class="ident">raw</span>];
+                <span class="kw">let</span> <span class="ident">values</span> <span class="op">=</span> [<span class="ident">wait_value</span>];
+                <span class="kw">let</span> <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk::SemaphoreWaitInfo::builder</span>()
+                    .<span class="ident">semaphores</span>(<span class="kw-2">&amp;</span><span class="ident">semaphores</span>)
+                    .<span class="ident">values</span>(<span class="kw-2">&amp;</span><span class="ident">values</span>);
+                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">extension_fns</span>.<span class="ident">timeline_semaphore</span> {
+                    <span class="prelude-val">Some</span>(<span class="kw">super</span><span class="ident">::ExtensionFn::Extension</span>(<span class="kw-2">ref</span> <span class="ident">ext</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">ext</span>.<span class="ident">wait_semaphores</span>(<span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">handle</span>(), <span class="kw-2">&amp;</span><span class="ident">vk_info</span>, <span class="ident">timeout_us</span>)
                     }
+                    <span class="prelude-val">Some</span>(<span class="kw">super</span><span class="ident">::ExtensionFn::Promoted</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">wait_semaphores</span>(<span class="kw-2">&amp;</span><span class="ident">vk_info</span>, <span class="ident">timeout_us</span>)
+                    }
+                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                };
+                <span class="kw">match</span> <span class="ident">result</span> {
+                    <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+                    <span class="prelude-val">Err</span>(<span class="ident">vk::Result::TIMEOUT</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
+                    <span class="prelude-val">Err</span>(<span class="ident">other</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">other</span>.<span class="ident">into</span>()),
                 }
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="macro">log::error!</span>(<span class="string">&quot;No signals reached value {}&quot;</span>, <span class="ident">wait_value</span>);
-                    <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::DeviceError::Lost</span>)
+            }
+            <span class="kw">super</span><span class="ident">::Fence::FencePool</span> {
+                <span class="ident">last_completed</span>,
+                <span class="kw-2">ref</span> <span class="ident">active</span>,
+                <span class="ident">free</span>: <span class="kw">_</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="ident">wait_value</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">last_completed</span> {
+                    <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>)
+                } <span class="kw">else</span> {
+                    <span class="kw">match</span> <span class="ident">active</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="op">&amp;&amp;</span>(<span class="ident">value</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">value</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">wait_value</span>) {
+                        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(<span class="kw">_</span>, <span class="ident">raw</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">wait_for_fences</span>(<span class="kw-2">&amp;</span>[<span class="ident">raw</span>], <span class="bool-val">true</span>, <span class="ident">timeout_us</span>) {
+                                <span class="prelude-val">Ok</span>(()) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
+                                <span class="prelude-val">Err</span>(<span class="ident">vk::Result::TIMEOUT</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
+                                <span class="prelude-val">Err</span>(<span class="ident">other</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">other</span>.<span class="ident">into</span>()),
+                            }
+                        }
+                        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="macro">log::error!</span>(<span class="string">&quot;No signals reached value {}&quot;</span>, <span class="ident">wait_value</span>);
+                            <span class="prelude-val">Err</span>(<span class="kw">crate</span><span class="ident">::DeviceError::Lost</span>)
+                        }
+                    }
                 }
             }
         }

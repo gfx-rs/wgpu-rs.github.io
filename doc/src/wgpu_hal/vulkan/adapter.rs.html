@@ -1036,6 +1036,44 @@
 <span id="1036">1036</span>
 <span id="1037">1037</span>
 <span id="1038">1038</span>
+<span id="1039">1039</span>
+<span id="1040">1040</span>
+<span id="1041">1041</span>
+<span id="1042">1042</span>
+<span id="1043">1043</span>
+<span id="1044">1044</span>
+<span id="1045">1045</span>
+<span id="1046">1046</span>
+<span id="1047">1047</span>
+<span id="1048">1048</span>
+<span id="1049">1049</span>
+<span id="1050">1050</span>
+<span id="1051">1051</span>
+<span id="1052">1052</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
+<span id="1055">1055</span>
+<span id="1056">1056</span>
+<span id="1057">1057</span>
+<span id="1058">1058</span>
+<span id="1059">1059</span>
+<span id="1060">1060</span>
+<span id="1061">1061</span>
+<span id="1062">1062</span>
+<span id="1063">1063</span>
+<span id="1064">1064</span>
+<span id="1065">1065</span>
+<span id="1066">1066</span>
+<span id="1067">1067</span>
+<span id="1068">1068</span>
+<span id="1069">1069</span>
+<span id="1070">1070</span>
+<span id="1071">1071</span>
+<span id="1072">1072</span>
+<span id="1073">1073</span>
+<span id="1074">1074</span>
+<span id="1075">1075</span>
+<span id="1076">1076</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::conv</span>;
 
@@ -1060,6 +1098,7 @@
     <span class="ident">vulkan_1_2</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">vk::PhysicalDeviceVulkan12Features</span><span class="op">&gt;</span>,
     <span class="ident">descriptor_indexing</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">vk::PhysicalDeviceDescriptorIndexingFeaturesEXT</span><span class="op">&gt;</span>,
     <span class="ident">imageless_framebuffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">vk::PhysicalDeviceImagelessFramebufferFeaturesKHR</span><span class="op">&gt;</span>,
+    <span class="ident">timeline_semaphore</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR</span><span class="op">&gt;</span>,
 }
 
 <span class="comment">// This is safe because the structs have `p_next: *mut c_void`, which we null out/never read.</span>
@@ -1204,6 +1243,7 @@
                         )
                         <span class="comment">//.sampler_filter_minmax(requested_features.contains(wgt::Features::SAMPLER_REDUCTION))</span>
                         .<span class="ident">imageless_framebuffer</span>(<span class="ident">private_caps</span>.<span class="ident">imageless_framebuffers</span>)
+                        .<span class="ident">timeline_semaphore</span>(<span class="ident">private_caps</span>.<span class="ident">timeline_semaphores</span>)
                         .<span class="ident">build</span>(),
                 )
             } <span class="kw">else</span> {
@@ -1255,6 +1295,16 @@
                 <span class="prelude-val">Some</span>(
                     <span class="ident">vk::PhysicalDeviceImagelessFramebufferFeaturesKHR::builder</span>()
                         .<span class="ident">imageless_framebuffer</span>(<span class="bool-val">true</span>)
+                        .<span class="ident">build</span>(),
+                )
+            } <span class="kw">else</span> {
+                <span class="prelude-val">None</span>
+            },
+            <span class="ident">timeline_semaphore</span>: <span class="kw">if</span> <span class="ident">enabled_extensions</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">vk::KhrTimelineSemaphoreFn::name</span>())
+            {
+                <span class="prelude-val">Some</span>(
+                    <span class="ident">vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR::builder</span>()
+                        .<span class="ident">timeline_semaphore</span>(<span class="bool-val">true</span>)
                         .<span class="ident">build</span>(),
                 )
             } <span class="kw">else</span> {
@@ -1578,6 +1628,15 @@
                 <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>);
             }
 
+            <span class="comment">// `VK_KHR_timeline_semaphore` is promoted to 1.2, but has no changes, so we can keep using the extension unconditionally.</span>
+            <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrTimelineSemaphoreFn::name</span>()) {
+                <span class="ident">features</span>.<span class="ident">timeline_semaphore</span> <span class="op">=</span>
+                    <span class="prelude-val">Some</span>(<span class="ident">vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR::builder</span>().<span class="ident">build</span>());
+
+                <span class="kw">let</span> <span class="ident">mut_ref</span> <span class="op">=</span> <span class="ident">features</span>.<span class="ident">timeline_semaphore</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>();
+                <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>);
+            }
+
             <span class="kw">unsafe</span> {
                 <span class="ident">get_device_properties</span>.<span class="ident">get_physical_device_features2_khr</span>(<span class="ident">phd</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features2</span>);
             }
@@ -1599,6 +1658,7 @@
             <span class="ident">null_p_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features</span>.<span class="ident">vulkan_1_2</span>);
             <span class="ident">null_p_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features</span>.<span class="ident">descriptor_indexing</span>);
             <span class="ident">null_p_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features</span>.<span class="ident">imageless_framebuffer</span>);
+            <span class="ident">null_p_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features</span>.<span class="ident">timeline_semaphore</span>);
         }
 
         (<span class="ident">capabilities</span>, <span class="ident">features</span>)
@@ -1676,12 +1736,16 @@
         <span class="kw">let</span> <span class="ident">private_caps</span> <span class="op">=</span> <span class="kw">super</span><span class="ident">::PrivateCapabilities</span> {
             <span class="ident">flip_y_requires_shift</span>: <span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">vk::API_VERSION_1_1</span>
                 <span class="op">|</span><span class="op">|</span> <span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrMaintenance1Fn::name</span>()),
-            <span class="ident">imageless_framebuffers</span>: <span class="ident">phd_features</span>
-                .<span class="ident">vulkan_1_2</span>
-                .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">features</span><span class="op">|</span> <span class="ident">features</span>.<span class="ident">imageless_framebuffer</span> <span class="op">=</span><span class="op">=</span> <span class="ident">vk::TRUE</span>)
-                <span class="op">|</span><span class="op">|</span> <span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrImagelessFramebufferFn::name</span>()),
+            <span class="ident">imageless_framebuffers</span>: <span class="kw">match</span> <span class="ident">phd_features</span>.<span class="ident">vulkan_1_2</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">features</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">features</span>.<span class="ident">imageless_framebuffer</span> <span class="op">=</span><span class="op">=</span> <span class="ident">vk::TRUE</span>,
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrImagelessFramebufferFn::name</span>()),
+            },
             <span class="ident">image_view_usage</span>: <span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">vk::API_VERSION_1_1</span>
                 <span class="op">|</span><span class="op">|</span> <span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrMaintenance2Fn::name</span>()),
+            <span class="ident">timeline_semaphores</span>: <span class="kw">match</span> <span class="ident">phd_features</span>.<span class="ident">vulkan_1_2</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">features</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">features</span>.<span class="ident">timeline_semaphore</span> <span class="op">=</span><span class="op">=</span> <span class="ident">vk::TRUE</span>,
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrTimelineSemaphoreFn::name</span>()),
+            },
             <span class="ident">texture_d24</span>: <span class="kw">unsafe</span> {
                 <span class="self">self</span>.<span class="ident">shared</span>
                     .<span class="ident">raw</span>
@@ -1814,6 +1878,17 @@
         } <span class="kw">else</span> {
             <span class="prelude-val">None</span>
         };
+        <span class="kw">let</span> <span class="ident">timeline_semaphore_fn</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">enabled_extensions</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">khr::TimelineSemaphore::name</span>())
+        {
+            <span class="prelude-val">Some</span>(<span class="kw">super</span><span class="ident">::ExtensionFn::Extension</span>(<span class="ident">khr::TimelineSemaphore::new</span>(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">instance</span>.<span class="ident">entry</span>,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">instance</span>.<span class="ident">raw</span>,
+            )))
+        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">vk::API_VERSION_1_2</span> {
+            <span class="prelude-val">Some</span>(<span class="kw">super</span><span class="ident">::ExtensionFn::Promoted</span>)
+        } <span class="kw">else</span> {
+            <span class="prelude-val">None</span>
+        };
 
         <span class="kw">let</span> <span class="ident">naga_options</span> <span class="op">=</span> {
             <span class="kw">use</span> <span class="ident">naga::back::spv</span>;
@@ -1847,6 +1922,7 @@
             <span class="ident">instance</span>: <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">instance</span>),
             <span class="ident">extension_fns</span>: <span class="kw">super</span><span class="ident">::DeviceExtensionFunctions</span> {
                 <span class="ident">draw_indirect_count</span>: <span class="ident">indirect_count_fn</span>,
+                <span class="ident">timeline_semaphore</span>: <span class="ident">timeline_semaphore_fn</span>,
             },
             <span class="ident">vendor_id</span>: <span class="self">self</span>.<span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">vendor_id</span>,
             <span class="ident">downlevel_flags</span>: <span class="self">self</span>.<span class="ident">downlevel_flags</span>,
