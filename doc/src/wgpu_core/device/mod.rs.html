@@ -4693,8 +4693,8 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serial-pass&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>, <span class="ident">serde::Serialize</span>))]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">AttachmentData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">colors</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="ident">T</span>; <span class="ident">hal::MAX_COLOR_TARGETS</span>]<span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">resolves</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="ident">T</span>; <span class="ident">hal::MAX_COLOR_TARGETS</span>]<span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">colors</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">T</span>, { <span class="ident">hal::MAX_COLOR_TARGETS</span> }<span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">resolves</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">T</span>, { <span class="ident">hal::MAX_COLOR_TARGETS</span> }<span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">depth_stencil</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 }
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">PartialEq</span><span class="op">&gt;</span> <span class="ident">Eq</span> <span class="kw">for</span> <span class="ident">AttachmentData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {}
@@ -4718,8 +4718,8 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RenderPassCompatibilityError</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Incompatible color attachment: {0:?} != {1:?}&quot;</span>)]</span>
     <span class="ident">IncompatibleColorAttachment</span>(
-        <span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="ident">TextureFormat</span>; <span class="ident">hal::MAX_COLOR_TARGETS</span>]<span class="op">&gt;</span>,
-        <span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="ident">TextureFormat</span>; <span class="ident">hal::MAX_COLOR_TARGETS</span>]<span class="op">&gt;</span>,
+        <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">TextureFormat</span>, { <span class="ident">hal::MAX_COLOR_TARGETS</span> }<span class="op">&gt;</span>,
+        <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">TextureFormat</span>, { <span class="ident">hal::MAX_COLOR_TARGETS</span> }<span class="op">&gt;</span>,
     ),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Incompatible depth-stencil attachment: {0:?} != {1:?}&quot;</span>)]</span>
     <span class="ident">IncompatibleDepthStencilAttachment</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TextureFormat</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TextureFormat</span><span class="op">&gt;</span>),
@@ -5610,7 +5610,7 @@
     <span class="kw">fn</span> <span class="ident">get_introspection_bind_group_layouts</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="ident">pipeline_layout</span>: <span class="kw-2">&amp;</span><span class="ident">binding_model::PipelineLayout</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
         <span class="ident">bgl_guard</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">binding_model::BindGroupLayout</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::BindGroupLayoutId</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">binding_model::BindEntryMap</span>; <span class="ident">hal::MAX_BIND_GROUPS</span>]<span class="op">&gt;</span> {
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">binding_model::BindEntryMap</span>, { <span class="ident">hal::MAX_BIND_GROUPS</span> }<span class="op">&gt;</span> {
         <span class="ident">pipeline_layout</span>
             .<span class="ident">bind_group_layout_ids</span>
             .<span class="ident">iter</span>()
@@ -6338,7 +6338,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">self_id</span>: <span class="ident">id::DeviceId</span>,
         <span class="ident">implicit_context</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ImplicitPipelineContext</span><span class="op">&gt;</span>,
-        <span class="kw-2">mut</span> <span class="ident">derived_group_layouts</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="ident">binding_model::BindEntryMap</span>; <span class="ident">hal::MAX_BIND_GROUPS</span>]<span class="op">&gt;</span>,
+        <span class="kw-2">mut</span> <span class="ident">derived_group_layouts</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">binding_model::BindEntryMap</span>, { <span class="ident">hal::MAX_BIND_GROUPS</span> }<span class="op">&gt;</span>,
         <span class="ident">bgl_guard</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">binding_model::BindGroupLayout</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::BindGroupLayoutId</span><span class="op">&gt;</span>,
         <span class="ident">pipeline_layout_guard</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">binding_model::PipelineLayout</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::PipelineLayoutId</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">id::PipelineLayoutId</span>, <span class="ident">pipeline::ImplicitLayoutError</span><span class="op">&gt;</span> {
@@ -6405,7 +6405,7 @@
         <span class="self">self</span>.<span class="ident">require_downlevel_flags</span>(<span class="ident">wgt::DownlevelFlags::COMPUTE_SHADERS</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">derived_group_layouts</span> <span class="op">=</span>
-            <span class="ident">ArrayVec</span>::<span class="op">&lt;</span>[<span class="ident">binding_model::BindEntryMap</span>; <span class="ident">hal::MAX_BIND_GROUPS</span>]<span class="op">&gt;</span><span class="ident">::new</span>();
+            <span class="ident">ArrayVec</span>::<span class="op">&lt;</span><span class="ident">binding_model::BindEntryMap</span>, { <span class="ident">hal::MAX_BIND_GROUPS</span> }<span class="op">&gt;</span><span class="ident">::new</span>();
 
         <span class="kw">let</span> <span class="ident">io</span> <span class="op">=</span> <span class="ident">validation::StageIo::default</span>();
         <span class="kw">let</span> (<span class="ident">shader_module_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">shader_modules</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
@@ -6517,7 +6517,7 @@
         }
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">derived_group_layouts</span> <span class="op">=</span>
-            <span class="ident">ArrayVec</span>::<span class="op">&lt;</span>[<span class="ident">binding_model::BindEntryMap</span>; <span class="ident">hal::MAX_BIND_GROUPS</span>]<span class="op">&gt;</span><span class="ident">::new</span>();
+            <span class="ident">ArrayVec</span>::<span class="op">&lt;</span><span class="ident">binding_model::BindEntryMap</span>, { <span class="ident">hal::MAX_BIND_GROUPS</span> }<span class="op">&gt;</span><span class="ident">::new</span>();
 
         <span class="kw">let</span> <span class="ident">color_targets</span> <span class="op">=</span> <span class="ident">desc</span>
             .<span class="ident">fragment</span>
@@ -7094,7 +7094,7 @@
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ImplicitPipelineContext</span> {
     <span class="kw">pub</span> <span class="ident">root_id</span>: <span class="ident">id::PipelineLayoutId</span>,
-    <span class="kw">pub</span> <span class="ident">group_ids</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span>[<span class="ident">id::BindGroupLayoutId</span>; <span class="ident">hal::MAX_BIND_GROUPS</span>]<span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">group_ids</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">id::BindGroupLayoutId</span>, { <span class="ident">hal::MAX_BIND_GROUPS</span> }<span class="op">&gt;</span>,
 }
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ImplicitPipelineIds</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span> {
