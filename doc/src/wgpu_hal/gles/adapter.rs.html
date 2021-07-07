@@ -502,6 +502,17 @@
 <span id="502">502</span>
 <span id="503">503</span>
 <span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">glow::HasContext</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
@@ -685,17 +696,39 @@
             <span class="ident">naga::back::glsl::Version::Embedded</span>(<span class="ident">value</span>)
         };
 
+        <span class="kw">let</span> <span class="ident">vertex_shader_storage_blocks</span> <span class="op">=</span>
+            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_SHADER_STORAGE_BLOCKS</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">let</span> <span class="ident">fragment_shader_storage_blocks</span> <span class="op">=</span>
+            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_FRAGMENT_SHADER_STORAGE_BLOCKS</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+
+        <span class="kw">let</span> <span class="ident">vertex_shader_storage_textures</span> <span class="op">=</span>
+            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_IMAGE_UNIFORMS</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">let</span> <span class="ident">fragment_shader_storage_textures</span> <span class="op">=</span>
+            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_FRAGMENT_IMAGE_UNIFORMS</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+
+        <span class="comment">// WORKAROUND:</span>
+        <span class="comment">// In order to work around an issue with GL on RPI4 and similar, we ignore a zero vertex ssbo count if there are vertex sstos. (more info: https://github.com/gfx-rs/wgpu/pull/1607#issuecomment-874938961)</span>
+        <span class="comment">// The hardware does not want us to write to these SSBOs, but GLES cannot express that. We detect this case and disable writing to SSBOs.</span>
+        <span class="kw">let</span> <span class="ident">vertex_ssbo_false_zero</span> <span class="op">=</span>
+            <span class="ident">vertex_shader_storage_blocks</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">vertex_shader_storage_textures</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
+
+        <span class="kw">let</span> <span class="ident">max_storage_buffers_per_shader_stage</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">vertex_ssbo_false_zero</span> {
+            <span class="comment">// We only care about fragment here as the 0 is a lie.</span>
+            <span class="macro">log::warn!</span>(<span class="string">&quot;Max vertex shader SSBO == 0 and SSTO != 0. Interpreting as false zero.&quot;</span>);
+            <span class="ident">fragment_shader_storage_blocks</span>
+        } <span class="kw">else</span> {
+            <span class="ident">vertex_shader_storage_blocks</span>.<span class="ident">min</span>(<span class="ident">fragment_shader_storage_blocks</span>)
+        };
+
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">wgt::Features::empty</span>() <span class="op">|</span> <span class="ident">wgt::Features::TEXTURE_COMPRESSION_ETC2</span>;
         <span class="ident">features</span>.<span class="ident">set</span>(
             <span class="ident">wgt::Features::DEPTH_CLAMPING</span>,
             <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_depth_clamp&quot;</span>),
         );
-        <span class="ident">features</span>.<span class="ident">set</span>(<span class="ident">wgt::Features::VERTEX_WRITABLE_STORAGE</span>, <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>));
-
-        <span class="kw">let</span> <span class="ident">vertex_shader_storage_blocks</span> <span class="op">=</span>
-            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_SHADER_STORAGE_BLOCKS</span>);
-        <span class="kw">let</span> <span class="ident">fragment_shader_storage_blocks</span> <span class="op">=</span>
-            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_FRAGMENT_SHADER_STORAGE_BLOCKS</span>);
+        <span class="ident">features</span>.<span class="ident">set</span>(
+            <span class="ident">wgt::Features::VERTEX_WRITABLE_STORAGE</span>,
+            <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">vertex_ssbo_false_zero</span>,
+        );
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">downlevel_flags</span> <span class="op">=</span> <span class="ident">wgt::DownlevelFlags::empty</span>()
             <span class="op">|</span> <span class="ident">wgt::DownlevelFlags::DEVICE_LOCAL_IMAGE_COPIES</span>
@@ -715,10 +748,6 @@
             <span class="ident">wgt::DownlevelFlags::INDEPENDENT_BLENDING</span>,
             <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">2</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_draw_buffers_indexed&quot;</span>),
         );
-        <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::DownlevelFlags::VERTEX_ACCESSABLE_STORAGE_BUFFERS</span>,
-            <span class="ident">vertex_shader_storage_blocks</span> <span class="op">&gt;</span> <span class="number">0</span>,
-        );
 
         <span class="kw">let</span> <span class="ident">max_texture_size</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_TEXTURE_SIZE</span>) <span class="kw">as</span> <span class="ident">u32</span>;
         <span class="kw">let</span> <span class="ident">max_texture_3d_size</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_3D_TEXTURE_SIZE</span>) <span class="kw">as</span> <span class="ident">u32</span>;
@@ -733,14 +762,6 @@
         <span class="kw">let</span> <span class="ident">max_uniform_buffers_per_shader_stage</span> <span class="op">=</span>
             <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_UNIFORM_BLOCKS</span>)
                 .<span class="ident">min</span>(<span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_FRAGMENT_UNIFORM_BLOCKS</span>)) <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="kw">let</span> <span class="ident">max_storage_buffers_per_shader_stage</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">vertex_shader_storage_blocks</span> <span class="op">&gt;</span> <span class="number">0</span> {
-            <span class="ident">vertex_shader_storage_blocks</span>.<span class="ident">min</span>(<span class="ident">fragment_shader_storage_blocks</span>)
-        } <span class="kw">else</span> {
-            <span class="ident">fragment_shader_storage_blocks</span>
-        } <span class="kw">as</span> <span class="ident">u32</span>;
-
-        <span class="kw">let</span> <span class="ident">max_storage_textures_per_shader_stage</span> <span class="op">=</span>
-            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_FRAGMENT_IMAGE_UNIFORMS</span>) <span class="kw">as</span> <span class="ident">u32</span>;
 
         <span class="kw">let</span> <span class="ident">limits</span> <span class="op">=</span> <span class="ident">wgt::Limits</span> {
             <span class="ident">max_texture_dimension_1d</span>: <span class="ident">max_texture_size</span>,
@@ -753,7 +774,8 @@
             <span class="ident">max_sampled_textures_per_shader_stage</span>: <span class="kw">super</span><span class="ident">::MAX_TEXTURE_SLOTS</span> <span class="kw">as</span> <span class="ident">u32</span>,
             <span class="ident">max_samplers_per_shader_stage</span>: <span class="kw">super</span><span class="ident">::MAX_SAMPLERS</span> <span class="kw">as</span> <span class="ident">u32</span>,
             <span class="ident">max_storage_buffers_per_shader_stage</span>,
-            <span class="ident">max_storage_textures_per_shader_stage</span>,
+            <span class="ident">max_storage_textures_per_shader_stage</span>: <span class="ident">vertex_shader_storage_textures</span>
+                .<span class="ident">min</span>(<span class="ident">fragment_shader_storage_textures</span>),
             <span class="ident">max_uniform_buffers_per_shader_stage</span>,
             <span class="ident">max_uniform_buffer_binding_size</span>: <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_UNIFORM_BLOCK_SIZE</span>)
                 <span class="kw">as</span> <span class="ident">u32</span>,
