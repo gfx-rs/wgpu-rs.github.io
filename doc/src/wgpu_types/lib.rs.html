@@ -3194,6 +3194,25 @@
 <span id="3194">3194</span>
 <span id="3195">3195</span>
 <span id="3196">3196</span>
+<span id="3197">3197</span>
+<span id="3198">3198</span>
+<span id="3199">3199</span>
+<span id="3200">3200</span>
+<span id="3201">3201</span>
+<span id="3202">3202</span>
+<span id="3203">3203</span>
+<span id="3204">3204</span>
+<span id="3205">3205</span>
+<span id="3206">3206</span>
+<span id="3207">3207</span>
+<span id="3208">3208</span>
+<span id="3209">3209</span>
+<span id="3210">3210</span>
+<span id="3211">3211</span>
+<span id="3212">3212</span>
+<span id="3213">3213</span>
+<span id="3214">3214</span>
+<span id="3215">3215</span>
 </pre><pre class="rust">
 <span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
@@ -5935,6 +5954,15 @@
 }
 
 <span class="doccomment">/// Layout of a texture in a buffer&#39;s memory.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The bytes per row and rows per image can be hard to figure out so here are some examples:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// | Resolution | Format | Bytes per block | Pixels per block | Bytes per row                          | Rows per image               |</span>
+<span class="doccomment">/// |------------|--------|-----------------|------------------|----------------------------------------|------------------------------|</span>
+<span class="doccomment">/// | 256x256    | RGBA8  | 4               | 1 * 1 * 1        | 256 * 4 = Some(1024)                   | None                         |</span>
+<span class="doccomment">/// | 32x16x8    | RGBA8  | 4               | 1 * 1 * 1        | 32 * 4 = 128 padded to 256 = Some(256) | None                         |</span>
+<span class="doccomment">/// | 256x256    | BC3    | 16              | 4 * 4 * 1        | 16 * (256 / 4) = 1024 = Some(1024)     | None                         |</span>
+<span class="doccomment">/// | 64x64x8    | BC3    | 16              | 4 * 4 * 1        | 16 * (64 / 4) = 256 = Some(256)        | 64 / 4 = 16 = Some(16)       |</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
@@ -5943,18 +5971,28 @@
     <span class="doccomment">/// Offset into the buffer that is the start of the texture. Must be a multiple of texture block size.</span>
     <span class="doccomment">/// For non-compressed textures, this is 1.</span>
     <span class="kw">pub</span> <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
-    <span class="doccomment">/// Bytes per &quot;row&quot; of the image. This represents one row of pixels in the x direction. Compressed</span>
-    <span class="doccomment">/// textures include multiple rows of pixels in each &quot;row&quot;.</span>
-    <span class="doccomment">/// Required if there are multiple rows (i.e. height or depth is more than one pixel or pixel block for compressed textures)</span>
+    <span class="doccomment">/// Bytes per &quot;row&quot; in an image.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Must be a multiple of 256 for [`CommandEncoder::copy_buffer_to_texture`] and [`CommandEncoder::copy_texture_to_buffer`].</span>
+    <span class="doccomment">/// A row is one row of pixels or of compressed blocks in the x direction.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This value is required if there are multiple rows (i.e. height or depth is more than one pixel or pixel block for compressed textures)</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Must be a multiple of 256 for [`CommandEncoder::copy_buffer_to_texture`] and [`CommandEncoder::copy_texture_to_buffer`]. You must manually pad</span>
+    <span class="doccomment">/// the image such that this is a multiple of 256. It will not affect the image data.</span>
+    <span class="doccomment">///</span>
     <span class="doccomment">/// [`Queue::write_texture`] does not have this requirement.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Must be a multiple of the texture block size. For non-compressed textures, this is 1.</span>
     <span class="kw">pub</span> <span class="ident">bytes_per_row</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonZeroU32</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Rows that make up a single &quot;image&quot;. Each &quot;image&quot; is one layer in the z direction of a 3D image. May be larger</span>
-    <span class="doccomment">/// than `copy_size.y`.</span>
-    <span class="doccomment">/// Required if there are multiple images (i.e. the depth is more than one)</span>
+    <span class="doccomment">/// &quot;Rows&quot; that make up a single &quot;image&quot;.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// A row is one row of pixels or of compressed blocks in the x direction.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// An image is one layer in the z direction of a 3D image or 2DArray texture.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The amount of rows per image may be larger than the actual amount of rows of data.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Required if there are multiple images (i.e. the depth is more than one).</span>
     <span class="kw">pub</span> <span class="ident">rows_per_image</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonZeroU32</span><span class="op">&gt;</span>,
 }
 
