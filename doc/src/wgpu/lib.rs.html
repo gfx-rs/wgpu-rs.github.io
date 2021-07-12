@@ -3079,6 +3079,7 @@
 <span id="3079">3079</span>
 <span id="3080">3080</span>
 <span id="3081">3081</span>
+<span id="3082">3082</span>
 </pre><pre class="rust">
 <span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).</span>
 <span class="doccomment">//!</span>
@@ -3667,7 +3668,8 @@
 
 <span class="doccomment">/// Handle to a GPU-accessible buffer.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Created with [`Device::create_buffer`] or [DeviceExt::create_buffer_init](util::DeviceExt::create_buffer_init)</span>
+<span class="doccomment">/// Created with [`Device::create_buffer`] or</span>
+<span class="doccomment">/// [`DeviceExt::create_buffer_init`](util::DeviceExt::create_buffer_init).</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Buffer</span> {
     <span class="ident">context</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
@@ -4075,7 +4077,7 @@
     <span class="ident">TextureView</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TextureView</span>),
     <span class="doccomment">/// Binding is backed by an array of textures.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [`Features::SAMPLED_TEXTURE_BINDING_ARRAY`] must be supported to use this feature.</span>
+    <span class="doccomment">/// [`Features::TEXTURE_BINDING_ARRAY`] must be supported to use this feature.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Corresponds to [`wgt::BindingType::Texture`] and [`wgt::BindingType::StorageTexture`] with</span>
     <span class="doccomment">/// [`BindGroupLayoutEntry::count`] set to Some.</span>
@@ -4666,7 +4668,7 @@
     <span class="doccomment">/// This function passes binary data to the backend as-is and can potentially result in a</span>
     <span class="doccomment">/// driver crash or bogus behaviour. No attempt is made to ensure that data is valid SPIR-V.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// See also [`crate::include_spirv_raw!`] and [`crate::make_spirv_raw`].</span>
+    <span class="doccomment">/// See also [`include_spirv_raw!`] and [`util::make_spirv_raw`].</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_shader_module_spirv</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">ShaderModuleDescriptorSpirV</span>,
@@ -5327,7 +5329,7 @@
     <span class="doccomment">/// Issue a timestamp command at this point in the queue.</span>
     <span class="doccomment">/// The timestamp will be written to the specified query set, at the specified index.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Must be multiplied by [`Device::get_timestamp_period`] to get</span>
+    <span class="doccomment">/// Must be multiplied by [`Queue::get_timestamp_period`] to get</span>
     <span class="doccomment">/// the value in nanoseconds. Absolute values have no meaning,</span>
     <span class="doccomment">/// but timestamps can be subtracted to get the time it takes</span>
     <span class="doccomment">/// for a string of operations to complete.</span>
@@ -5345,7 +5347,7 @@
 <span class="kw">impl</span> <span class="ident">CommandEncoder</span> {
     <span class="doccomment">/// Resolve a query set, writing the results into the supplied destination buffer.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Queries may be between 8 and 40 bytes each. See [`PipelineStatisticsType`] for more information.</span>
+    <span class="doccomment">/// Queries may be between 8 and 40 bytes each. See [`PipelineStatisticsTypes`] for more information.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">resolve_query_set</span>(
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">query_set</span>: <span class="kw-2">&amp;</span><span class="ident">QuerySet</span>,
@@ -5414,7 +5416,7 @@
     <span class="doccomment">/// [`RenderPass`] will use `buffer` as one of the source vertex buffers.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The `slot` refers to the index of the matching descriptor in</span>
-    <span class="doccomment">/// [`VertexStateDescriptor::vertex_buffers`].</span>
+    <span class="doccomment">/// [`VertexState::buffers`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`draw`]: RenderPass::draw</span>
     <span class="doccomment">/// [`draw_indexed`]: RenderPass::draw_indexed</span>
@@ -5733,7 +5735,7 @@
     <span class="doccomment">/// Issue a timestamp command at this point in the queue. The</span>
     <span class="doccomment">/// timestamp will be written to the specified query set, at the specified index.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Must be multiplied by [`Device::get_timestamp_period`] to get</span>
+    <span class="doccomment">/// Must be multiplied by [`Queue::get_timestamp_period`] to get</span>
     <span class="doccomment">/// the value in nanoseconds. Absolute values have no meaning,</span>
     <span class="doccomment">/// but timestamps can be subtracted to get the time it takes</span>
     <span class="doccomment">/// for a string of operations to complete.</span>
@@ -5839,7 +5841,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">ComputePass</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Issue a timestamp command at this point in the queue. The timestamp will be written to the specified query set, at the specified index.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Must be multiplied by [`Device::get_timestamp_period`] to get</span>
+    <span class="doccomment">/// Must be multiplied by [`Queue::get_timestamp_period`] to get</span>
     <span class="doccomment">/// the value in nanoseconds. Absolute values have no meaning,</span>
     <span class="doccomment">/// but timestamps can be subtracted to get the time it takes</span>
     <span class="doccomment">/// for a string of operations to complete.</span>
@@ -5924,7 +5926,7 @@
     <span class="doccomment">/// [`RenderBundleEncoder`] will use `buffer` as one of the source vertex buffers.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The `slot` refers to the index of the matching descriptor in</span>
-    <span class="doccomment">/// [`VertexStateDescriptor::vertex_buffers`].</span>
+    <span class="doccomment">/// [`VertexState::buffers`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`draw`]: RenderBundleEncoder::draw</span>
     <span class="doccomment">/// [`draw_indexed`]: RenderBundleEncoder::draw_indexed</span>
