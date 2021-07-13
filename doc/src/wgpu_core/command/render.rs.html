@@ -2153,8 +2153,6 @@
 <span id="2153">2153</span>
 <span id="2154">2154</span>
 <span id="2155">2155</span>
-<span id="2156">2156</span>
-<span id="2157">2157</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model::BindError</span>,
@@ -2173,6 +2171,7 @@
     <span class="ident">memory_init_tracker</span>::{<span class="ident">MemoryInitKind</span>, <span class="ident">MemoryInitTrackerAction</span>},
     <span class="ident">pipeline::PipelineFlags</span>,
     <span class="ident">resource</span>::{<span class="ident">Texture</span>, <span class="ident">TextureView</span>, <span class="ident">TextureViewSource</span>},
+    <span class="ident">swap_chain::SwapChain</span>,
     <span class="ident">track</span>::{<span class="ident">StatefulTrackerSubset</span>, <span class="ident">TextureSelector</span>, <span class="ident">UsageConflict</span>},
     <span class="ident">validation</span>::{
         <span class="ident">check_buffer_usage</span>, <span class="ident">check_texture_usage</span>, <span class="ident">MissingBufferUsageError</span>, <span class="ident">MissingTextureUsageError</span>,
@@ -2649,11 +2648,11 @@
 <span class="kw">struct</span> <span class="ident">RenderAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">texture_id</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::TextureId</span><span class="op">&gt;</span>,
     <span class="ident">selector</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TextureSelector</span>,
-    <span class="ident">previous_use</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">hal::TextureUses</span><span class="op">&gt;</span>,
-    <span class="ident">new_use</span>: <span class="ident">hal::TextureUses</span>,
+    <span class="ident">usage</span>: <span class="ident">hal::TextureUses</span>,
 }
 
-<span class="kw">type</span> <span class="ident">AttachmentDataVec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">T</span>, { <span class="ident">hal::MAX_COLOR_TARGETS</span> <span class="op">+</span> <span class="ident">hal::MAX_COLOR_TARGETS</span> <span class="op">+</span> <span class="number">1</span> }<span class="op">&gt;</span>;
+<span class="kw">const</span> <span class="ident">MAX_TOTAL_ATTACHMENTS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">hal::MAX_COLOR_TARGETS</span> <span class="op">+</span> <span class="ident">hal::MAX_COLOR_TARGETS</span> <span class="op">+</span> <span class="number">1</span>;
+<span class="kw">type</span> <span class="ident">AttachmentDataVec</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">MAX_TOTAL_ATTACHMENTS</span><span class="op">&gt;</span>;
 
 <span class="kw">struct</span> <span class="ident">RenderPassInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> {
     <span class="ident">context</span>: <span class="ident">RenderPassContext</span>,
@@ -2672,6 +2671,7 @@
         <span class="ident">depth_stencil_attachment</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">RenderPassDepthStencilAttachment</span><span class="op">&gt;</span>,
         <span class="ident">cmd_buf</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">CommandBuffer</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
         <span class="ident">view_guard</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">TextureView</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::TextureViewId</span><span class="op">&gt;</span>,
+        <span class="ident">swap_chain_guard</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">SwapChain</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::SwapChainId</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">RenderPassErrorInner</span><span class="op">&gt;</span> {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;start&quot;</span>, <span class="string">&quot;RenderPassInfo&quot;</span>);
 
@@ -2685,7 +2685,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attachment_type_name</span> <span class="op">=</span> <span class="string">&quot;&quot;</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">extent</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sample_count</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">used_swap_chain</span> <span class="op">=</span> <span class="prelude-val">None</span>::<span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::SwapChainId</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">used_swap_chain</span> <span class="op">=</span> <span class="prelude-val">None</span>::<span class="op">&lt;</span>(<span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::SwapChainId</span><span class="op">&gt;</span>, <span class="ident">hal::TextureUses</span>)<span class="op">&gt;</span>;
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">add_view</span> <span class="op">=</span> <span class="op">|</span><span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">TextureView</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">type_name</span><span class="op">|</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ex</span>) <span class="op">=</span> <span class="ident">extent</span> {
@@ -2735,12 +2735,7 @@
                 }
             };
 
-            <span class="comment">// Using render pass for transition.</span>
-            <span class="kw">let</span> <span class="ident">previous_use</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
-                .<span class="ident">trackers</span>
-                .<span class="ident">textures</span>
-                .<span class="ident">query</span>(<span class="ident">source_id</span>.<span class="ident">value</span>, <span class="ident">view</span>.<span class="ident">selector</span>.<span class="ident">clone</span>());
-            <span class="kw">let</span> <span class="ident">new_use</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">at</span>.<span class="ident">is_read_only</span>(<span class="ident">ds_aspects</span>)<span class="question-mark">?</span> {
+            <span class="kw">let</span> <span class="ident">usage</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">at</span>.<span class="ident">is_read_only</span>(<span class="ident">ds_aspects</span>)<span class="question-mark">?</span> {
                 <span class="ident">is_ds_read_only</span> <span class="op">=</span> <span class="bool-val">true</span>;
                 <span class="ident">hal::TextureUses::DEPTH_STENCIL_READ</span> <span class="op">|</span> <span class="ident">hal::TextureUses::SAMPLED</span>
             } <span class="kw">else</span> {
@@ -2749,16 +2744,13 @@
             <span class="ident">render_attachments</span>.<span class="ident">push</span>(<span class="ident">RenderAttachment</span> {
                 <span class="ident">texture_id</span>: <span class="ident">source_id</span>,
                 <span class="ident">selector</span>: <span class="kw-2">&amp;</span><span class="ident">view</span>.<span class="ident">selector</span>,
-                <span class="ident">previous_use</span>,
-                <span class="ident">new_use</span>,
+                <span class="ident">usage</span>,
             });
 
-            <span class="kw">let</span> <span class="ident">old_use</span> <span class="op">=</span> <span class="ident">previous_use</span>.<span class="ident">unwrap_or</span>(<span class="ident">new_use</span>);
             <span class="ident">depth_stencil</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">hal::DepthStencilAttachment</span> {
                 <span class="ident">target</span>: <span class="ident">hal::Attachment</span> {
                     <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">view</span>.<span class="ident">raw</span>,
-                    <span class="ident">usage</span>: <span class="ident">new_use</span>,
-                    <span class="ident">boundary_usage</span>: <span class="ident">old_use</span>..<span class="ident">new_use</span>,
+                    <span class="ident">usage</span>,
                 },
                 <span class="ident">depth_ops</span>: <span class="ident">at</span>.<span class="ident">depth</span>.<span class="ident">hal_ops</span>(),
                 <span class="ident">stencil_ops</span>: <span class="ident">at</span>.<span class="ident">stencil</span>.<span class="ident">hal_ops</span>(),
@@ -2784,33 +2776,22 @@
                 ));
             }
 
-            <span class="kw">let</span> <span class="ident">boundary_usage</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">color_view</span>.<span class="ident">source</span> {
+            <span class="kw">match</span> <span class="ident">color_view</span>.<span class="ident">source</span> {
                 <span class="ident">TextureViewSource::Native</span>(<span class="kw-2">ref</span> <span class="ident">source_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="kw">let</span> <span class="ident">previous_use</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
-                        .<span class="ident">trackers</span>
-                        .<span class="ident">textures</span>
-                        .<span class="ident">query</span>(<span class="ident">source_id</span>.<span class="ident">value</span>, <span class="ident">color_view</span>.<span class="ident">selector</span>.<span class="ident">clone</span>());
-                    <span class="kw">let</span> <span class="ident">new_use</span> <span class="op">=</span> <span class="ident">hal::TextureUses::COLOR_TARGET</span>;
                     <span class="ident">render_attachments</span>.<span class="ident">push</span>(<span class="ident">RenderAttachment</span> {
                         <span class="ident">texture_id</span>: <span class="ident">source_id</span>,
                         <span class="ident">selector</span>: <span class="kw-2">&amp;</span><span class="ident">color_view</span>.<span class="ident">selector</span>,
-                        <span class="ident">previous_use</span>,
-                        <span class="ident">new_use</span>,
+                        <span class="ident">usage</span>: <span class="ident">hal::TextureUses::COLOR_TARGET</span>,
                     });
-
-                    <span class="kw">let</span> <span class="ident">old_use</span> <span class="op">=</span> <span class="ident">previous_use</span>.<span class="ident">unwrap_or</span>(<span class="ident">new_use</span>);
-                    <span class="ident">old_use</span>..<span class="ident">new_use</span>
                 }
                 <span class="ident">TextureViewSource::SwapChain</span>(<span class="kw-2">ref</span> <span class="ident">source_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="macro">assert!</span>(<span class="ident">used_swap_chain</span>.<span class="ident">is_none</span>());
-                    <span class="ident">used_swap_chain</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">source_id</span>.<span class="ident">clone</span>());
-
-                    <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">hal::TextureUses::empty</span>();
-                    <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">at</span>.<span class="ident">channel</span>.<span class="ident">load_op</span> {
+                    <span class="comment">//HACK: guess the start usage based on the load op</span>
+                    <span class="kw">let</span> <span class="ident">start_usage</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">at</span>.<span class="ident">channel</span>.<span class="ident">load_op</span> {
+                        <span class="ident">LoadOp::Load</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">hal::TextureUses::empty</span>(),
                         <span class="ident">LoadOp::Clear</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">hal::TextureUses::UNINITIALIZED</span>,
-                        <span class="ident">LoadOp::Load</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">end</span>,
                     };
-                    <span class="ident">start</span>..<span class="ident">end</span>
+                    <span class="macro">assert!</span>(<span class="ident">used_swap_chain</span>.<span class="ident">is_none</span>());
+                    <span class="ident">used_swap_chain</span> <span class="op">=</span> <span class="prelude-val">Some</span>((<span class="ident">source_id</span>.<span class="ident">clone</span>(), <span class="ident">start_usage</span>));
                 }
             };
 
@@ -2834,34 +2815,25 @@
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::InvalidResolveTargetSampleCount</span>);
                 }
 
-                <span class="kw">let</span> <span class="ident">boundary_usage</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">resolve_view</span>.<span class="ident">source</span> {
+                <span class="kw">match</span> <span class="ident">resolve_view</span>.<span class="ident">source</span> {
                     <span class="ident">TextureViewSource::Native</span>(<span class="kw-2">ref</span> <span class="ident">source_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                        <span class="kw">let</span> <span class="ident">previous_use</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
-                            .<span class="ident">trackers</span>
-                            .<span class="ident">textures</span>
-                            .<span class="ident">query</span>(<span class="ident">source_id</span>.<span class="ident">value</span>, <span class="ident">resolve_view</span>.<span class="ident">selector</span>.<span class="ident">clone</span>());
-                        <span class="kw">let</span> <span class="ident">new_use</span> <span class="op">=</span> <span class="ident">hal::TextureUses::COLOR_TARGET</span>;
                         <span class="ident">render_attachments</span>.<span class="ident">push</span>(<span class="ident">RenderAttachment</span> {
                             <span class="ident">texture_id</span>: <span class="ident">source_id</span>,
                             <span class="ident">selector</span>: <span class="kw-2">&amp;</span><span class="ident">resolve_view</span>.<span class="ident">selector</span>,
-                            <span class="ident">previous_use</span>,
-                            <span class="ident">new_use</span>,
+                            <span class="ident">usage</span>: <span class="ident">hal::TextureUses::COLOR_TARGET</span>,
                         });
-
-                        <span class="kw">let</span> <span class="ident">old_use</span> <span class="op">=</span> <span class="ident">previous_use</span>.<span class="ident">unwrap_or</span>(<span class="ident">new_use</span>);
-                        <span class="ident">old_use</span>..<span class="ident">new_use</span>
                     }
                     <span class="ident">TextureViewSource::SwapChain</span>(<span class="kw-2">ref</span> <span class="ident">source_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="comment">//HACK: guess the start usage</span>
+                        <span class="kw">let</span> <span class="ident">start_usage</span> <span class="op">=</span> <span class="ident">hal::TextureUses::UNINITIALIZED</span>;
                         <span class="macro">assert!</span>(<span class="ident">used_swap_chain</span>.<span class="ident">is_none</span>());
-                        <span class="ident">used_swap_chain</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">source_id</span>.<span class="ident">clone</span>());
-                        <span class="ident">hal::TextureUses::UNINITIALIZED</span>..<span class="ident">hal::TextureUses::empty</span>()
+                        <span class="ident">used_swap_chain</span> <span class="op">=</span> <span class="prelude-val">Some</span>((<span class="ident">source_id</span>.<span class="ident">clone</span>(), <span class="ident">start_usage</span>));
                     }
                 };
 
                 <span class="ident">hal_resolve_target</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">hal::Attachment</span> {
                     <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">resolve_view</span>.<span class="ident">raw</span>,
                     <span class="ident">usage</span>: <span class="ident">hal::TextureUses::COLOR_TARGET</span>,
-                    <span class="ident">boundary_usage</span>,
                 });
             }
 
@@ -2869,7 +2841,6 @@
                 <span class="ident">target</span>: <span class="ident">hal::Attachment</span> {
                     <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">color_view</span>.<span class="ident">raw</span>,
                     <span class="ident">usage</span>: <span class="ident">hal::TextureUses::COLOR_TARGET</span>,
-                    <span class="ident">boundary_usage</span>,
                 },
                 <span class="ident">resolve_target</span>: <span class="ident">hal_resolve_target</span>,
                 <span class="ident">ops</span>: <span class="ident">at</span>.<span class="ident">channel</span>.<span class="ident">hal_ops</span>(),
@@ -2879,6 +2850,21 @@
 
         <span class="kw">if</span> <span class="ident">sample_count</span> <span class="op">!</span><span class="op">=</span> <span class="number">1</span> <span class="op">&amp;&amp;</span> <span class="ident">sample_count</span> <span class="op">!</span><span class="op">=</span> <span class="number">4</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::InvalidSampleCount</span>(<span class="ident">sample_count</span>));
+        }
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="kw-2">ref</span> <span class="ident">sc_id</span>, <span class="ident">start_usage</span>)) <span class="op">=</span> <span class="ident">used_swap_chain</span> {
+            <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="ident">suf_texture</span>) <span class="op">=</span> <span class="ident">swap_chain_guard</span>[<span class="ident">sc_id</span>.<span class="ident">value</span>]
+                .<span class="ident">acquired_texture</span>
+                .<span class="ident">as_ref</span>()
+                .<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">barrier</span> <span class="op">=</span> <span class="ident">hal::TextureBarrier</span> {
+                <span class="ident">texture</span>: <span class="ident">std::borrow::Borrow::borrow</span>(<span class="ident">suf_texture</span>),
+                <span class="ident">usage</span>: <span class="ident">start_usage</span>..<span class="ident">hal::TextureUses::COLOR_TARGET</span>,
+                <span class="ident">range</span>: <span class="ident">wgt::ImageSubresourceRange::default</span>(),
+            };
+            <span class="kw">unsafe</span> {
+                <span class="ident">cmd_buf</span>.<span class="ident">encoder</span>.<span class="ident">raw</span>.<span class="ident">transition_textures</span>(<span class="ident">iter::once</span>(<span class="ident">barrier</span>));
+            }
         }
 
         <span class="kw">let</span> <span class="ident">view_data</span> <span class="op">=</span> <span class="ident">AttachmentData</span> {
@@ -2914,7 +2900,7 @@
             <span class="ident">context</span>,
             <span class="ident">trackers</span>: <span class="ident">StatefulTrackerSubset::new</span>(<span class="ident">A::VARIANT</span>),
             <span class="ident">render_attachments</span>,
-            <span class="ident">used_swap_chain</span>,
+            <span class="ident">used_swap_chain</span>: <span class="ident">used_swap_chain</span>.<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">sc_id</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">sc_id</span>),
             <span class="ident">is_ds_read_only</span>,
             <span class="ident">extent</span>,
             <span class="ident">_phantom</span>: <span class="ident">PhantomData</span>,
@@ -2925,9 +2911,28 @@
         <span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">raw</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">A::CommandEncoder</span>,
         <span class="ident">texture_guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">Texture</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::TextureId</span><span class="op">&gt;</span>,
+        <span class="ident">swap_chain_guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">SwapChain</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::SwapChainId</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">StatefulTrackerSubset</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::SwapChainId</span><span class="op">&gt;</span><span class="op">&gt;</span>), <span class="ident">RenderPassErrorInner</span><span class="op">&gt;</span>
     {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;finish&quot;</span>, <span class="string">&quot;RenderPassInfo&quot;</span>);
+        <span class="kw">unsafe</span> {
+            <span class="ident">raw</span>.<span class="ident">end_render_pass</span>();
+        }
+
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">sc_id</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">used_swap_chain</span> {
+            <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="ident">suf_texture</span>) <span class="op">=</span> <span class="ident">swap_chain_guard</span>[<span class="ident">sc_id</span>.<span class="ident">value</span>]
+                .<span class="ident">acquired_texture</span>
+                .<span class="ident">as_ref</span>()
+                .<span class="ident">unwrap</span>();
+            <span class="kw">let</span> <span class="ident">barrier</span> <span class="op">=</span> <span class="ident">hal::TextureBarrier</span> {
+                <span class="ident">texture</span>: <span class="ident">std::borrow::Borrow::borrow</span>(<span class="ident">suf_texture</span>),
+                <span class="ident">usage</span>: <span class="ident">hal::TextureUses::COLOR_TARGET</span>..<span class="ident">hal::TextureUses::empty</span>(),
+                <span class="ident">range</span>: <span class="ident">wgt::ImageSubresourceRange::default</span>(),
+            };
+            <span class="kw">unsafe</span> {
+                <span class="ident">raw</span>.<span class="ident">transition_textures</span>(<span class="ident">iter::once</span>(<span class="ident">barrier</span>));
+            }
+        }
 
         <span class="kw">for</span> <span class="ident">ra</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">render_attachments</span> {
             <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">texture_guard</span>[<span class="ident">ra</span>.<span class="ident">texture_id</span>.<span class="ident">value</span>];
@@ -2940,29 +2945,11 @@
                     <span class="ident">ra</span>.<span class="ident">texture_id</span>.<span class="ident">value</span>,
                     <span class="kw-2">&amp;</span><span class="ident">ra</span>.<span class="ident">texture_id</span>.<span class="ident">ref_count</span>,
                     <span class="ident">ra</span>.<span class="ident">selector</span>.<span class="ident">clone</span>(),
-                    <span class="ident">ra</span>.<span class="ident">new_use</span>,
+                    <span class="ident">ra</span>.<span class="ident">usage</span>,
                 )
                 .<span class="ident">map_err</span>(<span class="ident">UsageConflict::from</span>)<span class="question-mark">?</span>;
-
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">usage</span>) <span class="op">=</span> <span class="ident">ra</span>.<span class="ident">previous_use</span> {
-                <span class="comment">// Make the attachment tracks to be aware of the internal</span>
-                <span class="comment">// transition done by the render pass, by registering the</span>
-                <span class="comment">// previous usage as the initial state.</span>
-                <span class="self">self</span>.<span class="ident">trackers</span>
-                    .<span class="ident">textures</span>
-                    .<span class="ident">prepend</span>(
-                        <span class="ident">ra</span>.<span class="ident">texture_id</span>.<span class="ident">value</span>,
-                        <span class="kw-2">&amp;</span><span class="ident">ra</span>.<span class="ident">texture_id</span>.<span class="ident">ref_count</span>,
-                        <span class="ident">ra</span>.<span class="ident">selector</span>.<span class="ident">clone</span>(),
-                        <span class="ident">usage</span>,
-                    )
-                    .<span class="ident">unwrap</span>();
-            }
         }
 
-        <span class="kw">unsafe</span> {
-            <span class="ident">raw</span>.<span class="ident">end_render_pass</span>();
-        }
         <span class="prelude-val">Ok</span>((<span class="self">self</span>.<span class="ident">trackers</span>, <span class="self">self</span>.<span class="ident">used_swap_chain</span>))
     }
 }
@@ -3000,7 +2987,7 @@
         <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
 
         <span class="kw">let</span> (<span class="ident">pass_raw</span>, <span class="ident">trackers</span>, <span class="ident">query_reset_state</span>) <span class="op">=</span> {
-            <span class="comment">// read-only lock guard</span>
+            <span class="kw">let</span> (<span class="ident">swap_chain_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">swap_chains</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
             <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">cmb_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">command_buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
 
             <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span>
@@ -3044,6 +3031,7 @@
                 <span class="ident">depth_stencil_attachment</span>,
                 <span class="ident">cmd_buf</span>,
                 <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">view_guard</span>,
+                <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">swap_chain_guard</span>,
             )
             .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
@@ -3364,8 +3352,14 @@
                     }
                     <span class="ident">RenderCommand::SetBlendConstant</span>(<span class="kw-2">ref</span> <span class="ident">color</span>) <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="ident">state</span>.<span class="ident">blend_constant</span> <span class="op">=</span> <span class="ident">OptionalState::Set</span>;
+                        <span class="kw">let</span> <span class="ident">array</span> <span class="op">=</span> [
+                            <span class="ident">color</span>.<span class="ident">r</span> <span class="kw">as</span> <span class="ident">f32</span>,
+                            <span class="ident">color</span>.<span class="ident">g</span> <span class="kw">as</span> <span class="ident">f32</span>,
+                            <span class="ident">color</span>.<span class="ident">b</span> <span class="kw">as</span> <span class="ident">f32</span>,
+                            <span class="ident">color</span>.<span class="ident">a</span> <span class="kw">as</span> <span class="ident">f32</span>,
+                        ];
                         <span class="kw">unsafe</span> {
-                            <span class="ident">raw</span>.<span class="ident">set_blend_constants</span>(<span class="ident">color</span>);
+                            <span class="ident">raw</span>.<span class="ident">set_blend_constants</span>(<span class="kw-2">&amp;</span><span class="ident">array</span>);
                         }
                     }
                     <span class="ident">RenderCommand::SetStencilReference</span>(<span class="ident">value</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -3896,8 +3890,10 @@
             }
 
             <span class="macro">log::trace!</span>(<span class="string">&quot;Merging {:?} with the render pass&quot;</span>, <span class="ident">encoder_id</span>);
-            <span class="kw">let</span> (<span class="ident">trackers</span>, <span class="ident">used_swapchain</span>) <span class="op">=</span>
-                <span class="ident">info</span>.<span class="ident">finish</span>(<span class="ident">raw</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> (<span class="ident">trackers</span>, <span class="ident">used_swapchain</span>) <span class="op">=</span> <span class="ident">info</span>
+                .<span class="ident">finish</span>(<span class="ident">raw</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">swap_chain_guard</span>)
+                .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
+
             <span class="kw">let</span> <span class="ident">raw_cmd_buf</span> <span class="op">=</span> <span class="kw">unsafe</span> {
                 <span class="ident">raw</span>.<span class="ident">end_encoding</span>()
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">RenderPassErrorInner::OutOfMemory</span>)

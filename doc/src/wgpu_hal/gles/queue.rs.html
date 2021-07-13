@@ -917,29 +917,6 @@
 <span id="917">917</span>
 <span id="918">918</span>
 <span id="919">919</span>
-<span id="920">920</span>
-<span id="921">921</span>
-<span id="922">922</span>
-<span id="923">923</span>
-<span id="924">924</span>
-<span id="925">925</span>
-<span id="926">926</span>
-<span id="927">927</span>
-<span id="928">928</span>
-<span id="929">929</span>
-<span id="930">930</span>
-<span id="931">931</span>
-<span id="932">932</span>
-<span id="933">933</span>
-<span id="934">934</span>
-<span id="935">935</span>
-<span id="936">936</span>
-<span id="937">937</span>
-<span id="938">938</span>
-<span id="939">939</span>
-<span id="940">940</span>
-<span id="941">941</span>
-<span id="942">942</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::Command</span> <span class="kw">as</span> <span class="ident">C</span>;
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
@@ -1144,52 +1121,51 @@
                 <span class="kw-2">ref</span> <span class="ident">copy</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">//TODO: cubemaps</span>
-                <span class="comment">//TODO: how is depth handled?</span>
+                <span class="comment">//TODO: handle 3D copies</span>
                 <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::READ_FRAMEBUFFER</span>, <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">copy_fbo</span>));
-                <span class="kw">for</span> <span class="ident">layer</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="kw">as</span> <span class="ident">i32</span> {
-                    <span class="kw">if</span> <span class="ident">is_3d_target</span>(<span class="ident">src_target</span>) {
-                        <span class="comment">//TODO: handle GLES without framebuffer_texture_3d</span>
-                        <span class="ident">gl</span>.<span class="ident">framebuffer_texture_layer</span>(
-                            <span class="ident">glow::READ_FRAMEBUFFER</span>,
-                            <span class="ident">glow::COLOR_ATTACHMENT0</span>,
-                            <span class="prelude-val">Some</span>(<span class="ident">src</span>),
-                            <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">i32</span> <span class="op">+</span> <span class="ident">layer</span>,
-                        );
-                    } <span class="kw">else</span> {
-                        <span class="ident">gl</span>.<span class="ident">framebuffer_texture_2d</span>(
-                            <span class="ident">glow::READ_FRAMEBUFFER</span>,
-                            <span class="ident">glow::COLOR_ATTACHMENT0</span>,
-                            <span class="ident">src_target</span>,
-                            <span class="prelude-val">Some</span>(<span class="ident">src</span>),
-                            <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                        );
-                    }
-                    <span class="ident">gl</span>.<span class="ident">bind_texture</span>(<span class="ident">dst_target</span>, <span class="prelude-val">Some</span>(<span class="ident">dst</span>));
-                    <span class="kw">if</span> <span class="ident">is_3d_target</span>(<span class="ident">dst_target</span>) {
-                        <span class="ident">gl</span>.<span class="ident">copy_tex_sub_image_3d</span>(
-                            <span class="ident">dst_target</span>,
-                            <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">i32</span> <span class="op">+</span> <span class="ident">layer</span>,
-                            <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                        );
-                    } <span class="kw">else</span> {
-                        <span class="ident">gl</span>.<span class="ident">copy_tex_sub_image_2d</span>(
-                            <span class="ident">dst_target</span>,
-                            <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                        );
-                    }
+                <span class="kw">if</span> <span class="ident">is_3d_target</span>(<span class="ident">src_target</span>) {
+                    <span class="comment">//TODO: handle GLES without framebuffer_texture_3d</span>
+                    <span class="ident">gl</span>.<span class="ident">framebuffer_texture_layer</span>(
+                        <span class="ident">glow::READ_FRAMEBUFFER</span>,
+                        <span class="ident">glow::COLOR_ATTACHMENT0</span>,
+                        <span class="prelude-val">Some</span>(<span class="ident">src</span>),
+                        <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">array_layer</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    );
+                } <span class="kw">else</span> {
+                    <span class="ident">gl</span>.<span class="ident">framebuffer_texture_2d</span>(
+                        <span class="ident">glow::READ_FRAMEBUFFER</span>,
+                        <span class="ident">glow::COLOR_ATTACHMENT0</span>,
+                        <span class="ident">src_target</span>,
+                        <span class="prelude-val">Some</span>(<span class="ident">src</span>),
+                        <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    );
+                }
+
+                <span class="ident">gl</span>.<span class="ident">bind_texture</span>(<span class="ident">dst_target</span>, <span class="prelude-val">Some</span>(<span class="ident">dst</span>));
+                <span class="kw">if</span> <span class="ident">is_3d_target</span>(<span class="ident">dst_target</span>) {
+                    <span class="ident">gl</span>.<span class="ident">copy_tex_sub_image_3d</span>(
+                        <span class="ident">dst_target</span>,
+                        <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    );
+                } <span class="kw">else</span> {
+                    <span class="ident">gl</span>.<span class="ident">copy_tex_sub_image_2d</span>(
+                        <span class="ident">dst_target</span>,
+                        <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    );
                 }
             }
             <span class="ident">C::CopyBufferToTexture</span> {
@@ -1229,7 +1205,7 @@
                                 <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">i32</span>,
                                 <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
                                 <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                                <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                                <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">depth</span> <span class="kw">as</span> <span class="ident">i32</span>,
                                 <span class="ident">format_desc</span>.<span class="ident">external</span>,
                                 <span class="ident">format_desc</span>.<span class="ident">data_type</span>,
                                 <span class="ident">unpack_data</span>,
@@ -1249,26 +1225,18 @@
                             );
                         }
                         <span class="ident">glow::TEXTURE_CUBE_MAP</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u32</span>;
-                            <span class="kw">for</span> <span class="ident">face_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> {
-                                <span class="ident">gl</span>.<span class="ident">tex_sub_image_2d</span>(
-                                    <span class="ident">CUBEMAP_FACES</span>
-                                        [(<span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="op">+</span> <span class="ident">face_index</span>) <span class="kw">as</span> <span class="ident">usize</span>],
-                                    <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                                    <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                                    <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                                    <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                                    <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                                    <span class="ident">format_desc</span>.<span class="ident">external</span>,
-                                    <span class="ident">format_desc</span>.<span class="ident">data_type</span>,
-                                    <span class="ident">glow::PixelUnpackData::BufferOffset</span>(<span class="ident">offset</span>),
-                                );
-                                <span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">copy</span>
-                                    .<span class="ident">buffer_layout</span>
-                                    .<span class="ident">rows_per_image</span>
-                                    .<span class="ident">map_or</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">rpi</span><span class="op">|</span> <span class="ident">rpi</span>.<span class="ident">get</span>())
-                                    <span class="op">*</span> <span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">bytes_per_row</span>.<span class="ident">map_or</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">bpr</span><span class="op">|</span> <span class="ident">bpr</span>.<span class="ident">get</span>());
-                            }
+                            <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u32</span>;
+                            <span class="ident">gl</span>.<span class="ident">tex_sub_image_2d</span>(
+                                <span class="ident">CUBEMAP_FACES</span>[<span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">array_layer</span> <span class="kw">as</span> <span class="ident">usize</span>],
+                                <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                                <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                                <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                                <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                                <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                                <span class="ident">format_desc</span>.<span class="ident">external</span>,
+                                <span class="ident">format_desc</span>.<span class="ident">data_type</span>,
+                                <span class="ident">glow::PixelUnpackData::BufferOffset</span>(<span class="ident">offset</span>),
+                            );
                         }
                         <span class="ident">glow::TEXTURE_CUBE_MAP_ARRAY</span> <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="comment">//Note: not sure if this is correct!</span>
@@ -1280,7 +1248,7 @@
                                 <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">i32</span>,
                                 <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
                                 <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                                <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                                <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">depth</span> <span class="kw">as</span> <span class="ident">i32</span>,
                                 <span class="ident">format_desc</span>.<span class="ident">external</span>,
                                 <span class="ident">format_desc</span>.<span class="ident">data_type</span>,
                                 <span class="ident">unpack_data</span>,
@@ -1292,10 +1260,9 @@
                     <span class="kw">let</span> <span class="ident">bytes_per_image</span> <span class="op">=</span>
                         <span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">rows_per_image</span>.<span class="ident">map_or</span>(<span class="number">1</span>, <span class="op">|</span><span class="ident">rpi</span><span class="op">|</span> <span class="ident">rpi</span>.<span class="ident">get</span>())
                             <span class="op">*</span> <span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">bytes_per_row</span>.<span class="ident">map_or</span>(<span class="number">1</span>, <span class="op">|</span><span class="ident">bpr</span><span class="op">|</span> <span class="ident">bpr</span>.<span class="ident">get</span>());
-                    <span class="kw">let</span> <span class="ident">offset_end</span> <span class="op">=</span> <span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u32</span>
-                        <span class="op">+</span> <span class="ident">bytes_per_image</span> <span class="op">*</span> <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span>;
+                    <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u32</span>;
                     <span class="kw">let</span> <span class="ident">unpack_data</span> <span class="op">=</span> <span class="ident">glow::CompressedPixelUnpackData::BufferRange</span>(
-                        <span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u32</span>..<span class="ident">offset_end</span>,
+                        <span class="ident">offset</span>..<span class="ident">offset</span> <span class="op">+</span> <span class="ident">bytes_per_image</span>,
                     );
                     <span class="kw">match</span> <span class="ident">dst_target</span> {
                         <span class="ident">glow::TEXTURE_3D</span> <span class="op">|</span> <span class="ident">glow::TEXTURE_2D_ARRAY</span> <span class="op">=</span><span class="op">&gt;</span> {
@@ -1307,7 +1274,7 @@
                                 <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">i32</span>,
                                 <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
                                 <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                                <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                                <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">depth</span> <span class="kw">as</span> <span class="ident">i32</span>,
                                 <span class="ident">format_desc</span>.<span class="ident">internal</span>,
                                 <span class="ident">unpack_data</span>,
                             );
@@ -1325,23 +1292,18 @@
                             );
                         }
                         <span class="ident">glow::TEXTURE_CUBE_MAP</span> <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u32</span>;
-                            <span class="kw">for</span> <span class="ident">face_index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> {
-                                <span class="ident">gl</span>.<span class="ident">compressed_tex_sub_image_2d</span>(
-                                    <span class="ident">CUBEMAP_FACES</span>
-                                        [(<span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="op">+</span> <span class="ident">face_index</span>) <span class="kw">as</span> <span class="ident">usize</span>],
-                                    <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                                    <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                                    <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                                    <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                                    <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                                    <span class="ident">format_desc</span>.<span class="ident">internal</span>,
-                                    <span class="ident">glow::CompressedPixelUnpackData::BufferRange</span>(
-                                        <span class="ident">offset</span>..<span class="ident">offset</span> <span class="op">+</span> <span class="ident">bytes_per_image</span>,
-                                    ),
-                                );
-                                <span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">bytes_per_image</span>;
-                            }
+                            <span class="ident">gl</span>.<span class="ident">compressed_tex_sub_image_2d</span>(
+                                <span class="ident">CUBEMAP_FACES</span>[<span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">array_layer</span> <span class="kw">as</span> <span class="ident">usize</span>],
+                                <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                                <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                                <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                                <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                                <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                                <span class="ident">format_desc</span>.<span class="ident">internal</span>,
+                                <span class="ident">glow::CompressedPixelUnpackData::BufferRange</span>(
+                                    <span class="ident">offset</span>..<span class="ident">offset</span> <span class="op">+</span> <span class="ident">bytes_per_image</span>,
+                                ),
+                            );
                         }
                         <span class="ident">glow::TEXTURE_CUBE_MAP_ARRAY</span> <span class="op">=</span><span class="op">&gt;</span> {
                             <span class="comment">//Note: not sure if this is correct!</span>
@@ -1353,7 +1315,7 @@
                                 <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">i32</span>,
                                 <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
                                 <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                                <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                                <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">depth</span> <span class="kw">as</span> <span class="ident">i32</span>,
                                 <span class="ident">format_desc</span>.<span class="ident">internal</span>,
                                 <span class="ident">unpack_data</span>,
                             );
@@ -1388,45 +1350,37 @@
                     .<span class="ident">map_or</span>(<span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span>, <span class="op">|</span><span class="ident">bpr</span><span class="op">|</span> {
                         <span class="ident">bpr</span>.<span class="ident">get</span>() <span class="op">/</span> <span class="ident">format_info</span>.<span class="ident">block_size</span> <span class="kw">as</span> <span class="ident">u32</span>
                     });
-                <span class="kw">let</span> <span class="ident">column_texels</span> <span class="op">=</span> <span class="ident">copy</span>
-                    .<span class="ident">buffer_layout</span>
-                    .<span class="ident">rows_per_image</span>
-                    .<span class="ident">map_or</span>(<span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span>, <span class="op">|</span><span class="ident">rpi</span><span class="op">|</span> <span class="ident">rpi</span>.<span class="ident">get</span>());
                 <span class="ident">gl</span>.<span class="ident">pixel_store_i32</span>(<span class="ident">glow::PACK_ROW_LENGTH</span>, <span class="ident">row_texels</span> <span class="kw">as</span> <span class="ident">i32</span>);
                 <span class="ident">gl</span>.<span class="ident">bind_buffer</span>(<span class="ident">glow::PIXEL_PACK_BUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">dst</span>));
 
                 <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::READ_FRAMEBUFFER</span>, <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">copy_fbo</span>));
-                <span class="kw">for</span> <span class="ident">layer</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> {
-                    <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u32</span>
-                        <span class="op">+</span> <span class="ident">layer</span> <span class="op">*</span> <span class="ident">column_texels</span> <span class="op">*</span> <span class="ident">row_texels</span> <span class="op">*</span> <span class="ident">format_info</span>.<span class="ident">block_size</span> <span class="kw">as</span> <span class="ident">u32</span>;
-                    <span class="kw">if</span> <span class="ident">is_3d_target</span>(<span class="ident">src_target</span>) {
-                        <span class="comment">//TODO: handle GLES without framebuffer_texture_3d</span>
-                        <span class="ident">gl</span>.<span class="ident">framebuffer_texture_layer</span>(
-                            <span class="ident">glow::READ_FRAMEBUFFER</span>,
-                            <span class="ident">glow::COLOR_ATTACHMENT0</span>,
-                            <span class="prelude-val">Some</span>(<span class="ident">src</span>),
-                            <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">i32</span> <span class="op">+</span> <span class="ident">layer</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                        );
-                    } <span class="kw">else</span> {
-                        <span class="ident">gl</span>.<span class="ident">framebuffer_texture_2d</span>(
-                            <span class="ident">glow::READ_FRAMEBUFFER</span>,
-                            <span class="ident">glow::COLOR_ATTACHMENT0</span>,
-                            <span class="ident">src_target</span>,
-                            <span class="prelude-val">Some</span>(<span class="ident">src</span>),
-                            <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                        );
-                    }
-                    <span class="ident">gl</span>.<span class="ident">read_pixels</span>(
-                        <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                        <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                        <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                        <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                        <span class="ident">format_desc</span>.<span class="ident">external</span>,
-                        <span class="ident">format_desc</span>.<span class="ident">data_type</span>,
-                        <span class="ident">glow::PixelPackData::BufferOffset</span>(<span class="ident">offset</span>),
+                <span class="kw">if</span> <span class="ident">is_3d_target</span>(<span class="ident">src_target</span>) {
+                    <span class="comment">//TODO: handle GLES without framebuffer_texture_3d</span>
+                    <span class="ident">gl</span>.<span class="ident">framebuffer_texture_layer</span>(
+                        <span class="ident">glow::READ_FRAMEBUFFER</span>,
+                        <span class="ident">glow::COLOR_ATTACHMENT0</span>,
+                        <span class="prelude-val">Some</span>(<span class="ident">src</span>),
+                        <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">array_layer</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    );
+                } <span class="kw">else</span> {
+                    <span class="ident">gl</span>.<span class="ident">framebuffer_texture_2d</span>(
+                        <span class="ident">glow::READ_FRAMEBUFFER</span>,
+                        <span class="ident">glow::COLOR_ATTACHMENT0</span>,
+                        <span class="ident">src_target</span>,
+                        <span class="prelude-val">Some</span>(<span class="ident">src</span>),
+                        <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
                     );
                 }
+                <span class="ident">gl</span>.<span class="ident">read_pixels</span>(
+                    <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    <span class="ident">format_desc</span>.<span class="ident">external</span>,
+                    <span class="ident">format_desc</span>.<span class="ident">data_type</span>,
+                    <span class="ident">glow::PixelPackData::BufferOffset</span>(<span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u32</span>),
+                );
             }
             <span class="ident">C::SetIndexBuffer</span>(<span class="ident">buffer</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">gl</span>.<span class="ident">bind_buffer</span>(<span class="ident">glow::ELEMENT_ARRAY_BUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">buffer</span>));

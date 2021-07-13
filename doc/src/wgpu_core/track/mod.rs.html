@@ -635,37 +635,6 @@
 <span id="635">635</span>
 <span id="636">636</span>
 <span id="637">637</span>
-<span id="638">638</span>
-<span id="639">639</span>
-<span id="640">640</span>
-<span id="641">641</span>
-<span id="642">642</span>
-<span id="643">643</span>
-<span id="644">644</span>
-<span id="645">645</span>
-<span id="646">646</span>
-<span id="647">647</span>
-<span id="648">648</span>
-<span id="649">649</span>
-<span id="650">650</span>
-<span id="651">651</span>
-<span id="652">652</span>
-<span id="653">653</span>
-<span id="654">654</span>
-<span id="655">655</span>
-<span id="656">656</span>
-<span id="657">657</span>
-<span id="658">658</span>
-<span id="659">659</span>
-<span id="660">660</span>
-<span id="661">661</span>
-<span id="662">662</span>
-<span id="663">663</span>
-<span id="664">664</span>
-<span id="665">665</span>
-<span id="666">666</span>
-<span id="667">667</span>
-<span id="668">668</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">buffer</span>;
 <span class="kw">mod</span> <span class="ident">range</span>;
@@ -743,14 +712,6 @@
         <span class="ident">selector</span>: <span class="self">Self</span><span class="ident">::Selector</span>,
         <span class="ident">usage</span>: <span class="self">Self</span><span class="ident">::Usage</span>,
         <span class="ident">output</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>;
-
-    <span class="doccomment">/// Sets up the first usage of the selected sub-resources.</span>
-    <span class="kw">fn</span> <span class="ident">prepend</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Id</span><span class="op">&gt;</span>,
-        <span class="ident">selector</span>: <span class="self">Self</span><span class="ident">::Selector</span>,
-        <span class="ident">usage</span>: <span class="self">Self</span><span class="ident">::Usage</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
     <span class="doccomment">/// Merge the state of this resource tracked by a different instance</span>
@@ -978,6 +939,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns `Some(Usage)` only if this usage is consistent</span>
     <span class="doccomment">/// across the given selector.</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span> <span class="comment">// TODO: figure out if this needs to be removed</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span>, <span class="ident">selector</span>: <span class="ident">S::Selector</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">S::Usage</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">backend</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="number">0</span>.<span class="ident">unzip</span>();
         <span class="macro">debug_assert_eq!</span>(<span class="ident">backend</span>, <span class="self">self</span>.<span class="ident">backend</span>);
@@ -1064,21 +1026,6 @@
             .<span class="ident">change</span>(<span class="ident">id</span>, <span class="ident">selector</span>, <span class="ident">usage</span>, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">temp</span>))
             .<span class="ident">ok</span>();
         <span class="self">self</span>.<span class="ident">temp</span>.<span class="ident">drain</span>(..)
-    }
-
-    <span class="doccomment">/// Turn the tracking from the &quot;expand&quot; mode into the &quot;replace&quot; one,</span>
-    <span class="doccomment">/// installing the selected usage as the &quot;first&quot;.</span>
-    <span class="doccomment">/// This is a special operation only used by the render pass attachments.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">prepend</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span>,
-        <span class="ident">ref_count</span>: <span class="kw-2">&amp;</span><span class="ident">RefCount</span>,
-        <span class="ident">selector</span>: <span class="ident">S::Selector</span>,
-        <span class="ident">usage</span>: <span class="ident">S::Usage</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">Self</span><span class="ident">::get_or_insert</span>(<span class="self">self</span>.<span class="ident">backend</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>, <span class="ident">id</span>, <span class="ident">ref_count</span>)
-            .<span class="ident">state</span>
-            .<span class="ident">prepend</span>(<span class="ident">id</span>, <span class="ident">selector</span>, <span class="ident">usage</span>)
     }
 
     <span class="doccomment">/// Merge another tracker into `self` by extending the current states</span>
@@ -1193,15 +1140,6 @@
         <span class="ident">_selector</span>: <span class="self">Self</span><span class="ident">::Selector</span>,
         <span class="ident">_usage</span>: <span class="self">Self</span><span class="ident">::Usage</span>,
         <span class="ident">_output</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(())
-    }
-
-    <span class="kw">fn</span> <span class="ident">prepend</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">_id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span><span class="ident">::Id</span><span class="op">&gt;</span>,
-        <span class="ident">_selector</span>: <span class="self">Self</span><span class="ident">::Selector</span>,
-        <span class="ident">_usage</span>: <span class="self">Self</span><span class="ident">::Usage</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">PendingTransition</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="prelude-val">Ok</span>(())
     }
