@@ -765,8 +765,6 @@
 <span id="765">765</span>
 <span id="766">766</span>
 <span id="767">767</span>
-<span id="768">768</span>
-<span id="769">769</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">device</span>::{<span class="ident">Device</span>, <span class="ident">DeviceDescriptor</span>},
@@ -982,36 +980,34 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">wgt::TextureFormatFeatures</span> {
-        <span class="kw">let</span> <span class="ident">caps</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">adapter</span>.<span class="ident">texture_format_capabilities</span>(<span class="ident">format</span>) };
+        <span class="kw">use</span> <span class="ident">hal::TextureFormatCapabilities</span> <span class="kw">as</span> <span class="ident">Tfc</span>;
 
+        <span class="kw">let</span> <span class="ident">caps</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">adapter</span>.<span class="ident">texture_format_capabilities</span>(<span class="ident">format</span>) };
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">allowed_usages</span> <span class="op">=</span> <span class="ident">format</span>.<span class="ident">describe</span>().<span class="ident">guaranteed_format_features</span>.<span class="ident">allowed_usages</span>;
-        <span class="ident">allowed_usages</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::TextureUsages::SAMPLED</span>,
-            <span class="ident">caps</span>.<span class="ident">contains</span>(<span class="ident">hal::TextureFormatCapabilities::SAMPLED</span>),
-        );
-        <span class="ident">allowed_usages</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::TextureUsages::STORAGE</span>,
-            <span class="ident">caps</span>.<span class="ident">contains</span>(<span class="ident">hal::TextureFormatCapabilities::STORAGE</span>),
-        );
+
+        <span class="ident">allowed_usages</span>.<span class="ident">set</span>(<span class="ident">wgt::TextureUsages::SAMPLED</span>, <span class="ident">caps</span>.<span class="ident">contains</span>(<span class="ident">Tfc::SAMPLED</span>));
+        <span class="ident">allowed_usages</span>.<span class="ident">set</span>(<span class="ident">wgt::TextureUsages::STORAGE</span>, <span class="ident">caps</span>.<span class="ident">contains</span>(<span class="ident">Tfc::STORAGE</span>));
         <span class="ident">allowed_usages</span>.<span class="ident">set</span>(
             <span class="ident">wgt::TextureUsages::RENDER_ATTACHMENT</span>,
-            <span class="ident">caps</span>.<span class="ident">intersects</span>(
-                <span class="ident">hal::TextureFormatCapabilities::COLOR_ATTACHMENT</span>
-                    <span class="op">|</span> <span class="ident">hal::TextureFormatCapabilities::DEPTH_STENCIL_ATTACHMENT</span>,
-            ),
+            <span class="ident">caps</span>.<span class="ident">intersects</span>(<span class="ident">Tfc::COLOR_ATTACHMENT</span> <span class="op">|</span> <span class="ident">Tfc::DEPTH_STENCIL_ATTACHMENT</span>),
         );
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">wgt::TextureFormatFeatureFlags::empty</span>();
         <span class="ident">flags</span>.<span class="ident">set</span>(
             <span class="ident">wgt::TextureFormatFeatureFlags::STORAGE_ATOMICS</span>,
-            <span class="ident">caps</span>.<span class="ident">contains</span>(<span class="ident">hal::TextureFormatCapabilities::STORAGE_ATOMIC</span>),
+            <span class="ident">caps</span>.<span class="ident">contains</span>(<span class="ident">Tfc::STORAGE_ATOMIC</span>),
         );
         <span class="ident">flags</span>.<span class="ident">set</span>(
             <span class="ident">wgt::TextureFormatFeatureFlags::STORAGE_READ_WRITE</span>,
-            <span class="ident">caps</span>.<span class="ident">contains</span>(<span class="ident">hal::TextureFormatCapabilities::STORAGE_READ_WRITE</span>),
+            <span class="ident">caps</span>.<span class="ident">contains</span>(<span class="ident">Tfc::STORAGE_READ_WRITE</span>),
         );
 
-        <span class="kw">let</span> <span class="ident">filterable</span> <span class="op">=</span> <span class="ident">caps</span>.<span class="ident">contains</span>(<span class="ident">hal::TextureFormatCapabilities::SAMPLED_LINEAR</span>);
+        <span class="comment">// We are currently taking the filtering and blending together,</span>
+        <span class="comment">// but we may reconsider this in the future if there are formats</span>
+        <span class="comment">// in the wild for which these two capabilities do not match.</span>
+        <span class="kw">let</span> <span class="ident">filterable</span> <span class="op">=</span> <span class="ident">caps</span>.<span class="ident">contains</span>(<span class="ident">Tfc::SAMPLED_LINEAR</span>)
+            <span class="op">&amp;&amp;</span> (<span class="op">!</span><span class="ident">caps</span>.<span class="ident">contains</span>(<span class="ident">Tfc::COLOR_ATTACHMENT</span>)
+                <span class="op">|</span><span class="op">|</span> <span class="ident">caps</span>.<span class="ident">contains</span>(<span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>));
 
         <span class="ident">wgt::TextureFormatFeatures</span> {
             <span class="ident">allowed_usages</span>,
