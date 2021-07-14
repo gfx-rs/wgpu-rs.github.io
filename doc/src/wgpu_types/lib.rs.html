@@ -3228,6 +3228,9 @@
 <span id="3228">3228</span>
 <span id="3229">3229</span>
 <span id="3230">3230</span>
+<span id="3231">3231</span>
+<span id="3232">3232</span>
+<span id="3233">3233</span>
 </pre><pre class="rust">
 <span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
@@ -4444,9 +4447,11 @@
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureFormatFeatureFlags</span>: <span class="ident">u32</span> {
-        <span class="doccomment">/// When used as a STORAGE texture, then a texture with this format can be bound with `StorageTextureAccess::ReadWrite`.</span>
+        <span class="doccomment">/// When used as a STORAGE texture, then a texture with this format can be bound with</span>
+        <span class="doccomment">/// [`StorageTextureAccess::ReadOnly`] or [`StorageTextureAccess::ReadWrite`].</span>
         <span class="kw">const</span> <span class="ident">STORAGE_READ_WRITE</span> <span class="op">=</span> <span class="number">1</span>;
-        <span class="doccomment">/// When used as a STORAGE texture, then a texture with this format can be written to with atomics. TODO: No access flag exposed as of writing</span>
+        <span class="doccomment">/// When used as a STORAGE texture, then a texture with this format can be written to with atomics.</span>
+        <span class="comment">// TODO: No access flag exposed as of writing</span>
         <span class="kw">const</span> <span class="ident">STORAGE_ATOMICS</span> <span class="op">=</span> <span class="number">2</span>;
     }
 }
@@ -6130,13 +6135,6 @@
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">StorageTextureAccess</span> {
-    <span class="doccomment">/// The texture can only be read in the shader and it must be annotated with `readonly`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Example GLSL syntax:</span>
-    <span class="doccomment">/// ```cpp,ignore</span>
-    <span class="doccomment">/// layout(set=0, binding=0, r32f) readonly uniform image2D myStorageImage;</span>
-    <span class="doccomment">/// ```</span>
-    <span class="ident">ReadOnly</span>,
     <span class="doccomment">/// The texture can only be written in the shader and it must be annotated with `writeonly`.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Example GLSL syntax:</span>
@@ -6144,6 +6142,14 @@
     <span class="doccomment">/// layout(set=0, binding=0, r32f) writeonly uniform image2D myStorageImage;</span>
     <span class="doccomment">/// ```</span>
     <span class="ident">WriteOnly</span>,
+    <span class="doccomment">/// The texture can only be read in the shader and it must be annotated with `readonly`.</span>
+    <span class="doccomment">/// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] must be enabled to use this access mode,</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Example GLSL syntax:</span>
+    <span class="doccomment">/// ```cpp,ignore</span>
+    <span class="doccomment">/// layout(set=0, binding=0, r32f) readonly uniform image2D myStorageImage;</span>
+    <span class="doccomment">/// ```</span>
+    <span class="ident">ReadOnly</span>,
     <span class="doccomment">/// The texture can be both read and written in the shader.</span>
     <span class="doccomment">/// [`Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES`] must be enabled to use this access mode.</span>
     <span class="doccomment">///</span>

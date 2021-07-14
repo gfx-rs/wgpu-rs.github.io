@@ -1624,9 +1624,9 @@
         <span class="doccomment">/// Format can be sampled with a min/max reduction sampler.</span>
         <span class="kw">const</span> <span class="ident">SAMPLED_MINMAX</span> <span class="op">=</span> <span class="number">0x4</span>;
 
-        <span class="doccomment">/// Format can be used as storage with exclusive read &amp; write access.</span>
+        <span class="doccomment">/// Format can be used as storage with write-only access.</span>
         <span class="kw">const</span> <span class="ident">STORAGE</span> <span class="op">=</span> <span class="number">0x10</span>;
-        <span class="doccomment">/// Format can be used as storage with simultaneous read/write access.</span>
+        <span class="doccomment">/// Format can be used as storage with read and read/write access.</span>
         <span class="kw">const</span> <span class="ident">STORAGE_READ_WRITE</span> <span class="op">=</span> <span class="number">0x20</span>;
         <span class="doccomment">/// Format can be used as storage with atomics.</span>
         <span class="kw">const</span> <span class="ident">STORAGE_ATOMIC</span> <span class="op">=</span> <span class="number">0x40</span>;
@@ -1700,19 +1700,19 @@
         <span class="kw">const</span> <span class="ident">INDEX</span> <span class="op">=</span> <span class="number">16</span>;
         <span class="kw">const</span> <span class="ident">VERTEX</span> <span class="op">=</span> <span class="number">32</span>;
         <span class="kw">const</span> <span class="ident">UNIFORM</span> <span class="op">=</span> <span class="number">64</span>;
-        <span class="kw">const</span> <span class="ident">STORAGE_LOAD</span> <span class="op">=</span> <span class="number">128</span>;
-        <span class="kw">const</span> <span class="ident">STORAGE_STORE</span> <span class="op">=</span> <span class="number">256</span>;
+        <span class="kw">const</span> <span class="ident">STORAGE_READ</span> <span class="op">=</span> <span class="number">128</span>;
+        <span class="kw">const</span> <span class="ident">STORAGE_WRITE</span> <span class="op">=</span> <span class="number">256</span>;
         <span class="kw">const</span> <span class="ident">INDIRECT</span> <span class="op">=</span> <span class="number">512</span>;
-        <span class="doccomment">/// The combination of all read-only usages.</span>
-        <span class="kw">const</span> <span class="ident">READ_ALL</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::MAP_READ</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::COPY_SRC</span>.<span class="ident">bits</span> <span class="op">|</span>
+        <span class="doccomment">/// The combination of usages that can be used together (read-only).</span>
+        <span class="kw">const</span> <span class="ident">INCLUSIVE</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::MAP_READ</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::COPY_SRC</span>.<span class="ident">bits</span> <span class="op">|</span>
             <span class="self">Self</span><span class="ident">::INDEX</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::VERTEX</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::UNIFORM</span>.<span class="ident">bits</span> <span class="op">|</span>
-            <span class="self">Self</span><span class="ident">::STORAGE_LOAD</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::INDIRECT</span>.<span class="ident">bits</span>;
-        <span class="doccomment">/// The combination of all write-only and read-write usages.</span>
-        <span class="kw">const</span> <span class="ident">WRITE_ALL</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::MAP_WRITE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::COPY_DST</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::STORAGE_STORE</span>.<span class="ident">bits</span>;
+            <span class="self">Self</span><span class="ident">::STORAGE_READ</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::INDIRECT</span>.<span class="ident">bits</span>;
+        <span class="doccomment">/// The combination of exclusive usages (write-only and read-write).</span>
+        <span class="kw">const</span> <span class="ident">EXCLUSIVE</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::MAP_WRITE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::COPY_DST</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::STORAGE_WRITE</span>.<span class="ident">bits</span>;
         <span class="doccomment">/// The combination of all usages that the are guaranteed to be be ordered by the hardware.</span>
         <span class="doccomment">/// If a usage is not ordered, then even if it doesn&#39;t change between draw calls, there</span>
         <span class="doccomment">/// still need to be pipeline barriers inserted for synchronization.</span>
-        <span class="kw">const</span> <span class="ident">ORDERED</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::READ_ALL</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::MAP_WRITE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::COPY_DST</span>.<span class="ident">bits</span>;
+        <span class="kw">const</span> <span class="ident">ORDERED</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::INCLUSIVE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::MAP_WRITE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::COPY_DST</span>.<span class="ident">bits</span>;
     }
 }
 
@@ -1725,16 +1725,16 @@
         <span class="kw">const</span> <span class="ident">COLOR_TARGET</span> <span class="op">=</span> <span class="number">8</span>;
         <span class="kw">const</span> <span class="ident">DEPTH_STENCIL_READ</span> <span class="op">=</span> <span class="number">16</span>;
         <span class="kw">const</span> <span class="ident">DEPTH_STENCIL_WRITE</span> <span class="op">=</span> <span class="number">32</span>;
-        <span class="kw">const</span> <span class="ident">STORAGE_LOAD</span> <span class="op">=</span> <span class="number">64</span>;
-        <span class="kw">const</span> <span class="ident">STORAGE_STORE</span> <span class="op">=</span> <span class="number">128</span>;
-        <span class="doccomment">/// The combination of all read-only usages.</span>
-        <span class="kw">const</span> <span class="ident">READ_ALL</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::COPY_SRC</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::SAMPLED</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::DEPTH_STENCIL_READ</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::STORAGE_LOAD</span>.<span class="ident">bits</span>;
-        <span class="doccomment">/// The combination of all write-only and read-write usages.</span>
-        <span class="kw">const</span> <span class="ident">WRITE_ALL</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::COPY_DST</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::COLOR_TARGET</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::DEPTH_STENCIL_WRITE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::STORAGE_STORE</span>.<span class="ident">bits</span>;
+        <span class="kw">const</span> <span class="ident">STORAGE_READ</span> <span class="op">=</span> <span class="number">64</span>;
+        <span class="kw">const</span> <span class="ident">STORAGE_WRITE</span> <span class="op">=</span> <span class="number">128</span>;
+        <span class="doccomment">/// The combination of usages that can be used together (read-only).</span>
+        <span class="kw">const</span> <span class="ident">INCLUSIVE</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::COPY_SRC</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::SAMPLED</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::DEPTH_STENCIL_READ</span>.<span class="ident">bits</span>;
+        <span class="doccomment">/// The combination of exclusive usages (write-only and read-write).</span>
+        <span class="kw">const</span> <span class="ident">EXCLUSIVE</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::COPY_DST</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::COLOR_TARGET</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::DEPTH_STENCIL_WRITE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::STORAGE_READ</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::STORAGE_WRITE</span>.<span class="ident">bits</span>;
         <span class="doccomment">/// The combination of all usages that the are guaranteed to be be ordered by the hardware.</span>
         <span class="doccomment">/// If a usage is not ordered, then even if it doesn&#39;t change between draw calls, there</span>
         <span class="doccomment">/// still need to be pipeline barriers inserted for synchronization.</span>
-        <span class="kw">const</span> <span class="ident">ORDERED</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::READ_ALL</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::COPY_DST</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::COLOR_TARGET</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::DEPTH_STENCIL_WRITE</span>.<span class="ident">bits</span>;
+        <span class="kw">const</span> <span class="ident">ORDERED</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::INCLUSIVE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::COPY_DST</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::COLOR_TARGET</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::DEPTH_STENCIL_WRITE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="self">Self</span><span class="ident">::STORAGE_READ</span>.<span class="ident">bits</span>;
         <span class="comment">//TODO: remove this</span>
         <span class="kw">const</span> <span class="ident">UNINITIALIZED</span> <span class="op">=</span> <span class="number">0xFFFF</span>;
     }
