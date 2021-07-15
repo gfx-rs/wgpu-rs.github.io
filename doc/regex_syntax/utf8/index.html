@@ -9,8 +9,7 @@ an example.</p>
 whether a particular byte sequence was a Cyrillic character. One possible
 scalar value range is <code>[0400-04FF]</code>. The set of allowed bytes for this
 range can be expressed as a sequence of byte ranges:</p>
-<pre><code class="language-text">[D0-D3][80-BF]
-</code></pre>
+<div class="example-wrap"><pre class="language-text">[D0-D3][80-BF]</pre></div>
 <p>This is simple enough: simply encode the boundaries, <code>0400</code> encodes to
 <code>D0 80</code> and <code>04FF</code> encodes to <code>D3 BF</code>, and create ranges from each
 corresponding pair of bytes: <code>D0</code> to <code>D3</code> and <code>80</code> to <code>BF</code>.</p>
@@ -21,23 +20,21 @@ you’d get from the previous transformation would be <code>[D0-D4][80-AF]</code
 this isn’t quite correct because this range doesn’t capture many characters,
 for example, <code>04FF</code> (because its last byte, <code>BF</code> isn’t in the range <code>80-AF</code>).</p>
 <p>Instead, you need multiple sequences of byte ranges:</p>
-<pre><code class="language-text">[D0-D3][80-BF]  # matches codepoints 0400-04FF
-[D4][80-AF]     # matches codepoints 0500-052F
-</code></pre>
+<div class="example-wrap"><pre class="language-text">[D0-D3][80-BF]  # matches codepoints 0400-04FF
+[D4][80-AF]     # matches codepoints 0500-052F</pre></div>
 <p>This gets even more complicated if you want bigger ranges, particularly if
 they naively contain surrogate codepoints. For example, the sequence of byte
 ranges for the basic multilingual plane (<code>[0000-FFFF]</code>) look like this:</p>
-<pre><code class="language-text">[0-7F]
+<div class="example-wrap"><pre class="language-text">[0-7F]
 [C2-DF][80-BF]
 [E0][A0-BF][80-BF]
 [E1-EC][80-BF][80-BF]
 [ED][80-9F][80-BF]
-[EE-EF][80-BF][80-BF]
-</code></pre>
+[EE-EF][80-BF][80-BF]</pre></div>
 <p>Note that the byte ranges above will <em>not</em> match any erroneous encoding of
 UTF-8, including encodings of surrogate codepoints.</p>
 <p>And, of course, for all of Unicode (<code>[000000-10FFFF]</code>):</p>
-<pre><code class="language-text">[0-7F]
+<div class="example-wrap"><pre class="language-text">[0-7F]
 [C2-DF][80-BF]
 [E0][A0-BF][80-BF]
 [E1-EC][80-BF][80-BF]
@@ -45,8 +42,7 @@ UTF-8, including encodings of surrogate codepoints.</p>
 [EE-EF][80-BF][80-BF]
 [F0][90-BF][80-BF][80-BF]
 [F1-F3][80-BF][80-BF][80-BF]
-[F4][80-8F][80-BF][80-BF]
-</code></pre>
+[F4][80-8F][80-BF][80-BF]</pre></div>
 <p>This module automates the process of creating these byte ranges from ranges of
 Unicode scalar values.</p>
 <h1 id="lineage" class="section-header"><a href="#lineage">Lineage</a></h1>

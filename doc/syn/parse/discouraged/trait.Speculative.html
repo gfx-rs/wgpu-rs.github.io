@@ -76,25 +76,22 @@ content a second time.</p>
 presentation. Even if the lookahead is the “correct” parse, the error
 that is shown is that of the “fallback” parse. To use the same example
 as the turbofish above, take the following unfinished “turbofish”:</p>
-<pre><code class="language-text">let _ = f&lt;&amp;'a fn(), for&lt;'a&gt; serde::&gt;();
-</code></pre>
+<div class="example-wrap"><pre class="language-text">let _ = f&lt;&amp;&#39;a fn(), for&lt;&#39;a&gt; serde::&gt;();</pre></div>
 <p>If this is parsed as generic arguments, we can provide the error message</p>
-<pre><code class="language-text">error: expected identifier
+<div class="example-wrap"><pre class="language-text">error: expected identifier
  --&gt; src.rs:L:C
   |
-L | let _ = f&lt;&amp;'a fn(), for&lt;'a&gt; serde::&gt;();
-  |                                    ^
-</code></pre>
+L | let _ = f&lt;&amp;&#39;a fn(), for&lt;&#39;a&gt; serde::&gt;();
+  |                                    ^</pre></div>
 <p>but if parsed using the above speculative parsing, it falls back to
 assuming that the <code>&lt;</code> is a less-than when it fails to parse the generic
 arguments, and tries to interpret the <code>&amp;'a</code> as the start of a labelled
 loop, resulting in the much less helpful error</p>
-<pre><code class="language-text">error: expected `:`
+<div class="example-wrap"><pre class="language-text">error: expected `:`
  --&gt; src.rs:L:C
   |
-L | let _ = f&lt;&amp;'a fn(), for&lt;'a&gt; serde::&gt;();
-  |               ^^
-</code></pre>
+L | let _ = f&lt;&amp;&#39;a fn(), for&lt;&#39;a&gt; serde::&gt;();
+  |               ^^</pre></div>
 <p>This can be mitigated with various heuristics (two examples: show both
 forks’ parse errors, or show the one that consumed more tokens), but
 when you can control the grammar, sticking to something that can be
