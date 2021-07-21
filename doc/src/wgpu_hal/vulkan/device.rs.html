@@ -1553,6 +1553,9 @@
 <span id="1553">1553</span>
 <span id="1554">1554</span>
 <span id="1555">1555</span>
+<span id="1556">1556</span>
+<span id="1557">1557</span>
+<span id="1558">1558</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::conv</span>;
 
@@ -1739,7 +1742,7 @@
                     .<span class="ident">enumerate</span>()
                     .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">i</span>, <span class="ident">at</span>)<span class="op">|</span> {
                         <span class="ident">vk::FramebufferAttachmentImageInfo::builder</span>()
-                            .<span class="ident">usage</span>(<span class="ident">conv::map_texture_usage</span>(<span class="ident">at</span>.<span class="ident">texture_usage</span>))
+                            .<span class="ident">usage</span>(<span class="ident">conv::map_texture_usage</span>(<span class="ident">at</span>.<span class="ident">view_usage</span>))
                             .<span class="ident">flags</span>(<span class="ident">at</span>.<span class="ident">raw_image_flags</span>)
                             .<span class="ident">width</span>(<span class="ident">e</span>.<span class="ident">key</span>().<span class="ident">extent</span>.<span class="ident">width</span>)
                             .<span class="ident">height</span>(<span class="ident">e</span>.<span class="ident">key</span>().<span class="ident">extent</span>.<span class="ident">height</span>)
@@ -2291,12 +2294,15 @@
             .<span class="ident">subresource_range</span>(<span class="ident">conv::map_subresource_range</span>(<span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">range</span>, <span class="ident">texture</span>.<span class="ident">aspects</span>));
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">image_view_info</span>;
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">private_caps</span>.<span class="ident">image_view_usage</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">is_empty</span>() {
+        <span class="kw">let</span> <span class="ident">view_usage</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">private_caps</span>.<span class="ident">image_view_usage</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">is_empty</span>() {
             <span class="ident">image_view_info</span> <span class="op">=</span> <span class="ident">vk::ImageViewUsageCreateInfo::builder</span>()
                 .<span class="ident">usage</span>(<span class="ident">conv::map_texture_usage</span>(<span class="ident">desc</span>.<span class="ident">usage</span>))
                 .<span class="ident">build</span>();
             <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk_info</span>.<span class="ident">push_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">image_view_info</span>);
-        }
+            <span class="ident">desc</span>.<span class="ident">usage</span>
+        } <span class="kw">else</span> {
+            <span class="ident">texture</span>.<span class="ident">usage</span>
+        };
 
         <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">create_image_view</span>(<span class="kw-2">&amp;</span><span class="ident">vk_info</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
 
@@ -2311,8 +2317,8 @@
             } <span class="kw">else</span> {
                 <span class="ident">raw</span>
             },
-            <span class="ident">texture_usage</span>: <span class="ident">texture</span>.<span class="ident">usage</span>,
             <span class="ident">raw_image_flags</span>: <span class="ident">texture</span>.<span class="ident">raw_flags</span>,
+            <span class="ident">view_usage</span>,
             <span class="ident">view_format</span>: <span class="ident">desc</span>.<span class="ident">format</span>,
         };
 
