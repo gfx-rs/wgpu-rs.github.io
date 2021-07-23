@@ -432,6 +432,73 @@
 <span id="432">432</span>
 <span id="433">433</span>
 <span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
 </pre><pre class="rust">
 <span class="kw">mod</span> <span class="ident">bind</span>;
 <span class="kw">mod</span> <span class="ident">bundle</span>;
@@ -452,7 +519,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>,
-    <span class="ident">memory_init_tracker::MemoryInitTrackerAction</span>,
+    <span class="ident">memory_init_tracker</span>::{<span class="ident">MemoryInitKind</span>, <span class="ident">MemoryInitTrackerAction</span>},
     <span class="ident">resource</span>::{<span class="ident">Buffer</span>, <span class="ident">Texture</span>},
     <span class="ident">track</span>::{<span class="ident">BufferState</span>, <span class="ident">ResourceTracker</span>, <span class="ident">TextureState</span>, <span class="ident">TrackerSet</span>},
     <span class="ident">Label</span>, <span class="ident">Stored</span>,
@@ -498,10 +565,76 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BackedCommands</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BakedCommands</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">encoder</span>: <span class="ident">A::CommandEncoder</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">list</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">A::CommandBuffer</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">trackers</span>: <span class="ident">TrackerSet</span>,
+    <span class="ident">buffer_memory_init_actions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MemoryInitTrackerAction</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">DestroyedBufferError</span>(<span class="kw">pub</span> <span class="ident">id::BufferId</span>);
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">BakedCommands</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">initialize_buffer_memory</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">device_tracker</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">TrackerSet</span>,
+        <span class="ident">buffer_guard</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">Buffer</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::BufferId</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">DestroyedBufferError</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ranges</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+        <span class="kw">for</span> <span class="ident">buffer_use</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">buffer_memory_init_actions</span>.<span class="ident">drain</span>(..) {
+            <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">buffer_guard</span>
+                .<span class="ident">get_mut</span>(<span class="ident">buffer_use</span>.<span class="ident">id</span>)
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">DestroyedBufferError</span>(<span class="ident">buffer_use</span>.<span class="ident">id</span>))<span class="question-mark">?</span>;
+
+            <span class="kw">let</span> <span class="ident">uninitialized_ranges</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">initialization_status</span>.<span class="ident">drain</span>(<span class="ident">buffer_use</span>.<span class="ident">range</span>.<span class="ident">clone</span>());
+            <span class="kw">match</span> <span class="ident">buffer_use</span>.<span class="ident">kind</span> {
+                <span class="ident">MemoryInitKind::ImplicitlyInitialized</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">uninitialized_ranges</span>.<span class="ident">for_each</span>(<span class="ident">drop</span>);
+                }
+                <span class="ident">MemoryInitKind::NeedsInitializedMemory</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">ranges</span>.<span class="ident">clear</span>();
+                    <span class="ident">ranges</span>.<span class="ident">extend</span>(<span class="ident">uninitialized_ranges</span>);
+                    <span class="comment">// Collapse touching ranges. We can&#39;t do this any earlier since we only now gathered ranges from several different command buffers!</span>
+                    <span class="ident">ranges</span>.<span class="ident">sort_by</span>(<span class="op">|</span><span class="ident">a</span>, <span class="ident">b</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">start</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>.<span class="ident">start</span>));
+                    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> (<span class="number">1</span>..<span class="ident">ranges</span>.<span class="ident">len</span>()).<span class="ident">rev</span>() {
+                        <span class="macro">assert!</span>(<span class="ident">ranges</span>[<span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>].<span class="ident">end</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">ranges</span>[<span class="ident">i</span>].<span class="ident">start</span>); <span class="comment">// The memory init tracker made sure of this!</span>
+                        <span class="kw">if</span> <span class="ident">ranges</span>[<span class="ident">i</span>].<span class="ident">start</span> <span class="op">=</span><span class="op">=</span> <span class="ident">ranges</span>[<span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>].<span class="ident">end</span> {
+                            <span class="ident">ranges</span>[<span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>].<span class="ident">end</span> <span class="op">=</span> <span class="ident">ranges</span>[<span class="ident">i</span>].<span class="ident">end</span>;
+                            <span class="ident">ranges</span>.<span class="ident">swap_remove</span>(<span class="ident">i</span>); <span class="comment">// Ordering not important at this point</span>
+                        }
+                    }
+
+                    <span class="comment">// Don&#39;t do use_replace since the buffer may already no longer have a ref_count.</span>
+                    <span class="comment">// However, we *know* that it is currently in use, so the tracker must already know about it.</span>
+                    <span class="kw">let</span> <span class="ident">transition</span> <span class="op">=</span> <span class="ident">device_tracker</span>.<span class="ident">buffers</span>.<span class="ident">change_replace_tracked</span>(
+                        <span class="ident">id::Valid</span>(<span class="ident">buffer_use</span>.<span class="ident">id</span>),
+                        (),
+                        <span class="ident">hal::BufferUses::COPY_DST</span>,
+                    );
+                    <span class="kw">let</span> <span class="ident">raw_buf</span> <span class="op">=</span> <span class="ident">buffer</span>
+                        .<span class="ident">raw</span>
+                        .<span class="ident">as_ref</span>()
+                        .<span class="ident">ok_or</span>(<span class="ident">DestroyedBufferError</span>(<span class="ident">buffer_use</span>.<span class="ident">id</span>))<span class="question-mark">?</span>;
+
+                    <span class="kw">unsafe</span> {
+                        <span class="self">self</span>.<span class="ident">encoder</span>
+                            .<span class="ident">transition_buffers</span>(<span class="ident">transition</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">buffer</span>)));
+                    }
+
+                    <span class="kw">for</span> <span class="ident">range</span> <span class="kw">in</span> <span class="ident">ranges</span>.<span class="ident">iter</span>() {
+                        <span class="macro">assert!</span>(<span class="ident">range</span>.<span class="ident">start</span> <span class="op">%</span> <span class="number">4</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>, <span class="string">&quot;Buffer {:?} has an uninitialized range with a start not aligned to 4 (start was {})&quot;</span>, <span class="ident">raw_buf</span>, <span class="ident">range</span>.<span class="ident">start</span>);
+                        <span class="macro">assert!</span>(<span class="ident">range</span>.<span class="ident">end</span> <span class="op">%</span> <span class="number">4</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>, <span class="string">&quot;Buffer {:?} has an uninitialized range with an end not aligned to 4 (end was {})&quot;</span>, <span class="ident">raw_buf</span>, <span class="ident">range</span>.<span class="ident">end</span>);
+
+                        <span class="kw">unsafe</span> {
+                            <span class="self">self</span>.<span class="ident">encoder</span>.<span class="ident">fill_buffer</span>(<span class="ident">raw_buf</span>, <span class="ident">range</span>.<span class="ident">clone</span>(), <span class="number">0</span>);
+                        }
+                    }
+                }
+            }
+        }
+
+        <span class="prelude-val">Ok</span>(())
+    }
 }
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CommandBuffer</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> {
@@ -510,7 +643,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">device_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::DeviceId</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">trackers</span>: <span class="ident">TrackerSet</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">used_swap_chains</span>: <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::SwapChainId</span><span class="op">&gt;</span>; <span class="number">1</span>]<span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">buffer_memory_init_actions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MemoryInitTrackerAction</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">buffer_memory_init_actions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MemoryInitTrackerAction</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">limits</span>: <span class="ident">wgt::Limits</span>,
     <span class="ident">support_fill_buffer_texture</span>: <span class="ident">bool</span>,
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
@@ -599,11 +732,12 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">into_baked</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BackedCommands</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
-        <span class="ident">BackedCommands</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">into_baked</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BakedCommands</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
+        <span class="ident">BakedCommands</span> {
             <span class="ident">encoder</span>: <span class="self">self</span>.<span class="ident">encoder</span>.<span class="ident">raw</span>,
             <span class="ident">list</span>: <span class="self">self</span>.<span class="ident">encoder</span>.<span class="ident">list</span>,
             <span class="ident">trackers</span>: <span class="self">self</span>.<span class="ident">trackers</span>,
+            <span class="ident">buffer_memory_init_actions</span>: <span class="self">self</span>.<span class="ident">buffer_memory_init_actions</span>,
         }
     }
 }
