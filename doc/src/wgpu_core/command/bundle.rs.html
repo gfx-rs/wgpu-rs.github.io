@@ -1346,6 +1346,24 @@
 <span id="1346">1346</span>
 <span id="1347">1347</span>
 <span id="1348">1348</span>
+<span id="1349">1349</span>
+<span id="1350">1350</span>
+<span id="1351">1351</span>
+<span id="1352">1352</span>
+<span id="1353">1353</span>
+<span id="1354">1354</span>
+<span id="1355">1355</span>
+<span id="1356">1356</span>
+<span id="1357">1357</span>
+<span id="1358">1358</span>
+<span id="1359">1359</span>
+<span id="1360">1360</span>
+<span id="1361">1361</span>
+<span id="1362">1362</span>
+<span id="1363">1363</span>
+<span id="1364">1364</span>
+<span id="1365">1365</span>
+<span id="1366">1366</span>
 </pre><pre class="rust">
 <span class="doccomment">/*! Render Bundles
 
@@ -1395,6 +1413,7 @@
     <span class="ident">hub</span>::{<span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Hub</span>, <span class="ident">Resource</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>,
     <span class="ident">memory_init_tracker</span>::{<span class="ident">MemoryInitKind</span>, <span class="ident">MemoryInitTrackerAction</span>},
+    <span class="ident">pipeline::PipelineFlags</span>,
     <span class="ident">track</span>::{<span class="ident">TrackerSet</span>, <span class="ident">UsageConflict</span>},
     <span class="ident">validation::check_buffer_usage</span>,
     <span class="ident">Label</span>, <span class="ident">LabelHelpers</span>, <span class="ident">LifeGuard</span>, <span class="ident">Stored</span>,
@@ -1415,9 +1434,9 @@
     <span class="doccomment">/// The formats of the color attachments that this render bundle is capable to rendering to. This</span>
     <span class="doccomment">/// must match the formats of the color attachments in the renderpass this render bundle is executed in.</span>
     <span class="kw">pub</span> <span class="ident">color_formats</span>: <span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, [<span class="ident">wgt::TextureFormat</span>]<span class="op">&gt;</span>,
-    <span class="doccomment">/// The formats of the depth attachment that this render bundle is capable to rendering to. This</span>
-    <span class="doccomment">/// must match the formats of the depth attachments in the renderpass this render bundle is executed in.</span>
-    <span class="kw">pub</span> <span class="ident">depth_stencil_format</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">wgt::TextureFormat</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Information about the depth attachment that this render bundle is capable to rendering to. The format</span>
+    <span class="doccomment">/// must match the format of the depth attachments in the renderpass this render bundle is executed in.</span>
+    <span class="kw">pub</span> <span class="ident">depth_stencil</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">wgt::RenderBundleDepthStencil</span><span class="op">&gt;</span>,
     <span class="doccomment">/// Sample count this render bundle is capable of rendering to. This must match the pipelines and</span>
     <span class="doccomment">/// the renderpasses it is used in.</span>
     <span class="kw">pub</span> <span class="ident">sample_count</span>: <span class="ident">u32</span>,
@@ -1429,6 +1448,7 @@
     <span class="ident">base</span>: <span class="ident">BasePass</span><span class="op">&lt;</span><span class="ident">RenderCommand</span><span class="op">&gt;</span>,
     <span class="ident">parent_id</span>: <span class="ident">id::DeviceId</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">context</span>: <span class="ident">RenderPassContext</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">is_ds_read_only</span>: <span class="ident">bool</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">RenderBundleEncoder</span> {
@@ -1444,7 +1464,7 @@
                 <span class="ident">attachments</span>: <span class="ident">AttachmentData</span> {
                     <span class="ident">colors</span>: <span class="ident">desc</span>.<span class="ident">color_formats</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>(),
                     <span class="ident">resolves</span>: <span class="ident">ArrayVec::new</span>(),
-                    <span class="ident">depth_stencil</span>: <span class="ident">desc</span>.<span class="ident">depth_stencil_format</span>,
+                    <span class="ident">depth_stencil</span>: <span class="ident">desc</span>.<span class="ident">depth_stencil</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">ds</span><span class="op">|</span> <span class="ident">ds</span>.<span class="ident">format</span>),
                 },
                 <span class="ident">sample_count</span>: {
                     <span class="kw">let</span> <span class="ident">sc</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">sample_count</span>;
@@ -1453,6 +1473,14 @@
                     }
                     <span class="ident">sc</span>
                 },
+            },
+            <span class="ident">is_ds_read_only</span>: <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">depth_stencil</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">ds</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="kw">let</span> <span class="ident">aspects</span> <span class="op">=</span> <span class="ident">hal::FormatAspects::from</span>(<span class="ident">ds</span>.<span class="ident">format</span>);
+                    (<span class="op">!</span><span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="ident">hal::FormatAspects::DEPTH</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">ds</span>.<span class="ident">depth_read_only</span>)
+                        <span class="op">&amp;&amp;</span> (<span class="op">!</span><span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="ident">hal::FormatAspects::STENCIL</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">ds</span>.<span class="ident">stencil_read_only</span>)
+                }
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
             },
         })
     }
@@ -1469,6 +1497,7 @@
                 },
                 <span class="ident">sample_count</span>: <span class="number">0</span>,
             },
+            <span class="ident">is_ds_read_only</span>: <span class="bool-val">false</span>,
         }
     }
 
@@ -1581,10 +1610,15 @@
 
                     <span class="self">self</span>.<span class="ident">context</span>
                         .<span class="ident">check_compatible</span>(<span class="kw-2">&amp;</span><span class="ident">pipeline</span>.<span class="ident">pass_context</span>)
-                        .<span class="ident">map_err</span>(<span class="ident">RenderCommandError::IncompatiblePipeline</span>)
+                        .<span class="ident">map_err</span>(<span class="ident">RenderCommandError::IncompatiblePipelineTargets</span>)
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
-                    <span class="comment">//TODO: check read-only depth</span>
+                    <span class="kw">if</span> <span class="ident">pipeline</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">PipelineFlags::WRITES_DEPTH_STENCIL</span>)
+                        <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">is_ds_read_only</span>
+                    {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderCommandError::IncompatiblePipelineRods</span>)
+                            .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>);
+                    }
 
                     <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">pipeline_layout_guard</span>[<span class="ident">pipeline</span>.<span class="ident">layout_id</span>.<span class="ident">value</span>];
                     <span class="ident">pipeline_layout_id</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">pipeline</span>.<span class="ident">layout_id</span>.<span class="ident">value</span>);
@@ -1850,6 +1884,7 @@
                 <span class="ident">string_data</span>: <span class="ident">Vec::new</span>(),
                 <span class="ident">push_constant_data</span>: <span class="ident">Vec::new</span>(),
             },
+            <span class="ident">is_ds_read_only</span>: <span class="self">self</span>.<span class="ident">is_ds_read_only</span>,
             <span class="ident">device_id</span>: <span class="ident">Stored</span> {
                 <span class="ident">value</span>: <span class="ident">id::Valid</span>(<span class="self">self</span>.<span class="ident">parent_id</span>),
                 <span class="ident">ref_count</span>: <span class="ident">device</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>(),
@@ -1903,10 +1938,11 @@
     <span class="comment">// Normalized command stream. It can be executed verbatim,</span>
     <span class="comment">// without re-binding anything on the pipeline change.</span>
     <span class="ident">base</span>: <span class="ident">BasePass</span><span class="op">&lt;</span><span class="ident">RenderCommand</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">is_ds_read_only</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">device_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::DeviceId</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">used</span>: <span class="ident">TrackerSet</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">buffer_memory_init_actions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MemoryInitTrackerAction</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">context</span>: <span class="ident">RenderPassContext</span>,
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">buffer_memory_init_actions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MemoryInitTrackerAction</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">context</span>: <span class="ident">RenderPassContext</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>,
 }
 
@@ -1923,7 +1959,7 @@
     <span class="doccomment">/// Note that the function isn&#39;t expected to fail, generally.</span>
     <span class="doccomment">/// All the validation has already been done by this point.</span>
     <span class="doccomment">/// The only failure condition is if some of the used buffers are destroyed.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">execute</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">execute</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">raw</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">A::CommandEncoder</span>,
         <span class="ident">pipeline_layout_guard</span>: <span class="kw-2">&amp;</span><span class="ident">Storage</span><span class="op">&lt;</span>
