@@ -4703,6 +4703,77 @@
 <span id="4703">4703</span>
 <span id="4704">4704</span>
 <span id="4705">4705</span>
+<span id="4706">4706</span>
+<span id="4707">4707</span>
+<span id="4708">4708</span>
+<span id="4709">4709</span>
+<span id="4710">4710</span>
+<span id="4711">4711</span>
+<span id="4712">4712</span>
+<span id="4713">4713</span>
+<span id="4714">4714</span>
+<span id="4715">4715</span>
+<span id="4716">4716</span>
+<span id="4717">4717</span>
+<span id="4718">4718</span>
+<span id="4719">4719</span>
+<span id="4720">4720</span>
+<span id="4721">4721</span>
+<span id="4722">4722</span>
+<span id="4723">4723</span>
+<span id="4724">4724</span>
+<span id="4725">4725</span>
+<span id="4726">4726</span>
+<span id="4727">4727</span>
+<span id="4728">4728</span>
+<span id="4729">4729</span>
+<span id="4730">4730</span>
+<span id="4731">4731</span>
+<span id="4732">4732</span>
+<span id="4733">4733</span>
+<span id="4734">4734</span>
+<span id="4735">4735</span>
+<span id="4736">4736</span>
+<span id="4737">4737</span>
+<span id="4738">4738</span>
+<span id="4739">4739</span>
+<span id="4740">4740</span>
+<span id="4741">4741</span>
+<span id="4742">4742</span>
+<span id="4743">4743</span>
+<span id="4744">4744</span>
+<span id="4745">4745</span>
+<span id="4746">4746</span>
+<span id="4747">4747</span>
+<span id="4748">4748</span>
+<span id="4749">4749</span>
+<span id="4750">4750</span>
+<span id="4751">4751</span>
+<span id="4752">4752</span>
+<span id="4753">4753</span>
+<span id="4754">4754</span>
+<span id="4755">4755</span>
+<span id="4756">4756</span>
+<span id="4757">4757</span>
+<span id="4758">4758</span>
+<span id="4759">4759</span>
+<span id="4760">4760</span>
+<span id="4761">4761</span>
+<span id="4762">4762</span>
+<span id="4763">4763</span>
+<span id="4764">4764</span>
+<span id="4765">4765</span>
+<span id="4766">4766</span>
+<span id="4767">4767</span>
+<span id="4768">4768</span>
+<span id="4769">4769</span>
+<span id="4770">4770</span>
+<span id="4771">4771</span>
+<span id="4772">4772</span>
+<span id="4773">4773</span>
+<span id="4774">4774</span>
+<span id="4775">4775</span>
+<span id="4776">4776</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
@@ -5223,13 +5294,16 @@
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">create_texture</span>(
+    <span class="kw">fn</span> <span class="ident">create_texture_from_hal</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">hal_texture</span>: <span class="ident">A::Texture</span>,
         <span class="ident">self_id</span>: <span class="ident">id::DeviceId</span>,
         <span class="ident">adapter</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::instance::Adapter</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">resource::TextureDescriptor</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">resource::Texture</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">resource::CreateTextureError</span><span class="op">&gt;</span> {
         <span class="macro">debug_assert_eq!</span>(<span class="ident">self_id</span>.<span class="ident">backend</span>(), <span class="ident">A::VARIANT</span>);
+
+        <span class="kw">let</span> <span class="ident">hal_usage</span> <span class="op">=</span> <span class="ident">conv::map_texture_usage</span>(<span class="ident">desc</span>.<span class="ident">usage</span>, <span class="ident">desc</span>.<span class="ident">format</span>.<span class="ident">into</span>());
 
         <span class="kw">let</span> <span class="ident">format_features</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">describe_format_features</span>(<span class="ident">adapter</span>, <span class="ident">desc</span>.<span class="ident">format</span>)
@@ -5272,6 +5346,29 @@
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">resource::CreateTextureError::InvalidMipLevelCount</span>(<span class="ident">mips</span>));
         }
 
+        <span class="prelude-val">Ok</span>(<span class="ident">resource::Texture</span> {
+            <span class="ident">raw</span>: <span class="prelude-val">Some</span>(<span class="ident">hal_texture</span>),
+            <span class="ident">device_id</span>: <span class="ident">Stored</span> {
+                <span class="ident">value</span>: <span class="ident">id::Valid</span>(<span class="ident">self_id</span>),
+                <span class="ident">ref_count</span>: <span class="self">self</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>(),
+            },
+            <span class="ident">desc</span>: <span class="ident">desc</span>.<span class="ident">map_label</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ()),
+            <span class="ident">hal_usage</span>,
+            <span class="ident">format_features</span>,
+            <span class="ident">full_range</span>: <span class="ident">TextureSelector</span> {
+                <span class="ident">levels</span>: <span class="number">0</span>..<span class="ident">desc</span>.<span class="ident">mip_level_count</span>,
+                <span class="ident">layers</span>: <span class="number">0</span>..<span class="ident">desc</span>.<span class="ident">array_layer_count</span>(),
+            },
+            <span class="ident">life_guard</span>: <span class="ident">LifeGuard::new</span>(<span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_or_default</span>()),
+        })
+    }
+
+    <span class="kw">fn</span> <span class="ident">create_texture</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">self_id</span>: <span class="ident">id::DeviceId</span>,
+        <span class="ident">adapter</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::instance::Adapter</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
+        <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">resource::TextureDescriptor</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">resource::Texture</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">resource::CreateTextureError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">hal_usage</span> <span class="op">=</span> <span class="ident">conv::map_texture_usage</span>(<span class="ident">desc</span>.<span class="ident">usage</span>, <span class="ident">desc</span>.<span class="ident">format</span>.<span class="ident">into</span>());
         <span class="kw">let</span> <span class="ident">hal_desc</span> <span class="op">=</span> <span class="ident">hal::TextureDescriptor</span> {
             <span class="ident">label</span>: <span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_option</span>(),
@@ -5289,21 +5386,7 @@
                 .<span class="ident">map_err</span>(<span class="ident">DeviceError::from</span>)<span class="question-mark">?</span>
         };
 
-        <span class="prelude-val">Ok</span>(<span class="ident">resource::Texture</span> {
-            <span class="ident">raw</span>: <span class="prelude-val">Some</span>(<span class="ident">raw</span>),
-            <span class="ident">device_id</span>: <span class="ident">Stored</span> {
-                <span class="ident">value</span>: <span class="ident">id::Valid</span>(<span class="ident">self_id</span>),
-                <span class="ident">ref_count</span>: <span class="self">self</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>(),
-            },
-            <span class="ident">desc</span>: <span class="ident">desc</span>.<span class="ident">map_label</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ()),
-            <span class="ident">hal_usage</span>,
-            <span class="ident">format_features</span>,
-            <span class="ident">full_range</span>: <span class="ident">TextureSelector</span> {
-                <span class="ident">levels</span>: <span class="number">0</span>..<span class="ident">desc</span>.<span class="ident">mip_level_count</span>,
-                <span class="ident">layers</span>: <span class="number">0</span>..<span class="ident">desc</span>.<span class="ident">array_layer_count</span>(),
-            },
-            <span class="ident">life_guard</span>: <span class="ident">LifeGuard::new</span>(<span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_or_default</span>()),
-        })
+        <span class="self">self</span>.<span class="ident">create_texture_from_hal</span>(<span class="ident">raw</span>, <span class="ident">self_id</span>, <span class="ident">adapter</span>, <span class="ident">desc</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">create_texture_view</span>(
@@ -7662,6 +7745,65 @@
                 <span class="prelude-val">Ok</span>(<span class="ident">texture</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">texture</span>,
                 <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span> <span class="ident">error</span>,
             };
+            <span class="kw">let</span> <span class="ident">num_levels</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">full_range</span>.<span class="ident">levels</span>.<span class="ident">end</span>;
+            <span class="kw">let</span> <span class="ident">num_layers</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">full_range</span>.<span class="ident">layers</span>.<span class="ident">end</span>;
+            <span class="kw">let</span> <span class="ident">ref_count</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>();
+
+            <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">fid</span>.<span class="ident">assign</span>(<span class="ident">texture</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+            <span class="macro">log::info!</span>(<span class="string">&quot;Created texture {:?} with {:?}&quot;</span>, <span class="ident">id</span>, <span class="ident">desc</span>);
+
+            <span class="ident">device</span>
+                .<span class="ident">trackers</span>
+                .<span class="ident">lock</span>()
+                .<span class="ident">textures</span>
+                .<span class="ident">init</span>(<span class="ident">id</span>, <span class="ident">ref_count</span>, <span class="ident">TextureState::new</span>(<span class="ident">num_levels</span>, <span class="ident">num_layers</span>))
+                .<span class="ident">unwrap</span>();
+            <span class="kw">return</span> (<span class="ident">id</span>.<span class="number">0</span>, <span class="prelude-val">None</span>);
+        };
+
+        <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">fid</span>.<span class="ident">assign_error</span>(<span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_or_default</span>(), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+        (<span class="ident">id</span>, <span class="prelude-val">Some</span>(<span class="ident">error</span>))
+    }
+
+    <span class="doccomment">/// # Safety</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// - `hal_texture` must be created from `device_id` corresponding raw handle.</span>
+    <span class="doccomment">/// - `hal_texture` must be created respecting `desc`</span>
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_texture_from_hal</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">hal_texture</span>: <span class="ident">A::Texture</span>,
+        <span class="ident">device_id</span>: <span class="ident">id::DeviceId</span>,
+        <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">resource::TextureDescriptor</span>,
+        <span class="ident">id_in</span>: <span class="ident">Input</span><span class="op">&lt;</span><span class="ident">G</span>, <span class="ident">id::TextureId</span><span class="op">&gt;</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">id::TextureId</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">resource::CreateTextureError</span><span class="op">&gt;</span>) {
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;create_texture&quot;</span>, <span class="string">&quot;Device&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
+        <span class="kw">let</span> <span class="ident">fid</span> <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">prepare</span>(<span class="ident">id_in</span>);
+
+        <span class="kw">let</span> (<span class="ident">adapter_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">adapters</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+        <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="kw">loop</span> {
+            <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">device_guard</span>.<span class="ident">get</span>(<span class="ident">device_id</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">device</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">device</span>,
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span> <span class="ident">DeviceError::Invalid</span>.<span class="ident">into</span>(),
+            };
+
+            <span class="comment">// NB: Any change done through the raw texture handle will not be recorded in the replay</span>
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">trace</span>) <span class="op">=</span> <span class="ident">device</span>.<span class="ident">trace</span> {
+                <span class="ident">trace</span>
+                    .<span class="ident">lock</span>()
+                    .<span class="ident">add</span>(<span class="ident">trace::Action::CreateTexture</span>(<span class="ident">fid</span>.<span class="ident">id</span>(), <span class="ident">desc</span>.<span class="ident">clone</span>()));
+            }
+
+            <span class="kw">let</span> <span class="ident">adapter</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">adapter_guard</span>[<span class="ident">device</span>.<span class="ident">adapter_id</span>.<span class="ident">value</span>];
+            <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span>
+                <span class="kw">match</span> <span class="ident">device</span>.<span class="ident">create_texture_from_hal</span>(<span class="ident">hal_texture</span>, <span class="ident">device_id</span>, <span class="ident">adapter</span>, <span class="ident">desc</span>) {
+                    <span class="prelude-val">Ok</span>(<span class="ident">texture</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">texture</span>,
+                    <span class="prelude-val">Err</span>(<span class="ident">error</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span> <span class="ident">error</span>,
+                };
             <span class="kw">let</span> <span class="ident">num_levels</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">full_range</span>.<span class="ident">levels</span>.<span class="ident">end</span>;
             <span class="kw">let</span> <span class="ident">num_layers</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">full_range</span>.<span class="ident">layers</span>.<span class="ident">end</span>;
             <span class="kw">let</span> <span class="ident">ref_count</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>();

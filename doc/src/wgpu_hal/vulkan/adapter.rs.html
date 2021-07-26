@@ -1083,6 +1083,36 @@
 <span id="1083">1083</span>
 <span id="1084">1084</span>
 <span id="1085">1085</span>
+<span id="1086">1086</span>
+<span id="1087">1087</span>
+<span id="1088">1088</span>
+<span id="1089">1089</span>
+<span id="1090">1090</span>
+<span id="1091">1091</span>
+<span id="1092">1092</span>
+<span id="1093">1093</span>
+<span id="1094">1094</span>
+<span id="1095">1095</span>
+<span id="1096">1096</span>
+<span id="1097">1097</span>
+<span id="1098">1098</span>
+<span id="1099">1099</span>
+<span id="1100">1100</span>
+<span id="1101">1101</span>
+<span id="1102">1102</span>
+<span id="1103">1103</span>
+<span id="1104">1104</span>
+<span id="1105">1105</span>
+<span id="1106">1106</span>
+<span id="1107">1107</span>
+<span id="1108">1108</span>
+<span id="1109">1109</span>
+<span id="1110">1110</span>
+<span id="1111">1111</span>
+<span id="1112">1112</span>
+<span id="1113">1113</span>
+<span id="1114">1114</span>
+<span id="1115">1115</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::conv</span>;
 
@@ -1116,7 +1146,7 @@
 
 <span class="kw">impl</span> <span class="ident">PhysicalDeviceFeatures</span> {
     <span class="doccomment">/// Add the members of `self` into `info.enabled_features` and its `p_next` chain.</span>
-    <span class="kw">fn</span> <span class="ident">add_to_device_create_builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_to_device_create_builder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="kw-2">mut</span> <span class="ident">info</span>: <span class="ident">vk::DeviceCreateInfoBuilder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">vk::DeviceCreateInfoBuilder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -1678,7 +1708,7 @@
 }
 
 <span class="kw">impl</span> <span class="kw">super</span><span class="ident">::Instance</span> {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">expose_adapter</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">expose_adapter</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">phd</span>: <span class="ident">vk::PhysicalDevice</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::ExposedAdapter</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Api</span><span class="op">&gt;</span><span class="op">&gt;</span> {
@@ -1809,28 +1839,51 @@
     }
 }
 
-<span class="kw">impl</span> <span class="kw">crate</span><span class="ident">::Adapter</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Api</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw">super</span><span class="ident">::Adapter</span> {
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">open</span>(
+<span class="kw">impl</span> <span class="kw">super</span><span class="ident">::Adapter</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">required_device_extensions</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">features</span>: <span class="ident">wgt::Features</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> (<span class="ident">supported_extensions</span>, <span class="ident">unsupported_extensions</span>) <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">phd_capabilities</span>
+            .<span class="ident">get_required_extensions</span>(<span class="ident">features</span>)
+            .<span class="ident">iter</span>()
+            .<span class="ident">partition</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">CStr</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="op">|</span><span class="op">&amp;&amp;</span><span class="ident">extension</span><span class="op">|</span> {
+                <span class="self">self</span>.<span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">extension</span>)
+            });
+
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">unsupported_extensions</span>.<span class="ident">is_empty</span>() {
+            <span class="macro">log::warn!</span>(<span class="string">&quot;Missing extensions: {:?}&quot;</span>, <span class="ident">unsupported_extensions</span>);
+        }
+
+        <span class="macro">log::debug!</span>(<span class="string">&quot;Supported extensions: {:?}&quot;</span>, <span class="ident">supported_extensions</span>);
+        <span class="ident">supported_extensions</span>
+    }
+
+    <span class="doccomment">/// `features` must be the same features used to create `enabled_extensions`.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">physical_device_features</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">enabled_extensions</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span>],
         <span class="ident">features</span>: <span class="ident">wgt::Features</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">PhysicalDeviceFeatures</span> {
+        <span class="ident">PhysicalDeviceFeatures::from_extensions_and_requested_features</span>(
+            <span class="self">self</span>.<span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span>,
+            <span class="ident">enabled_extensions</span>,
+            <span class="ident">features</span>,
+            <span class="self">self</span>.<span class="ident">downlevel_flags</span>,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">private_caps</span>,
+        )
+    }
+
+    <span class="doccomment">/// # Safety</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// - `raw_device` must be created from this adapter.</span>
+    <span class="doccomment">/// - `raw_device` must be created using `family_index`, `enabled_extensions` and `physical_device_features()`</span>
+    <span class="doccomment">/// - `enabled_extensions` must be a superset of `required_device_extensions()`.</span>
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">device_from_raw</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">raw_device</span>: <span class="ident">ash::Device</span>,
+        <span class="ident">enabled_extensions</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span>],
+        <span class="ident">family_index</span>: <span class="ident">u32</span>,
+        <span class="ident">queue_index</span>: <span class="ident">u32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::OpenDevice</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Api</span><span class="op">&gt;</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">enabled_extensions</span> <span class="op">=</span> {
-            <span class="kw">let</span> (<span class="ident">supported_extensions</span>, <span class="ident">unsupported_extensions</span>) <span class="op">=</span> <span class="self">self</span>
-                .<span class="ident">phd_capabilities</span>
-                .<span class="ident">get_required_extensions</span>(<span class="ident">features</span>)
-                .<span class="ident">iter</span>()
-                .<span class="ident">partition</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">CStr</span><span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span>(<span class="op">|</span><span class="op">&amp;&amp;</span><span class="ident">extension</span><span class="op">|</span> {
-                    <span class="self">self</span>.<span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">extension</span>)
-                });
-
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">unsupported_extensions</span>.<span class="ident">is_empty</span>() {
-                <span class="macro">log::warn!</span>(<span class="string">&quot;Missing extensions: {:?}&quot;</span>, <span class="ident">unsupported_extensions</span>);
-            }
-
-            <span class="macro">log::debug!</span>(<span class="string">&quot;Supported extensions: {:?}&quot;</span>, <span class="ident">supported_extensions</span>);
-            <span class="ident">supported_extensions</span>
-        };
-
         <span class="kw">let</span> <span class="ident">mem_properties</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">instance</span>
             .<span class="ident">raw</span>
@@ -1844,39 +1897,6 @@
                 <span class="ident">u</span>
             }
         });
-
-        <span class="comment">// Create device</span>
-        <span class="kw">let</span> <span class="ident">family_index</span> <span class="op">=</span> <span class="number">0</span>; <span class="comment">//TODO</span>
-        <span class="kw">let</span> <span class="ident">raw_device</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">family_info</span> <span class="op">=</span> <span class="ident">vk::DeviceQueueCreateInfo::builder</span>()
-                .<span class="ident">queue_family_index</span>(<span class="ident">family_index</span>)
-                .<span class="ident">queue_priorities</span>(<span class="kw-2">&amp;</span>[<span class="number">1.0</span>])
-                .<span class="ident">build</span>();
-            <span class="kw">let</span> <span class="ident">family_infos</span> <span class="op">=</span> [<span class="ident">family_info</span>];
-
-            <span class="kw">let</span> <span class="ident">str_pointers</span> <span class="op">=</span> <span class="ident">enabled_extensions</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">s</span><span class="op">|</span> {
-                    <span class="comment">// Safe because `enabled_extensions` entries have static lifetime.</span>
-                    <span class="ident">s</span>.<span class="ident">as_ptr</span>()
-                })
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">enabled_phd_features</span> <span class="op">=</span>
-                <span class="ident">PhysicalDeviceFeatures::from_extensions_and_requested_features</span>(
-                    <span class="self">self</span>.<span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span>,
-                    <span class="kw-2">&amp;</span><span class="ident">enabled_extensions</span>,
-                    <span class="ident">features</span>,
-                    <span class="self">self</span>.<span class="ident">downlevel_flags</span>,
-                    <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">private_caps</span>,
-                );
-            <span class="kw">let</span> <span class="ident">pre_info</span> <span class="op">=</span> <span class="ident">vk::DeviceCreateInfo::builder</span>()
-                .<span class="ident">queue_create_infos</span>(<span class="kw-2">&amp;</span><span class="ident">family_infos</span>)
-                .<span class="ident">enabled_extension_names</span>(<span class="kw-2">&amp;</span><span class="ident">str_pointers</span>);
-            <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">enabled_phd_features</span>.<span class="ident">add_to_device_create_builder</span>(<span class="ident">pre_info</span>);
-
-            <span class="self">self</span>.<span class="ident">instance</span>.<span class="ident">raw</span>.<span class="ident">create_device</span>(<span class="self">self</span>.<span class="ident">raw</span>, <span class="kw-2">&amp;</span><span class="ident">info</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>
-        };
 
         <span class="kw">let</span> <span class="ident">swapchain_fn</span> <span class="op">=</span> <span class="ident">khr::Swapchain::new</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">instance</span>.<span class="ident">raw</span>, <span class="kw-2">&amp;</span><span class="ident">raw_device</span>);
 
@@ -1927,7 +1947,7 @@
         };
 
         <span class="macro">log::info!</span>(<span class="string">&quot;Private capabilities: {:?}&quot;</span>, <span class="self">self</span>.<span class="ident">private_caps</span>);
-        <span class="kw">let</span> <span class="ident">raw_queue</span> <span class="op">=</span> <span class="ident">raw_device</span>.<span class="ident">get_device_queue</span>(<span class="ident">family_index</span>, <span class="number">0</span>);
+        <span class="kw">let</span> <span class="ident">raw_queue</span> <span class="op">=</span> <span class="ident">raw_device</span>.<span class="ident">get_device_queue</span>(<span class="ident">family_index</span>, <span class="ident">queue_index</span>);
 
         <span class="kw">let</span> <span class="ident">shared</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="kw">super</span><span class="ident">::DeviceShared</span> {
             <span class="ident">raw</span>: <span class="ident">raw_device</span>,
@@ -1994,6 +2014,46 @@
         };
 
         <span class="prelude-val">Ok</span>(<span class="kw">crate</span><span class="ident">::OpenDevice</span> { <span class="ident">device</span>, <span class="ident">queue</span> })
+    }
+}
+
+<span class="kw">impl</span> <span class="kw">crate</span><span class="ident">::Adapter</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Api</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw">super</span><span class="ident">::Adapter</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">open</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">features</span>: <span class="ident">wgt::Features</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::OpenDevice</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Api</span><span class="op">&gt;</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">enabled_extensions</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">required_device_extensions</span>(<span class="ident">features</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">enabled_phd_features</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">physical_device_features</span>(<span class="kw-2">&amp;</span><span class="ident">enabled_extensions</span>, <span class="ident">features</span>);
+
+        <span class="kw">let</span> <span class="ident">family_index</span> <span class="op">=</span> <span class="number">0</span>; <span class="comment">//TODO</span>
+        <span class="kw">let</span> <span class="ident">family_info</span> <span class="op">=</span> <span class="ident">vk::DeviceQueueCreateInfo::builder</span>()
+            .<span class="ident">queue_family_index</span>(<span class="ident">family_index</span>)
+            .<span class="ident">queue_priorities</span>(<span class="kw-2">&amp;</span>[<span class="number">1.0</span>])
+            .<span class="ident">build</span>();
+        <span class="kw">let</span> <span class="ident">family_infos</span> <span class="op">=</span> [<span class="ident">family_info</span>];
+
+        <span class="kw">let</span> <span class="ident">str_pointers</span> <span class="op">=</span> <span class="ident">enabled_extensions</span>
+            .<span class="ident">iter</span>()
+            .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">s</span><span class="op">|</span> {
+                <span class="comment">// Safe because `enabled_extensions` entries have static lifetime.</span>
+                <span class="ident">s</span>.<span class="ident">as_ptr</span>()
+            })
+            .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+
+        <span class="kw">let</span> <span class="ident">pre_info</span> <span class="op">=</span> <span class="ident">vk::DeviceCreateInfo::builder</span>()
+            .<span class="ident">queue_create_infos</span>(<span class="kw-2">&amp;</span><span class="ident">family_infos</span>)
+            .<span class="ident">enabled_extension_names</span>(<span class="kw-2">&amp;</span><span class="ident">str_pointers</span>);
+        <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">enabled_phd_features</span>
+            .<span class="ident">add_to_device_create_builder</span>(<span class="ident">pre_info</span>)
+            .<span class="ident">build</span>();
+        <span class="kw">let</span> <span class="ident">raw_device</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">instance</span>.<span class="ident">raw</span>.<span class="ident">create_device</span>(<span class="self">self</span>.<span class="ident">raw</span>, <span class="kw-2">&amp;</span><span class="ident">info</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+
+        <span class="self">self</span>.<span class="ident">device_from_raw</span>(
+            <span class="ident">raw_device</span>,
+            <span class="kw-2">&amp;</span><span class="ident">enabled_extensions</span>,
+            <span class="ident">family_info</span>.<span class="ident">queue_family_index</span>,
+            <span class="number">0</span>,
+        )
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">texture_format_capabilities</span>(

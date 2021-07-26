@@ -999,6 +999,50 @@
 <span id="999"> 999</span>
 <span id="1000">1000</span>
 <span id="1001">1001</span>
+<span id="1002">1002</span>
+<span id="1003">1003</span>
+<span id="1004">1004</span>
+<span id="1005">1005</span>
+<span id="1006">1006</span>
+<span id="1007">1007</span>
+<span id="1008">1008</span>
+<span id="1009">1009</span>
+<span id="1010">1010</span>
+<span id="1011">1011</span>
+<span id="1012">1012</span>
+<span id="1013">1013</span>
+<span id="1014">1014</span>
+<span id="1015">1015</span>
+<span id="1016">1016</span>
+<span id="1017">1017</span>
+<span id="1018">1018</span>
+<span id="1019">1019</span>
+<span id="1020">1020</span>
+<span id="1021">1021</span>
+<span id="1022">1022</span>
+<span id="1023">1023</span>
+<span id="1024">1024</span>
+<span id="1025">1025</span>
+<span id="1026">1026</span>
+<span id="1027">1027</span>
+<span id="1028">1028</span>
+<span id="1029">1029</span>
+<span id="1030">1030</span>
+<span id="1031">1031</span>
+<span id="1032">1032</span>
+<span id="1033">1033</span>
+<span id="1034">1034</span>
+<span id="1035">1035</span>
+<span id="1036">1036</span>
+<span id="1037">1037</span>
+<span id="1038">1038</span>
+<span id="1039">1039</span>
+<span id="1040">1040</span>
+<span id="1041">1041</span>
+<span id="1042">1042</span>
+<span id="1043">1043</span>
+<span id="1044">1044</span>
+<span id="1045">1045</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{<span class="ident">BindGroup</span>, <span class="ident">BindGroupLayout</span>, <span class="ident">PipelineLayout</span>},
@@ -1852,6 +1896,22 @@
         }
     }
 
+    <span class="doccomment">/// # Safety</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Refer to the creation of wgpu-hal Instance for every backend.</span>
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_hal_instance</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
+        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
+        <span class="ident">factory</span>: <span class="ident">G</span>,
+        <span class="ident">hal_instance</span>: <span class="ident">A::Instance</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;new&quot;</span>, <span class="string">&quot;Global&quot;</span>);
+        <span class="self">Self</span> {
+            <span class="ident">instance</span>: <span class="ident">A::create_instance_from_hal</span>(<span class="ident">name</span>, <span class="ident">hal_instance</span>),
+            <span class="ident">surfaces</span>: <span class="ident">Registry::without_backend</span>(<span class="kw-2">&amp;</span><span class="ident">factory</span>, <span class="string">&quot;Surface&quot;</span>),
+            <span class="ident">hubs</span>: <span class="ident">Hubs::new</span>(<span class="kw-2">&amp;</span><span class="ident">factory</span>),
+        }
+    }
+
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear_backend</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_dummy</span>: ()) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">surface_guard</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">surfaces</span>.<span class="ident">data</span>.<span class="ident">write</span>();
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
@@ -1935,6 +1995,7 @@
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">HalApi</span>: <span class="ident">hal::Api</span> {
     <span class="kw">const</span> <span class="ident">VARIANT</span>: <span class="ident">Backend</span>;
+    <span class="kw">fn</span> <span class="ident">create_instance_from_hal</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">hal_instance</span>: <span class="self">Self</span><span class="ident">::Instance</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instance</span>;
     <span class="kw">fn</span> <span class="ident">hub</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(<span class="ident">global</span>: <span class="kw-2">&amp;</span><span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">G</span><span class="op">&gt;</span>;
     <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span><span class="ident">::Surface</span>;
 }
@@ -1942,6 +2003,13 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">vulkan</span>)]</span>
 <span class="kw">impl</span> <span class="ident">HalApi</span> <span class="kw">for</span> <span class="ident">hal::api::Vulkan</span> {
     <span class="kw">const</span> <span class="ident">VARIANT</span>: <span class="ident">Backend</span> <span class="op">=</span> <span class="ident">Backend::Vulkan</span>;
+    <span class="kw">fn</span> <span class="ident">create_instance_from_hal</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">hal_instance</span>: <span class="self">Self</span><span class="ident">::Instance</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instance</span> {
+        <span class="ident">Instance</span> {
+            <span class="ident">name</span>: <span class="ident">name</span>.<span class="ident">to_owned</span>(),
+            <span class="ident">vulkan</span>: <span class="prelude-val">Some</span>(<span class="ident">hal_instance</span>),
+            ..<span class="ident">Default::default</span>()
+        }
+    }
     <span class="kw">fn</span> <span class="ident">hub</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(<span class="ident">global</span>: <span class="kw-2">&amp;</span><span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">G</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="ident">global</span>.<span class="ident">hubs</span>.<span class="ident">vulkan</span>
     }
@@ -1953,6 +2021,12 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">metal</span>)]</span>
 <span class="kw">impl</span> <span class="ident">HalApi</span> <span class="kw">for</span> <span class="ident">hal::api::Metal</span> {
     <span class="kw">const</span> <span class="ident">VARIANT</span>: <span class="ident">Backend</span> <span class="op">=</span> <span class="ident">Backend::Metal</span>;
+    <span class="kw">fn</span> <span class="ident">create_instance_from_hal</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">hal_instance</span>: <span class="self">Self</span><span class="ident">::Instance</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instance</span> {
+        <span class="ident">Instance</span> {
+            <span class="ident">name</span>: <span class="ident">name</span>.<span class="ident">to_owned</span>(),
+            <span class="ident">metal</span>: <span class="prelude-val">Some</span>(<span class="ident">hal_instance</span>),
+        }
+    }
     <span class="kw">fn</span> <span class="ident">hub</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(<span class="ident">global</span>: <span class="kw-2">&amp;</span><span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">G</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="ident">global</span>.<span class="ident">hubs</span>.<span class="ident">metal</span>
     }
@@ -1964,6 +2038,13 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">dx12</span>)]</span>
 <span class="kw">impl</span> <span class="ident">HalApi</span> <span class="kw">for</span> <span class="ident">hal::api::Dx12</span> {
     <span class="kw">const</span> <span class="ident">VARIANT</span>: <span class="ident">Backend</span> <span class="op">=</span> <span class="ident">Backend::Dx12</span>;
+    <span class="kw">fn</span> <span class="ident">create_instance_from_hal</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">hal_instance</span>: <span class="self">Self</span><span class="ident">::Instance</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instance</span> {
+        <span class="ident">Instance</span> {
+            <span class="ident">name</span>: <span class="ident">name</span>.<span class="ident">to_owned</span>(),
+            <span class="ident">dx12</span>: <span class="prelude-val">Some</span>(<span class="ident">hal_instance</span>),
+            ..<span class="ident">Default::default</span>()
+        }
+    }
     <span class="kw">fn</span> <span class="ident">hub</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(<span class="ident">global</span>: <span class="kw-2">&amp;</span><span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">G</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="ident">global</span>.<span class="ident">hubs</span>.<span class="ident">dx12</span>
     }
@@ -1988,6 +2069,13 @@ impl HalApi for hal::api::Dx11 {
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">gl</span>)]</span>
 <span class="kw">impl</span> <span class="ident">HalApi</span> <span class="kw">for</span> <span class="ident">hal::api::Gles</span> {
     <span class="kw">const</span> <span class="ident">VARIANT</span>: <span class="ident">Backend</span> <span class="op">=</span> <span class="ident">Backend::Gl</span>;
+    <span class="kw">fn</span> <span class="ident">create_instance_from_hal</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">hal_instance</span>: <span class="self">Self</span><span class="ident">::Instance</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instance</span> {
+        <span class="ident">Instance</span> {
+            <span class="ident">name</span>: <span class="ident">name</span>.<span class="ident">to_owned</span>(),
+            <span class="ident">gl</span>: <span class="prelude-val">Some</span>(<span class="ident">hal_instance</span>),
+            ..<span class="ident">Default::default</span>()
+        }
+    }
     <span class="kw">fn</span> <span class="ident">hub</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(<span class="ident">global</span>: <span class="kw-2">&amp;</span><span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">G</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="ident">global</span>.<span class="ident">hubs</span>.<span class="ident">gl</span>
     }
