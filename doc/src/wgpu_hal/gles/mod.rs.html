@@ -645,6 +645,32 @@
 <span id="645">645</span>
 <span id="646">646</span>
 <span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
 </pre><pre class="rust">
 <span class="doccomment">/*!
 # OpenGL ES3 API (aka GLES3).
@@ -716,6 +742,8 @@ To address this, we invalidate the vertex buffers based on:
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>))]</span>
 <span class="kw">use</span> <span class="self">self</span><span class="ident">::egl</span>::{<span class="ident">Instance</span>, <span class="ident">Surface</span>};
 
+<span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
+
 <span class="kw">use</span> <span class="ident">glow::HasContext</span>;
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">ops::Range</span>, <span class="ident">sync::Arc</span>};
@@ -761,13 +789,26 @@ To address this, we invalidate the vertex buffers based on:
     <span class="doccomment">/// change the exposed feature set.</span>
     <span class="kw">struct</span> <span class="ident">PrivateCapabilities</span>: <span class="ident">u32</span> {
         <span class="doccomment">/// Support explicit layouts in shader.</span>
-        <span class="kw">const</span> <span class="ident">SHADER_BINDING_LAYOUT</span> <span class="op">=</span> <span class="number">0x0001</span>;
+        <span class="kw">const</span> <span class="ident">SHADER_BINDING_LAYOUT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">0</span>;
         <span class="doccomment">/// Support extended shadow sampling instructions.</span>
-        <span class="kw">const</span> <span class="ident">SHADER_TEXTURE_SHADOW_LOD</span> <span class="op">=</span> <span class="number">0x0002</span>;
+        <span class="kw">const</span> <span class="ident">SHADER_TEXTURE_SHADOW_LOD</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
         <span class="doccomment">/// Support memory barriers.</span>
-        <span class="kw">const</span> <span class="ident">MEMORY_BARRIERS</span> <span class="op">=</span> <span class="number">0x0004</span>;
+        <span class="kw">const</span> <span class="ident">MEMORY_BARRIERS</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
         <span class="doccomment">/// Vertex buffer layouts separate from the data.</span>
-        <span class="kw">const</span> <span class="ident">VERTEX_BUFFER_LAYOUT</span> <span class="op">=</span> <span class="number">0x0008</span>;
+        <span class="kw">const</span> <span class="ident">VERTEX_BUFFER_LAYOUT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
+    }
+}
+
+<span class="macro">bitflags::bitflags!</span> {
+    <span class="doccomment">/// Flags that indicate necessary workarounds for specific devices or driver bugs</span>
+    <span class="kw">struct</span> <span class="ident">Workarounds</span>: <span class="ident">u32</span> {
+        <span class="comment">// Needs workaround for Intel Mesa bug:</span>
+        <span class="comment">// https://gitlab.freedesktop.org/mesa/mesa/-/issues/2565.</span>
+        <span class="comment">//</span>
+        <span class="comment">// This comment</span>
+        <span class="comment">// (https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/4972/diffs?diff_id=75888#22f5d1004713c9bbf857988c7efb81631ab88f99_323_327)</span>
+        <span class="comment">// seems to indicate all skylake models are effected.</span>
+        <span class="kw">const</span> <span class="ident">MESA_I915_SRGB_SHADER_CLEAR</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">0</span>;
     }
 }
 
@@ -796,6 +837,7 @@ To address this, we invalidate the vertex buffers based on:
 <span class="kw">struct</span> <span class="ident">AdapterShared</span> {
     <span class="ident">context</span>: <span class="ident">glow::Context</span>,
     <span class="ident">private_caps</span>: <span class="ident">PrivateCapabilities</span>,
+    <span class="ident">workarounds</span>: <span class="ident">Workarounds</span>,
     <span class="ident">shading_language_version</span>: <span class="ident">naga::back::glsl::Version</span>,
 }
 
@@ -815,11 +857,16 @@ To address this, we invalidate the vertex buffers based on:
     <span class="ident">features</span>: <span class="ident">wgt::Features</span>,
     <span class="ident">draw_fbo</span>: <span class="ident">glow::Framebuffer</span>,
     <span class="ident">copy_fbo</span>: <span class="ident">glow::Framebuffer</span>,
-    <span class="doccomment">/// Keep a reasonably large buffer filled with zeroes,</span>
-    <span class="doccomment">/// so that we can implement `FillBuffer` of zeroes</span>
-    <span class="doccomment">/// by copying from it.</span>
+    <span class="doccomment">/// Shader program used to clear the screen for [`PrivateCapabilities::REQUIRES_SHADER_CLEAR`]</span>
+    <span class="doccomment">/// devices.</span>
+    <span class="ident">shader_clear_program</span>: <span class="ident">glow::Program</span>,
+    <span class="doccomment">/// The uniform location of the color uniform in the shader clear program</span>
+    <span class="ident">shader_clear_program_color_uniform_location</span>: <span class="ident">glow::UniformLocation</span>,
+    <span class="doccomment">/// Keep a reasonably large buffer filled with zeroes, so that we can implement `FillBuffer` of</span>
+    <span class="doccomment">/// zeroes by copying from it.</span>
     <span class="ident">zero_buffer</span>: <span class="ident">glow::Buffer</span>,
     <span class="ident">temp_query_results</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>,
+    <span class="ident">draw_buffer_count</span>: <span class="ident">u8</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -866,6 +913,7 @@ To address this, we invalidate the vertex buffers based on:
     <span class="ident">aspects</span>: <span class="kw">crate</span><span class="ident">::FormatAspects</span>,
     <span class="ident">mip_levels</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
     <span class="ident">array_layers</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+    <span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -1119,7 +1167,7 @@ To address this, we invalidate the vertex buffers based on:
     <span class="ident">clamp_depth</span>: <span class="ident">bool</span>,
 }
 
-<span class="kw">type</span> <span class="ident">InvalidatedAttachments</span> <span class="op">=</span> <span class="ident">arrayvec::ArrayVec</span><span class="op">&lt;</span><span class="ident">u32</span>, { <span class="kw">crate</span><span class="ident">::MAX_COLOR_TARGETS</span> <span class="op">+</span> <span class="number">2</span> }<span class="op">&gt;</span>;
+<span class="kw">type</span> <span class="ident">InvalidatedAttachments</span> <span class="op">=</span> <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">u32</span>, { <span class="kw">crate</span><span class="ident">::MAX_COLOR_TARGETS</span> <span class="op">+</span> <span class="number">2</span> }<span class="op">&gt;</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">enum</span> <span class="ident">Command</span> {
@@ -1210,7 +1258,11 @@ To address this, we invalidate the vertex buffers based on:
     },
     <span class="ident">InvalidateAttachments</span>(<span class="ident">InvalidatedAttachments</span>),
     <span class="ident">SetDrawColorBuffers</span>(<span class="ident">u8</span>),
-    <span class="ident">ClearColorF</span>(<span class="ident">u32</span>, [<span class="ident">f32</span>; <span class="number">4</span>]),
+    <span class="ident">ClearColorF</span> {
+        <span class="ident">draw_buffer</span>: <span class="ident">u32</span>,
+        <span class="ident">color</span>: [<span class="ident">f32</span>; <span class="number">4</span>],
+        <span class="ident">is_srgb</span>: <span class="ident">bool</span>,
+    },
     <span class="ident">ClearColorU</span>(<span class="ident">u32</span>, [<span class="ident">u32</span>; <span class="number">4</span>]),
     <span class="ident">ClearColorI</span>(<span class="ident">u32</span>, [<span class="ident">i32</span>; <span class="number">4</span>]),
     <span class="ident">ClearDepth</span>(<span class="ident">f32</span>),
