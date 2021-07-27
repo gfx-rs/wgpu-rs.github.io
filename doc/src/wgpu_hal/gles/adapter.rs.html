@@ -593,6 +593,13 @@
 <span id="593">593</span>
 <span id="594">594</span>
 <span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">glow::HasContext</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
@@ -815,6 +822,12 @@
             <span class="ident">vertex_shader_storage_blocks</span>.<span class="ident">min</span>(<span class="ident">fragment_shader_storage_blocks</span>)
         };
 
+        <span class="kw">let</span> <span class="ident">max_storage_textures_per_shader_stage</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">vertex_shader_storage_textures</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="ident">fragment_shader_storage_textures</span>
+        } <span class="kw">else</span> {
+            <span class="ident">vertex_shader_storage_textures</span>.<span class="ident">min</span>(<span class="ident">fragment_shader_storage_textures</span>)
+        };
+
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">wgt::Features::empty</span>()
             <span class="op">|</span> <span class="ident">wgt::Features::TEXTURE_COMPRESSION_ETC2</span>
             <span class="op">|</span> <span class="ident">wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span>;
@@ -824,7 +837,9 @@
         );
         <span class="ident">features</span>.<span class="ident">set</span>(
             <span class="ident">wgt::Features::VERTEX_WRITABLE_STORAGE</span>,
-            <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">vertex_ssbo_false_zero</span>,
+            <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>)
+                <span class="op">&amp;&amp;</span> (<span class="ident">vertex_shader_storage_blocks</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">vertex_ssbo_false_zero</span>)
+                <span class="op">&amp;&amp;</span> <span class="ident">vertex_shader_storage_textures</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
         );
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">downlevel_flags</span> <span class="op">=</span> <span class="ident">wgt::DownlevelFlags::empty</span>()
@@ -871,8 +886,7 @@
             <span class="ident">max_sampled_textures_per_shader_stage</span>: <span class="kw">super</span><span class="ident">::MAX_TEXTURE_SLOTS</span> <span class="kw">as</span> <span class="ident">u32</span>,
             <span class="ident">max_samplers_per_shader_stage</span>: <span class="kw">super</span><span class="ident">::MAX_SAMPLERS</span> <span class="kw">as</span> <span class="ident">u32</span>,
             <span class="ident">max_storage_buffers_per_shader_stage</span>,
-            <span class="ident">max_storage_textures_per_shader_stage</span>: <span class="ident">vertex_shader_storage_textures</span>
-                .<span class="ident">min</span>(<span class="ident">fragment_shader_storage_textures</span>),
+            <span class="ident">max_storage_textures_per_shader_stage</span>,
             <span class="ident">max_uniform_buffers_per_shader_stage</span>,
             <span class="ident">max_uniform_buffer_binding_size</span>: <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_UNIFORM_BLOCK_SIZE</span>)
                 <span class="kw">as</span> <span class="ident">u32</span>,
