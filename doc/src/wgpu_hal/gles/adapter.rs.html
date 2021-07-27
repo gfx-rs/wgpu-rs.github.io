@@ -600,6 +600,12 @@
 <span id="600">600</span>
 <span id="601">601</span>
 <span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">glow::HasContext</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
@@ -766,7 +772,10 @@
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">expose</span>(<span class="ident">gl</span>: <span class="ident">glow::Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::ExposedAdapter</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Api</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">expose</span>(
+        <span class="ident">context</span>: <span class="kw">super</span><span class="ident">::AdapterContext</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::ExposedAdapter</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Api</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="kw">let</span> <span class="ident">extensions</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">supported_extensions</span>();
 
         <span class="kw">let</span> (<span class="ident">vendor_const</span>, <span class="ident">renderer_const</span>) <span class="op">=</span> <span class="kw">if</span> <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;WEBGL_debug_renderer_info&quot;</span>) {
@@ -936,10 +945,13 @@
 
         <span class="kw">let</span> <span class="ident">downlevel_defaults</span> <span class="op">=</span> <span class="ident">wgt::DownlevelLimits</span> {};
 
+        <span class="comment">// Drop the GL guard so we can move the context into AdapterShared</span>
+        <span class="ident">drop</span>(<span class="ident">gl</span>);
+
         <span class="prelude-val">Some</span>(<span class="kw">crate</span><span class="ident">::ExposedAdapter</span> {
             <span class="ident">adapter</span>: <span class="kw">super</span><span class="ident">::Adapter</span> {
                 <span class="ident">shared</span>: <span class="ident">Arc::new</span>(<span class="kw">super</span><span class="ident">::AdapterShared</span> {
-                    <span class="ident">context</span>: <span class="ident">gl</span>,
+                    <span class="ident">context</span>,
                     <span class="ident">private_caps</span>,
                     <span class="ident">workarounds</span>,
                     <span class="ident">shading_language_version</span>,
@@ -1004,7 +1016,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">features</span>: <span class="ident">wgt::Features</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::OpenDevice</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Api</span><span class="op">&gt;</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="ident">gl</span>.<span class="ident">pixel_store_i32</span>(<span class="ident">glow::UNPACK_ALIGNMENT</span>, <span class="number">1</span>);
         <span class="ident">gl</span>.<span class="ident">pixel_store_i32</span>(<span class="ident">glow::PACK_ALIGNMENT</span>, <span class="number">1</span>);
         <span class="kw">let</span> <span class="ident">main_vao</span> <span class="op">=</span> <span class="ident">gl</span>

@@ -971,11 +971,15 @@
 <span id="971">971</span>
 <span id="972">972</span>
 <span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::Command</span> <span class="kw">as</span> <span class="ident">C</span>;
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">glow::HasContext</span>;
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">mem</span>, <span class="ident">ops::Range</span>, <span class="ident">slice</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">mem</span>, <span class="ident">ops::Range</span>, <span class="ident">slice</span>, <span class="ident">sync::Arc</span>};
 
 <span class="kw">const</span> <span class="ident">DEBUG_ID</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0</span>;
 
@@ -1001,9 +1005,7 @@
 
 <span class="kw">impl</span> <span class="kw">super</span><span class="ident">::Queue</span> {
     <span class="doccomment">/// Performs a manual shader clear, used as a workaround for a clearing bug on mesa</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">perform_shader_clear</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">draw_buffer</span>: <span class="ident">u32</span>, <span class="ident">color</span>: [<span class="ident">f32</span>; <span class="number">4</span>]) {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
-
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">perform_shader_clear</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">glow::Context</span>, <span class="ident">draw_buffer</span>: <span class="ident">u32</span>, <span class="ident">color</span>: [<span class="ident">f32</span>; <span class="number">4</span>]) {
         <span class="ident">gl</span>.<span class="ident">use_program</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">shader_clear_program</span>));
         <span class="ident">gl</span>.<span class="ident">uniform_4_f32</span>(
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shader_clear_program_color_uniform_location</span>),
@@ -1030,8 +1032,7 @@
         }
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">reset_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">reset_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">glow::Context</span>) {
         <span class="ident">gl</span>.<span class="ident">use_program</span>(<span class="prelude-val">None</span>);
         <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::FRAMEBUFFER</span>, <span class="prelude-val">None</span>);
         <span class="ident">gl</span>.<span class="ident">disable</span>(<span class="ident">glow::DEPTH_TEST</span>);
@@ -1045,8 +1046,13 @@
         }
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_attachment</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fbo_target</span>: <span class="ident">u32</span>, <span class="ident">attachment</span>: <span class="ident">u32</span>, <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="kw">super</span><span class="ident">::TextureView</span>) {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_attachment</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">glow::Context</span>,
+        <span class="ident">fbo_target</span>: <span class="ident">u32</span>,
+        <span class="ident">attachment</span>: <span class="ident">u32</span>,
+        <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="kw">super</span><span class="ident">::TextureView</span>,
+    ) {
         <span class="kw">match</span> <span class="ident">view</span>.<span class="ident">inner</span> {
             <span class="kw">super</span><span class="ident">::TextureInner::Renderbuffer</span> { <span class="ident">raw</span> } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">gl</span>.<span class="ident">framebuffer_renderbuffer</span>(<span class="ident">fbo_target</span>, <span class="ident">attachment</span>, <span class="ident">glow::RENDERBUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">raw</span>));
@@ -1073,8 +1079,13 @@
         }
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">process</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">command</span>: <span class="kw-2">&amp;</span><span class="ident">C</span>, <span class="ident">data_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">data_words</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>]) {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">process</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">glow::Context</span>,
+        <span class="ident">command</span>: <span class="kw-2">&amp;</span><span class="ident">C</span>,
+        <span class="ident">data_bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
+        <span class="ident">data_words</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>],
+    ) {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">command</span> {
             <span class="ident">C::Draw</span> {
                 <span class="ident">topology</span>,
@@ -1525,7 +1536,7 @@
                 <span class="ident">attachment</span>,
                 <span class="kw-2">ref</span> <span class="ident">view</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="self">self</span>.<span class="ident">set_attachment</span>(<span class="ident">glow::DRAW_FRAMEBUFFER</span>, <span class="ident">attachment</span>, <span class="ident">view</span>);
+                <span class="self">self</span>.<span class="ident">set_attachment</span>(<span class="ident">gl</span>, <span class="ident">glow::DRAW_FRAMEBUFFER</span>, <span class="ident">attachment</span>, <span class="ident">view</span>);
             }
             <span class="ident">C::ResolveAttachment</span> {
                 <span class="ident">attachment</span>,
@@ -1535,7 +1546,7 @@
                 <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::READ_FRAMEBUFFER</span>, <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">draw_fbo</span>));
                 <span class="ident">gl</span>.<span class="ident">read_buffer</span>(<span class="ident">attachment</span>);
                 <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::DRAW_FRAMEBUFFER</span>, <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">copy_fbo</span>));
-                <span class="self">self</span>.<span class="ident">set_attachment</span>(<span class="ident">glow::DRAW_FRAMEBUFFER</span>, <span class="ident">glow::COLOR_ATTACHMENT0</span>, <span class="ident">dst</span>);
+                <span class="self">self</span>.<span class="ident">set_attachment</span>(<span class="ident">gl</span>, <span class="ident">glow::DRAW_FRAMEBUFFER</span>, <span class="ident">glow::COLOR_ATTACHMENT0</span>, <span class="ident">dst</span>);
                 <span class="ident">gl</span>.<span class="ident">blit_framebuffer</span>(
                     <span class="number">0</span>,
                     <span class="number">0</span>,
@@ -1575,7 +1586,7 @@
                     .<span class="ident">contains</span>(<span class="kw">super</span><span class="ident">::Workarounds::MESA_I915_SRGB_SHADER_CLEAR</span>)
                     <span class="op">&amp;&amp;</span> <span class="ident">is_srgb</span>
                 {
-                    <span class="self">self</span>.<span class="ident">perform_shader_clear</span>(<span class="ident">draw_buffer</span>, <span class="kw-2">*</span><span class="ident">color</span>);
+                    <span class="self">self</span>.<span class="ident">perform_shader_clear</span>(<span class="ident">gl</span>, <span class="ident">draw_buffer</span>, <span class="kw-2">*</span><span class="ident">color</span>);
                 } <span class="kw">else</span> {
                     <span class="ident">gl</span>.<span class="ident">clear_buffer_f32_slice</span>(<span class="ident">glow::COLOR</span>, <span class="ident">draw_buffer</span>, <span class="ident">color</span>);
                 }
@@ -1907,25 +1918,22 @@
         <span class="ident">command_buffers</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="kw">super</span><span class="ident">::CommandBuffer</span>],
         <span class="ident">signal_fence</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">super</span><span class="ident">::Fence</span>, <span class="kw">crate</span><span class="ident">::FenceValue</span>)<span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">reset_state</span>();
+        <span class="kw">let</span> <span class="ident">shared</span> <span class="op">=</span> <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>);
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
+        <span class="self">self</span>.<span class="ident">reset_state</span>(<span class="ident">gl</span>);
         <span class="kw">for</span> <span class="ident">cmd_buf</span> <span class="kw">in</span> <span class="ident">command_buffers</span>.<span class="ident">iter</span>() {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">label</span>) <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">label</span> {
-                <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">push_debug_group</span>(
-                    <span class="ident">glow::DEBUG_SOURCE_APPLICATION</span>,
-                    <span class="ident">DEBUG_ID</span>,
-                    <span class="ident">label</span>,
-                );
+                <span class="ident">gl</span>.<span class="ident">push_debug_group</span>(<span class="ident">glow::DEBUG_SOURCE_APPLICATION</span>, <span class="ident">DEBUG_ID</span>, <span class="ident">label</span>);
             }
             <span class="kw">for</span> <span class="ident">command</span> <span class="kw">in</span> <span class="ident">cmd_buf</span>.<span class="ident">commands</span>.<span class="ident">iter</span>() {
-                <span class="self">self</span>.<span class="ident">process</span>(<span class="ident">command</span>, <span class="kw-2">&amp;</span><span class="ident">cmd_buf</span>.<span class="ident">data_bytes</span>, <span class="kw-2">&amp;</span><span class="ident">cmd_buf</span>.<span class="ident">data_words</span>);
+                <span class="self">self</span>.<span class="ident">process</span>(<span class="ident">gl</span>, <span class="ident">command</span>, <span class="kw-2">&amp;</span><span class="ident">cmd_buf</span>.<span class="ident">data_bytes</span>, <span class="kw-2">&amp;</span><span class="ident">cmd_buf</span>.<span class="ident">data_words</span>);
             }
             <span class="kw">if</span> <span class="ident">cmd_buf</span>.<span class="ident">label</span>.<span class="ident">is_some</span>() {
-                <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">pop_debug_group</span>();
+                <span class="ident">gl</span>.<span class="ident">pop_debug_group</span>();
             }
         }
 
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">fence</span>, <span class="ident">value</span>)) <span class="op">=</span> <span class="ident">signal_fence</span> {
-            <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
             <span class="ident">fence</span>.<span class="ident">maintain</span>(<span class="ident">gl</span>);
             <span class="kw">let</span> <span class="ident">sync</span> <span class="op">=</span> <span class="ident">gl</span>
                 .<span class="ident">fence_sync</span>(<span class="ident">glow::SYNC_GPU_COMMANDS_COMPLETE</span>, <span class="number">0</span>)
@@ -1941,7 +1949,7 @@
         <span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw">super</span><span class="ident">::Surface</span>,
         <span class="ident">texture</span>: <span class="kw">super</span><span class="ident">::Texture</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="kw">crate</span><span class="ident">::SurfaceError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">get_without_egl_lock</span>();
         <span class="ident">surface</span>.<span class="ident">present</span>(<span class="ident">texture</span>, <span class="ident">gl</span>)
     }
 }

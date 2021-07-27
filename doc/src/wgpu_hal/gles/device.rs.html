@@ -1038,6 +1038,7 @@
 <span id="1038">1038</span>
 <span id="1039">1039</span>
 <span id="1040">1040</span>
+<span id="1041">1041</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span><span class="ident">::conv</span>;
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::auxil::map_naga_stage</span>;
@@ -1114,12 +1115,11 @@
 
 <span class="kw">impl</span> <span class="kw">super</span><span class="ident">::Device</span> {
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">compile_shader</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">glow::Context</span>,
         <span class="ident">shader</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
         <span class="ident">naga_stage</span>: <span class="ident">naga::ShaderStage</span>,
         <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">glow::Shader</span>, <span class="kw">crate</span><span class="ident">::PipelineError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">naga_stage</span> {
             <span class="ident">naga::ShaderStage::Vertex</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">glow::VERTEX_SHADER</span>,
             <span class="ident">naga::ShaderStage::Fragment</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">glow::FRAGMENT_SHADER</span>,
@@ -1152,7 +1152,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">create_shader</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">glow::Context</span>,
         <span class="ident">naga_stage</span>: <span class="ident">naga::ShaderStage</span>,
         <span class="ident">stage</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::ProgrammableStage</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Api</span><span class="op">&gt;</span>,
         <span class="ident">context</span>: <span class="ident">CompilationContext</span>,
@@ -1197,16 +1197,16 @@
             <span class="ident">reflection_info</span>,
         );
 
-        <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">compile_shader</span>(<span class="kw-2">&amp;</span><span class="ident">output</span>, <span class="ident">naga_stage</span>, <span class="ident">stage</span>.<span class="ident">module</span>.<span class="ident">label</span>.<span class="ident">as_deref</span>()) }
+        <span class="kw">unsafe</span> { <span class="self">Self</span><span class="ident">::compile_shader</span>(<span class="ident">gl</span>, <span class="kw-2">&amp;</span><span class="ident">output</span>, <span class="ident">naga_stage</span>, <span class="ident">stage</span>.<span class="ident">module</span>.<span class="ident">label</span>.<span class="ident">as_deref</span>()) }
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_pipeline</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">ShaderStage</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">glow::Context</span>,
         <span class="ident">shaders</span>: <span class="ident">I</span>,
         <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="kw">super</span><span class="ident">::PipelineLayout</span>,
         <span class="ident">label</span>: <span class="kw">crate</span><span class="ident">::Label</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::PipelineInner</span>, <span class="kw">crate</span><span class="ident">::PipelineError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
         <span class="kw">let</span> <span class="ident">program</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">create_program</span>().<span class="ident">unwrap</span>();
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">label</span>) <span class="op">=</span> <span class="ident">label</span> {
             <span class="kw">if</span> <span class="ident">gl</span>.<span class="ident">supports_debug</span>() {
@@ -1227,7 +1227,7 @@
                 <span class="ident">name_binding_map</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">name_binding_map</span>,
             };
 
-            <span class="kw">let</span> <span class="ident">shader</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_shader</span>(<span class="ident">naga_stage</span>, <span class="ident">stage</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
+            <span class="kw">let</span> <span class="ident">shader</span> <span class="op">=</span> <span class="self">Self</span><span class="ident">::create_shader</span>(<span class="ident">gl</span>, <span class="ident">naga_stage</span>, <span class="ident">stage</span>, <span class="ident">context</span>)<span class="question-mark">?</span>;
             <span class="ident">shaders_to_delete</span>.<span class="ident">push</span>(<span class="ident">shader</span>);
         }
 
@@ -1240,7 +1240,7 @@
             <span class="kw">let</span> <span class="ident">shader_src</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;#version {} es \n void main(void) {{}}&quot;</span>, <span class="ident">version</span>,);
             <span class="macro">log::info!</span>(<span class="string">&quot;Only vertex shader is present. Creating an empty fragment shader&quot;</span>,);
             <span class="kw">let</span> <span class="ident">shader</span> <span class="op">=</span>
-                <span class="self">self</span>.<span class="ident">compile_shader</span>(<span class="kw-2">&amp;</span><span class="ident">shader_src</span>, <span class="ident">naga::ShaderStage::Fragment</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;_dummy&quot;</span>))<span class="question-mark">?</span>;
+                <span class="self">Self</span><span class="ident">::compile_shader</span>(<span class="ident">gl</span>, <span class="kw-2">&amp;</span><span class="ident">shader_src</span>, <span class="ident">naga::ShaderStage::Fragment</span>, <span class="prelude-val">Some</span>(<span class="string">&quot;_dummy&quot;</span>))<span class="question-mark">?</span>;
             <span class="ident">shaders_to_delete</span>.<span class="ident">push</span>(<span class="ident">shader</span>);
         }
 
@@ -1333,7 +1333,7 @@
 
 <span class="kw">impl</span> <span class="kw">crate</span><span class="ident">::Device</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Api</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="kw">super</span><span class="ident">::Device</span> {
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">exit</span>(<span class="self">self</span>, <span class="ident">queue</span>: <span class="kw">super</span><span class="ident">::Queue</span>) {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="ident">gl</span>.<span class="ident">delete_vertex_array</span>(<span class="self">self</span>.<span class="ident">main_vao</span>);
         <span class="ident">gl</span>.<span class="ident">delete_framebuffer</span>(<span class="ident">queue</span>.<span class="ident">draw_fbo</span>);
         <span class="ident">gl</span>.<span class="ident">delete_framebuffer</span>(<span class="ident">queue</span>.<span class="ident">copy_fbo</span>);
@@ -1344,7 +1344,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::BufferDescriptor</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Buffer</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
 
         <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="kw">crate</span><span class="ident">::BufferUses::INDEX</span>) {
             <span class="ident">glow::ELEMENT_ARRAY_BUFFER</span>
@@ -1401,7 +1401,7 @@
         })
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_buffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buffer</span>: <span class="kw">super</span><span class="ident">::Buffer</span>) {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="ident">gl</span>.<span class="ident">delete_buffer</span>(<span class="ident">buffer</span>.<span class="ident">raw</span>);
     }
 
@@ -1410,7 +1410,7 @@
         <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="kw">super</span><span class="ident">::Buffer</span>,
         <span class="ident">range</span>: <span class="kw">crate</span><span class="ident">::MemoryRange</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::BufferMapping</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
 
         <span class="kw">let</span> <span class="ident">is_coherent</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">map_flags</span> <span class="op">&amp;</span> <span class="ident">glow::MAP_COHERENT_BIT</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
 
@@ -1429,7 +1429,7 @@
         })
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">unmap_buffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="kw">super</span><span class="ident">::Buffer</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="ident">gl</span>.<span class="ident">bind_buffer</span>(<span class="ident">buffer</span>.<span class="ident">target</span>, <span class="prelude-val">Some</span>(<span class="ident">buffer</span>.<span class="ident">raw</span>));
         <span class="ident">gl</span>.<span class="ident">unmap_buffer</span>(<span class="ident">buffer</span>.<span class="ident">target</span>);
         <span class="ident">gl</span>.<span class="ident">bind_buffer</span>(<span class="ident">buffer</span>.<span class="ident">target</span>, <span class="prelude-val">None</span>);
@@ -1439,7 +1439,7 @@
     <span class="kw">where</span>
         <span class="ident">I</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::MemoryRange</span><span class="op">&gt;</span>,
     {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="ident">gl</span>.<span class="ident">bind_buffer</span>(<span class="ident">buffer</span>.<span class="ident">target</span>, <span class="prelude-val">Some</span>(<span class="ident">buffer</span>.<span class="ident">raw</span>));
         <span class="kw">for</span> <span class="ident">range</span> <span class="kw">in</span> <span class="ident">ranges</span> {
             <span class="ident">gl</span>.<span class="ident">flush_mapped_buffer_range</span>(
@@ -1457,7 +1457,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::TextureDescriptor</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Texture</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
 
         <span class="kw">let</span> <span class="ident">render_usage</span> <span class="op">=</span> <span class="kw">crate</span><span class="ident">::TextureUses::COLOR_TARGET</span>
             <span class="op">|</span> <span class="kw">crate</span><span class="ident">::TextureUses::DEPTH_STENCIL_WRITE</span>
@@ -1600,7 +1600,7 @@
         })
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_texture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">texture</span>: <span class="kw">super</span><span class="ident">::Texture</span>) {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="kw">match</span> <span class="ident">texture</span>.<span class="ident">inner</span> {
             <span class="kw">super</span><span class="ident">::TextureInner::Renderbuffer</span> { <span class="ident">raw</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="ident">gl</span>.<span class="ident">delete_renderbuffer</span>(<span class="ident">raw</span>);
@@ -1641,7 +1641,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::SamplerDescriptor</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Sampler</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
 
         <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">create_sampler</span>().<span class="ident">unwrap</span>();
 
@@ -1708,7 +1708,7 @@
         <span class="prelude-val">Ok</span>(<span class="kw">super</span><span class="ident">::Sampler</span> { <span class="ident">raw</span> })
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_sampler</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">sampler</span>: <span class="kw">super</span><span class="ident">::Sampler</span>) {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="ident">gl</span>.<span class="ident">delete_sampler</span>(<span class="ident">sampler</span>.<span class="ident">raw</span>);
     }
 
@@ -1903,12 +1903,13 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::RenderPipelineDescriptor</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Api</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::RenderPipeline</span>, <span class="kw">crate</span><span class="ident">::PipelineError</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="kw">let</span> <span class="ident">shaders</span> <span class="op">=</span> <span class="ident">iter::once</span>((<span class="ident">naga::ShaderStage::Vertex</span>, <span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">vertex_stage</span>)).<span class="ident">chain</span>(
             <span class="ident">desc</span>.<span class="ident">fragment_stage</span>
                 .<span class="ident">as_ref</span>()
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">fs</span><span class="op">|</span> (<span class="ident">naga::ShaderStage::Fragment</span>, <span class="ident">fs</span>)),
         );
-        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_pipeline</span>(<span class="ident">shaders</span>, <span class="ident">desc</span>.<span class="ident">layout</span>, <span class="ident">desc</span>.<span class="ident">label</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_pipeline</span>(<span class="ident">gl</span>, <span class="ident">shaders</span>, <span class="ident">desc</span>.<span class="ident">layout</span>, <span class="ident">desc</span>.<span class="ident">label</span>)<span class="question-mark">?</span>;
 
         <span class="kw">let</span> (<span class="ident">vertex_buffers</span>, <span class="ident">vertex_attributes</span>) <span class="op">=</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffers</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
@@ -1966,7 +1967,7 @@
         })
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_render_pipeline</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pipeline</span>: <span class="kw">super</span><span class="ident">::RenderPipeline</span>) {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="ident">gl</span>.<span class="ident">delete_program</span>(<span class="ident">pipeline</span>.<span class="ident">inner</span>.<span class="ident">program</span>);
     }
 
@@ -1974,13 +1975,14 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="kw">crate</span><span class="ident">::ComputePipelineDescriptor</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::Api</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::ComputePipeline</span>, <span class="kw">crate</span><span class="ident">::PipelineError</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="kw">let</span> <span class="ident">shaders</span> <span class="op">=</span> <span class="ident">iter::once</span>((<span class="ident">naga::ShaderStage::Compute</span>, <span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">stage</span>));
-        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_pipeline</span>(<span class="ident">shaders</span>, <span class="ident">desc</span>.<span class="ident">layout</span>, <span class="ident">desc</span>.<span class="ident">label</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_pipeline</span>(<span class="ident">gl</span>, <span class="ident">shaders</span>, <span class="ident">desc</span>.<span class="ident">layout</span>, <span class="ident">desc</span>.<span class="ident">label</span>)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span><span class="ident">::ComputePipeline</span> { <span class="ident">inner</span> })
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_compute_pipeline</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pipeline</span>: <span class="kw">super</span><span class="ident">::ComputePipeline</span>) {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="ident">gl</span>.<span class="ident">delete_program</span>(<span class="ident">pipeline</span>.<span class="ident">inner</span>.<span class="ident">program</span>);
     }
 
@@ -1989,7 +1991,7 @@
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::QuerySetDescriptor</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::Label</span><span class="op">&gt;</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">super</span><span class="ident">::QuerySet</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="ident">std::fmt::Write</span>;
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">temp_string</span> <span class="op">=</span> <span class="ident">String::new</span>();
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">queries</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">desc</span>.<span class="ident">count</span> <span class="kw">as</span> <span class="ident">usize</span>);
@@ -2016,7 +2018,7 @@
         })
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_query_set</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">set</span>: <span class="kw">super</span><span class="ident">::QuerySet</span>) {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">query</span> <span class="kw">in</span> <span class="ident">set</span>.<span class="ident">queries</span>.<span class="ident">iter</span>() {
             <span class="ident">gl</span>.<span class="ident">delete_query</span>(<span class="ident">query</span>);
         }
@@ -2028,7 +2030,7 @@
         })
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_fence</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fence</span>: <span class="kw">super</span><span class="ident">::Fence</span>) {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">sync</span>) <span class="kw">in</span> <span class="ident">fence</span>.<span class="ident">pending</span> {
             <span class="ident">gl</span>.<span class="ident">delete_sync</span>(<span class="ident">sync</span>);
         }
@@ -2037,7 +2039,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">fence</span>: <span class="kw-2">&amp;</span><span class="kw">super</span><span class="ident">::Fence</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw">crate</span><span class="ident">::FenceValue</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">fence</span>.<span class="ident">get_latest</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>))
+        <span class="prelude-val">Ok</span>(<span class="ident">fence</span>.<span class="ident">get_latest</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>()))
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">wait</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -2046,7 +2048,7 @@
         <span class="ident">timeout_ms</span>: <span class="ident">u32</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="kw">crate</span><span class="ident">::DeviceError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">fence</span>.<span class="ident">last_completed</span> <span class="op">&lt;</span> <span class="ident">wait_value</span> {
-            <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>;
+            <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
             <span class="kw">let</span> <span class="ident">timeout_ns</span> <span class="op">=</span> (<span class="ident">timeout_ms</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="number">1_000_000</span>).<span class="ident">min</span>(<span class="op">!</span><span class="number">0u32</span> <span class="kw">as</span> <span class="ident">u64</span>);
             <span class="kw">let</span> <span class="kw-2">&amp;</span>(<span class="kw">_</span>, <span class="ident">sync</span>) <span class="op">=</span> <span class="ident">fence</span>
                 .<span class="ident">pending</span>
