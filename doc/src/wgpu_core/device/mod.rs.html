@@ -4775,6 +4775,13 @@
 <span id="4775">4775</span>
 <span id="4776">4776</span>
 <span id="4777">4777</span>
+<span id="4778">4778</span>
+<span id="4779">4779</span>
+<span id="4780">4780</span>
+<span id="4781">4781</span>
+<span id="4782">4782</span>
+<span id="4783">4783</span>
+<span id="4784">4784</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
@@ -5523,17 +5530,17 @@
             <span class="kw">let</span> <span class="ident">mask_copy</span> <span class="op">=</span> <span class="op">!</span>(<span class="ident">hal::TextureUses::COPY_SRC</span> <span class="op">|</span> <span class="ident">hal::TextureUses::COPY_DST</span>);
             <span class="kw">let</span> <span class="ident">mask_dimension</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">view_dim</span> {
                 <span class="ident">wgt::TextureViewDimension::Cube</span> <span class="op">|</span> <span class="ident">wgt::TextureViewDimension::CubeArray</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">hal::TextureUses::SAMPLED</span>
+                    <span class="ident">hal::TextureUses::RESOURCE</span>
                 }
                 <span class="ident">wgt::TextureViewDimension::D3</span> <span class="op">=</span><span class="op">&gt;</span> {
-                    <span class="ident">hal::TextureUses::SAMPLED</span>
+                    <span class="ident">hal::TextureUses::RESOURCE</span>
                         <span class="op">|</span> <span class="ident">hal::TextureUses::STORAGE_READ</span>
                         <span class="op">|</span> <span class="ident">hal::TextureUses::STORAGE_WRITE</span>
                 }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">hal::TextureUses::all</span>(),
             };
             <span class="kw">let</span> <span class="ident">mask_mip_level</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">end_layer</span> <span class="op">!</span><span class="op">=</span> <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">base_array_layer</span> <span class="op">+</span> <span class="number">1</span> {
-                <span class="ident">hal::TextureUses::SAMPLED</span>
+                <span class="ident">hal::TextureUses::RESOURCE</span>
             } <span class="kw">else</span> {
                 <span class="ident">hal::TextureUses::all</span>()
             };
@@ -5574,10 +5581,14 @@
             <span class="ident">extent</span>,
             <span class="ident">samples</span>: <span class="ident">texture</span>.<span class="ident">desc</span>.<span class="ident">sample_count</span>,
             <span class="comment">// once a storage - forever a storage</span>
-            <span class="ident">sampled_internal_use</span>: <span class="kw">if</span> <span class="ident">texture</span>.<span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">wgt::TextureUsages::STORAGE</span>) {
-                <span class="ident">hal::TextureUses::SAMPLED</span> <span class="op">|</span> <span class="ident">hal::TextureUses::STORAGE_READ</span>
+            <span class="ident">sampled_internal_use</span>: <span class="kw">if</span> <span class="ident">texture</span>
+                .<span class="ident">desc</span>
+                .<span class="ident">usage</span>
+                .<span class="ident">contains</span>(<span class="ident">wgt::TextureUsages::STORAGE_BINDING</span>)
+            {
+                <span class="ident">hal::TextureUses::RESOURCE</span> <span class="op">|</span> <span class="ident">hal::TextureUses::STORAGE_READ</span>
             } <span class="kw">else</span> {
-                <span class="ident">hal::TextureUses::SAMPLED</span>
+                <span class="ident">hal::TextureUses::RESOURCE</span>
             },
             <span class="ident">selector</span>,
             <span class="ident">life_guard</span>: <span class="ident">LifeGuard::new</span>(<span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_or_default</span>()),
@@ -6371,7 +6382,10 @@
                         <span class="ident">view_dimension</span>: <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">dimension</span>,
                     });
                 }
-                <span class="prelude-val">Ok</span>((<span class="ident">wgt::TextureUsages::SAMPLED</span>, <span class="ident">view</span>.<span class="ident">sampled_internal_use</span>))
+                <span class="prelude-val">Ok</span>((
+                    <span class="ident">wgt::TextureUsages::TEXTURE_BINDING</span>,
+                    <span class="ident">view</span>.<span class="ident">sampled_internal_use</span>,
+                ))
             }
             <span class="ident">wgt::BindingType::StorageTexture</span> {
                 <span class="ident">access</span>,
@@ -6416,7 +6430,7 @@
                         <span class="ident">hal::TextureUses::STORAGE_WRITE</span> <span class="op">|</span> <span class="ident">hal::TextureUses::STORAGE_READ</span>
                     }
                 };
-                <span class="prelude-val">Ok</span>((<span class="ident">wgt::TextureUsages::STORAGE</span>, <span class="ident">internal_use</span>))
+                <span class="prelude-val">Ok</span>((<span class="ident">wgt::TextureUsages::STORAGE_BINDING</span>, <span class="ident">internal_use</span>))
             }
             <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">Error::WrongBindingType</span> {
                 <span class="ident">binding</span>,
