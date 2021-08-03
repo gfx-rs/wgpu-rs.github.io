@@ -298,6 +298,21 @@
 <span id="298">298</span>
 <span id="299">299</span>
 <span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{<span class="ident">CreateBindGroupLayoutError</span>, <span class="ident">CreatePipelineLayoutError</span>},
@@ -346,9 +361,24 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NagaParseError</span> {
+    <span class="kw">pub</span> <span class="ident">shader_source</span>: <span class="ident">String</span>,
+    <span class="kw">pub</span> <span class="ident">error</span>: <span class="ident">naga::front::wgsl::ParseError</span>,
+}
+<span class="kw">impl</span> <span class="ident">std::fmt::Display</span> <span class="kw">for</span> <span class="ident">NagaParseError</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">std::fmt::Result</span> {
+        <span class="macro">write!</span>(
+            <span class="ident">f</span>,
+            <span class="string">&quot;\nShader error:\n{}&quot;</span>,
+            <span class="self">self</span>.<span class="ident">error</span>.<span class="ident">emit_to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shader_source</span>)
+        )
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CreateShaderModuleError</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to parse a shader&quot;</span>)]</span>
-    <span class="ident">Parsing</span>,
+    <span class="ident">Parsing</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">NagaParseError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to generate the backend-specific code&quot;</span>)]</span>
     <span class="ident">Generation</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
