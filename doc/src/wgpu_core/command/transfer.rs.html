@@ -839,12 +839,46 @@
 <span id="839">839</span>
 <span id="840">840</span>
 <span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
 </pre><pre class="rust">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
 <span class="kw">use</span> <span class="kw">crate</span><span class="ident">::device::trace::Command</span> <span class="kw">as</span> <span class="ident">TraceCommand</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">command</span>::{<span class="ident">CommandBuffer</span>, <span class="ident">CommandEncoderError</span>},
     <span class="ident">conv</span>,
+    <span class="ident">error</span>::{<span class="ident">ErrorFormatter</span>, <span class="ident">PrettyError</span>},
     <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>::{<span class="ident">BufferId</span>, <span class="ident">CommandEncoderId</span>, <span class="ident">TextureId</span>},
     <span class="ident">memory_init_tracker</span>::{<span class="ident">MemoryInitKind</span>, <span class="ident">MemoryInitTrackerAction</span>},
@@ -934,6 +968,38 @@
     <span class="ident">CopyToForbiddenTextureFormat</span>(<span class="ident">wgt::TextureFormat</span>),
 }
 
+<span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">TransferError</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fmt</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ErrorFormatter</span>) {
+        <span class="ident">fmt</span>.<span class="ident">error</span>(<span class="self">self</span>);
+        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
+            <span class="self">Self</span><span class="ident">::InvalidBuffer</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">fmt</span>.<span class="ident">buffer_label</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>);
+            }
+            <span class="self">Self</span><span class="ident">::InvalidTexture</span>(<span class="ident">id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">fmt</span>.<span class="ident">texture_label</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>);
+            }
+            <span class="comment">// Self::MissingCopySrcUsageFlag(buf_opt, tex_opt) =&gt; {</span>
+            <span class="comment">//     if let Some(buf) = buf_opt {</span>
+            <span class="comment">//         let name = crate::gfx_select!(buf =&gt; global.buffer_label(buf));</span>
+            <span class="comment">//         ret.push_str(&amp;format_label_line(&quot;source&quot;, &amp;name));</span>
+            <span class="comment">//     }</span>
+            <span class="comment">//     if let Some(tex) = tex_opt {</span>
+            <span class="comment">//         let name = crate::gfx_select!(tex =&gt; global.texture_label(tex));</span>
+            <span class="comment">//         ret.push_str(&amp;format_label_line(&quot;source&quot;, &amp;name));</span>
+            <span class="comment">//     }</span>
+            <span class="comment">// }</span>
+            <span class="self">Self</span><span class="ident">::MissingCopyDstUsageFlag</span>(<span class="ident">buf_opt</span>, <span class="ident">tex_opt</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">buf</span>) <span class="op">=</span> <span class="ident">buf_opt</span> {
+                    <span class="ident">fmt</span>.<span class="ident">buffer_label_with_key</span>(<span class="kw-2">&amp;</span><span class="ident">buf</span>, <span class="string">&quot;destination&quot;</span>);
+                }
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">tex</span>) <span class="op">=</span> <span class="ident">tex_opt</span> {
+                    <span class="ident">fmt</span>.<span class="ident">texture_label_with_key</span>(<span class="kw-2">&amp;</span><span class="ident">tex</span>, <span class="string">&quot;destination&quot;</span>);
+                }
+            }
+            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+        };
+    }
+}
 <span class="doccomment">/// Error encountered while attempting to do a copy on a command encoder.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CopyError</span> {

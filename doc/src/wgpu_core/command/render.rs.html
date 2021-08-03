@@ -2163,6 +2163,24 @@
 <span id="2163">2163</span>
 <span id="2164">2164</span>
 <span id="2165">2165</span>
+<span id="2166">2166</span>
+<span id="2167">2167</span>
+<span id="2168">2168</span>
+<span id="2169">2169</span>
+<span id="2170">2170</span>
+<span id="2171">2171</span>
+<span id="2172">2172</span>
+<span id="2173">2173</span>
+<span id="2174">2174</span>
+<span id="2175">2175</span>
+<span id="2176">2176</span>
+<span id="2177">2177</span>
+<span id="2178">2178</span>
+<span id="2179">2179</span>
+<span id="2180">2180</span>
+<span id="2181">2181</span>
+<span id="2182">2182</span>
+<span id="2183">2183</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model::BindError</span>,
@@ -2176,6 +2194,7 @@
         <span class="ident">AttachmentData</span>, <span class="ident">MissingDownlevelFlags</span>, <span class="ident">MissingFeatures</span>, <span class="ident">RenderPassCompatibilityError</span>,
         <span class="ident">RenderPassContext</span>,
     },
+    <span class="ident">error</span>::{<span class="ident">ErrorFormatter</span>, <span class="ident">PrettyError</span>},
     <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>,
     <span class="ident">memory_init_tracker</span>::{<span class="ident">MemoryInitKind</span>, <span class="ident">MemoryInitTrackerAction</span>},
@@ -2624,6 +2643,15 @@
     <span class="ident">QueryUse</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">QueryUseError</span>),
 }
 
+<span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">RenderPassErrorInner</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fmt</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ErrorFormatter</span>) {
+        <span class="ident">fmt</span>.<span class="ident">error</span>(<span class="self">self</span>);
+        <span class="kw">if</span> <span class="kw">let</span> <span class="self">Self</span><span class="ident">::InvalidAttachment</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span> {
+            <span class="ident">fmt</span>.<span class="ident">texture_view_label_with_key</span>(<span class="kw-2">&amp;</span><span class="ident">id</span>, <span class="string">&quot;attachment&quot;</span>);
+        };
+    }
+}
+
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">MissingBufferUsageError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RenderPassErrorInner</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">error</span>: <span class="ident">MissingBufferUsageError</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span><span class="ident">::RenderCommand</span>(<span class="ident">error</span>.<span class="ident">into</span>())
@@ -2643,6 +2671,14 @@
     <span class="kw">pub</span> <span class="ident">scope</span>: <span class="ident">PassErrorScope</span>,
     <span class="attribute">#[<span class="ident">source</span>]</span>
     <span class="ident">inner</span>: <span class="ident">RenderPassErrorInner</span>,
+}
+<span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">RenderPassError</span> {
+    <span class="kw">fn</span> <span class="ident">fmt_pretty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">fmt</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">ErrorFormatter</span>) {
+        <span class="comment">// This error is wrapper for the inner error,</span>
+        <span class="comment">// but the scope has useful labels</span>
+        <span class="ident">fmt</span>.<span class="ident">error</span>(<span class="self">self</span>);
+        <span class="self">self</span>.<span class="ident">scope</span>.<span class="ident">fmt_pretty</span>(<span class="ident">fmt</span>);
+    }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">E</span><span class="op">&gt;</span> <span class="ident">MapPassErr</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">RenderPassError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">E</span><span class="op">&gt;</span>

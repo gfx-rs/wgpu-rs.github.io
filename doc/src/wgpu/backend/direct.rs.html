@@ -2108,13 +2108,30 @@
 <span id="2108">2108</span>
 <span id="2109">2109</span>
 <span id="2110">2110</span>
+<span id="2111">2111</span>
+<span id="2112">2112</span>
+<span id="2113">2113</span>
+<span id="2114">2114</span>
+<span id="2115">2115</span>
+<span id="2116">2116</span>
+<span id="2117">2117</span>
+<span id="2118">2118</span>
+<span id="2119">2119</span>
+<span id="2120">2120</span>
+<span id="2121">2121</span>
+<span id="2122">2122</span>
+<span id="2123">2123</span>
+<span id="2124">2124</span>
+<span id="2125">2125</span>
+<span id="2126">2126</span>
+<span id="2127">2127</span>
+<span id="2128">2128</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">backend</span>::{<span class="ident">error::ContextError</span>, <span class="ident">native_gpu_future</span>},
-    <span class="ident">AdapterInfo</span>, <span class="ident">BindGroupDescriptor</span>, <span class="ident">BindGroupLayoutDescriptor</span>, <span class="ident">BindingResource</span>, <span class="ident">BufferBinding</span>,
-    <span class="ident">CommandEncoderDescriptor</span>, <span class="ident">ComputePassDescriptor</span>, <span class="ident">ComputePipelineDescriptor</span>,
-    <span class="ident">DownlevelCapabilities</span>, <span class="ident">Features</span>, <span class="ident">Label</span>, <span class="ident">Limits</span>, <span class="ident">LoadOp</span>, <span class="ident">MapMode</span>, <span class="ident">Operations</span>,
-    <span class="ident">PipelineLayoutDescriptor</span>, <span class="ident">RenderBundleEncoderDescriptor</span>, <span class="ident">RenderPipelineDescriptor</span>,
+    <span class="ident">backend::native_gpu_future</span>, <span class="ident">AdapterInfo</span>, <span class="ident">BindGroupDescriptor</span>, <span class="ident">BindGroupLayoutDescriptor</span>,
+    <span class="ident">BindingResource</span>, <span class="ident">BufferBinding</span>, <span class="ident">CommandEncoderDescriptor</span>, <span class="ident">ComputePassDescriptor</span>,
+    <span class="ident">ComputePipelineDescriptor</span>, <span class="ident">DownlevelCapabilities</span>, <span class="ident">Features</span>, <span class="ident">Label</span>, <span class="ident">Limits</span>, <span class="ident">LoadOp</span>, <span class="ident">MapMode</span>,
+    <span class="ident">Operations</span>, <span class="ident">PipelineLayoutDescriptor</span>, <span class="ident">RenderBundleEncoderDescriptor</span>, <span class="ident">RenderPipelineDescriptor</span>,
     <span class="ident">SamplerDescriptor</span>, <span class="ident">ShaderModuleDescriptor</span>, <span class="ident">ShaderModuleDescriptorSpirV</span>, <span class="ident">ShaderSource</span>,
     <span class="ident">SwapChainStatus</span>, <span class="ident">TextureDescriptor</span>, <span class="ident">TextureFormat</span>, <span class="ident">TextureViewDescriptor</span>,
 };
@@ -2255,7 +2272,7 @@
         <span class="ident">label</span>: <span class="ident">Label</span>,
         <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
     ) {
-        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">ContextError</span> {
+        <span class="kw">let</span> <span class="ident">error</span> <span class="op">=</span> <span class="ident">wgc::error::ContextError</span> {
             <span class="ident">string</span>,
             <span class="ident">cause</span>: <span class="ident">Box::new</span>(<span class="ident">cause</span>),
             <span class="ident">label</span>: <span class="ident">label</span>.<span class="ident">unwrap_or_default</span>().<span class="ident">to_string</span>(),
@@ -2296,6 +2313,25 @@
         <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="op">!</span> {
         <span class="macro">panic!</span>(<span class="string">&quot;Error in {}: {}&quot;</span>, <span class="ident">string</span>, <span class="ident">cause</span>);
+    }
+
+    <span class="kw">fn</span> <span class="ident">format_error</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">err</span>: <span class="kw-2">&amp;</span>(<span class="kw">impl</span> <span class="ident">Error</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>)) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">String</span> {
+        <span class="kw">let</span> <span class="ident">global</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">global</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err_descs</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">err_str</span> <span class="op">=</span> <span class="ident">String::new</span>();
+        <span class="ident">wgc::error::format_pretty_any</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">err_str</span>, <span class="ident">global</span>, <span class="ident">err</span>);
+        <span class="ident">err_descs</span>.<span class="ident">push</span>(<span class="ident">err_str</span>);
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">source_opt</span> <span class="op">=</span> <span class="ident">err</span>.<span class="ident">source</span>();
+        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">source</span>) <span class="op">=</span> <span class="ident">source_opt</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">source_str</span> <span class="op">=</span> <span class="ident">String::new</span>();
+            <span class="ident">wgc::error::format_pretty_any</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">source_str</span>, <span class="ident">global</span>, <span class="ident">source</span>);
+            <span class="ident">err_descs</span>.<span class="ident">push</span>(<span class="ident">source_str</span>);
+            <span class="ident">source_opt</span> <span class="op">=</span> <span class="ident">source</span>.<span class="ident">source</span>();
+        }
+
+        <span class="macro">format!</span>(<span class="string">&quot;Validation Error\n\nCaused by:\n{}&quot;</span>, <span class="ident">err_descs</span>.<span class="ident">join</span>(<span class="string">&quot;&quot;</span>))
     }
 }
 
