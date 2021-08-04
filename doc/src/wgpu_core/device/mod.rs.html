@@ -4783,6 +4783,24 @@
 <span id="4783">4783</span>
 <span id="4784">4784</span>
 <span id="4785">4785</span>
+<span id="4786">4786</span>
+<span id="4787">4787</span>
+<span id="4788">4788</span>
+<span id="4789">4789</span>
+<span id="4790">4790</span>
+<span id="4791">4791</span>
+<span id="4792">4792</span>
+<span id="4793">4793</span>
+<span id="4794">4794</span>
+<span id="4795">4795</span>
+<span id="4796">4796</span>
+<span id="4797">4797</span>
+<span id="4798">4798</span>
+<span id="4799">4799</span>
+<span id="4800">4800</span>
+<span id="4801">4801</span>
+<span id="4802">4802</span>
+<span id="4803">4803</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
@@ -7336,6 +7354,24 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span> <span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">adapter_is_surface_supported</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">adapter_id</span>: <span class="ident">id::AdapterId</span>,
+        <span class="ident">surface_id</span>: <span class="ident">id::SurfaceId</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">instance::IsSurfaceSupportedError</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
+
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">surface_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">surfaces</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+        <span class="kw">let</span> (<span class="ident">adapter_guard</span>, <span class="kw-2">mut</span> <span class="ident">_token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">adapters</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+        <span class="kw">let</span> <span class="ident">adapter</span> <span class="op">=</span> <span class="ident">adapter_guard</span>
+            .<span class="ident">get</span>(<span class="ident">adapter_id</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">instance::IsSurfaceSupportedError::InvalidAdapter</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="ident">surface_guard</span>
+            .<span class="ident">get_mut</span>(<span class="ident">surface_id</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">instance::IsSurfaceSupportedError::InvalidSurface</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="ident">adapter</span>.<span class="ident">is_surface_supported</span>(<span class="ident">surface</span>))
+    }
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">adapter_get_swap_chain_preferred_format</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">adapter_id</span>: <span class="ident">id::AdapterId</span>,
