@@ -1049,6 +1049,23 @@
 <span id="1049">1049</span>
 <span id="1050">1050</span>
 <span id="1051">1051</span>
+<span id="1052">1052</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
+<span id="1055">1055</span>
+<span id="1056">1056</span>
+<span id="1057">1057</span>
+<span id="1058">1058</span>
+<span id="1059">1059</span>
+<span id="1060">1060</span>
+<span id="1061">1061</span>
+<span id="1062">1062</span>
+<span id="1063">1063</span>
+<span id="1064">1064</span>
+<span id="1065">1065</span>
+<span id="1066">1066</span>
+<span id="1067">1067</span>
+<span id="1068">1068</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">binding_model::BindEntryMap</span>, <span class="ident">FastHashMap</span>, <span class="ident">FastHashSet</span>};
 <span class="kw">use</span> <span class="ident">naga::valid::GlobalUse</span>;
@@ -1377,7 +1394,14 @@
                             <span class="ident">wgt::BufferBindingType::Storage</span> { <span class="ident">read_only</span> } <span class="op">=</span><span class="op">&gt;</span> {
                                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">global_use</span> <span class="op">=</span> <span class="ident">GlobalUse::READ</span> <span class="op">|</span> <span class="ident">GlobalUse::QUERY</span>;
                                 <span class="ident">global_use</span>.<span class="ident">set</span>(<span class="ident">GlobalUse::WRITE</span>, <span class="op">!</span><span class="ident">read_only</span>);
-                                (<span class="ident">naga::StorageClass::Storage</span>, <span class="ident">global_use</span>)
+                                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">naga_access</span> <span class="op">=</span> <span class="ident">naga::StorageAccess::LOAD</span>;
+                                <span class="ident">naga_access</span>.<span class="ident">set</span>(<span class="ident">naga::StorageAccess::STORE</span>, <span class="op">!</span><span class="ident">read_only</span>);
+                                (
+                                    <span class="ident">naga::StorageClass::Storage</span> {
+                                        <span class="ident">access</span>: <span class="ident">naga_access</span>,
+                                    },
+                                    <span class="ident">global_use</span>,
+                                )
                             }
                         };
                         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">class</span> <span class="op">!</span><span class="op">=</span> <span class="ident">class</span> {
@@ -1484,16 +1508,26 @@
                     } <span class="op">=</span><span class="op">&gt;</span> {
                         <span class="kw">let</span> <span class="ident">naga_format</span> <span class="op">=</span> <span class="ident">map_storage_format_to_naga</span>(<span class="ident">format</span>)
                             .<span class="ident">ok_or</span>(<span class="ident">BindingError::BadStorageFormat</span>(<span class="ident">format</span>))<span class="question-mark">?</span>;
-                        <span class="kw">let</span> <span class="ident">usage</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">access</span> {
-                            <span class="ident">wgt::StorageTextureAccess::ReadOnly</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="ident">GlobalUse::READ</span> <span class="op">|</span> <span class="ident">GlobalUse::QUERY</span>
+                        <span class="kw">let</span> (<span class="ident">naga_access</span>, <span class="ident">usage</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">access</span> {
+                            <span class="ident">wgt::StorageTextureAccess::ReadOnly</span> <span class="op">=</span><span class="op">&gt;</span> (
+                                <span class="ident">naga::StorageAccess::LOAD</span>,
+                                <span class="ident">GlobalUse::READ</span> <span class="op">|</span> <span class="ident">GlobalUse::QUERY</span>,
+                            ),
+                            <span class="ident">wgt::StorageTextureAccess::WriteOnly</span> <span class="op">=</span><span class="op">&gt;</span> (
+                                <span class="ident">naga::StorageAccess::STORE</span>,
+                                <span class="ident">GlobalUse::WRITE</span> <span class="op">|</span> <span class="ident">GlobalUse::QUERY</span>,
+                            ),
+                            <span class="ident">wgt::StorageTextureAccess::ReadWrite</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                (<span class="ident">naga::StorageAccess::all</span>(), <span class="ident">GlobalUse::all</span>())
                             }
-                            <span class="ident">wgt::StorageTextureAccess::WriteOnly</span> <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="ident">GlobalUse::WRITE</span> <span class="op">|</span> <span class="ident">GlobalUse::QUERY</span>
-                            }
-                            <span class="ident">wgt::StorageTextureAccess::ReadWrite</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">GlobalUse::all</span>(),
                         };
-                        (<span class="ident">naga::ImageClass::Storage</span>(<span class="ident">naga_format</span>), <span class="ident">usage</span>)
+                        (
+                            <span class="ident">naga::ImageClass::Storage</span> {
+                                <span class="ident">format</span>: <span class="ident">naga_format</span>,
+                                <span class="ident">access</span>: <span class="ident">naga_access</span>,
+                            },
+                            <span class="ident">usage</span>,
+                        )
                     }
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongType</span>),
                 };
@@ -1526,7 +1560,7 @@
             <span class="ident">ResourceType::Buffer</span> { <span class="ident">size</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BindingType::Buffer</span> {
                 <span class="ident">ty</span>: <span class="kw">match</span> <span class="self">self</span>.<span class="ident">class</span> {
                     <span class="ident">naga::StorageClass::Uniform</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt::BufferBindingType::Uniform</span>,
-                    <span class="ident">naga::StorageClass::Storage</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt::BufferBindingType::Storage</span> {
+                    <span class="ident">naga::StorageClass::Storage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">wgt::BufferBindingType::Storage</span> {
                         <span class="ident">read_only</span>: <span class="op">!</span><span class="ident">shader_usage</span>.<span class="ident">contains</span>(<span class="ident">GlobalUse::WRITE</span>),
                     },
                     <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongType</span>),
@@ -1569,7 +1603,7 @@
                         <span class="ident">view_dimension</span>,
                         <span class="ident">multisampled</span>: <span class="ident">multi</span>,
                     },
-                    <span class="ident">naga::ImageClass::Storage</span>(<span class="ident">format</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BindingType::StorageTexture</span> {
+                    <span class="ident">naga::ImageClass::Storage</span> { <span class="ident">format</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BindingType::StorageTexture</span> {
                         <span class="ident">access</span>: <span class="kw">if</span> <span class="ident">shader_usage</span> <span class="op">=</span><span class="op">=</span> <span class="ident">GlobalUse::WRITE</span> <span class="op">|</span><span class="op">|</span> <span class="ident">shader_usage</span>.<span class="ident">is_empty</span>() {
                             <span class="ident">wgt::StorageTextureAccess::WriteOnly</span>
                         } <span class="kw">else</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">features</span>
