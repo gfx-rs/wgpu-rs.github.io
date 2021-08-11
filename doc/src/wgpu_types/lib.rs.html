@@ -3274,6 +3274,28 @@
 <span id="3274">3274</span>
 <span id="3275">3275</span>
 <span id="3276">3276</span>
+<span id="3277">3277</span>
+<span id="3278">3278</span>
+<span id="3279">3279</span>
+<span id="3280">3280</span>
+<span id="3281">3281</span>
+<span id="3282">3282</span>
+<span id="3283">3283</span>
+<span id="3284">3284</span>
+<span id="3285">3285</span>
+<span id="3286">3286</span>
+<span id="3287">3287</span>
+<span id="3288">3288</span>
+<span id="3289">3289</span>
+<span id="3290">3290</span>
+<span id="3291">3291</span>
+<span id="3292">3292</span>
+<span id="3293">3293</span>
+<span id="3294">3294</span>
+<span id="3295">3295</span>
+<span id="3296">3296</span>
+<span id="3297">3297</span>
+<span id="3298">3298</span>
 </pre><pre class="rust">
 <span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
@@ -3562,7 +3584,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native only feature.</span>
         <span class="kw">const</span> <span class="ident">STORAGE_RESOURCE_BINDING_ARRAY</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">19</span>;
-        <span class="doccomment">/// Allows shaders to index resource arrays with dynamically non-uniform values:</span>
+        <span class="doccomment">/// Allows shaders to index sampled texture and storage buffer resource arrays with dynamically non-uniform values:</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// eg. `texture_array[vertex_data]`</span>
         <span class="doccomment">///</span>
@@ -3583,23 +3605,45 @@
         <span class="doccomment">/// Supported platforms:</span>
         <span class="doccomment">/// - DX12</span>
         <span class="doccomment">/// - Metal (with MSL 2.0+ on macOS 10.13+)</span>
-        <span class="doccomment">/// - Vulkan 1.2+ (or VK_EXT_descriptor_indexing)&#39;s shaderSampledImageArrayNonUniformIndexing feature)</span>
+        <span class="doccomment">/// - Vulkan 1.2+ (or VK_EXT_descriptor_indexing)&#39;s shaderSampledImageArrayNonUniformIndexing &amp; shaderStorageBufferArrayNonUniformIndexing feature)</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native only feature.</span>
-        <span class="kw">const</span> <span class="ident">RESOURCE_BINDING_ARRAY_NON_UNIFORM_INDEXING</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">20</span>;
+        <span class="kw">const</span> <span class="ident">SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">20</span>;
+        <span class="doccomment">/// Allows shaders to index uniform buffer and storage texture resource arrays with dynamically non-uniform values:</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// eg. `texture_array[vertex_data]`</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// In order to use this capability, the corresponding GLSL extension must be enabled like so:</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// `#extension GL_EXT_nonuniform_qualifier : require`</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// and then used either as `nonuniformEXT` qualifier in variable declaration:</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// eg. `layout(location = 0) nonuniformEXT flat in int vertex_data;`</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// or as `nonuniformEXT` constructor:</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// eg. `texture_array[nonuniformEXT(vertex_data)]`</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// HLSL does not need any extension.</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// Supported platforms:</span>
+        <span class="doccomment">/// - DX12</span>
+        <span class="doccomment">/// - Metal (with MSL 2.0+ on macOS 10.13+)</span>
+        <span class="doccomment">/// - Vulkan 1.2+ (or VK_EXT_descriptor_indexing)&#39;s shaderUniformBufferArrayNonUniformIndexing &amp; shaderStorageTextureArrayNonUniformIndexing feature)</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// This is a native only feature.</span>
+        <span class="kw">const</span> <span class="ident">UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">21</span>;
         <span class="doccomment">/// Allows the user to create unsized uniform arrays of bindings:</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// eg. `uniform texture2D textures[]`.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// If this capability is supported, [`Features::RESOURCE_BINDING_ARRAY_NON_UNIFORM_INDEXING`] is very likely</span>
-        <span class="doccomment">/// to also be supported</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// Supported platforms:</span>
         <span class="doccomment">/// - DX12</span>
         <span class="doccomment">/// - Vulkan 1.2+ (or VK_EXT_descriptor_indexing)&#39;s runtimeDescriptorArray feature</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native only feature.</span>
-        <span class="kw">const</span> <span class="ident">UNSIZED_BINDING_ARRAY</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">21</span>;
+        <span class="kw">const</span> <span class="ident">UNSIZED_BINDING_ARRAY</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">22</span>;
         <span class="doccomment">/// Allows the user to call [`RenderPass::multi_draw_indirect`] and [`RenderPass::multi_draw_indexed_indirect`].</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// Allows multiple indirect calls to be dispatched from a single buffer.</span>
@@ -3609,7 +3653,7 @@
         <span class="doccomment">/// - Vulkan</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native only feature.</span>
-        <span class="kw">const</span> <span class="ident">MULTI_DRAW_INDIRECT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">22</span>;
+        <span class="kw">const</span> <span class="ident">MULTI_DRAW_INDIRECT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">23</span>;
         <span class="doccomment">/// Allows the user to call [`RenderPass::multi_draw_indirect_count`] and [`RenderPass::multi_draw_indexed_indirect_count`].</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This allows the use of a buffer containing the actual number of draw calls.</span>
@@ -3619,7 +3663,7 @@
         <span class="doccomment">/// - Vulkan 1.2+ (or VK_KHR_draw_indirect_count)</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native only feature.</span>
-        <span class="kw">const</span> <span class="ident">MULTI_DRAW_INDIRECT_COUNT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">23</span>;
+        <span class="kw">const</span> <span class="ident">MULTI_DRAW_INDIRECT_COUNT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">24</span>;
         <span class="doccomment">/// Allows the use of push constants: small, fast bits of memory that can be updated</span>
         <span class="doccomment">/// inside a [`RenderPass`].</span>
         <span class="doccomment">///</span>
@@ -3636,7 +3680,7 @@
         <span class="doccomment">/// - OpenGL (emulated with uniforms)</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native only feature.</span>
-        <span class="kw">const</span> <span class="ident">PUSH_CONSTANTS</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">24</span>;
+        <span class="kw">const</span> <span class="ident">PUSH_CONSTANTS</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">25</span>;
         <span class="doccomment">/// Allows the use of [`AddressMode::ClampToBorder`].</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// Supported platforms:</span>
@@ -3647,7 +3691,7 @@
         <span class="doccomment">/// - OpenGL</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a web and native feature.</span>
-        <span class="kw">const</span> <span class="ident">ADDRESS_MODE_CLAMP_TO_BORDER</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">25</span>;
+        <span class="kw">const</span> <span class="ident">ADDRESS_MODE_CLAMP_TO_BORDER</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">26</span>;
         <span class="doccomment">/// Allows the user to set a non-fill polygon mode in [`PrimitiveState::polygon_mode`]</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This allows drawing polygons/triangles as lines (wireframe) or points instead of filled</span>
@@ -3657,7 +3701,7 @@
         <span class="doccomment">/// - Vulkan</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native only feature.</span>
-        <span class="kw">const</span> <span class="ident">NON_FILL_POLYGON_MODE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">26</span>;
+        <span class="kw">const</span> <span class="ident">NON_FILL_POLYGON_MODE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">27</span>;
         <span class="doccomment">/// Enables ETC family of compressed textures. All ETC textures use 4x4 pixel blocks.</span>
         <span class="doccomment">/// ETC2 RGB and RGBA1 are 8 bytes per block. RTC2 RGBA8 and EAC are 16 bytes per block.</span>
         <span class="doccomment">///</span>
@@ -3672,7 +3716,7 @@
         <span class="doccomment">/// - Mobile (some)</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native-only feature.</span>
-        <span class="kw">const</span> <span class="ident">TEXTURE_COMPRESSION_ETC2</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">27</span>;
+        <span class="kw">const</span> <span class="ident">TEXTURE_COMPRESSION_ETC2</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">28</span>;
         <span class="doccomment">/// Enables ASTC family of compressed textures. ASTC textures use pixel blocks varying from 4x4 to 12x12.</span>
         <span class="doccomment">/// Blocks are always 16 bytes.</span>
         <span class="doccomment">///</span>
@@ -3687,7 +3731,7 @@
         <span class="doccomment">/// - Mobile (some)</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native-only feature.</span>
-        <span class="kw">const</span> <span class="ident">TEXTURE_COMPRESSION_ASTC_LDR</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">28</span>;
+        <span class="kw">const</span> <span class="ident">TEXTURE_COMPRESSION_ASTC_LDR</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">29</span>;
         <span class="doccomment">/// Enables device specific texture format features.</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// See `TextureFormatFeatures` for a listing of the features in question.</span>
@@ -3699,7 +3743,7 @@
         <span class="doccomment">/// This extension does not enable additional formats.</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native-only feature.</span>
-        <span class="kw">const</span> <span class="ident">TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">29</span>;
+        <span class="kw">const</span> <span class="ident">TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">30</span>;
         <span class="doccomment">/// Enables 64-bit floating point types in SPIR-V shaders.</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// Note: even when supported by GPU hardware, 64-bit floating point operations are</span>
@@ -3709,7 +3753,7 @@
         <span class="doccomment">/// - Vulkan</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native-only feature.</span>
-        <span class="kw">const</span> <span class="ident">SHADER_FLOAT64</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">30</span>;
+        <span class="kw">const</span> <span class="ident">SHADER_FLOAT64</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">31</span>;
         <span class="doccomment">/// Enables using 64-bit types for vertex attributes.</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// Requires SHADER_FLOAT64.</span>
@@ -3717,7 +3761,7 @@
         <span class="doccomment">/// Supported Platforms: N/A</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native-only feature.</span>
-        <span class="kw">const</span> <span class="ident">VERTEX_ATTRIBUTE_64BIT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">31</span>;
+        <span class="kw">const</span> <span class="ident">VERTEX_ATTRIBUTE_64BIT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">32</span>;
         <span class="doccomment">/// Allows the user to set a overestimation-conservative-rasterization in [`PrimitiveState::conservative`]</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// Processing of degenerate triangles/lines is hardware specific.</span>
@@ -3727,7 +3771,7 @@
         <span class="doccomment">/// - Vulkan</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native only feature.</span>
-        <span class="kw">const</span> <span class="ident">CONSERVATIVE_RASTERIZATION</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">32</span>;
+        <span class="kw">const</span> <span class="ident">CONSERVATIVE_RASTERIZATION</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">33</span>;
         <span class="doccomment">/// Enables bindings of writable storage buffers and textures visible to vertex shaders.</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// Note: some (tiled-based) platforms do not support vertex shaders with any side-effects.</span>
@@ -3736,14 +3780,14 @@
         <span class="doccomment">/// - All</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native-only feature.</span>
-        <span class="kw">const</span> <span class="ident">VERTEX_WRITABLE_STORAGE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">33</span>;
+        <span class="kw">const</span> <span class="ident">VERTEX_WRITABLE_STORAGE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">34</span>;
         <span class="doccomment">/// Enables clear to zero for buffers &amp; images.</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// Supported platforms:</span>
         <span class="doccomment">/// - All</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native only feature.</span>
-        <span class="kw">const</span> <span class="ident">CLEAR_COMMANDS</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">34</span>;
+        <span class="kw">const</span> <span class="ident">CLEAR_COMMANDS</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">35</span>;
         <span class="doccomment">/// Enables creating shader modules from SPIR-V binary data (unsafe).</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// SPIR-V data is not parsed or interpreted in any way; you can use</span>
@@ -3755,7 +3799,7 @@
         <span class="doccomment">/// Vulkan implementation.</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native only feature.</span>
-        <span class="kw">const</span> <span class="ident">SPIRV_SHADER_PASSTHROUGH</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">35</span>;
+        <span class="kw">const</span> <span class="ident">SPIRV_SHADER_PASSTHROUGH</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">36</span>;
         <span class="doccomment">/// Enables `builtin(primitive_index)` in fragment shaders.</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// Note: enables geometry processing for pipelines using the builtin.</span>
@@ -3766,7 +3810,7 @@
         <span class="doccomment">/// - Vulkan</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native only feature.</span>
-        <span class="kw">const</span> <span class="ident">SHADER_PRIMITIVE_INDEX</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">36</span>;
+        <span class="kw">const</span> <span class="ident">SHADER_PRIMITIVE_INDEX</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">37</span>;
     }
 }
 
