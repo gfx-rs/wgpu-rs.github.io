@@ -868,6 +868,40 @@
 <span id="868">868</span>
 <span id="869">869</span>
 <span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
 </pre><pre class="rust">
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::device::trace::Action</span>;
@@ -895,6 +929,17 @@
 <span class="doccomment">/// If we don&#39;t stop at some point, the pool will grow forever,</span>
 <span class="doccomment">/// without a concrete moment of when it can be cleared.</span>
 <span class="kw">const</span> <span class="ident">WRITE_COMMAND_BUFFERS_PER_POOL</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">64</span>;
+
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">OnSubmittedWorkDoneCallback</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">user_data</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>);
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SubmittedWorkDoneClosure</span> {
+    <span class="kw">pub</span> <span class="ident">callback</span>: <span class="ident">OnSubmittedWorkDoneCallback</span>,
+    <span class="kw">pub</span> <span class="ident">user_data</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>,
+}
+
+<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">SubmittedWorkDoneClosure</span> {}
+<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">SubmittedWorkDoneClosure</span> {}
 
 <span class="kw">struct</span> <span class="ident">StagingData</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> {
     <span class="ident">buffer</span>: <span class="ident">A::Buffer</span>,
@@ -1378,10 +1423,10 @@
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">QueueSubmitError</span><span class="op">&gt;</span> {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;submit&quot;</span>, <span class="string">&quot;Queue&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
-
         <span class="kw">let</span> <span class="ident">callbacks</span> <span class="op">=</span> {
+            <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
+
             <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
             <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="ident">device_guard</span>
                 .<span class="ident">get_mut</span>(<span class="ident">queue_id</span>)
@@ -1662,8 +1707,8 @@
 
             <span class="comment">// This will schedule destruction of all resources that are no longer needed</span>
             <span class="comment">// by the user but used in the command stream, among other things.</span>
-            <span class="kw">let</span> <span class="ident">callbacks</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">device</span>.<span class="ident">maintain</span>(<span class="ident">hub</span>, <span class="bool-val">false</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">callbacks</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">callbacks</span>,
+            <span class="kw">let</span> <span class="ident">closures</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">device</span>.<span class="ident">maintain</span>(<span class="ident">hub</span>, <span class="bool-val">false</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">closures</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">closures</span>,
                 <span class="prelude-val">Err</span>(<span class="ident">WaitIdleError::Device</span>(<span class="ident">err</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">QueueSubmitError::Queue</span>(<span class="ident">err</span>)),
                 <span class="prelude-val">Err</span>(<span class="ident">WaitIdleError::StuckGpu</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">QueueSubmitError::StuckGpu</span>),
             };
@@ -1672,13 +1717,13 @@
             <span class="ident">device</span>.<span class="ident">temp_suspected</span>.<span class="ident">clear</span>();
             <span class="ident">device</span>.<span class="ident">lock_life</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>).<span class="ident">post_submit</span>();
 
-            <span class="ident">callbacks</span>
+            <span class="ident">closures</span>
         };
 
-        <span class="comment">// the map callbacks should execute with nothing locked!</span>
-        <span class="ident">drop</span>(<span class="ident">token</span>);
-        <span class="ident"><span class="kw">super</span>::fire_map_callbacks</span>(<span class="ident">callbacks</span>);
-
+        <span class="comment">// the closures should execute with nothing locked!</span>
+        <span class="kw">unsafe</span> {
+            <span class="ident">callbacks</span>.<span class="ident">fire</span>();
+        }
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -1693,6 +1738,29 @@
             <span class="prelude-val">Ok</span>(<span class="ident">_device</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="number">1.0</span>), <span class="comment">//TODO?</span>
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">InvalidQueue</span>),
         }
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">queue_on_submitted_work_done</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">queue_id</span>: <span class="ident">id::QueueId</span>,
+        <span class="ident">closure</span>: <span class="ident">SubmittedWorkDoneClosure</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">InvalidQueue</span><span class="op">&gt;</span> {
+        <span class="comment">//TODO: flush pending writes</span>
+        <span class="kw">let</span> <span class="ident">added</span> <span class="op">=</span> {
+            <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
+            <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+            <span class="kw">match</span> <span class="ident">device_guard</span>.<span class="ident">get</span>(<span class="ident">queue_id</span>) {
+                <span class="prelude-val">Ok</span>(<span class="ident">device</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">device</span>.<span class="ident">lock_life</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>).<span class="ident">add_work_done_closure</span>(<span class="ident">closure</span>),
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">InvalidQueue</span>),
+            }
+        };
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">added</span> {
+            <span class="kw">unsafe</span> {
+                (<span class="ident">closure</span>.<span class="ident">callback</span>)(<span class="ident">closure</span>.<span class="ident">user_data</span>);
+            }
+        }
+        <span class="prelude-val">Ok</span>(())
     }
 }
 
