@@ -1043,16 +1043,19 @@
 <span id="1043">1043</span>
 <span id="1044">1044</span>
 <span id="1045">1045</span>
+<span id="1046">1046</span>
+<span id="1047">1047</span>
+<span id="1048">1048</span>
+<span id="1049">1049</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{<span class="ident">BindGroup</span>, <span class="ident">BindGroupLayout</span>, <span class="ident">PipelineLayout</span>},
     <span class="ident">command</span>::{<span class="ident">CommandBuffer</span>, <span class="ident">RenderBundle</span>},
     <span class="ident">device::Device</span>,
     <span class="ident">id</span>,
-    <span class="ident">instance</span>::{<span class="ident">Adapter</span>, <span class="ident">Instance</span>, <span class="ident">Surface</span>},
+    <span class="ident">instance</span>::{<span class="ident">Adapter</span>, <span class="ident">HalSurface</span>, <span class="ident">Instance</span>, <span class="ident">Surface</span>},
     <span class="ident">pipeline</span>::{<span class="ident">ComputePipeline</span>, <span class="ident">RenderPipeline</span>, <span class="ident">ShaderModule</span>},
     <span class="ident">resource</span>::{<span class="ident">Buffer</span>, <span class="ident">QuerySet</span>, <span class="ident">Sampler</span>, <span class="ident">Texture</span>, <span class="ident">TextureView</span>},
-    <span class="ident">swap_chain::SwapChain</span>,
     <span class="ident">Epoch</span>, <span class="ident">Index</span>,
 };
 
@@ -1157,7 +1160,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">I</span>: <span class="ident">id::TypedId</span><span class="op">&gt;</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">I</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">_contains</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">unzip</span>();
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>] {
             <span class="ident">Element::Vacant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
@@ -1247,7 +1250,7 @@
     }
 
     <span class="comment">// Prevents panic on out of range access, allows Vacant elements.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">try_remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">_try_remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">unzip</span>();
         <span class="kw">if</span> <span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">len</span>() {
             <span class="prelude-val">None</span>
@@ -1310,8 +1313,6 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">Device</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Root</span> {}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">Device</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Surface</span> {}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">Device</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Adapter</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {}
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">SwapChain</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Root</span> {}
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">SwapChain</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Device</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">PipelineLayout</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Root</span> {}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">PipelineLayout</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Device</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">PipelineLayout</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RenderBundle</span> {}
@@ -1325,7 +1326,6 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CommandBuffer</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">CommandBuffer</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Root</span> {}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">CommandBuffer</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Device</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {}
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">CommandBuffer</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SwapChain</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {} <span class="comment">//TODO: remove this (only used in `submit()`)</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">RenderBundle</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Device</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">RenderBundle</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">CommandBuffer</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">ComputePipeline</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Device</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {}
@@ -1353,7 +1353,6 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">Texture</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Device</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">Texture</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Buffer</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">TextureView</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Root</span> {}
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">TextureView</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SwapChain</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {} <span class="comment">//TODO: remove this (only used in `get_next_texture()`)</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">TextureView</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Device</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">TextureView</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Texture</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {}
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Access</span><span class="op">&lt;</span><span class="ident">Sampler</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Root</span> {}
@@ -1441,7 +1440,6 @@
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">GlobalIdentityHandlerFactory</span>:
     <span class="ident">IdentityHandlerFactory</span><span class="op">&lt;</span><span class="ident">id::AdapterId</span><span class="op">&gt;</span>
     <span class="op">+</span> <span class="ident">IdentityHandlerFactory</span><span class="op">&lt;</span><span class="ident">id::DeviceId</span><span class="op">&gt;</span>
-    <span class="op">+</span> <span class="ident">IdentityHandlerFactory</span><span class="op">&lt;</span><span class="ident">id::SwapChainId</span><span class="op">&gt;</span>
     <span class="op">+</span> <span class="ident">IdentityHandlerFactory</span><span class="op">&lt;</span><span class="ident">id::PipelineLayoutId</span><span class="op">&gt;</span>
     <span class="op">+</span> <span class="ident">IdentityHandlerFactory</span><span class="op">&lt;</span><span class="ident">id::ShaderModuleId</span><span class="op">&gt;</span>
     <span class="op">+</span> <span class="ident">IdentityHandlerFactory</span><span class="op">&lt;</span><span class="ident">id::BindGroupLayoutId</span><span class="op">&gt;</span>
@@ -1605,7 +1603,6 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HubReport</span> {
     <span class="kw">pub</span> <span class="ident">adapters</span>: <span class="ident">StorageReport</span>,
     <span class="kw">pub</span> <span class="ident">devices</span>: <span class="ident">StorageReport</span>,
-    <span class="kw">pub</span> <span class="ident">swap_chains</span>: <span class="ident">StorageReport</span>,
     <span class="kw">pub</span> <span class="ident">pipeline_layouts</span>: <span class="ident">StorageReport</span>,
     <span class="kw">pub</span> <span class="ident">shader_modules</span>: <span class="ident">StorageReport</span>,
     <span class="kw">pub</span> <span class="ident">bind_group_layouts</span>: <span class="ident">StorageReport</span>,
@@ -1630,7 +1627,6 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Hub</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span>, <span class="ident">F</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="ident">adapters</span>: <span class="ident">Registry</span><span class="op">&lt;</span><span class="ident">Adapter</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::AdapterId</span>, <span class="ident">F</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">devices</span>: <span class="ident">Registry</span><span class="op">&lt;</span><span class="ident">Device</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::DeviceId</span>, <span class="ident">F</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">swap_chains</span>: <span class="ident">Registry</span><span class="op">&lt;</span><span class="ident">SwapChain</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::SwapChainId</span>, <span class="ident">F</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">pipeline_layouts</span>: <span class="ident">Registry</span><span class="op">&lt;</span><span class="ident">PipelineLayout</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::PipelineLayoutId</span>, <span class="ident">F</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">shader_modules</span>: <span class="ident">Registry</span><span class="op">&lt;</span><span class="ident">ShaderModule</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::ShaderModuleId</span>, <span class="ident">F</span><span class="op">&gt;</span>,
     <span class="kw">pub</span> <span class="ident">bind_group_layouts</span>: <span class="ident">Registry</span><span class="op">&lt;</span><span class="ident">BindGroupLayout</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::BindGroupLayoutId</span>, <span class="ident">F</span><span class="op">&gt;</span>,
@@ -1651,7 +1647,6 @@
         <span class="self">Self</span> {
             <span class="ident">adapters</span>: <span class="ident">Registry::new</span>(<span class="ident">A::VARIANT</span>, <span class="ident">factory</span>),
             <span class="ident">devices</span>: <span class="ident">Registry::new</span>(<span class="ident">A::VARIANT</span>, <span class="ident">factory</span>),
-            <span class="ident">swap_chains</span>: <span class="ident">Registry::new</span>(<span class="ident">A::VARIANT</span>, <span class="ident">factory</span>),
             <span class="ident">pipeline_layouts</span>: <span class="ident">Registry::new</span>(<span class="ident">A::VARIANT</span>, <span class="ident">factory</span>),
             <span class="ident">shader_modules</span>: <span class="ident">Registry::new</span>(<span class="ident">A::VARIANT</span>, <span class="ident">factory</span>),
             <span class="ident">bind_group_layouts</span>: <span class="ident">Registry::new</span>(<span class="ident">A::VARIANT</span>, <span class="ident">factory</span>),
@@ -1672,7 +1667,7 @@
     <span class="comment">// we should have `clear_device(device_id)` that specifically destroys</span>
     <span class="comment">// everything related to a logical device.</span>
     <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">surface_guard</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">Surface</span>, <span class="ident">id::SurfaceId</span><span class="op">&gt;</span>, <span class="ident">with_adapters</span>: <span class="ident">bool</span>) {
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::resource::TextureViewSource</span>;
+        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::resource::TextureInner</span>;
         <span class="kw">use</span> <span class="ident">hal</span>::{<span class="ident">Device</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Surface</span> <span class="kw">as</span> <span class="kw">_</span>};
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">devices</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">devices</span>.<span class="ident">data</span>.<span class="ident">write</span>();
@@ -1703,14 +1698,9 @@
             <span class="kw">let</span> <span class="ident">textures</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">textures</span>.<span class="ident">data</span>.<span class="ident">read</span>();
             <span class="kw">for</span> <span class="ident">element</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">texture_views</span>.<span class="ident">data</span>.<span class="ident">write</span>().<span class="ident">map</span>.<span class="ident">drain</span>(..) {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Element::Occupied</span>(<span class="ident">texture_view</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">element</span> {
-                    <span class="kw">match</span> <span class="ident">texture_view</span>.<span class="ident">source</span> {
-                        <span class="ident">TextureViewSource::Native</span>(<span class="ident">source_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">devices</span>[<span class="ident">textures</span>[<span class="ident">source_id</span>.<span class="ident">value</span>].<span class="ident">device_id</span>.<span class="ident">value</span>];
-                            <span class="kw">unsafe</span> {
-                                <span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">destroy_texture_view</span>(<span class="ident">texture_view</span>.<span class="ident">raw</span>);
-                            }
-                        }
-                        <span class="ident">TextureViewSource::SwapChain</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {} <span class="comment">//TODO</span>
+                    <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">devices</span>[<span class="ident">textures</span>[<span class="ident">texture_view</span>.<span class="ident">parent_id</span>.<span class="ident">value</span>].<span class="ident">device_id</span>.<span class="ident">value</span>];
+                    <span class="kw">unsafe</span> {
+                        <span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">destroy_texture_view</span>(<span class="ident">texture_view</span>.<span class="ident">raw</span>);
                     }
                 }
             }
@@ -1718,7 +1708,12 @@
 
         <span class="kw">for</span> <span class="ident">element</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">textures</span>.<span class="ident">data</span>.<span class="ident">write</span>().<span class="ident">map</span>.<span class="ident">drain</span>(..) {
             <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Element::Occupied</span>(<span class="ident">texture</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">element</span> {
-                <span class="ident">devices</span>[<span class="ident">texture</span>.<span class="ident">device_id</span>.<span class="ident">value</span>].<span class="ident">destroy_texture</span>(<span class="ident">texture</span>);
+                <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">devices</span>[<span class="ident">texture</span>.<span class="ident">device_id</span>.<span class="ident">value</span>];
+                <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TextureInner::Native</span> { <span class="ident">raw</span>: <span class="prelude-val">Some</span>(<span class="ident">raw</span>) } <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">inner</span> {
+                    <span class="kw">unsafe</span> {
+                        <span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">destroy_texture</span>(<span class="ident">raw</span>);
+                    }
+                }
             }
         }
         <span class="kw">for</span> <span class="ident">element</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">buffers</span>.<span class="ident">data</span>.<span class="ident">write</span>().<span class="ident">map</span>.<span class="ident">drain</span>(..) {
@@ -1777,16 +1772,14 @@
             }
         }
 
-        <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">element</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">swap_chains</span>.<span class="ident">data</span>.<span class="ident">write</span>().<span class="ident">map</span>.<span class="ident">drain</span>(..).<span class="ident">enumerate</span>() {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Element::Occupied</span>(<span class="ident">swap_chain</span>, <span class="ident">epoch</span>) <span class="op">=</span> <span class="ident">element</span> {
-                <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">devices</span>[<span class="ident">swap_chain</span>.<span class="ident">device_id</span>.<span class="ident">value</span>];
-                <span class="kw">let</span> <span class="ident">suf_id</span> <span class="op">=</span> <span class="ident">id::TypedId::zip</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">Index</span>, <span class="ident">epoch</span>, <span class="ident">A::VARIANT</span>);
-                <span class="comment">//TODO: hold the surface alive by the swapchain</span>
-                <span class="kw">if</span> <span class="ident">surface_guard</span>.<span class="ident">contains</span>(<span class="ident">suf_id</span>) {
-                    <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="ident">surface_guard</span>.<span class="ident">get_mut</span>(<span class="ident">suf_id</span>).<span class="ident">unwrap</span>();
+        <span class="kw">for</span> <span class="ident">element</span> <span class="kw">in</span> <span class="ident">surface_guard</span>.<span class="ident">map</span>.<span class="ident">iter_mut</span>() {
+            <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Element::Occupied</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">surface</span>, <span class="ident">_epoch</span>) <span class="op">=</span> <span class="kw-2">*</span><span class="ident">element</span> {
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">present</span>) <span class="op">=</span> <span class="ident">surface</span>.<span class="ident">presentation</span>.<span class="ident">take</span>() {
+                    <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">devices</span>[<span class="ident">present</span>.<span class="ident">device_id</span>.<span class="ident">value</span>];
                     <span class="kw">let</span> <span class="ident">suf</span> <span class="op">=</span> <span class="ident">A::get_surface_mut</span>(<span class="ident">surface</span>);
                     <span class="kw">unsafe</span> {
-                        <span class="ident">suf</span>.<span class="ident">unconfigure</span>(<span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">raw</span>);
+                        <span class="ident">suf</span>.<span class="ident">raw</span>.<span class="ident">unconfigure</span>(<span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">raw</span>);
+                        <span class="comment">//TODO: we could destroy the surface here</span>
                     }
                 }
             }
@@ -1817,7 +1810,6 @@
         <span class="ident">HubReport</span> {
             <span class="ident">adapters</span>: <span class="self">self</span>.<span class="ident">adapters</span>.<span class="ident">data</span>.<span class="ident">read</span>().<span class="ident">generate_report</span>(),
             <span class="ident">devices</span>: <span class="self">self</span>.<span class="ident">devices</span>.<span class="ident">data</span>.<span class="ident">read</span>().<span class="ident">generate_report</span>(),
-            <span class="ident">swap_chains</span>: <span class="self">self</span>.<span class="ident">swap_chains</span>.<span class="ident">data</span>.<span class="ident">read</span>().<span class="ident">generate_report</span>(),
             <span class="ident">pipeline_layouts</span>: <span class="self">self</span>.<span class="ident">pipeline_layouts</span>.<span class="ident">data</span>.<span class="ident">read</span>().<span class="ident">generate_report</span>(),
             <span class="ident">shader_modules</span>: <span class="self">self</span>.<span class="ident">shader_modules</span>.<span class="ident">data</span>.<span class="ident">read</span>().<span class="ident">generate_report</span>(),
             <span class="ident">bind_group_layouts</span>: <span class="self">self</span>.<span class="ident">bind_group_layouts</span>.<span class="ident">data</span>.<span class="ident">read</span>().<span class="ident">generate_report</span>(),
@@ -1997,7 +1989,8 @@
     <span class="kw">const</span> <span class="ident">VARIANT</span>: <span class="ident">Backend</span>;
     <span class="kw">fn</span> <span class="ident">create_instance_from_hal</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">hal_instance</span>: <span class="ident"><span class="self">Self</span>::Instance</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Instance</span>;
     <span class="kw">fn</span> <span class="ident">hub</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(<span class="ident">global</span>: <span class="kw-2">&amp;</span><span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">G</span><span class="op">&gt;</span>;
-    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident"><span class="self">Self</span>::Surface</span>;
+    <span class="kw">fn</span> <span class="ident">get_surface</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">vulkan</span>)]</span>
@@ -2013,7 +2006,10 @@
     <span class="kw">fn</span> <span class="ident">hub</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(<span class="ident">global</span>: <span class="kw-2">&amp;</span><span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">G</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="ident">global</span>.<span class="ident">hubs</span>.<span class="ident">vulkan</span>
     }
-    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident"><span class="self">Self</span>::Surface</span> {
+    <span class="kw">fn</span> <span class="ident">get_surface</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="ident">surface</span>.<span class="ident">vulkan</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>()
+    }
+    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">surface</span>.<span class="ident">vulkan</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>()
     }
 }
@@ -2030,7 +2026,10 @@
     <span class="kw">fn</span> <span class="ident">hub</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(<span class="ident">global</span>: <span class="kw-2">&amp;</span><span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">G</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="ident">global</span>.<span class="ident">hubs</span>.<span class="ident">metal</span>
     }
-    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident"><span class="self">Self</span>::Surface</span> {
+    <span class="kw">fn</span> <span class="ident">get_surface</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="ident">surface</span>.<span class="ident">metal</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>()
+    }
+    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">surface</span>.<span class="ident">metal</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>()
     }
 }
@@ -2048,7 +2047,10 @@
     <span class="kw">fn</span> <span class="ident">hub</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(<span class="ident">global</span>: <span class="kw-2">&amp;</span><span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">G</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="ident">global</span>.<span class="ident">hubs</span>.<span class="ident">dx12</span>
     }
-    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident"><span class="self">Self</span>::Surface</span> {
+    <span class="kw">fn</span> <span class="ident">get_surface</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="ident">surface</span>.<span class="ident">dx12</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>()
+    }
+    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">surface</span>.<span class="ident">dx12</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>()
     }
 }
@@ -2060,7 +2062,10 @@ impl HalApi for hal::api::Dx11 {
     fn hub&lt;G: GlobalIdentityHandlerFactory&gt;(global: &amp;Global&lt;G&gt;) -&gt; &amp;Hub&lt;Self, G&gt; {
         &amp;global.hubs.dx11
     }
-    fn get_surface_mut(surface: &amp;mut Surface) -&gt; &amp;mut Self::Surface {
+    fn get_surface(surface: &amp;Surface) -&gt; &amp;HalSurface&lt;Self&gt; {
+        surface.dx11.as_ref().unwrap()
+    }
+    fn get_surface_mut(surface: &amp;mut Surface) -&gt; &amp;mut HalSurface&lt;Self&gt; {
         surface.dx11.as_mut().unwrap()
     }
 }
@@ -2079,7 +2084,10 @@ impl HalApi for hal::api::Dx11 {
     <span class="kw">fn</span> <span class="ident">hub</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(<span class="ident">global</span>: <span class="kw-2">&amp;</span><span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">G</span><span class="op">&gt;</span> {
         <span class="kw-2">&amp;</span><span class="ident">global</span>.<span class="ident">hubs</span>.<span class="ident">gl</span>
     }
-    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident"><span class="self">Self</span>::Surface</span> {
+    <span class="kw">fn</span> <span class="ident">get_surface</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+        <span class="ident">surface</span>.<span class="ident">gl</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>()
+    }
+    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">surface</span>.<span class="ident">gl</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>()
     }
 }
