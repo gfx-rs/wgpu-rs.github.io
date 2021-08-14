@@ -960,9 +960,42 @@
 <span id="960">960</span>
 <span id="961">961</span>
 <span id="962">962</span>
+<span id="963">963</span>
+<span id="964">964</span>
+<span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
+<span id="978">978</span>
+<span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
+<span id="982">982</span>
+<span id="983">983</span>
+<span id="984">984</span>
+<span id="985">985</span>
+<span id="986">986</span>
+<span id="987">987</span>
+<span id="988">988</span>
+<span id="989">989</span>
+<span id="990">990</span>
+<span id="991">991</span>
+<span id="992">992</span>
+<span id="993">993</span>
+<span id="994">994</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="ident">glow::HasContext</span>;
 <span class="kw">use</span> <span class="ident">parking_lot</span>::{<span class="ident">Mutex</span>, <span class="ident">MutexGuard</span>};
+<span class="kw">use</span> <span class="ident">raw_window_handle</span>::{<span class="ident">HasRawWindowHandle</span>, <span class="ident">RawWindowHandle</span>};
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">ffi::CStr</span>, <span class="ident">os::raw</span>, <span class="ident">ptr</span>, <span class="ident">sync::Arc</span>, <span class="ident">time::Duration</span>};
 
@@ -992,6 +1025,7 @@
     <span class="ident">height</span>: <span class="ident">raw::c_int</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw::c_void</span>;
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
 <span class="kw">type</span> <span class="ident">WlEglWindowResizeFun</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(
     <span class="ident">window</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">raw::c_void</span>,
     <span class="ident">width</span>: <span class="ident">raw::c_int</span>,
@@ -1429,7 +1463,7 @@
 }
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Instance</span> {
-    <span class="ident">wsi_library</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">libloading::Library</span><span class="op">&gt;</span>,
+    <span class="ident">wsi_library</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">libloading::Library</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">flags</span>: <span class="ident"><span class="kw">crate</span>::InstanceFlags</span>,
     <span class="ident">inner</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Inner</span><span class="op">&gt;</span>,
 }
@@ -1477,7 +1511,7 @@
         {
             <span class="macro">log::info!</span>(<span class="string">&quot;Using Wayland platform&quot;</span>);
             <span class="kw">let</span> <span class="ident">display_attributes</span> <span class="op">=</span> [<span class="ident">egl::ATTRIB_NONE</span>];
-            <span class="ident">wsi_library</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">library</span>);
+            <span class="ident">wsi_library</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Arc::new</span>(<span class="ident">library</span>));
             <span class="ident">egl</span>.<span class="ident">get_platform_display</span>(
                 <span class="ident">EGL_PLATFORM_WAYLAND_KHR</span>,
                 <span class="ident">egl::DEFAULT_DISPLAY</span>,
@@ -1489,7 +1523,7 @@
         {
             <span class="macro">log::info!</span>(<span class="string">&quot;Using X11 platform&quot;</span>);
             <span class="kw">let</span> <span class="ident">display_attributes</span> <span class="op">=</span> [<span class="ident">egl::ATTRIB_NONE</span>];
-            <span class="ident">wsi_library</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">library</span>);
+            <span class="ident">wsi_library</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Arc::new</span>(<span class="ident">library</span>));
             <span class="ident">egl</span>.<span class="ident">get_platform_display</span>(<span class="ident">EGL_PLATFORM_X11_KHR</span>, <span class="ident">display</span>.<span class="ident">as_ptr</span>(), <span class="kw-2">&amp;</span><span class="ident">display_attributes</span>)
                 .<span class="ident">unwrap</span>()
         } <span class="kw">else</span> {
@@ -1529,31 +1563,34 @@
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">allow</span>(<span class="ident">unused</span>, <span class="ident">unused_mut</span>, <span class="ident">unreachable_code</span>))]</span>
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_surface</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">has_handle</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">raw_window_handle::HasRawWindowHandle</span>,
+        <span class="ident">has_handle</span>: <span class="kw-2">&amp;</span><span class="kw">impl</span> <span class="ident">HasRawWindowHandle</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Surface</span>, <span class="ident"><span class="kw">crate</span>::InstanceError</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="ident">raw_window_handle::RawWindowHandle</span> <span class="kw">as</span> <span class="ident">Rwh</span>;
 
+        <span class="kw">let</span> <span class="ident">raw_window_handle</span> <span class="op">=</span> <span class="ident">has_handle</span>.<span class="ident">raw_window_handle</span>();
+
         <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">allow</span>(<span class="ident">unused_mut</span>))]</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock</span>();
-        <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">allow</span>(<span class="ident">unused_mut</span>))]</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wl_window</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
-        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">temp_xlib_handle</span>, <span class="kw-2">mut</span> <span class="ident">temp_xcb_handle</span>);
 
-        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">trivial_casts</span>)]</span>
-        <span class="kw">let</span> <span class="ident">native_window_ptr</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">has_handle</span>.<span class="ident">raw_window_handle</span>() {
+        <span class="kw">match</span> <span class="ident">raw_window_handle</span> {
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
-            <span class="ident">Rwh::Xlib</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">temp_xlib_handle</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">window</span>;
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">temp_xlib_handle</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>
-            }
+            <span class="ident">Rwh::Xlib</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {}
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
-            <span class="ident">Rwh::Xcb</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">temp_xcb_handle</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">window</span>;
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">temp_xcb_handle</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>
-            }
+            <span class="ident">Rwh::Xcb</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {}
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>)]</span>
-            <span class="ident">Rwh::Android</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">handle</span>.<span class="ident">a_native_window</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">Rwh::Android</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw">let</span> <span class="ident">format</span> <span class="op">=</span> <span class="ident">inner</span>
+                    .<span class="ident">egl</span>
+                    .<span class="ident">get_config_attrib</span>(<span class="ident">inner</span>.<span class="ident">display</span>, <span class="ident">inner</span>.<span class="ident">config</span>, <span class="ident">egl::NATIVE_VISUAL_ID</span>)
+                    .<span class="ident">unwrap</span>();
+
+                <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">ANativeWindow_setBuffersGeometry</span>(<span class="ident">handle</span>.<span class="ident">a_native_window</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="ident">format</span>);
+
+                <span class="kw">if</span> <span class="ident">ret</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+                    <span class="macro">log::error!</span>(<span class="string">&quot;Error returned from ANativeWindow_setBuffersGeometry&quot;</span>);
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::InstanceError</span>);
+                }
+            }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
             <span class="ident">Rwh::Wayland</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="comment">/* Wayland displays are not sharable between surfaces so if the
@@ -1588,17 +1625,6 @@
                     <span class="ident">inner</span>.<span class="ident">wl_display</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">handle</span>.<span class="ident">display</span>);
                     <span class="ident">drop</span>(<span class="ident">old_inner</span>);
                 }
-
-                <span class="kw">let</span> <span class="ident">wl_egl_window_create</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span><span class="ident">WlEglWindowCreateFun</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">wsi_library</span>
-                    .<span class="ident">as_ref</span>()
-                    .<span class="ident">expect</span>(<span class="string">&quot;unsupported window&quot;</span>)
-                    .<span class="ident">get</span>(<span class="string">b&quot;wl_egl_window_create&quot;</span>)
-                    .<span class="ident">unwrap</span>();
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">wl_egl_window_create</span>(<span class="ident">handle</span>.<span class="ident">surface</span>, <span class="number">640</span>, <span class="number">480</span>) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>
-                    <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>;
-                <span class="ident">wl_window</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">result</span>);
-                <span class="ident">result</span>
             }
             <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
                 <span class="macro">log::error!</span>(<span class="string">&quot;Unsupported window: {:?}&quot;</span>, <span class="ident">other</span>);
@@ -1606,72 +1632,10 @@
             }
         };
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="macro">vec!</span>[
-            <span class="ident">egl::RENDER_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>,
-            <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>) {
-                <span class="ident">egl::BACK_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>
-            } <span class="kw">else</span> {
-                <span class="ident">egl::SINGLE_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>
-            },
-        ];
-
         <span class="kw">let</span> <span class="ident">enable_srgb</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">inner</span>.<span class="ident">srgb_kind</span> {
-            <span class="ident">SrgbFrameBufferKind::Core</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">egl::GL_COLORSPACE</span> <span class="kw">as</span> <span class="ident">usize</span>);
-                <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">egl::GL_COLORSPACE_SRGB</span> <span class="kw">as</span> <span class="ident">usize</span>);
-                <span class="bool-val">true</span>
-            }
-            <span class="ident">SrgbFrameBufferKind::Khr</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">EGL_GL_COLORSPACE_KHR</span> <span class="kw">as</span> <span class="ident">usize</span>);
-                <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">EGL_GL_COLORSPACE_SRGB_KHR</span> <span class="kw">as</span> <span class="ident">usize</span>);
-                <span class="bool-val">true</span>
-            }
+            <span class="ident">SrgbFrameBufferKind::Core</span> <span class="op">|</span> <span class="ident">SrgbFrameBufferKind::Khr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
             <span class="ident">SrgbFrameBufferKind::None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
         };
-
-        <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">egl::ATTRIB_NONE</span>);
-
-        <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">egl</span>) <span class="op">=</span> <span class="ident">inner</span>.<span class="ident">egl</span>.<span class="ident">upcast</span>::<span class="op">&lt;</span><span class="ident">egl::EGL1_5</span><span class="op">&gt;</span>() {
-            <span class="ident">egl</span>.<span class="ident">create_platform_window_surface</span>(
-                <span class="ident">inner</span>.<span class="ident">display</span>,
-                <span class="ident">inner</span>.<span class="ident">config</span>,
-                <span class="ident">native_window_ptr</span>,
-                <span class="kw-2">&amp;</span><span class="ident">attributes</span>,
-            )
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="macro">log::warn!</span>(<span class="string">&quot;Error in create_platform_window_surface: {:?}&quot;</span>, <span class="ident">e</span>);
-                <span class="ident"><span class="kw">crate</span>::InstanceError</span>
-            })
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">attributes_i32</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">attributes</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">a</span> <span class="kw">as</span> <span class="ident">i32</span>).<span class="ident">collect</span>();
-            <span class="ident">inner</span>
-                .<span class="ident">egl</span>
-                .<span class="ident">create_window_surface</span>(
-                    <span class="ident">inner</span>.<span class="ident">display</span>,
-                    <span class="ident">inner</span>.<span class="ident">config</span>,
-                    <span class="ident">native_window_ptr</span>,
-                    <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">attributes_i32</span>),
-                )
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                    <span class="macro">log::warn!</span>(<span class="string">&quot;Error in create_platform_window_surface: {:?}&quot;</span>, <span class="ident">e</span>);
-                    <span class="ident"><span class="kw">crate</span>::InstanceError</span>
-                })
-        }<span class="question-mark">?</span>;
-
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>)]</span>
-        {
-            <span class="kw">let</span> <span class="ident">format</span> <span class="op">=</span> <span class="ident">inner</span>
-                .<span class="ident">egl</span>
-                .<span class="ident">get_config_attrib</span>(<span class="ident">inner</span>.<span class="ident">display</span>, <span class="ident">inner</span>.<span class="ident">config</span>, <span class="ident">egl::NATIVE_VISUAL_ID</span>)
-                .<span class="ident">unwrap</span>();
-
-            <span class="kw">let</span> <span class="ident">ret</span> <span class="op">=</span> <span class="ident">ANativeWindow_setBuffersGeometry</span>(<span class="ident">native_window_ptr</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="ident">format</span>);
-
-            <span class="kw">if</span> <span class="ident">ret</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="macro">log::error!</span>(<span class="string">&quot;Error returned from ANativeWindow_setBuffersGeometry&quot;</span>);
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::InstanceError</span>);
-            }
-        }
 
         <span class="ident">inner</span>
             .<span class="ident">egl</span>
@@ -1680,32 +1644,18 @@
 
         <span class="prelude-val">Ok</span>(<span class="ident">Surface</span> {
             <span class="ident">egl</span>: <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="ident">inner</span>.<span class="ident">egl</span>),
-            <span class="ident">raw</span>,
+            <span class="ident">wsi_library</span>: <span class="self">self</span>.<span class="ident">wsi_library</span>.<span class="ident">clone</span>(),
+            <span class="ident">config</span>: <span class="ident">inner</span>.<span class="ident">config</span>,
             <span class="ident">display</span>: <span class="ident">inner</span>.<span class="ident">display</span>,
             <span class="ident">context</span>: <span class="ident">inner</span>.<span class="ident">context</span>,
             <span class="ident">presentable</span>: <span class="ident">inner</span>.<span class="ident">supports_native_window</span>,
             <span class="ident">pbuffer</span>: <span class="ident">inner</span>.<span class="ident">pbuffer</span>,
-            <span class="ident">wl_window</span>,
+            <span class="ident">raw_window_handle</span>,
             <span class="ident">swapchain</span>: <span class="prelude-val">None</span>,
             <span class="ident">enable_srgb</span>,
         })
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_surface</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">surface</span>: <span class="ident">Surface</span>) {
-        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock</span>();
-        <span class="ident">inner</span>
-            .<span class="ident">egl</span>
-            .<span class="ident">destroy_surface</span>(<span class="ident">inner</span>.<span class="ident">display</span>, <span class="ident">surface</span>.<span class="ident">raw</span>)
-            .<span class="ident">unwrap</span>();
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">wl_window</span>) <span class="op">=</span> <span class="ident">surface</span>.<span class="ident">wl_window</span> {
-            <span class="kw">let</span> <span class="ident">wl_egl_window_destroy</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span><span class="ident">WlEglWindowDestroyFun</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
-                .<span class="ident">wsi_library</span>
-                .<span class="ident">as_ref</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;unsupported window&quot;</span>)
-                .<span class="ident">get</span>(<span class="string">b&quot;wl_egl_window_destroy&quot;</span>)
-                .<span class="ident">unwrap</span>();
-            <span class="ident">wl_egl_window_destroy</span>(<span class="ident">wl_window</span>)
-        }
-    }
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_surface</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_surface</span>: <span class="ident">Surface</span>) {}
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">enumerate_adapters</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::ExposedAdapter</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::Api</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock</span>();
@@ -1758,6 +1708,8 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Swapchain</span> {
+    <span class="ident">surface</span>: <span class="ident">egl::Surface</span>,
+    <span class="ident">wl_window</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw::c_void</span><span class="op">&gt;</span>,
     <span class="ident">framebuffer</span>: <span class="ident">glow::Framebuffer</span>,
     <span class="ident">renderbuffer</span>: <span class="ident">glow::Renderbuffer</span>,
     <span class="doccomment">/// Extent because the window lies</span>
@@ -1770,12 +1722,13 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Surface</span> {
     <span class="ident">egl</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">egl::DynamicInstance</span><span class="op">&lt;</span><span class="ident">egl::EGL1_4</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">raw</span>: <span class="ident">egl::Surface</span>,
+    <span class="ident">wsi_library</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">libloading::Library</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">config</span>: <span class="ident">egl::Config</span>,
     <span class="ident">display</span>: <span class="ident">egl::Display</span>,
     <span class="ident">context</span>: <span class="ident">egl::Context</span>,
     <span class="ident">pbuffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">egl::Surface</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">presentable</span>: <span class="ident">bool</span>,
-    <span class="ident">wl_window</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw::c_void</span><span class="op">&gt;</span>,
+    <span class="ident">raw_window_handle</span>: <span class="ident">RawWindowHandle</span>,
     <span class="ident">swapchain</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Swapchain</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">enable_srgb</span>: <span class="ident">bool</span>,
 }
@@ -1794,8 +1747,8 @@
         <span class="self">self</span>.<span class="ident">egl</span>
             .<span class="ident">make_current</span>(
                 <span class="self">self</span>.<span class="ident">display</span>,
-                <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">raw</span>),
-                <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">raw</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">sc</span>.<span class="ident">surface</span>),
+                <span class="prelude-val">Some</span>(<span class="ident">sc</span>.<span class="ident">surface</span>),
                 <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">context</span>),
             )
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
@@ -1825,10 +1778,12 @@
         );
         <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::READ_FRAMEBUFFER</span>, <span class="prelude-val">None</span>);
 
-        <span class="self">self</span>.<span class="ident">egl</span>.<span class="ident">swap_buffers</span>(<span class="self">self</span>.<span class="ident">display</span>, <span class="self">self</span>.<span class="ident">raw</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-            <span class="macro">log::error!</span>(<span class="string">&quot;swap_buffers failed: {}&quot;</span>, <span class="ident">e</span>);
-            <span class="ident"><span class="kw">crate</span>::SurfaceError::Lost</span>
-        })<span class="question-mark">?</span>;
+        <span class="self">self</span>.<span class="ident">egl</span>
+            .<span class="ident">swap_buffers</span>(<span class="self">self</span>.<span class="ident">display</span>, <span class="ident">sc</span>.<span class="ident">surface</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="macro">log::error!</span>(<span class="string">&quot;swap_buffers failed: {}&quot;</span>, <span class="ident">e</span>);
+                <span class="ident"><span class="kw">crate</span>::SurfaceError::Lost</span>
+            })<span class="question-mark">?</span>;
         <span class="self">self</span>.<span class="ident">egl</span>
             .<span class="ident">make_current</span>(<span class="self">self</span>.<span class="ident">display</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
@@ -1838,6 +1793,21 @@
 
         <span class="prelude-val">Ok</span>(())
     }
+
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">unconfigure_impl</span>(
+        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Device</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">egl::Surface</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">raw::c_void</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">swapchain</span>.<span class="ident">take</span>() {
+            <span class="prelude-val">Some</span>(<span class="ident">sc</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="ident">gl</span>.<span class="ident">delete_renderbuffer</span>(<span class="ident">sc</span>.<span class="ident">renderbuffer</span>);
+                <span class="ident">gl</span>.<span class="ident">delete_framebuffer</span>(<span class="ident">sc</span>.<span class="ident">framebuffer</span>);
+                <span class="prelude-val">Some</span>((<span class="ident">sc</span>.<span class="ident">surface</span>, <span class="ident">sc</span>.<span class="ident">wl_window</span>))
+            }
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+        }
+    }
 }
 
 <span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::Surface</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::Api</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Surface</span> {
@@ -1846,20 +1816,105 @@
         <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Device</span>,
         <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::SurfaceConfiguration</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="kw">crate</span>::SurfaceError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">unconfigure</span>(<span class="ident">device</span>);
+        <span class="kw">use</span> <span class="ident">raw_window_handle::RawWindowHandle</span> <span class="kw">as</span> <span class="ident">Rwh</span>;
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">wl_window</span> {
-            <span class="kw">let</span> <span class="ident">library</span> <span class="op">=</span> <span class="ident">libloading::Library::new</span>(<span class="string">&quot;libwayland-egl.so&quot;</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">wl_egl_window_resize</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span><span class="ident">WlEglWindowResizeFun</span><span class="op">&gt;</span> <span class="op">=</span>
-                <span class="ident">library</span>.<span class="ident">get</span>(<span class="string">b&quot;wl_egl_window_resize&quot;</span>).<span class="ident">unwrap</span>();
-            <span class="ident">wl_egl_window_resize</span>(
-                <span class="ident">window</span>,
-                <span class="ident">config</span>.<span class="ident">extent</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                <span class="ident">config</span>.<span class="ident">extent</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                <span class="number">0</span>,
-                <span class="number">0</span>,
-            );
-        }
+        <span class="kw">let</span> (<span class="ident">surface</span>, <span class="ident">wl_window</span>) <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">unconfigure_impl</span>(<span class="ident">device</span>) {
+            <span class="prelude-val">Some</span>(<span class="ident">pair</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">pair</span>,
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>), <span class="ident">allow</span>(<span class="ident">unused_mut</span>))]</span>
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wl_window</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
+                <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">temp_xlib_handle</span>, <span class="kw-2">mut</span> <span class="ident">temp_xcb_handle</span>);
+                <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">trivial_casts</span>)]</span>
+                <span class="kw">let</span> <span class="ident">native_window_ptr</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">raw_window_handle</span> {
+                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
+                    <span class="ident">Rwh::Xlib</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">temp_xlib_handle</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">window</span>;
+                        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">temp_xlib_handle</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>
+                    }
+                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
+                    <span class="ident">Rwh::Xcb</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">temp_xcb_handle</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">window</span>;
+                        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">temp_xcb_handle</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>
+                    }
+                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>)]</span>
+                    <span class="ident">Rwh::Android</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">handle</span>.<span class="ident">a_native_window</span>,
+                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
+                    <span class="ident">Rwh::Wayland</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">let</span> <span class="ident">library</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">wsi_library</span>.<span class="ident">as_ref</span>().<span class="ident">expect</span>(<span class="string">&quot;unsupported window&quot;</span>);
+                        <span class="kw">let</span> <span class="ident">wl_egl_window_create</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span><span class="ident">WlEglWindowCreateFun</span><span class="op">&gt;</span> <span class="op">=</span>
+                            <span class="ident">library</span>.<span class="ident">get</span>(<span class="string">b&quot;wl_egl_window_create&quot;</span>).<span class="ident">unwrap</span>();
+                        <span class="kw">let</span> <span class="ident">window</span> <span class="op">=</span> <span class="ident">wl_egl_window_create</span>(<span class="ident">handle</span>.<span class="ident">surface</span>, <span class="number">640</span>, <span class="number">480</span>) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>
+                            <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>;
+                        <span class="kw">let</span> <span class="ident">wl_egl_window_resize</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span><span class="ident">WlEglWindowResizeFun</span><span class="op">&gt;</span> <span class="op">=</span>
+                            <span class="ident">library</span>.<span class="ident">get</span>(<span class="string">b&quot;wl_egl_window_resize&quot;</span>).<span class="ident">unwrap</span>();
+                        <span class="ident">wl_egl_window_resize</span>(
+                            <span class="ident">window</span>,
+                            <span class="ident">config</span>.<span class="ident">extent</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                            <span class="ident">config</span>.<span class="ident">extent</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                            <span class="number">0</span>,
+                            <span class="number">0</span>,
+                        );
+                        <span class="ident">wl_window</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>);
+                        <span class="ident">window</span>
+                    }
+                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                };
+
+                <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">egl</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">egl</span>.<span class="ident">upcast</span>::<span class="op">&lt;</span><span class="ident">egl::EGL1_5</span><span class="op">&gt;</span>() {
+                    <span class="kw">let</span> <span class="ident">attributes</span> <span class="op">=</span> [
+                        <span class="ident">egl::RENDER_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>,
+                        <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>) {
+                            <span class="ident">egl::BACK_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>
+                        } <span class="kw">else</span> {
+                            <span class="ident">egl::SINGLE_BUFFER</span> <span class="kw">as</span> <span class="ident">usize</span>
+                        },
+                        <span class="comment">// Always enable sRGB in EGL 1.5</span>
+                        <span class="ident">egl::GL_COLORSPACE</span> <span class="kw">as</span> <span class="ident">usize</span>,
+                        <span class="ident">egl::GL_COLORSPACE_SRGB</span> <span class="kw">as</span> <span class="ident">usize</span>,
+                        <span class="ident">egl::ATTRIB_NONE</span>,
+                    ];
+
+                    <span class="ident">egl</span>.<span class="ident">create_platform_window_surface</span>(
+                        <span class="self">self</span>.<span class="ident">display</span>,
+                        <span class="self">self</span>.<span class="ident">config</span>,
+                        <span class="ident">native_window_ptr</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">attributes</span>,
+                    )
+                    .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                        <span class="macro">log::warn!</span>(<span class="string">&quot;Error in create_platform_window_surface: {:?}&quot;</span>, <span class="ident">e</span>);
+                        <span class="ident"><span class="kw">crate</span>::SurfaceError::Lost</span>
+                    })
+                } <span class="kw">else</span> {
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attributes</span> <span class="op">=</span> <span class="macro">vec!</span>[
+                        <span class="ident">egl::RENDER_BUFFER</span>,
+                        <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>) {
+                            <span class="ident">egl::BACK_BUFFER</span>
+                        } <span class="kw">else</span> {
+                            <span class="ident">egl::SINGLE_BUFFER</span>
+                        },
+                    ];
+                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">enable_srgb</span> {
+                        <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">EGL_GL_COLORSPACE_KHR</span> <span class="kw">as</span> <span class="ident">i32</span>);
+                        <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">EGL_GL_COLORSPACE_SRGB_KHR</span> <span class="kw">as</span> <span class="ident">i32</span>);
+                    }
+                    <span class="ident">attributes</span>.<span class="ident">push</span>(<span class="ident">egl::ATTRIB_NONE</span> <span class="kw">as</span> <span class="ident">i32</span>);
+                    <span class="self">self</span>.<span class="ident">egl</span>
+                        .<span class="ident">create_window_surface</span>(
+                            <span class="self">self</span>.<span class="ident">display</span>,
+                            <span class="self">self</span>.<span class="ident">config</span>,
+                            <span class="ident">native_window_ptr</span>,
+                            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">attributes</span>),
+                        )
+                        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                            <span class="macro">log::warn!</span>(<span class="string">&quot;Error in create_platform_window_surface: {:?}&quot;</span>, <span class="ident">e</span>);
+                            <span class="ident"><span class="kw">crate</span>::SurfaceError::Lost</span>
+                        })
+                }<span class="question-mark">?</span>;
+
+                (<span class="ident">raw</span>, <span class="ident">wl_window</span>)
+            }
+        };
 
         <span class="kw">let</span> <span class="ident">format_desc</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">shared</span>.<span class="ident">describe_texture_format</span>(<span class="ident">config</span>.<span class="ident">format</span>);
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
@@ -1883,6 +1938,8 @@
         <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::READ_FRAMEBUFFER</span>, <span class="prelude-val">None</span>);
 
         <span class="self">self</span>.<span class="ident">swapchain</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">Swapchain</span> {
+            <span class="ident">surface</span>,
+            <span class="ident">wl_window</span>,
             <span class="ident">renderbuffer</span>,
             <span class="ident">framebuffer</span>,
             <span class="ident">extent</span>: <span class="ident">config</span>.<span class="ident">extent</span>,
@@ -1895,10 +1952,17 @@
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">unconfigure</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Device</span>) {
-        <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">sc</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">swapchain</span>.<span class="ident">take</span>() {
-            <span class="ident">gl</span>.<span class="ident">delete_renderbuffer</span>(<span class="ident">sc</span>.<span class="ident">renderbuffer</span>);
-            <span class="ident">gl</span>.<span class="ident">delete_framebuffer</span>(<span class="ident">sc</span>.<span class="ident">framebuffer</span>);
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">surface</span>, <span class="ident">wl_window</span>)) <span class="op">=</span> <span class="self">self</span>.<span class="ident">unconfigure_impl</span>(<span class="ident">device</span>) {
+            <span class="self">self</span>.<span class="ident">egl</span>.<span class="ident">destroy_surface</span>(<span class="self">self</span>.<span class="ident">display</span>, <span class="ident">surface</span>).<span class="ident">unwrap</span>();
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">window</span>) <span class="op">=</span> <span class="ident">wl_window</span> {
+                <span class="kw">let</span> <span class="ident">wl_egl_window_destroy</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span><span class="ident">WlEglWindowDestroyFun</span><span class="op">&gt;</span> <span class="op">=</span> <span class="self">self</span>
+                    .<span class="ident">wsi_library</span>
+                    .<span class="ident">as_ref</span>()
+                    .<span class="ident">expect</span>(<span class="string">&quot;unsupported window&quot;</span>)
+                    .<span class="ident">get</span>(<span class="string">b&quot;wl_egl_window_destroy&quot;</span>)
+                    .<span class="ident">unwrap</span>();
+                <span class="ident">wl_egl_window_destroy</span>(<span class="ident">window</span>);
+            }
         }
     }
 
