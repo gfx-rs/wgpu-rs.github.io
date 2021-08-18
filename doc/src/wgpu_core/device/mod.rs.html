@@ -4809,6 +4809,12 @@
 <span id="4809">4809</span>
 <span id="4810">4810</span>
 <span id="4811">4811</span>
+<span id="4812">4812</span>
+<span id="4813">4813</span>
+<span id="4814">4814</span>
+<span id="4815">4815</span>
+<span id="4816">4816</span>
+<span id="4817">4817</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
@@ -5314,12 +5320,18 @@
             <span class="ident">usage</span> <span class="op">|</span><span class="op">=</span> <span class="ident">hal::BufferUses::COPY_DST</span>;
         }
 
+        <span class="kw">let</span> <span class="ident">actual_size</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">size</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span>
+        } <span class="kw">else</span> {
+            <span class="ident">desc</span>.<span class="ident">size</span>
+        };
+
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">memory_flags</span> <span class="op">=</span> <span class="ident">hal::MemoryFlags::empty</span>();
         <span class="ident">memory_flags</span>.<span class="ident">set</span>(<span class="ident">hal::MemoryFlags::TRANSIENT</span>, <span class="ident">transient</span>);
 
         <span class="kw">let</span> <span class="ident">hal_desc</span> <span class="op">=</span> <span class="ident">hal::BufferDescriptor</span> {
             <span class="ident">label</span>: <span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_option</span>(),
-            <span class="ident">size</span>: <span class="ident">desc</span>.<span class="ident">size</span>,
+            <span class="ident">size</span>: <span class="ident">actual_size</span>,
             <span class="ident">usage</span>,
             <span class="ident">memory_flags</span>,
         };
