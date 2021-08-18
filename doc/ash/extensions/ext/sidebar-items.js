@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["DebugMarker",""],["DebugReport",""],["DebugUtils",""],["MetalSurface",""],["ToolingInfo",""]]});
+initSidebarItems({"struct":[["BufferDeviceAddress",""],["DebugMarker",""],["DebugReport",""],["DebugUtils",""],["ExtendedDynamicState",""],["FullScreenExclusive",""],["MetalSurface",""],["PhysicalDeviceDrm",""],["ToolingInfo",""]]});

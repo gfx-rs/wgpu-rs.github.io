@@ -900,6 +900,11 @@
 <span id="900">900</span>
 <span id="901">901</span>
 <span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
 </pre><pre class="rust">
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">conv</span>, <span class="ident">Command</span> <span class="kw">as</span> <span class="ident">C</span>};
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
@@ -917,7 +922,8 @@
     <span class="ident">primitive</span>: <span class="ident"><span class="kw">super</span>::PrimitiveState</span>,
     <span class="ident">index_format</span>: <span class="ident">wgt::IndexFormat</span>,
     <span class="ident">index_offset</span>: <span class="ident">wgt::BufferAddress</span>,
-    <span class="ident">vertex_buffers</span>: [(<span class="ident"><span class="kw">super</span>::VertexBufferDesc</span>, <span class="ident"><span class="kw">super</span>::BufferBinding</span>); <span class="ident"><span class="kw">crate</span>::MAX_VERTEX_BUFFERS</span>],
+    <span class="ident">vertex_buffers</span>:
+        [(<span class="ident"><span class="kw">super</span>::VertexBufferDesc</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::BufferBinding</span><span class="op">&gt;</span>); <span class="ident"><span class="kw">crate</span>::MAX_VERTEX_BUFFERS</span>],
     <span class="ident">vertex_attributes</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::AttributeDesc</span>, { <span class="ident"><span class="kw">super</span>::MAX_VERTEX_ATTRIBUTES</span> }<span class="op">&gt;</span>,
     <span class="ident">color_targets</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::ColorTargetDesc</span>, { <span class="ident"><span class="kw">crate</span>::MAX_COLOR_TARGETS</span> }<span class="op">&gt;</span>,
     <span class="ident">stencil</span>: <span class="ident"><span class="kw">super</span>::StencilState</span>,
@@ -937,7 +943,7 @@
         <span class="self">self</span>.<span class="ident">label</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="self">self</span>.<span class="ident">commands</span>.<span class="ident">clear</span>();
         <span class="self">self</span>.<span class="ident">data_bytes</span>.<span class="ident">clear</span>();
-        <span class="self">self</span>.<span class="ident">data_words</span>.<span class="ident">clear</span>();
+        <span class="self">self</span>.<span class="ident">queries</span>.<span class="ident">clear</span>();
     }
 
     <span class="kw">fn</span> <span class="ident">add_marker</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">marker</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
@@ -981,6 +987,7 @@
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">dirty_vbuf_mask</span> <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">index</span>) <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
                     <span class="kw">continue</span>;
                 }
+                <span class="kw">let</span> <span class="ident">vb</span> <span class="op">=</span> <span class="ident">vb</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
                 <span class="kw">let</span> <span class="ident">instance_offset</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">vb_desc</span>.<span class="ident">step</span> {
                     <span class="ident">wgt::VertexStepMode::Vertex</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
                     <span class="ident">wgt::VertexStepMode::Instance</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">first_instance</span> <span class="op">*</span> <span class="ident">vb_desc</span>.<span class="ident">stride</span>,
@@ -1003,13 +1010,14 @@
                     <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">vertex_buffers</span>[<span class="ident">attribute</span>.<span class="ident">buffer_index</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">clone</span>();
 
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attribute_desc</span> <span class="op">=</span> <span class="ident">attribute</span>.<span class="ident">clone</span>();
-                <span class="ident">attribute_desc</span>.<span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u32</span>;
+                <span class="kw">let</span> <span class="ident">vb</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">unwrap</span>();
+                <span class="ident">attribute_desc</span>.<span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">vb</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u32</span>;
                 <span class="kw">if</span> <span class="ident">buffer_desc</span>.<span class="ident">step</span> <span class="op">=</span><span class="op">=</span> <span class="ident">wgt::VertexStepMode::Instance</span> {
                     <span class="ident">attribute_desc</span>.<span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">buffer_desc</span>.<span class="ident">stride</span> <span class="op">*</span> <span class="ident">first_instance</span>;
                 }
 
                 <span class="self">self</span>.<span class="ident">cmd_buffer</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">C::SetVertexAttribute</span> {
-                    <span class="ident">buffer</span>: <span class="prelude-val">Some</span>(<span class="ident">buffer</span>.<span class="ident">raw</span>),
+                    <span class="ident">buffer</span>: <span class="prelude-val">Some</span>(<span class="ident">vb</span>.<span class="ident">raw</span>),
                     <span class="ident">buffer_desc</span>,
                     <span class="ident">attribute_desc</span>,
                 });
@@ -1255,11 +1263,11 @@
         <span class="ident">offset</span>: <span class="ident">wgt::BufferAddress</span>,
         <span class="ident">_stride</span>: <span class="ident">wgt::BufferSize</span>,
     ) {
-        <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cmd_buffer</span>.<span class="ident">data_words</span>.<span class="ident">len</span>();
+        <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cmd_buffer</span>.<span class="ident">queries</span>.<span class="ident">len</span>();
         <span class="self">self</span>.<span class="ident">cmd_buffer</span>
-            .<span class="ident">data_words</span>
+            .<span class="ident">queries</span>
             .<span class="ident">extend_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">set</span>.<span class="ident">queries</span>[<span class="ident">range</span>.<span class="ident">start</span> <span class="kw">as</span> <span class="ident">usize</span>..<span class="ident">range</span>.<span class="ident">end</span> <span class="kw">as</span> <span class="ident">usize</span>]);
-        <span class="kw">let</span> <span class="ident">query_range</span> <span class="op">=</span> <span class="ident">start</span> <span class="kw">as</span> <span class="ident">u32</span>..<span class="self">self</span>.<span class="ident">cmd_buffer</span>.<span class="ident">data_words</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">let</span> <span class="ident">query_range</span> <span class="op">=</span> <span class="ident">start</span> <span class="kw">as</span> <span class="ident">u32</span>..<span class="self">self</span>.<span class="ident">cmd_buffer</span>.<span class="ident">queries</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span>;
         <span class="self">self</span>.<span class="ident">cmd_buffer</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">C::CopyQueryResults</span> {
             <span class="ident">query_range</span>,
             <span class="ident">dst</span>: <span class="ident">buffer</span>.<span class="ident">raw</span>,
@@ -1644,8 +1652,10 @@
     ) {
         <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">dirty_vbuf_mask</span> <span class="op">|</span><span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">index</span>;
         <span class="kw">let</span> (<span class="kw">_</span>, <span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">vb</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">vertex_buffers</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>];
-        <span class="ident">vb</span>.<span class="ident">raw</span> <span class="op">=</span> <span class="ident">binding</span>.<span class="ident">buffer</span>.<span class="ident">raw</span>;
-        <span class="ident">vb</span>.<span class="ident">offset</span> <span class="op">=</span> <span class="ident">binding</span>.<span class="ident">offset</span>;
+        <span class="kw-2">*</span><span class="ident">vb</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">super</span>::BufferBinding</span> {
+            <span class="ident">raw</span>: <span class="ident">binding</span>.<span class="ident">buffer</span>.<span class="ident">raw</span>,
+            <span class="ident">offset</span>: <span class="ident">binding</span>.<span class="ident">offset</span>,
+        });
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_viewport</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">rect</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::Rect</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>, <span class="ident">depth</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span>) {
         <span class="self">self</span>.<span class="ident">cmd_buffer</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">C::SetViewport</span> {
