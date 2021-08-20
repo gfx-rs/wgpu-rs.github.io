@@ -7,13 +7,12 @@ object defined by either statically linking with <code>libEGL.so.1</code> at com
 or dynamically loading the EGL library at runtime.</p>
 <h3 id="static-linking" class="section-header"><a href="#static-linking">Static linking</a></h3>
 <p>You must enable static linking using the <code>static</code> feature in your <code>Cargo.toml</code>:</p>
-<div class="example-wrap"><pre class="language-toml">khronos-egl = { version = ..., features = [&quot;static&quot;] }</pre></div>
+<div class="example-wrap"><pre class="language-toml"><code>khronos-egl = { version = ..., features = [&quot;static&quot;] }</code></pre></div>
 <p>This will add a dependency to the <a href="https://crates.io/crates/pkg-config"><code>pkg-config</code></a> crate,
 necessary to find the EGL library at compile time.
 Here is a simple example showing how to use this library to create an EGL context when static linking is enabled.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">khronos_egl</span> <span class="kw">as</span> <span class="ident">egl</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">khronos_egl</span> <span class="kw">as</span> <span class="ident">egl</span>;
 
 <span class="kw">fn</span> <span class="ident">main</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">egl::Error</span><span class="op">&gt;</span> {
 	<span class="comment">// Create an EGL API instance.</span>
@@ -43,7 +42,7 @@ Here is a simple example showing how to use this library to create an EGL contex
 	<span class="ident">egl</span>.<span class="ident">create_context</span>(<span class="ident">display</span>, <span class="ident">config</span>, <span class="prelude-val">None</span>, <span class="kw-2">&amp;</span><span class="ident">context_attributes</span>);
 
 	<span class="prelude-val">Ok</span>(())
-}</pre></div>
+}</code></pre></div>
 <p>The creation of a <code>Display</code> instance is not detailed here since it depends on your display server.
 It is created using the <code>get_display</code> function with a pointer to the display server connection handle.
 For instance, if you are using the <a href="https://crates.io/crates/wayland-client">wayland-client</a> crate,
@@ -57,42 +56,38 @@ With the nightly compiler,
 you can combine the <code>nightly</code> and <code>static</code> features so that this crate
 can provide a static <code>Instance</code>, called <code>API</code> that can then be accessed everywhere.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">use</span> <span class="ident">egl::API</span> <span class="kw">as</span> <span class="ident">egl</span>;</pre></div>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">egl::API</span> <span class="kw">as</span> <span class="ident">egl</span>;</code></pre></div>
 <h3 id="dynamic-linking" class="section-header"><a href="#dynamic-linking">Dynamic Linking</a></h3>
 <p>Dynamic linking allows your application to accept multiple versions of EGL and be more flexible.
 You must enable dynamic linking using the <code>dynamic</code> feature in your <code>Cargo.toml</code>:</p>
-<div class="example-wrap"><pre class="language-toml">khronos-egl = { version = ..., features = [&quot;dynamic&quot;] }</pre></div>
+<div class="example-wrap"><pre class="language-toml"><code>khronos-egl = { version = ..., features = [&quot;dynamic&quot;] }</code></pre></div>
 <p>This will add a dependency to the <a href="https://crates.io/crates/libloading"><code>libloading</code></a> crate,
 necessary to find the EGL library at runtime.
 You can then load the EGL API into a <code>Instance&lt;Dynamic&lt;libloading::Library&gt;&gt;</code> as follows:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">let</span> <span class="ident">lib</span> <span class="op">=</span> <span class="ident">libloading::Library::new</span>(<span class="string">&quot;libEGL.so.1&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;unable to find libEGL.so.1&quot;</span>);
-<span class="kw">let</span> <span class="ident">egl</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">egl::DynamicInstance</span>::<span class="op">&lt;</span><span class="ident">egl::EGL1_4</span><span class="op">&gt;</span><span class="ident">::load_required_from</span>(<span class="ident">lib</span>).<span class="ident">expect</span>(<span class="string">&quot;unable to load libEGL.so.1&quot;</span>) };</pre></div>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">lib</span> <span class="op">=</span> <span class="ident">libloading::Library::new</span>(<span class="string">&quot;libEGL.so.1&quot;</span>).<span class="ident">expect</span>(<span class="string">&quot;unable to find libEGL.so.1&quot;</span>);
+<span class="kw">let</span> <span class="ident">egl</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">egl::DynamicInstance</span>::<span class="op">&lt;</span><span class="ident">egl::EGL1_4</span><span class="op">&gt;</span><span class="ident">::load_required_from</span>(<span class="ident">lib</span>).<span class="ident">expect</span>(<span class="string">&quot;unable to load libEGL.so.1&quot;</span>) };</code></pre></div>
 <p>Here, <code>egl::EGL1_4</code> is used to specify what is the minimum required version of EGL that must be provided by <code>libEGL.so.1</code>.
 This will return a <code>DynamicInstance&lt;egl::EGL1_4&gt;</code>, however in that case where <code>libEGL.so.1</code> provides a more recent version of EGL,
 you can still upcast ths instance to provide version specific features:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="kw">match</span> <span class="ident">egl</span>.<span class="ident">upcast</span>::<span class="op">&lt;</span><span class="ident">egl::EGL1_5</span><span class="op">&gt;</span>() {
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">match</span> <span class="ident">egl</span>.<span class="ident">upcast</span>::<span class="op">&lt;</span><span class="ident">egl::EGL1_5</span><span class="op">&gt;</span>() {
 	<span class="prelude-val">Some</span>(<span class="ident">egl1_5</span>) <span class="op">=</span><span class="op">&gt;</span> {
 		<span class="comment">// do something with EGL 1.5</span>
 	}
 	<span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
 		<span class="comment">// do something with EGL 1.4 instead.</span>
 	}
-};</pre></div>
+};</code></pre></div>
 <h2 id="troubleshooting" class="section-header"><a href="#troubleshooting">Troubleshooting</a></h2><h3 id="static-linking-with-opengl-es" class="section-header"><a href="#static-linking-with-opengl-es">Static Linking with OpenGL ES</a></h3>
 <p>When using OpenGL ES with <code>khronos-egl</code> with the <code>static</code> feature,
 it is necessary to place a dummy extern at the top of your application which links libEGL first, then GLESv1/2.
 This is because libEGL provides symbols required by GLESv1/2.
 Here’s how to work around this:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered">
-<span class="attribute">#[<span class="ident">link</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;EGL&quot;</span>)]</span>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[<span class="ident">link</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;EGL&quot;</span>)]</span>
 <span class="attribute">#[<span class="ident">link</span>(<span class="ident">name</span> <span class="op">=</span> <span class="string">&quot;GLESv2&quot;</span>)]</span>
-<span class="kw">extern</span> {}</pre></div>
+<span class="kw">extern</span> {}</code></pre></div>
 </div></details><h2 id="modules" class="section-header"><a href="#modules">Modules</a></h2>
 <div class="item-table"><div class="item-left module-item"><a class="mod" href="api/index.html" title="khronos_egl::api mod">api</a></div><div class="item-right docblock-short"></div></div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
 <div class="item-table"><div class="item-left module-item"><a class="struct" href="struct.ClientBuffer.html" title="khronos_egl::ClientBuffer struct">ClientBuffer</a></div><div class="item-right docblock-short"></div><div class="item-left module-item"><a class="struct" href="struct.Config.html" title="khronos_egl::Config struct">Config</a></div><div class="item-right docblock-short"></div><div class="item-left module-item"><a class="struct" href="struct.Context.html" title="khronos_egl::Context struct">Context</a></div><div class="item-right docblock-short"></div><div class="item-left module-item"><a class="struct" href="struct.Display.html" title="khronos_egl::Display struct">Display</a></div><div class="item-right docblock-short"></div><div class="item-left module-item"><a class="struct" href="struct.Dynamic.html" title="khronos_egl::Dynamic struct">Dynamic</a></div><div class="item-right docblock-short"><p>Dynamic EGL API interface.</p>
