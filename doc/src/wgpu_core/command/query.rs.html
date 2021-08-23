@@ -414,9 +414,6 @@
 <span id="414">414</span>
 <span id="415">415</span>
 <span id="416">416</span>
-<span id="417">417</span>
-<span id="418">418</span>
-<span id="419">419</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">hal::CommandEncoder</span> <span class="kw">as</span> <span class="kw">_</span>;
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
@@ -425,7 +422,7 @@
     <span class="ident">command</span>::{<span class="ident">CommandBuffer</span>, <span class="ident">CommandEncoderError</span>},
     <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>::{<span class="self">self</span>, <span class="ident">Id</span>, <span class="ident">TypedId</span>},
-    <span class="ident">memory_init_tracker</span>::{<span class="ident">MemoryInitKind</span>, <span class="ident">MemoryInitTrackerAction</span>},
+    <span class="ident">init_tracker::MemoryInitKind</span>,
     <span class="ident">resource::QuerySet</span>,
     <span class="ident">track::UseExtendError</span>,
     <span class="ident">Epoch</span>, <span class="ident">FastHashMap</span>, <span class="ident">Index</span>,
@@ -811,16 +808,13 @@
             .<span class="ident">into</span>());
         }
 
-        <span class="ident">cmd_buf</span>.<span class="ident">buffer_memory_init_actions</span>.<span class="ident">extend</span>(
-            <span class="ident">dst_buffer</span>
-                .<span class="ident">initialization_status</span>
-                .<span class="ident">check</span>(<span class="ident">buffer_start_offset</span>..<span class="ident">buffer_end_offset</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">range</span><span class="op">|</span> <span class="ident">MemoryInitTrackerAction</span> {
-                    <span class="ident">id</span>: <span class="ident">destination</span>,
-                    <span class="ident">range</span>,
-                    <span class="ident">kind</span>: <span class="ident">MemoryInitKind::ImplicitlyInitialized</span>,
-                }),
-        );
+        <span class="ident">cmd_buf</span>
+            .<span class="ident">buffer_memory_init_actions</span>
+            .<span class="ident">extend</span>(<span class="ident">dst_buffer</span>.<span class="ident">initialization_status</span>.<span class="ident">create_action</span>(
+                <span class="ident">destination</span>,
+                <span class="ident">buffer_start_offset</span>..<span class="ident">buffer_end_offset</span>,
+                <span class="ident">MemoryInitKind::ImplicitlyInitialized</span>,
+            ));
 
         <span class="kw">unsafe</span> {
             <span class="ident">raw_encoder</span>.<span class="ident">transition_buffers</span>(<span class="ident">dst_barrier</span>);

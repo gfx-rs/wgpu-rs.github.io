@@ -262,10 +262,6 @@
 <span id="262">262</span>
 <span id="263">263</span>
 <span id="264">264</span>
-<span id="265">265</span>
-<span id="266">266</span>
-<span id="267">267</span>
-<span id="268">268</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">num::NonZeroU32</span>, <span class="ident">ops::Range</span>};
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
@@ -274,7 +270,7 @@
     <span class="ident">command::CommandBuffer</span>,
     <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>::{<span class="ident">BufferId</span>, <span class="ident">CommandEncoderId</span>, <span class="ident">TextureId</span>},
-    <span class="ident">memory_init_tracker</span>::{<span class="ident">MemoryInitKind</span>, <span class="ident">MemoryInitTrackerAction</span>},
+    <span class="ident">init_tracker::MemoryInitKind</span>,
     <span class="ident">track::TextureSelector</span>,
 };
 
@@ -395,17 +391,13 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         }
 
         <span class="comment">// Mark dest as initialized.</span>
-        <span class="ident">cmd_buf</span>.<span class="ident">buffer_memory_init_actions</span>.<span class="ident">extend</span>(
-            <span class="ident">dst_buffer</span>
-                .<span class="ident">initialization_status</span>
-                .<span class="ident">check</span>(<span class="ident">offset</span>..<span class="ident">end</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">range</span><span class="op">|</span> <span class="ident">MemoryInitTrackerAction</span> {
-                    <span class="ident">id</span>: <span class="ident">dst</span>,
-                    <span class="ident">range</span>,
-                    <span class="ident">kind</span>: <span class="ident">MemoryInitKind::ImplicitlyInitialized</span>,
-                }),
-        );
-
+        <span class="ident">cmd_buf</span>
+            .<span class="ident">buffer_memory_init_actions</span>
+            .<span class="ident">extend</span>(<span class="ident">dst_buffer</span>.<span class="ident">initialization_status</span>.<span class="ident">create_action</span>(
+                <span class="ident">dst</span>,
+                <span class="ident">offset</span>..<span class="ident">end</span>,
+                <span class="ident">MemoryInitKind::ImplicitlyInitialized</span>,
+            ));
         <span class="comment">// actual hal barrier &amp; operation</span>
         <span class="kw">let</span> <span class="ident">dst_barrier</span> <span class="op">=</span> <span class="ident">dst_pending</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">dst_buffer</span>));
         <span class="kw">let</span> <span class="ident">cmd_buf_raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">encoder</span>.<span class="ident">open</span>();

@@ -1370,20 +1370,6 @@
 <span id="1370">1370</span>
 <span id="1371">1371</span>
 <span id="1372">1372</span>
-<span id="1373">1373</span>
-<span id="1374">1374</span>
-<span id="1375">1375</span>
-<span id="1376">1376</span>
-<span id="1377">1377</span>
-<span id="1378">1378</span>
-<span id="1379">1379</span>
-<span id="1380">1380</span>
-<span id="1381">1381</span>
-<span id="1382">1382</span>
-<span id="1383">1383</span>
-<span id="1384">1384</span>
-<span id="1385">1385</span>
-<span id="1386">1386</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
     ## Software implementation
@@ -1432,7 +1418,7 @@
     <span class="ident">error</span>::{<span class="ident">ErrorFormatter</span>, <span class="ident">PrettyError</span>},
     <span class="ident">hub</span>::{<span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Hub</span>, <span class="ident">Resource</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>,
-    <span class="ident">memory_init_tracker</span>::{<span class="ident">MemoryInitKind</span>, <span class="ident">MemoryInitTrackerAction</span>},
+    <span class="ident">init_tracker</span>::{<span class="ident">BufferInitTrackerAction</span>, <span class="ident">MemoryInitKind</span>},
     <span class="ident">pipeline::PipelineFlags</span>,
     <span class="ident">track</span>::{<span class="ident">TrackerSet</span>, <span class="ident">UsageConflict</span>},
     <span class="ident">validation::check_buffer_usage</span>,
@@ -1673,11 +1659,11 @@
                         <span class="prelude-val">Some</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">offset</span> <span class="op">+</span> <span class="ident">s</span>.<span class="ident">get</span>(),
                         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">buffer</span>.<span class="ident">size</span>,
                     };
-                    <span class="ident">buffer_memory_init_actions</span>.<span class="ident">push</span>(<span class="ident">MemoryInitTrackerAction</span> {
-                        <span class="ident">id</span>: <span class="ident">buffer_id</span>,
-                        <span class="ident">range</span>: <span class="ident">offset</span>..<span class="ident">end</span>,
-                        <span class="ident">kind</span>: <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
-                    });
+                    <span class="ident">buffer_memory_init_actions</span>.<span class="ident">extend</span>(<span class="ident">buffer</span>.<span class="ident">initialization_status</span>.<span class="ident">create_action</span>(
+                        <span class="ident">buffer_id</span>,
+                        <span class="ident">offset</span>..<span class="ident">end</span>,
+                        <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
+                    ));
                     <span class="ident">state</span>.<span class="ident">index</span>.<span class="ident">set_format</span>(<span class="ident">index_format</span>);
                     <span class="ident">state</span>.<span class="ident">index</span>.<span class="ident">set_buffer</span>(<span class="ident">buffer_id</span>, <span class="ident">offset</span>..<span class="ident">end</span>);
                 }
@@ -1700,11 +1686,11 @@
                         <span class="prelude-val">Some</span>(<span class="ident">s</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">offset</span> <span class="op">+</span> <span class="ident">s</span>.<span class="ident">get</span>(),
                         <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">buffer</span>.<span class="ident">size</span>,
                     };
-                    <span class="ident">buffer_memory_init_actions</span>.<span class="ident">push</span>(<span class="ident">MemoryInitTrackerAction</span> {
-                        <span class="ident">id</span>: <span class="ident">buffer_id</span>,
-                        <span class="ident">range</span>: <span class="ident">offset</span>..<span class="ident">end</span>,
-                        <span class="ident">kind</span>: <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
-                    });
+                    <span class="ident">buffer_memory_init_actions</span>.<span class="ident">extend</span>(<span class="ident">buffer</span>.<span class="ident">initialization_status</span>.<span class="ident">create_action</span>(
+                        <span class="ident">buffer_id</span>,
+                        <span class="ident">offset</span>..<span class="ident">end</span>,
+                        <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
+                    ));
                     <span class="ident">state</span>.<span class="ident">vertex</span>[<span class="ident">slot</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">set_buffer</span>(<span class="ident">buffer_id</span>, <span class="ident">offset</span>..<span class="ident">end</span>);
                 }
                 <span class="ident">RenderCommand::SetPushConstant</span> {
@@ -1821,18 +1807,11 @@
                     <span class="ident">check_buffer_usage</span>(<span class="ident">buffer</span>.<span class="ident">usage</span>, <span class="ident">wgt::BufferUsages::INDIRECT</span>)
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
-                    <span class="ident">buffer_memory_init_actions</span>.<span class="ident">extend</span>(
-                        <span class="ident">buffer</span>
-                            .<span class="ident">initialization_status</span>
-                            .<span class="ident">check</span>(
-                                <span class="ident">offset</span>..(<span class="ident">offset</span> <span class="op">+</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">wgt::DrawIndirectArgs</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>),
-                            )
-                            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">range</span><span class="op">|</span> <span class="ident">MemoryInitTrackerAction</span> {
-                                <span class="ident">id</span>: <span class="ident">buffer_id</span>,
-                                <span class="ident">range</span>,
-                                <span class="ident">kind</span>: <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
-                            }),
-                    );
+                    <span class="ident">buffer_memory_init_actions</span>.<span class="ident">extend</span>(<span class="ident">buffer</span>.<span class="ident">initialization_status</span>.<span class="ident">create_action</span>(
+                        <span class="ident">buffer_id</span>,
+                        <span class="ident">offset</span>..(<span class="ident">offset</span> <span class="op">+</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">wgt::DrawIndirectArgs</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>),
+                        <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
+                    ));
 
                     <span class="ident">commands</span>.<span class="ident">extend</span>(<span class="ident">state</span>.<span class="ident">flush_vertices</span>());
                     <span class="ident">commands</span>.<span class="ident">extend</span>(<span class="ident">state</span>.<span class="ident">flush_binds</span>());
@@ -1862,18 +1841,11 @@
                     <span class="ident">check_buffer_usage</span>(<span class="ident">buffer</span>.<span class="ident">usage</span>, <span class="ident">wgt::BufferUsages::INDIRECT</span>)
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
-                    <span class="ident">buffer_memory_init_actions</span>.<span class="ident">extend</span>(
-                        <span class="ident">buffer</span>
-                            .<span class="ident">initialization_status</span>
-                            .<span class="ident">check</span>(
-                                <span class="ident">offset</span>..(<span class="ident">offset</span> <span class="op">+</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">wgt::DrawIndirectArgs</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>),
-                            )
-                            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">range</span><span class="op">|</span> <span class="ident">MemoryInitTrackerAction</span> {
-                                <span class="ident">id</span>: <span class="ident">buffer_id</span>,
-                                <span class="ident">range</span>,
-                                <span class="ident">kind</span>: <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
-                            }),
-                    );
+                    <span class="ident">buffer_memory_init_actions</span>.<span class="ident">extend</span>(<span class="ident">buffer</span>.<span class="ident">initialization_status</span>.<span class="ident">create_action</span>(
+                        <span class="ident">buffer_id</span>,
+                        <span class="ident">offset</span>..(<span class="ident">offset</span> <span class="op">+</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">wgt::DrawIndirectArgs</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>),
+                        <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
+                    ));
 
                     <span class="ident">commands</span>.<span class="ident">extend</span>(<span class="ident">state</span>.<span class="ident">index</span>.<span class="ident">flush</span>());
                     <span class="ident">commands</span>.<span class="ident">extend</span>(<span class="ident">state</span>.<span class="ident">flush_vertices</span>());
@@ -1972,7 +1944,7 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">is_ds_read_only</span>: <span class="ident">bool</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">device_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::DeviceId</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">used</span>: <span class="ident">TrackerSet</span>,
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">buffer_memory_init_actions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">MemoryInitTrackerAction</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">buffer_memory_init_actions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BufferInitTrackerAction</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">context</span>: <span class="ident">RenderPassContext</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>,
 }

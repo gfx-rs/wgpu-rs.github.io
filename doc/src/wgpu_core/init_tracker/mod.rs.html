@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core&#x2F;src&#x2F;memory_init_tracker.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>memory_init_tracker.rs - source</title><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core&#x2F;src&#x2F;init_tracker&#x2F;mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../light.css"  id="themeStyle"><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled ><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled ><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"><style type="text/css">#crate-search{background-image:url("../../../down-arrow.svg");}</style></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="sidebar-menu" role="button">&#9776;</div><a href='../../../wgpu_core/index.html'><div class='logo-container rust-logo'><img src='../../../rust-logo.png' alt='logo'></div></a></nav><div class="theme-picker"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="18" height="18" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><nav class="sub"><form class="search-form"><div class="search-container"><div><select id="crate-search"><option value="All crates">All crates</option></select><input class="search-input" name="search" disabled autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"></div><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="18" height="18" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav><section id="main" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">  1</span>
 <span id="2">  2</span>
 <span id="3">  3</span>
 <span id="4">  4</span>
@@ -277,7 +277,46 @@
 <span id="277">277</span>
 <span id="278">278</span>
 <span id="279">279</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::ops::Range</span>;
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+</pre><pre class="rust"><code><span class="comment">// WebGPU specification requires all texture &amp; buffer memory to be zero initialized on first read.</span>
+<span class="comment">// To avoid unnecessary inits, we track the initialization status of every resource and perform inits lazily.</span>
+<span class="comment">//</span>
+<span class="comment">// The granularity is different for buffers and textures:</span>
+<span class="comment">// * Buffer: Byte granularity to support usecases with large, partially bound buffers well.</span>
+<span class="comment">// * Texture: Mip-level per layer. I.e. a 2D surface is either completely initialized or not, subrects are not tracked.</span>
+<span class="comment">//</span>
+<span class="comment">// Every use of a buffer/texture generates a InitTrackerAction which are recorded and later resolved at queue submit by merging them with the current state and each other in execution order.</span>
+<span class="comment">// It is important to note that from the point of view of the memory init system there are two kind of writes:</span>
+<span class="comment">// * Full writes:</span>
+<span class="comment">//      Any kind of memcpy operation. These cause a `MemoryInitKind.ImplicitlyInitialized` action.</span>
+<span class="comment">// * (Potentially) partial writes:</span>
+<span class="comment">//      E.g. write use in a Shader. The system is not able to determine if a resource is fully initialized afterwards but is no longer allowed to perform any clears,</span>
+<span class="comment">//      therefore this leads to a `MemoryInitKind.ImplicitlyInitialized` action, exactly like a read would.</span>
+
+<span class="kw">use</span> <span class="ident">smallvec::SmallVec</span>;
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">iter</span>, <span class="ident">ops::Range</span>};
+
+<span class="kw">mod</span> <span class="ident">buffer</span>;
+<span class="comment">//mod texture;</span>
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">buffer</span>::{<span class="ident">BufferInitTracker</span>, <span class="ident">BufferInitTrackerAction</span>};
+<span class="comment">//pub(crate) use texture::{TextureInitRange, TextureInitTracker, TextureInitTrackerAction};</span>
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum</span> <span class="ident">MemoryInitKind</span> {
@@ -285,31 +324,36 @@
     <span class="ident">ImplicitlyInitialized</span>,
     <span class="comment">// The memory range is going to be read, therefore needs to ensure prior initialization.</span>
     <span class="ident">NeedsInitializedMemory</span>,
+    <span class="comment">// The memory going to be discarded and regarded therefore regarded uninitialized.</span>
+    <span class="comment">// TODO: This is tricky to implement: Discards needs to be resolved within AND between command buffers!</span>
+    <span class="comment">//       Being able to do this would be quite nice because then we could mark any resource uninitialized at any point in time.</span>
+    <span class="comment">//       Practically speaking however, discard can only ever happen for single rendertarget surfaces.</span>
+    <span class="comment">//       Considering this, this could potentially be implemented differently since we don&#39;t really need to care about ranges of memory.</span>
+    <span class="comment">//DiscardMemory,</span>
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">MemoryInitTrackerAction</span><span class="op">&lt;</span><span class="ident">ResourceId</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">id</span>: <span class="ident">ResourceId</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">kind</span>: <span class="ident">MemoryInitKind</span>,
-}
+<span class="comment">// Most of the time a resource is either fully uninitialized (one element) or initialized (zero elements).</span>
+<span class="kw">type</span> <span class="ident">UninitializedRangeVec</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">Range</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span>; <span class="number">1</span>]<span class="op">&gt;</span>;
 
 <span class="doccomment">/// Tracks initialization status of a linear range from 0..size</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">MemoryInitTracker</span> {
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">InitTracker</span><span class="op">&lt;</span><span class="ident">Idx</span>: <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Default</span><span class="op">&gt;</span> {
     <span class="comment">// Ordered, non overlapping list of all uninitialized ranges.</span>
-    <span class="ident">uninitialized_ranges</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">uninitialized_ranges</span>: <span class="ident">UninitializedRangeVec</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">MemoryInitTrackerDrain</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">uninitialized_ranges</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">drain_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span>,
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">InitTrackerDrain</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Idx</span>: <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Copy</span><span class="op">&gt;</span> {
+    <span class="ident">uninitialized_ranges</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">UninitializedRangeVec</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span>,
+    <span class="ident">drain_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span>,
     <span class="ident">first_index</span>: <span class="ident">usize</span>,
     <span class="ident">next_index</span>: <span class="ident">usize</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">MemoryInitTrackerDrain</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span>;
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Idx</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">InitTrackerDrain</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Idx</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">Idx</span>: <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Copy</span>,
+{
+    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">r</span>) <span class="op">=</span> <span class="self">self</span>
@@ -368,15 +412,18 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident">MemoryInitTracker</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">size</span>: <span class="ident">wgt::BufferAddress</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span> <span class="ident">InitTracker</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">Idx</span>: <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Default</span>,
+{
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">size</span>: <span class="ident">Idx</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">uninitialized_ranges</span>: <span class="macro">vec!</span>[<span class="number">0</span>..<span class="ident">size</span>],
+            <span class="ident">uninitialized_ranges</span>: <span class="ident">iter::once</span>(<span class="ident">Idx::default</span>()..<span class="ident">size</span>).<span class="ident">collect</span>(),
         }
     }
 
     <span class="comment">// Search smallest range.end which is bigger than bound in O(log n) (with n being number of uninitialized ranges)</span>
-    <span class="kw">fn</span> <span class="ident">lower_bound</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">bound</span>: <span class="ident">wgt::BufferAddress</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
+    <span class="kw">fn</span> <span class="ident">lower_bound</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">bound</span>: <span class="ident">Idx</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">usize</span> {
         <span class="comment">// This is equivalent to, except that it may return an out of bounds index instead of</span>
         <span class="comment">//self.uninitialized_ranges.iter().position(|r| r.end &gt; bound)</span>
 
@@ -402,10 +449,7 @@
     <span class="comment">// Checks if there&#39;s any uninitialized ranges within a query.</span>
     <span class="comment">// If there are any, the range returned a the subrange of the query_range that contains all these uninitialized regions.</span>
     <span class="comment">// Returned range may be larger than necessary (tradeoff for making this function O(log n))</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">check</span>(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">query_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">check</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">query_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lower_bound</span>(<span class="ident">query_range</span>.<span class="ident">start</span>);
         <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>
             .<span class="ident">get</span>(<span class="ident">index</span>)
@@ -432,12 +476,9 @@
 
     <span class="comment">// Drains uninitialized ranges in a query range.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">drain</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">drain_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">MemoryInitTrackerDrain</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">drain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">drain_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">InitTrackerDrain</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lower_bound</span>(<span class="ident">drain_range</span>.<span class="ident">start</span>);
-        <span class="ident">MemoryInitTrackerDrain</span> {
+        <span class="ident">InitTrackerDrain</span> {
             <span class="ident">drain_range</span>,
             <span class="ident">uninitialized_ranges</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>,
             <span class="ident">first_index</span>: <span class="ident">index</span>,
@@ -446,19 +487,20 @@
     }
 
     <span class="comment">// Clears uninitialized ranges in a query range.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span>) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span>) {
         <span class="self">self</span>.<span class="ident">drain</span>(<span class="ident">range</span>).<span class="ident">for_each</span>(<span class="ident">drop</span>);
     }
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::MemoryInitTracker</span>;
     <span class="kw">use</span> <span class="ident">std::ops::Range</span>;
+
+    <span class="kw">type</span> <span class="ident">Tracker</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::InitTracker</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">check_for_newly_created_tracker</span>() {
-        <span class="kw">let</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">MemoryInitTracker::new</span>(<span class="number">10</span>);
+        <span class="kw">let</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">10</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">0</span>..<span class="number">10</span>), <span class="prelude-val">Some</span>(<span class="number">0</span>..<span class="number">10</span>));
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">0</span>..<span class="number">3</span>), <span class="prelude-val">Some</span>(<span class="number">0</span>..<span class="number">3</span>));
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">3</span>..<span class="number">4</span>), <span class="prelude-val">Some</span>(<span class="number">3</span>..<span class="number">4</span>));
@@ -467,7 +509,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">check_for_cleared_tracker</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">MemoryInitTracker::new</span>(<span class="number">10</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">10</span>);
         <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">0</span>..<span class="number">10</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">0</span>..<span class="number">10</span>), <span class="prelude-val">None</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">0</span>..<span class="number">3</span>), <span class="prelude-val">None</span>);
@@ -477,7 +519,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">check_for_partially_filled_tracker</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">MemoryInitTracker::new</span>(<span class="number">25</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">25</span>);
         <span class="comment">// Two regions of uninitialized memory</span>
         <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">0</span>..<span class="number">5</span>);
         <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">10</span>..<span class="number">15</span>);
@@ -496,7 +538,7 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">clear_already_cleared</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">MemoryInitTracker::new</span>(<span class="number">30</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">30</span>);
         <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">10</span>..<span class="number">20</span>);
 
         <span class="comment">// Overlapping with non-cleared</span>
@@ -512,11 +554,11 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">drain_never_returns_ranges_twice_for_same_range</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">MemoryInitTracker::new</span>(<span class="number">19</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">19</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">0</span>..<span class="number">19</span>).<span class="ident">count</span>(), <span class="number">1</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">0</span>..<span class="number">19</span>).<span class="ident">count</span>(), <span class="number">0</span>);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">MemoryInitTracker::new</span>(<span class="number">17</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">17</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">5</span>..<span class="number">8</span>).<span class="ident">count</span>(), <span class="number">1</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">5</span>..<span class="number">8</span>).<span class="ident">count</span>(), <span class="number">0</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">1</span>..<span class="number">3</span>).<span class="ident">count</span>(), <span class="number">1</span>);
@@ -527,36 +569,28 @@
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">drain_splits_ranges_correctly</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">MemoryInitTracker::new</span>(<span class="number">1337</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">1337</span>);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">tracker</span>
-                .<span class="ident">drain</span>(<span class="number">21</span>..<span class="number">42</span>)
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+            <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">21</span>..<span class="number">42</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
             <span class="macro">vec!</span>[<span class="number">21</span>..<span class="number">42</span>]
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">tracker</span>
-                .<span class="ident">drain</span>(<span class="number">900</span>..<span class="number">1000</span>)
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+            <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">900</span>..<span class="number">1000</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
             <span class="macro">vec!</span>[<span class="number">900</span>..<span class="number">1000</span>]
         );
 
         <span class="comment">// Splitted ranges.</span>
         <span class="macro">assert_eq!</span>(
-            <span class="ident">tracker</span>
-                .<span class="ident">drain</span>(<span class="number">5</span>..<span class="number">1003</span>)
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+            <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">5</span>..<span class="number">1003</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
             <span class="macro">vec!</span>[<span class="number">5</span>..<span class="number">21</span>, <span class="number">42</span>..<span class="number">900</span>, <span class="number">1000</span>..<span class="number">1003</span>]
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">tracker</span>
-                .<span class="ident">drain</span>(<span class="number">0</span>..<span class="number">1337</span>)
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+            <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">0</span>..<span class="number">1337</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
             <span class="macro">vec!</span>[<span class="number">0</span>..<span class="number">5</span>, <span class="number">1003</span>..<span class="number">1337</span>]
         );
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu_core" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
-    <script src="../../main.js"></script><script src="../../source-script.js"></script><script src="../../source-files.js"></script>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>
+    <script src="../../../main.js"></script><script src="../../../source-script.js"></script><script src="../../../source-files.js"></script>
 </body></html>

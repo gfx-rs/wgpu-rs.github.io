@@ -852,17 +852,6 @@
 <span id="852">852</span>
 <span id="853">853</span>
 <span id="854">854</span>
-<span id="855">855</span>
-<span id="856">856</span>
-<span id="857">857</span>
-<span id="858">858</span>
-<span id="859">859</span>
-<span id="860">860</span>
-<span id="861">861</span>
-<span id="862">862</span>
-<span id="863">863</span>
-<span id="864">864</span>
-<span id="865">865</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{<span class="ident">BindError</span>, <span class="ident">BindGroup</span>, <span class="ident">PushConstantUploadError</span>},
     <span class="ident">command</span>::{
@@ -874,7 +863,7 @@
     <span class="ident">error</span>::{<span class="ident">ErrorFormatter</span>, <span class="ident">PrettyError</span>},
     <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>,
-    <span class="ident">memory_init_tracker</span>::{<span class="ident">MemoryInitKind</span>, <span class="ident">MemoryInitTrackerAction</span>},
+    <span class="ident">init_tracker::MemoryInitKind</span>,
     <span class="ident">resource</span>::{<span class="ident">Buffer</span>, <span class="ident">Texture</span>},
     <span class="ident">track</span>::{<span class="ident">StatefulTrackerSubset</span>, <span class="ident">TrackerSet</span>, <span class="ident">UsageConflict</span>, <span class="ident">UseExtendError</span>},
     <span class="ident">validation</span>::{<span class="ident">check_buffer_usage</span>, <span class="ident">MissingBufferUsageError</span>},
@@ -1231,19 +1220,11 @@
                     <span class="ident">cmd_buf</span>.<span class="ident">buffer_memory_init_actions</span>.<span class="ident">extend</span>(
                         <span class="ident">bind_group</span>.<span class="ident">used_buffer_ranges</span>.<span class="ident">iter</span>().<span class="ident">filter_map</span>(
                             <span class="op">|</span><span class="ident">action</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">buffer_guard</span>.<span class="ident">get</span>(<span class="ident">action</span>.<span class="ident">id</span>) {
-                                <span class="prelude-val">Ok</span>(<span class="ident">buffer</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">buffer</span>
-                                    .<span class="ident">initialization_status</span>
-                                    .<span class="ident">check</span>(<span class="ident">action</span>.<span class="ident">range</span>.<span class="ident">clone</span>())
-                                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">range</span><span class="op">|</span> <span class="ident">MemoryInitTrackerAction</span> {
-                                        <span class="ident">id</span>: <span class="ident">action</span>.<span class="ident">id</span>,
-                                        <span class="ident">range</span>,
-                                        <span class="ident">kind</span>: <span class="ident">action</span>.<span class="ident">kind</span>,
-                                    }),
+                                <span class="prelude-val">Ok</span>(<span class="ident">buffer</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">buffer</span>.<span class="ident">initialization_status</span>.<span class="ident">check_action</span>(<span class="ident">action</span>),
                                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
                             },
                         ),
                     );
-
                     <span class="kw">let</span> <span class="ident">pipeline_layout_id</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">binder</span>.<span class="ident">pipeline_layout_id</span>;
                     <span class="kw">let</span> <span class="ident">entries</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">binder</span>.<span class="ident">assign_group</span>(
                         <span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>,
@@ -1430,14 +1411,11 @@
                     <span class="kw">let</span> <span class="ident">stride</span> <span class="op">=</span> <span class="number">3</span> <span class="op">*</span> <span class="number">4</span>; <span class="comment">// 3 integers, x/y/z group size</span>
 
                     <span class="ident">cmd_buf</span>.<span class="ident">buffer_memory_init_actions</span>.<span class="ident">extend</span>(
-                        <span class="ident">indirect_buffer</span>
-                            .<span class="ident">initialization_status</span>
-                            .<span class="ident">check</span>(<span class="ident">offset</span>..(<span class="ident">offset</span> <span class="op">+</span> <span class="ident">stride</span>))
-                            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">range</span><span class="op">|</span> <span class="ident">MemoryInitTrackerAction</span> {
-                                <span class="ident">id</span>: <span class="ident">buffer_id</span>,
-                                <span class="ident">range</span>,
-                                <span class="ident">kind</span>: <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
-                            }),
+                        <span class="ident">indirect_buffer</span>.<span class="ident">initialization_status</span>.<span class="ident">create_action</span>(
+                            <span class="ident">buffer_id</span>,
+                            <span class="ident">offset</span>..(<span class="ident">offset</span> <span class="op">+</span> <span class="ident">stride</span>),
+                            <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
+                        ),
                     );
 
                     <span class="ident">state</span>
