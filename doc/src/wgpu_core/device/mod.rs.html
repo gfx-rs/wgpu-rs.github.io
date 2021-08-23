@@ -4832,6 +4832,15 @@
 <span id="4832">4832</span>
 <span id="4833">4833</span>
 <span id="4834">4834</span>
+<span id="4835">4835</span>
+<span id="4836">4836</span>
+<span id="4837">4837</span>
+<span id="4838">4838</span>
+<span id="4839">4839</span>
+<span id="4840">4840</span>
+<span id="4841">4841</span>
+<span id="4842">4842</span>
+<span id="4843">4843</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -5607,7 +5616,7 @@
                 }
                 <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">hal::TextureUses::all</span>(),
             };
-            <span class="kw">let</span> <span class="ident">mask_mip_level</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">end_layer</span> <span class="op">!</span><span class="op">=</span> <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">base_array_layer</span> <span class="op">+</span> <span class="number">1</span> {
+            <span class="kw">let</span> <span class="ident">mask_mip_level</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">selector</span>.<span class="ident">levels</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">selector</span>.<span class="ident">levels</span>.<span class="ident">start</span> <span class="op">!</span><span class="op">=</span> <span class="number">1</span> {
                 <span class="ident">hal::TextureUses::RESOURCE</span>
             } <span class="kw">else</span> {
                 <span class="ident">hal::TextureUses::all</span>()
@@ -6491,6 +6500,15 @@
                         <span class="ident">view_dimension</span>: <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">dimension</span>,
                     });
                 }
+
+                <span class="kw">let</span> <span class="ident">mip_level_count</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">selector</span>.<span class="ident">levels</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">view</span>.<span class="ident">selector</span>.<span class="ident">levels</span>.<span class="ident">start</span>;
+                <span class="kw">if</span> <span class="ident">mip_level_count</span> <span class="op">!</span><span class="op">=</span> <span class="number">1</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::InvalidStorageTextureMipLevelCount</span> {
+                        <span class="ident">binding</span>,
+                        <span class="ident">mip_level_count</span>,
+                    });
+                }
+
                 <span class="kw">let</span> <span class="ident">internal_use</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">access</span> {
                     <span class="ident">wgt::StorageTextureAccess::WriteOnly</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">hal::TextureUses::STORAGE_WRITE</span>,
                     <span class="ident">wgt::StorageTextureAccess::ReadOnly</span> <span class="op">=</span><span class="op">&gt;</span> {
