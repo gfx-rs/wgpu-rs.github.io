@@ -1662,7 +1662,7 @@
                         <span class="ident">multisampled</span>: <span class="ident">multi</span>,
                     },
                     <span class="ident">naga::ImageClass::Storage</span> { <span class="ident">format</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BindingType::StorageTexture</span> {
-                        <span class="ident">access</span>: <span class="kw">if</span> <span class="ident">shader_usage</span> <span class="op">=</span><span class="op">=</span> <span class="ident">GlobalUse::WRITE</span> <span class="op">|</span><span class="op">|</span> <span class="ident">shader_usage</span>.<span class="ident">is_empty</span>() {
+                        <span class="ident">access</span>: <span class="kw">if</span> <span class="op">!</span><span class="ident">shader_usage</span>.<span class="ident">contains</span>(<span class="ident">GlobalUse::READ</span>) {
                             <span class="ident">wgt::StorageTextureAccess::WriteOnly</span>
                         } <span class="kw">else</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">features</span>
                             .<span class="ident">contains</span>(<span class="ident">wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span>)
@@ -1670,10 +1670,10 @@
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::UnsupportedTextureStorageAccess</span>(
                                 <span class="ident">shader_usage</span>,
                             ));
-                        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">shader_usage</span> <span class="op">=</span><span class="op">=</span> <span class="ident">GlobalUse::READ</span> {
-                            <span class="ident">wgt::StorageTextureAccess::ReadOnly</span>
-                        } <span class="kw">else</span> {
+                        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">shader_usage</span>.<span class="ident">contains</span>(<span class="ident">GlobalUse::WRITE</span>) {
                             <span class="ident">wgt::StorageTextureAccess::ReadWrite</span>
+                        } <span class="kw">else</span> {
+                            <span class="ident">wgt::StorageTextureAccess::ReadOnly</span>
                         },
                         <span class="ident">view_dimension</span>,
                         <span class="ident">format</span>: {
