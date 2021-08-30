@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["one","Returns the multiplicative identity, `1`."],["zero","Returns the additive identity, `0`."]],"trait":[["One","Defines a multiplicative identity element for `Self`."],["Zero","Defines an additive identity element for `Self`."]]});
+initSidebarItems({"fn":[["one","Returns the multiplicative identity, `1`."],["zero","Returns the additive identity, `0`."]],"macro":[["one_impl",""],["zero_impl",""]],"trait":[["One","Defines a multiplicative identity element for `Self`."],["Zero","Defines an additive identity element for `Self`."]]});

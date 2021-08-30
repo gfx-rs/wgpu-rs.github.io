@@ -1,1 +1,1 @@
-initSidebarItems({"trait":[["PrimInt","Generic trait for primitive integers."]]});
+initSidebarItems({"macro":[["prim_int_impl",""]],"trait":[["PrimInt","Generic trait for primitive integers."]]});
