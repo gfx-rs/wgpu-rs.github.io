@@ -1,1 +1,1 @@
-initSidebarItems({"macro":[["mul_add_assign_impl",""],["mul_add_impl",""]],"trait":[["MulAdd","Fused multiply-add. Computes `(self * a) + b` with only one rounding error, yielding a more accurate result than an unfused multiply-add."],["MulAddAssign","The fused multiply-add assignment operation."]]});
+initSidebarItems({"trait":[["MulAdd","Fused multiply-add. Computes `(self * a) + b` with only one rounding error, yielding a more accurate result than an unfused multiply-add."],["MulAddAssign","The fused multiply-add assignment operation."]]});

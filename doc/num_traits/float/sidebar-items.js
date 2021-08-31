@@ -1,1 +1,1 @@
-initSidebarItems({"macro":[["float_const_impl",""],["float_impl_std",""]],"trait":[["Float","Generic trait for floating point numbers"],["FloatConst",""],["FloatCore","Generic trait for floating point numbers that works with `no_std`."]]});
+initSidebarItems({"trait":[["Float","Generic trait for floating point numbers"],["FloatConst",""],["FloatCore","Generic trait for floating point numbers that works with `no_std`."]]});
