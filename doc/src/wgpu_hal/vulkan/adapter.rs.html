@@ -1127,6 +1127,7 @@
 <span id="1127">1127</span>
 <span id="1128">1128</span>
 <span id="1129">1129</span>
+<span id="1130">1130</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">extensions::khr</span>, <span class="ident">vk</span>};
@@ -1199,9 +1200,9 @@
                     <span class="ident">requested_features</span>.<span class="ident">contains</span>(<span class="ident">wgt::Features::MULTI_DRAW_INDIRECT</span>),
                 )
                 .<span class="ident">depth_clamp</span>(<span class="ident">requested_features</span>.<span class="ident">contains</span>(<span class="ident">wgt::Features::DEPTH_CLAMPING</span>))
-                .<span class="ident">fill_mode_non_solid</span>(
-                    <span class="ident">requested_features</span>.<span class="ident">contains</span>(<span class="ident">wgt::Features::NON_FILL_POLYGON_MODE</span>),
-                )
+                .<span class="ident">fill_mode_non_solid</span>(<span class="ident">requested_features</span>.<span class="ident">intersects</span>(
+                    <span class="ident">wgt::Features::POLYGON_MODE_LINE</span> <span class="op">|</span> <span class="ident">wgt::Features::POLYGON_MODE_POINT</span>,
+                ))
                 <span class="comment">//.depth_bounds(requested_features.contains(wgt::Features::DEPTH_BOUNDS))</span>
                 <span class="comment">//.alpha_to_one(requested_features.contains(wgt::Features::ALPHA_TO_ONE))</span>
                 <span class="comment">//.multi_viewport(requested_features.contains(wgt::Features::MULTI_VIEWPORTS))</span>
@@ -1384,7 +1385,8 @@
         <span class="comment">//if self.core.dual_src_blend != 0</span>
         <span class="ident">features</span>.<span class="ident">set</span>(<span class="ident">F::MULTI_DRAW_INDIRECT</span>, <span class="self">self</span>.<span class="ident">core</span>.<span class="ident">multi_draw_indirect</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>);
         <span class="ident">features</span>.<span class="ident">set</span>(<span class="ident">F::DEPTH_CLAMPING</span>, <span class="self">self</span>.<span class="ident">core</span>.<span class="ident">depth_clamp</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>);
-        <span class="ident">features</span>.<span class="ident">set</span>(<span class="ident">F::NON_FILL_POLYGON_MODE</span>, <span class="self">self</span>.<span class="ident">core</span>.<span class="ident">fill_mode_non_solid</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>);
+        <span class="ident">features</span>.<span class="ident">set</span>(<span class="ident">F::POLYGON_MODE_LINE</span>, <span class="self">self</span>.<span class="ident">core</span>.<span class="ident">fill_mode_non_solid</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>);
+        <span class="ident">features</span>.<span class="ident">set</span>(<span class="ident">F::POLYGON_MODE_POINT</span>, <span class="self">self</span>.<span class="ident">core</span>.<span class="ident">fill_mode_non_solid</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>);
         <span class="comment">//if self.core.depth_bounds != 0 {</span>
         <span class="comment">//if self.core.alpha_to_one != 0 {</span>
         <span class="comment">//if self.core.multi_viewport != 0 {</span>
