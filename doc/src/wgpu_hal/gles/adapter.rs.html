@@ -612,6 +612,18 @@
 <span id="612">612</span>
 <span id="613">613</span>
 <span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">glow::HasContext</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 
@@ -816,11 +828,12 @@
             <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_SHADER_STORAGE_BLOCKS</span>) <span class="kw">as</span> <span class="ident">u32</span>;
         <span class="kw">let</span> <span class="ident">fragment_shader_storage_blocks</span> <span class="op">=</span>
             <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_FRAGMENT_SHADER_STORAGE_BLOCKS</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-
         <span class="kw">let</span> <span class="ident">vertex_shader_storage_textures</span> <span class="op">=</span>
             <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_IMAGE_UNIFORMS</span>) <span class="kw">as</span> <span class="ident">u32</span>;
         <span class="kw">let</span> <span class="ident">fragment_shader_storage_textures</span> <span class="op">=</span>
             <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_FRAGMENT_IMAGE_UNIFORMS</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">let</span> <span class="ident">max_storage_block_size</span> <span class="op">=</span>
+            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_SHADER_STORAGE_BLOCK_SIZE</span>) <span class="kw">as</span> <span class="ident">u32</span>;
 
         <span class="comment">// WORKAROUND:</span>
         <span class="comment">// In order to work around an issue with GL on RPI4 and similar, we ignore a zero vertex ssbo count if there are vertex sstos. (more info: https://github.com/gfx-rs/wgpu/pull/1607#issuecomment-874938961)</span>
@@ -837,26 +850,11 @@
         } <span class="kw">else</span> {
             <span class="ident">vertex_shader_storage_blocks</span>.<span class="ident">min</span>(<span class="ident">fragment_shader_storage_blocks</span>)
         };
-
         <span class="kw">let</span> <span class="ident">max_storage_textures_per_shader_stage</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">vertex_shader_storage_textures</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
             <span class="ident">fragment_shader_storage_textures</span>
         } <span class="kw">else</span> {
             <span class="ident">vertex_shader_storage_textures</span>.<span class="ident">min</span>(<span class="ident">fragment_shader_storage_textures</span>)
         };
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">wgt::Features::empty</span>()
-            <span class="op">|</span> <span class="ident">wgt::Features::TEXTURE_COMPRESSION_ETC2</span>
-            <span class="op">|</span> <span class="ident">wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span>;
-        <span class="ident">features</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::Features::DEPTH_CLAMPING</span>,
-            <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_depth_clamp&quot;</span>),
-        );
-        <span class="ident">features</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::Features::VERTEX_WRITABLE_STORAGE</span>,
-            <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>)
-                <span class="op">&amp;&amp;</span> (<span class="ident">vertex_shader_storage_blocks</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">vertex_ssbo_false_zero</span>)
-                <span class="op">&amp;&amp;</span> <span class="ident">vertex_shader_storage_textures</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
-        );
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">downlevel_flags</span> <span class="op">=</span> <span class="ident">wgt::DownlevelFlags::empty</span>()
             <span class="op">|</span> <span class="ident">wgt::DownlevelFlags::DEVICE_LOCAL_IMAGE_COPIES</span>
@@ -866,7 +864,7 @@
         <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(<span class="ident">wgt::DownlevelFlags::COMPUTE_SHADERS</span>, <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>));
         <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(
             <span class="ident">wgt::DownlevelFlags::FRAGMENT_WRITABLE_STORAGE</span>,
-            <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>),
+            <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>) <span class="op">&amp;&amp;</span> <span class="ident">max_storage_block_size</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
         );
         <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(<span class="ident">wgt::DownlevelFlags::INDIRECT_EXECUTION</span>, <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>));
         <span class="comment">//TODO: we can actually support positive `base_vertex` in the same way</span>
@@ -878,7 +876,37 @@
         );
         <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(
             <span class="ident">wgt::DownlevelFlags::VERTEX_STORAGE</span>,
-            <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>) <span class="op">&amp;&amp;</span> (<span class="ident">vertex_shader_storage_blocks</span> <span class="op">&gt;</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">vertex_ssbo_false_zero</span>),
+            <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>)
+                <span class="op">&amp;&amp;</span> <span class="ident">max_storage_block_size</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>
+                <span class="op">&amp;&amp;</span> (<span class="ident">vertex_shader_storage_blocks</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">vertex_ssbo_false_zero</span>),
+        );
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">wgt::Features::empty</span>()
+            <span class="op">|</span> <span class="ident">wgt::Features::TEXTURE_COMPRESSION_ETC2</span>
+            <span class="op">|</span> <span class="ident">wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span>;
+        <span class="ident">features</span>.<span class="ident">set</span>(
+            <span class="ident">wgt::Features::DEPTH_CLAMPING</span>,
+            <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_depth_clamp&quot;</span>),
+        );
+        <span class="ident">features</span>.<span class="ident">set</span>(
+            <span class="ident">wgt::Features::VERTEX_WRITABLE_STORAGE</span>,
+            <span class="ident">downlevel_flags</span>.<span class="ident">contains</span>(<span class="ident">wgt::DownlevelFlags::VERTEX_STORAGE</span>)
+                <span class="op">&amp;&amp;</span> <span class="ident">vertex_shader_storage_textures</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
+        );
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">private_caps</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::PrivateCapabilities::empty</span>();
+        <span class="ident">private_caps</span>.<span class="ident">set</span>(
+            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::SHADER_BINDING_LAYOUT</span>,
+            <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>),
+        );
+        <span class="ident">private_caps</span>.<span class="ident">set</span>(
+            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::SHADER_TEXTURE_SHADOW_LOD</span>,
+            <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_texture_shadow_lod&quot;</span>),
+        );
+        <span class="ident">private_caps</span>.<span class="ident">set</span>(<span class="ident"><span class="kw">super</span>::PrivateCapabilities::MEMORY_BARRIERS</span>, <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>));
+        <span class="ident">private_caps</span>.<span class="ident">set</span>(
+            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::VERTEX_BUFFER_LAYOUT</span>,
+            <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>),
         );
 
         <span class="kw">let</span> <span class="ident">max_texture_size</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_TEXTURE_SIZE</span>) <span class="kw">as</span> <span class="ident">u32</span>;
@@ -915,28 +943,24 @@
             } <span class="kw">else</span> {
                 <span class="number">0</span>
             } <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">max_vertex_buffers</span>: <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_ATTRIB_BINDINGS</span>) <span class="kw">as</span> <span class="ident">u32</span>,
+            <span class="ident">max_vertex_buffers</span>: <span class="kw">if</span> <span class="ident">private_caps</span>
+                .<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::PrivateCapabilities::VERTEX_BUFFER_LAYOUT</span>)
+            {
+                <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_ATTRIB_BINDINGS</span>) <span class="kw">as</span> <span class="ident">u32</span>
+            } <span class="kw">else</span> {
+                <span class="number">16</span> <span class="comment">// should this be different?</span>
+            },
             <span class="ident">max_vertex_attributes</span>: (<span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_ATTRIBS</span>) <span class="kw">as</span> <span class="ident">u32</span>)
                 .<span class="ident">min</span>(<span class="ident"><span class="kw">super</span>::MAX_VERTEX_ATTRIBUTES</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">max_vertex_buffer_array_stride</span>: <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_ATTRIB_STRIDE</span>)
-                <span class="kw">as</span> <span class="ident">u32</span>,
+            <span class="ident">max_vertex_buffer_array_stride</span>: <span class="kw">if</span> <span class="ident">private_caps</span>
+                .<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::PrivateCapabilities::VERTEX_BUFFER_LAYOUT</span>)
+            {
+                <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_ATTRIB_STRIDE</span>) <span class="kw">as</span> <span class="ident">u32</span>
+            } <span class="kw">else</span> {
+                <span class="op">!</span><span class="number">0</span>
+            },
             <span class="ident">max_push_constant_size</span>: <span class="number">0</span>,
         };
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">private_caps</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::PrivateCapabilities::empty</span>();
-        <span class="ident">private_caps</span>.<span class="ident">set</span>(
-            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::SHADER_BINDING_LAYOUT</span>,
-            <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>),
-        );
-        <span class="ident">private_caps</span>.<span class="ident">set</span>(
-            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::SHADER_TEXTURE_SHADOW_LOD</span>,
-            <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_texture_shadow_lod&quot;</span>),
-        );
-        <span class="ident">private_caps</span>.<span class="ident">set</span>(<span class="ident"><span class="kw">super</span>::PrivateCapabilities::MEMORY_BARRIERS</span>, <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>));
-        <span class="ident">private_caps</span>.<span class="ident">set</span>(
-            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::VERTEX_BUFFER_LAYOUT</span>,
-            <span class="ident">ver</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">3</span>, <span class="number">1</span>),
-        );
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">workarounds</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::Workarounds::empty</span>();
         <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">renderer</span>.<span class="ident">to_lowercase</span>();

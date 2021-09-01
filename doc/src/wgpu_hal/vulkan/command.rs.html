@@ -736,6 +736,24 @@
 <span id="736">736</span>
 <span id="737">737</span>
 <span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
@@ -799,6 +817,9 @@
             <span class="ident">raw</span>,
             <span class="ident">label</span>.<span class="ident">unwrap_or_default</span>(),
         );
+
+        <span class="comment">// Reset this in case the last renderpass was never ended.</span>
+        <span class="self">self</span>.<span class="ident">rpass_debug_marker_active</span> <span class="op">=</span> <span class="bool-val">false</span>;
 
         <span class="kw">let</span> <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk::CommandBufferBeginInfo::builder</span>()
             .<span class="ident">flags</span>(<span class="ident">vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT</span>)
@@ -1165,6 +1186,11 @@
             <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk_info</span>.<span class="ident">push_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">vk_attachment_info</span>);
         }
 
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">label</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">label</span> {
+            <span class="self">self</span>.<span class="ident">begin_debug_marker</span>(<span class="ident">label</span>);
+            <span class="self">self</span>.<span class="ident">rpass_debug_marker_active</span> <span class="op">=</span> <span class="bool-val">true</span>;
+        }
+
         <span class="self">self</span>.<span class="ident">device</span>
             .<span class="ident">raw</span>
             .<span class="ident">cmd_set_viewport</span>(<span class="self">self</span>.<span class="ident">active</span>, <span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">vk_viewports</span>);
@@ -1179,6 +1205,10 @@
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">end_render_pass</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_end_render_pass</span>(<span class="self">self</span>.<span class="ident">active</span>);
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">rpass_debug_marker_active</span> {
+            <span class="self">self</span>.<span class="ident">end_debug_marker</span>();
+            <span class="self">self</span>.<span class="ident">rpass_debug_marker_active</span> <span class="op">=</span> <span class="bool-val">false</span>;
+        }
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_bind_group</span>(
@@ -1441,10 +1471,16 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">begin_compute_pass</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::ComputePassDescriptor</span>) {
         <span class="self">self</span>.<span class="ident">bind_point</span> <span class="op">=</span> <span class="ident">vk::PipelineBindPoint::COMPUTE</span>;
-        <span class="self">self</span>.<span class="ident">begin_debug_marker</span>(<span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">unwrap_or_default</span>());
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">label</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">label</span> {
+            <span class="self">self</span>.<span class="ident">begin_debug_marker</span>(<span class="ident">label</span>);
+            <span class="self">self</span>.<span class="ident">rpass_debug_marker_active</span> <span class="op">=</span> <span class="bool-val">true</span>;
+        }
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">end_compute_pass</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">end_debug_marker</span>();
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">rpass_debug_marker_active</span> {
+            <span class="self">self</span>.<span class="ident">end_debug_marker</span>();
+            <span class="self">self</span>.<span class="ident">rpass_debug_marker_active</span> <span class="op">=</span> <span class="bool-val">false</span>
+        }
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_compute_pipeline</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">pipeline</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::ComputePipeline</span>) {
