@@ -2077,6 +2077,11 @@
 <span id="2077">2077</span>
 <span id="2078">2078</span>
 <span id="2079">2079</span>
+<span id="2080">2080</span>
+<span id="2081">2081</span>
+<span id="2082">2082</span>
+<span id="2083">2083</span>
+<span id="2084">2084</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model::BindError</span>,
     <span class="ident">command</span>::{
@@ -2490,6 +2495,8 @@
     <span class="ident">InvalidResolveSourceSampleCount</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;resolve target must have a sample count of 1&quot;</span>)]</span>
     <span class="ident">InvalidResolveTargetSampleCount</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;surface texture is dropped before the render pass is finished&quot;</span>)]</span>
+    <span class="ident">SurfaceTextureDropped</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;not enough memory left&quot;</span>)]</span>
     <span class="ident">OutOfMemory</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;unable to clear non-present/read-only depth&quot;</span>)]</span>
@@ -2809,6 +2816,9 @@
         }
 
         <span class="kw">for</span> <span class="ident">ra</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">render_attachments</span> {
+            <span class="kw">if</span> <span class="op">!</span><span class="ident">texture_guard</span>.<span class="ident">contains</span>(<span class="ident">ra</span>.<span class="ident">texture_id</span>.<span class="ident">value</span>.<span class="number">0</span>) {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::SurfaceTextureDropped</span>);
+            }
             <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">texture_guard</span>[<span class="ident">ra</span>.<span class="ident">texture_id</span>.<span class="ident">value</span>];
             <span class="ident">check_texture_usage</span>(<span class="ident">texture</span>.<span class="ident">desc</span>.<span class="ident">usage</span>, <span class="ident">TextureUsages::RENDER_ATTACHMENT</span>)<span class="question-mark">?</span>;
 
