@@ -1132,6 +1132,11 @@
 <span id="1132">1132</span>
 <span id="1133">1133</span>
 <span id="1134">1134</span>
+<span id="1135">1135</span>
+<span id="1136">1136</span>
+<span id="1137">1137</span>
+<span id="1138">1138</span>
+<span id="1139">1139</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">extensions::khr</span>, <span class="ident">vk</span>};
@@ -1832,6 +1837,7 @@
                     .<span class="ident">contains</span>(<span class="ident">vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT</span>)
             },
             <span class="ident">non_coherent_map_mask</span>: <span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">limits</span>.<span class="ident">non_coherent_atom_size</span> <span class="op">-</span> <span class="number">1</span>,
+            <span class="ident">can_present</span>: <span class="bool-val">true</span>,
         };
 
         <span class="kw">let</span> <span class="ident">capabilities</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::Capabilities</span> {
@@ -2157,6 +2163,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Surface</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::SurfaceCapabilities</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">private_caps</span>.<span class="ident">can_present</span> {
+            <span class="kw">return</span> <span class="prelude-val">None</span>;
+        }
+
         <span class="kw">let</span> <span class="ident">queue_family_index</span> <span class="op">=</span> <span class="number">0</span>; <span class="comment">//TODO</span>
         <span class="kw">match</span> <span class="ident">surface</span>.<span class="ident">functor</span>.<span class="ident">get_physical_device_surface_support</span>(
             <span class="self">self</span>.<span class="ident">raw</span>,

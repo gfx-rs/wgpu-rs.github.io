@@ -86,9 +86,10 @@
 <span id="86">86</span>
 <span id="87">87</span>
 <span id="88">88</span>
+<span id="89">89</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">wgt</span>::{<span class="ident">Backends</span>, <span class="ident">PowerPreference</span>, <span class="ident">RequestAdapterOptions</span>};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Adapter</span>, <span class="ident">Instance</span>};
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Adapter</span>, <span class="ident">Instance</span>, <span class="ident">Surface</span>};
 
 <span class="doccomment">/// Get a set of backend bits from the environment variable WGPU_BACKEND.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">backend_bits_from_env</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Backends</span><span class="op">&gt;</span> {
@@ -160,6 +161,7 @@
 <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">initialize_adapter_from_env_or_default</span>(
     <span class="ident">instance</span>: <span class="kw-2">&amp;</span><span class="ident">Instance</span>,
     <span class="ident">backend_bits</span>: <span class="ident">wgt::Backends</span>,
+    <span class="ident">compatible_surface</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">Surface</span><span class="op">&gt;</span>,
 ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Adapter</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">initialize_adapter_from_env</span>(<span class="ident">instance</span>, <span class="ident">backend_bits</span>) {
         <span class="prelude-val">Some</span>(<span class="ident">a</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">a</span>),
@@ -168,7 +170,7 @@
                 .<span class="ident">request_adapter</span>(<span class="kw-2">&amp;</span><span class="ident">RequestAdapterOptions</span> {
                     <span class="ident">power_preference</span>: <span class="ident">power_preference_from_env</span>()
                         .<span class="ident">unwrap_or_else</span>(<span class="ident">PowerPreference::default</span>),
-                    <span class="ident">compatible_surface</span>: <span class="prelude-val">None</span>,
+                    <span class="ident">compatible_surface</span>,
                 })
                 .<span class="kw">await</span>
         }

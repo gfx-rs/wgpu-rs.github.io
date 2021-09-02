@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["intel",""]]});
+initSidebarItems({"mod":[["intel",""],["nvidia",""]]});
