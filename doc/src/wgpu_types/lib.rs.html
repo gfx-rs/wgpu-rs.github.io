@@ -3402,6 +3402,18 @@
 <span id="3402">3402</span>
 <span id="3403">3403</span>
 <span id="3404">3404</span>
+<span id="3405">3405</span>
+<span id="3406">3406</span>
+<span id="3407">3407</span>
+<span id="3408">3408</span>
+<span id="3409">3409</span>
+<span id="3410">3410</span>
+<span id="3411">3411</span>
+<span id="3412">3412</span>
+<span id="3413">3413</span>
+<span id="3414">3414</span>
+<span id="3415">3415</span>
+<span id="3416">3416</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */</span>
@@ -3497,8 +3509,6 @@
 <span class="macro">bitflags::bitflags!</span> {
     <span class="doccomment">/// Represents the backends that wgpu will use.</span>
     <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Backends</span>: <span class="ident">u32</span> {
         <span class="doccomment">/// Supported on Windows, Linux/Android, and macOS/iOS via Vulkan Portability (with the Vulkan feature enabled)</span>
         <span class="kw">const</span> <span class="ident">VULKAN</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">Backend::Vulkan</span> <span class="kw">as</span> <span class="ident">u32</span>;
@@ -3526,6 +3536,9 @@
         <span class="kw">const</span> <span class="ident">SECONDARY</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::GL</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::DX11</span>.<span class="ident">bits</span>;
     }
 }
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;bitflags_serde_shim&quot;</span>)]</span>
+<span class="macro">bitflags_serde_shim::impl_serde_for_bitflags!</span>(<span class="ident">Backends</span>);
 
 <span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Backend</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Backends</span> {
     <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">backend</span>: <span class="ident">Backend</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
@@ -3568,8 +3581,6 @@
     <span class="doccomment">/// will panic.</span>
     <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Features</span>: <span class="ident">u64</span> {
         <span class="doccomment">/// By default, polygon depth is clipped to 0-1 range. Anything outside of that range</span>
         <span class="doccomment">/// is rejected, and respective fragments are not touched.</span>
@@ -3933,6 +3944,9 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;bitflags_serde_shim&quot;</span>)]</span>
+<span class="macro">bitflags_serde_shim::impl_serde_for_bitflags!</span>(<span class="ident">Features</span>);
+
 <span class="kw">impl</span> <span class="ident">Features</span> {
     <span class="doccomment">/// Mask of all features which are part of the upstream WebGPU standard.</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">all_webgpu_mask</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
@@ -4188,6 +4202,9 @@
     }
 }
 
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;bitflags_serde_shim&quot;</span>)]</span>
+<span class="macro">bitflags_serde_shim::impl_serde_for_bitflags!</span>(<span class="ident">DownlevelFlags</span>);
+
 <span class="kw">impl</span> <span class="ident">DownlevelFlags</span> {
     <span class="doccomment">/// All flags that indicate if the backend is WebGPU compliant</span>
     <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">compliant</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
@@ -4281,7 +4298,6 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// `ShaderStages::VERTEX | ShaderStages::FRAGMENT`</span>
     <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>, <span class="ident">Serialize</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderStages</span>: <span class="ident">u32</span> {
         <span class="doccomment">/// Binding is not visible from any shader stage.</span>
         <span class="kw">const</span> <span class="ident">NONE</span> <span class="op">=</span> <span class="number">0</span>;
@@ -4295,6 +4311,9 @@
         <span class="kw">const</span> <span class="ident">VERTEX_FRAGMENT</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::VERTEX</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::FRAGMENT</span>.<span class="ident">bits</span>;
     }
 }
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;bitflags_serde_shim&quot;</span>)]</span>
+<span class="macro">bitflags_serde_shim::impl_serde_for_bitflags!</span>(<span class="ident">ShaderStages</span>);
 
 <span class="doccomment">/// Dimensions of a particular texture view.</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
@@ -4693,8 +4712,6 @@
 <span class="macro">bitflags::bitflags!</span> {
     <span class="doccomment">/// Feature flags for a texture format.</span>
     <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureFormatFeatureFlags</span>: <span class="ident">u32</span> {
         <span class="doccomment">/// When used as a STORAGE texture, then a texture with this format can be bound with</span>
         <span class="doccomment">/// [`StorageTextureAccess::ReadOnly`] or [`StorageTextureAccess::ReadWrite`].</span>
@@ -4704,6 +4721,9 @@
         <span class="kw">const</span> <span class="ident">STORAGE_ATOMICS</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
     }
 }
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;bitflags_serde_shim&quot;</span>)]</span>
+<span class="macro">bitflags_serde_shim::impl_serde_for_bitflags!</span>(<span class="ident">TextureFormatFeatureFlags</span>);
 
 <span class="doccomment">/// Features supported by a given texture format</span>
 <span class="doccomment">///</span>
@@ -5342,8 +5362,6 @@
 <span class="macro">bitflags::bitflags!</span> {
     <span class="doccomment">/// Color write mask. Disabled color channels will not be written to.</span>
     <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ColorWrites</span>: <span class="ident">u32</span> {
         <span class="doccomment">/// Enable red channel writes</span>
         <span class="kw">const</span> <span class="ident">RED</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">0</span>;
@@ -5359,6 +5377,9 @@
         <span class="kw">const</span> <span class="ident">ALL</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::RED</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::GREEN</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::BLUE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::ALPHA</span>.<span class="ident">bits</span>;
     }
 }
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;bitflags_serde_shim&quot;</span>)]</span>
+<span class="macro">bitflags_serde_shim::impl_serde_for_bitflags!</span>(<span class="ident">ColorWrites</span>);
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">ColorWrites</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
@@ -5731,8 +5752,6 @@
     <span class="doccomment">/// The usages determine what kind of memory the buffer is allocated from and what</span>
     <span class="doccomment">/// actions the buffer can partake in.</span>
     <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferUsages</span>: <span class="ident">u32</span> {
         <span class="doccomment">/// Allow a buffer to be mapped for reading using [`Buffer::map_async`] + [`Buffer::get_mapped_range`].</span>
         <span class="doccomment">/// This does not include creating a buffer with [`BufferDescriptor::mapped_at_creation`] set.</span>
@@ -5764,6 +5783,9 @@
         <span class="kw">const</span> <span class="ident">INDIRECT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>;
     }
 }
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;bitflags_serde_shim&quot;</span>)]</span>
+<span class="macro">bitflags_serde_shim::impl_serde_for_bitflags!</span>(<span class="ident">BufferUsages</span>);
 
 <span class="doccomment">/// Describes a [`Buffer`].</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
@@ -5848,8 +5870,6 @@
     <span class="doccomment">/// The usages determine what kind of memory the texture is allocated from and what</span>
     <span class="doccomment">/// actions the texture can partake in.</span>
     <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureUsages</span>: <span class="ident">u32</span> {
         <span class="doccomment">/// Allows a texture to be the source in a [`CommandEncoder::copy_texture_to_buffer`] or</span>
         <span class="doccomment">/// [`CommandEncoder::copy_texture_to_texture`] operation.</span>
@@ -5865,6 +5885,9 @@
         <span class="kw">const</span> <span class="ident">RENDER_ATTACHMENT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
     }
 }
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;bitflags_serde_shim&quot;</span>)]</span>
+<span class="macro">bitflags_serde_shim::impl_serde_for_bitflags!</span>(<span class="ident">TextureUsages</span>);
 
 <span class="doccomment">/// Configures a [`Surface`] for presentation.</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
@@ -6742,8 +6765,6 @@
     <span class="doccomment">/// the first 8 bytes being the primitive out value, the last 8</span>
     <span class="doccomment">/// bytes being the compute shader invocation count.</span>
     <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
-    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PipelineStatisticsTypes</span> : <span class="ident">u8</span> {
         <span class="doccomment">/// Amount of times the vertex shader is ran. Accounts for</span>
         <span class="doccomment">/// the vertex cache when doing indexed rendering.</span>
@@ -6764,6 +6785,9 @@
         <span class="kw">const</span> <span class="ident">COMPUTE_SHADER_INVOCATIONS</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
     }
 }
+
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;bitflags_serde_shim&quot;</span>)]</span>
+<span class="macro">bitflags_serde_shim::impl_serde_for_bitflags!</span>(<span class="ident">PipelineStatisticsTypes</span>);
 
 <span class="doccomment">/// Argument buffer layout for draw_indirect commands.</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
