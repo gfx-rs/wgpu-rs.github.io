@@ -849,15 +849,6 @@
 <span id="849">849</span>
 <span id="850">850</span>
 <span id="851">851</span>
-<span id="852">852</span>
-<span id="853">853</span>
-<span id="854">854</span>
-<span id="855">855</span>
-<span id="856">856</span>
-<span id="857">857</span>
-<span id="858">858</span>
-<span id="859">859</span>
-<span id="860">860</span>
 </pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::device::trace::Command</span> <span class="kw">as</span> <span class="ident">TraceCommand</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -1199,21 +1190,12 @@
         <span class="ident">wgt::TextureDimension::D1</span> <span class="op">|</span> <span class="ident">wgt::TextureDimension::D2</span> <span class="op">=</span><span class="op">&gt;</span> {
             (<span class="number">1</span>, <span class="ident">copy_size</span>.<span class="ident">depth_or_array_layers</span>)
         }
-        <span class="ident">wgt::TextureDimension::D3</span> <span class="op">=</span><span class="op">&gt;</span> (
-            <span class="ident">copy_size</span>
-                .<span class="ident">depth_or_array_layers</span>
-                .<span class="ident">min</span>(<span class="ident">extent_virtual</span>.<span class="ident">depth_or_array_layers</span>),
-            <span class="number">1</span>,
-        ),
+        <span class="ident">wgt::TextureDimension::D3</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">copy_size</span>.<span class="ident">depth_or_array_layers</span>, <span class="number">1</span>),
     };
 
-    <span class="comment">// WebGPU uses the physical size of the texture for copies whereas vulkan uses</span>
-    <span class="comment">// the virtual size. We have passed validation, so it&#39;s safe to use the</span>
-    <span class="comment">// image extent data directly. We want the provided copy size to be no larger than</span>
-    <span class="comment">// the virtual size.</span>
     <span class="kw">let</span> <span class="ident">copy_extent</span> <span class="op">=</span> <span class="ident">hal::CopyExtent</span> {
-        <span class="ident">width</span>: <span class="ident">copy_size</span>.<span class="ident">width</span>.<span class="ident">min</span>(<span class="ident">extent_virtual</span>.<span class="ident">width</span>),
-        <span class="ident">height</span>: <span class="ident">copy_size</span>.<span class="ident">height</span>.<span class="ident">min</span>(<span class="ident">extent_virtual</span>.<span class="ident">height</span>),
+        <span class="ident">width</span>: <span class="ident">copy_size</span>.<span class="ident">width</span>,
+        <span class="ident">height</span>: <span class="ident">copy_size</span>.<span class="ident">height</span>,
         <span class="ident">depth</span>,
     };
     <span class="prelude-val">Ok</span>((<span class="ident">copy_extent</span>, <span class="ident">array_layer_count</span>))
