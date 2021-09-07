@@ -3414,6 +3414,14 @@
 <span id="3414">3414</span>
 <span id="3415">3415</span>
 <span id="3416">3416</span>
+<span id="3417">3417</span>
+<span id="3418">3418</span>
+<span id="3419">3419</span>
+<span id="3420">3420</span>
+<span id="3421">3421</span>
+<span id="3422">3422</span>
+<span id="3423">3423</span>
+<span id="3424">3424</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */</span>
@@ -3911,7 +3919,7 @@
         <span class="doccomment">///</span>
         <span class="doccomment">/// This is a native-only feature.</span>
         <span class="kw">const</span> <span class="ident">VERTEX_WRITABLE_STORAGE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">35</span>;
-        <span class="doccomment">/// Enables clear to zero for buffers &amp; images.</span>
+        <span class="doccomment">/// Enables clear to zero for buffers &amp; textures.</span>
         <span class="doccomment">///</span>
         <span class="doccomment">/// Supported platforms:</span>
         <span class="doccomment">/// - All</span>
@@ -5769,7 +5777,7 @@
         <span class="doccomment">/// operation.</span>
         <span class="kw">const</span> <span class="ident">COPY_SRC</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
         <span class="doccomment">/// Allow a buffer to be the destination buffer for a [`CommandEncoder::copy_buffer_to_buffer`], [`CommandEncoder::copy_texture_to_buffer`],</span>
-        <span class="doccomment">/// [`CommandEncoder::fill_buffer`] or [`Queue::write_buffer`] operation.</span>
+        <span class="doccomment">/// [`CommandEncoder::clear_buffer`] or [`Queue::write_buffer`] operation.</span>
         <span class="kw">const</span> <span class="ident">COPY_DST</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
         <span class="doccomment">/// Allow a buffer to be the index buffer in a draw operation.</span>
         <span class="kw">const</span> <span class="ident">INDEX</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
@@ -6108,6 +6116,18 @@
         <span class="kw">let</span> <span class="ident">max_dim</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">width</span>.<span class="ident">max</span>(<span class="self">self</span>.<span class="ident">height</span>.<span class="ident">max</span>(<span class="self">self</span>.<span class="ident">depth_or_array_layers</span>));
         <span class="number">32</span> <span class="op">-</span> <span class="ident">max_dim</span>.<span class="ident">leading_zeros</span>()
     }
+
+    <span class="doccomment">/// Calculates the extent at a given mip level.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mip_level_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">level</span>: <span class="ident">u32</span>, <span class="ident">is_3d_texture</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Extent3d</span> {
+        <span class="ident">Extent3d</span> {
+            <span class="ident">width</span>: <span class="ident">u32::max</span>(<span class="number">1</span>, <span class="self">self</span>.<span class="ident">width</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">level</span>),
+            <span class="ident">height</span>: <span class="ident">u32::max</span>(<span class="number">1</span>, <span class="self">self</span>.<span class="ident">height</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">level</span>),
+            <span class="ident">depth_or_array_layers</span>: <span class="kw">match</span> <span class="ident">is_3d_texture</span> {
+                <span class="bool-val">false</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">depth_or_array_layers</span>,
+                <span class="bool-val">true</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u32::max</span>(<span class="number">1</span>, <span class="self">self</span>.<span class="ident">depth_or_array_layers</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">level</span>),
+            },
+        }
+    }
 }
 
 <span class="doccomment">/// Describes a [`Texture`].</span>
@@ -6181,14 +6201,10 @@
             <span class="kw">return</span> <span class="prelude-val">None</span>;
         }
 
-        <span class="prelude-val">Some</span>(<span class="ident">Extent3d</span> {
-            <span class="ident">width</span>: <span class="ident">u32::max</span>(<span class="number">1</span>, <span class="self">self</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">level</span>),
-            <span class="ident">height</span>: <span class="ident">u32::max</span>(<span class="number">1</span>, <span class="self">self</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">level</span>),
-            <span class="ident">depth_or_array_layers</span>: <span class="kw">match</span> <span class="self">self</span>.<span class="ident">dimension</span> {
-                <span class="ident">TextureDimension::D1</span> <span class="op">|</span> <span class="ident">TextureDimension::D2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span>,
-                <span class="ident">TextureDimension::D3</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">u32::max</span>(<span class="number">1</span>, <span class="self">self</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">level</span>),
-            },
-        })
+        <span class="prelude-val">Some</span>(
+            <span class="self">self</span>.<span class="ident">size</span>
+                .<span class="ident">mip_level_size</span>(<span class="ident">level</span>, <span class="self">self</span>.<span class="ident">dimension</span> <span class="op">=</span><span class="op">=</span> <span class="ident">TextureDimension::D3</span>),
+        )
     }
 
     <span class="doccomment">/// Returns the number of array layers.</span>

@@ -977,6 +977,18 @@
 <span id="977">977</span>
 <span id="978">978</span>
 <span id="979">979</span>
+<span id="980">980</span>
+<span id="981">981</span>
+<span id="982">982</span>
+<span id="983">983</span>
+<span id="984">984</span>
+<span id="985">985</span>
+<span id="986">986</span>
+<span id="987">987</span>
+<span id="988">988</span>
+<span id="989">989</span>
+<span id="990">990</span>
+<span id="991">991</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Command</span> <span class="kw">as</span> <span class="ident">C</span>;
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">glow::HasContext</span>;
@@ -1169,13 +1181,11 @@
                 <span class="ident">gl</span>.<span class="ident">bind_buffer</span>(<span class="ident">glow::DRAW_INDIRECT_BUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">indirect_buf</span>));
                 <span class="ident">gl</span>.<span class="ident">dispatch_compute_indirect</span>(<span class="ident">indirect_offset</span> <span class="kw">as</span> <span class="ident">i32</span>);
             }
-            <span class="ident">C::FillBuffer</span> {
+            <span class="ident">C::ClearBuffer</span> {
                 <span class="ident">dst</span>,
                 <span class="ident">dst_target</span>,
                 <span class="kw-2">ref</span> <span class="ident">range</span>,
-                <span class="ident">value</span>,
             } <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">assert_eq!</span>(<span class="ident">value</span>, <span class="number">0</span>); <span class="comment">// other values require `wgt::Features::CLEAR_COMMANDS`.</span>
                 <span class="ident">gl</span>.<span class="ident">bind_buffer</span>(<span class="ident">glow::COPY_READ_BUFFER</span>, <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">zero_buffer</span>));
                 <span class="ident">gl</span>.<span class="ident">bind_buffer</span>(<span class="ident">dst_target</span>, <span class="prelude-val">Some</span>(<span class="ident">dst</span>));
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dst_offset</span> <span class="op">=</span> <span class="ident">range</span>.<span class="ident">start</span>;
@@ -1190,6 +1200,20 @@
                     );
                     <span class="ident">dst_offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">size</span>;
                 }
+            }
+            <span class="ident">C::ClearTexture</span> {
+                <span class="ident">dst</span>: <span class="kw">_</span>,
+                <span class="ident">dst_target</span>: <span class="kw">_</span>,
+                <span class="ident">subresource_range</span>: <span class="kw">_</span>,
+            } <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="comment">// Should EXT_clear_texture when possible.</span>
+                <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_clear_texture.txt</span>
+                <span class="comment">// But support is not very widespread. Need to fallback to do zero_buffer copies</span>
+
+                <span class="comment">// TODO: Need to invoke calls into CopyBufferToTexture using zero_buffer.</span>
+                <span class="comment">// To do that determine how many rows zero_buffer can fill and then chunk the texture up</span>
+                <span class="comment">// (do *not* repeat the exact logic of CopyBufferToTexture, it&#39;s way too much!)</span>
+                <span class="comment">//unimplemented!(&quot;texture clearing for GLES is not implemented yet&quot;);</span>
             }
             <span class="ident">C::CopyBufferToBuffer</span> {
                 <span class="ident">src</span>,
