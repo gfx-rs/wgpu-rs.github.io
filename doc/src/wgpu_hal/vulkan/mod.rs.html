@@ -571,6 +571,18 @@
 <span id="571">571</span>
 <span id="572">572</span>
 <span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
 </pre><pre class="rust"><code><span class="doccomment">/*!
 # Vulkan API internals.
 
@@ -703,6 +715,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     <span class="comment">//phd_features: adapter::PhysicalDeviceFeatures,</span>
     <span class="ident">downlevel_flags</span>: <span class="ident">wgt::DownlevelFlags</span>,
     <span class="ident">private_caps</span>: <span class="ident">PrivateCapabilities</span>,
+    <span class="ident">workarounds</span>: <span class="ident">Workarounds</span>,
 }
 
 <span class="comment">// TODO there&#39;s no reason why this can&#39;t be unified--the function pointers should all be the same--it&#39;s not clear how to do this with `ash`.</span>
@@ -734,7 +747,16 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     <span class="doccomment">/// Ability to present contents to any screen. Only needed to work around broken platform configurations.</span>
     <span class="ident">can_present</span>: <span class="ident">bool</span>,
     <span class="ident">non_coherent_map_mask</span>: <span class="ident">wgt::BufferAddress</span>,
+    <span class="ident">robust_buffer_access</span>: <span class="ident">bool</span>,
 }
+
+<span class="macro">bitflags::bitflags!</span>(
+    <span class="doccomment">/// Workaround flags.</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Workarounds</span>: <span class="ident">u32</span> {
+        <span class="doccomment">/// Only generate SPIR-V for one entry point at a time.</span>
+        <span class="kw">const</span> <span class="ident">SEPARATE_ENTRY_POINTS</span> <span class="op">=</span> <span class="number">0x1</span>;
+    }
+);
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="kw">struct</span> <span class="ident">AttachmentKey</span> {
@@ -798,6 +820,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     <span class="ident">timestamp_period</span>: <span class="ident">f32</span>,
     <span class="ident">downlevel_flags</span>: <span class="ident">wgt::DownlevelFlags</span>,
     <span class="ident">private_caps</span>: <span class="ident">PrivateCapabilities</span>,
+    <span class="ident">workarounds</span>: <span class="ident">Workarounds</span>,
     <span class="ident">render_passes</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">fxhash::FxHashMap</span><span class="op">&lt;</span><span class="ident">RenderPassKey</span>, <span class="ident">vk::RenderPass</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">framebuffers</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">fxhash::FxHashMap</span><span class="op">&lt;</span><span class="ident">FramebufferKey</span>, <span class="ident">vk::Framebuffer</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
@@ -931,8 +954,9 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderModule</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::ShaderModule</span>,
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ShaderModule</span> {
+    <span class="ident">Raw</span>(<span class="ident">vk::ShaderModule</span>),
+    <span class="ident">Intermediate</span>(<span class="ident"><span class="kw">crate</span>::NagaShader</span>),
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>

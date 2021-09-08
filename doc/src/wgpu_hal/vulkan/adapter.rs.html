@@ -1137,6 +1137,18 @@
 <span id="1137">1137</span>
 <span id="1138">1138</span>
 <span id="1139">1139</span>
+<span id="1140">1140</span>
+<span id="1141">1141</span>
+<span id="1142">1142</span>
+<span id="1143">1143</span>
+<span id="1144">1144</span>
+<span id="1145">1145</span>
+<span id="1146">1146</span>
+<span id="1147">1147</span>
+<span id="1148">1148</span>
+<span id="1149">1149</span>
+<span id="1150">1150</span>
+<span id="1151">1151</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">extensions::khr</span>, <span class="ident">vk</span>};
@@ -1192,13 +1204,11 @@
         <span class="ident">downlevel_flags</span>: <span class="ident">wgt::DownlevelFlags</span>,
         <span class="ident">private_caps</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::PrivateCapabilities</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
-        <span class="comment">//TODO: make configurable</span>
-        <span class="kw">let</span> <span class="ident">rba</span> <span class="op">=</span> <span class="op">!</span>(<span class="macro">cfg!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>) <span class="op">|</span><span class="op">|</span> <span class="macro">cfg!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>));
         <span class="self">Self</span> {
             <span class="comment">// vk::PhysicalDeviceFeatures is a struct composed of Bool32&#39;s while</span>
             <span class="comment">// Features is a bitfield so we need to map everything manually</span>
             <span class="ident">core</span>: <span class="ident">vk::PhysicalDeviceFeatures::builder</span>()
-                .<span class="ident">robust_buffer_access</span>(<span class="ident">rba</span>)
+                .<span class="ident">robust_buffer_access</span>(<span class="ident">private_caps</span>.<span class="ident">robust_buffer_access</span>)
                 .<span class="ident">independent_blend</span>(<span class="bool-val">true</span>)
                 .<span class="ident">sample_rate_shading</span>(<span class="bool-val">true</span>)
                 .<span class="ident">image_cube_array</span>(
@@ -1768,6 +1778,7 @@
         };
 
         <span class="kw">let</span> (<span class="ident">available_features</span>, <span class="ident">downlevel_flags</span>) <span class="op">=</span> <span class="ident">phd_features</span>.<span class="ident">to_wgpu</span>(<span class="kw-2">&amp;</span><span class="ident">phd_capabilities</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">workarounds</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::Workarounds::empty</span>();
         {
             <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::auxil::db</span>;
             <span class="comment">// see https://github.com/gfx-rs/gfx/issues/1930</span>
@@ -1777,6 +1788,8 @@
                     <span class="op">=</span><span class="op">=</span> <span class="ident">db::intel::DEVICE_KABY_LAKE_MASK</span>
                     <span class="op">|</span><span class="op">|</span> <span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">device_id</span> <span class="op">&amp;</span> <span class="ident">db::intel::DEVICE_SKY_LAKE_MASK</span>
                         <span class="op">=</span><span class="op">=</span> <span class="ident">db::intel::DEVICE_SKY_LAKE_MASK</span>);
+            <span class="comment">// TODO: only enable for particular devices</span>
+            <span class="ident">workarounds</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="kw">super</span>::Workarounds::SEPARATE_ENTRY_POINTS</span>;
         };
 
         <span class="kw">if</span> <span class="ident">phd_features</span>.<span class="ident">core</span>.<span class="ident">sample_rate_shading</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
@@ -1837,6 +1850,8 @@
             },
             <span class="ident">non_coherent_map_mask</span>: <span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">limits</span>.<span class="ident">non_coherent_atom_size</span> <span class="op">-</span> <span class="number">1</span>,
             <span class="ident">can_present</span>: <span class="bool-val">true</span>,
+            <span class="comment">//TODO: make configurable</span>
+            <span class="ident">robust_buffer_access</span>: <span class="ident">phd_features</span>.<span class="ident">core</span>.<span class="ident">robust_buffer_access</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
         };
 
         <span class="kw">let</span> <span class="ident">capabilities</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::Capabilities</span> {
@@ -1862,6 +1877,7 @@
             <span class="comment">//phd_features,</span>
             <span class="ident">downlevel_flags</span>,
             <span class="ident">private_caps</span>,
+            <span class="ident">workarounds</span>,
         };
 
         <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::ExposedAdapter</span> {
@@ -1982,8 +1998,15 @@
                 <span class="ident">lang_version</span>: (<span class="number">1</span>, <span class="number">0</span>),
                 <span class="ident">flags</span>,
                 <span class="ident">capabilities</span>: <span class="prelude-val">Some</span>(<span class="ident">capabilities</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>()),
-                <span class="ident">index_bounds_check_policy</span>: <span class="ident">naga::back::BoundsCheckPolicy::Restrict</span>,
-                <span class="ident">image_bounds_check_policy</span>: <span class="ident">naga::back::BoundsCheckPolicy::Restrict</span>,
+                <span class="ident">bounds_check_policies</span>: <span class="ident">naga::back::BoundsCheckPolicies</span> {
+                    <span class="ident">index</span>: <span class="ident">naga::back::BoundsCheckPolicy::Restrict</span>,
+                    <span class="ident">image</span>: <span class="ident">naga::back::BoundsCheckPolicy::Restrict</span>,
+                    <span class="ident">buffer</span>: <span class="kw">if</span> <span class="self">self</span>.<span class="ident">private_caps</span>.<span class="ident">robust_buffer_access</span> {
+                        <span class="ident">naga::back::BoundsCheckPolicy::Unchecked</span>
+                    } <span class="kw">else</span> {
+                        <span class="ident">naga::back::BoundsCheckPolicy::Restrict</span>
+                    },
+                },
             }
         };
 
@@ -2001,6 +2024,7 @@
             <span class="ident">vendor_id</span>: <span class="self">self</span>.<span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">vendor_id</span>,
             <span class="ident">downlevel_flags</span>: <span class="self">self</span>.<span class="ident">downlevel_flags</span>,
             <span class="ident">private_caps</span>: <span class="self">self</span>.<span class="ident">private_caps</span>.<span class="ident">clone</span>(),
+            <span class="ident">workarounds</span>: <span class="self">self</span>.<span class="ident">workarounds</span>,
             <span class="ident">timestamp_period</span>: <span class="self">self</span>.<span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">limits</span>.<span class="ident">timestamp_period</span>,
             <span class="ident">render_passes</span>: <span class="ident">Mutex::new</span>(<span class="ident">Default::default</span>()),
             <span class="ident">framebuffers</span>: <span class="ident">Mutex::new</span>(<span class="ident">Default::default</span>()),
