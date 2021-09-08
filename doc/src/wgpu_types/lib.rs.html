@@ -3422,6 +3422,27 @@
 <span id="3422">3422</span>
 <span id="3423">3423</span>
 <span id="3424">3424</span>
+<span id="3425">3425</span>
+<span id="3426">3426</span>
+<span id="3427">3427</span>
+<span id="3428">3428</span>
+<span id="3429">3429</span>
+<span id="3430">3430</span>
+<span id="3431">3431</span>
+<span id="3432">3432</span>
+<span id="3433">3433</span>
+<span id="3434">3434</span>
+<span id="3435">3435</span>
+<span id="3436">3436</span>
+<span id="3437">3437</span>
+<span id="3438">3438</span>
+<span id="3439">3439</span>
+<span id="3440">3440</span>
+<span id="3441">3441</span>
+<span id="3442">3442</span>
+<span id="3443">3443</span>
+<span id="3444">3444</span>
+<span id="3445">3445</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */</span>
@@ -3456,8 +3477,6 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// [`bytes_per_row`]: ImageDataLayout::bytes_per_row</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">COPY_BYTES_PER_ROW_ALIGNMENT</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">256</span>;
-<span class="doccomment">/// Bound uniform/storage buffer offsets must be aligned to this number.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BIND_BUFFER_ALIGNMENT</span>: <span class="ident">BufferAddress</span> <span class="op">=</span> <span class="number">256</span>;
 <span class="doccomment">/// An offset into the query resolve buffer has to be aligned to this.</span>
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">QUERY_RESOLVE_BUFFER_ALIGNMENT</span>: <span class="ident">BufferAddress</span> <span class="op">=</span> <span class="number">256</span>;
 <span class="doccomment">/// Buffer to buffer copy as well as buffer clear offsets and sizes must be aligned to this number.</span>
@@ -4053,6 +4072,14 @@
     <span class="doccomment">/// - DX11 &amp; OpenGL don&#39;t natively support push constants, and are emulated with uniforms,</span>
     <span class="doccomment">///   so this number is less useful but likely 256.</span>
     <span class="kw">pub</span> <span class="ident">max_push_constant_size</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// Required `BufferBindingType::Uniform` alignment for `BufferBinding::offset`</span>
+    <span class="doccomment">/// when creating a `BindGroup`, or for `set_bind_group` `dynamicOffsets`.</span>
+    <span class="doccomment">/// Defaults to 256. Lower is &quot;better&quot;.</span>
+    <span class="kw">pub</span> <span class="ident">min_uniform_buffer_offset_alignment</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// Required `BufferBindingType::Storage` alignment for `BufferBinding::offset`</span>
+    <span class="doccomment">/// when creating a `BindGroup`, or for `set_bind_group` `dynamicOffsets`.</span>
+    <span class="doccomment">/// Defaults to 256. Lower is &quot;better&quot;.</span>
+    <span class="kw">pub</span> <span class="ident">min_storage_buffer_offset_alignment</span>: <span class="ident">u32</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Limits</span> {
@@ -4076,6 +4103,8 @@
             <span class="ident">max_vertex_attributes</span>: <span class="number">16</span>,
             <span class="ident">max_vertex_buffer_array_stride</span>: <span class="number">2048</span>,
             <span class="ident">max_push_constant_size</span>: <span class="number">0</span>,
+            <span class="ident">min_uniform_buffer_offset_alignment</span>: <span class="number">256</span>,
+            <span class="ident">min_storage_buffer_offset_alignment</span>: <span class="number">256</span>,
         }
     }
 }
@@ -4102,6 +4131,8 @@
             <span class="ident">max_vertex_attributes</span>: <span class="number">16</span>,
             <span class="ident">max_vertex_buffer_array_stride</span>: <span class="number">2048</span>,
             <span class="ident">max_push_constant_size</span>: <span class="number">0</span>,
+            <span class="ident">min_uniform_buffer_offset_alignment</span>: <span class="number">256</span>,
+            <span class="ident">min_storage_buffer_offset_alignment</span>: <span class="number">256</span>,
         }
     }
 
@@ -4115,6 +4146,17 @@
             <span class="ident">max_texture_dimension_1d</span>: <span class="ident">other</span>.<span class="ident">max_texture_dimension_1d</span>,
             <span class="ident">max_texture_dimension_2d</span>: <span class="ident">other</span>.<span class="ident">max_texture_dimension_2d</span>,
             <span class="ident">max_texture_dimension_3d</span>: <span class="ident">other</span>.<span class="ident">max_texture_dimension_3d</span>,
+            ..<span class="self">self</span>
+        }
+    }
+
+    <span class="doccomment">/// Modify the current limits to use the buffer alignment limits of the adapter.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This is useful for when you&#39;d like to dynamically use the &quot;best&quot; supported buffer alignments.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">using_alignment</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+        <span class="self">Self</span> {
+            <span class="ident">min_uniform_buffer_offset_alignment</span>: <span class="ident">other</span>.<span class="ident">min_uniform_buffer_offset_alignment</span>,
+            <span class="ident">min_storage_buffer_offset_alignment</span>: <span class="ident">other</span>.<span class="ident">min_storage_buffer_offset_alignment</span>,
             ..<span class="self">self</span>
         }
     }

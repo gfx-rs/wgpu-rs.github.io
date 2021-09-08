@@ -4848,6 +4848,13 @@
 <span id="4848">4848</span>
 <span id="4849">4849</span>
 <span id="4850">4850</span>
+<span id="4851">4851</span>
+<span id="4852">4852</span>
+<span id="4853">4853</span>
+<span id="4854">4854</span>
+<span id="4855">4855</span>
+<span id="4856">4856</span>
+<span id="4857">4857</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -6108,8 +6115,14 @@
             ),
         };
 
-        <span class="kw">if</span> <span class="ident">bb</span>.<span class="ident">offset</span> <span class="op">%</span> <span class="ident">wgt::BIND_BUFFER_ALIGNMENT</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::UnalignedBufferOffset</span>(<span class="ident">bb</span>.<span class="ident">offset</span>));
+        <span class="kw">let</span> (<span class="ident">align</span>, <span class="ident">align_limit_name</span>) <span class="op">=</span>
+            <span class="ident">binding_model::buffer_binding_type_alignment</span>(<span class="ident">limits</span>, <span class="ident">binding_ty</span>);
+        <span class="kw">if</span> <span class="ident">bb</span>.<span class="ident">offset</span> <span class="op">%</span> <span class="ident">align</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::UnalignedBufferOffset</span>(
+                <span class="ident">bb</span>.<span class="ident">offset</span>,
+                <span class="ident">align_limit_name</span>,
+                <span class="ident">align</span>,
+            ));
         }
 
         <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">used</span>
@@ -6149,6 +6162,7 @@
         <span class="kw">if</span> <span class="ident">dynamic</span> {
             <span class="ident">dynamic_binding_info</span>.<span class="ident">push</span>(<span class="ident">binding_model::BindGroupDynamicBindingData</span> {
                 <span class="ident">maximum_dynamic_offset</span>: <span class="ident">buffer</span>.<span class="ident">size</span> <span class="op">-</span> <span class="ident">bind_end</span>,
+                <span class="ident">binding_type</span>: <span class="ident">binding_ty</span>,
             });
         }
 

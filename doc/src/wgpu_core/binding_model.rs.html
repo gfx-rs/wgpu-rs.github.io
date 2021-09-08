@@ -735,6 +735,36 @@
 <span id="735">735</span>
 <span id="736">736</span>
 <span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">device</span>::{<span class="ident">DeviceError</span>, <span class="ident">MissingDownlevelFlags</span>, <span class="ident">MissingFeatures</span>, <span class="ident">SHADER_STAGE_COUNT</span>},
     <span class="ident">error</span>::{<span class="ident">ErrorFormatter</span>, <span class="ident">PrettyError</span>},
@@ -830,8 +860,8 @@
     <span class="ident">MissingTextureUsage</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">MissingTextureUsageError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;binding declared as a single item, but bind group is using it as an array&quot;</span>)]</span>
     <span class="ident">SingleBindingExpected</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;buffer offset {0} does not respect `BIND_BUFFER_ALIGNMENT`&quot;</span>)]</span>
-    <span class="ident">UnalignedBufferOffset</span>(<span class="ident">wgt::BufferAddress</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;buffer offset {0} does not respect device&#39;s requested `{1}` limit {2}&quot;</span>)]</span>
+    <span class="ident">UnalignedBufferOffset</span>(<span class="ident">wgt::BufferAddress</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">u32</span>),
     <span class="attribute">#[<span class="ident">error</span>(
         <span class="string">&quot;buffer binding {binding} range {given} exceeds `max_*_buffer_binding_size` limit {limit}&quot;</span>
     )]</span>
@@ -1392,9 +1422,14 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;number of dynamic offsets ({actual}) doesn&#39;t match the number of dynamic bindings in the bind group layout ({expected})&quot;</span>)]</span>
     <span class="ident">MismatchedDynamicOffsetCount</span> { <span class="ident">actual</span>: <span class="ident">usize</span>, <span class="ident">expected</span>: <span class="ident">usize</span> },
     <span class="attribute">#[<span class="ident">error</span>(
-        <span class="string">&quot;dynamic binding at index {idx}: offset {offset} does not respect `BIND_BUFFER_ALIGNMENT`&quot;</span>
+        <span class="string">&quot;dynamic binding at index {idx}: offset {offset} does not respect device&#39;s requested `{limit_name}` limit {alignment}&quot;</span>
     )]</span>
-    <span class="ident">UnalignedDynamicBinding</span> { <span class="ident">idx</span>: <span class="ident">usize</span>, <span class="ident">offset</span>: <span class="ident">u32</span> },
+    <span class="ident">UnalignedDynamicBinding</span> {
+        <span class="ident">idx</span>: <span class="ident">usize</span>,
+        <span class="ident">offset</span>: <span class="ident">u32</span>,
+        <span class="ident">alignment</span>: <span class="ident">u32</span>,
+        <span class="ident">limit_name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
+    },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;dynamic binding at index {idx} with offset {offset} would overrun the buffer (limit: {max})&quot;</span>)]</span>
     <span class="ident">DynamicBindingOutOfBounds</span> { <span class="ident">idx</span>: <span class="ident">usize</span>, <span class="ident">offset</span>: <span class="ident">u32</span>, <span class="ident">max</span>: <span class="ident">u64</span> },
 }
@@ -1403,6 +1438,24 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroupDynamicBindingData</span> {
     <span class="doccomment">/// The maximum value the dynamic offset can have before running off the end of the buffer.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">maximum_dynamic_offset</span>: <span class="ident">wgt::BufferAddress</span>,
+    <span class="doccomment">/// The binding type.</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">binding_type</span>: <span class="ident">wgt::BufferBindingType</span>,
+}
+
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">buffer_binding_type_alignment</span>(
+    <span class="ident">limits</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::Limits</span>,
+    <span class="ident">binding_type</span>: <span class="ident">wgt::BufferBindingType</span>,
+) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">u32</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) {
+    <span class="kw">match</span> <span class="ident">binding_type</span> {
+        <span class="ident">wgt::BufferBindingType::Uniform</span> <span class="op">=</span><span class="op">&gt;</span> (
+            <span class="ident">limits</span>.<span class="ident">min_uniform_buffer_offset_alignment</span>,
+            <span class="string">&quot;min_uniform_buffer_offset_alignment&quot;</span>,
+        ),
+        <span class="ident">wgt::BufferBindingType::Storage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> (
+            <span class="ident">limits</span>.<span class="ident">min_storage_buffer_offset_alignment</span>,
+            <span class="string">&quot;min_storage_buffer_offset_alignment&quot;</span>,
+        ),
+    }
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -1420,6 +1473,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">validate_dynamic_bindings</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">offsets</span>: <span class="kw-2">&amp;</span>[<span class="ident">wgt::DynamicOffset</span>],
+        <span class="ident">limits</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::Limits</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BindError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">dynamic_binding_info</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">offsets</span>.<span class="ident">len</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindError::MismatchedDynamicOffsetCount</span> {
@@ -1434,8 +1488,14 @@
             .<span class="ident">zip</span>(<span class="ident">offsets</span>.<span class="ident">iter</span>())
             .<span class="ident">enumerate</span>()
         {
-            <span class="kw">if</span> <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">wgt::BufferAddress</span> <span class="op">%</span> <span class="ident">wgt::BIND_BUFFER_ALIGNMENT</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindError::UnalignedDynamicBinding</span> { <span class="ident">idx</span>, <span class="ident">offset</span> });
+            <span class="kw">let</span> (<span class="ident">alignment</span>, <span class="ident">limit_name</span>) <span class="op">=</span> <span class="ident">buffer_binding_type_alignment</span>(<span class="ident">limits</span>, <span class="ident">info</span>.<span class="ident">binding_type</span>);
+            <span class="kw">if</span> <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">wgt::BufferAddress</span> <span class="op">%</span> <span class="ident">alignment</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindError::UnalignedDynamicBinding</span> {
+                    <span class="ident">idx</span>,
+                    <span class="ident">offset</span>,
+                    <span class="ident">alignment</span>,
+                    <span class="ident">limit_name</span>,
+                });
             }
 
             <span class="kw">if</span> <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">wgt::BufferAddress</span> <span class="op">&gt;</span> <span class="ident">info</span>.<span class="ident">maximum_dynamic_offset</span> {
