@@ -4851,10 +4851,6 @@
 <span id="4851">4851</span>
 <span id="4852">4852</span>
 <span id="4853">4853</span>
-<span id="4854">4854</span>
-<span id="4855">4855</span>
-<span id="4856">4856</span>
-<span id="4857">4857</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -4876,7 +4872,7 @@
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">wgt</span>::{<span class="ident">BufferAddress</span>, <span class="ident">TextureFormat</span>, <span class="ident">TextureViewDimension</span>};
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">iter</span>, <span class="ident">marker::PhantomData</span>, <span class="ident">mem</span>, <span class="ident">ops::Range</span>, <span class="ident">ptr</span>, <span class="ident">sync::atomic::Ordering</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">iter</span>, <span class="ident">marker::PhantomData</span>, <span class="ident">mem</span>, <span class="ident">ops::Range</span>, <span class="ident">ptr</span>};
 
 <span class="kw">mod</span> <span class="ident">life</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">queue</span>;
@@ -7669,7 +7665,7 @@
         <span class="kw">let</span> <span class="ident">last_submission</span> <span class="op">=</span> {
             <span class="kw">let</span> (<span class="ident">buffer_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
             <span class="kw">match</span> <span class="ident">buffer_guard</span>.<span class="ident">get</span>(<span class="ident">buffer_id</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">buffer</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">buffer</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>),
+                <span class="prelude-val">Ok</span>(<span class="ident">buffer</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">buffer</span>.<span class="ident">life_guard</span>.<span class="ident">life_count</span>(),
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Ok</span>(()),
             }
         };
@@ -7821,7 +7817,7 @@
         <span class="kw">if</span> <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">dst_buffers</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">buffer_id</span>) {
             <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">temp_resources</span>.<span class="ident">push</span>(<span class="ident">temp</span>);
         } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">last_submit_index</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
+            <span class="kw">let</span> <span class="ident">last_submit_index</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">life_guard</span>.<span class="ident">life_count</span>();
             <span class="ident">drop</span>(<span class="ident">buffer_guard</span>);
             <span class="ident">device</span>
                 .<span class="ident">lock_life</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>)
@@ -7843,8 +7839,7 @@
             <span class="kw">match</span> <span class="ident">buffer_guard</span>.<span class="ident">get_mut</span>(<span class="ident">buffer_id</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">buffer</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">ref_count</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">life_guard</span>.<span class="ident">ref_count</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>();
-                    <span class="kw">let</span> <span class="ident">last_submit_index</span> <span class="op">=</span>
-                        <span class="ident">buffer</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
+                    <span class="kw">let</span> <span class="ident">last_submit_index</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">life_guard</span>.<span class="ident">life_count</span>();
                     (<span class="ident">ref_count</span>, <span class="ident">last_submit_index</span>, <span class="ident">buffer</span>.<span class="ident">device_id</span>.<span class="ident">value</span>)
                 }
                 <span class="prelude-val">Err</span>(<span class="ident">InvalidId</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -8027,8 +8022,7 @@
                 <span class="kw">if</span> <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">dst_textures</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">texture_id</span>) {
                     <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">temp_resources</span>.<span class="ident">push</span>(<span class="ident">temp</span>);
                 } <span class="kw">else</span> {
-                    <span class="kw">let</span> <span class="ident">last_submit_index</span> <span class="op">=</span>
-                        <span class="ident">texture</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
+                    <span class="kw">let</span> <span class="ident">last_submit_index</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">life_guard</span>.<span class="ident">life_count</span>();
                     <span class="ident">drop</span>(<span class="ident">texture_guard</span>);
                     <span class="ident">device</span>
                         .<span class="ident">lock_life</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>)
@@ -8052,8 +8046,7 @@
             <span class="kw">match</span> <span class="ident">texture_guard</span>.<span class="ident">get_mut</span>(<span class="ident">texture_id</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">texture</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">ref_count</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">life_guard</span>.<span class="ident">ref_count</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>();
-                    <span class="kw">let</span> <span class="ident">last_submit_index</span> <span class="op">=</span>
-                        <span class="ident">texture</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
+                    <span class="kw">let</span> <span class="ident">last_submit_index</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">life_guard</span>.<span class="ident">life_count</span>();
                     (<span class="ident">ref_count</span>, <span class="ident">last_submit_index</span>, <span class="ident">texture</span>.<span class="ident">device_id</span>.<span class="ident">value</span>)
                 }
                 <span class="prelude-val">Err</span>(<span class="ident">InvalidId</span>) <span class="op">=</span><span class="op">&gt;</span> {
@@ -8160,8 +8153,7 @@
             <span class="kw">match</span> <span class="ident">texture_view_guard</span>.<span class="ident">get_mut</span>(<span class="ident">texture_view_id</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">view</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">_ref_count</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">life_guard</span>.<span class="ident">ref_count</span>.<span class="ident">take</span>();
-                    <span class="kw">let</span> <span class="ident">last_submit_index</span> <span class="op">=</span>
-                        <span class="ident">view</span>.<span class="ident">life_guard</span>.<span class="ident">submission_index</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>);
+                    <span class="kw">let</span> <span class="ident">last_submit_index</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">life_guard</span>.<span class="ident">life_count</span>();
                     <span class="kw">let</span> <span class="ident">device_id</span> <span class="op">=</span> <span class="ident">texture_guard</span>[<span class="ident">view</span>.<span class="ident">parent_id</span>.<span class="ident">value</span>].<span class="ident">device_id</span>.<span class="ident">value</span>;
                     (<span class="ident">last_submit_index</span>, <span class="ident">device_id</span>)
                 }
