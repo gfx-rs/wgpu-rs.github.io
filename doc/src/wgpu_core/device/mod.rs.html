@@ -4850,7 +4850,6 @@
 <span id="4850">4850</span>
 <span id="4851">4851</span>
 <span id="4852">4852</span>
-<span id="4853">4853</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -5662,6 +5661,7 @@
                 <span class="ident">value</span>: <span class="ident">id::Valid</span>(<span class="ident">texture_id</span>),
                 <span class="ident">ref_count</span>: <span class="ident">texture</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>(),
             },
+            <span class="ident">device_id</span>: <span class="ident">texture</span>.<span class="ident">device_id</span>.<span class="ident">clone</span>(),
             <span class="ident">desc</span>: <span class="ident">resource::HalTextureViewDescriptor</span> {
                 <span class="ident">format</span>: <span class="ident">hal_desc</span>.<span class="ident">format</span>,
                 <span class="ident">dimension</span>: <span class="ident">hal_desc</span>.<span class="ident">dimension</span>,
@@ -8147,15 +8147,13 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
 
         <span class="kw">let</span> (<span class="ident">last_submit_index</span>, <span class="ident">device_id</span>) <span class="op">=</span> {
-            <span class="kw">let</span> (<span class="ident">texture_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
             <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">texture_view_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">texture_views</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
 
             <span class="kw">match</span> <span class="ident">texture_view_guard</span>.<span class="ident">get_mut</span>(<span class="ident">texture_view_id</span>) {
                 <span class="prelude-val">Ok</span>(<span class="ident">view</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">_ref_count</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">life_guard</span>.<span class="ident">ref_count</span>.<span class="ident">take</span>();
                     <span class="kw">let</span> <span class="ident">last_submit_index</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">life_guard</span>.<span class="ident">life_count</span>();
-                    <span class="kw">let</span> <span class="ident">device_id</span> <span class="op">=</span> <span class="ident">texture_guard</span>[<span class="ident">view</span>.<span class="ident">parent_id</span>.<span class="ident">value</span>].<span class="ident">device_id</span>.<span class="ident">value</span>;
-                    (<span class="ident">last_submit_index</span>, <span class="ident">device_id</span>)
+                    (<span class="ident">last_submit_index</span>, <span class="ident">view</span>.<span class="ident">device_id</span>.<span class="ident">value</span>)
                 }
                 <span class="prelude-val">Err</span>(<span class="ident">InvalidId</span>) <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">hub</span>.<span class="ident">texture_views</span>
