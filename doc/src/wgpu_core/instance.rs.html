@@ -876,6 +876,43 @@
 <span id="876">876</span>
 <span id="877">877</span>
 <span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
+<span id="907">907</span>
+<span id="908">908</span>
+<span id="909">909</span>
+<span id="910">910</span>
+<span id="911">911</span>
+<span id="912">912</span>
+<span id="913">913</span>
+<span id="914">914</span>
+<span id="915">915</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">device</span>::{<span class="ident">Device</span>, <span class="ident">DeviceDescriptor</span>},
     <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Input</span>, <span class="ident">Token</span>},
@@ -1753,6 +1790,43 @@
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">fid</span>.<span class="ident">assign_error</span>(<span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_or_default</span>(), <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         (<span class="ident">id</span>, <span class="prelude-val">Some</span>(<span class="ident">error</span>))
     }
+}
+
+<span class="doccomment">/// Generates a set of backends from a comma separated list of case-insensitive backend names.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Whitespace is stripped, so both &#39;gl, dx12&#39; and &#39;gl,dx12&#39; are valid.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Always returns WEBGPU on wasm over webgpu.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Names:</span>
+<span class="doccomment">/// - vulkan = &quot;vulkan&quot; or &quot;vk&quot;</span>
+<span class="doccomment">/// - dx12   = &quot;dx12&quot; or &quot;d3d12&quot;</span>
+<span class="doccomment">/// - dx11   = &quot;dx11&quot; or &quot;d3d11&quot;</span>
+<span class="doccomment">/// - metal  = &quot;metal&quot; or &quot;mtl&quot;</span>
+<span class="doccomment">/// - gles   = &quot;opengl&quot; or &quot;gles&quot; or &quot;gl&quot;</span>
+<span class="doccomment">/// - webgpu = &quot;webgpu&quot;</span>
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_backends_from_comma_list</span>(<span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Backends</span> {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">backends</span> <span class="op">=</span> <span class="ident">Backends::empty</span>();
+    <span class="kw">for</span> <span class="ident">backend</span> <span class="kw">in</span> <span class="ident">string</span>.<span class="ident">to_lowercase</span>().<span class="ident">split</span>(<span class="string">&#39;,&#39;</span>) {
+        <span class="ident">backends</span> <span class="op">|</span><span class="op">=</span> <span class="kw">match</span> <span class="ident">backend</span>.<span class="ident">trim</span>() {
+            <span class="string">&quot;vulkan&quot;</span> <span class="op">|</span> <span class="string">&quot;vk&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Backends::VULKAN</span>,
+            <span class="string">&quot;dx12&quot;</span> <span class="op">|</span> <span class="string">&quot;d3d12&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Backends::DX12</span>,
+            <span class="string">&quot;dx11&quot;</span> <span class="op">|</span> <span class="string">&quot;d3d11&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Backends::DX11</span>,
+            <span class="string">&quot;metal&quot;</span> <span class="op">|</span> <span class="string">&quot;mtl&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Backends::METAL</span>,
+            <span class="string">&quot;opengl&quot;</span> <span class="op">|</span> <span class="string">&quot;gles&quot;</span> <span class="op">|</span> <span class="string">&quot;gl&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Backends::GL</span>,
+            <span class="string">&quot;webgpu&quot;</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Backends::BROWSER_WEBGPU</span>,
+            <span class="ident">b</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="macro">log::warn!</span>(<span class="string">&quot;unknown backend string &#39;{}&#39;&quot;</span>, <span class="ident">b</span>);
+                <span class="kw">continue</span>;
+            }
+        }
+    }
+
+    <span class="kw">if</span> <span class="ident">backends</span>.<span class="ident">is_empty</span>() {
+        <span class="macro">log::warn!</span>(<span class="string">&quot;no valid backend strings found!&quot;</span>);
+    }
+
+    <span class="ident">backends</span>
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu_core" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>
