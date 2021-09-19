@@ -1160,6 +1160,58 @@
 <span id="1160">1160</span>
 <span id="1161">1161</span>
 <span id="1162">1162</span>
+<span id="1163">1163</span>
+<span id="1164">1164</span>
+<span id="1165">1165</span>
+<span id="1166">1166</span>
+<span id="1167">1167</span>
+<span id="1168">1168</span>
+<span id="1169">1169</span>
+<span id="1170">1170</span>
+<span id="1171">1171</span>
+<span id="1172">1172</span>
+<span id="1173">1173</span>
+<span id="1174">1174</span>
+<span id="1175">1175</span>
+<span id="1176">1176</span>
+<span id="1177">1177</span>
+<span id="1178">1178</span>
+<span id="1179">1179</span>
+<span id="1180">1180</span>
+<span id="1181">1181</span>
+<span id="1182">1182</span>
+<span id="1183">1183</span>
+<span id="1184">1184</span>
+<span id="1185">1185</span>
+<span id="1186">1186</span>
+<span id="1187">1187</span>
+<span id="1188">1188</span>
+<span id="1189">1189</span>
+<span id="1190">1190</span>
+<span id="1191">1191</span>
+<span id="1192">1192</span>
+<span id="1193">1193</span>
+<span id="1194">1194</span>
+<span id="1195">1195</span>
+<span id="1196">1196</span>
+<span id="1197">1197</span>
+<span id="1198">1198</span>
+<span id="1199">1199</span>
+<span id="1200">1200</span>
+<span id="1201">1201</span>
+<span id="1202">1202</span>
+<span id="1203">1203</span>
+<span id="1204">1204</span>
+<span id="1205">1205</span>
+<span id="1206">1206</span>
+<span id="1207">1207</span>
+<span id="1208">1208</span>
+<span id="1209">1209</span>
+<span id="1210">1210</span>
+<span id="1211">1211</span>
+<span id="1212">1212</span>
+<span id="1213">1213</span>
+<span id="1214">1214</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">extensions::khr</span>, <span class="ident">vk</span>};
@@ -1180,6 +1232,8 @@
     <span class="ident">descriptor_indexing</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">vk::PhysicalDeviceDescriptorIndexingFeaturesEXT</span><span class="op">&gt;</span>,
     <span class="ident">imageless_framebuffer</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">vk::PhysicalDeviceImagelessFramebufferFeaturesKHR</span><span class="op">&gt;</span>,
     <span class="ident">timeline_semaphore</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR</span><span class="op">&gt;</span>,
+    <span class="ident">image_robustness</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">vk::PhysicalDeviceImageRobustnessFeaturesEXT</span><span class="op">&gt;</span>,
+    <span class="ident">robustness2</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">vk::PhysicalDeviceRobustness2FeaturesEXT</span><span class="op">&gt;</span>,
 }
 
 <span class="comment">// This is safe because the structs have `p_next: *mut c_void`, which we null out/never read.</span>
@@ -1385,6 +1439,28 @@
                 <span class="prelude-val">Some</span>(
                     <span class="ident">vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR::builder</span>()
                         .<span class="ident">timeline_semaphore</span>(<span class="bool-val">true</span>)
+                        .<span class="ident">build</span>(),
+                )
+            } <span class="kw">else</span> {
+                <span class="prelude-val">None</span>
+            },
+            <span class="ident">image_robustness</span>: <span class="kw">if</span> <span class="ident">enabled_extensions</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">vk::ExtImageRobustnessFn::name</span>()) {
+                <span class="prelude-val">Some</span>(
+                    <span class="ident">vk::PhysicalDeviceImageRobustnessFeaturesEXT::builder</span>()
+                        .<span class="ident">robust_image_access</span>(<span class="ident">private_caps</span>.<span class="ident">robust_image_access</span>)
+                        .<span class="ident">build</span>(),
+                )
+            } <span class="kw">else</span> {
+                <span class="prelude-val">None</span>
+            },
+            <span class="ident">robustness2</span>: <span class="kw">if</span> <span class="ident">enabled_extensions</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">vk::ExtRobustness2Fn::name</span>()) {
+                <span class="comment">// Note: enabling `robust_buffer_access2` isn&#39;t requires, strictly speaking</span>
+                <span class="comment">// since we can enable `robust_buffer_access` all the time. But it improves</span>
+                <span class="comment">// program portability, so we opt into it anyway.</span>
+                <span class="prelude-val">Some</span>(
+                    <span class="ident">vk::PhysicalDeviceRobustness2FeaturesEXT::builder</span>()
+                        .<span class="ident">robust_buffer_access2</span>(<span class="ident">private_caps</span>.<span class="ident">robust_buffer_access</span>)
+                        .<span class="ident">robust_image_access2</span>(<span class="ident">private_caps</span>.<span class="ident">robust_image_access</span>)
                         .<span class="ident">build</span>(),
                 )
             } <span class="kw">else</span> {
@@ -1733,6 +1809,21 @@
                 <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>);
             }
 
+            <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::ExtImageRobustnessFn::name</span>()) {
+                <span class="ident">features</span>.<span class="ident">image_robustness</span> <span class="op">=</span>
+                    <span class="prelude-val">Some</span>(<span class="ident">vk::PhysicalDeviceImageRobustnessFeaturesEXT::builder</span>().<span class="ident">build</span>());
+
+                <span class="kw">let</span> <span class="ident">mut_ref</span> <span class="op">=</span> <span class="ident">features</span>.<span class="ident">image_robustness</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>();
+                <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>);
+            }
+            <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::ExtRobustness2Fn::name</span>()) {
+                <span class="ident">features</span>.<span class="ident">robustness2</span> <span class="op">=</span>
+                    <span class="prelude-val">Some</span>(<span class="ident">vk::PhysicalDeviceRobustness2FeaturesEXT::builder</span>().<span class="ident">build</span>());
+
+                <span class="kw">let</span> <span class="ident">mut_ref</span> <span class="op">=</span> <span class="ident">features</span>.<span class="ident">robustness2</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>();
+                <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>);
+            }
+
             <span class="kw">unsafe</span> {
                 <span class="ident">get_device_properties</span>.<span class="ident">get_physical_device_features2_khr</span>(<span class="ident">phd</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features2</span>);
             }
@@ -1755,6 +1846,8 @@
             <span class="ident">null_p_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features</span>.<span class="ident">descriptor_indexing</span>);
             <span class="ident">null_p_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features</span>.<span class="ident">imageless_framebuffer</span>);
             <span class="ident">null_p_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features</span>.<span class="ident">timeline_semaphore</span>);
+            <span class="ident">null_p_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features</span>.<span class="ident">image_robustness</span>);
+            <span class="ident">null_p_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">features</span>.<span class="ident">robustness2</span>);
         }
 
         (<span class="ident">capabilities</span>, <span class="ident">features</span>)
@@ -1837,13 +1930,13 @@
                 <span class="op">|</span><span class="op">|</span> <span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrMaintenance1Fn::name</span>()),
             <span class="ident">imageless_framebuffers</span>: <span class="kw">match</span> <span class="ident">phd_features</span>.<span class="ident">vulkan_1_2</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">features</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">features</span>.<span class="ident">imageless_framebuffer</span> <span class="op">=</span><span class="op">=</span> <span class="ident">vk::TRUE</span>,
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrImagelessFramebufferFn::name</span>()),
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">phd_features</span>.<span class="ident">imageless_framebuffer</span>.<span class="ident">is_some</span>(),
             },
             <span class="ident">image_view_usage</span>: <span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">vk::API_VERSION_1_1</span>
                 <span class="op">|</span><span class="op">|</span> <span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrMaintenance2Fn::name</span>()),
             <span class="ident">timeline_semaphores</span>: <span class="kw">match</span> <span class="ident">phd_features</span>.<span class="ident">vulkan_1_2</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">features</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">features</span>.<span class="ident">timeline_semaphore</span> <span class="op">=</span><span class="op">=</span> <span class="ident">vk::TRUE</span>,
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrTimelineSemaphoreFn::name</span>()),
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">phd_features</span>.<span class="ident">timeline_semaphore</span>.<span class="ident">is_some</span>(),
             },
             <span class="ident">texture_d24</span>: <span class="kw">unsafe</span> {
                 <span class="self">self</span>.<span class="ident">shared</span>
@@ -1863,6 +1956,13 @@
             <span class="ident">can_present</span>: <span class="bool-val">true</span>,
             <span class="comment">//TODO: make configurable</span>
             <span class="ident">robust_buffer_access</span>: <span class="ident">phd_features</span>.<span class="ident">core</span>.<span class="ident">robust_buffer_access</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
+            <span class="ident">robust_image_access</span>: <span class="kw">match</span> <span class="ident">phd_features</span>.<span class="ident">robustness2</span> {
+                <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">robust_image_access2</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
+                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">phd_features</span>.<span class="ident">image_robustness</span> {
+                    <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">f</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f</span>.<span class="ident">robust_image_access</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
+                    <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                },
+            },
         };
 
         <span class="kw">let</span> <span class="ident">capabilities</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::Capabilities</span> {
@@ -2022,8 +2122,12 @@
                 <span class="ident">capabilities</span>: <span class="prelude-val">Some</span>(<span class="ident">capabilities</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>()),
                 <span class="ident">bounds_check_policies</span>: <span class="ident">naga::back::BoundsCheckPolicies</span> {
                     <span class="ident">index</span>: <span class="ident">naga::back::BoundsCheckPolicy::Restrict</span>,
-                    <span class="ident">image</span>: <span class="ident">naga::back::BoundsCheckPolicy::Restrict</span>,
                     <span class="ident">buffer</span>: <span class="kw">if</span> <span class="self">self</span>.<span class="ident">private_caps</span>.<span class="ident">robust_buffer_access</span> {
+                        <span class="ident">naga::back::BoundsCheckPolicy::Unchecked</span>
+                    } <span class="kw">else</span> {
+                        <span class="ident">naga::back::BoundsCheckPolicy::Restrict</span>
+                    },
+                    <span class="ident">image</span>: <span class="kw">if</span> <span class="self">self</span>.<span class="ident">private_caps</span>.<span class="ident">robust_image_access</span> {
                         <span class="ident">naga::back::BoundsCheckPolicy::Unchecked</span>
                     } <span class="kw">else</span> {
                         <span class="ident">naga::back::BoundsCheckPolicy::Restrict</span>
