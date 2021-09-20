@@ -1100,6 +1100,10 @@
 <span id="1100">1100</span>
 <span id="1101">1101</span>
 <span id="1102">1102</span>
+<span id="1103">1103</span>
+<span id="1104">1104</span>
+<span id="1105">1105</span>
+<span id="1106">1106</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">binding_model::BindEntryMap</span>, <span class="ident">FastHashMap</span>, <span class="ident">FastHashSet</span>};
 <span class="kw">use</span> <span class="ident">naga::valid::GlobalUse</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::hash_map::Entry</span>, <span class="ident">fmt</span>};
@@ -1924,7 +1928,11 @@
                 <span class="kw">return</span>;
             }
             <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
-                <span class="macro">log::error!</span>(<span class="string">&quot;Unexpected varying type: {:?}&quot;</span>, <span class="ident">other</span>);
+                <span class="comment">//Note: technically this should be at least `log::error`, but</span>
+                <span class="comment">// the reality is - every shader coming from `glslc` outputs an array</span>
+                <span class="comment">// of clip distances and hits this path :(</span>
+                <span class="comment">// So we lower it to `log::warn` to be less annoying.</span>
+                <span class="macro">log::warn!</span>(<span class="string">&quot;Unexpected varying type: {:?}&quot;</span>, <span class="ident">other</span>);
                 <span class="kw">return</span>;
             }
         };
