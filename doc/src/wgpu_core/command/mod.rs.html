@@ -559,6 +559,16 @@
 <span id="559">559</span>
 <span id="560">560</span>
 <span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
 </pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">bind</span>;
 <span class="kw">mod</span> <span class="ident">bundle</span>;
 <span class="kw">mod</span> <span class="ident">clear</span>;
@@ -651,7 +661,17 @@
                 .<span class="ident">get_mut</span>(<span class="ident">buffer_use</span>.<span class="ident">id</span>)
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">DestroyedBufferError</span>(<span class="ident">buffer_use</span>.<span class="ident">id</span>))<span class="question-mark">?</span>;
 
-            <span class="kw">let</span> <span class="ident">uninitialized_ranges</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">initialization_status</span>.<span class="ident">drain</span>(<span class="ident">buffer_use</span>.<span class="ident">range</span>.<span class="ident">clone</span>());
+            <span class="comment">// align the end to 4</span>
+            <span class="kw">let</span> <span class="ident">end_remainder</span> <span class="op">=</span> <span class="ident">buffer_use</span>.<span class="ident">range</span>.<span class="ident">end</span> <span class="op">%</span> <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span>;
+            <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">end_remainder</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+                <span class="ident">buffer_use</span>.<span class="ident">range</span>.<span class="ident">end</span>
+            } <span class="kw">else</span> {
+                <span class="ident">buffer_use</span>.<span class="ident">range</span>.<span class="ident">end</span> <span class="op">+</span> <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span> <span class="op">-</span> <span class="ident">end_remainder</span>
+            };
+            <span class="kw">let</span> <span class="ident">uninitialized_ranges</span> <span class="op">=</span> <span class="ident">buffer</span>
+                .<span class="ident">initialization_status</span>
+                .<span class="ident">drain</span>(<span class="ident">buffer_use</span>.<span class="ident">range</span>.<span class="ident">start</span>..<span class="ident">end</span>);
+
             <span class="kw">match</span> <span class="ident">buffer_use</span>.<span class="ident">kind</span> {
                 <span class="ident">MemoryInitKind::ImplicitlyInitialized</span> <span class="op">=</span><span class="op">&gt;</span> {
                     <span class="ident">uninitialized_ranges</span>.<span class="ident">for_each</span>(<span class="ident">drop</span>);
@@ -701,8 +721,8 @@
             }
 
             <span class="kw">for</span> <span class="ident">range</span> <span class="kw">in</span> <span class="ident">ranges</span>.<span class="ident">iter</span>() {
-                <span class="macro">assert!</span>(<span class="ident">range</span>.<span class="ident">start</span> <span class="op">%</span> <span class="number">4</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>, <span class="string">&quot;Buffer {:?} has an uninitialized range with a start not aligned to 4 (start was {})&quot;</span>, <span class="ident">raw_buf</span>, <span class="ident">range</span>.<span class="ident">start</span>);
-                <span class="macro">assert!</span>(<span class="ident">range</span>.<span class="ident">end</span> <span class="op">%</span> <span class="number">4</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>, <span class="string">&quot;Buffer {:?} has an uninitialized range with an end not aligned to 4 (end was {})&quot;</span>, <span class="ident">raw_buf</span>, <span class="ident">range</span>.<span class="ident">end</span>);
+                <span class="macro">assert!</span>(<span class="ident">range</span>.<span class="ident">start</span> <span class="op">%</span> <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>, <span class="string">&quot;Buffer {:?} has an uninitialized range with a start not aligned to 4 (start was {})&quot;</span>, <span class="ident">raw_buf</span>, <span class="ident">range</span>.<span class="ident">start</span>);
+                <span class="macro">assert!</span>(<span class="ident">range</span>.<span class="ident">end</span> <span class="op">%</span> <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span>, <span class="string">&quot;Buffer {:?} has an uninitialized range with an end not aligned to 4 (end was {})&quot;</span>, <span class="ident">raw_buf</span>, <span class="ident">range</span>.<span class="ident">end</span>);
 
                 <span class="kw">unsafe</span> {
                     <span class="self">self</span>.<span class="ident">encoder</span>.<span class="ident">clear_buffer</span>(<span class="ident">raw_buf</span>, <span class="ident">range</span>.<span class="ident">clone</span>());

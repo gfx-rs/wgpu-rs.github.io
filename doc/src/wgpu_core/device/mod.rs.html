@@ -4850,6 +4850,16 @@
 <span id="4850">4850</span>
 <span id="4851">4851</span>
 <span id="4852">4852</span>
+<span id="4853">4853</span>
+<span id="4854">4854</span>
+<span id="4855">4855</span>
+<span id="4856">4856</span>
+<span id="4857">4857</span>
+<span id="4858">4858</span>
+<span id="4859">4859</span>
+<span id="4860">4860</span>
+<span id="4861">4861</span>
+<span id="4862">4862</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -5012,6 +5022,8 @@
         <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
     };
 
+    <span class="macro">assert_eq!</span>(<span class="ident">offset</span> <span class="op">%</span> <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span>, <span class="number">0</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">size</span> <span class="op">%</span> <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span>, <span class="number">0</span>);
     <span class="comment">// Zero out uninitialized parts of the mapping. (Spec dictates all resources behave as if they were initialized with zero)</span>
     <span class="comment">//</span>
     <span class="comment">// If this is a read mapping, ideally we would use a `clear_buffer` command before reading the data from GPU (i.e. `invalidate_range`).</span>
@@ -5362,13 +5374,19 @@
         } <span class="kw">else</span> {
             <span class="ident">desc</span>.<span class="ident">size</span>
         };
+        <span class="kw">let</span> <span class="ident">clear_remainder</span> <span class="op">=</span> <span class="ident">actual_size</span> <span class="op">%</span> <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span>;
+        <span class="kw">let</span> <span class="ident">aligned_size</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">clear_remainder</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="ident">actual_size</span> <span class="op">+</span> <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span> <span class="op">-</span> <span class="ident">clear_remainder</span>
+        } <span class="kw">else</span> {
+            <span class="ident">actual_size</span>
+        };
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">memory_flags</span> <span class="op">=</span> <span class="ident">hal::MemoryFlags::empty</span>();
         <span class="ident">memory_flags</span>.<span class="ident">set</span>(<span class="ident">hal::MemoryFlags::TRANSIENT</span>, <span class="ident">transient</span>);
 
         <span class="kw">let</span> <span class="ident">hal_desc</span> <span class="op">=</span> <span class="ident">hal::BufferDescriptor</span> {
             <span class="ident">label</span>: <span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_option</span>(),
-            <span class="ident">size</span>: <span class="ident">actual_size</span>,
+            <span class="ident">size</span>: <span class="ident">aligned_size</span>,
             <span class="ident">usage</span>,
             <span class="ident">memory_flags</span>,
         };
@@ -6175,9 +6193,10 @@
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::BindingZeroSize</span>(<span class="ident">bb</span>.<span class="ident">buffer_id</span>));
         }
 
+        <span class="macro">assert_eq!</span>(<span class="ident">bb</span>.<span class="ident">offset</span> <span class="op">%</span> <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span>, <span class="number">0</span>);
         <span class="ident">used_buffer_ranges</span>.<span class="ident">extend</span>(<span class="ident">buffer</span>.<span class="ident">initialization_status</span>.<span class="ident">create_action</span>(
             <span class="ident">bb</span>.<span class="ident">buffer_id</span>,
-            <span class="ident">bb</span>.<span class="ident">offset</span>..(<span class="ident">bb</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">bind_size</span>),
+            <span class="ident">bb</span>.<span class="ident">offset</span>..<span class="ident">bb</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">bind_size</span>,
             <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
         ));
 
@@ -7623,6 +7642,7 @@
                     }
                 };
 
+                <span class="macro">assert_eq!</span>(<span class="ident">buffer</span>.<span class="ident">size</span> <span class="op">%</span> <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span>, <span class="number">0</span>);
                 <span class="comment">// Zero initialize memory and then mark both staging and buffer as initialized</span>
                 <span class="comment">// (it&#39;s guaranteed that this is the case by the time the buffer is usable)</span>
                 <span class="kw">unsafe</span> { <span class="ident">ptr::write_bytes</span>(<span class="ident">mapping</span>.<span class="ident">ptr</span>.<span class="ident">as_ptr</span>(), <span class="number">0</span>, <span class="ident">buffer</span>.<span class="ident">size</span> <span class="kw">as</span> <span class="ident">usize</span>) };
