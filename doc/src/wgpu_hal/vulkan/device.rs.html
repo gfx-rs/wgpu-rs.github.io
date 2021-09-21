@@ -1645,6 +1645,13 @@
 <span id="1645">1645</span>
 <span id="1646">1646</span>
 <span id="1647">1647</span>
+<span id="1648">1648</span>
+<span id="1649">1649</span>
+<span id="1650">1650</span>
+<span id="1651">1651</span>
+<span id="1652">1652</span>
+<span id="1653">1653</span>
+<span id="1654">1654</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
@@ -3245,20 +3252,27 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">start_capture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;renderdoc&quot;</span>)]</span>
         {
-            <span class="self">self</span>.<span class="ident">render_doc</span>.<span class="ident">start_frame_capture</span>(
-                <span class="ident">ash::vk::Handle::as_raw</span>(<span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">handle</span>()) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>,
-                <span class="ident">ptr::null_mut</span>(),
-            )
+            <span class="comment">// Renderdoc requires us to give us the pointer that vkInstance _points to_.</span>
+            <span class="kw">let</span> <span class="ident">raw_vk_instance</span> <span class="op">=</span>
+                <span class="ident">ash::vk::Handle::as_raw</span>(<span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">instance</span>.<span class="ident">raw</span>.<span class="ident">handle</span>()) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>;
+            <span class="kw">let</span> <span class="ident">raw_vk_instance_dispatch_table</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">raw_vk_instance</span>;
+            <span class="self">self</span>.<span class="ident">render_doc</span>
+                .<span class="ident">start_frame_capture</span>(<span class="ident">raw_vk_instance_dispatch_table</span>, <span class="ident">ptr::null_mut</span>())
         }
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;renderdoc&quot;</span>))]</span>
         <span class="bool-val">false</span>
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">stop_capture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;renderdoc&quot;</span>)]</span>
-        <span class="self">self</span>.<span class="ident">render_doc</span>.<span class="ident">end_frame_capture</span>(
-            <span class="ident">ash::vk::Handle::as_raw</span>(<span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">handle</span>()) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>,
-            <span class="ident">ptr::null_mut</span>(),
-        )
+        {
+            <span class="comment">// Renderdoc requires us to give us the pointer that vkInstance _points to_.</span>
+            <span class="kw">let</span> <span class="ident">raw_vk_instance</span> <span class="op">=</span>
+                <span class="ident">ash::vk::Handle::as_raw</span>(<span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">instance</span>.<span class="ident">raw</span>.<span class="ident">handle</span>()) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>;
+            <span class="kw">let</span> <span class="ident">raw_vk_instance_dispatch_table</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">raw_vk_instance</span>;
+
+            <span class="self">self</span>.<span class="ident">render_doc</span>
+                .<span class="ident">end_frame_capture</span>(<span class="ident">raw_vk_instance_dispatch_table</span>, <span class="ident">ptr::null_mut</span>())
+        }
     }
 }
 
