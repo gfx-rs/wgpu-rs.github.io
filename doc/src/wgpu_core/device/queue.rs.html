@@ -913,6 +913,11 @@
 <span id="913">913</span>
 <span id="914">914</span>
 <span id="915">915</span>
+<span id="916">916</span>
+<span id="917">917</span>
+<span id="918">918</span>
+<span id="919">919</span>
+<span id="920">920</span>
 </pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::device::trace::Action</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -1286,7 +1291,9 @@
         <span class="kw">let</span> (<span class="ident">selector</span>, <span class="ident">dst_base</span>, <span class="ident">texture_format</span>) <span class="op">=</span>
             <span class="ident">extract_texture_selector</span>(<span class="ident">destination</span>, <span class="ident">size</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">format_desc</span> <span class="op">=</span> <span class="ident">texture_format</span>.<span class="ident">describe</span>();
-        <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">bytes_per_array_layer</span>) <span class="op">=</span> <span class="ident">validate_linear_texture_data</span>(
+        <span class="comment">//Note: `_source_bytes_per_array_layer` is ignored since we have a staging copy,</span>
+        <span class="comment">// and it can have a different value.</span>
+        <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">_source_bytes_per_array_layer</span>) <span class="op">=</span> <span class="ident">validate_linear_texture_data</span>(
             <span class="ident">data_layout</span>,
             <span class="ident">texture_format</span>,
             <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">wgt::BufferAddress</span>,
@@ -1359,6 +1366,7 @@
             .<span class="ident">map_err</span>(<span class="ident">DeviceError::from</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> {
             <span class="macro">profiling::scope!</span>(<span class="string">&quot;copy&quot;</span>);
+
             <span class="kw">if</span> <span class="ident">stage_bytes_per_row</span> <span class="op">=</span><span class="op">=</span> <span class="ident">bytes_per_row</span> {
                 <span class="comment">// Fast path if the data is already being aligned optimally.</span>
                 <span class="ident">ptr::copy_nonoverlapping</span>(
@@ -1403,7 +1411,9 @@
             <span class="ident">texture_base</span>.<span class="ident">array_layer</span> <span class="op">+</span><span class="op">=</span> <span class="ident">rel_array_layer</span>;
             <span class="ident">hal::BufferTextureCopy</span> {
                 <span class="ident">buffer_layout</span>: <span class="ident">wgt::ImageDataLayout</span> {
-                    <span class="ident">offset</span>: <span class="ident">rel_array_layer</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">bytes_per_array_layer</span>,
+                    <span class="ident">offset</span>: <span class="ident">rel_array_layer</span> <span class="kw">as</span> <span class="ident">u64</span>
+                        <span class="op">*</span> <span class="ident">block_rows_per_image</span> <span class="kw">as</span> <span class="ident">u64</span>
+                        <span class="op">*</span> <span class="ident">stage_bytes_per_row</span> <span class="kw">as</span> <span class="ident">u64</span>,
                     <span class="ident">bytes_per_row</span>: <span class="ident">NonZeroU32::new</span>(<span class="ident">stage_bytes_per_row</span>),
                     <span class="ident">rows_per_image</span>: <span class="ident">NonZeroU32::new</span>(<span class="ident">block_rows_per_image</span>),
                 },
