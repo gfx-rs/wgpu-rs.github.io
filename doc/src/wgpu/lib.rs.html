@@ -3216,6 +3216,37 @@
 <span id="3216">3216</span>
 <span id="3217">3217</span>
 <span id="3218">3218</span>
+<span id="3219">3219</span>
+<span id="3220">3220</span>
+<span id="3221">3221</span>
+<span id="3222">3222</span>
+<span id="3223">3223</span>
+<span id="3224">3224</span>
+<span id="3225">3225</span>
+<span id="3226">3226</span>
+<span id="3227">3227</span>
+<span id="3228">3228</span>
+<span id="3229">3229</span>
+<span id="3230">3230</span>
+<span id="3231">3231</span>
+<span id="3232">3232</span>
+<span id="3233">3233</span>
+<span id="3234">3234</span>
+<span id="3235">3235</span>
+<span id="3236">3236</span>
+<span id="3237">3237</span>
+<span id="3238">3238</span>
+<span id="3239">3239</span>
+<span id="3240">3240</span>
+<span id="3241">3241</span>
+<span id="3242">3242</span>
+<span id="3243">3243</span>
+<span id="3244">3244</span>
+<span id="3245">3245</span>
+<span id="3246">3246</span>
+<span id="3247">3247</span>
+<span id="3248">3248</span>
+<span id="3249">3249</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! To start using the API, create an [`Instance`].</span>
@@ -3460,6 +3491,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::DeviceId</span>,
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">ShaderModuleDescriptor</span>,
+        <span class="ident">shader_bound_checks</span>: <span class="ident">wgt::ShaderBoundChecks</span>,
     ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::ShaderModuleId</span>;
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">device_create_shader_module_spirv</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -4882,7 +4914,37 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_shader_module</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">ShaderModuleDescriptor</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ShaderModule</span> {
         <span class="ident">ShaderModule</span> {
             <span class="ident">context</span>: <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">context</span>),
-            <span class="ident">id</span>: <span class="ident">Context::device_create_shader_module</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>, <span class="ident">desc</span>),
+            <span class="ident">id</span>: <span class="ident">Context::device_create_shader_module</span>(
+                <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>,
+                <span class="ident">desc</span>,
+                <span class="ident">wgt::ShaderBoundChecks::new</span>(),
+            ),
+        }
+    }
+
+    <span class="doccomment">/// Creates a shader module from either SPIR-V or WGSL source code without runtime checks.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// # Safety</span>
+    <span class="doccomment">/// In contrast with [`create_shader_module`](Self::create_shader_module) this function</span>
+    <span class="doccomment">/// creates a shader module without runtime checks which allows shaders to perform</span>
+    <span class="doccomment">/// operations which can lead to undefined behavior like indexing out of bounds, thus it&#39;s</span>
+    <span class="doccomment">/// the caller responsibility to pass a shader which doesn&#39;t perform any of this</span>
+    <span class="doccomment">/// operations.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This has no effect on web.</span>
+    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_shader_module_unchecked</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">ShaderModuleDescriptor</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">ShaderModule</span> {
+        <span class="ident">ShaderModule</span> {
+            <span class="ident">context</span>: <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">context</span>),
+            <span class="ident">id</span>: <span class="ident">Context::device_create_shader_module</span>(
+                <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>,
+                <span class="ident">desc</span>,
+                <span class="ident">wgt::ShaderBoundChecks::unchecked</span>(),
+            ),
         }
     }
 
