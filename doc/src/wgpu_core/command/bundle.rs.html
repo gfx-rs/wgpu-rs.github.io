@@ -1378,6 +1378,12 @@
 <span id="1378">1378</span>
 <span id="1379">1379</span>
 <span id="1380">1380</span>
+<span id="1381">1381</span>
+<span id="1382">1382</span>
+<span id="1383">1383</span>
+<span id="1384">1384</span>
+<span id="1385">1385</span>
+<span id="1386">1386</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
     ## Software implementation
@@ -1477,7 +1483,11 @@
             <span class="ident">parent_id</span>,
             <span class="ident">context</span>: <span class="ident">RenderPassContext</span> {
                 <span class="ident">attachments</span>: <span class="ident">AttachmentData</span> {
-                    <span class="ident">colors</span>: <span class="ident">desc</span>.<span class="ident">color_formats</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>(),
+                    <span class="ident">colors</span>: <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">color_formats</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">hal::MAX_COLOR_TARGETS</span> {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">CreateRenderBundleError::TooManyColorAttachments</span>);
+                    } <span class="kw">else</span> {
+                        <span class="ident">desc</span>.<span class="ident">color_formats</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>()
+                    },
                     <span class="ident">resolves</span>: <span class="ident">ArrayVec::new</span>(),
                     <span class="ident">depth_stencil</span>: <span class="ident">desc</span>.<span class="ident">depth_stencil</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">ds</span><span class="op">|</span> <span class="ident">ds</span>.<span class="ident">format</span>),
                 },
@@ -1925,6 +1935,8 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CreateRenderBundleError</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;invalid number of samples {0}&quot;</span>)]</span>
     <span class="ident">InvalidSampleCount</span>(<span class="ident">u32</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;number of color attachments exceeds the limit&quot;</span>)]</span>
+    <span class="ident">TooManyColorAttachments</span>,
 }
 
 <span class="doccomment">/// Error type returned from `RenderBundleEncoder::new` if the sample count is invalid.</span>
