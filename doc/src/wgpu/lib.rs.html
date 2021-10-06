@@ -3243,6 +3243,20 @@
 <span id="3243">3243</span>
 <span id="3244">3244</span>
 <span id="3245">3245</span>
+<span id="3246">3246</span>
+<span id="3247">3247</span>
+<span id="3248">3248</span>
+<span id="3249">3249</span>
+<span id="3250">3250</span>
+<span id="3251">3251</span>
+<span id="3252">3252</span>
+<span id="3253">3253</span>
+<span id="3254">3254</span>
+<span id="3255">3255</span>
+<span id="3256">3256</span>
+<span id="3257">3257</span>
+<span id="3258">3258</span>
+<span id="3259">3259</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! To start using the API, create an [`Instance`].</span>
@@ -3479,6 +3493,11 @@
         <span class="ident"><span class="self">Self</span>::SurfaceOutputDetail</span>,
     );
     <span class="kw">fn</span> <span class="ident">surface_present</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">texture</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::TextureId</span>, <span class="ident">detail</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::SurfaceOutputDetail</span>);
+    <span class="kw">fn</span> <span class="ident">surface_texture_discard</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">texture</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::TextureId</span>,
+        <span class="ident">detail</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::SurfaceOutputDetail</span>,
+    );
 
     <span class="kw">fn</span> <span class="ident">device_features</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::DeviceId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Features</span>;
     <span class="kw">fn</span> <span class="ident">device_limits</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::DeviceId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Limits</span>;
@@ -4576,24 +4595,19 @@
 }
 
 <span class="doccomment">/// Surface texture that can be rendered to.</span>
+<span class="doccomment">/// Result of a successful call to [`Surface::get_current_texture`].</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SurfaceTexture</span> {
     <span class="doccomment">/// Accessible view of the frame.</span>
     <span class="kw">pub</span> <span class="ident">texture</span>: <span class="ident">Texture</span>,
-    <span class="ident">detail</span>: <span class="op">&lt;</span><span class="ident">C</span> <span class="kw">as</span> <span class="ident">Context</span><span class="op">&gt;</span><span class="ident">::SurfaceOutputDetail</span>,
-}
-
-<span class="doccomment">/// Result of a successful call to [`Surface::get_current_frame`].</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SurfaceFrame</span> {
-    <span class="doccomment">/// The texture into which the next frame should be rendered.</span>
-    <span class="kw">pub</span> <span class="ident">output</span>: <span class="ident">SurfaceTexture</span>,
     <span class="doccomment">/// `true` if the acquired buffer can still be used for rendering,</span>
     <span class="doccomment">/// but should be recreated for maximum performance.</span>
     <span class="kw">pub</span> <span class="ident">suboptimal</span>: <span class="ident">bool</span>,
+    <span class="ident">presented</span>: <span class="ident">bool</span>,
+    <span class="ident">detail</span>: <span class="op">&lt;</span><span class="ident">C</span> <span class="kw">as</span> <span class="ident">Context</span><span class="op">&gt;</span><span class="ident">::SurfaceOutputDetail</span>,
 }
 
-<span class="doccomment">/// Result of an unsuccessful call to [`Surface::get_current_frame`].</span>
+<span class="doccomment">/// Result of an unsuccessful call to [`Surface::get_current_texture`].</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SurfaceError</span> {
     <span class="doccomment">/// A timeout was encountered while trying to acquire the next frame.</span>
@@ -6389,10 +6403,24 @@
     }
 }
 
+<span class="kw">impl</span> <span class="ident">SurfaceTexture</span> {
+    <span class="doccomment">/// Schedule this texture to be presented on the owning surface.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Needs to be called after any work on the texture is scheduled via [`Queue::submit`].</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">present</span>(<span class="kw-2">mut</span> <span class="self">self</span>) {
+        <span class="self">self</span>.<span class="ident">presented</span> <span class="op">=</span> <span class="bool-val">true</span>;
+        <span class="ident">Context::surface_present</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">texture</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">texture</span>.<span class="ident">id</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">detail</span>);
+    }
+}
+
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">SurfaceTexture</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">thread::panicking</span>() {
-            <span class="ident">Context::surface_present</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">texture</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">texture</span>.<span class="ident">id</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">detail</span>);
+        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">presented</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">thread::panicking</span>() {
+            <span class="ident">Context::surface_texture_discard</span>(
+                <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">texture</span>.<span class="ident">context</span>,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">texture</span>.<span class="ident">id</span>,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">detail</span>,
+            );
         }
     }
 }
@@ -6409,7 +6437,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// # Panics</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// - A old [`SurfaceFrame`] is still alive referencing an old surface.</span>
+    <span class="doccomment">/// - A old [`SurfaceTexture`] is still alive referencing an old surface.</span>
     <span class="doccomment">/// - Texture format requested is unsupported on the surface.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">configure</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">Device</span>, <span class="ident">config</span>: <span class="kw-2">&amp;</span><span class="ident">SurfaceConfiguration</span>) {
         <span class="ident">Context::surface_configure</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>, <span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">id</span>, <span class="ident">config</span>)
@@ -6417,36 +6445,36 @@
 
     <span class="doccomment">/// Returns the next texture to be presented by the swapchain for drawing.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// When the [`SurfaceFrame`] returned by this method is dropped, the swapchain will present</span>
-    <span class="doccomment">/// the texture to the associated [`Surface`].</span>
+    <span class="doccomment">/// In order to present the [`SurfaceTexture`] returned by this method,</span>
+    <span class="doccomment">/// first a [`Queue::submit`] needs to be done with some work rendering to this texture.</span>
+    <span class="doccomment">/// Then [`SurfaceTexture::present`] needs to be called.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// If a SurfaceFrame referencing this surface is alive when the swapchain is recreated,</span>
+    <span class="doccomment">/// If a SurfaceTexture referencing this surface is alive when the swapchain is recreated,</span>
     <span class="doccomment">/// recreating the swapchain will panic.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_current_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SurfaceFrame</span>, <span class="ident">SurfaceError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_current_texture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SurfaceTexture</span>, <span class="ident">SurfaceError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">texture_id</span>, <span class="ident">status</span>, <span class="ident">detail</span>) <span class="op">=</span>
             <span class="ident">Context::surface_get_current_texture</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>);
-        <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">texture_id</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">id</span><span class="op">|</span> <span class="ident">SurfaceTexture</span> {
-            <span class="ident">texture</span>: <span class="ident">Texture</span> {
-                <span class="ident">context</span>: <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">context</span>),
-                <span class="ident">id</span>,
-                <span class="ident">owned</span>: <span class="bool-val">false</span>,
-            },
-            <span class="ident">detail</span>,
-        });
 
-        <span class="kw">match</span> <span class="ident">status</span> {
-            <span class="ident">SurfaceStatus::Good</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">SurfaceFrame</span> {
-                <span class="ident">output</span>: <span class="ident">output</span>.<span class="ident">unwrap</span>(),
-                <span class="ident">suboptimal</span>: <span class="bool-val">false</span>,
-            }),
-            <span class="ident">SurfaceStatus::Suboptimal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">SurfaceFrame</span> {
-                <span class="ident">output</span>: <span class="ident">output</span>.<span class="ident">unwrap</span>(),
-                <span class="ident">suboptimal</span>: <span class="bool-val">true</span>,
-            }),
-            <span class="ident">SurfaceStatus::Timeout</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">SurfaceError::Timeout</span>),
-            <span class="ident">SurfaceStatus::Outdated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">SurfaceError::Outdated</span>),
-            <span class="ident">SurfaceStatus::Lost</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">SurfaceError::Lost</span>),
-        }
+        <span class="kw">let</span> <span class="ident">suboptimal</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">status</span> {
+            <span class="ident">SurfaceStatus::Good</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="ident">SurfaceStatus::Suboptimal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+            <span class="ident">SurfaceStatus::Timeout</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SurfaceError::Timeout</span>),
+            <span class="ident">SurfaceStatus::Outdated</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SurfaceError::Outdated</span>),
+            <span class="ident">SurfaceStatus::Lost</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SurfaceError::Lost</span>),
+        };
+
+        <span class="ident">texture_id</span>
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">id</span><span class="op">|</span> <span class="ident">SurfaceTexture</span> {
+                <span class="ident">texture</span>: <span class="ident">Texture</span> {
+                    <span class="ident">context</span>: <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">context</span>),
+                    <span class="ident">id</span>,
+                    <span class="ident">owned</span>: <span class="bool-val">false</span>,
+                },
+                <span class="ident">suboptimal</span>,
+                <span class="ident">presented</span>: <span class="bool-val">false</span>,
+                <span class="ident">detail</span>,
+            })
+            .<span class="ident">ok_or</span>(<span class="ident">SurfaceError::Lost</span>)
     }
 }
 

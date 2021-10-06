@@ -278,6 +278,66 @@
 <span id="278">278</span>
 <span id="279">279</span>
 <span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
     ## Lifecycle
@@ -556,6 +616,66 @@
                 }
             },
         }
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">surface_texture_discard</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">surface_id</span>: <span class="ident">SurfaceId</span>,
+    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SurfaceError</span><span class="op">&gt;</span> {
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;discard&quot;</span>, <span class="string">&quot;SwapChain&quot;</span>);
+
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
+
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">surface_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">surfaces</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+        <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> <span class="ident">surface_guard</span>
+            .<span class="ident">get_mut</span>(<span class="ident">surface_id</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">SurfaceError::Invalid</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+
+        <span class="kw">let</span> <span class="ident">present</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">surface</span>.<span class="ident">presentation</span> {
+            <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">present</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">present</span>,
+            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SurfaceError::NotConfigured</span>),
+        };
+
+        <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">device_guard</span>[<span class="ident">present</span>.<span class="ident">device_id</span>.<span class="ident">value</span>];
+
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">trace</span>) <span class="op">=</span> <span class="ident">device</span>.<span class="ident">trace</span> {
+            <span class="ident">trace</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">Action::DiscardSurfaceTexture</span>(<span class="ident">surface_id</span>));
+        }
+
+        {
+            <span class="kw">let</span> <span class="ident">texture_id</span> <span class="op">=</span> <span class="ident">present</span>
+                .<span class="ident">acquired_texture</span>
+                .<span class="ident">take</span>()
+                .<span class="ident">ok_or</span>(<span class="ident">SurfaceError::AlreadyAcquired</span>)<span class="question-mark">?</span>;
+
+            <span class="comment">// The texture ID got added to the device tracker by `submit()`,</span>
+            <span class="comment">// and now we are moving it away.</span>
+            <span class="ident">device</span>.<span class="ident">trackers</span>.<span class="ident">lock</span>().<span class="ident">textures</span>.<span class="ident">remove</span>(<span class="ident">texture_id</span>.<span class="ident">value</span>);
+
+            <span class="kw">let</span> (<span class="ident">texture</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">unregister</span>(<span class="ident">texture_id</span>.<span class="ident">value</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">texture</span>) <span class="op">=</span> <span class="ident">texture</span> {
+                <span class="kw">let</span> <span class="ident">suf</span> <span class="op">=</span> <span class="ident">A::get_surface_mut</span>(<span class="ident">surface</span>);
+                <span class="kw">match</span> <span class="ident">texture</span>.<span class="ident">inner</span> {
+                    <span class="ident">resource::TextureInner::Surface</span> {
+                        <span class="ident">raw</span>,
+                        <span class="ident">parent_id</span>,
+                        <span class="ident">has_work</span>: <span class="kw">_</span>,
+                    } <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw">if</span> <span class="ident">surface_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">parent_id</span>.<span class="number">0</span> {
+                            <span class="kw">unsafe</span> { <span class="ident">suf</span>.<span class="ident">raw</span>.<span class="ident">discard_texture</span>(<span class="ident">raw</span>) };
+                        } <span class="kw">else</span> {
+                            <span class="macro">log::warn!</span>(<span class="string">&quot;Surface texture is outdated&quot;</span>);
+                        }
+                    }
+                    <span class="ident">resource::TextureInner::Native</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+                }
+            }
+        }
+
+        <span class="prelude-val">Ok</span>(())
     }
 }
 </code></pre></div>
