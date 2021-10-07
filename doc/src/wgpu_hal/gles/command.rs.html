@@ -920,6 +920,9 @@
 <span id="920">920</span>
 <span id="921">921</span>
 <span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">conv</span>, <span class="ident">Command</span> <span class="kw">as</span> <span class="ident">C</span>};
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">mem</span>, <span class="ident">ops::Range</span>};
@@ -1188,14 +1191,17 @@
     ) <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::BufferCopy</span><span class="op">&gt;</span>,
     {
-        <span class="comment">//TODO: preserve `src.target` and `dst.target`</span>
-        <span class="comment">// at least for the buffers that require it.</span>
+        <span class="kw">let</span> (<span class="ident">src_target</span>, <span class="ident">dst_target</span>) <span class="op">=</span> <span class="kw">if</span> <span class="ident">src</span>.<span class="ident">target</span> <span class="op">=</span><span class="op">=</span> <span class="ident">dst</span>.<span class="ident">target</span> {
+            (<span class="ident">glow::COPY_READ_BUFFER</span>, <span class="ident">glow::COPY_WRITE_BUFFER</span>)
+        } <span class="kw">else</span> {
+            (<span class="ident">src</span>.<span class="ident">target</span>, <span class="ident">dst</span>.<span class="ident">target</span>)
+        };
         <span class="kw">for</span> <span class="ident">copy</span> <span class="kw">in</span> <span class="ident">regions</span> {
             <span class="self">self</span>.<span class="ident">cmd_buffer</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">C::CopyBufferToBuffer</span> {
                 <span class="ident">src</span>: <span class="ident">src</span>.<span class="ident">raw</span>,
-                <span class="ident">src_target</span>: <span class="ident">glow::COPY_READ_BUFFER</span>,
+                <span class="ident">src_target</span>,
                 <span class="ident">dst</span>: <span class="ident">dst</span>.<span class="ident">raw</span>,
-                <span class="ident">dst_target</span>: <span class="ident">glow::COPY_WRITE_BUFFER</span>,
+                <span class="ident">dst_target</span>,
                 <span class="ident">copy</span>,
             })
         }
