@@ -46,7 +46,7 @@
 
 <span class="doccomment">/// Guarantees uniqueness only if `Weak` pointers are never created</span>
 <span class="doccomment">/// from this `Arc` or clones.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_arc_unique</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="ident">arc</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_arc_unique</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="ident">arc</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
     <span class="kw">let</span> <span class="ident">strong_count</span> <span class="op">=</span> <span class="ident">Arc::strong_count</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">arc</span>);
     <span class="macro">debug_assert_ne!</span>(<span class="ident">strong_count</span>, <span class="number">0</span>, <span class="string">&quot;This Arc should exist&quot;</span>);
 
@@ -55,12 +55,12 @@
         <span class="string">&quot;`Weak` pointer exists&quot;</span>
     );
 
-    <span class="ident">strong_count</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span>
+    <span class="ident">strong_count</span> <span class="op">==</span> <span class="number">1</span>
 }
 
 <span class="doccomment">/// Can be used instead of `Arc::try_unwrap(arc).unwrap()`</span>
 <span class="doccomment">/// when it is guaranteed to succeed.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">arc_unwrap</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">arc</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">M</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">arc_unwrap</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">arc</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) -&gt; <span class="ident">M</span> {
     <span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">mem::ManuallyDrop</span>, <span class="ident">ptr::read</span>};
     <span class="macro">debug_assert!</span>(<span class="ident">is_arc_unique</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">arc</span>));
 
@@ -79,7 +79,7 @@
 
 <span class="doccomment">/// Can be used instead of `Arc::try_unwrap`</span>
 <span class="doccomment">/// only if `Weak` pointers are never created from this `Arc` or clones.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">try_arc_unwrap</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">arc</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">try_arc_unwrap</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">arc</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
     <span class="kw">if</span> <span class="ident">is_arc_unique</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">arc</span>) {
         <span class="prelude-val">Some</span>(<span class="ident">arc_unwrap</span>(<span class="ident">arc</span>))
     } <span class="kw">else</span> {

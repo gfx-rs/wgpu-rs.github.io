@@ -64,18 +64,18 @@
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Handle</span>, <span class="ident">UniqueArena</span>};
 <span class="kw">use</span> <span class="ident">spirv::Word</span>;
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">bytes_to_words</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> {
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">bytes_to_words</span>(<span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> {
     <span class="ident">bytes</span>
         .<span class="ident">chunks</span>(<span class="number">4</span>)
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">chars</span><span class="op">|</span> <span class="ident">chars</span>.<span class="ident">iter</span>().<span class="ident">rev</span>().<span class="ident">fold</span>(<span class="number">0u32</span>, <span class="op">|</span><span class="ident">u</span>, <span class="ident">c</span><span class="op">|</span> (<span class="ident">u</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>) <span class="op">|</span> <span class="kw-2">*</span><span class="ident">c</span> <span class="kw">as</span> <span class="ident">u32</span>))
         .<span class="ident">collect</span>()
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">string_to_words</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> {
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">string_to_words</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">as_bytes</span>();
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">words</span> <span class="op">=</span> <span class="ident">bytes_to_words</span>(<span class="ident">bytes</span>);
 
-    <span class="kw">if</span> <span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">%</span> <span class="number">4</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> <span class="ident">bytes</span>.<span class="ident">len</span>() <span class="op">%</span> <span class="number">4</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="comment">// nul-termination</span>
         <span class="ident">words</span>.<span class="ident">push</span>(<span class="number">0x0u32</span>);
     }
@@ -83,15 +83,15 @@
     <span class="ident">words</span>
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">map_storage_class</span>(<span class="ident">class</span>: <span class="ident"><span class="kw">crate</span>::StorageClass</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">spirv::StorageClass</span> {
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">map_storage_class</span>(<span class="ident">class</span>: <span class="ident"><span class="kw">crate</span>::StorageClass</span>) -&gt; <span class="ident">spirv::StorageClass</span> {
     <span class="kw">match</span> <span class="ident">class</span> {
-        <span class="ident"><span class="kw">crate</span>::StorageClass::Handle</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv::StorageClass::UniformConstant</span>,
-        <span class="ident"><span class="kw">crate</span>::StorageClass::Function</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv::StorageClass::Function</span>,
-        <span class="ident"><span class="kw">crate</span>::StorageClass::Private</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv::StorageClass::Private</span>,
-        <span class="ident"><span class="kw">crate</span>::StorageClass::Storage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv::StorageClass::StorageBuffer</span>,
-        <span class="ident"><span class="kw">crate</span>::StorageClass::Uniform</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv::StorageClass::Uniform</span>,
-        <span class="ident"><span class="kw">crate</span>::StorageClass::WorkGroup</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv::StorageClass::Workgroup</span>,
-        <span class="ident"><span class="kw">crate</span>::StorageClass::PushConstant</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv::StorageClass::PushConstant</span>,
+        <span class="ident"><span class="kw">crate</span>::StorageClass::Handle</span> =&gt; <span class="ident">spirv::StorageClass::UniformConstant</span>,
+        <span class="ident"><span class="kw">crate</span>::StorageClass::Function</span> =&gt; <span class="ident">spirv::StorageClass::Function</span>,
+        <span class="ident"><span class="kw">crate</span>::StorageClass::Private</span> =&gt; <span class="ident">spirv::StorageClass::Private</span>,
+        <span class="ident"><span class="kw">crate</span>::StorageClass::Storage</span> { .. } =&gt; <span class="ident">spirv::StorageClass::StorageBuffer</span>,
+        <span class="ident"><span class="kw">crate</span>::StorageClass::Uniform</span> =&gt; <span class="ident">spirv::StorageClass::Uniform</span>,
+        <span class="ident"><span class="kw">crate</span>::StorageClass::WorkGroup</span> =&gt; <span class="ident">spirv::StorageClass::Workgroup</span>,
+        <span class="ident"><span class="kw">crate</span>::StorageClass::PushConstant</span> =&gt; <span class="ident">spirv::StorageClass::PushConstant</span>,
     }
 }
 
@@ -100,9 +100,9 @@
     <span class="ident">ty</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Type</span><span class="op">&gt;</span>,
     <span class="ident">arena</span>: <span class="kw-2">&amp;</span><span class="ident">UniqueArena</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Type</span><span class="op">&gt;</span>,
     <span class="ident">built_in</span>: <span class="ident"><span class="kw">crate</span>::BuiltIn</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+) -&gt; <span class="ident">bool</span> {
     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::Binding::BuiltIn</span>(<span class="ident">bi</span>)) <span class="op">=</span> <span class="ident">binding</span> {
-        <span class="ident">bi</span> <span class="op">=</span><span class="op">=</span> <span class="ident">built_in</span>
+        <span class="ident">bi</span> <span class="op">==</span> <span class="ident">built_in</span>
     } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="ident"><span class="kw">crate</span>::TypeInner::Struct</span> { <span class="kw-2">ref</span> <span class="ident">members</span>, .. } <span class="op">=</span> <span class="ident">arena</span>[<span class="ident">ty</span>].<span class="ident">inner</span> {
         <span class="ident">members</span>
             .<span class="ident">iter</span>()
@@ -113,14 +113,14 @@
 }
 
 <span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::StorageClass</span> {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">to_spirv_semantics_and_scope</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">spirv::MemorySemantics</span>, <span class="ident">spirv::Scope</span>) {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">to_spirv_semantics_and_scope</span>(<span class="self">self</span>) -&gt; (<span class="ident">spirv::MemorySemantics</span>, <span class="ident">spirv::Scope</span>) {
         <span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Storage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">spirv::MemorySemantics::UNIFORM_MEMORY</span>, <span class="ident">spirv::Scope::Device</span>),
-            <span class="ident"><span class="self">Self</span>::WorkGroup</span> <span class="op">=</span><span class="op">&gt;</span> (
+            <span class="ident"><span class="self">Self</span>::Storage</span> { .. } =&gt; (<span class="ident">spirv::MemorySemantics::UNIFORM_MEMORY</span>, <span class="ident">spirv::Scope::Device</span>),
+            <span class="ident"><span class="self">Self</span>::WorkGroup</span> =&gt; (
                 <span class="ident">spirv::MemorySemantics::WORKGROUP_MEMORY</span>,
                 <span class="ident">spirv::Scope::Workgroup</span>,
             ),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">spirv::MemorySemantics::empty</span>(), <span class="ident">spirv::Scope::Invocation</span>),
+            <span class="kw">_</span> =&gt; (<span class="ident">spirv::MemorySemantics::empty</span>(), <span class="ident">spirv::Scope::Invocation</span>),
         }
     }
 }

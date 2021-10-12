@@ -1497,7 +1497,7 @@
     <span class="kw">fn</span> <span class="ident">resolve</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident"><span class="kw">crate</span>::TypeInner</span>, <span class="ident">ExpressionError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident"><span class="kw">crate</span>::TypeInner</span>, <span class="ident">ExpressionError</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">handle</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">root</span> {
             <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">info</span>[<span class="ident">handle</span>].<span class="ident">ty</span>.<span class="ident">inner_with</span>(<span class="self">self</span>.<span class="ident">types</span>))
         } <span class="kw">else</span> {
@@ -1516,7 +1516,7 @@
         <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::Module</span>,
         <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">FunctionInfo</span>,
         <span class="ident">other_infos</span>: <span class="kw-2">&amp;</span>[<span class="ident">FunctionInfo</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ShaderStages</span>, <span class="ident">ExpressionError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ShaderStages</span>, <span class="ident">ExpressionError</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Expression</span> <span class="kw">as</span> <span class="ident">E</span>, <span class="ident">ScalarKind</span> <span class="kw">as</span> <span class="ident">Sk</span>, <span class="ident">TypeInner</span> <span class="kw">as</span> <span class="ident">Ti</span>};
 
         <span class="kw">let</span> <span class="ident">resolver</span> <span class="op">=</span> <span class="ident">ExpressionTypeResolver</span> {
@@ -1526,14 +1526,14 @@
         };
 
         <span class="kw">let</span> <span class="ident">stages</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">expression</span> {
-            <span class="ident">E::Access</span> { <span class="ident">base</span>, <span class="ident">index</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::Access</span> { <span class="ident">base</span>, <span class="ident">index</span> } =&gt; {
                 <span class="kw">let</span> <span class="ident">base_type</span> <span class="op">=</span> <span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">base</span>)<span class="question-mark">?</span>;
                 <span class="comment">// See the documentation for `Expression::Access`.</span>
                 <span class="kw">let</span> <span class="ident">dynamic_indexing_restricted</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">base_type</span> {
-                    <span class="ident">Ti::Vector</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-                    <span class="ident">Ti::Matrix</span> { .. } <span class="op">|</span> <span class="ident">Ti::Array</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-                    <span class="ident">Ti::Pointer</span> { .. } <span class="op">|</span> <span class="ident">Ti::ValuePointer</span> { <span class="ident">size</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>), .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-                    <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Ti::Vector</span> { .. } =&gt; <span class="bool-val">false</span>,
+                    <span class="ident">Ti::Matrix</span> { .. } <span class="op">|</span> <span class="ident">Ti::Array</span> { .. } =&gt; <span class="bool-val">true</span>,
+                    <span class="ident">Ti::Pointer</span> { .. } <span class="op">|</span> <span class="ident">Ti::ValuePointer</span> { <span class="ident">size</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>), .. } =&gt; <span class="bool-val">false</span>,
+                    <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                         <span class="macro">log::error!</span>(<span class="string">&quot;Indexing of {:?}&quot;</span>, <span class="ident">other</span>);
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidBaseType</span>(<span class="ident">base</span>));
                     }
@@ -1547,8 +1547,8 @@
                     <span class="op">|</span> <span class="ident">Ti::Scalar</span> {
                         <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>,
                         <span class="ident">width</span>: <span class="kw">_</span>,
-                    } <span class="op">=</span><span class="op">&gt;</span> {}
-                    <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    } =&gt; {}
+                    <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                         <span class="macro">log::error!</span>(<span class="string">&quot;Indexing by {:?}&quot;</span>, <span class="ident">other</span>);
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidIndexType</span>(<span class="ident">index</span>));
                     }
@@ -1574,15 +1574,15 @@
                         } <span class="op">=</span> <span class="ident">module</span>.<span class="ident">constants</span>[<span class="ident">k</span>]
                         {
                             <span class="kw">match</span> <span class="ident">value</span> {
-                                <span class="ident"><span class="kw">crate</span>::ScalarValue::Uint</span>(<span class="ident">u</span>) <span class="kw">if</span> <span class="ident">u</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">known_length</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident"><span class="kw">crate</span>::ScalarValue::Uint</span>(<span class="ident">u</span>) <span class="kw">if</span> <span class="ident">u</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">known_length</span> <span class="kw">as</span> <span class="ident">u64</span> =&gt; {
                                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::IndexOutOfBounds</span>(<span class="ident">base</span>, <span class="ident">value</span>));
                                 }
                                 <span class="ident"><span class="kw">crate</span>::ScalarValue::Sint</span>(<span class="ident">s</span>)
-                                    <span class="kw">if</span> <span class="ident">s</span> <span class="op">&lt;</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">s</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">known_length</span> <span class="kw">as</span> <span class="ident">i64</span> <span class="op">=</span><span class="op">&gt;</span>
+                                    <span class="kw">if</span> <span class="ident">s</span> <span class="op">&lt;</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">s</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">known_length</span> <span class="kw">as</span> <span class="ident">i64</span> =&gt;
                                 {
                                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::IndexOutOfBounds</span>(<span class="ident">base</span>, <span class="ident">value</span>));
                                 }
-                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> (),
+                                <span class="kw">_</span> =&gt; (),
                             }
                         }
                     }
@@ -1590,29 +1590,29 @@
 
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::AccessIndex</span> { <span class="ident">base</span>, <span class="ident">index</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::AccessIndex</span> { <span class="ident">base</span>, <span class="ident">index</span> } =&gt; {
                 <span class="kw">fn</span> <span class="ident">resolve_index_limit</span>(
                     <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::Module</span>,
                     <span class="ident">top</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
                     <span class="ident">ty</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::TypeInner</span>,
                     <span class="ident">top_level</span>: <span class="ident">bool</span>,
-                ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">ExpressionError</span><span class="op">&gt;</span> {
+                ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">u32</span>, <span class="ident">ExpressionError</span><span class="op">&gt;</span> {
                     <span class="kw">let</span> <span class="ident">limit</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">ty</span> {
                         <span class="ident">Ti::Vector</span> { <span class="ident">size</span>, .. }
                         <span class="op">|</span> <span class="ident">Ti::ValuePointer</span> {
                             <span class="ident">size</span>: <span class="prelude-val">Some</span>(<span class="ident">size</span>), ..
-                        } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                        <span class="ident">Ti::Matrix</span> { <span class="ident">columns</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">columns</span> <span class="kw">as</span> <span class="ident">u32</span>,
+                        } =&gt; <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u32</span>,
+                        <span class="ident">Ti::Matrix</span> { <span class="ident">columns</span>, .. } =&gt; <span class="ident">columns</span> <span class="kw">as</span> <span class="ident">u32</span>,
                         <span class="ident">Ti::Array</span> {
                             <span class="ident">size</span>: <span class="ident"><span class="kw">crate</span>::ArraySize::Constant</span>(<span class="ident">handle</span>),
                             ..
-                        } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">module</span>.<span class="ident">constants</span>[<span class="ident">handle</span>].<span class="ident">to_array_length</span>().<span class="ident">unwrap</span>(),
-                        <span class="ident">Ti::Array</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="op">!</span><span class="number">0</span>, <span class="comment">// can&#39;t statically know, but need run-time checks</span>
-                        <span class="ident">Ti::Pointer</span> { <span class="ident">base</span>, .. } <span class="kw">if</span> <span class="ident">top_level</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        } =&gt; <span class="ident">module</span>.<span class="ident">constants</span>[<span class="ident">handle</span>].<span class="ident">to_array_length</span>().<span class="ident">unwrap</span>(),
+                        <span class="ident">Ti::Array</span> { .. } =&gt; <span class="op">!</span><span class="number">0</span>, <span class="comment">// can&#39;t statically know, but need run-time checks</span>
+                        <span class="ident">Ti::Pointer</span> { <span class="ident">base</span>, .. } <span class="kw">if</span> <span class="ident">top_level</span> =&gt; {
                             <span class="ident">resolve_index_limit</span>(<span class="ident">module</span>, <span class="ident">top</span>, <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">base</span>].<span class="ident">inner</span>, <span class="bool-val">false</span>)<span class="question-mark">?</span>
                         }
-                        <span class="ident">Ti::Struct</span> { <span class="kw-2">ref</span> <span class="ident">members</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">members</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span>,
-                        <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="ident">Ti::Struct</span> { <span class="kw-2">ref</span> <span class="ident">members</span>, .. } =&gt; <span class="ident">members</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span>,
+                        <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                             <span class="macro">log::error!</span>(<span class="string">&quot;Indexing of {:?}&quot;</span>, <span class="ident">other</span>);
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidBaseType</span>(<span class="ident">top</span>));
                         }
@@ -1629,16 +1629,16 @@
                 }
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::Constant</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::Constant</span>(<span class="ident">handle</span>) =&gt; {
                 <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">module</span>
                     .<span class="ident">constants</span>
                     .<span class="ident">try_get</span>(<span class="ident">handle</span>)
                     .<span class="ident">ok_or</span>(<span class="ident">ExpressionError::ConstantDoesntExist</span>(<span class="ident">handle</span>))<span class="question-mark">?</span>;
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::Splat</span> { <span class="ident">size</span>: <span class="kw">_</span>, <span class="ident">value</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">value</span>)<span class="question-mark">?</span> {
-                <span class="ident">Ti::Scalar</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ShaderStages::all</span>(),
-                <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::Splat</span> { <span class="ident">size</span>: <span class="kw">_</span>, <span class="ident">value</span> } =&gt; <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">value</span>)<span class="question-mark">?</span> {
+                <span class="ident">Ti::Scalar</span> { .. } =&gt; <span class="ident">ShaderStages::all</span>(),
+                <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                     <span class="macro">log::error!</span>(<span class="string">&quot;Splat scalar type {:?}&quot;</span>, <span class="ident">other</span>);
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidSplatType</span>(<span class="ident">value</span>));
                 }
@@ -1647,10 +1647,10 @@
                 <span class="ident">size</span>,
                 <span class="ident">vector</span>,
                 <span class="ident">pattern</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> {
+            } =&gt; {
                 <span class="kw">let</span> <span class="ident">vec_size</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">vector</span>)<span class="question-mark">?</span> {
-                    <span class="ident">Ti::Vector</span> { <span class="ident">size</span>: <span class="ident">vec_size</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">vec_size</span>,
-                    <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Ti::Vector</span> { <span class="ident">size</span>: <span class="ident">vec_size</span>, .. } =&gt; <span class="ident">vec_size</span>,
+                    <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                         <span class="macro">log::error!</span>(<span class="string">&quot;Swizzle vector type {:?}&quot;</span>, <span class="ident">other</span>);
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidVectorType</span>(<span class="ident">vector</span>));
                     }
@@ -1662,7 +1662,7 @@
                 }
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::Compose</span> { <span class="kw-2">ref</span> <span class="ident">components</span>, <span class="ident">ty</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::Compose</span> { <span class="kw-2">ref</span> <span class="ident">components</span>, <span class="ident">ty</span> } =&gt; {
                 <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">handle</span> <span class="kw">in</span> <span class="ident">components</span> {
                     <span class="kw">if</span> <span class="ident">handle</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">root</span> {
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ForwardDependency</span>(<span class="ident">handle</span>));
@@ -1676,34 +1676,34 @@
                 )<span class="question-mark">?</span>;
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::FunctionArgument</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::FunctionArgument</span>(<span class="ident">index</span>) =&gt; {
                 <span class="kw">if</span> <span class="ident">index</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">function</span>.<span class="ident">arguments</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span> {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::FunctionArgumentDoesntExist</span>(<span class="ident">index</span>));
                 }
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::GlobalVariable</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::GlobalVariable</span>(<span class="ident">handle</span>) =&gt; {
                 <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">module</span>
                     .<span class="ident">global_variables</span>
                     .<span class="ident">try_get</span>(<span class="ident">handle</span>)
                     .<span class="ident">ok_or</span>(<span class="ident">ExpressionError::GlobalVarDoesntExist</span>(<span class="ident">handle</span>))<span class="question-mark">?</span>;
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::LocalVariable</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::LocalVariable</span>(<span class="ident">handle</span>) =&gt; {
                 <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">function</span>
                     .<span class="ident">local_variables</span>
                     .<span class="ident">try_get</span>(<span class="ident">handle</span>)
                     .<span class="ident">ok_or</span>(<span class="ident">ExpressionError::LocalVarDoesntExist</span>(<span class="ident">handle</span>))<span class="question-mark">?</span>;
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::Load</span> { <span class="ident">pointer</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::Load</span> { <span class="ident">pointer</span> } =&gt; {
                 <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">pointer</span>)<span class="question-mark">?</span> {
                     <span class="ident">Ti::Pointer</span> { <span class="ident">base</span>, .. }
                         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">types</span>[<span class="ident">base</span>.<span class="ident">index</span>()]
                             .<span class="ident">flags</span>
-                            .<span class="ident">contains</span>(<span class="ident">TypeFlags::SIZED</span> <span class="op">|</span> <span class="ident">TypeFlags::DATA</span>) <span class="op">=</span><span class="op">&gt;</span> {}
-                    <span class="ident">Ti::ValuePointer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                    <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            .<span class="ident">contains</span>(<span class="ident">TypeFlags::SIZED</span> <span class="op">|</span> <span class="ident">TypeFlags::DATA</span>) =&gt; {}
+                    <span class="ident">Ti::ValuePointer</span> { .. } =&gt; {}
+                    <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                         <span class="macro">log::error!</span>(<span class="string">&quot;Loading {:?}&quot;</span>, <span class="ident">other</span>);
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidPointerType</span>(<span class="ident">pointer</span>));
                     }
@@ -1718,25 +1718,25 @@
                 <span class="ident">offset</span>,
                 <span class="ident">level</span>,
                 <span class="ident">depth_ref</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> {
+            } =&gt; {
                 <span class="comment">// check the validity of expressions</span>
                 <span class="kw">let</span> <span class="ident">image_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">function</span>.<span class="ident">expressions</span>[<span class="ident">image</span>] {
-                    <span class="ident"><span class="kw">crate</span>::Expression::GlobalVariable</span>(<span class="ident">var_handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident"><span class="kw">crate</span>::Expression::GlobalVariable</span>(<span class="ident">var_handle</span>) =&gt; {
                         <span class="ident">module</span>.<span class="ident">global_variables</span>[<span class="ident">var_handle</span>].<span class="ident">ty</span>
                     }
-                    <span class="ident"><span class="kw">crate</span>::Expression::FunctionArgument</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">function</span>.<span class="ident">arguments</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">ty</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedGlobalVariable</span>),
+                    <span class="ident"><span class="kw">crate</span>::Expression::FunctionArgument</span>(<span class="ident">i</span>) =&gt; <span class="ident">function</span>.<span class="ident">arguments</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">ty</span>,
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedGlobalVariable</span>),
                 };
                 <span class="kw">let</span> <span class="ident">sampler_ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">function</span>.<span class="ident">expressions</span>[<span class="ident">sampler</span>] {
-                    <span class="ident"><span class="kw">crate</span>::Expression::GlobalVariable</span>(<span class="ident">var_handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident"><span class="kw">crate</span>::Expression::GlobalVariable</span>(<span class="ident">var_handle</span>) =&gt; {
                         <span class="ident">module</span>.<span class="ident">global_variables</span>[<span class="ident">var_handle</span>].<span class="ident">ty</span>
                     }
-                    <span class="ident"><span class="kw">crate</span>::Expression::FunctionArgument</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">function</span>.<span class="ident">arguments</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">ty</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedGlobalVariable</span>),
+                    <span class="ident"><span class="kw">crate</span>::Expression::FunctionArgument</span>(<span class="ident">i</span>) =&gt; <span class="ident">function</span>.<span class="ident">arguments</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">ty</span>,
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedGlobalVariable</span>),
                 };
                 <span class="kw">let</span> <span class="ident">comparison</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">sampler_ty</span>].<span class="ident">inner</span> {
-                    <span class="ident">Ti::Sampler</span> { <span class="ident">comparison</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">comparison</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedSamplerType</span>(<span class="ident">sampler_ty</span>)),
+                    <span class="ident">Ti::Sampler</span> { <span class="ident">comparison</span> } =&gt; <span class="ident">comparison</span>,
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedSamplerType</span>(<span class="ident">sampler_ty</span>)),
                 };
 
                 <span class="kw">let</span> (<span class="ident">class</span>, <span class="ident">dim</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">image_ty</span>].<span class="ident">inner</span> {
@@ -1744,7 +1744,7 @@
                         <span class="ident">class</span>,
                         <span class="ident">arrayed</span>,
                         <span class="ident">dim</span>,
-                    } <span class="op">=</span><span class="op">&gt;</span> {
+                    } =&gt; {
                         <span class="comment">// check the array property</span>
                         <span class="kw">if</span> <span class="ident">arrayed</span> <span class="op">!</span><span class="op">=</span> <span class="ident">array_index</span>.<span class="ident">is_some</span>() {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidImageArrayIndex</span>);
@@ -1754,13 +1754,13 @@
                                 <span class="ident">Ti::Scalar</span> {
                                     <span class="ident">kind</span>: <span class="ident">Sk::Sint</span>,
                                     <span class="ident">width</span>: <span class="kw">_</span>,
-                                } <span class="op">=</span><span class="op">&gt;</span> {}
-                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidImageArrayIndexType</span>(<span class="ident">expr</span>)),
+                                } =&gt; {}
+                                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidImageArrayIndexType</span>(<span class="ident">expr</span>)),
                             }
                         }
                         (<span class="ident">class</span>, <span class="ident">dim</span>)
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedImageType</span>(<span class="ident">image_ty</span>)),
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedImageType</span>(<span class="ident">image_ty</span>)),
                 };
 
                 <span class="comment">// check sampling and comparison properties</span>
@@ -1768,9 +1768,9 @@
                     <span class="ident"><span class="kw">crate</span>::ImageClass::Sampled</span> {
                         <span class="ident">kind</span>: <span class="ident"><span class="kw">crate</span>::ScalarKind::Float</span>,
                         <span class="ident">multi</span>: <span class="bool-val">false</span>,
-                    } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-                    <span class="ident"><span class="kw">crate</span>::ImageClass::Depth</span> { <span class="ident">multi</span>: <span class="bool-val">false</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidImageClass</span>(<span class="ident">class</span>)),
+                    } =&gt; <span class="bool-val">false</span>,
+                    <span class="ident"><span class="kw">crate</span>::ImageClass::Depth</span> { <span class="ident">multi</span>: <span class="bool-val">false</span> } =&gt; <span class="bool-val">true</span>,
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidImageClass</span>(<span class="ident">class</span>)),
                 };
                 <span class="kw">if</span> <span class="ident">comparison</span> <span class="op">!</span><span class="op">=</span> <span class="ident">depth_ref</span>.<span class="ident">is_some</span>() <span class="op">|</span><span class="op">|</span> (<span class="ident">comparison</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">image_depth</span>) {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ComparisonSamplingMismatch</span> {
@@ -1782,20 +1782,20 @@
 
                 <span class="comment">// check texture coordinates type</span>
                 <span class="kw">let</span> <span class="ident">num_components</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">dim</span> {
-                    <span class="ident"><span class="kw">crate</span>::ImageDimension::D1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-                    <span class="ident"><span class="kw">crate</span>::ImageDimension::D2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-                    <span class="ident"><span class="kw">crate</span>::ImageDimension::D3</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::ImageDimension::Cube</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
+                    <span class="ident"><span class="kw">crate</span>::ImageDimension::D1</span> =&gt; <span class="number">1</span>,
+                    <span class="ident"><span class="kw">crate</span>::ImageDimension::D2</span> =&gt; <span class="number">2</span>,
+                    <span class="ident"><span class="kw">crate</span>::ImageDimension::D3</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::ImageDimension::Cube</span> =&gt; <span class="number">3</span>,
                 };
                 <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">coordinate</span>)<span class="question-mark">?</span> {
                     <span class="ident">Ti::Scalar</span> {
                         <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
-                    } <span class="kw">if</span> <span class="ident">num_components</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {}
+                    } <span class="kw">if</span> <span class="ident">num_components</span> <span class="op">==</span> <span class="number">1</span> =&gt; {}
                     <span class="ident">Ti::Vector</span> {
                         <span class="ident">size</span>,
                         <span class="ident">kind</span>: <span class="ident">Sk::Float</span>,
                         ..
-                    } <span class="kw">if</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">=</span><span class="op">=</span> <span class="ident">num_components</span> <span class="op">=</span><span class="op">&gt;</span> {}
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidImageCoordinateType</span>(<span class="ident">dim</span>, <span class="ident">coordinate</span>)),
+                    } <span class="kw">if</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">==</span> <span class="ident">num_components</span> =&gt; {}
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidImageCoordinateType</span>(<span class="ident">dim</span>, <span class="ident">coordinate</span>)),
                 }
 
                 <span class="comment">// check constant offset</span>
@@ -1804,16 +1804,16 @@
                         <span class="ident"><span class="kw">crate</span>::ConstantInner::Scalar</span> {
                             <span class="ident">width</span>: <span class="kw">_</span>,
                             <span class="ident">value</span>: <span class="ident"><span class="kw">crate</span>::ScalarValue::Sint</span>(<span class="kw">_</span>),
-                        } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">num_components</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span>,
-                        <span class="ident"><span class="kw">crate</span>::ConstantInner::Scalar</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-                        <span class="ident"><span class="kw">crate</span>::ConstantInner::Composite</span> { <span class="ident">ty</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+                        } =&gt; <span class="ident">num_components</span> <span class="op">==</span> <span class="number">1</span>,
+                        <span class="ident"><span class="kw">crate</span>::ConstantInner::Scalar</span> { .. } =&gt; <span class="bool-val">false</span>,
+                        <span class="ident"><span class="kw">crate</span>::ConstantInner::Composite</span> { <span class="ident">ty</span>, .. } =&gt; {
                             <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">ty</span>].<span class="ident">inner</span> {
                                 <span class="ident">Ti::Vector</span> {
                                     <span class="ident">size</span>,
                                     <span class="ident">kind</span>: <span class="ident">Sk::Sint</span>,
                                     ..
-                                } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">=</span><span class="op">=</span> <span class="ident">num_components</span>,
-                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                                } =&gt; <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">==</span> <span class="ident">num_components</span>,
+                                <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                             }
                         }
                     };
@@ -1827,61 +1827,61 @@
                     <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">expr</span>)<span class="question-mark">?</span> {
                         <span class="ident">Ti::Scalar</span> {
                             <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
-                        } <span class="op">=</span><span class="op">&gt;</span> {}
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidDepthReference</span>(<span class="ident">expr</span>)),
+                        } =&gt; {}
+                        <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidDepthReference</span>(<span class="ident">expr</span>)),
                     }
                     <span class="kw">match</span> <span class="ident">level</span> {
-                        <span class="ident"><span class="kw">crate</span>::SampleLevel::Auto</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::SampleLevel::Zero</span> <span class="op">=</span><span class="op">&gt;</span> {}
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidDepthSampleLevel</span>),
+                        <span class="ident"><span class="kw">crate</span>::SampleLevel::Auto</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::SampleLevel::Zero</span> =&gt; {}
+                        <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidDepthSampleLevel</span>),
                     }
                 }
 
                 <span class="comment">// check level properties</span>
                 <span class="kw">match</span> <span class="ident">level</span> {
-                    <span class="ident"><span class="kw">crate</span>::SampleLevel::Auto</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ShaderStages::FRAGMENT</span>,
-                    <span class="ident"><span class="kw">crate</span>::SampleLevel::Zero</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ShaderStages::all</span>(),
-                    <span class="ident"><span class="kw">crate</span>::SampleLevel::Exact</span>(<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident"><span class="kw">crate</span>::SampleLevel::Auto</span> =&gt; <span class="ident">ShaderStages::FRAGMENT</span>,
+                    <span class="ident"><span class="kw">crate</span>::SampleLevel::Zero</span> =&gt; <span class="ident">ShaderStages::all</span>(),
+                    <span class="ident"><span class="kw">crate</span>::SampleLevel::Exact</span>(<span class="ident">expr</span>) =&gt; {
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">expr</span>)<span class="question-mark">?</span> {
                             <span class="ident">Ti::Scalar</span> {
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
-                            } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidSampleLevelExactType</span>(<span class="ident">expr</span>)),
+                            } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidSampleLevelExactType</span>(<span class="ident">expr</span>)),
                         }
                         <span class="ident">ShaderStages::all</span>()
                     }
-                    <span class="ident"><span class="kw">crate</span>::SampleLevel::Bias</span>(<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident"><span class="kw">crate</span>::SampleLevel::Bias</span>(<span class="ident">expr</span>) =&gt; {
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">expr</span>)<span class="question-mark">?</span> {
                             <span class="ident">Ti::Scalar</span> {
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
-                            } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidSampleLevelBiasType</span>(<span class="ident">expr</span>)),
+                            } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidSampleLevelBiasType</span>(<span class="ident">expr</span>)),
                         }
                         <span class="ident">ShaderStages::all</span>()
                     }
-                    <span class="ident"><span class="kw">crate</span>::SampleLevel::Gradient</span> { <span class="ident">x</span>, <span class="ident">y</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident"><span class="kw">crate</span>::SampleLevel::Gradient</span> { <span class="ident">x</span>, <span class="ident">y</span> } =&gt; {
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">x</span>)<span class="question-mark">?</span> {
                             <span class="ident">Ti::Scalar</span> {
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
-                            } <span class="kw">if</span> <span class="ident">num_components</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {}
+                            } <span class="kw">if</span> <span class="ident">num_components</span> <span class="op">==</span> <span class="number">1</span> =&gt; {}
                             <span class="ident">Ti::Vector</span> {
                                 <span class="ident">size</span>,
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>,
                                 ..
-                            } <span class="kw">if</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">=</span><span class="op">=</span> <span class="ident">num_components</span> <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            } <span class="kw">if</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">==</span> <span class="ident">num_components</span> =&gt; {}
+                            <span class="kw">_</span> =&gt; {
                                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidSampleLevelGradientType</span>(<span class="ident">dim</span>, <span class="ident">x</span>))
                             }
                         }
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">y</span>)<span class="question-mark">?</span> {
                             <span class="ident">Ti::Scalar</span> {
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
-                            } <span class="kw">if</span> <span class="ident">num_components</span> <span class="op">=</span><span class="op">=</span> <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> {}
+                            } <span class="kw">if</span> <span class="ident">num_components</span> <span class="op">==</span> <span class="number">1</span> =&gt; {}
                             <span class="ident">Ti::Vector</span> {
                                 <span class="ident">size</span>,
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>,
                                 ..
-                            } <span class="kw">if</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">=</span><span class="op">=</span> <span class="ident">num_components</span> <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            } <span class="kw">if</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">==</span> <span class="ident">num_components</span> =&gt; {}
+                            <span class="kw">_</span> =&gt; {
                                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidSampleLevelGradientType</span>(<span class="ident">dim</span>, <span class="ident">y</span>))
                             }
                         }
@@ -1894,31 +1894,31 @@
                 <span class="ident">coordinate</span>,
                 <span class="ident">array_index</span>,
                 <span class="ident">index</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> {
+            } =&gt; {
                 <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">function</span>.<span class="ident">expressions</span>[<span class="ident">image</span>] {
-                    <span class="ident"><span class="kw">crate</span>::Expression::GlobalVariable</span>(<span class="ident">var_handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident"><span class="kw">crate</span>::Expression::GlobalVariable</span>(<span class="ident">var_handle</span>) =&gt; {
                         <span class="ident">module</span>.<span class="ident">global_variables</span>[<span class="ident">var_handle</span>].<span class="ident">ty</span>
                     }
-                    <span class="ident"><span class="kw">crate</span>::Expression::FunctionArgument</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">function</span>.<span class="ident">arguments</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">ty</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedGlobalVariable</span>),
+                    <span class="ident"><span class="kw">crate</span>::Expression::FunctionArgument</span>(<span class="ident">i</span>) =&gt; <span class="ident">function</span>.<span class="ident">arguments</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">ty</span>,
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedGlobalVariable</span>),
                 };
                 <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">ty</span>].<span class="ident">inner</span> {
                     <span class="ident">Ti::Image</span> {
                         <span class="ident">class</span>,
                         <span class="ident">arrayed</span>,
                         <span class="ident">dim</span>,
-                    } <span class="op">=</span><span class="op">&gt;</span> {
+                    } =&gt; {
                         <span class="kw">match</span> <span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">coordinate</span>)<span class="question-mark">?</span>.<span class="ident">image_storage_coordinates</span>() {
-                            <span class="prelude-val">Some</span>(<span class="ident">coord_dim</span>) <span class="kw">if</span> <span class="ident">coord_dim</span> <span class="op">=</span><span class="op">=</span> <span class="ident">dim</span> <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="prelude-val">Some</span>(<span class="ident">coord_dim</span>) <span class="kw">if</span> <span class="ident">coord_dim</span> <span class="op">==</span> <span class="ident">dim</span> =&gt; {}
+                            <span class="kw">_</span> =&gt; {
                                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidImageCoordinateType</span>(
                                     <span class="ident">dim</span>, <span class="ident">coordinate</span>,
                                 ))
                             }
                         };
                         <span class="kw">let</span> <span class="ident">needs_index</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">class</span> {
-                            <span class="ident"><span class="kw">crate</span>::ImageClass::Storage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+                            <span class="ident"><span class="kw">crate</span>::ImageClass::Storage</span> { .. } =&gt; <span class="bool-val">false</span>,
+                            <span class="kw">_</span> =&gt; <span class="bool-val">true</span>,
                         };
                         <span class="kw">if</span> <span class="ident">arrayed</span> <span class="op">!</span><span class="op">=</span> <span class="ident">array_index</span>.<span class="ident">is_some</span>() {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidImageArrayIndex</span>);
@@ -1931,8 +1931,8 @@
                                 <span class="ident">Ti::Scalar</span> {
                                     <span class="ident">kind</span>: <span class="ident">Sk::Sint</span>,
                                     <span class="ident">width</span>: <span class="kw">_</span>,
-                                } <span class="op">=</span><span class="op">&gt;</span> {}
-                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidImageArrayIndexType</span>(<span class="ident">expr</span>)),
+                                } =&gt; {}
+                                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidImageArrayIndexType</span>(<span class="ident">expr</span>)),
                             }
                         }
                         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">expr</span>) <span class="op">=</span> <span class="ident">index</span> {
@@ -1940,47 +1940,47 @@
                                 <span class="ident">Ti::Scalar</span> {
                                     <span class="ident">kind</span>: <span class="ident">Sk::Sint</span>,
                                     <span class="ident">width</span>: <span class="kw">_</span>,
-                                } <span class="op">=</span><span class="op">&gt;</span> {}
-                                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidImageOtherIndexType</span>(<span class="ident">expr</span>)),
+                                } =&gt; {}
+                                <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidImageOtherIndexType</span>(<span class="ident">expr</span>)),
                             }
                         }
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedImageType</span>(<span class="ident">ty</span>)),
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedImageType</span>(<span class="ident">ty</span>)),
                 }
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::ImageQuery</span> { <span class="ident">image</span>, <span class="ident">query</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::ImageQuery</span> { <span class="ident">image</span>, <span class="ident">query</span> } =&gt; {
                 <span class="kw">let</span> <span class="ident">ty</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">function</span>.<span class="ident">expressions</span>[<span class="ident">image</span>] {
-                    <span class="ident"><span class="kw">crate</span>::Expression::GlobalVariable</span>(<span class="ident">var_handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident"><span class="kw">crate</span>::Expression::GlobalVariable</span>(<span class="ident">var_handle</span>) =&gt; {
                         <span class="ident">module</span>.<span class="ident">global_variables</span>[<span class="ident">var_handle</span>].<span class="ident">ty</span>
                     }
-                    <span class="ident"><span class="kw">crate</span>::Expression::FunctionArgument</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">function</span>.<span class="ident">arguments</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">ty</span>,
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedGlobalVariable</span>),
+                    <span class="ident"><span class="kw">crate</span>::Expression::FunctionArgument</span>(<span class="ident">i</span>) =&gt; <span class="ident">function</span>.<span class="ident">arguments</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">ty</span>,
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedGlobalVariable</span>),
                 };
                 <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">ty</span>].<span class="ident">inner</span> {
-                    <span class="ident">Ti::Image</span> { <span class="ident">class</span>, <span class="ident">arrayed</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Ti::Image</span> { <span class="ident">class</span>, <span class="ident">arrayed</span>, .. } =&gt; {
                         <span class="kw">let</span> <span class="ident">can_level</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">class</span> {
-                            <span class="ident"><span class="kw">crate</span>::ImageClass::Sampled</span> { <span class="ident">multi</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="op">!</span><span class="ident">multi</span>,
-                            <span class="ident"><span class="kw">crate</span>::ImageClass::Depth</span> { <span class="ident">multi</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="op">!</span><span class="ident">multi</span>,
-                            <span class="ident"><span class="kw">crate</span>::ImageClass::Storage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                            <span class="ident"><span class="kw">crate</span>::ImageClass::Sampled</span> { <span class="ident">multi</span>, .. } =&gt; <span class="op">!</span><span class="ident">multi</span>,
+                            <span class="ident"><span class="kw">crate</span>::ImageClass::Depth</span> { <span class="ident">multi</span> } =&gt; <span class="op">!</span><span class="ident">multi</span>,
+                            <span class="ident"><span class="kw">crate</span>::ImageClass::Storage</span> { .. } =&gt; <span class="bool-val">false</span>,
                         };
                         <span class="kw">let</span> <span class="ident">good</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">query</span> {
-                            <span class="ident"><span class="kw">crate</span>::ImageQuery::NumLayers</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">arrayed</span>,
-                            <span class="ident"><span class="kw">crate</span>::ImageQuery::Size</span> { <span class="ident">level</span>: <span class="prelude-val">None</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+                            <span class="ident"><span class="kw">crate</span>::ImageQuery::NumLayers</span> =&gt; <span class="ident">arrayed</span>,
+                            <span class="ident"><span class="kw">crate</span>::ImageQuery::Size</span> { <span class="ident">level</span>: <span class="prelude-val">None</span> } =&gt; <span class="bool-val">true</span>,
                             <span class="ident"><span class="kw">crate</span>::ImageQuery::Size</span> { <span class="ident">level</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>) }
-                            <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::ImageQuery::NumLevels</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">can_level</span>,
+                            <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::ImageQuery::NumLevels</span> =&gt; <span class="ident">can_level</span>,
                             <span class="comment">//TODO: forbid on storage images</span>
-                            <span class="ident"><span class="kw">crate</span>::ImageQuery::NumSamples</span> <span class="op">=</span><span class="op">&gt;</span> <span class="op">!</span><span class="ident">can_level</span>,
+                            <span class="ident"><span class="kw">crate</span>::ImageQuery::NumSamples</span> =&gt; <span class="op">!</span><span class="ident">can_level</span>,
                         };
                         <span class="kw">if</span> <span class="op">!</span><span class="ident">good</span> {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidImageClass</span>(<span class="ident">class</span>));
                         }
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedImageType</span>(<span class="ident">ty</span>)),
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::ExpectedImageType</span>(<span class="ident">ty</span>)),
                 }
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::Unary</span> { <span class="ident">op</span>, <span class="ident">expr</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::Unary</span> { <span class="ident">op</span>, <span class="ident">expr</span> } =&gt; {
                 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::UnaryOperator</span> <span class="kw">as</span> <span class="ident">Uo</span>;
                 <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">expr</span>)<span class="question-mark">?</span>;
                 <span class="kw">match</span> (<span class="ident">op</span>, <span class="ident">inner</span>.<span class="ident">scalar_kind</span>()) {
@@ -1988,45 +1988,45 @@
                     <span class="op">|</span> (<span class="kw">_</span>, <span class="prelude-val">Some</span>(<span class="ident">Sk::Bool</span>))
                     <span class="comment">//TODO: restrict Negate for bools?</span>
                     <span class="op">|</span> (<span class="ident">Uo::Negate</span>, <span class="prelude-val">Some</span>(<span class="ident">Sk::Float</span>))
-                    <span class="op">|</span> (<span class="ident">Uo::Not</span>, <span class="prelude-val">Some</span>(<span class="ident">Sk::Uint</span>)) <span class="op">=</span><span class="op">&gt;</span> {}
-                    <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="op">|</span> (<span class="ident">Uo::Not</span>, <span class="prelude-val">Some</span>(<span class="ident">Sk::Uint</span>)) =&gt; {}
+                    <span class="ident">other</span> =&gt; {
                         <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} kind {:?}&quot;</span>, <span class="ident">op</span>, <span class="ident">other</span>);
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidUnaryOperandType</span>(<span class="ident">op</span>, <span class="ident">expr</span>));
                     }
                 }
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::Binary</span> { <span class="ident">op</span>, <span class="ident">left</span>, <span class="ident">right</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::Binary</span> { <span class="ident">op</span>, <span class="ident">left</span>, <span class="ident">right</span> } =&gt; {
                 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::BinaryOperator</span> <span class="kw">as</span> <span class="ident">Bo</span>;
                 <span class="kw">let</span> <span class="ident">left_inner</span> <span class="op">=</span> <span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">left</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">right_inner</span> <span class="op">=</span> <span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">right</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">good</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">op</span> {
-                    <span class="ident">Bo::Add</span> <span class="op">|</span> <span class="ident">Bo::Subtract</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">left_inner</span> {
-                        <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">kind</span> {
-                            <span class="ident">Sk::Uint</span> <span class="op">|</span> <span class="ident">Sk::Sint</span> <span class="op">|</span> <span class="ident">Sk::Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">left_inner</span> <span class="op">=</span><span class="op">=</span> <span class="ident">right_inner</span>,
-                            <span class="ident">Sk::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                    <span class="ident">Bo::Add</span> <span class="op">|</span> <span class="ident">Bo::Subtract</span> =&gt; <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">left_inner</span> {
+                        <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } =&gt; <span class="kw">match</span> <span class="ident">kind</span> {
+                            <span class="ident">Sk::Uint</span> <span class="op">|</span> <span class="ident">Sk::Sint</span> <span class="op">|</span> <span class="ident">Sk::Float</span> =&gt; <span class="ident">left_inner</span> <span class="op">==</span> <span class="ident">right_inner</span>,
+                            <span class="ident">Sk::Bool</span> =&gt; <span class="bool-val">false</span>,
                         },
-                        <span class="ident">Ti::Matrix</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">left_inner</span> <span class="op">=</span><span class="op">=</span> <span class="ident">right_inner</span>,
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                        <span class="ident">Ti::Matrix</span> { .. } =&gt; <span class="ident">left_inner</span> <span class="op">==</span> <span class="ident">right_inner</span>,
+                        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                     },
-                    <span class="ident">Bo::Divide</span> <span class="op">|</span> <span class="ident">Bo::Modulo</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">left_inner</span> {
-                        <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">kind</span> {
-                            <span class="ident">Sk::Uint</span> <span class="op">|</span> <span class="ident">Sk::Sint</span> <span class="op">|</span> <span class="ident">Sk::Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">left_inner</span> <span class="op">=</span><span class="op">=</span> <span class="ident">right_inner</span>,
-                            <span class="ident">Sk::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                    <span class="ident">Bo::Divide</span> <span class="op">|</span> <span class="ident">Bo::Modulo</span> =&gt; <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">left_inner</span> {
+                        <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } =&gt; <span class="kw">match</span> <span class="ident">kind</span> {
+                            <span class="ident">Sk::Uint</span> <span class="op">|</span> <span class="ident">Sk::Sint</span> <span class="op">|</span> <span class="ident">Sk::Float</span> =&gt; <span class="ident">left_inner</span> <span class="op">==</span> <span class="ident">right_inner</span>,
+                            <span class="ident">Sk::Bool</span> =&gt; <span class="bool-val">false</span>,
                         },
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                     },
-                    <span class="ident">Bo::Multiply</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Bo::Multiply</span> =&gt; {
                         <span class="kw">let</span> <span class="ident">kind_match</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">left_inner</span>.<span class="ident">scalar_kind</span>() {
-                            <span class="prelude-val">Some</span>(<span class="ident">Sk::Uint</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">Sk::Sint</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">Sk::Float</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-                            <span class="prelude-val">Some</span>(<span class="ident">Sk::Bool</span>) <span class="op">|</span> <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                            <span class="prelude-val">Some</span>(<span class="ident">Sk::Uint</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">Sk::Sint</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">Sk::Float</span>) =&gt; <span class="bool-val">true</span>,
+                            <span class="prelude-val">Some</span>(<span class="ident">Sk::Bool</span>) <span class="op">|</span> <span class="prelude-val">None</span> =&gt; <span class="bool-val">false</span>,
                         };
                         <span class="comment">//TODO: should we be more restrictive here? I.e. expect scalar only to the left.</span>
                         <span class="kw">let</span> <span class="ident">types_match</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">left_inner</span>, <span class="ident">right_inner</span>) {
                             (<span class="kw-2">&amp;</span><span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">kind1</span>, .. }, <span class="kw-2">&amp;</span><span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">kind2</span>, .. })
                             <span class="op">|</span> (<span class="kw-2">&amp;</span><span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">kind1</span>, .. }, <span class="kw-2">&amp;</span><span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">kind2</span>, .. })
-                            <span class="op">|</span> (<span class="kw-2">&amp;</span><span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">kind1</span>, .. }, <span class="kw-2">&amp;</span><span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">kind2</span>, .. }) <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="ident">kind1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">kind2</span>
+                            <span class="op">|</span> (<span class="kw-2">&amp;</span><span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">kind1</span>, .. }, <span class="kw-2">&amp;</span><span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">kind2</span>, .. }) =&gt; {
+                                <span class="ident">kind1</span> <span class="op">==</span> <span class="ident">kind2</span>
                             }
                             (
                                 <span class="kw-2">&amp;</span><span class="ident">Ti::Scalar</span> {
@@ -2039,7 +2039,7 @@
                                 <span class="kw-2">&amp;</span><span class="ident">Ti::Scalar</span> {
                                     <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
                                 },
-                            ) <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
+                            ) =&gt; <span class="bool-val">true</span>,
                             (
                                 <span class="kw-2">&amp;</span><span class="ident">Ti::Vector</span> {
                                     <span class="ident">kind</span>: <span class="ident">kind1</span>,
@@ -2051,7 +2051,7 @@
                                     <span class="ident">size</span>: <span class="ident">size2</span>,
                                     ..
                                 },
-                            ) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">kind1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">kind2</span> <span class="op">&amp;&amp;</span> <span class="ident">size1</span> <span class="op">=</span><span class="op">=</span> <span class="ident">size2</span>,
+                            ) =&gt; <span class="ident">kind1</span> <span class="op">==</span> <span class="ident">kind2</span> <span class="op">&amp;&amp;</span> <span class="ident">size1</span> <span class="op">==</span> <span class="ident">size2</span>,
                             (
                                 <span class="kw-2">&amp;</span><span class="ident">Ti::Matrix</span> { <span class="ident">columns</span>, .. },
                                 <span class="kw-2">&amp;</span><span class="ident">Ti::Vector</span> {
@@ -2059,7 +2059,7 @@
                                     <span class="ident">size</span>,
                                     ..
                                 },
-                            ) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">columns</span> <span class="op">=</span><span class="op">=</span> <span class="ident">size</span>,
+                            ) =&gt; <span class="ident">columns</span> <span class="op">==</span> <span class="ident">size</span>,
                             (
                                 <span class="kw-2">&amp;</span><span class="ident">Ti::Vector</span> {
                                     <span class="ident">kind</span>: <span class="ident">Sk::Float</span>,
@@ -2067,82 +2067,82 @@
                                     ..
                                 },
                                 <span class="kw-2">&amp;</span><span class="ident">Ti::Matrix</span> { <span class="ident">rows</span>, .. },
-                            ) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">size</span> <span class="op">=</span><span class="op">=</span> <span class="ident">rows</span>,
-                            (<span class="kw-2">&amp;</span><span class="ident">Ti::Matrix</span> { <span class="ident">columns</span>, .. }, <span class="kw-2">&amp;</span><span class="ident">Ti::Matrix</span> { <span class="ident">rows</span>, .. }) <span class="op">=</span><span class="op">&gt;</span> {
-                                <span class="ident">columns</span> <span class="op">=</span><span class="op">=</span> <span class="ident">rows</span>
+                            ) =&gt; <span class="ident">size</span> <span class="op">==</span> <span class="ident">rows</span>,
+                            (<span class="kw-2">&amp;</span><span class="ident">Ti::Matrix</span> { <span class="ident">columns</span>, .. }, <span class="kw-2">&amp;</span><span class="ident">Ti::Matrix</span> { <span class="ident">rows</span>, .. }) =&gt; {
+                                <span class="ident">columns</span> <span class="op">==</span> <span class="ident">rows</span>
                             }
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                         };
                         <span class="kw">let</span> <span class="ident">left_width</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">left_inner</span> {
                             <span class="ident">Ti::Scalar</span> { <span class="ident">width</span>, .. }
                             <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">width</span>, .. }
-                            <span class="op">|</span> <span class="ident">Ti::Matrix</span> { <span class="ident">width</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">width</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
+                            <span class="op">|</span> <span class="ident">Ti::Matrix</span> { <span class="ident">width</span>, .. } =&gt; <span class="ident">width</span>,
+                            <span class="kw">_</span> =&gt; <span class="number">0</span>,
                         };
                         <span class="kw">let</span> <span class="ident">right_width</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">right_inner</span> {
                             <span class="ident">Ti::Scalar</span> { <span class="ident">width</span>, .. }
                             <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">width</span>, .. }
-                            <span class="op">|</span> <span class="ident">Ti::Matrix</span> { <span class="ident">width</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">width</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">0</span>,
+                            <span class="op">|</span> <span class="ident">Ti::Matrix</span> { <span class="ident">width</span>, .. } =&gt; <span class="ident">width</span>,
+                            <span class="kw">_</span> =&gt; <span class="number">0</span>,
                         };
-                        <span class="ident">kind_match</span> <span class="op">&amp;&amp;</span> <span class="ident">types_match</span> <span class="op">&amp;&amp;</span> <span class="ident">left_width</span> <span class="op">=</span><span class="op">=</span> <span class="ident">right_width</span>
+                        <span class="ident">kind_match</span> <span class="op">&amp;&amp;</span> <span class="ident">types_match</span> <span class="op">&amp;&amp;</span> <span class="ident">left_width</span> <span class="op">==</span> <span class="ident">right_width</span>
                     }
-                    <span class="ident">Bo::Equal</span> <span class="op">|</span> <span class="ident">Bo::NotEqual</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">left_inner</span>.<span class="ident">is_sized</span>() <span class="op">&amp;&amp;</span> <span class="ident">left_inner</span> <span class="op">=</span><span class="op">=</span> <span class="ident">right_inner</span>,
-                    <span class="ident">Bo::Less</span> <span class="op">|</span> <span class="ident">Bo::LessEqual</span> <span class="op">|</span> <span class="ident">Bo::Greater</span> <span class="op">|</span> <span class="ident">Bo::GreaterEqual</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Bo::Equal</span> <span class="op">|</span> <span class="ident">Bo::NotEqual</span> =&gt; <span class="ident">left_inner</span>.<span class="ident">is_sized</span>() <span class="op">&amp;&amp;</span> <span class="ident">left_inner</span> <span class="op">==</span> <span class="ident">right_inner</span>,
+                    <span class="ident">Bo::Less</span> <span class="op">|</span> <span class="ident">Bo::LessEqual</span> <span class="op">|</span> <span class="ident">Bo::Greater</span> <span class="op">|</span> <span class="ident">Bo::GreaterEqual</span> =&gt; {
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">left_inner</span> {
-                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">kind</span> {
-                                <span class="ident">Sk::Uint</span> <span class="op">|</span> <span class="ident">Sk::Sint</span> <span class="op">|</span> <span class="ident">Sk::Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">left_inner</span> <span class="op">=</span><span class="op">=</span> <span class="ident">right_inner</span>,
-                                <span class="ident">Sk::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } =&gt; <span class="kw">match</span> <span class="ident">kind</span> {
+                                <span class="ident">Sk::Uint</span> <span class="op">|</span> <span class="ident">Sk::Sint</span> <span class="op">|</span> <span class="ident">Sk::Float</span> =&gt; <span class="ident">left_inner</span> <span class="op">==</span> <span class="ident">right_inner</span>,
+                                <span class="ident">Sk::Bool</span> =&gt; <span class="bool-val">false</span>,
                             },
-                            <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                                 <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} left type {:?}&quot;</span>, <span class="ident">op</span>, <span class="ident">other</span>);
                                 <span class="bool-val">false</span>
                             }
                         }
                     }
-                    <span class="ident">Bo::LogicalAnd</span> <span class="op">|</span> <span class="ident">Bo::LogicalOr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">left_inner</span> {
-                        <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Bool</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">Sk::Bool</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
-                            <span class="ident">left_inner</span> <span class="op">=</span><span class="op">=</span> <span class="ident">right_inner</span>
+                    <span class="ident">Bo::LogicalAnd</span> <span class="op">|</span> <span class="ident">Bo::LogicalOr</span> =&gt; <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">left_inner</span> {
+                        <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Bool</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">Sk::Bool</span>, .. } =&gt; {
+                            <span class="ident">left_inner</span> <span class="op">==</span> <span class="ident">right_inner</span>
                         }
-                        <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                             <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} left type {:?}&quot;</span>, <span class="ident">op</span>, <span class="ident">other</span>);
                             <span class="bool-val">false</span>
                         }
                     },
-                    <span class="ident">Bo::And</span> <span class="op">|</span> <span class="ident">Bo::ExclusiveOr</span> <span class="op">|</span> <span class="ident">Bo::InclusiveOr</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">left_inner</span> {
-                        <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">kind</span> {
-                            <span class="ident">Sk::Sint</span> <span class="op">|</span> <span class="ident">Sk::Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">left_inner</span> <span class="op">=</span><span class="op">=</span> <span class="ident">right_inner</span>,
-                            <span class="ident">Sk::Bool</span> <span class="op">|</span> <span class="ident">Sk::Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                    <span class="ident">Bo::And</span> <span class="op">|</span> <span class="ident">Bo::ExclusiveOr</span> <span class="op">|</span> <span class="ident">Bo::InclusiveOr</span> =&gt; <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">left_inner</span> {
+                        <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } =&gt; <span class="kw">match</span> <span class="ident">kind</span> {
+                            <span class="ident">Sk::Sint</span> <span class="op">|</span> <span class="ident">Sk::Uint</span> =&gt; <span class="ident">left_inner</span> <span class="op">==</span> <span class="ident">right_inner</span>,
+                            <span class="ident">Sk::Bool</span> <span class="op">|</span> <span class="ident">Sk::Float</span> =&gt; <span class="bool-val">false</span>,
                         },
-                        <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                             <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} left type {:?}&quot;</span>, <span class="ident">op</span>, <span class="ident">other</span>);
                             <span class="bool-val">false</span>
                         }
                     },
-                    <span class="ident">Bo::ShiftLeft</span> <span class="op">|</span> <span class="ident">Bo::ShiftRight</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Bo::ShiftLeft</span> <span class="op">|</span> <span class="ident">Bo::ShiftRight</span> =&gt; {
                         <span class="kw">let</span> (<span class="ident">base_size</span>, <span class="ident">base_kind</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">left_inner</span> {
-                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>), <span class="ident">kind</span>),
-                            <span class="ident">Ti::Vector</span> { <span class="ident">size</span>, <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">size</span>)), <span class="ident">kind</span>),
-                            <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } =&gt; (<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>), <span class="ident">kind</span>),
+                            <span class="ident">Ti::Vector</span> { <span class="ident">size</span>, <span class="ident">kind</span>, .. } =&gt; (<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">size</span>)), <span class="ident">kind</span>),
+                            <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                                 <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} base type {:?}&quot;</span>, <span class="ident">op</span>, <span class="ident">other</span>);
                                 (<span class="prelude-val">Err</span>(()), <span class="ident">Sk::Bool</span>)
                             }
                         };
                         <span class="kw">let</span> <span class="ident">shift_size</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">right_inner</span> {
-                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
                             <span class="ident">Ti::Vector</span> {
                                 <span class="ident">size</span>,
                                 <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>,
                                 ..
-                            } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">size</span>)),
-                            <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            } =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">size</span>)),
+                            <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                                 <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} shift type {:?}&quot;</span>, <span class="ident">op</span>, <span class="ident">other</span>);
                                 <span class="prelude-val">Err</span>(())
                             }
                         };
                         <span class="kw">match</span> <span class="ident">base_kind</span> {
-                            <span class="ident">Sk::Sint</span> <span class="op">|</span> <span class="ident">Sk::Uint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">base_size</span>.<span class="ident">is_ok</span>() <span class="op">&amp;&amp;</span> <span class="ident">base_size</span> <span class="op">=</span><span class="op">=</span> <span class="ident">shift_size</span>,
-                            <span class="ident">Sk::Float</span> <span class="op">|</span> <span class="ident">Sk::Bool</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                            <span class="ident">Sk::Sint</span> <span class="op">|</span> <span class="ident">Sk::Uint</span> =&gt; <span class="ident">base_size</span>.<span class="ident">is_ok</span>() <span class="op">&amp;&amp;</span> <span class="ident">base_size</span> <span class="op">==</span> <span class="ident">shift_size</span>,
+                            <span class="ident">Sk::Float</span> <span class="op">|</span> <span class="ident">Sk::Bool</span> =&gt; <span class="bool-val">false</span>,
                         }
                     }
                 };
@@ -2165,69 +2165,69 @@
                 <span class="ident">condition</span>,
                 <span class="ident">accept</span>,
                 <span class="ident">reject</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> {
+            } =&gt; {
                 <span class="kw">let</span> <span class="ident">accept_inner</span> <span class="op">=</span> <span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">accept</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">reject_inner</span> <span class="op">=</span> <span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">reject</span>)<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">condition_good</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">condition</span>)<span class="question-mark">?</span> {
                     <span class="ident">Ti::Scalar</span> {
                         <span class="ident">kind</span>: <span class="ident">Sk::Bool</span>,
                         <span class="ident">width</span>: <span class="kw">_</span>,
-                    } <span class="op">=</span><span class="op">&gt;</span> {
+                    } =&gt; {
                         <span class="comment">// When `condition` is a single boolean, `accept` and</span>
                         <span class="comment">// `reject` can be vectors or scalars.</span>
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">accept_inner</span> {
-                            <span class="ident">Ti::Scalar</span> { .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                            <span class="ident">Ti::Scalar</span> { .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { .. } =&gt; <span class="bool-val">true</span>,
+                            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                         }
                     }
                     <span class="ident">Ti::Vector</span> {
                         <span class="ident">size</span>,
                         <span class="ident">kind</span>: <span class="ident">Sk::Bool</span>,
                         <span class="ident">width</span>: <span class="kw">_</span>,
-                    } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">accept_inner</span> {
+                    } =&gt; <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">accept_inner</span> {
                         <span class="ident">Ti::Vector</span> {
                             <span class="ident">size</span>: <span class="ident">other_size</span>, ..
-                        } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">size</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other_size</span>,
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                        } =&gt; <span class="ident">size</span> <span class="op">==</span> <span class="ident">other_size</span>,
+                        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                     },
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                    <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                 };
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">condition_good</span> <span class="op">|</span><span class="op">|</span> <span class="ident">accept_inner</span> <span class="op">!</span><span class="op">=</span> <span class="ident">reject_inner</span> {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidSelectTypes</span>);
                 }
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::Derivative</span> { <span class="ident">axis</span>: <span class="kw">_</span>, <span class="ident">expr</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::Derivative</span> { <span class="ident">axis</span>: <span class="kw">_</span>, <span class="ident">expr</span> } =&gt; {
                 <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">expr</span>)<span class="question-mark">?</span> {
                     <span class="ident">Ti::Scalar</span> {
                         <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
                     }
                     <span class="op">|</span> <span class="ident">Ti::Vector</span> {
                         <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
-                    } <span class="op">=</span><span class="op">&gt;</span> {}
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidDerivative</span>),
+                    } =&gt; {}
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidDerivative</span>),
                 }
                 <span class="ident">ShaderStages::FRAGMENT</span>
             }
-            <span class="ident">E::Relational</span> { <span class="ident">fun</span>, <span class="ident">argument</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::Relational</span> { <span class="ident">fun</span>, <span class="ident">argument</span> } =&gt; {
                 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::RelationalFunction</span> <span class="kw">as</span> <span class="ident">Rf</span>;
                 <span class="kw">let</span> <span class="ident">argument_inner</span> <span class="op">=</span> <span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">argument</span>)<span class="question-mark">?</span>;
                 <span class="kw">match</span> <span class="ident">fun</span> {
-                    <span class="ident">Rf::All</span> <span class="op">|</span> <span class="ident">Rf::Any</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">argument_inner</span> {
-                        <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">Sk::Bool</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                        <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Rf::All</span> <span class="op">|</span> <span class="ident">Rf::Any</span> =&gt; <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">argument_inner</span> {
+                        <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">Sk::Bool</span>, .. } =&gt; {}
+                        <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                             <span class="macro">log::error!</span>(<span class="string">&quot;All/Any of type {:?}&quot;</span>, <span class="ident">other</span>);
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidBooleanVector</span>(<span class="ident">argument</span>));
                         }
                     },
-                    <span class="ident">Rf::IsNan</span> <span class="op">|</span> <span class="ident">Rf::IsInf</span> <span class="op">|</span> <span class="ident">Rf::IsFinite</span> <span class="op">|</span> <span class="ident">Rf::IsNormal</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">argument_inner</span> {
+                    <span class="ident">Rf::IsNan</span> <span class="op">|</span> <span class="ident">Rf::IsInf</span> <span class="op">|</span> <span class="ident">Rf::IsFinite</span> <span class="op">|</span> <span class="ident">Rf::IsNormal</span> =&gt; <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">argument_inner</span> {
                         <span class="ident">Ti::Scalar</span> {
                             <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
                         }
                         <span class="op">|</span> <span class="ident">Ti::Vector</span> {
                             <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
-                        } <span class="op">=</span><span class="op">&gt;</span> {}
-                        <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                        } =&gt; {}
+                        <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                             <span class="macro">log::error!</span>(<span class="string">&quot;Float test of type {:?}&quot;</span>, <span class="ident">other</span>);
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidFloatArgument</span>(<span class="ident">argument</span>));
                         }
@@ -2241,7 +2241,7 @@
                 <span class="ident">arg1</span>,
                 <span class="ident">arg2</span>,
                 <span class="ident">arg3</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> {
+            } =&gt; {
                 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::MathFunction</span> <span class="kw">as</span> <span class="ident">Mf</span>;
 
                 <span class="kw">let</span> <span class="ident">arg_ty</span> <span class="op">=</span> <span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">arg</span>)<span class="question-mark">?</span>;
@@ -2249,26 +2249,26 @@
                 <span class="kw">let</span> <span class="ident">arg2_ty</span> <span class="op">=</span> <span class="ident">arg2</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">expr</span><span class="op">|</span> <span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">expr</span>)).<span class="ident">transpose</span>()<span class="question-mark">?</span>;
                 <span class="kw">let</span> <span class="ident">arg3_ty</span> <span class="op">=</span> <span class="ident">arg3</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">expr</span><span class="op">|</span> <span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">expr</span>)).<span class="ident">transpose</span>()<span class="question-mark">?</span>;
                 <span class="kw">match</span> <span class="ident">fun</span> {
-                    <span class="ident">Mf::Abs</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::Abs</span> =&gt; {
                         <span class="kw">if</span> <span class="ident">arg1_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg2_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg3_ty</span>.<span class="ident">is_some</span>() {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>));
                         }
                         <span class="kw">let</span> <span class="ident">good</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
-                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">kind</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Sk::Bool</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } =&gt; <span class="ident">kind</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Sk::Bool</span>,
+                            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                         };
                         <span class="kw">if</span> <span class="op">!</span><span class="ident">good</span> {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>));
                         }
                     }
-                    <span class="ident">Mf::Min</span> <span class="op">|</span> <span class="ident">Mf::Max</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::Min</span> <span class="op">|</span> <span class="ident">Mf::Max</span> =&gt; {
                         <span class="kw">let</span> <span class="ident">arg1_ty</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>, <span class="ident">arg3_ty</span>) {
-                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ty1</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
+                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="ident">ty1</span>,
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
                         };
                         <span class="kw">let</span> <span class="ident">good</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
-                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">kind</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Sk::Bool</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } =&gt; <span class="ident">kind</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Sk::Bool</span>,
+                            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                         };
                         <span class="kw">if</span> <span class="op">!</span><span class="ident">good</span> {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>));
@@ -2281,14 +2281,14 @@
                             ));
                         }
                     }
-                    <span class="ident">Mf::Clamp</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::Clamp</span> =&gt; {
                         <span class="kw">let</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>) <span class="op">=</span> <span class="kw">match</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>, <span class="ident">arg3_ty</span>) {
-                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">Some</span>(<span class="ident">ty2</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ty1</span>, <span class="ident">ty2</span>),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
+                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">Some</span>(<span class="ident">ty2</span>), <span class="prelude-val">None</span>) =&gt; (<span class="ident">ty1</span>, <span class="ident">ty2</span>),
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
                         };
                         <span class="kw">let</span> <span class="ident">good</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
-                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">kind</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Sk::Bool</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, .. } <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>, .. } =&gt; <span class="ident">kind</span> <span class="op">!</span><span class="op">=</span> <span class="ident">Sk::Bool</span>,
+                            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                         };
                         <span class="kw">if</span> <span class="op">!</span><span class="ident">good</span> {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>));
@@ -2332,7 +2332,7 @@
                     <span class="op">|</span> <span class="ident">Mf::Length</span>
                     <span class="op">|</span> <span class="ident">Mf::Sign</span>
                     <span class="op">|</span> <span class="ident">Mf::Sqrt</span>
-                    <span class="op">|</span> <span class="ident">Mf::InverseSqrt</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="op">|</span> <span class="ident">Mf::InverseSqrt</span> =&gt; {
                         <span class="kw">if</span> <span class="ident">arg1_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg2_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg3_ty</span>.<span class="ident">is_some</span>() {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>));
                         }
@@ -2342,14 +2342,14 @@
                             }
                             <span class="op">|</span> <span class="ident">Ti::Vector</span> {
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
-                            } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         }
                     }
-                    <span class="ident">Mf::Atan2</span> <span class="op">|</span> <span class="ident">Mf::Pow</span> <span class="op">|</span> <span class="ident">Mf::Distance</span> <span class="op">|</span> <span class="ident">Mf::Step</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::Atan2</span> <span class="op">|</span> <span class="ident">Mf::Pow</span> <span class="op">|</span> <span class="ident">Mf::Distance</span> <span class="op">|</span> <span class="ident">Mf::Step</span> =&gt; {
                         <span class="kw">let</span> <span class="ident">arg1_ty</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>, <span class="ident">arg3_ty</span>) {
-                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ty1</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
+                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="ident">ty1</span>,
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
                         };
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
                             <span class="ident">Ti::Scalar</span> {
@@ -2357,8 +2357,8 @@
                             }
                             <span class="op">|</span> <span class="ident">Ti::Vector</span> {
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
-                            } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         }
                         <span class="kw">if</span> <span class="ident">arg1_ty</span> <span class="op">!</span><span class="op">=</span> <span class="ident">arg_ty</span> {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(
@@ -2368,32 +2368,32 @@
                             ));
                         }
                     }
-                    <span class="ident">Mf::Modf</span> <span class="op">|</span> <span class="ident">Mf::Frexp</span> <span class="op">|</span> <span class="ident">Mf::Ldexp</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::Modf</span> <span class="op">|</span> <span class="ident">Mf::Frexp</span> <span class="op">|</span> <span class="ident">Mf::Ldexp</span> =&gt; {
                         <span class="kw">let</span> <span class="ident">arg1_ty</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>, <span class="ident">arg3_ty</span>) {
-                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ty1</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
+                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="ident">ty1</span>,
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
                         };
                         <span class="kw">let</span> (<span class="ident">size0</span>, <span class="ident">width0</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
                             <span class="ident">Ti::Scalar</span> {
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>,
                                 <span class="ident">width</span>,
-                            } <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-val">None</span>, <span class="ident">width</span>),
+                            } =&gt; (<span class="prelude-val">None</span>, <span class="ident">width</span>),
                             <span class="ident">Ti::Vector</span> {
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>,
                                 <span class="ident">size</span>,
                                 <span class="ident">width</span>,
-                            } <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-val">Some</span>(<span class="ident">size</span>), <span class="ident">width</span>),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            } =&gt; (<span class="prelude-val">Some</span>(<span class="ident">size</span>), <span class="ident">width</span>),
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         };
                         <span class="kw">let</span> <span class="ident">good</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg1_ty</span> {
-                            <span class="ident">Ti::Pointer</span> { <span class="ident">base</span>, <span class="ident">class</span>: <span class="kw">_</span> } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">base</span>].<span class="ident">inner</span> <span class="op">=</span><span class="op">=</span> <span class="kw-2">*</span><span class="ident">arg_ty</span>,
+                            <span class="ident">Ti::Pointer</span> { <span class="ident">base</span>, <span class="ident">class</span>: <span class="kw">_</span> } =&gt; <span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">base</span>].<span class="ident">inner</span> <span class="op">==</span> <span class="kw-2">*</span><span class="ident">arg_ty</span>,
                             <span class="ident">Ti::ValuePointer</span> {
                                 <span class="ident">size</span>,
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>,
                                 <span class="ident">width</span>,
                                 <span class="ident">class</span>: <span class="kw">_</span>,
-                            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">size</span> <span class="op">=</span><span class="op">=</span> <span class="ident">size0</span> <span class="op">&amp;&amp;</span> <span class="ident">width</span> <span class="op">=</span><span class="op">=</span> <span class="ident">width0</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                            } =&gt; <span class="ident">size</span> <span class="op">==</span> <span class="ident">size0</span> <span class="op">&amp;&amp;</span> <span class="ident">width</span> <span class="op">==</span> <span class="ident">width0</span>,
+                            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                         };
                         <span class="kw">if</span> <span class="op">!</span><span class="ident">good</span> {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(
@@ -2403,16 +2403,16 @@
                             ));
                         }
                     }
-                    <span class="ident">Mf::Dot</span> <span class="op">|</span> <span class="ident">Mf::Outer</span> <span class="op">|</span> <span class="ident">Mf::Cross</span> <span class="op">|</span> <span class="ident">Mf::Reflect</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::Dot</span> <span class="op">|</span> <span class="ident">Mf::Outer</span> <span class="op">|</span> <span class="ident">Mf::Cross</span> <span class="op">|</span> <span class="ident">Mf::Reflect</span> =&gt; {
                         <span class="kw">let</span> <span class="ident">arg1_ty</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>, <span class="ident">arg3_ty</span>) {
-                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ty1</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
+                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="ident">ty1</span>,
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
                         };
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
                             <span class="ident">Ti::Vector</span> {
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
-                            } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         }
                         <span class="kw">if</span> <span class="ident">arg1_ty</span> <span class="op">!</span><span class="op">=</span> <span class="ident">arg_ty</span> {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(
@@ -2422,17 +2422,17 @@
                             ));
                         }
                     }
-                    <span class="ident">Mf::Refract</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::Refract</span> =&gt; {
                         <span class="kw">let</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>) <span class="op">=</span> <span class="kw">match</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>, <span class="ident">arg3_ty</span>) {
-                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">Some</span>(<span class="ident">ty2</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ty1</span>, <span class="ident">ty2</span>),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
+                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">Some</span>(<span class="ident">ty2</span>), <span class="prelude-val">None</span>) =&gt; (<span class="ident">ty1</span>, <span class="ident">ty2</span>),
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
                         };
 
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
                             <span class="ident">Ti::Vector</span> {
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
-                            } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         }
 
                         <span class="kw">if</span> <span class="ident">arg1_ty</span> <span class="op">!</span><span class="op">=</span> <span class="ident">arg_ty</span> {
@@ -2453,8 +2453,8 @@
                                     <span class="ident">width</span>: <span class="ident">scalar_width</span>,
                                     <span class="ident">kind</span>: <span class="ident">Sk::Float</span>,
                                 },
-                            ) <span class="kw">if</span> <span class="ident">vector_width</span> <span class="op">=</span><span class="op">=</span> <span class="ident">scalar_width</span> <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            ) <span class="kw">if</span> <span class="ident">vector_width</span> <span class="op">==</span> <span class="ident">scalar_width</span> =&gt; {}
+                            <span class="kw">_</span> =&gt; {
                                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(
                                     <span class="ident">fun</span>,
                                     <span class="number">2</span>,
@@ -2463,21 +2463,21 @@
                             }
                         }
                     }
-                    <span class="ident">Mf::Normalize</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::Normalize</span> =&gt; {
                         <span class="kw">if</span> <span class="ident">arg1_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg2_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg3_ty</span>.<span class="ident">is_some</span>() {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>));
                         }
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
                             <span class="ident">Ti::Vector</span> {
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
-                            } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         }
                     }
-                    <span class="ident">Mf::FaceForward</span> <span class="op">|</span> <span class="ident">Mf::Fma</span> <span class="op">|</span> <span class="ident">Mf::SmoothStep</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::FaceForward</span> <span class="op">|</span> <span class="ident">Mf::Fma</span> <span class="op">|</span> <span class="ident">Mf::SmoothStep</span> =&gt; {
                         <span class="kw">let</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>) <span class="op">=</span> <span class="kw">match</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>, <span class="ident">arg3_ty</span>) {
-                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">Some</span>(<span class="ident">ty2</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ty1</span>, <span class="ident">ty2</span>),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
+                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">Some</span>(<span class="ident">ty2</span>), <span class="prelude-val">None</span>) =&gt; (<span class="ident">ty1</span>, <span class="ident">ty2</span>),
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
                         };
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
                             <span class="ident">Ti::Scalar</span> {
@@ -2485,8 +2485,8 @@
                             }
                             <span class="op">|</span> <span class="ident">Ti::Vector</span> {
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>, ..
-                            } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         }
                         <span class="kw">if</span> <span class="ident">arg1_ty</span> <span class="op">!</span><span class="op">=</span> <span class="ident">arg_ty</span> {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(
@@ -2503,10 +2503,10 @@
                             ));
                         }
                     }
-                    <span class="ident">Mf::Mix</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::Mix</span> =&gt; {
                         <span class="kw">let</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>) <span class="op">=</span> <span class="kw">match</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>, <span class="ident">arg3_ty</span>) {
-                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">Some</span>(<span class="ident">ty2</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ty1</span>, <span class="ident">ty2</span>),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
+                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">Some</span>(<span class="ident">ty2</span>), <span class="prelude-val">None</span>) =&gt; (<span class="ident">ty1</span>, <span class="ident">ty2</span>),
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
                         };
                         <span class="kw">let</span> <span class="ident">arg_width</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
                             <span class="ident">Ti::Scalar</span> {
@@ -2517,8 +2517,8 @@
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>,
                                 <span class="ident">width</span>,
                                 ..
-                            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">width</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            } =&gt; <span class="ident">width</span>,
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         };
                         <span class="kw">if</span> <span class="ident">arg1_ty</span> <span class="op">!</span><span class="op">=</span> <span class="ident">arg_ty</span> {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(
@@ -2532,9 +2532,9 @@
                             <span class="ident">Ti::Scalar</span> {
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>,
                                 <span class="ident">width</span>,
-                            } <span class="kw">if</span> <span class="ident">width</span> <span class="op">=</span><span class="op">=</span> <span class="ident">arg_width</span> <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="kw">if</span> <span class="ident">arg2_ty</span> <span class="op">=</span><span class="op">=</span> <span class="ident">arg_ty</span> <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            } <span class="kw">if</span> <span class="ident">width</span> <span class="op">==</span> <span class="ident">arg_width</span> =&gt; {}
+                            <span class="kw">_</span> <span class="kw">if</span> <span class="ident">arg2_ty</span> <span class="op">==</span> <span class="ident">arg_ty</span> =&gt; {}
+                            <span class="kw">_</span> =&gt; {
                                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(
                                     <span class="ident">fun</span>,
                                     <span class="number">2</span>,
@@ -2543,28 +2543,28 @@
                             }
                         }
                     }
-                    <span class="ident">Mf::Inverse</span> <span class="op">|</span> <span class="ident">Mf::Determinant</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::Inverse</span> <span class="op">|</span> <span class="ident">Mf::Determinant</span> =&gt; {
                         <span class="kw">if</span> <span class="ident">arg1_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg2_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg3_ty</span>.<span class="ident">is_some</span>() {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>));
                         }
                         <span class="kw">let</span> <span class="ident">good</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
-                            <span class="ident">Ti::Matrix</span> { <span class="ident">columns</span>, <span class="ident">rows</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">columns</span> <span class="op">=</span><span class="op">=</span> <span class="ident">rows</span>,
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                            <span class="ident">Ti::Matrix</span> { <span class="ident">columns</span>, <span class="ident">rows</span>, .. } =&gt; <span class="ident">columns</span> <span class="op">==</span> <span class="ident">rows</span>,
+                            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                         };
                         <span class="kw">if</span> <span class="op">!</span><span class="ident">good</span> {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>));
                         }
                     }
-                    <span class="ident">Mf::Transpose</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::Transpose</span> =&gt; {
                         <span class="kw">if</span> <span class="ident">arg1_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg2_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg3_ty</span>.<span class="ident">is_some</span>() {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>));
                         }
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
-                            <span class="ident">Ti::Matrix</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            <span class="ident">Ti::Matrix</span> { .. } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         }
                     }
-                    <span class="ident">Mf::CountOneBits</span> <span class="op">|</span> <span class="ident">Mf::ReverseBits</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::CountOneBits</span> <span class="op">|</span> <span class="ident">Mf::ReverseBits</span> =&gt; {
                         <span class="kw">if</span> <span class="ident">arg1_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg2_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg3_ty</span>.<span class="ident">is_some</span>() {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>));
                         }
@@ -2572,21 +2572,21 @@
                             <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Sint</span>, .. }
                             <span class="op">|</span> <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. }
                             <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">Sk::Sint</span>, .. }
-                            <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         }
                     }
-                    <span class="ident">Mf::InsertBits</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::InsertBits</span> =&gt; {
                         <span class="kw">let</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>, <span class="ident">arg3_ty</span>) <span class="op">=</span> <span class="kw">match</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>, <span class="ident">arg3_ty</span>) {
-                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">Some</span>(<span class="ident">ty2</span>), <span class="prelude-val">Some</span>(<span class="ident">ty3</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ty1</span>, <span class="ident">ty2</span>, <span class="ident">ty3</span>),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
+                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">Some</span>(<span class="ident">ty2</span>), <span class="prelude-val">Some</span>(<span class="ident">ty3</span>)) =&gt; (<span class="ident">ty1</span>, <span class="ident">ty2</span>, <span class="ident">ty3</span>),
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
                         };
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
                             <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Sint</span>, .. }
                             <span class="op">|</span> <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. }
                             <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">Sk::Sint</span>, .. }
-                            <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         }
                         <span class="kw">if</span> <span class="ident">arg1_ty</span> <span class="op">!</span><span class="op">=</span> <span class="ident">arg_ty</span> {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(
@@ -2596,8 +2596,8 @@
                             ));
                         }
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg2_ty</span> {
-                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } =&gt; {}
+                            <span class="kw">_</span> =&gt; {
                                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(
                                     <span class="ident">fun</span>,
                                     <span class="number">2</span>,
@@ -2606,8 +2606,8 @@
                             }
                         }
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg3_ty</span> {
-                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } =&gt; {}
+                            <span class="kw">_</span> =&gt; {
                                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(
                                     <span class="ident">fun</span>,
                                     <span class="number">2</span>,
@@ -2616,21 +2616,21 @@
                             }
                         }
                     }
-                    <span class="ident">Mf::ExtractBits</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::ExtractBits</span> =&gt; {
                         <span class="kw">let</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>) <span class="op">=</span> <span class="kw">match</span> (<span class="ident">arg1_ty</span>, <span class="ident">arg2_ty</span>, <span class="ident">arg3_ty</span>) {
-                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">Some</span>(<span class="ident">ty2</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">ty1</span>, <span class="ident">ty2</span>),
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
+                            (<span class="prelude-val">Some</span>(<span class="ident">ty1</span>), <span class="prelude-val">Some</span>(<span class="ident">ty2</span>), <span class="prelude-val">None</span>) =&gt; (<span class="ident">ty1</span>, <span class="ident">ty2</span>),
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>)),
                         };
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
                             <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Sint</span>, .. }
                             <span class="op">|</span> <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. }
                             <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">Sk::Sint</span>, .. }
-                            <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            <span class="op">|</span> <span class="ident">Ti::Vector</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         }
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg1_ty</span> {
-                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } =&gt; {}
+                            <span class="kw">_</span> =&gt; {
                                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(
                                     <span class="ident">fun</span>,
                                     <span class="number">2</span>,
@@ -2639,8 +2639,8 @@
                             }
                         }
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg2_ty</span> {
-                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } =&gt; {}
+                            <span class="kw">_</span> =&gt; {
                                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(
                                     <span class="ident">fun</span>,
                                     <span class="number">2</span>,
@@ -2649,7 +2649,7 @@
                             }
                         }
                     }
-                    <span class="ident">Mf::Pack2x16unorm</span> <span class="op">|</span> <span class="ident">Mf::Pack2x16snorm</span> <span class="op">|</span> <span class="ident">Mf::Pack2x16float</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::Pack2x16unorm</span> <span class="op">|</span> <span class="ident">Mf::Pack2x16snorm</span> <span class="op">|</span> <span class="ident">Mf::Pack2x16float</span> =&gt; {
                         <span class="kw">if</span> <span class="ident">arg1_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg2_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg3_ty</span>.<span class="ident">is_some</span>() {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>));
                         }
@@ -2658,11 +2658,11 @@
                                 <span class="ident">size</span>: <span class="ident"><span class="kw">crate</span>::VectorSize::Bi</span>,
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>,
                                 ..
-                            } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         }
                     }
-                    <span class="ident">Mf::Pack4x8snorm</span> <span class="op">|</span> <span class="ident">Mf::Pack4x8unorm</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Mf::Pack4x8snorm</span> <span class="op">|</span> <span class="ident">Mf::Pack4x8unorm</span> =&gt; {
                         <span class="kw">if</span> <span class="ident">arg1_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg2_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg3_ty</span>.<span class="ident">is_some</span>() {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>));
                         }
@@ -2671,54 +2671,54 @@
                                 <span class="ident">size</span>: <span class="ident"><span class="kw">crate</span>::VectorSize::Quad</span>,
                                 <span class="ident">kind</span>: <span class="ident">Sk::Float</span>,
                                 ..
-                            } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         }
                     }
                     <span class="ident">Mf::Unpack2x16float</span>
                     <span class="op">|</span> <span class="ident">Mf::Unpack2x16snorm</span>
                     <span class="op">|</span> <span class="ident">Mf::Unpack2x16unorm</span>
                     <span class="op">|</span> <span class="ident">Mf::Unpack4x8snorm</span>
-                    <span class="op">|</span> <span class="ident">Mf::Unpack4x8unorm</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="op">|</span> <span class="ident">Mf::Unpack4x8unorm</span> =&gt; {
                         <span class="kw">if</span> <span class="ident">arg1_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg2_ty</span>.<span class="ident">is_some</span>() <span class="op">|</span> <span class="ident">arg3_ty</span>.<span class="ident">is_some</span>() {
                             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::WrongArgumentCount</span>(<span class="ident">fun</span>));
                         }
                         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">arg_ty</span> {
-                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {}
-                            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
+                            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>: <span class="ident">Sk::Uint</span>, .. } =&gt; {}
+                            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArgumentType</span>(<span class="ident">fun</span>, <span class="number">0</span>, <span class="ident">arg</span>)),
                         }
                     }
                 }
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::As</span> { <span class="ident">kind</span>, <span class="ident">convert</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::As</span> { <span class="ident">kind</span>, <span class="ident">convert</span>, .. } =&gt; {
                 <span class="kw">match</span> <span class="ident">convert</span> {
-                    <span class="prelude-val">Some</span>(<span class="ident">width</span>) <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">check_width</span>(<span class="ident">kind</span>, <span class="ident">width</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="prelude-val">Some</span>(<span class="ident">width</span>) <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">check_width</span>(<span class="ident">kind</span>, <span class="ident">width</span>) =&gt; {
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidCastArgument</span>)
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {}
+                    <span class="kw">_</span> =&gt; {}
                 }
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::CallResult</span>(<span class="ident">function</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">other_infos</span>[<span class="ident">function</span>.<span class="ident">index</span>()].<span class="ident">available_stages</span>,
+            <span class="ident">E::CallResult</span>(<span class="ident">function</span>) =&gt; <span class="ident">other_infos</span>[<span class="ident">function</span>.<span class="ident">index</span>()].<span class="ident">available_stages</span>,
             <span class="ident">E::AtomicResult</span> {
                 <span class="ident">kind</span>,
                 <span class="ident">width</span>,
                 <span class="ident">comparison</span>: <span class="kw">_</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> {
+            } =&gt; {
                 <span class="kw">let</span> <span class="ident">good</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">kind</span> {
-                    <span class="ident"><span class="kw">crate</span>::ScalarKind::Uint</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::ScalarKind::Sint</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident"><span class="kw">crate</span>::ScalarKind::Uint</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::ScalarKind::Sint</span> =&gt; {
                         <span class="self">self</span>.<span class="ident">check_width</span>(<span class="ident">kind</span>, <span class="ident">width</span>)
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                    <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
                 };
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">good</span> {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidAtomicResultType</span>(<span class="ident">kind</span>, <span class="ident">width</span>));
                 }
                 <span class="ident">ShaderStages::all</span>()
             }
-            <span class="ident">E::ArrayLength</span>(<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">expr</span>)<span class="question-mark">?</span> {
-                <span class="ident">Ti::Pointer</span> { <span class="ident">base</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">E::ArrayLength</span>(<span class="ident">expr</span>) =&gt; <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">resolver</span>.<span class="ident">resolve</span>(<span class="ident">expr</span>)<span class="question-mark">?</span> {
+                <span class="ident">Ti::Pointer</span> { <span class="ident">base</span>, .. } =&gt; {
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">Ti::Array</span> {
                         <span class="ident">size</span>: <span class="ident"><span class="kw">crate</span>::ArraySize::Dynamic</span>,
                         ..
@@ -2729,7 +2729,7 @@
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArrayType</span>(<span class="ident">expr</span>));
                     }
                 }
-                <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                     <span class="macro">log::error!</span>(<span class="string">&quot;Array length of {:?}&quot;</span>, <span class="ident">other</span>);
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ExpressionError::InvalidArrayType</span>(<span class="ident">expr</span>));
                 }

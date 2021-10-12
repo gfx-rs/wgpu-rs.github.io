@@ -539,7 +539,7 @@
     <span class="ident">gpu_alloc_types</span>::{<span class="ident">AllocationFlags</span>, <span class="ident">DeviceMapError</span>, <span class="ident">MemoryDevice</span>, <span class="ident">MemoryPropertyFlags</span>},
 };
 
-<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">opt_ptr_add</span>(<span class="ident">ptr</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">size</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">opt_ptr_add</span>(<span class="ident">ptr</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">size</span>: <span class="ident">u64</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="ident">ptr</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">ptr</span><span class="op">|</span> {
         <span class="comment">// Size is within memory region started at `ptr`.</span>
         <span class="comment">// size is within `chunk_size` that fits `isize`.</span>
@@ -554,7 +554,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> <span class="ident">FreeList</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">FreeList</span> {
             <span class="ident">array</span>: <span class="ident">Vec::new</span>(),
             <span class="ident">counter</span>: <span class="number">0</span>,
@@ -568,7 +568,7 @@
         <span class="ident">ptr</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">align_mask</span>: <span class="ident">u64</span>,
         <span class="ident">size</span>: <span class="ident">u64</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
         <span class="macro">debug_assert!</span>(<span class="ident">size</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">memory_size</span>);
 
         <span class="self">self</span>.<span class="ident">counter</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
@@ -582,21 +582,21 @@
         <span class="self">self</span>.<span class="ident">get_block_at</span>(<span class="self">self</span>.<span class="ident">array</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span>, <span class="ident">align_mask</span>, <span class="ident">size</span>)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">align_mask</span>: <span class="ident">u64</span>, <span class="ident">size</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">align_mask</span>: <span class="ident">u64</span>, <span class="ident">size</span>: <span class="ident">u64</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">array</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>().<span class="ident">rev</span>().<span class="ident">find</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">region</span>)<span class="op">|</span> {
             <span class="kw">match</span> <span class="ident">region</span>.<span class="ident">end</span>.<span class="ident">checked_sub</span>(<span class="ident">size</span>) {
-                <span class="prelude-val">Some</span>(<span class="ident">start</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">start</span>) =&gt; {
                     <span class="kw">let</span> <span class="ident">aligned_start</span> <span class="op">=</span> <span class="ident">align_down</span>(<span class="ident">start</span>, <span class="ident">align_mask</span>);
                     <span class="ident">aligned_start</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">region</span>.<span class="ident">start</span>
                 }
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+                <span class="prelude-val">None</span> =&gt; <span class="bool-val">false</span>,
             }
         })<span class="question-mark">?</span>;
 
         <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">get_block_at</span>(<span class="ident">index</span>, <span class="ident">align_mask</span>, <span class="ident">size</span>))
     }
 
-    <span class="kw">fn</span> <span class="ident">get_block_at</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">align_mask</span>: <span class="ident">u64</span>, <span class="ident">size</span>: <span class="ident">u64</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_block_at</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">align_mask</span>: <span class="ident">u64</span>, <span class="ident">size</span>: <span class="ident">u64</span>) -&gt; <span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">region</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">array</span>[<span class="ident">index</span>];
 
         <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">region</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">size</span>;
@@ -623,12 +623,12 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">block</span>: <span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">array</span>.<span class="ident">binary_search_by</span>(<span class="op">|</span><span class="ident">b</span><span class="op">|</span> <span class="ident">b</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">block</span>)) {
-            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; {
                 <span class="macro">panic!</span>(<span class="string">&quot;Overlapping block found in free list&quot;</span>);
             }
-            <span class="prelude-val">Err</span>(<span class="ident">index</span>) <span class="kw">if</span> <span class="self">self</span>.<span class="ident">array</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">index</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">array</span>[..<span class="op">=</span><span class="ident">index</span>] {
-                [] <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
-                [<span class="ident">next</span>] <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Err</span>(<span class="ident">index</span>) <span class="kw">if</span> <span class="self">self</span>.<span class="ident">array</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">index</span> =&gt; <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">array</span>[..<span class="op">=</span><span class="ident">index</span>] {
+                [] =&gt; <span class="macro">unreachable!</span>(),
+                [<span class="ident">next</span>] =&gt; {
                     <span class="macro">debug_assert!</span>(<span class="op">!</span><span class="ident">next</span>.<span class="ident">is_suffix_block</span>(<span class="kw-2">&amp;</span><span class="ident">block</span>));
 
                     <span class="kw">if</span> <span class="ident">next</span>.<span class="ident">is_prefix_block</span>(<span class="kw-2">&amp;</span><span class="ident">block</span>) {
@@ -637,7 +637,7 @@
                         <span class="self">self</span>.<span class="ident">array</span>.<span class="ident">insert</span>(<span class="number">0</span>, <span class="ident">FreeListRegion::from_block</span>(<span class="ident">block</span>));
                     }
                 }
-                [.., <span class="ident">prev</span>, <span class="ident">next</span>] <span class="op">=</span><span class="op">&gt;</span> {
+                [.., <span class="ident">prev</span>, <span class="ident">next</span>] =&gt; {
                     <span class="macro">debug_assert!</span>(<span class="op">!</span><span class="ident">prev</span>.<span class="ident">is_prefix_block</span>(<span class="kw-2">&amp;</span><span class="ident">block</span>));
                     <span class="macro">debug_assert!</span>(<span class="op">!</span><span class="ident">next</span>.<span class="ident">is_suffix_block</span>(<span class="kw-2">&amp;</span><span class="ident">block</span>));
 
@@ -656,9 +656,9 @@
                     }
                 }
             },
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">array</span>[..] {
-                [] <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">array</span>.<span class="ident">push</span>(<span class="ident">FreeListRegion::from_block</span>(<span class="ident">block</span>)),
-                [.., <span class="ident">prev</span>] <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">array</span>[..] {
+                [] =&gt; <span class="self">self</span>.<span class="ident">array</span>.<span class="ident">push</span>(<span class="ident">FreeListRegion::from_block</span>(<span class="ident">block</span>)),
+                [.., <span class="ident">prev</span>] =&gt; {
                     <span class="macro">debug_assert!</span>(<span class="op">!</span><span class="ident">prev</span>.<span class="ident">is_prefix_block</span>(<span class="kw-2">&amp;</span><span class="ident">block</span>));
                     <span class="kw">if</span> <span class="ident">prev</span>.<span class="ident">is_suffix_block</span>(<span class="kw-2">&amp;</span><span class="ident">block</span>) {
                         <span class="ident">prev</span>.<span class="ident">merge_suffix_block</span>(<span class="ident">block</span>);
@@ -670,7 +670,7 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">drain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">keep_last</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">M</span>, <span class="ident">u64</span>)<span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">drain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">keep_last</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw">impl</span> <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">M</span>, <span class="ident">u64</span>)<span class="op">&gt;</span> <span class="op">+</span> <span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
         <span class="comment">// Time to deallocate</span>
 
         <span class="kw">let</span> <span class="ident">len</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">array</span>.<span class="ident">len</span>();
@@ -712,13 +712,13 @@
 <span class="kw">unsafe</span> <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">FreeListRegion</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> <span class="kw">where</span> <span class="ident">M</span>: <span class="ident">Send</span> {}
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> <span class="ident">FreeListRegion</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ordering</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) -&gt; <span class="ident">Ordering</span> {
         <span class="macro">debug_assert_eq!</span>(
             <span class="ident">Arc::ptr_eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">memory</span>, <span class="kw-2">&amp;</span><span class="ident">block</span>.<span class="ident">memory</span>),
-            <span class="self">self</span>.<span class="ident">chunk</span> <span class="op">=</span><span class="op">=</span> <span class="ident">block</span>.<span class="ident">chunk</span>
+            <span class="self">self</span>.<span class="ident">chunk</span> <span class="op">==</span> <span class="ident">block</span>.<span class="ident">chunk</span>
         );
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">chunk</span> <span class="op">=</span><span class="op">=</span> <span class="ident">block</span>.<span class="ident">chunk</span> {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">chunk</span> <span class="op">==</span> <span class="ident">block</span>.<span class="ident">chunk</span> {
             <span class="macro">debug_assert_eq!</span>(
                 <span class="ident">Ord::cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">start</span>, <span class="kw-2">&amp;</span><span class="ident">block</span>.<span class="ident">offset</span>),
                 <span class="ident">Ord::cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">end</span>, <span class="kw-2">&amp;</span>(<span class="ident">block</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">block</span>.<span class="ident">size</span>)),
@@ -733,7 +733,7 @@
         <span class="ident">Ord::cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">chunk</span>, <span class="kw-2">&amp;</span><span class="ident">block</span>.<span class="ident">chunk</span>).<span class="ident">then</span>(<span class="ident">Ord::cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">start</span>, <span class="kw-2">&amp;</span><span class="ident">block</span>.<span class="ident">offset</span>))
     }
 
-    <span class="kw">fn</span> <span class="ident">from_block</span>(<span class="ident">block</span>: <span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from_block</span>(<span class="ident">block</span>: <span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">FreeListRegion</span> {
             <span class="ident">memory</span>: <span class="ident">block</span>.<span class="ident">memory</span>,
             <span class="ident">chunk</span>: <span class="ident">block</span>.<span class="ident">chunk</span>,
@@ -743,7 +743,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">into_block</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">into_block</span>(<span class="self">self</span>) -&gt; <span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
         <span class="ident">FreeListBlock</span> {
             <span class="ident">memory</span>: <span class="self">self</span>.<span class="ident">memory</span>,
             <span class="ident">chunk</span>: <span class="self">self</span>.<span class="ident">chunk</span>,
@@ -753,7 +753,7 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">consecutive</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">consecutive</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">chunk</span> <span class="op">!</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">chunk</span> {
             <span class="kw">return</span> <span class="bool-val">false</span>;
         }
@@ -765,7 +765,7 @@
             <span class="ident">Ord::cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">end</span>, <span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="ident">end</span>)
         );
 
-        <span class="self">self</span>.<span class="ident">end</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="ident">start</span>
+        <span class="self">self</span>.<span class="ident">end</span> <span class="op">==</span> <span class="ident">other</span>.<span class="ident">start</span>
     }
 
     <span class="kw">fn</span> <span class="ident">merge</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">next</span>: <span class="ident">FreeListRegion</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) {
@@ -773,7 +773,7 @@
         <span class="self">self</span>.<span class="ident">end</span> <span class="op">=</span> <span class="ident">next</span>.<span class="ident">end</span>;
     }
 
-    <span class="kw">fn</span> <span class="ident">is_prefix_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">is_prefix_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">chunk</span> <span class="op">!</span><span class="op">=</span> <span class="ident">block</span>.<span class="ident">chunk</span> {
             <span class="kw">return</span> <span class="bool-val">false</span>;
         }
@@ -785,7 +785,7 @@
             <span class="ident">Ord::cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">end</span>, <span class="kw-2">&amp;</span>(<span class="ident">block</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">block</span>.<span class="ident">size</span>))
         );
 
-        <span class="self">self</span>.<span class="ident">start</span> <span class="op">=</span><span class="op">=</span> (<span class="ident">block</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">block</span>.<span class="ident">size</span>)
+        <span class="self">self</span>.<span class="ident">start</span> <span class="op">==</span> (<span class="ident">block</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">block</span>.<span class="ident">size</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">merge_prefix_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">block</span>: <span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) {
@@ -794,7 +794,7 @@
         <span class="self">self</span>.<span class="ident">ptr</span> <span class="op">=</span> <span class="ident">block</span>.<span class="ident">ptr</span>;
     }
 
-    <span class="kw">fn</span> <span class="ident">is_suffix_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">is_suffix_block</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">chunk</span> <span class="op">!</span><span class="op">=</span> <span class="ident">block</span>.<span class="ident">chunk</span> {
             <span class="kw">return</span> <span class="bool-val">false</span>;
         }
@@ -806,7 +806,7 @@
             <span class="ident">Ord::cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">end</span>, <span class="kw-2">&amp;</span>(<span class="ident">block</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">block</span>.<span class="ident">size</span>))
         );
 
-        <span class="self">self</span>.<span class="ident">end</span> <span class="op">=</span><span class="op">=</span> <span class="ident">block</span>.<span class="ident">offset</span>
+        <span class="self">self</span>.<span class="ident">end</span> <span class="op">==</span> <span class="ident">block</span>.<span class="ident">offset</span>
     }
 
     <span class="kw">fn</span> <span class="ident">merge_suffix_block</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">block</span>: <span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>) {
@@ -843,11 +843,11 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">FreeListAllocator</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
         <span class="kw">match</span> <span class="ident">Ord::cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">total_allocations</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">total_deallocations</span>) {
-            <span class="ident">Ordering::Equal</span> <span class="op">=</span><span class="op">&gt;</span> {}
-            <span class="ident">Ordering::Greater</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Ordering::Equal</span> =&gt; {}
+            <span class="ident">Ordering::Greater</span> =&gt; {
                 <span class="macro">report_error_on_drop!</span>(<span class="string">&quot;Not all blocks were deallocated&quot;</span>)
             }
-            <span class="ident">Ordering::Less</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Ordering::Less</span> =&gt; {
                 <span class="macro">report_error_on_drop!</span>(<span class="string">&quot;More blocks deallocated than allocated&quot;</span>)
             }
         }
@@ -870,7 +870,7 @@
         <span class="ident">memory_type</span>: <span class="ident">u32</span>,
         <span class="ident">props</span>: <span class="ident">MemoryPropertyFlags</span>,
         <span class="ident">atom_mask</span>: <span class="ident">u64</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    ) -&gt; <span class="self">Self</span> {
         <span class="macro">debug_assert_eq!</span>(
             <span class="ident">align_down</span>(<span class="ident">starting_chunk_size</span>, <span class="ident">atom_mask</span>),
             <span class="ident">starting_chunk_size</span>
@@ -903,7 +903,7 @@
         <span class="ident">flags</span>: <span class="ident">AllocationFlags</span>,
         <span class="ident">heap</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Heap</span>,
         <span class="ident">allocations_remains</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">u32</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>, <span class="ident">AllocationError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">FreeListBlock</span><span class="op">&lt;</span><span class="ident">M</span><span class="op">&gt;</span>, <span class="ident">AllocationError</span><span class="op">&gt;</span> {
         <span class="macro">debug_assert!</span>(
             <span class="self">self</span>.<span class="ident">final_chunk_size</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">size</span>,
             <span class="string">&quot;GpuAllocator must not request allocations equal or greater to chunks size&quot;</span>
@@ -925,7 +925,7 @@
         }
 
         <span class="comment">// New allocation is required.</span>
-        <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">allocations_remains</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">allocations_remains</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError::TooManyObjects</span>);
         }
 
@@ -943,8 +943,8 @@
         <span class="comment">// Map host visible allocations</span>
         <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">host_visible</span> {
             <span class="kw">match</span> <span class="ident">device</span>.<span class="ident">map_memory</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">memory</span>, <span class="number">0</span>, <span class="self">self</span>.<span class="ident">chunk_size</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">ptr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">ptr</span>),
-                <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError::MapFailed</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Ok</span>(<span class="ident">ptr</span>) =&gt; <span class="prelude-val">Some</span>(<span class="ident">ptr</span>),
+                <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError::MapFailed</span>) =&gt; {
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>)]</span>
                     <span class="macro">tracing::error!</span>(<span class="string">&quot;Failed to map host-visible memory in linear allocator&quot;</span>);
                     <span class="ident">device</span>.<span class="ident">deallocate_memory</span>(<span class="ident">memory</span>);
@@ -953,10 +953,10 @@
 
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError::OutOfHostMemory</span>);
                 }
-                <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError::OutOfDeviceMemory</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError::OutOfDeviceMemory</span>) =&gt; {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError::OutOfDeviceMemory</span>);
                 }
-                <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError::OutOfHostMemory</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Err</span>(<span class="ident">DeviceMapError::OutOfHostMemory</span>) =&gt; {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AllocationError::OutOfHostMemory</span>);
                 }
             }
@@ -1026,7 +1026,7 @@
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;tracing&quot;</span>)]</span>
         {
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">total_allocations</span> <span class="op">=</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">total_deallocations</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">freelist</span>.<span class="ident">array</span>.<span class="ident">is_empty</span>()
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">total_allocations</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">total_deallocations</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">freelist</span>.<span class="ident">array</span>.<span class="ident">is_empty</span>()
             {
                 <span class="macro">tracing::error!</span>(
                     <span class="string">&quot;Some regions were not deallocated on cleanup, although all blocks are free.
@@ -1039,19 +1039,19 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">host_visible</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
+    <span class="kw">fn</span> <span class="ident">host_visible</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">props</span>.<span class="ident">contains</span>(<span class="ident">MemoryPropertyFlags::HOST_VISIBLE</span>)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">min</span><span class="op">&lt;</span><span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">l</span>: <span class="ident">L</span>, <span class="ident">r</span>: <span class="ident">R</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">L</span>
+<span class="kw">fn</span> <span class="ident">min</span><span class="op">&lt;</span><span class="ident">L</span>, <span class="ident">R</span><span class="op">&gt;</span>(<span class="ident">l</span>: <span class="ident">L</span>, <span class="ident">r</span>: <span class="ident">R</span>) -&gt; <span class="ident">L</span>
 <span class="kw">where</span>
     <span class="ident">R</span>: <span class="ident">core::convert::TryInto</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>,
     <span class="ident">L</span>: <span class="ident">Ord</span>,
 {
     <span class="kw">match</span> <span class="ident">r</span>.<span class="ident">try_into</span>() {
-        <span class="prelude-val">Ok</span>(<span class="ident">r</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">core::cmp::min</span>(<span class="ident">l</span>, <span class="ident">r</span>),
-        <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">l</span>,
+        <span class="prelude-val">Ok</span>(<span class="ident">r</span>) =&gt; <span class="ident">core::cmp::min</span>(<span class="ident">l</span>, <span class="ident">r</span>),
+        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="ident">l</span>,
     }
 }
 </code></pre></div>

@@ -576,34 +576,34 @@
 };
 
 <span class="kw">impl</span> <span class="ident">ParseHexfError</span> {
-    <span class="kw">fn</span> <span class="ident">text</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">text</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">kind</span> {
-            <span class="ident">ParseHexfErrorKind::Empty</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;cannot parse float from empty string&quot;</span>,
-            <span class="ident">ParseHexfErrorKind::Invalid</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;invalid hexadecimal float literal&quot;</span>,
-            <span class="ident">ParseHexfErrorKind::Inexact</span> <span class="op">=</span><span class="op">&gt;</span> <span class="string">&quot;cannot exactly represent float in target type&quot;</span>,
+            <span class="ident">ParseHexfErrorKind::Empty</span> =&gt; <span class="string">&quot;cannot parse float from empty string&quot;</span>,
+            <span class="ident">ParseHexfErrorKind::Invalid</span> =&gt; <span class="string">&quot;invalid hexadecimal float literal&quot;</span>,
+            <span class="ident">ParseHexfErrorKind::Inexact</span> =&gt; <span class="string">&quot;cannot exactly represent float in target type&quot;</span>,
         }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">ParseHexfError</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="ident">fmt::Display::fmt</span>(<span class="self">self</span>.<span class="ident">text</span>(), <span class="ident">f</span>)
     }
 }
 
 <span class="kw">impl</span> <span class="ident">std::error::Error</span> <span class="kw">for</span> <span class="ident">ParseHexfError</span> {
-    <span class="kw">fn</span> <span class="ident">description</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
+    <span class="kw">fn</span> <span class="ident">description</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
         <span class="self">self</span>.<span class="ident">text</span>()
     }
 }
 
-<span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">allow_underscore</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">bool</span>, <span class="ident">u64</span>, <span class="ident">isize</span>), <span class="ident">ParseHexfError</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">parse</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>], <span class="ident">allow_underscore</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">bool</span>, <span class="ident">u64</span>, <span class="ident">isize</span>), <span class="ident">ParseHexfError</span><span class="op">&gt;</span> {
     <span class="comment">// ^[+-]?</span>
     <span class="kw">let</span> (<span class="ident">s</span>, <span class="ident">negative</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">s</span>.<span class="ident">split_first</span>() {
-        <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;+&#39;</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">s</span>, <span class="bool-val">false</span>),
-        <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;-&#39;</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">s</span>, <span class="bool-val">true</span>),
-        <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">s</span>, <span class="bool-val">false</span>),
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">EMPTY</span>),
+        <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;+&#39;</span>, <span class="ident">s</span>)) =&gt; (<span class="ident">s</span>, <span class="bool-val">false</span>),
+        <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;-&#39;</span>, <span class="ident">s</span>)) =&gt; (<span class="ident">s</span>, <span class="bool-val">true</span>),
+        <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; (<span class="ident">s</span>, <span class="bool-val">false</span>),
+        <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">EMPTY</span>),
     };
 
     <span class="comment">// 0[xX]</span>
@@ -617,14 +617,14 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">digit_seen</span> <span class="op">=</span> <span class="bool-val">false</span>;
     <span class="kw">loop</span> {
         <span class="kw">let</span> (<span class="ident">s_</span>, <span class="ident">digit</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">s</span>.<span class="ident">split_first</span>() {
-            <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="ident">c</span> @ <span class="string">b&#39;0&#39;</span>..<span class="op">=</span><span class="string">b&#39;9&#39;</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">s</span>, <span class="ident">c</span> <span class="op">-</span> <span class="string">b&#39;0&#39;</span>),
-            <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="ident">c</span> @ <span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;f&#39;</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">s</span>, <span class="ident">c</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span> <span class="op">+</span> <span class="number">10</span>),
-            <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="ident">c</span> @ <span class="string">b&#39;A&#39;</span>..<span class="op">=</span><span class="string">b&#39;F&#39;</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">s</span>, <span class="ident">c</span> <span class="op">-</span> <span class="string">b&#39;A&#39;</span> <span class="op">+</span> <span class="number">10</span>),
-            <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;_&#39;</span>, <span class="ident">s_</span>)) <span class="kw">if</span> <span class="ident">allow_underscore</span> <span class="op">&amp;&amp;</span> <span class="ident">digit_seen</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="ident">c</span> @ <span class="string">b&#39;0&#39;</span>..<span class="op">=</span><span class="string">b&#39;9&#39;</span>, <span class="ident">s</span>)) =&gt; (<span class="ident">s</span>, <span class="ident">c</span> <span class="op">-</span> <span class="string">b&#39;0&#39;</span>),
+            <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="ident">c</span> @ <span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;f&#39;</span>, <span class="ident">s</span>)) =&gt; (<span class="ident">s</span>, <span class="ident">c</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span> <span class="op">+</span> <span class="number">10</span>),
+            <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="ident">c</span> @ <span class="string">b&#39;A&#39;</span>..<span class="op">=</span><span class="string">b&#39;F&#39;</span>, <span class="ident">s</span>)) =&gt; (<span class="ident">s</span>, <span class="ident">c</span> <span class="op">-</span> <span class="string">b&#39;A&#39;</span> <span class="op">+</span> <span class="number">10</span>),
+            <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;_&#39;</span>, <span class="ident">s_</span>)) <span class="kw">if</span> <span class="ident">allow_underscore</span> <span class="op">&amp;&amp;</span> <span class="ident">digit_seen</span> =&gt; {
                 <span class="ident">s</span> <span class="op">=</span> <span class="ident">s_</span>;
                 <span class="kw">continue</span>;
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span>,
+            <span class="kw">_</span> =&gt; <span class="kw">break</span>,
         };
 
         <span class="ident">s</span> <span class="op">=</span> <span class="ident">s_</span>;
@@ -647,20 +647,20 @@
         <span class="ident">s</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">s</span>[<span class="number">1</span>..];
         <span class="kw">loop</span> {
             <span class="kw">let</span> (<span class="ident">s_</span>, <span class="ident">digit</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">s</span>.<span class="ident">split_first</span>() {
-                <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="ident">c</span> @ <span class="string">b&#39;0&#39;</span>..<span class="op">=</span><span class="string">b&#39;9&#39;</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">s</span>, <span class="ident">c</span> <span class="op">-</span> <span class="string">b&#39;0&#39;</span>),
-                <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="ident">c</span> @ <span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;f&#39;</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">s</span>, <span class="ident">c</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span> <span class="op">+</span> <span class="number">10</span>),
-                <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="ident">c</span> @ <span class="string">b&#39;A&#39;</span>..<span class="op">=</span><span class="string">b&#39;F&#39;</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">s</span>, <span class="ident">c</span> <span class="op">-</span> <span class="string">b&#39;A&#39;</span> <span class="op">+</span> <span class="number">10</span>),
-                <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;_&#39;</span>, <span class="ident">s_</span>)) <span class="kw">if</span> <span class="ident">allow_underscore</span> <span class="op">&amp;&amp;</span> <span class="ident">frac_digit_seen</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="ident">c</span> @ <span class="string">b&#39;0&#39;</span>..<span class="op">=</span><span class="string">b&#39;9&#39;</span>, <span class="ident">s</span>)) =&gt; (<span class="ident">s</span>, <span class="ident">c</span> <span class="op">-</span> <span class="string">b&#39;0&#39;</span>),
+                <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="ident">c</span> @ <span class="string">b&#39;a&#39;</span>..<span class="op">=</span><span class="string">b&#39;f&#39;</span>, <span class="ident">s</span>)) =&gt; (<span class="ident">s</span>, <span class="ident">c</span> <span class="op">-</span> <span class="string">b&#39;a&#39;</span> <span class="op">+</span> <span class="number">10</span>),
+                <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="ident">c</span> @ <span class="string">b&#39;A&#39;</span>..<span class="op">=</span><span class="string">b&#39;F&#39;</span>, <span class="ident">s</span>)) =&gt; (<span class="ident">s</span>, <span class="ident">c</span> <span class="op">-</span> <span class="string">b&#39;A&#39;</span> <span class="op">+</span> <span class="number">10</span>),
+                <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;_&#39;</span>, <span class="ident">s_</span>)) <span class="kw">if</span> <span class="ident">allow_underscore</span> <span class="op">&amp;&amp;</span> <span class="ident">frac_digit_seen</span> =&gt; {
                     <span class="ident">s</span> <span class="op">=</span> <span class="ident">s_</span>;
                     <span class="kw">continue</span>;
                 }
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span>,
+                <span class="kw">_</span> =&gt; <span class="kw">break</span>,
             };
 
             <span class="ident">s</span> <span class="op">=</span> <span class="ident">s_</span>;
             <span class="ident">frac_digit_seen</span> <span class="op">=</span> <span class="bool-val">true</span>;
 
-            <span class="kw">if</span> <span class="ident">digit</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> <span class="ident">digit</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="ident">nzeroes</span> <span class="op">=</span> <span class="ident">nzeroes</span>.<span class="ident">checked_add</span>(<span class="number">1</span>).<span class="ident">ok_or</span>(<span class="ident">INEXACT</span>)<span class="question-mark">?</span>;
             } <span class="kw">else</span> {
                 <span class="comment">// flush nzeroes</span>
@@ -689,16 +689,16 @@
 
     <span class="comment">// [pP]</span>
     <span class="kw">let</span> <span class="ident">s</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">s</span>.<span class="ident">split_first</span>() {
-        <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;P&#39;</span>, <span class="ident">s</span>)) <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;p&#39;</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">s</span>,
-        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">INVALID</span>),
+        <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;P&#39;</span>, <span class="ident">s</span>)) <span class="op">|</span> <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;p&#39;</span>, <span class="ident">s</span>)) =&gt; <span class="ident">s</span>,
+        <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">INVALID</span>),
     };
 
     <span class="comment">// [+-]?</span>
     <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">s</span>, <span class="ident">negative_exponent</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">s</span>.<span class="ident">split_first</span>() {
-        <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;+&#39;</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">s</span>, <span class="bool-val">false</span>),
-        <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;-&#39;</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">s</span>, <span class="bool-val">true</span>),
-        <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">s</span>, <span class="bool-val">false</span>),
-        <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">INVALID</span>),
+        <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;+&#39;</span>, <span class="ident">s</span>)) =&gt; (<span class="ident">s</span>, <span class="bool-val">false</span>),
+        <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;-&#39;</span>, <span class="ident">s</span>)) =&gt; (<span class="ident">s</span>, <span class="bool-val">true</span>),
+        <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; (<span class="ident">s</span>, <span class="bool-val">false</span>),
+        <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">INVALID</span>),
     };
 
     <span class="comment">// [0-9_]*[0-9][0-9_]*$</span>
@@ -706,14 +706,14 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">exponent</span> <span class="op">=</span> <span class="number">0isize</span>; <span class="comment">// this is suboptimal but also practical, see below</span>
     <span class="kw">loop</span> {
         <span class="kw">let</span> (<span class="ident">s_</span>, <span class="ident">digit</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">s</span>.<span class="ident">split_first</span>() {
-            <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="ident">c</span> @ <span class="string">b&#39;0&#39;</span>..<span class="op">=</span><span class="string">b&#39;9&#39;</span>, <span class="ident">s</span>)) <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">s</span>, <span class="ident">c</span> <span class="op">-</span> <span class="string">b&#39;0&#39;</span>),
-            <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;_&#39;</span>, <span class="ident">s_</span>)) <span class="kw">if</span> <span class="ident">allow_underscore</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="ident">c</span> @ <span class="string">b&#39;0&#39;</span>..<span class="op">=</span><span class="string">b&#39;9&#39;</span>, <span class="ident">s</span>)) =&gt; (<span class="ident">s</span>, <span class="ident">c</span> <span class="op">-</span> <span class="string">b&#39;0&#39;</span>),
+            <span class="prelude-val">Some</span>((<span class="kw-2">&amp;</span><span class="string">b&#39;_&#39;</span>, <span class="ident">s_</span>)) <span class="kw">if</span> <span class="ident">allow_underscore</span> =&gt; {
                 <span class="ident">s</span> <span class="op">=</span> <span class="ident">s_</span>;
                 <span class="kw">continue</span>;
             }
-            <span class="prelude-val">None</span> <span class="kw">if</span> <span class="ident">digit_seen</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">break</span>,
+            <span class="prelude-val">None</span> <span class="kw">if</span> <span class="ident">digit_seen</span> =&gt; <span class="kw">break</span>,
             <span class="comment">// no more bytes expected, and at least one exponent digit should be present</span>
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">INVALID</span>),
+            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">INVALID</span>),
         };
 
         <span class="ident">s</span> <span class="op">=</span> <span class="ident">s_</span>;
@@ -731,7 +731,7 @@
         <span class="ident">exponent</span> <span class="op">=</span> <span class="op">-</span><span class="ident">exponent</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">acc</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">if</span> <span class="ident">acc</span> <span class="op">==</span> <span class="number">0</span> {
         <span class="comment">// ignore the exponent as above</span>
         <span class="prelude-val">Ok</span>((<span class="ident">negative</span>, <span class="number">0</span>, <span class="number">0</span>))
     } <span class="kw">else</span> {
@@ -832,8 +832,8 @@
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">define_convert</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f</span>:<span class="ident">ident</span>) <span class="op">=</span><span class="op">&gt;</span> {
-        <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>(<span class="ident">negative</span>: <span class="ident">bool</span>, <span class="ident">mantissa</span>: <span class="ident">u64</span>, <span class="ident">exponent</span>: <span class="ident">isize</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">f</span>, <span class="ident">ParseHexfError</span><span class="op">&gt;</span> {
+    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">ident</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f</span>:<span class="ident">ident</span>) =&gt; {
+        <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>(<span class="ident">negative</span>: <span class="ident">bool</span>, <span class="ident">mantissa</span>: <span class="ident">u64</span>, <span class="ident">exponent</span>: <span class="ident">isize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">f</span>, <span class="ident">ParseHexfError</span><span class="op">&gt;</span> {
             <span class="comment">// guard the exponent with the definitely safe range (we will exactly bound it later)</span>
             <span class="kw">if</span> <span class="ident">exponent</span> <span class="op">&lt;</span> <span class="op">-</span><span class="number">0xffff</span> <span class="op">|</span><span class="op">|</span> <span class="ident">exponent</span> <span class="op">&gt;</span> <span class="number">0xffff</span> {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">INEXACT</span>);
@@ -867,7 +867,7 @@
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">INEXACT</span>);
             };
 
-            <span class="kw">if</span> <span class="ident">mantissa</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">mantissasize</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if</span> <span class="ident">mantissa</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">mantissasize</span> <span class="op">==</span> <span class="number">0</span> {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mantissa</span> <span class="op">=</span> <span class="ident">mantissa</span> <span class="kw">as</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f</span>;
                 <span class="kw">if</span> <span class="ident">negative</span> {
                     <span class="ident">mantissa</span> <span class="op">=</span> <span class="op">-</span><span class="ident">mantissa</span>;
@@ -881,8 +881,8 @@
     };
 }
 
-<span class="macro">define_convert!</span>(<span class="ident">convert_hexf32</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f32</span>);
-<span class="macro">define_convert!</span>(<span class="ident">convert_hexf64</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">f64</span>);
+<span class="macro">define_convert!</span>(<span class="ident">convert_hexf32</span> =&gt; <span class="ident">f32</span>);
+<span class="macro">define_convert!</span>(<span class="ident">convert_hexf64</span> =&gt; <span class="ident">f64</span>);
 
 <span class="attribute">#[<span class="ident">test</span>]</span>
 <span class="kw">fn</span> <span class="ident">test_convert_hexf32</span>() {
@@ -1046,14 +1046,14 @@
 
 <span class="doccomment">/// Tries to parse a hexadecimal float literal to `f32`.</span>
 <span class="doccomment">/// The underscore is allowed only when `allow_underscore` is true.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_hexf32</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">allow_underscore</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">ParseHexfError</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_hexf32</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">allow_underscore</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">ParseHexfError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> (<span class="ident">negative</span>, <span class="ident">mantissa</span>, <span class="ident">exponent</span>) <span class="op">=</span> <span class="ident">parse</span>(<span class="ident">s</span>.<span class="ident">as_bytes</span>(), <span class="ident">allow_underscore</span>)<span class="question-mark">?</span>;
     <span class="ident">convert_hexf32</span>(<span class="ident">negative</span>, <span class="ident">mantissa</span>, <span class="ident">exponent</span>)
 }
 
 <span class="doccomment">/// Tries to parse a hexadecimal float literal to `f64`.</span>
 <span class="doccomment">/// The underscore is allowed only when `allow_underscore` is true.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_hexf64</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">allow_underscore</span>: <span class="ident">bool</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span>, <span class="ident">ParseHexfError</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parse_hexf64</span>(<span class="ident">s</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">allow_underscore</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f64</span>, <span class="ident">ParseHexfError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> (<span class="ident">negative</span>, <span class="ident">mantissa</span>, <span class="ident">exponent</span>) <span class="op">=</span> <span class="ident">parse</span>(<span class="ident">s</span>.<span class="ident">as_bytes</span>(), <span class="ident">allow_underscore</span>)<span class="question-mark">?</span>;
     <span class="ident">convert_hexf64</span>(<span class="ident">negative</span>, <span class="ident">mantissa</span>, <span class="ident">exponent</span>)
 }

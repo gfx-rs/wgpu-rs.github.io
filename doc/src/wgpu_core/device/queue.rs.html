@@ -970,7 +970,7 @@
         <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">A::Device</span>,
         <span class="ident">offset</span>: <span class="ident">wgt::BufferAddress</span>,
         <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">hal::DeviceError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">hal::DeviceError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">map_buffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">buffer</span>, <span class="ident">offset</span>..<span class="ident">offset</span> <span class="op">+</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>)<span class="question-mark">?</span>;
         <span class="ident">ptr::copy_nonoverlapping</span>(<span class="ident">data</span>.<span class="ident">as_ptr</span>(), <span class="ident">mapping</span>.<span class="ident">ptr</span>.<span class="ident">as_ptr</span>(), <span class="ident">data</span>.<span class="ident">len</span>());
         <span class="kw">if</span> <span class="op">!</span><span class="ident">mapping</span>.<span class="ident">is_coherent</span> {
@@ -995,7 +995,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">EncoderInFlight</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">land</span>(<span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">A::CommandEncoder</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">land</span>(<span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">A::CommandEncoder</span> {
         <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">reset_all</span>(<span class="self">self</span>.<span class="ident">cmd_buffers</span>.<span class="ident">into_iter</span>());
         <span class="self">self</span>.<span class="ident">raw</span>
     }
@@ -1012,7 +1012,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">PendingWrites</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">command_encoder</span>: <span class="ident">A::CommandEncoder</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">command_encoder</span>: <span class="ident">A::CommandEncoder</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">command_encoder</span>,
             <span class="ident">is_active</span>: <span class="bool-val">false</span>,
@@ -1035,10 +1035,10 @@
 
         <span class="kw">for</span> <span class="ident">resource</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">temp_resources</span> {
             <span class="kw">match</span> <span class="ident">resource</span> {
-                <span class="ident">TempResource::Buffer</span>(<span class="ident">buffer</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> {
+                <span class="ident">TempResource::Buffer</span>(<span class="ident">buffer</span>) =&gt; <span class="kw">unsafe</span> {
                     <span class="ident">device</span>.<span class="ident">destroy_buffer</span>(<span class="ident">buffer</span>);
                 },
-                <span class="ident">TempResource::Texture</span>(<span class="ident">texture</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">unsafe</span> {
+                <span class="ident">TempResource::Texture</span>(<span class="ident">texture</span>) =&gt; <span class="kw">unsafe</span> {
                     <span class="ident">device</span>.<span class="ident">destroy_texture</span>(<span class="ident">texture</span>);
                 },
             }
@@ -1054,7 +1054,7 @@
     }
 
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">fn</span> <span class="ident">pre_submit</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">A::CommandBuffer</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">pre_submit</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">A::CommandBuffer</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">dst_buffers</span>.<span class="ident">clear</span>();
         <span class="self">self</span>.<span class="ident">dst_textures</span>.<span class="ident">clear</span>();
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_active</span> {
@@ -1073,7 +1073,7 @@
         <span class="ident">command_allocator</span>: <span class="kw-2">&amp;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::CommandAllocator</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">A::Device</span>,
         <span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="ident">A::Queue</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">EncoderInFlight</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">EncoderInFlight</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">executing_command_buffers</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">WRITE_COMMAND_BUFFERS_PER_POOL</span> {
             <span class="kw">let</span> <span class="ident">new_encoder</span> <span class="op">=</span> <span class="ident">command_allocator</span>
                 .<span class="ident">lock</span>()
@@ -1088,7 +1088,7 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">activate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">A::CommandEncoder</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">activate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">A::CommandEncoder</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">is_active</span> {
             <span class="kw">unsafe</span> {
                 <span class="self">self</span>.<span class="ident">command_encoder</span>
@@ -1111,7 +1111,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident"><span class="kw">super</span>::Device</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">prepare_stage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">size</span>: <span class="ident">wgt::BufferAddress</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">StagingData</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">DeviceError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">prepare_stage</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">size</span>: <span class="ident">wgt::BufferAddress</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">StagingData</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">DeviceError</span><span class="op">&gt;</span> {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;prepare_stage&quot;</span>);
         <span class="kw">let</span> <span class="ident">stage_desc</span> <span class="op">=</span> <span class="ident">hal::BufferDescriptor</span> {
             <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;_Staging&quot;</span>),
@@ -1163,7 +1163,7 @@
         <span class="ident">buffer_id</span>: <span class="ident">id::BufferId</span>,
         <span class="ident">buffer_offset</span>: <span class="ident">wgt::BufferAddress</span>,
         <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">QueueWriteError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">QueueWriteError</span><span class="op">&gt;</span> {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;write_buffer&quot;</span>, <span class="string">&quot;Queue&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
@@ -1187,7 +1187,7 @@
         }
 
         <span class="kw">let</span> <span class="ident">data_size</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">wgt::BufferAddress</span>;
-        <span class="kw">if</span> <span class="ident">data_size</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">data_size</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="macro">log::trace!</span>(<span class="string">&quot;Ignoring write_buffer of size 0&quot;</span>);
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
         }
@@ -1268,7 +1268,7 @@
         <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
         <span class="ident">data_layout</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::ImageDataLayout</span>,
         <span class="ident">size</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::Extent3d</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">QueueWriteError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">QueueWriteError</span><span class="op">&gt;</span> {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;write_texture&quot;</span>, <span class="string">&quot;Queue&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
@@ -1290,7 +1290,7 @@
             });
         }
 
-        <span class="kw">if</span> <span class="ident">size</span>.<span class="ident">width</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">size</span>.<span class="ident">height</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">size</span>.<span class="ident">width</span> <span class="op">==</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">size</span>.<span class="ident">height</span> <span class="op">==</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="macro">log::trace!</span>(<span class="string">&quot;Ignoring write_texture of size 0&quot;</span>);
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
         }
@@ -1319,8 +1319,8 @@
         <span class="kw">let</span> <span class="ident">height_blocks</span> <span class="op">=</span> <span class="ident">size</span>.<span class="ident">height</span> <span class="op">/</span> <span class="ident">block_height</span> <span class="kw">as</span> <span class="ident">u32</span>;
 
         <span class="kw">let</span> <span class="ident">block_rows_per_image</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">data_layout</span>.<span class="ident">rows_per_image</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">rows_per_image</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">rows_per_image</span>.<span class="ident">get</span>(),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">rows_per_image</span>) =&gt; <span class="ident">rows_per_image</span>.<span class="ident">get</span>(),
+            <span class="prelude-val">None</span> =&gt; {
                 <span class="comment">// doesn&#39;t really matter because we need this only if we copy more than one layer, and then we validate for this being not None</span>
                 <span class="ident">size</span>.<span class="ident">height</span>
             }
@@ -1373,7 +1373,7 @@
         <span class="kw">let</span> <span class="ident">mapping</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">map_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">stage</span>.<span class="ident">buffer</span>, <span class="number">0</span>..<span class="ident">stage_size</span>) }
             .<span class="ident">map_err</span>(<span class="ident">DeviceError::from</span>)<span class="question-mark">?</span>;
         <span class="kw">unsafe</span> {
-            <span class="kw">if</span> <span class="ident">stage_bytes_per_row</span> <span class="op">=</span><span class="op">=</span> <span class="ident">bytes_per_row</span> {
+            <span class="kw">if</span> <span class="ident">stage_bytes_per_row</span> <span class="op">==</span> <span class="ident">bytes_per_row</span> {
                 <span class="macro">profiling::scope!</span>(<span class="string">&quot;copy aligned&quot;</span>);
                 <span class="comment">// Fast path if the data is already being aligned optimally.</span>
                 <span class="ident">ptr::copy_nonoverlapping</span>(
@@ -1454,7 +1454,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">queue_id</span>: <span class="ident">id::QueueId</span>,
         <span class="ident">command_buffer_ids</span>: <span class="kw-2">&amp;</span>[<span class="ident">id::CommandBufferId</span>],
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">QueueSubmitError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">QueueSubmitError</span><span class="op">&gt;</span> {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;submit&quot;</span>, <span class="string">&quot;Queue&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">callbacks</span> <span class="op">=</span> {
@@ -1502,8 +1502,8 @@
                             .<span class="ident">command_buffers</span>
                             .<span class="ident">unregister_locked</span>(<span class="ident">cmb_id</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">command_buffer_guard</span>)
                         {
-                            <span class="prelude-val">Some</span>(<span class="ident">cmdbuf</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">cmdbuf</span>,
-                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">continue</span>,
+                            <span class="prelude-val">Some</span>(<span class="ident">cmdbuf</span>) =&gt; <span class="ident">cmdbuf</span>,
+                            <span class="prelude-val">None</span> =&gt; <span class="kw">continue</span>,
                         };
                         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">trace</span>) <span class="op">=</span> <span class="ident">device</span>.<span class="ident">trace</span> {
@@ -1524,8 +1524,8 @@
                         <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="ident">cmdbuf</span>.<span class="ident">trackers</span>.<span class="ident">buffers</span>.<span class="ident">used</span>() {
                             <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buffer_guard</span>[<span class="ident">id</span>];
                             <span class="kw">let</span> <span class="ident">raw_buf</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">buffer</span>.<span class="ident">raw</span> {
-                                <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">raw</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">raw</span>,
-                                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">raw</span>) =&gt; <span class="ident">raw</span>,
+                                <span class="prelude-val">None</span> =&gt; {
                                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">QueueSubmitError::DestroyedBuffer</span>(<span class="ident">id</span>.<span class="number">0</span>));
                                 }
                             };
@@ -1538,21 +1538,21 @@
                                 <span class="ident">device</span>.<span class="ident">temp_suspected</span>.<span class="ident">buffers</span>.<span class="ident">push</span>(<span class="ident">id</span>);
                             } <span class="kw">else</span> {
                                 <span class="kw">match</span> <span class="ident">buffer</span>.<span class="ident">map_state</span> {
-                                    <span class="ident">BufferMapState::Idle</span> <span class="op">=</span><span class="op">&gt;</span> (),
-                                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">panic!</span>(<span class="string">&quot;Buffer {:?} is still mapped&quot;</span>, <span class="ident">id</span>),
+                                    <span class="ident">BufferMapState::Idle</span> =&gt; (),
+                                    <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Buffer {:?} is still mapped&quot;</span>, <span class="ident">id</span>),
                                 }
                             }
                         }
                         <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="ident">cmdbuf</span>.<span class="ident">trackers</span>.<span class="ident">textures</span>.<span class="ident">used</span>() {
                             <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">texture_guard</span>[<span class="ident">id</span>];
                             <span class="kw">match</span> <span class="ident">texture</span>.<span class="ident">inner</span> {
-                                <span class="ident">TextureInner::Native</span> { <span class="ident">raw</span>: <span class="prelude-val">None</span> } <span class="op">=</span><span class="op">&gt;</span> {
+                                <span class="ident">TextureInner::Native</span> { <span class="ident">raw</span>: <span class="prelude-val">None</span> } =&gt; {
                                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">QueueSubmitError::DestroyedTexture</span>(<span class="ident">id</span>.<span class="number">0</span>));
                                 }
-                                <span class="ident">TextureInner::Native</span> { <span class="ident">raw</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>) } <span class="op">=</span><span class="op">&gt;</span> {}
+                                <span class="ident">TextureInner::Native</span> { <span class="ident">raw</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>) } =&gt; {}
                                 <span class="ident">TextureInner::Surface</span> {
                                     <span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">has_work</span>, ..
-                                } <span class="op">=</span><span class="op">&gt;</span> {
+                                } =&gt; {
                                     <span class="kw">use</span> <span class="ident">track::ResourceState</span> <span class="kw">as</span> <span class="kw">_</span>;
 
                                     <span class="kw-2">*</span><span class="ident">has_work</span> <span class="op">=</span> <span class="bool-val">true</span>;
@@ -1747,9 +1747,9 @@
             <span class="comment">// This will schedule destruction of all resources that are no longer needed</span>
             <span class="comment">// by the user but used in the command stream, among other things.</span>
             <span class="kw">let</span> <span class="ident">closures</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">device</span>.<span class="ident">maintain</span>(<span class="ident">hub</span>, <span class="bool-val">false</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">closures</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">closures</span>,
-                <span class="prelude-val">Err</span>(<span class="ident">WaitIdleError::Device</span>(<span class="ident">err</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">QueueSubmitError::Queue</span>(<span class="ident">err</span>)),
-                <span class="prelude-val">Err</span>(<span class="ident">WaitIdleError::StuckGpu</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">QueueSubmitError::StuckGpu</span>),
+                <span class="prelude-val">Ok</span>(<span class="ident">closures</span>) =&gt; <span class="ident">closures</span>,
+                <span class="prelude-val">Err</span>(<span class="ident">WaitIdleError::Device</span>(<span class="ident">err</span>)) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">QueueSubmitError::Queue</span>(<span class="ident">err</span>)),
+                <span class="prelude-val">Err</span>(<span class="ident">WaitIdleError::StuckGpu</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">QueueSubmitError::StuckGpu</span>),
             };
 
             <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">temp_resources</span> <span class="op">=</span> <span class="ident">pending_write_resources</span>;
@@ -1769,13 +1769,13 @@
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">queue_get_timestamp_period</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">queue_id</span>: <span class="ident">id::QueueId</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">InvalidQueue</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">f32</span>, <span class="ident">InvalidQueue</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
         <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
         <span class="kw">match</span> <span class="ident">device_guard</span>.<span class="ident">get</span>(<span class="ident">queue_id</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">device</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="kw">unsafe</span> { <span class="ident">device</span>.<span class="ident">queue</span>.<span class="ident">get_timestamp_period</span>() }),
-            <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Err</span>(<span class="ident">InvalidQueue</span>),
+            <span class="prelude-val">Ok</span>(<span class="ident">device</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="kw">unsafe</span> { <span class="ident">device</span>.<span class="ident">queue</span>.<span class="ident">get_timestamp_period</span>() }),
+            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">InvalidQueue</span>),
         }
     }
 
@@ -1783,15 +1783,15 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">queue_id</span>: <span class="ident">id::QueueId</span>,
         <span class="ident">closure</span>: <span class="ident">SubmittedWorkDoneClosure</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">InvalidQueue</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">InvalidQueue</span><span class="op">&gt;</span> {
         <span class="comment">//TODO: flush pending writes</span>
         <span class="kw">let</span> <span class="ident">added</span> <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
             <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
             <span class="kw">match</span> <span class="ident">device_guard</span>.<span class="ident">get</span>(<span class="ident">queue_id</span>) {
-                <span class="prelude-val">Ok</span>(<span class="ident">device</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">device</span>.<span class="ident">lock_life</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>).<span class="ident">add_work_done_closure</span>(<span class="ident">closure</span>),
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">InvalidQueue</span>),
+                <span class="prelude-val">Ok</span>(<span class="ident">device</span>) =&gt; <span class="ident">device</span>.<span class="ident">lock_life</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>).<span class="ident">add_work_done_closure</span>(<span class="ident">closure</span>),
+                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">InvalidQueue</span>),
             }
         };
         <span class="kw">if</span> <span class="op">!</span><span class="ident">added</span> {
@@ -1803,7 +1803,7 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">get_lowest_common_denom</span>(<span class="ident">a</span>: <span class="ident">u32</span>, <span class="ident">b</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+<span class="kw">fn</span> <span class="ident">get_lowest_common_denom</span>(<span class="ident">a</span>: <span class="ident">u32</span>, <span class="ident">b</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
     <span class="kw">let</span> <span class="ident">gcd</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">a</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">b</span> {
         <span class="ident">get_greatest_common_divisor</span>(<span class="ident">a</span>, <span class="ident">b</span>)
     } <span class="kw">else</span> {
@@ -1812,11 +1812,11 @@
     <span class="ident">a</span> <span class="op">*</span> <span class="ident">b</span> <span class="op">/</span> <span class="ident">gcd</span>
 }
 
-<span class="kw">fn</span> <span class="ident">get_greatest_common_divisor</span>(<span class="kw-2">mut</span> <span class="ident">a</span>: <span class="ident">u32</span>, <span class="kw-2">mut</span> <span class="ident">b</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+<span class="kw">fn</span> <span class="ident">get_greatest_common_divisor</span>(<span class="kw-2">mut</span> <span class="ident">a</span>: <span class="ident">u32</span>, <span class="kw-2">mut</span> <span class="ident">b</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
     <span class="macro">assert!</span>(<span class="ident">a</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">b</span>);
     <span class="kw">loop</span> {
         <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">a</span> <span class="op">%</span> <span class="ident">b</span>;
-        <span class="kw">if</span> <span class="ident">c</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">c</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="ident">b</span>;
         } <span class="kw">else</span> {
             <span class="ident">a</span> <span class="op">=</span> <span class="ident">b</span>;
@@ -1825,10 +1825,10 @@
     }
 }
 
-<span class="kw">fn</span> <span class="ident">align_to</span>(<span class="ident">value</span>: <span class="ident">u32</span>, <span class="ident">alignment</span>: <span class="ident">u32</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u32</span> {
+<span class="kw">fn</span> <span class="ident">align_to</span>(<span class="ident">value</span>: <span class="ident">u32</span>, <span class="ident">alignment</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
     <span class="kw">match</span> <span class="ident">value</span> <span class="op">%</span> <span class="ident">alignment</span> {
-        <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span>,
-        <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">value</span> <span class="op">-</span> <span class="ident">other</span> <span class="op">+</span> <span class="ident">alignment</span>,
+        <span class="number">0</span> =&gt; <span class="ident">value</span>,
+        <span class="ident">other</span> =&gt; <span class="ident">value</span> <span class="op">-</span> <span class="ident">other</span> <span class="op">+</span> <span class="ident">alignment</span>,
     }
 }
 

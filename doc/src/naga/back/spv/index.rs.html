@@ -491,23 +491,23 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">array</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="comment">// Look into the expression to find the value and type of the struct</span>
         <span class="comment">// holding the dynamically-sized array.</span>
         <span class="kw">let</span> (<span class="ident">structure_id</span>, <span class="ident">last_member_index</span>) <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ir_function</span>.<span class="ident">expressions</span>[<span class="ident">array</span>] {
-            <span class="ident"><span class="kw">crate</span>::Expression::AccessIndex</span> { <span class="ident">base</span>, <span class="ident">index</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::Expression::AccessIndex</span> { <span class="ident">base</span>, <span class="ident">index</span> } =&gt; {
                 <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ir_function</span>.<span class="ident">expressions</span>[<span class="ident">base</span>] {
-                    <span class="ident"><span class="kw">crate</span>::Expression::GlobalVariable</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident"><span class="kw">crate</span>::Expression::GlobalVariable</span>(<span class="ident">handle</span>) =&gt; {
                         (<span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">global_variables</span>[<span class="ident">handle</span>.<span class="ident">index</span>()].<span class="ident">id</span>, <span class="ident">index</span>)
                     }
-                    <span class="ident"><span class="kw">crate</span>::Expression::FunctionArgument</span>(<span class="ident">index</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident"><span class="kw">crate</span>::Expression::FunctionArgument</span>(<span class="ident">index</span>) =&gt; {
                         <span class="kw">let</span> <span class="ident">parameter_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">function</span>.<span class="ident">parameter_id</span>(<span class="ident">index</span>);
                         (<span class="ident">parameter_id</span>, <span class="ident">index</span>)
                     }
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Validation</span>(<span class="string">&quot;array length expression&quot;</span>)),
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Validation</span>(<span class="string">&quot;array length expression&quot;</span>)),
                 }
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Validation</span>(<span class="string">&quot;array length expression&quot;</span>)),
+            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Validation</span>(<span class="string">&quot;array length expression&quot;</span>)),
         };
 
         <span class="kw">let</span> <span class="ident">length_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gen_id</span>();
@@ -534,17 +534,17 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">sequence</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MaybeKnown</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MaybeKnown</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">sequence_ty</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">fun_info</span>[<span class="ident">sequence</span>].<span class="ident">ty</span>.<span class="ident">inner_with</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ir_module</span>.<span class="ident">types</span>);
         <span class="kw">match</span> <span class="ident">sequence_ty</span>.<span class="ident">indexable_length</span>(<span class="self">self</span>.<span class="ident">ir_module</span>)<span class="question-mark">?</span> {
-            <span class="ident"><span class="kw">crate</span>::proc::IndexableLength::Known</span>(<span class="ident">known_length</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::proc::IndexableLength::Known</span>(<span class="ident">known_length</span>) =&gt; {
                 <span class="prelude-val">Ok</span>(<span class="ident">MaybeKnown::Known</span>(<span class="ident">known_length</span>))
             }
-            <span class="ident"><span class="kw">crate</span>::proc::IndexableLength::Dynamic</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::proc::IndexableLength::Dynamic</span> =&gt; {
                 <span class="kw">let</span> <span class="ident">length_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">write_runtime_array_length</span>(<span class="ident">sequence</span>, <span class="ident">block</span>)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(<span class="ident">MaybeKnown::Computed</span>(<span class="ident">length_id</span>))
             }
-            <span class="ident"><span class="kw">crate</span>::proc::IndexableLength::Specializable</span>(<span class="ident">constant</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::proc::IndexableLength::Specializable</span>(<span class="ident">constant</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">length_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">constant_ids</span>[<span class="ident">constant</span>.<span class="ident">index</span>()];
                 <span class="prelude-val">Ok</span>(<span class="ident">MaybeKnown::Computed</span>(<span class="ident">length_id</span>))
             }
@@ -564,9 +564,9 @@
         <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
         <span class="ident">sequence</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MaybeKnown</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">MaybeKnown</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">write_sequence_length</span>(<span class="ident">sequence</span>, <span class="ident">block</span>)<span class="question-mark">?</span> {
-            <span class="ident">MaybeKnown::Known</span>(<span class="ident">known_length</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MaybeKnown::Known</span>(<span class="ident">known_length</span>) =&gt; {
                 <span class="comment">// We should have thrown out all attempts to subscript zero-length</span>
                 <span class="comment">// sequences during validation, so the following subtraction should never</span>
                 <span class="comment">// underflow.</span>
@@ -574,7 +574,7 @@
                 <span class="comment">// Compute the max index from the length now.</span>
                 <span class="prelude-val">Ok</span>(<span class="ident">MaybeKnown::Known</span>(<span class="ident">known_length</span> <span class="op">-</span> <span class="number">1</span>))
             }
-            <span class="ident">MaybeKnown::Computed</span>(<span class="ident">length_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MaybeKnown::Computed</span>(<span class="ident">length_id</span>) =&gt; {
                 <span class="comment">// Emit code to compute the max index from the length.</span>
                 <span class="kw">let</span> <span class="ident">const_one_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_index_constant</span>(<span class="number">1</span>);
                 <span class="kw">let</span> <span class="ident">max_index_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gen_id</span>();
@@ -611,13 +611,13 @@
         <span class="ident">sequence</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
         <span class="ident">index</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoundsCheckResult</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoundsCheckResult</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">index_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">index</span>];
 
         <span class="comment">// Get the sequence&#39;s maximum valid index. Return early if we&#39;ve already</span>
         <span class="comment">// done the bounds check.</span>
         <span class="kw">let</span> <span class="ident">max_index_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">write_sequence_max_index</span>(<span class="ident">sequence</span>, <span class="ident">block</span>)<span class="question-mark">?</span> {
-            <span class="ident">MaybeKnown::Known</span>(<span class="ident">known_max_index</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MaybeKnown::Known</span>(<span class="ident">known_max_index</span>) =&gt; {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="ident"><span class="kw">crate</span>::Expression::Constant</span>(<span class="ident">index_k</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">ir_function</span>.<span class="ident">expressions</span>[<span class="ident">index</span>] {
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">known_index</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">ir_module</span>.<span class="ident">constants</span>[<span class="ident">index_k</span>].<span class="ident">to_array_length</span>() {
                         <span class="comment">// Both the index and length are known at compile time.</span>
@@ -633,7 +633,7 @@
 
                 <span class="self">self</span>.<span class="ident">get_index_constant</span>(<span class="ident">known_max_index</span>)
             }
-            <span class="ident">MaybeKnown::Computed</span>(<span class="ident">max_index_id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">max_index_id</span>,
+            <span class="ident">MaybeKnown::Computed</span>(<span class="ident">max_index_id</span>) =&gt; <span class="ident">max_index_id</span>,
         };
 
         <span class="comment">// One or the other of the index or length is dynamic, so emit code for</span>
@@ -671,13 +671,13 @@
         <span class="ident">sequence</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
         <span class="ident">index</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoundsCheckResult</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoundsCheckResult</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">index_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">index</span>];
 
         <span class="comment">// Get the sequence&#39;s length. Return early if we&#39;ve already done the</span>
         <span class="comment">// bounds check.</span>
         <span class="kw">let</span> <span class="ident">length_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">write_sequence_length</span>(<span class="ident">sequence</span>, <span class="ident">block</span>)<span class="question-mark">?</span> {
-            <span class="ident">MaybeKnown::Known</span>(<span class="ident">known_length</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">MaybeKnown::Known</span>(<span class="ident">known_length</span>) =&gt; {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="ident"><span class="kw">crate</span>::Expression::Constant</span>(<span class="ident">index_k</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">ir_function</span>.<span class="ident">expressions</span>[<span class="ident">index</span>] {
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">known_index</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">ir_module</span>.<span class="ident">constants</span>[<span class="ident">index_k</span>].<span class="ident">to_array_length</span>() {
                         <span class="comment">// Both the index and length are known at compile time.</span>
@@ -708,7 +708,7 @@
 
                 <span class="self">self</span>.<span class="ident">get_index_constant</span>(<span class="ident">known_length</span>)
             }
-            <span class="ident">MaybeKnown::Computed</span>(<span class="ident">length_id</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">length_id</span>,
+            <span class="ident">MaybeKnown::Computed</span>(<span class="ident">length_id</span>) =&gt; <span class="ident">length_id</span>,
         };
 
         <span class="comment">// Compare the index against the length.</span>
@@ -737,9 +737,9 @@
         <span class="ident">condition</span>: <span class="ident">Word</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
         <span class="ident">emit_load</span>: <span class="ident">F</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span>
+    ) -&gt; <span class="ident">Word</span>
     <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">IdGenerator</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span>,
+        <span class="ident">F</span>: <span class="ident">FnOnce</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">IdGenerator</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>) -&gt; <span class="ident">Word</span>,
     {
         <span class="comment">// For the out-of-bounds case, we produce a zero value.</span>
         <span class="kw">let</span> <span class="ident">null_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">write_constant_null</span>(<span class="ident">result_type</span>);
@@ -780,16 +780,16 @@
         <span class="ident">base</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
         <span class="ident">index</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoundsCheckResult</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">BoundsCheckResult</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="comment">// Should this access be covered by `index_bounds_check_policy` or</span>
         <span class="comment">// `buffer_bounds_check_policy`?</span>
         <span class="kw">let</span> <span class="ident">is_buffer</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">fun_info</span>[<span class="ident">base</span>].<span class="ident">ty</span>.<span class="ident">inner_with</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ir_module</span>.<span class="ident">types</span>) {
             <span class="ident"><span class="kw">crate</span>::TypeInner::Pointer</span> { <span class="ident">class</span>, .. }
-            <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::TypeInner::ValuePointer</span> { <span class="ident">class</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">class</span> {
-                <span class="ident"><span class="kw">crate</span>::StorageClass::Storage</span> { <span class="ident">access</span>: <span class="kw">_</span> } <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::StorageClass::Uniform</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">true</span>,
-                <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::TypeInner::ValuePointer</span> { <span class="ident">class</span>, .. } =&gt; <span class="kw">match</span> <span class="ident">class</span> {
+                <span class="ident"><span class="kw">crate</span>::StorageClass::Storage</span> { <span class="ident">access</span>: <span class="kw">_</span> } <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::StorageClass::Uniform</span> =&gt; <span class="bool-val">true</span>,
+                <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
             },
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
         };
 
         <span class="kw">let</span> <span class="ident">policy</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">is_buffer</span> {
@@ -799,11 +799,11 @@
         };
 
         <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">policy</span> {
-            <span class="ident">BoundsCheckPolicy::Restrict</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">write_restricted_index</span>(<span class="ident">base</span>, <span class="ident">index</span>, <span class="ident">block</span>)<span class="question-mark">?</span>,
-            <span class="ident">BoundsCheckPolicy::ReadZeroSkipWrite</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">BoundsCheckPolicy::Restrict</span> =&gt; <span class="self">self</span>.<span class="ident">write_restricted_index</span>(<span class="ident">base</span>, <span class="ident">index</span>, <span class="ident">block</span>)<span class="question-mark">?</span>,
+            <span class="ident">BoundsCheckPolicy::ReadZeroSkipWrite</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">write_index_comparison</span>(<span class="ident">base</span>, <span class="ident">index</span>, <span class="ident">block</span>)<span class="question-mark">?</span>
             }
-            <span class="ident">BoundsCheckPolicy::Unchecked</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">BoundsCheckResult::Computed</span>(<span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">index</span>]),
+            <span class="ident">BoundsCheckPolicy::Unchecked</span> =&gt; <span class="ident">BoundsCheckResult::Computed</span>(<span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">index</span>]),
         })
     }
 
@@ -816,14 +816,14 @@
         <span class="ident">base</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
         <span class="ident">index</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">result_type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_expression_type_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">fun_info</span>[<span class="ident">expr_handle</span>].<span class="ident">ty</span>);
 
         <span class="kw">let</span> <span class="ident">base_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">base</span>];
         <span class="kw">let</span> <span class="ident">index_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">index</span>];
 
         <span class="kw">let</span> <span class="ident">result_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">write_bounds_check</span>(<span class="ident">base</span>, <span class="ident">index</span>, <span class="ident">block</span>)<span class="question-mark">?</span> {
-            <span class="ident">BoundsCheckResult::KnownInBounds</span>(<span class="ident">known_index</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">BoundsCheckResult::KnownInBounds</span>(<span class="ident">known_index</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">result_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gen_id</span>();
                 <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">Instruction::composite_extract</span>(
                     <span class="ident">result_type_id</span>,
@@ -833,7 +833,7 @@
                 ));
                 <span class="ident">result_id</span>
             }
-            <span class="ident">BoundsCheckResult::Computed</span>(<span class="ident">computed_index_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">BoundsCheckResult::Computed</span>(<span class="ident">computed_index_id</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">result_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gen_id</span>();
                 <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">Instruction::vector_extract_dynamic</span>(
                     <span class="ident">result_type_id</span>,
@@ -843,7 +843,7 @@
                 ));
                 <span class="ident">result_id</span>
             }
-            <span class="ident">BoundsCheckResult::Conditional</span>(<span class="ident">comparison_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">BoundsCheckResult::Conditional</span>(<span class="ident">comparison_id</span>) =&gt; {
                 <span class="comment">// Run-time bounds checks were required. Emit</span>
                 <span class="comment">// conditional load.</span>
                 <span class="self">self</span>.<span class="ident">write_conditional_indexed_load</span>(

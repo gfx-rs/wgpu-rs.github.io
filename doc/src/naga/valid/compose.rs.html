@@ -168,7 +168,7 @@
     <span class="ident">constant_arena</span>: <span class="kw-2">&amp;</span><span class="ident">Arena</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Constant</span><span class="op">&gt;</span>,
     <span class="ident">type_arena</span>: <span class="kw-2">&amp;</span><span class="ident">UniqueArena</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Type</span><span class="op">&gt;</span>,
     <span class="ident">component_resolutions</span>: <span class="kw">impl</span> <span class="ident">ExactSizeIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">TypeResolution</span><span class="op">&gt;</span>,
-) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ComposeError</span><span class="op">&gt;</span> {
+) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ComposeError</span><span class="op">&gt;</span> {
     <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::TypeInner</span> <span class="kw">as</span> <span class="ident">Ti</span>;
 
     <span class="kw">let</span> <span class="ident">self_ty</span> <span class="op">=</span> <span class="ident">type_arena</span>
@@ -176,20 +176,20 @@
         .<span class="ident">ok_or</span>(<span class="ident">ComposeError::TypeDoesntExist</span>(<span class="ident">self_ty_handle</span>))<span class="question-mark">?</span>;
     <span class="kw">match</span> <span class="ident">self_ty</span>.<span class="ident">inner</span> {
         <span class="comment">// vectors are composed from scalars or other vectors</span>
-        <span class="ident">Ti::Vector</span> { <span class="ident">size</span>, <span class="ident">kind</span>, <span class="ident">width</span> } <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Ti::Vector</span> { <span class="ident">size</span>, <span class="ident">kind</span>, <span class="ident">width</span> } =&gt; {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">total</span> <span class="op">=</span> <span class="number">0</span>;
             <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">comp_res</span>) <span class="kw">in</span> <span class="ident">component_resolutions</span>.<span class="ident">enumerate</span>() {
                 <span class="ident">total</span> <span class="op">+</span><span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">comp_res</span>.<span class="ident">inner_with</span>(<span class="ident">type_arena</span>) {
                     <span class="ident">Ti::Scalar</span> {
                         <span class="ident">kind</span>: <span class="ident">comp_kind</span>,
                         <span class="ident">width</span>: <span class="ident">comp_width</span>,
-                    } <span class="kw">if</span> <span class="ident">comp_kind</span> <span class="op">=</span><span class="op">=</span> <span class="ident">kind</span> <span class="op">&amp;&amp;</span> <span class="ident">comp_width</span> <span class="op">=</span><span class="op">=</span> <span class="ident">width</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
+                    } <span class="kw">if</span> <span class="ident">comp_kind</span> <span class="op">==</span> <span class="ident">kind</span> <span class="op">&amp;&amp;</span> <span class="ident">comp_width</span> <span class="op">==</span> <span class="ident">width</span> =&gt; <span class="number">1</span>,
                     <span class="ident">Ti::Vector</span> {
                         <span class="ident">size</span>: <span class="ident">comp_size</span>,
                         <span class="ident">kind</span>: <span class="ident">comp_kind</span>,
                         <span class="ident">width</span>: <span class="ident">comp_width</span>,
-                    } <span class="kw">if</span> <span class="ident">comp_kind</span> <span class="op">=</span><span class="op">=</span> <span class="ident">kind</span> <span class="op">&amp;&amp;</span> <span class="ident">comp_width</span> <span class="op">=</span><span class="op">=</span> <span class="ident">width</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">comp_size</span> <span class="kw">as</span> <span class="ident">u32</span>,
-                    <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    } <span class="kw">if</span> <span class="ident">comp_kind</span> <span class="op">==</span> <span class="ident">kind</span> <span class="op">&amp;&amp;</span> <span class="ident">comp_width</span> <span class="op">==</span> <span class="ident">width</span> =&gt; <span class="ident">comp_size</span> <span class="kw">as</span> <span class="ident">u32</span>,
+                    <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                         <span class="macro">log::error!</span>(<span class="string">&quot;Vector component[{}] type {:?}&quot;</span>, <span class="ident">index</span>, <span class="ident">other</span>);
                         <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ComposeError::ComponentType</span> {
                             <span class="ident">index</span>: <span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>,
@@ -209,7 +209,7 @@
             <span class="ident">columns</span>,
             <span class="ident">rows</span>,
             <span class="ident">width</span>,
-        } <span class="op">=</span><span class="op">&gt;</span> {
+        } =&gt; {
             <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">Ti::Vector</span> {
                 <span class="ident">size</span>: <span class="ident">rows</span>,
                 <span class="ident">kind</span>: <span class="ident"><span class="kw">crate</span>::ScalarKind::Float</span>,
@@ -234,7 +234,7 @@
             <span class="ident">base</span>,
             <span class="ident">size</span>: <span class="ident"><span class="kw">crate</span>::ArraySize::Constant</span>(<span class="ident">handle</span>),
             <span class="ident">stride</span>: <span class="kw">_</span>,
-        } <span class="op">=</span><span class="op">&gt;</span> {
+        } =&gt; {
             <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="ident">constant_arena</span>[<span class="ident">handle</span>].<span class="ident">to_array_length</span>().<span class="ident">unwrap</span>();
             <span class="kw">if</span> <span class="ident">count</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">!</span><span class="op">=</span> <span class="ident">component_resolutions</span>.<span class="ident">len</span>() {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ComposeError::ComponentCount</span> {
@@ -255,7 +255,7 @@
                 }
             }
         }
-        <span class="ident">Ti::Struct</span> { <span class="kw-2">ref</span> <span class="ident">members</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="ident">Ti::Struct</span> { <span class="kw-2">ref</span> <span class="ident">members</span>, .. } =&gt; {
             <span class="kw">if</span> <span class="ident">members</span>.<span class="ident">len</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">component_resolutions</span>.<span class="ident">len</span>() {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ComposeError::ComponentCount</span> {
                     <span class="ident">given</span>: <span class="ident">component_resolutions</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u32</span>,
@@ -276,7 +276,7 @@
                 }
             }
         }
-        <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+        <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
             <span class="macro">log::error!</span>(<span class="string">&quot;Composing of {:?}&quot;</span>, <span class="ident">other</span>);
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ComposeError::Type</span>(<span class="ident">self_ty_handle</span>));
         }

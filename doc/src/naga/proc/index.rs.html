@@ -91,30 +91,30 @@
     <span class="doccomment">/// The value returned is appropriate for bounds checks on subscripting.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Return an error if `self` does not describe a subscriptable type at all.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">indexable_length</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">IndexableLength</span>, <span class="ident">ProcError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">indexable_length</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::Module</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">IndexableLength</span>, <span class="ident">ProcError</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::TypeInner</span> <span class="kw">as</span> <span class="ident">Ti</span>;
         <span class="kw">let</span> <span class="ident">known_length</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident">Ti::Vector</span> { <span class="ident">size</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">size</span> <span class="kw">as</span> <span class="kw">_</span>,
-            <span class="ident">Ti::Matrix</span> { <span class="ident">columns</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">columns</span> <span class="kw">as</span> <span class="kw">_</span>,
-            <span class="ident">Ti::Array</span> { <span class="ident">size</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Ti::Vector</span> { <span class="ident">size</span>, .. } =&gt; <span class="ident">size</span> <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident">Ti::Matrix</span> { <span class="ident">columns</span>, .. } =&gt; <span class="ident">columns</span> <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident">Ti::Array</span> { <span class="ident">size</span>, .. } =&gt; {
                 <span class="kw">return</span> <span class="ident">size</span>.<span class="ident">to_indexable_length</span>(<span class="ident">module</span>);
             }
             <span class="ident">Ti::ValuePointer</span> {
                 <span class="ident">size</span>: <span class="prelude-val">Some</span>(<span class="ident">size</span>), ..
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">size</span> <span class="kw">as</span> <span class="kw">_</span>,
-            <span class="ident">Ti::Pointer</span> { <span class="ident">base</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+            } =&gt; <span class="ident">size</span> <span class="kw">as</span> <span class="kw">_</span>,
+            <span class="ident">Ti::Pointer</span> { <span class="ident">base</span>, .. } =&gt; {
                 <span class="comment">// When assigning types to expressions, ResolveContext::Resolve</span>
                 <span class="comment">// does a separate sub-match here instead of a full recursion,</span>
                 <span class="comment">// so we&#39;ll do the same.</span>
                 <span class="kw">let</span> <span class="ident">base_inner</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">base</span>].<span class="ident">inner</span>;
                 <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">base_inner</span> {
-                    <span class="ident">Ti::Vector</span> { <span class="ident">size</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">size</span> <span class="kw">as</span> <span class="kw">_</span>,
-                    <span class="ident">Ti::Matrix</span> { <span class="ident">columns</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">columns</span> <span class="kw">as</span> <span class="kw">_</span>,
-                    <span class="ident">Ti::Array</span> { <span class="ident">size</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="ident">size</span>.<span class="ident">to_indexable_length</span>(<span class="ident">module</span>),
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ProcError::TypeNotIndexable</span>),
+                    <span class="ident">Ti::Vector</span> { <span class="ident">size</span>, .. } =&gt; <span class="ident">size</span> <span class="kw">as</span> <span class="kw">_</span>,
+                    <span class="ident">Ti::Matrix</span> { <span class="ident">columns</span>, .. } =&gt; <span class="ident">columns</span> <span class="kw">as</span> <span class="kw">_</span>,
+                    <span class="ident">Ti::Array</span> { <span class="ident">size</span>, .. } =&gt; <span class="kw">return</span> <span class="ident">size</span>.<span class="ident">to_indexable_length</span>(<span class="ident">module</span>),
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ProcError::TypeNotIndexable</span>),
                 }
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ProcError::TypeNotIndexable</span>),
+            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ProcError::TypeNotIndexable</span>),
         };
         <span class="prelude-val">Ok</span>(<span class="ident">IndexableLength::Known</span>(<span class="ident">known_length</span>))
     }
@@ -137,22 +137,22 @@
 }
 
 <span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::ArraySize</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_indexable_length</span>(<span class="self">self</span>, <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::Module</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">IndexableLength</span>, <span class="ident">ProcError</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_indexable_length</span>(<span class="self">self</span>, <span class="ident">module</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::Module</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">IndexableLength</span>, <span class="ident">ProcError</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Constant</span> <span class="kw">as</span> <span class="ident">K</span>;
         <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Constant</span>(<span class="ident">k</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">constants</span>[<span class="ident">k</span>] {
+            <span class="ident"><span class="self">Self</span>::Constant</span>(<span class="ident">k</span>) =&gt; <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">constants</span>[<span class="ident">k</span>] {
                 <span class="ident">K</span> {
                     <span class="ident">specialization</span>: <span class="prelude-val">Some</span>(<span class="kw">_</span>),
                     ..
-                } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IndexableLength::Specializable</span>(<span class="ident">k</span>),
-                <span class="kw-2">ref</span> <span class="ident">unspecialized</span> <span class="op">=</span><span class="op">&gt;</span> {
+                } =&gt; <span class="ident">IndexableLength::Specializable</span>(<span class="ident">k</span>),
+                <span class="kw-2">ref</span> <span class="ident">unspecialized</span> =&gt; {
                     <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">unspecialized</span>
                         .<span class="ident">to_array_length</span>()
                         .<span class="ident">ok_or</span>(<span class="ident">ProcError::InvalidArraySizeConstant</span>(<span class="ident">k</span>))<span class="question-mark">?</span>;
                     <span class="ident">IndexableLength::Known</span>(<span class="ident">length</span>)
                 }
             },
-            <span class="ident"><span class="self">Self</span>::Dynamic</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">IndexableLength::Dynamic</span>,
+            <span class="ident"><span class="self">Self</span>::Dynamic</span> =&gt; <span class="ident">IndexableLength::Dynamic</span>,
         })
     }
 }

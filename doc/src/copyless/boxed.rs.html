@@ -76,8 +76,8 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">BoxAllocation</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Consumes self and writes the given value into the allocation.</span>
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span> <span class="comment">// if this does not get inlined then copying happens</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="ident">Box::new</span>(<span class="ident">value</span>);
         }
 
@@ -92,7 +92,7 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">BoxAllocation</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">return</span>;
         }
 
@@ -106,12 +106,12 @@
 <span class="doccomment">/// Helper trait for a `Box` type that allocates up-front.</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">BoxHelper</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Allocates the storage without providing any data.</span>
-    <span class="kw">fn</span> <span class="ident">alloc</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxAllocation</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">alloc</span>() -&gt; <span class="ident">BoxAllocation</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>;
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">BoxHelper</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">alloc</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">BoxAllocation</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+    <span class="kw">fn</span> <span class="ident">alloc</span>() -&gt; <span class="ident">BoxAllocation</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+        <span class="kw">if</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">==</span> <span class="number">0</span> {
             <span class="kw">return</span> <span class="ident">BoxAllocation</span>(<span class="ident">NonNull::dangling</span>());
         }
 

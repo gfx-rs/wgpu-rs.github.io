@@ -1235,17 +1235,17 @@
         <span class="ident">level_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
         <span class="ident">sample_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span>;
+    ) -&gt; <span class="ident"><span class="self">Self</span>::Output</span>;
 
     <span class="doccomment">/// Return the SPIR-V type of the value produced by the code written by</span>
     <span class="doccomment">/// `generate`. If the access does not produce a value, `Self::Output`</span>
     <span class="doccomment">/// should be `()`.</span>
-    <span class="kw">fn</span> <span class="ident">result_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span>;
+    <span class="kw">fn</span> <span class="ident">result_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span>;
 
     <span class="doccomment">/// Construct the SPIR-V &#39;zero&#39; value to be returned for an out-of-bounds</span>
     <span class="doccomment">/// access under the `ReadZeroSkipWrite` policy. If the access does not</span>
     <span class="doccomment">/// produce a value, `Self::Output` should be `()`.</span>
-    <span class="kw">fn</span> <span class="ident">out_of_bounds_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">BlockContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::Output</span>;
+    <span class="kw">fn</span> <span class="ident">out_of_bounds_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">BlockContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span>;
 }
 
 <span class="doccomment">/// Texel access information for an [`ImageLoad`] expression.</span>
@@ -1269,10 +1269,10 @@
         <span class="ident">image_id</span>: <span class="ident">Word</span>,
         <span class="ident">image_class</span>: <span class="ident"><span class="kw">crate</span>::ImageClass</span>,
         <span class="ident">result_type_id</span>: <span class="ident">Word</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Load</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Load</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">opcode</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">image_class</span> {
-            <span class="ident"><span class="kw">crate</span>::ImageClass::Storage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">spirv::Op::ImageRead</span>,
-            <span class="ident"><span class="kw">crate</span>::ImageClass::Depth</span> { .. } <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::ImageClass::Sampled</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::ImageClass::Storage</span> { .. } =&gt; <span class="ident">spirv::Op::ImageRead</span>,
+            <span class="ident"><span class="kw">crate</span>::ImageClass::Depth</span> { .. } <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::ImageClass::Sampled</span> { .. } =&gt; {
                 <span class="ident">spirv::Op::ImageFetch</span>
             }
         };
@@ -1283,7 +1283,7 @@
         <span class="comment">// image produces a scalar `f32`, so in that case we need to find</span>
         <span class="comment">// the right SPIR-V type for the access instruction here.</span>
         <span class="kw">let</span> <span class="ident">type_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">image_class</span> {
-            <span class="ident"><span class="kw">crate</span>::ImageClass::Depth</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::ImageClass::Depth</span> { .. } =&gt; {
                 <span class="ident">ctx</span>.<span class="ident">get_type_id</span>(<span class="ident">LookupType::Local</span>(<span class="ident">LocalType::Value</span> {
                     <span class="ident">vector_size</span>: <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::VectorSize::Quad</span>),
                     <span class="ident">kind</span>: <span class="ident"><span class="kw">crate</span>::ScalarKind::Float</span>,
@@ -1291,7 +1291,7 @@
                     <span class="ident">pointer_class</span>: <span class="prelude-val">None</span>,
                 }))
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">result_type_id</span>,
+            <span class="kw">_</span> =&gt; <span class="ident">result_type_id</span>,
         };
 
         <span class="prelude-val">Ok</span>(<span class="ident">Load</span> {
@@ -1313,7 +1313,7 @@
         <span class="ident">level_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
         <span class="ident">sample_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
+    ) -&gt; <span class="ident">Word</span> {
         <span class="kw">let</span> <span class="ident">texel_id</span> <span class="op">=</span> <span class="ident">id_gen</span>.<span class="ident">next</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">instruction</span> <span class="op">=</span> <span class="ident">Instruction::image_fetch_or_read</span>(
             <span class="self">self</span>.<span class="ident">opcode</span>,
@@ -1324,17 +1324,17 @@
         );
 
         <span class="kw">match</span> (<span class="ident">level_id</span>, <span class="ident">sample_id</span>) {
-            (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {}
-            (<span class="prelude-val">Some</span>(<span class="ident">level_id</span>), <span class="prelude-val">None</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; {}
+            (<span class="prelude-val">Some</span>(<span class="ident">level_id</span>), <span class="prelude-val">None</span>) =&gt; {
                 <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">spirv::ImageOperands::LOD</span>.<span class="ident">bits</span>());
                 <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">level_id</span>);
             }
-            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">sample_id</span>)) <span class="op">=</span><span class="op">&gt;</span> {
+            (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">sample_id</span>)) =&gt; {
                 <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">spirv::ImageOperands::SAMPLE</span>.<span class="ident">bits</span>());
                 <span class="ident">instruction</span>.<span class="ident">add_operand</span>(<span class="ident">sample_id</span>);
             }
             <span class="comment">// There&#39;s no such thing as a multi-sampled mipmap.</span>
-            (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">Some</span>(<span class="kw">_</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+            (<span class="prelude-val">Some</span>(<span class="kw">_</span>), <span class="prelude-val">Some</span>(<span class="kw">_</span>)) =&gt; <span class="macro">unreachable!</span>(),
         }
 
         <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">instruction</span>);
@@ -1342,11 +1342,11 @@
         <span class="ident">texel_id</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">result_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
+    <span class="kw">fn</span> <span class="ident">result_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Word</span> {
         <span class="self">self</span>.<span class="ident">type_id</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">out_of_bounds_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">BlockContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
+    <span class="kw">fn</span> <span class="ident">out_of_bounds_value</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ctx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">BlockContext</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">Word</span> {
         <span class="ident">ctx</span>.<span class="ident">writer</span>.<span class="ident">write_constant_null</span>(<span class="self">self</span>.<span class="ident">type_id</span>)
     }
 }
@@ -1420,7 +1420,7 @@
         <span class="ident">coordinates</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
         <span class="ident">array_index</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ImageCoordinates</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ImageCoordinates</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::TypeInner</span> <span class="kw">as</span> <span class="ident">Ti</span>;
         <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::VectorSize</span> <span class="kw">as</span> <span class="ident">Vs</span>;
 
@@ -1431,13 +1431,13 @@
         <span class="comment">// If there&#39;s no array index, the image coordinates are exactly the</span>
         <span class="comment">// `coordinate` field of the `Expression::ImageLoad`. No work is needed.</span>
         <span class="kw">let</span> <span class="ident">array_index</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">array_index</span> {
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">None</span> =&gt; {
                 <span class="kw">let</span> <span class="ident">value_id</span> <span class="op">=</span> <span class="ident">coordinates_id</span>;
                 <span class="kw">let</span> <span class="ident">type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_expression_type_id</span>(<span class="ident">ty</span>);
                 <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">inner_ty</span> {
-                    <span class="ident">Ti::Scalar</span> { .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
-                    <span class="ident">Ti::Vector</span> { <span class="ident">size</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident">size</span>),
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Validation</span>(<span class="string">&quot;coordinate type&quot;</span>)),
+                    <span class="ident">Ti::Scalar</span> { .. } =&gt; <span class="prelude-val">None</span>,
+                    <span class="ident">Ti::Vector</span> { <span class="ident">size</span>, .. } =&gt; <span class="prelude-val">Some</span>(<span class="ident">size</span>),
+                    <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Validation</span>(<span class="string">&quot;coordinate type&quot;</span>)),
                 };
                 <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">ImageCoordinates</span> {
                     <span class="ident">value_id</span>,
@@ -1445,27 +1445,27 @@
                     <span class="ident">size</span>,
                 });
             }
-            <span class="prelude-val">Some</span>(<span class="ident">ix</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">ix</span>,
+            <span class="prelude-val">Some</span>(<span class="ident">ix</span>) =&gt; <span class="ident">ix</span>,
         };
 
         <span class="comment">// Find the component type of `coordinates`, and figure out the size the</span>
         <span class="comment">// combined coordinate vector will have.</span>
         <span class="kw">let</span> (<span class="ident">component_kind</span>, <span class="ident">size</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">inner_ty</span> {
-            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span>: <span class="number">4</span> } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">kind</span>, <span class="prelude-val">Some</span>(<span class="ident">Vs::Bi</span>)),
+            <span class="ident">Ti::Scalar</span> { <span class="ident">kind</span>, <span class="ident">width</span>: <span class="number">4</span> } =&gt; (<span class="ident">kind</span>, <span class="prelude-val">Some</span>(<span class="ident">Vs::Bi</span>)),
             <span class="ident">Ti::Vector</span> {
                 <span class="ident">kind</span>,
                 <span class="ident">width</span>: <span class="number">4</span>,
                 <span class="ident">size</span>: <span class="ident">Vs::Bi</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">kind</span>, <span class="prelude-val">Some</span>(<span class="ident">Vs::Tri</span>)),
+            } =&gt; (<span class="ident">kind</span>, <span class="prelude-val">Some</span>(<span class="ident">Vs::Tri</span>)),
             <span class="ident">Ti::Vector</span> {
                 <span class="ident">kind</span>,
                 <span class="ident">width</span>: <span class="number">4</span>,
                 <span class="ident">size</span>: <span class="ident">Vs::Tri</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">kind</span>, <span class="prelude-val">Some</span>(<span class="ident">Vs::Quad</span>)),
-            <span class="ident">Ti::Vector</span> { <span class="ident">size</span>: <span class="ident">Vs::Quad</span>, .. } <span class="op">=</span><span class="op">&gt;</span> {
+            } =&gt; (<span class="ident">kind</span>, <span class="prelude-val">Some</span>(<span class="ident">Vs::Quad</span>)),
+            <span class="ident">Ti::Vector</span> { <span class="ident">size</span>: <span class="ident">Vs::Quad</span>, .. } =&gt; {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Validation</span>(<span class="string">&quot;extending vec4 coordinate&quot;</span>));
             }
-            <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                 <span class="macro">log::error!</span>(<span class="string">&quot;wrong coordinate type {:?}&quot;</span>, <span class="ident">other</span>);
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Validation</span>(<span class="string">&quot;coordinate type&quot;</span>));
             }
@@ -1473,7 +1473,7 @@
 
         <span class="comment">// Convert the index to the coordinate component type, if necessary.</span>
         <span class="kw">let</span> <span class="ident">array_index_i32_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">array_index</span>];
-        <span class="kw">let</span> <span class="ident">reconciled_array_index_id</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">component_kind</span> <span class="op">=</span><span class="op">=</span> <span class="ident"><span class="kw">crate</span>::ScalarKind::Sint</span> {
+        <span class="kw">let</span> <span class="ident">reconciled_array_index_id</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">component_kind</span> <span class="op">==</span> <span class="ident"><span class="kw">crate</span>::ScalarKind::Sint</span> {
             <span class="ident">array_index_i32_id</span>
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">component_type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="ident">LookupType::Local</span>(<span class="ident">LocalType::Value</span> {
@@ -1515,18 +1515,18 @@
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">get_image_id</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">expr_handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
+    <span class="kw">fn</span> <span class="ident">get_image_id</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">expr_handle</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>) -&gt; <span class="ident">Word</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">ir_function</span>.<span class="ident">expressions</span>[<span class="ident">expr_handle</span>] {
-            <span class="ident"><span class="kw">crate</span>::Expression::GlobalVariable</span>(<span class="ident">handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::Expression::GlobalVariable</span>(<span class="ident">handle</span>) =&gt; {
                 <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">global_variables</span>[<span class="ident">handle</span>.<span class="ident">index</span>()].<span class="ident">handle_id</span>
             }
-            <span class="ident"><span class="kw">crate</span>::Expression::FunctionArgument</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::Expression::FunctionArgument</span>(<span class="ident">i</span>) =&gt; {
                 <span class="self">self</span>.<span class="ident">function</span>.<span class="ident">parameters</span>[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">handle_id</span>
             }
-            <span class="kw-2">ref</span> <span class="ident">other</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(<span class="string">&quot;Unexpected image expression {:?}&quot;</span>, <span class="ident">other</span>),
+            <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;Unexpected image expression {:?}&quot;</span>, <span class="ident">other</span>),
         };
 
-        <span class="kw">if</span> <span class="ident">id</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">id</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="macro">unreachable!</span>(
                 <span class="string">&quot;Image expression {:?} doesn&#39;t have a handle ID&quot;</span>,
                 <span class="ident">expr_handle</span>
@@ -1540,11 +1540,11 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// If `coordinates` is a scalar, return a scalar one. Otherwise, return</span>
     <span class="doccomment">/// a vector of ones.</span>
-    <span class="kw">fn</span> <span class="ident">write_coordinate_one</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">coordinates</span>: <span class="kw-2">&amp;</span><span class="ident">ImageCoordinates</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">write_coordinate_one</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">coordinates</span>: <span class="kw-2">&amp;</span><span class="ident">ImageCoordinates</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">one</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_scope_constant</span>(<span class="number">1</span>);
         <span class="kw">match</span> <span class="ident">coordinates</span>.<span class="ident">size</span> {
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>(<span class="ident">one</span>),
-            <span class="prelude-val">Some</span>(<span class="ident">vector_size</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">one</span>),
+            <span class="prelude-val">Some</span>(<span class="ident">vector_size</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">ones</span> <span class="op">=</span> [<span class="ident">one</span>; <span class="number">4</span>];
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gen_id</span>();
                 <span class="ident">Instruction::constant_composite</span>(
@@ -1569,7 +1569,7 @@
         <span class="ident">input_id</span>: <span class="ident">Word</span>,
         <span class="ident">size_id</span>: <span class="ident">Word</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">i32_one_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_scope_constant</span>(<span class="number">1</span>);
 
         <span class="comment">// Subtract one from `size` to get the largest valid value.</span>
@@ -1607,10 +1607,10 @@
         <span class="ident">image_id</span>: <span class="ident">Word</span>,
         <span class="ident">level_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Word</span> {
+    ) -&gt; <span class="ident">Word</span> {
         <span class="kw">let</span> <span class="ident">coordinate_bounds_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gen_id</span>();
         <span class="kw">match</span> <span class="ident">level_id</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">level_id</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">level_id</span>) =&gt; {
                 <span class="comment">// A level of detail was provided, so fetch the image size for</span>
                 <span class="comment">// that level.</span>
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">Instruction::image_query</span>(
@@ -1622,7 +1622,7 @@
                 <span class="ident">inst</span>.<span class="ident">add_operand</span>(<span class="ident">level_id</span>);
                 <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">inst</span>);
             }
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">_</span> =&gt; {
                 <span class="comment">// No level of detail was given.</span>
                 <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">Instruction::image_query</span>(
                     <span class="ident">spirv::Op::ImageQuerySize</span>,
@@ -1657,7 +1657,7 @@
         <span class="ident">level_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
         <span class="ident">sample_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Word</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>), <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">Word</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">require_any</span>(
             <span class="string">&quot;the `Restrict` image bounds check policy&quot;</span>,
             <span class="kw-2">&amp;</span>[<span class="ident">spirv::Capability::ImageQuery</span>],
@@ -1744,7 +1744,7 @@
         <span class="ident">sample_id</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Word</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
         <span class="ident">access</span>: <span class="kw-2">&amp;</span><span class="ident">A</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">A::Output</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">A::Output</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">require_any</span>(
             <span class="string">&quot;the `ReadZeroSkipWrite` image bounds check policy&quot;</span>,
             <span class="kw-2">&amp;</span>[<span class="ident">spirv::Capability::ImageQuery</span>],
@@ -1875,12 +1875,12 @@
         <span class="ident">array_index</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">level_or_sample</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">image_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_image_id</span>(<span class="ident">image</span>);
         <span class="kw">let</span> <span class="ident">image_type</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">fun_info</span>[<span class="ident">image</span>].<span class="ident">ty</span>.<span class="ident">inner_with</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">ir_module</span>.<span class="ident">types</span>);
         <span class="kw">let</span> <span class="ident">image_class</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">image_type</span> {
-            <span class="ident"><span class="kw">crate</span>::TypeInner::Image</span> { <span class="ident">class</span>, .. } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">class</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Validation</span>(<span class="string">&quot;image type&quot;</span>)),
+            <span class="ident"><span class="kw">crate</span>::TypeInner::Image</span> { <span class="ident">class</span>, .. } =&gt; <span class="ident">class</span>,
+            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Validation</span>(<span class="string">&quot;image type&quot;</span>)),
         };
 
         <span class="kw">let</span> <span class="ident">access</span> <span class="op">=</span> <span class="ident">Load::from_image_expr</span>(<span class="self">self</span>, <span class="ident">image_id</span>, <span class="ident">image_class</span>, <span class="ident">result_type_id</span>)<span class="question-mark">?</span>;
@@ -1889,19 +1889,19 @@
         <span class="comment">// Figure out what the `level_or_sample` operand really means.</span>
         <span class="kw">let</span> <span class="ident">level_or_sample_id</span> <span class="op">=</span> <span class="ident">level_or_sample</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">i</span>]);
         <span class="kw">let</span> (<span class="ident">level_id</span>, <span class="ident">sample_id</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">image_class</span> {
-            <span class="ident"><span class="kw">crate</span>::ImageClass::Sampled</span> { <span class="ident">multi</span>, .. } <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::ImageClass::Depth</span> { <span class="ident">multi</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::ImageClass::Sampled</span> { <span class="ident">multi</span>, .. } <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::ImageClass::Depth</span> { <span class="ident">multi</span> } =&gt; {
                 <span class="kw">if</span> <span class="ident">multi</span> {
                     (<span class="prelude-val">None</span>, <span class="ident">level_or_sample_id</span>)
                 } <span class="kw">else</span> {
                     (<span class="ident">level_or_sample_id</span>, <span class="prelude-val">None</span>)
                 }
             }
-            <span class="ident"><span class="kw">crate</span>::ImageClass::Storage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
+            <span class="ident"><span class="kw">crate</span>::ImageClass::Storage</span> { .. } =&gt; (<span class="prelude-val">None</span>, <span class="prelude-val">None</span>),
         };
 
         <span class="comment">// Perform the access, according to the bounds check policy.</span>
         <span class="kw">let</span> <span class="ident">access_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">bounds_check_policies</span>.<span class="ident">image</span> {
-            <span class="ident"><span class="kw">crate</span>::back::BoundsCheckPolicy::Restrict</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::back::BoundsCheckPolicy::Restrict</span> =&gt; {
                 <span class="kw">let</span> (<span class="ident">coords</span>, <span class="ident">level_id</span>, <span class="ident">sample_id</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">write_restricted_coordinates</span>(
                     <span class="ident">image_id</span>,
                     <span class="ident">coordinates</span>,
@@ -1911,7 +1911,7 @@
                 )<span class="question-mark">?</span>;
                 <span class="ident">access</span>.<span class="ident">generate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">id_gen</span>, <span class="ident">coords</span>, <span class="ident">level_id</span>, <span class="ident">sample_id</span>, <span class="ident">block</span>)
             }
-            <span class="ident"><span class="kw">crate</span>::back::BoundsCheckPolicy::ReadZeroSkipWrite</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>
+            <span class="ident"><span class="kw">crate</span>::back::BoundsCheckPolicy::ReadZeroSkipWrite</span> =&gt; <span class="self">self</span>
                 .<span class="ident">write_conditional_image_access</span>(
                     <span class="ident">image_id</span>,
                     <span class="ident">coordinates</span>,
@@ -1920,7 +1920,7 @@
                     <span class="ident">block</span>,
                     <span class="kw-2">&amp;</span><span class="ident">access</span>,
                 )<span class="question-mark">?</span>,
-            <span class="ident"><span class="kw">crate</span>::back::BoundsCheckPolicy::Unchecked</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">access</span>.<span class="ident">generate</span>(
+            <span class="ident"><span class="kw">crate</span>::back::BoundsCheckPolicy::Unchecked</span> =&gt; <span class="ident">access</span>.<span class="ident">generate</span>(
                 <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">id_gen</span>,
                 <span class="ident">coordinates</span>.<span class="ident">value_id</span>,
                 <span class="ident">level_id</span>,
@@ -1932,7 +1932,7 @@
         <span class="comment">// For depth images, `ImageLoad` expressions produce a single f32,</span>
         <span class="comment">// whereas the SPIR-V instructions always produce a vec4. So we may have</span>
         <span class="comment">// to pull out the component we need.</span>
-        <span class="kw">let</span> <span class="ident">result_id</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">result_type_id</span> <span class="op">=</span><span class="op">=</span> <span class="ident">access</span>.<span class="ident">result_type</span>() {
+        <span class="kw">let</span> <span class="ident">result_id</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">result_type_id</span> <span class="op">==</span> <span class="ident">access</span>.<span class="ident">result_type</span>() {
             <span class="comment">// The instruction produced the type we expected. We can use</span>
             <span class="comment">// its result as-is.</span>
             <span class="ident">access_id</span>
@@ -1967,7 +1967,7 @@
         <span class="ident">level</span>: <span class="ident"><span class="kw">crate</span>::SampleLevel</span>,
         <span class="ident">depth_ref</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::instructions::SampleLod</span>;
         <span class="comment">// image</span>
         <span class="kw">let</span> <span class="ident">image_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_image_id</span>(<span class="ident">image</span>);
@@ -1978,8 +1978,8 @@
             <span class="ident"><span class="kw">crate</span>::TypeInner::Image</span> {
                 <span class="ident">class</span>: <span class="ident"><span class="kw">crate</span>::ImageClass::Depth</span> { .. },
                 ..
-            } <span class="op">=</span><span class="op">&gt;</span> <span class="ident">depth_ref</span>.<span class="ident">is_none</span>(),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            } =&gt; <span class="ident">depth_ref</span>.<span class="ident">is_none</span>(),
+            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
         };
         <span class="kw">let</span> <span class="ident">sample_result_type_id</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">needs_sub_access</span> {
             <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="ident">LookupType::Local</span>(<span class="ident">LocalType::Value</span> {
@@ -2016,7 +2016,7 @@
         <span class="ident">mask</span>.<span class="ident">set</span>(<span class="ident">spirv::ImageOperands::CONST_OFFSET</span>, <span class="ident">offset</span>.<span class="ident">is_some</span>());
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">main_instruction</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">level</span> {
-            <span class="ident"><span class="kw">crate</span>::SampleLevel::Zero</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::SampleLevel::Zero</span> =&gt; {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">Instruction::image_sample</span>(
                     <span class="ident">sample_result_type_id</span>,
                     <span class="ident">id</span>,
@@ -2036,7 +2036,7 @@
 
                 <span class="ident">inst</span>
             }
-            <span class="ident"><span class="kw">crate</span>::SampleLevel::Auto</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::SampleLevel::Auto</span> =&gt; {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">Instruction::image_sample</span>(
                     <span class="ident">sample_result_type_id</span>,
                     <span class="ident">id</span>,
@@ -2050,7 +2050,7 @@
                 }
                 <span class="ident">inst</span>
             }
-            <span class="ident"><span class="kw">crate</span>::SampleLevel::Exact</span>(<span class="ident">lod_handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::SampleLevel::Exact</span>(<span class="ident">lod_handle</span>) =&gt; {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">Instruction::image_sample</span>(
                     <span class="ident">sample_result_type_id</span>,
                     <span class="ident">id</span>,
@@ -2067,7 +2067,7 @@
 
                 <span class="ident">inst</span>
             }
-            <span class="ident"><span class="kw">crate</span>::SampleLevel::Bias</span>(<span class="ident">bias_handle</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::SampleLevel::Bias</span>(<span class="ident">bias_handle</span>) =&gt; {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">Instruction::image_sample</span>(
                     <span class="ident">sample_result_type_id</span>,
                     <span class="ident">id</span>,
@@ -2084,7 +2084,7 @@
 
                 <span class="ident">inst</span>
             }
-            <span class="ident"><span class="kw">crate</span>::SampleLevel::Gradient</span> { <span class="ident">x</span>, <span class="ident">y</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::SampleLevel::Gradient</span> { <span class="ident">x</span>, <span class="ident">y</span> } =&gt; {
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inst</span> <span class="op">=</span> <span class="ident">Instruction::image_sample</span>(
                     <span class="ident">sample_result_type_id</span>,
                     <span class="ident">id</span>,
@@ -2137,7 +2137,7 @@
         <span class="ident">image</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
         <span class="ident">query</span>: <span class="ident"><span class="kw">crate</span>::ImageQuery</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Word</span>, <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">ImageClass</span> <span class="kw">as</span> <span class="ident">Ic</span>, <span class="ident">ImageDimension</span> <span class="kw">as</span> <span class="ident">Id</span>, <span class="ident">ImageQuery</span> <span class="kw">as</span> <span class="ident">Iq</span>};
 
         <span class="kw">let</span> <span class="ident">image_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_image_id</span>(<span class="ident">image</span>);
@@ -2147,8 +2147,8 @@
                 <span class="ident">dim</span>,
                 <span class="ident">arrayed</span>,
                 <span class="ident">class</span>,
-            } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">dim</span>, <span class="ident">arrayed</span>, <span class="ident">class</span>),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+            } =&gt; (<span class="ident">dim</span>, <span class="ident">arrayed</span>, <span class="ident">class</span>),
+            <span class="kw">_</span> =&gt; {
                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::Validation</span>(<span class="string">&quot;image type&quot;</span>));
             }
         };
@@ -2157,19 +2157,19 @@
             .<span class="ident">require_any</span>(<span class="string">&quot;image queries&quot;</span>, <span class="kw-2">&amp;</span>[<span class="ident">spirv::Capability::ImageQuery</span>])<span class="question-mark">?</span>;
 
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">query</span> {
-            <span class="ident">Iq::Size</span> { <span class="ident">level</span> } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Iq::Size</span> { <span class="ident">level</span> } =&gt; {
                 <span class="kw">let</span> <span class="ident">dim_coords</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">dim</span> {
-                    <span class="ident">Id::D1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">1</span>,
-                    <span class="ident">Id::D2</span> <span class="op">|</span> <span class="ident">Id::Cube</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">2</span>,
-                    <span class="ident">Id::D3</span> <span class="op">=</span><span class="op">&gt;</span> <span class="number">3</span>,
+                    <span class="ident">Id::D1</span> =&gt; <span class="number">1</span>,
+                    <span class="ident">Id::D2</span> <span class="op">|</span> <span class="ident">Id::Cube</span> =&gt; <span class="number">2</span>,
+                    <span class="ident">Id::D3</span> =&gt; <span class="number">3</span>,
                 };
                 <span class="kw">let</span> <span class="ident">extended_size_type_id</span> <span class="op">=</span> {
                     <span class="kw">let</span> <span class="ident">array_coords</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">arrayed</span> { <span class="number">1</span> } <span class="kw">else</span> { <span class="number">0</span> };
                     <span class="kw">let</span> <span class="ident">vector_size</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">dim_coords</span> <span class="op">+</span> <span class="ident">array_coords</span> {
-                        <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::VectorSize::Bi</span>),
-                        <span class="number">3</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::VectorSize::Tri</span>),
-                        <span class="number">4</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::VectorSize::Quad</span>),
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">None</span>,
+                        <span class="number">2</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::VectorSize::Bi</span>),
+                        <span class="number">3</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::VectorSize::Tri</span>),
+                        <span class="number">4</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::VectorSize::Quad</span>),
+                        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
                     };
                     <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="ident">LookupType::Local</span>(<span class="ident">LocalType::Value</span> {
                         <span class="ident">vector_size</span>,
@@ -2180,11 +2180,11 @@
                 };
 
                 <span class="kw">let</span> (<span class="ident">query_op</span>, <span class="ident">level_id</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">class</span> {
-                    <span class="ident">Ic::Storage</span> { .. } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">spirv::Op::ImageQuerySize</span>, <span class="prelude-val">None</span>),
-                    <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+                    <span class="ident">Ic::Storage</span> { .. } =&gt; (<span class="ident">spirv::Op::ImageQuerySize</span>, <span class="prelude-val">None</span>),
+                    <span class="kw">_</span> =&gt; {
                         <span class="kw">let</span> <span class="ident">level_id</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">level</span> {
-                            <span class="prelude-val">Some</span>(<span class="ident">expr</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">expr</span>],
-                            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">get_index_constant</span>(<span class="number">0</span>),
+                            <span class="prelude-val">Some</span>(<span class="ident">expr</span>) =&gt; <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">expr</span>],
+                            <span class="prelude-val">None</span> =&gt; <span class="self">self</span>.<span class="ident">get_index_constant</span>(<span class="number">0</span>),
                         };
                         (<span class="ident">spirv::Op::ImageQuerySizeLod</span>, <span class="prelude-val">Some</span>(<span class="ident">level_id</span>))
                     }
@@ -2208,8 +2208,8 @@
                     <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gen_id</span>();
                     <span class="kw">let</span> <span class="ident">components</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">dim</span> {
                         <span class="comment">// always pick the first component, and duplicate it for all 3 dimensions</span>
-                        <span class="ident">Id::Cube</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="number">0u32</span>, <span class="number">0</span>][..],
-                        <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="kw-2">&amp;</span>[<span class="number">0u32</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>][..<span class="ident">dim_coords</span>],
+                        <span class="ident">Id::Cube</span> =&gt; <span class="kw-2">&amp;</span>[<span class="number">0u32</span>, <span class="number">0</span>][..],
+                        <span class="kw">_</span> =&gt; <span class="kw-2">&amp;</span>[<span class="number">0u32</span>, <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>][..<span class="ident">dim_coords</span>],
                     };
                     <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">Instruction::vector_shuffle</span>(
                         <span class="ident">result_type_id</span>,
@@ -2223,7 +2223,7 @@
                     <span class="ident">id_extended</span>
                 }
             }
-            <span class="ident">Iq::NumLevels</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Iq::NumLevels</span> =&gt; {
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gen_id</span>();
                 <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">Instruction::image_query</span>(
                     <span class="ident">spirv::Op::ImageQueryLevels</span>,
@@ -2233,11 +2233,11 @@
                 ));
                 <span class="ident">id</span>
             }
-            <span class="ident">Iq::NumLayers</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Iq::NumLayers</span> =&gt; {
                 <span class="kw">let</span> <span class="ident">vec_size</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">dim</span> {
-                    <span class="ident">Id::D1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::VectorSize::Bi</span>,
-                    <span class="ident">Id::D2</span> <span class="op">|</span> <span class="ident">Id::Cube</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::VectorSize::Tri</span>,
-                    <span class="ident">Id::D3</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::VectorSize::Quad</span>,
+                    <span class="ident">Id::D1</span> =&gt; <span class="ident"><span class="kw">crate</span>::VectorSize::Bi</span>,
+                    <span class="ident">Id::D2</span> <span class="op">|</span> <span class="ident">Id::Cube</span> =&gt; <span class="ident"><span class="kw">crate</span>::VectorSize::Tri</span>,
+                    <span class="ident">Id::D3</span> =&gt; <span class="ident"><span class="kw">crate</span>::VectorSize::Quad</span>,
                 };
                 <span class="kw">let</span> <span class="ident">extended_size_type_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_type_id</span>(<span class="ident">LookupType::Local</span>(<span class="ident">LocalType::Value</span> {
                     <span class="ident">vector_size</span>: <span class="prelude-val">Some</span>(<span class="ident">vec_size</span>),
@@ -2263,7 +2263,7 @@
                 ));
                 <span class="ident">id</span>
             }
-            <span class="ident">Iq::NumSamples</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Iq::NumSamples</span> =&gt; {
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">gen_id</span>();
                 <span class="ident">block</span>.<span class="ident">body</span>.<span class="ident">push</span>(<span class="ident">Instruction::image_query</span>(
                     <span class="ident">spirv::Op::ImageQuerySamples</span>,
@@ -2285,7 +2285,7 @@
         <span class="ident">array_index</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="ident">value</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Expression</span><span class="op">&gt;</span>,
         <span class="ident">block</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Block</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">Error</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">image_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_image_id</span>(<span class="ident">image</span>);
         <span class="kw">let</span> <span class="ident">coordinates</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">write_image_coordinates</span>(<span class="ident">coordinate</span>, <span class="ident">array_index</span>, <span class="ident">block</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">value_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cached</span>[<span class="ident">value</span>];
@@ -2293,12 +2293,12 @@
         <span class="kw">let</span> <span class="ident">write</span> <span class="op">=</span> <span class="ident">Store</span> { <span class="ident">image_id</span>, <span class="ident">value_id</span> };
 
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">bounds_check_policies</span>.<span class="ident">image</span> {
-            <span class="ident"><span class="kw">crate</span>::back::BoundsCheckPolicy::Restrict</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::back::BoundsCheckPolicy::Restrict</span> =&gt; {
                 <span class="kw">let</span> (<span class="ident">coords</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="op">=</span>
                     <span class="self">self</span>.<span class="ident">write_restricted_coordinates</span>(<span class="ident">image_id</span>, <span class="ident">coordinates</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">block</span>)<span class="question-mark">?</span>;
                 <span class="ident">write</span>.<span class="ident">generate</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">id_gen</span>, <span class="ident">coords</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>, <span class="ident">block</span>);
             }
-            <span class="ident"><span class="kw">crate</span>::back::BoundsCheckPolicy::ReadZeroSkipWrite</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::back::BoundsCheckPolicy::ReadZeroSkipWrite</span> =&gt; {
                 <span class="self">self</span>.<span class="ident">write_conditional_image_access</span>(
                     <span class="ident">image_id</span>,
                     <span class="ident">coordinates</span>,
@@ -2308,7 +2308,7 @@
                     <span class="kw-2">&amp;</span><span class="ident">write</span>,
                 )<span class="question-mark">?</span>;
             }
-            <span class="ident"><span class="kw">crate</span>::back::BoundsCheckPolicy::Unchecked</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="kw">crate</span>::back::BoundsCheckPolicy::Unchecked</span> =&gt; {
                 <span class="ident">write</span>.<span class="ident">generate</span>(
                     <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">writer</span>.<span class="ident">id_gen</span>,
                     <span class="ident">coordinates</span>.<span class="ident">value_id</span>,

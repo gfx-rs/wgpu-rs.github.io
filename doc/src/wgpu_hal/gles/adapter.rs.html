@@ -691,7 +691,7 @@
     <span class="doccomment">/// resulting in an `Err`.</span>
     <span class="doccomment">/// # Notes</span>
     <span class="doccomment">/// `WebGL 2` version returned as `OpenGL ES 3.0`</span>
-    <span class="kw">fn</span> <span class="ident">parse_version</span>(<span class="kw-2">mut</span> <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">u8</span>, <span class="ident">u8</span>), <span class="ident"><span class="kw">crate</span>::InstanceError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">parse_version</span>(<span class="kw-2">mut</span> <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">u8</span>, <span class="ident">u8</span>), <span class="ident"><span class="kw">crate</span>::InstanceError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">webgl_sig</span> <span class="op">=</span> <span class="string">&quot;WebGL &quot;</span>;
         <span class="comment">// According to the WebGL specification</span>
         <span class="comment">// VERSION  WebGL&lt;space&gt;1.0&lt;space&gt;&lt;vendor-specific information&gt;</span>
@@ -703,10 +703,10 @@
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">es_sig</span> <span class="op">=</span> <span class="string">&quot; ES &quot;</span>;
             <span class="kw">match</span> <span class="ident">src</span>.<span class="ident">rfind</span>(<span class="ident">es_sig</span>) {
-                <span class="prelude-val">Some</span>(<span class="ident">pos</span>) <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">Some</span>(<span class="ident">pos</span>) =&gt; {
                     <span class="ident">src</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">src</span>[<span class="ident">pos</span> <span class="op">+</span> <span class="ident">es_sig</span>.<span class="ident">len</span>()..];
                 }
-                <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> {
+                <span class="prelude-val">None</span> =&gt; {
                     <span class="macro">log::warn!</span>(<span class="string">&quot;ES not found in &#39;{}&#39;&quot;</span>, <span class="ident">src</span>);
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::InstanceError</span>);
                 }
@@ -715,16 +715,16 @@
 
         <span class="kw">let</span> <span class="ident">glsl_es_sig</span> <span class="op">=</span> <span class="string">&quot;GLSL ES &quot;</span>;
         <span class="kw">let</span> <span class="ident">is_glsl</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">src</span>.<span class="ident">find</span>(<span class="ident">glsl_es_sig</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">pos</span>) <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">pos</span>) =&gt; {
                 <span class="ident">src</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">src</span>[<span class="ident">pos</span> <span class="op">+</span> <span class="ident">glsl_es_sig</span>.<span class="ident">len</span>()..];
                 <span class="bool-val">true</span>
             }
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> <span class="bool-val">false</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="bool-val">false</span>,
         };
 
         <span class="kw">let</span> (<span class="ident">version</span>, <span class="ident">_vendor_info</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">src</span>.<span class="ident">find</span>(<span class="string">&#39; &#39;</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">i</span>) <span class="op">=</span><span class="op">&gt;</span> (<span class="kw-2">&amp;</span><span class="ident">src</span>[..<span class="ident">i</span>], <span class="ident">src</span>[<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>..].<span class="ident">to_string</span>()),
-            <span class="prelude-val">None</span> <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">src</span>, <span class="ident">String::new</span>()),
+            <span class="prelude-val">Some</span>(<span class="ident">i</span>) =&gt; (<span class="kw-2">&amp;</span><span class="ident">src</span>[..<span class="ident">i</span>], <span class="ident">src</span>[<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>..].<span class="ident">to_string</span>()),
+            <span class="prelude-val">None</span> =&gt; (<span class="ident">src</span>, <span class="ident">String::new</span>()),
         };
 
         <span class="comment">// TODO: make this even more lenient so that we can also accept</span>
@@ -741,7 +741,7 @@
         });
 
         <span class="kw">match</span> (<span class="ident">major</span>, <span class="ident">minor</span>) {
-            (<span class="prelude-val">Some</span>(<span class="ident">major</span>), <span class="prelude-val">Some</span>(<span class="ident">minor</span>)) <span class="op">=</span><span class="op">&gt;</span> <span class="prelude-val">Ok</span>((
+            (<span class="prelude-val">Some</span>(<span class="ident">major</span>), <span class="prelude-val">Some</span>(<span class="ident">minor</span>)) =&gt; <span class="prelude-val">Ok</span>((
                 <span class="comment">// Return WebGL 2.0 version as OpenGL ES 3.0</span>
                 <span class="kw">if</span> <span class="ident">is_webgl</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">is_glsl</span> {
                     <span class="ident">major</span> <span class="op">+</span> <span class="number">1</span>
@@ -750,14 +750,14 @@
                 },
                 <span class="ident">minor</span>,
             )),
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="kw">_</span> =&gt; {
                 <span class="macro">log::warn!</span>(<span class="string">&quot;Unable to extract the version from &#39;{}&#39;&quot;</span>, <span class="ident">version</span>);
                 <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::InstanceError</span>)
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">make_info</span>(<span class="ident">vendor_orig</span>: <span class="ident">String</span>, <span class="ident">renderer_orig</span>: <span class="ident">String</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">wgt::AdapterInfo</span> {
+    <span class="kw">fn</span> <span class="ident">make_info</span>(<span class="ident">vendor_orig</span>: <span class="ident">String</span>, <span class="ident">renderer_orig</span>: <span class="ident">String</span>) -&gt; <span class="ident">wgt::AdapterInfo</span> {
         <span class="kw">let</span> <span class="ident">vendor</span> <span class="op">=</span> <span class="ident">vendor_orig</span>.<span class="ident">to_lowercase</span>();
         <span class="kw">let</span> <span class="ident">renderer</span> <span class="op">=</span> <span class="ident">renderer_orig</span>.<span class="ident">to_lowercase</span>();
 
@@ -832,7 +832,7 @@
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">expose</span>(
         <span class="ident">context</span>: <span class="ident"><span class="kw">super</span>::AdapterContext</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::ExposedAdapter</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::Api</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::ExposedAdapter</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::Api</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="kw">let</span> <span class="ident">extensions</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">supported_extensions</span>();
 
@@ -898,18 +898,18 @@
         <span class="comment">// want us to write to these SSBOs, but GLES cannot express that. We detect this case and</span>
         <span class="comment">// disable writing to SSBOs.</span>
         <span class="kw">let</span> <span class="ident">vertex_ssbo_false_zero</span> <span class="op">=</span>
-            <span class="ident">vertex_shader_storage_blocks</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">vertex_shader_storage_textures</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
+            <span class="ident">vertex_shader_storage_blocks</span> <span class="op">==</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">vertex_shader_storage_textures</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
         <span class="kw">if</span> <span class="ident">vertex_ssbo_false_zero</span> {
             <span class="comment">// We only care about fragment here as the 0 is a lie.</span>
             <span class="macro">log::warn!</span>(<span class="string">&quot;Max vertex shader SSBO == 0 and SSTO != 0. Interpreting as false zero.&quot;</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">max_storage_buffers_per_shader_stage</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">vertex_shader_storage_blocks</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">let</span> <span class="ident">max_storage_buffers_per_shader_stage</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">vertex_shader_storage_blocks</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="ident">fragment_shader_storage_blocks</span>
         } <span class="kw">else</span> {
             <span class="ident">vertex_shader_storage_blocks</span>.<span class="ident">min</span>(<span class="ident">fragment_shader_storage_blocks</span>)
         };
-        <span class="kw">let</span> <span class="ident">max_storage_textures_per_shader_stage</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">vertex_shader_storage_textures</span> <span class="op">=</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">let</span> <span class="ident">max_storage_textures_per_shader_stage</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">vertex_shader_storage_textures</span> <span class="op">==</span> <span class="number">0</span> {
             <span class="ident">fragment_shader_storage_textures</span>
         } <span class="kw">else</span> {
             <span class="ident">vertex_shader_storage_textures</span>.<span class="ident">min</span>(<span class="ident">fragment_shader_storage_textures</span>)
@@ -1045,7 +1045,7 @@
         <span class="kw">if</span> <span class="ident">r</span>.<span class="ident">contains</span>(<span class="string">&quot;mesa&quot;</span>)
             <span class="op">&amp;&amp;</span> <span class="ident">r</span>.<span class="ident">contains</span>(<span class="string">&quot;intel&quot;</span>)
             <span class="op">&amp;&amp;</span> <span class="ident">r</span>.<span class="ident">split</span>(<span class="kw-2">&amp;</span>[<span class="string">&#39; &#39;</span>, <span class="string">&#39;(&#39;</span>, <span class="string">&#39;)&#39;</span>][..])
-                .<span class="ident">any</span>(<span class="op">|</span><span class="ident">substr</span><span class="op">|</span> <span class="ident">substr</span>.<span class="ident">len</span>() <span class="op">=</span><span class="op">=</span> <span class="number">3</span> <span class="op">&amp;&amp;</span> <span class="ident">substr</span>.<span class="ident">chars</span>().<span class="ident">nth</span>(<span class="number">2</span>) <span class="op">=</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="string">&#39;l&#39;</span>))
+                .<span class="ident">any</span>(<span class="op">|</span><span class="ident">substr</span><span class="op">|</span> <span class="ident">substr</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">3</span> <span class="op">&amp;&amp;</span> <span class="ident">substr</span>.<span class="ident">chars</span>().<span class="ident">nth</span>(<span class="number">2</span>) <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="string">&#39;l&#39;</span>))
         {
             <span class="macro">log::warn!</span>(
                 <span class="string">&quot;Detected skylake derivative running on mesa i915. Clears to srgb textures will \
@@ -1091,7 +1091,7 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_shader_clear_program</span>(
         <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">glow::Context</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">glow::Program</span>, <span class="ident">glow::UniformLocation</span>) {
+    ) -&gt; (<span class="ident">glow::Program</span>, <span class="ident">glow::UniformLocation</span>) {
         <span class="kw">let</span> <span class="ident">program</span> <span class="op">=</span> <span class="ident">gl</span>
             .<span class="ident">create_program</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;Could not create shader program&quot;</span>);
@@ -1123,7 +1123,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">features</span>: <span class="ident">wgt::Features</span>,
         <span class="ident">_limits</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::Limits</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::OpenDevice</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::Api</span><span class="op">&gt;</span>, <span class="ident"><span class="kw">crate</span>::DeviceError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::OpenDevice</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::Api</span><span class="op">&gt;</span>, <span class="ident"><span class="kw">crate</span>::DeviceError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
         <span class="ident">gl</span>.<span class="ident">pixel_store_i32</span>(<span class="ident">glow::UNPACK_ALIGNMENT</span>, <span class="number">1</span>);
         <span class="ident">gl</span>.<span class="ident">pixel_store_i32</span>(<span class="ident">glow::PACK_ALIGNMENT</span>, <span class="number">1</span>);
@@ -1173,7 +1173,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">texture_format_capabilities</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::TextureFormatCapabilities</span> {
+    ) -&gt; <span class="ident"><span class="kw">crate</span>::TextureFormatCapabilities</span> {
         <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::TextureFormatCapabilities</span> <span class="kw">as</span> <span class="ident">Tfc</span>;
         <span class="kw">use</span> <span class="ident">wgt::TextureFormat</span> <span class="kw">as</span> <span class="ident">Tf</span>;
         <span class="comment">// The storage types are sprinkled based on section</span>
@@ -1181,27 +1181,27 @@
         <span class="kw">let</span> <span class="ident">unfiltered_color</span> <span class="op">=</span> <span class="ident">Tfc::SAMPLED</span> <span class="op">|</span> <span class="ident">Tfc::COLOR_ATTACHMENT</span>;
         <span class="kw">let</span> <span class="ident">filtered_color</span> <span class="op">=</span> <span class="ident">unfiltered_color</span> <span class="op">|</span> <span class="ident">Tfc::SAMPLED_LINEAR</span> <span class="op">|</span> <span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>;
         <span class="kw">match</span> <span class="ident">format</span> {
-            <span class="ident">Tf::R8Unorm</span> <span class="op">|</span> <span class="ident">Tf::R8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">filtered_color</span>,
-            <span class="ident">Tf::R8Uint</span> <span class="op">|</span> <span class="ident">Tf::R8Sint</span> <span class="op">|</span> <span class="ident">Tf::R16Uint</span> <span class="op">|</span> <span class="ident">Tf::R16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unfiltered_color</span>,
-            <span class="ident">Tf::R16Float</span> <span class="op">|</span> <span class="ident">Tf::Rg8Unorm</span> <span class="op">|</span> <span class="ident">Tf::Rg8Snorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">filtered_color</span>,
-            <span class="ident">Tf::Rg8Uint</span> <span class="op">|</span> <span class="ident">Tf::Rg8Sint</span> <span class="op">|</span> <span class="ident">Tf::R32Uint</span> <span class="op">|</span> <span class="ident">Tf::R32Sint</span> <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident">Tf::R8Unorm</span> <span class="op">|</span> <span class="ident">Tf::R8Snorm</span> =&gt; <span class="ident">filtered_color</span>,
+            <span class="ident">Tf::R8Uint</span> <span class="op">|</span> <span class="ident">Tf::R8Sint</span> <span class="op">|</span> <span class="ident">Tf::R16Uint</span> <span class="op">|</span> <span class="ident">Tf::R16Sint</span> =&gt; <span class="ident">unfiltered_color</span>,
+            <span class="ident">Tf::R16Float</span> <span class="op">|</span> <span class="ident">Tf::Rg8Unorm</span> <span class="op">|</span> <span class="ident">Tf::Rg8Snorm</span> =&gt; <span class="ident">filtered_color</span>,
+            <span class="ident">Tf::Rg8Uint</span> <span class="op">|</span> <span class="ident">Tf::Rg8Sint</span> <span class="op">|</span> <span class="ident">Tf::R32Uint</span> <span class="op">|</span> <span class="ident">Tf::R32Sint</span> =&gt; {
                 <span class="ident">unfiltered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>
             }
-            <span class="ident">Tf::R32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unfiltered_color</span>,
-            <span class="ident">Tf::Rg16Uint</span> <span class="op">|</span> <span class="ident">Tf::Rg16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unfiltered_color</span>,
-            <span class="ident">Tf::Rg16Float</span> <span class="op">|</span> <span class="ident">Tf::Rgba8Unorm</span> <span class="op">|</span> <span class="ident">Tf::Rgba8UnormSrgb</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">filtered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>,
-            <span class="ident">Tf::Bgra8UnormSrgb</span> <span class="op">|</span> <span class="ident">Tf::Rgba8Snorm</span> <span class="op">|</span> <span class="ident">Tf::Bgra8Unorm</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">filtered_color</span>,
-            <span class="ident">Tf::Rgba8Uint</span> <span class="op">|</span> <span class="ident">Tf::Rgba8Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unfiltered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>,
-            <span class="ident">Tf::Rgb10a2Unorm</span> <span class="op">|</span> <span class="ident">Tf::Rg11b10Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">filtered_color</span>,
-            <span class="ident">Tf::Rg32Uint</span> <span class="op">|</span> <span class="ident">Tf::Rg32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unfiltered_color</span>,
-            <span class="ident">Tf::Rg32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unfiltered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>,
-            <span class="ident">Tf::Rgba16Uint</span> <span class="op">|</span> <span class="ident">Tf::Rgba16Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unfiltered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>,
-            <span class="ident">Tf::Rgba16Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">filtered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>,
-            <span class="ident">Tf::Rgba32Uint</span> <span class="op">|</span> <span class="ident">Tf::Rgba32Sint</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unfiltered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>,
-            <span class="ident">Tf::Rgba32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">unfiltered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>,
-            <span class="ident">Tf::Depth32Float</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tfc::SAMPLED</span> <span class="op">|</span> <span class="ident">Tfc::DEPTH_STENCIL_ATTACHMENT</span>,
-            <span class="ident">Tf::Depth24Plus</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tfc::SAMPLED</span> <span class="op">|</span> <span class="ident">Tfc::DEPTH_STENCIL_ATTACHMENT</span>,
-            <span class="ident">Tf::Depth24PlusStencil8</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tfc::SAMPLED</span> <span class="op">|</span> <span class="ident">Tfc::DEPTH_STENCIL_ATTACHMENT</span>,
+            <span class="ident">Tf::R32Float</span> =&gt; <span class="ident">unfiltered_color</span>,
+            <span class="ident">Tf::Rg16Uint</span> <span class="op">|</span> <span class="ident">Tf::Rg16Sint</span> =&gt; <span class="ident">unfiltered_color</span>,
+            <span class="ident">Tf::Rg16Float</span> <span class="op">|</span> <span class="ident">Tf::Rgba8Unorm</span> <span class="op">|</span> <span class="ident">Tf::Rgba8UnormSrgb</span> =&gt; <span class="ident">filtered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>,
+            <span class="ident">Tf::Bgra8UnormSrgb</span> <span class="op">|</span> <span class="ident">Tf::Rgba8Snorm</span> <span class="op">|</span> <span class="ident">Tf::Bgra8Unorm</span> =&gt; <span class="ident">filtered_color</span>,
+            <span class="ident">Tf::Rgba8Uint</span> <span class="op">|</span> <span class="ident">Tf::Rgba8Sint</span> =&gt; <span class="ident">unfiltered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>,
+            <span class="ident">Tf::Rgb10a2Unorm</span> <span class="op">|</span> <span class="ident">Tf::Rg11b10Float</span> =&gt; <span class="ident">filtered_color</span>,
+            <span class="ident">Tf::Rg32Uint</span> <span class="op">|</span> <span class="ident">Tf::Rg32Sint</span> =&gt; <span class="ident">unfiltered_color</span>,
+            <span class="ident">Tf::Rg32Float</span> =&gt; <span class="ident">unfiltered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>,
+            <span class="ident">Tf::Rgba16Uint</span> <span class="op">|</span> <span class="ident">Tf::Rgba16Sint</span> =&gt; <span class="ident">unfiltered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>,
+            <span class="ident">Tf::Rgba16Float</span> =&gt; <span class="ident">filtered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>,
+            <span class="ident">Tf::Rgba32Uint</span> <span class="op">|</span> <span class="ident">Tf::Rgba32Sint</span> =&gt; <span class="ident">unfiltered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>,
+            <span class="ident">Tf::Rgba32Float</span> =&gt; <span class="ident">unfiltered_color</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span>,
+            <span class="ident">Tf::Depth32Float</span> =&gt; <span class="ident">Tfc::SAMPLED</span> <span class="op">|</span> <span class="ident">Tfc::DEPTH_STENCIL_ATTACHMENT</span>,
+            <span class="ident">Tf::Depth24Plus</span> =&gt; <span class="ident">Tfc::SAMPLED</span> <span class="op">|</span> <span class="ident">Tfc::DEPTH_STENCIL_ATTACHMENT</span>,
+            <span class="ident">Tf::Depth24PlusStencil8</span> =&gt; <span class="ident">Tfc::SAMPLED</span> <span class="op">|</span> <span class="ident">Tfc::DEPTH_STENCIL_ATTACHMENT</span>,
             <span class="ident">Tf::Rgb9e5Ufloat</span>
             <span class="op">|</span> <span class="ident">Tf::Bc1RgbaUnorm</span>
             <span class="op">|</span> <span class="ident">Tf::Bc1RgbaUnormSrgb</span>
@@ -1252,14 +1252,14 @@
             <span class="op">|</span> <span class="ident">Tf::Astc12x10RgbaUnorm</span>
             <span class="op">|</span> <span class="ident">Tf::Astc12x10RgbaUnormSrgb</span>
             <span class="op">|</span> <span class="ident">Tf::Astc12x12RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf::Astc12x12RgbaUnormSrgb</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Tfc::SAMPLED</span> <span class="op">|</span> <span class="ident">Tfc::SAMPLED_LINEAR</span>,
+            <span class="op">|</span> <span class="ident">Tf::Astc12x12RgbaUnormSrgb</span> =&gt; <span class="ident">Tfc::SAMPLED</span> <span class="op">|</span> <span class="ident">Tfc::SAMPLED_LINEAR</span>,
         }
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">surface_capabilities</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Surface</span>,
-    ) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::SurfaceCapabilities</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::SurfaceCapabilities</span><span class="op">&gt;</span> {
         <span class="kw">if</span> <span class="ident">surface</span>.<span class="ident">presentable</span> {
             <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::SurfaceCapabilities</span> {
                 <span class="ident">formats</span>: <span class="kw">if</span> <span class="ident">surface</span>.<span class="ident">enable_srgb</span> {

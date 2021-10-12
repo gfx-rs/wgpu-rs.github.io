@@ -211,35 +211,35 @@
 }
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">Id</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SerialId</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">id</span>: <span class="ident">Id</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">id</span>: <span class="ident">Id</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">backend</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">unzip</span>();
         <span class="ident"><span class="self">Self</span>::Id</span>(<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">backend</span>)
     }
 }
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>)]</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">SerialId</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Id</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">id</span>: <span class="ident">SerialId</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">id</span>: <span class="ident">SerialId</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">match</span> <span class="ident">id</span> {
-            <span class="ident">SerialId::Id</span>(<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">backend</span>) <span class="op">=</span><span class="op">&gt;</span> <span class="ident">TypedId::zip</span>(<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">backend</span>),
+            <span class="ident">SerialId::Id</span>(<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">backend</span>) =&gt; <span class="ident">TypedId::zip</span>(<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">backend</span>),
         }
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Id</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">dummy</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">dummy</span>() -&gt; <span class="ident">Valid</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">Valid</span>(<span class="ident">Id</span>(<span class="ident">NonZeroU64::new</span>(<span class="number">1</span>).<span class="ident">unwrap</span>(), <span class="ident">PhantomData</span>))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">backend</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Backend</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">backend</span>(<span class="self">self</span>) -&gt; <span class="ident">Backend</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">get</span>() <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="number">64</span> <span class="op">-</span> <span class="ident">BACKEND_BITS</span>) <span class="kw">as</span> <span class="ident">u8</span> {
-            <span class="number">0</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Backend::Empty</span>,
-            <span class="number">1</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Backend::Vulkan</span>,
-            <span class="number">2</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Backend::Metal</span>,
-            <span class="number">3</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Backend::Dx12</span>,
-            <span class="number">4</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Backend::Dx11</span>,
-            <span class="number">5</span> <span class="op">=</span><span class="op">&gt;</span> <span class="ident">Backend::Gl</span>,
-            <span class="kw">_</span> <span class="op">=</span><span class="op">&gt;</span> <span class="macro">unreachable!</span>(),
+            <span class="number">0</span> =&gt; <span class="ident">Backend::Empty</span>,
+            <span class="number">1</span> =&gt; <span class="ident">Backend::Vulkan</span>,
+            <span class="number">2</span> =&gt; <span class="ident">Backend::Metal</span>,
+            <span class="number">3</span> =&gt; <span class="ident">Backend::Dx12</span>,
+            <span class="number">4</span> =&gt; <span class="ident">Backend::Dx11</span>,
+            <span class="number">5</span> =&gt; <span class="ident">Backend::Gl</span>,
+            <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
         }
     }
 }
@@ -247,13 +247,13 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Copy</span> <span class="kw">for</span> <span class="ident">Id</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {}
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">Id</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">PhantomData</span>)
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Id</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">formatter</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
         <span class="self">self</span>.<span class="ident">unzip</span>().<span class="ident">fmt</span>(<span class="ident">formatter</span>)
     }
 }
@@ -265,21 +265,21 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">PartialEq</span> <span class="kw">for</span> <span class="ident">Id</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="number">0</span> <span class="op">=</span><span class="op">=</span> <span class="ident">other</span>.<span class="number">0</span>
+    <span class="kw">fn</span> <span class="ident">eq</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="number">0</span> <span class="op">==</span> <span class="ident">other</span>.<span class="number">0</span>
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Eq</span> <span class="kw">for</span> <span class="ident">Id</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {}
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">PartialOrd</span> <span class="kw">for</span> <span class="ident">Id</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ordering</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ordering</span><span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">partial_cmp</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Ord</span> <span class="kw">for</span> <span class="ident">Id</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">Ordering</span> {
+    <span class="kw">fn</span> <span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="ident">Ordering</span> {
         <span class="self">self</span>.<span class="number">0</span>.<span class="ident">cmp</span>(<span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="number">0</span>)
     }
 }
@@ -293,18 +293,18 @@
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>(<span class="kw">pub</span> <span class="ident">I</span>);
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">TypedId</span> {
-    <span class="kw">fn</span> <span class="ident">zip</span>(<span class="ident">index</span>: <span class="ident">Index</span>, <span class="ident">epoch</span>: <span class="ident">Epoch</span>, <span class="ident">backend</span>: <span class="ident">Backend</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span>;
-    <span class="kw">fn</span> <span class="ident">unzip</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Index</span>, <span class="ident">Epoch</span>, <span class="ident">Backend</span>);
+    <span class="kw">fn</span> <span class="ident">zip</span>(<span class="ident">index</span>: <span class="ident">Index</span>, <span class="ident">epoch</span>: <span class="ident">Epoch</span>, <span class="ident">backend</span>: <span class="ident">Backend</span>) -&gt; <span class="self">Self</span>;
+    <span class="kw">fn</span> <span class="ident">unzip</span>(<span class="self">self</span>) -&gt; (<span class="ident">Index</span>, <span class="ident">Epoch</span>, <span class="ident">Backend</span>);
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="ident">TypedId</span> <span class="kw">for</span> <span class="ident">Id</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">zip</span>(<span class="ident">index</span>: <span class="ident">Index</span>, <span class="ident">epoch</span>: <span class="ident">Epoch</span>, <span class="ident">backend</span>: <span class="ident">Backend</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">zip</span>(<span class="ident">index</span>: <span class="ident">Index</span>, <span class="ident">epoch</span>: <span class="ident">Epoch</span>, <span class="ident">backend</span>: <span class="ident">Backend</span>) -&gt; <span class="self">Self</span> {
         <span class="macro">assert_eq!</span>(<span class="number">0</span>, <span class="ident">epoch</span> <span class="op">&gt;</span><span class="op">&gt;</span> (<span class="number">32</span> <span class="op">-</span> <span class="ident">BACKEND_BITS</span>));
         <span class="kw">let</span> <span class="ident">v</span> <span class="op">=</span> <span class="ident">index</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">|</span> ((<span class="ident">epoch</span> <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">32</span>) <span class="op">|</span> ((<span class="ident">backend</span> <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="number">64</span> <span class="op">-</span> <span class="ident">BACKEND_BITS</span>));
         <span class="ident">Id</span>(<span class="ident">NonZeroU64::new</span>(<span class="ident">v</span>).<span class="ident">unwrap</span>(), <span class="ident">PhantomData</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">unzip</span>(<span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">Index</span>, <span class="ident">Epoch</span>, <span class="ident">Backend</span>) {
+    <span class="kw">fn</span> <span class="ident">unzip</span>(<span class="self">self</span>) -&gt; (<span class="ident">Index</span>, <span class="ident">Epoch</span>, <span class="ident">Backend</span>) {
         (
             <span class="self">self</span>.<span class="number">0</span>.<span class="ident">get</span>() <span class="kw">as</span> <span class="ident">u32</span>,
             (<span class="self">self</span>.<span class="number">0</span>.<span class="ident">get</span>() <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span> <span class="op">&amp;</span> <span class="ident">EPOCH_MASK</span>,

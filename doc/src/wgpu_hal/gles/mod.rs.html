@@ -878,7 +878,7 @@ To address this, we invalidate the vertex buffers based on:
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">VertexAttribKind</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="ident"><span class="self">Self</span>::Float</span>
     }
 }
@@ -954,12 +954,12 @@ To address this, we invalidate the vertex buffers based on:
 }
 
 <span class="kw">impl</span> <span class="ident">TextureInner</span> {
-    <span class="kw">fn</span> <span class="ident">as_native</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) <span class="op">-</span><span class="op">&gt;</span> (<span class="ident">glow::Texture</span>, <span class="ident">BindTarget</span>) {
+    <span class="kw">fn</span> <span class="ident">as_native</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">glow::Texture</span>, <span class="ident">BindTarget</span>) {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Renderbuffer</span> { .. } <span class="op">=</span><span class="op">&gt;</span> {
+            <span class="ident"><span class="self">Self</span>::Renderbuffer</span> { .. } =&gt; {
                 <span class="macro">panic!</span>(<span class="string">&quot;Unexpected renderbuffer&quot;</span>);
             }
-            <span class="ident"><span class="self">Self</span>::Texture</span> { <span class="ident">raw</span>, <span class="ident">target</span> } <span class="op">=</span><span class="op">&gt;</span> (<span class="ident">raw</span>, <span class="ident">target</span>),
+            <span class="ident"><span class="self">Self</span>::Texture</span> { <span class="ident">raw</span>, <span class="ident">target</span> } =&gt; (<span class="ident">raw</span>, <span class="ident">target</span>),
         }
     }
 }
@@ -1010,7 +1010,7 @@ To address this, we invalidate the vertex buffers based on:
 }
 
 <span class="kw">impl</span> <span class="ident">PipelineLayout</span> {
-    <span class="kw">fn</span> <span class="ident">get_slot</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">br</span>: <span class="kw-2">&amp;</span><span class="ident">naga::ResourceBinding</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident">u8</span> {
+    <span class="kw">fn</span> <span class="ident">get_slot</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">br</span>: <span class="kw-2">&amp;</span><span class="ident">naga::ResourceBinding</span>) -&gt; <span class="ident">u8</span> {
         <span class="kw">let</span> <span class="ident">group_info</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">group_infos</span>[<span class="ident">br</span>.<span class="ident">group</span> <span class="kw">as</span> <span class="ident">usize</span>];
         <span class="ident">group_info</span>.<span class="ident">binding_to_slot</span>[<span class="ident">br</span>.<span class="ident">binding</span> <span class="kw">as</span> <span class="ident">usize</span>]
     }
@@ -1173,11 +1173,11 @@ To address this, we invalidate the vertex buffers based on:
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">Fence</span> {}
 
 <span class="kw">impl</span> <span class="ident">Fence</span> {
-    <span class="kw">fn</span> <span class="ident">get_latest</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">glow::Context</span>) <span class="op">-</span><span class="op">&gt;</span> <span class="ident"><span class="kw">crate</span>::FenceValue</span> {
+    <span class="kw">fn</span> <span class="ident">get_latest</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">glow::Context</span>) -&gt; <span class="ident"><span class="kw">crate</span>::FenceValue</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">max_value</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">last_completed</span>;
         <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="ident">value</span>, <span class="ident">sync</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">pending</span>.<span class="ident">iter</span>() {
             <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_sync_status</span>(<span class="ident">sync</span>) };
-            <span class="kw">if</span> <span class="ident">status</span> <span class="op">=</span><span class="op">=</span> <span class="ident">glow::SIGNALED</span> {
+            <span class="kw">if</span> <span class="ident">status</span> <span class="op">==</span> <span class="ident">glow::SIGNALED</span> {
                 <span class="ident">max_value</span> <span class="op">=</span> <span class="ident">value</span>;
             }
         }
@@ -1206,7 +1206,7 @@ To address this, we invalidate the vertex buffers based on:
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">StencilOps</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">pass</span>: <span class="ident">glow::KEEP</span>,
             <span class="ident">fail</span>: <span class="ident">glow::KEEP</span>,
@@ -1225,7 +1225,7 @@ To address this, we invalidate the vertex buffers based on:
 }
 
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">StencilSide</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() <span class="op">-</span><span class="op">&gt;</span> <span class="self">Self</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">function</span>: <span class="ident">glow::ALWAYS</span>,
             <span class="ident">mask_read</span>: <span class="number">0xFF</span>,
