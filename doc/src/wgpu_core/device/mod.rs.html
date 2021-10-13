@@ -4891,6 +4891,44 @@
 <span id="4891">4891</span>
 <span id="4892">4892</span>
 <span id="4893">4893</span>
+<span id="4894">4894</span>
+<span id="4895">4895</span>
+<span id="4896">4896</span>
+<span id="4897">4897</span>
+<span id="4898">4898</span>
+<span id="4899">4899</span>
+<span id="4900">4900</span>
+<span id="4901">4901</span>
+<span id="4902">4902</span>
+<span id="4903">4903</span>
+<span id="4904">4904</span>
+<span id="4905">4905</span>
+<span id="4906">4906</span>
+<span id="4907">4907</span>
+<span id="4908">4908</span>
+<span id="4909">4909</span>
+<span id="4910">4910</span>
+<span id="4911">4911</span>
+<span id="4912">4912</span>
+<span id="4913">4913</span>
+<span id="4914">4914</span>
+<span id="4915">4915</span>
+<span id="4916">4916</span>
+<span id="4917">4917</span>
+<span id="4918">4918</span>
+<span id="4919">4919</span>
+<span id="4920">4920</span>
+<span id="4921">4921</span>
+<span id="4922">4922</span>
+<span id="4923">4923</span>
+<span id="4924">4924</span>
+<span id="4925">4925</span>
+<span id="4926">4926</span>
+<span id="4927">4927</span>
+<span id="4928">4928</span>
+<span id="4929">4929</span>
+<span id="4930">4930</span>
+<span id="4931">4931</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -4920,6 +4958,9 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">trace</span>;
 
 <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SHADER_STAGE_COUNT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">3</span>;
+<span class="comment">// Should be large enough for the largest possible texture row. This value is enough for a 16k texture with float4 format.</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">ZERO_BUFFER_SIZE</span>: <span class="ident">BufferAddress</span> <span class="op">=</span> <span class="number">512</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">10</span>;
+
 <span class="kw">const</span> <span class="ident">CLEANUP_WAIT_MS</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">5000</span>;
 
 <span class="kw">const</span> <span class="ident">IMPLICIT_FAILURE</span>: <span class="kw-2">&amp;</span><span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;failed implicit&quot;</span>;
@@ -5125,7 +5166,7 @@
 <span class="doccomment">/// Structure describing a logical device. Some members are internally mutable,</span>
 <span class="doccomment">/// stored behind mutexes.</span>
 <span class="doccomment">/// TODO: establish clear order of locking for these:</span>
-<span class="doccomment">/// `mem_allocator`, `desc_allocator`, `life_tracke`, `trackers`,</span>
+<span class="doccomment">/// `mem_allocator`, `desc_allocator`, `life_tracker`, `trackers`,</span>
 <span class="doccomment">/// `render_passes`, `pending_writes`, `trace`.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Currently, the rules are:</span>
@@ -5136,6 +5177,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">A::Device</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">adapter_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::AdapterId</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">queue</span>: <span class="ident">A::Queue</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">zero_buffer</span>: <span class="ident">A::Buffer</span>,
     <span class="comment">//pub(crate) cmd_allocator: command::CommandAllocator&lt;A&gt;,</span>
     <span class="comment">//mem_allocator: Mutex&lt;alloc::MemoryAllocator&lt;A&gt;&gt;,</span>
     <span class="comment">//desc_allocator: Mutex&lt;descriptor::DescriptorAllocator&lt;A&gt;&gt;,</span>
@@ -5164,6 +5206,8 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CreateDeviceError</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;not enough memory left&quot;</span>)]</span>
     <span class="ident">OutOfMemory</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;failed to create internal buffer for initializing textures&quot;</span>)]</span>
+    <span class="ident">FailedToCreateZeroBuffer</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">DeviceError</span>),
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Device</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
@@ -5210,12 +5254,43 @@
         <span class="kw">let</span> <span class="ident">pending_encoder</span> <span class="op">=</span> <span class="ident">com_alloc</span>
             .<span class="ident">acquire_encoder</span>(<span class="kw-2">&amp;</span><span class="ident">open</span>.<span class="ident">device</span>, <span class="kw-2">&amp;</span><span class="ident">open</span>.<span class="ident">queue</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">CreateDeviceError::OutOfMemory</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">pending_writes</span> <span class="op">=</span> <span class="ident">queue::PendingWrites::new</span>(<span class="ident">pending_encoder</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pending_writes</span> <span class="op">=</span> <span class="ident">queue::PendingWrites</span>::<span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">pending_encoder</span>);
+
+        <span class="comment">// Create zeroed buffer used for texture clears.</span>
+        <span class="kw">let</span> <span class="ident">zero_buffer</span> <span class="op">=</span> <span class="kw">unsafe</span> {
+            <span class="ident">open</span>.<span class="ident">device</span>
+                .<span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">hal::BufferDescriptor</span> {
+                    <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;wgpu zero init buffer&quot;</span>),
+                    <span class="ident">size</span>: <span class="ident">ZERO_BUFFER_SIZE</span>,
+                    <span class="ident">usage</span>: <span class="ident">hal::BufferUses::COPY_SRC</span> <span class="op">|</span> <span class="ident">hal::BufferUses::COPY_DST</span>,
+                    <span class="ident">memory_flags</span>: <span class="ident">hal::MemoryFlags::empty</span>(),
+                })
+                .<span class="ident">map_err</span>(<span class="ident">DeviceError::from</span>)<span class="question-mark">?</span>
+        };
+        <span class="ident">pending_writes</span>.<span class="ident">activate</span>();
+        <span class="kw">unsafe</span> {
+            <span class="ident">pending_writes</span>
+                .<span class="ident">command_encoder</span>
+                .<span class="ident">transition_buffers</span>(<span class="ident">iter::once</span>(<span class="ident">hal::BufferBarrier</span> {
+                    <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident">zero_buffer</span>,
+                    <span class="ident">usage</span>: <span class="ident">hal::BufferUses::empty</span>()..<span class="ident">hal::BufferUses::COPY_DST</span>,
+                }));
+            <span class="ident">pending_writes</span>
+                .<span class="ident">command_encoder</span>
+                .<span class="ident">clear_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">zero_buffer</span>, <span class="number">0</span>..<span class="ident">ZERO_BUFFER_SIZE</span>);
+            <span class="ident">pending_writes</span>
+                .<span class="ident">command_encoder</span>
+                .<span class="ident">transition_buffers</span>(<span class="ident">iter::once</span>(<span class="ident">hal::BufferBarrier</span> {
+                    <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident">zero_buffer</span>,
+                    <span class="ident">usage</span>: <span class="ident">hal::BufferUses::COPY_DST</span>..<span class="ident">hal::BufferUses::COPY_SRC</span>,
+                }));
+        }
 
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
             <span class="ident">raw</span>: <span class="ident">open</span>.<span class="ident">device</span>,
             <span class="ident">adapter_id</span>,
             <span class="ident">queue</span>: <span class="ident">open</span>.<span class="ident">queue</span>,
+            <span class="ident">zero_buffer</span>,
             <span class="ident">life_guard</span>: <span class="ident">LifeGuard::new</span>(<span class="string">&quot;&lt;device&gt;&quot;</span>),
             <span class="ident">command_allocator</span>: <span class="ident">Mutex::new</span>(<span class="ident">com_alloc</span>),
             <span class="ident">active_submission_index</span>: <span class="number">0</span>,
@@ -7453,6 +7528,7 @@
         <span class="self">self</span>.<span class="ident">pending_writes</span>.<span class="ident">dispose</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>);
         <span class="self">self</span>.<span class="ident">command_allocator</span>.<span class="ident">into_inner</span>().<span class="ident">dispose</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>);
         <span class="kw">unsafe</span> {
+            <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">destroy_buffer</span>(<span class="self">self</span>.<span class="ident">zero_buffer</span>);
             <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">destroy_fence</span>(<span class="self">self</span>.<span class="ident">fence</span>);
             <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">exit</span>(<span class="self">self</span>.<span class="ident">queue</span>);
         }
