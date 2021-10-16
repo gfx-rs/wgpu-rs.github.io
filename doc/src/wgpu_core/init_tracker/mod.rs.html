@@ -293,6 +293,57 @@
 <span id="293">293</span>
 <span id="294">294</span>
 <span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
 </pre><pre class="rust"><code><span class="comment">// WebGPU specification requires all texture &amp; buffer memory to be zero initialized on first read.</span>
 <span class="comment">// To avoid unnecessary inits, we track the initialization status of every resource and perform inits lazily.</span>
 <span class="comment">//</span>
@@ -323,12 +374,6 @@
     <span class="ident">ImplicitlyInitialized</span>,
     <span class="comment">// The memory range is going to be read, therefore needs to ensure prior initialization.</span>
     <span class="ident">NeedsInitializedMemory</span>,
-    <span class="comment">// The memory going to be discarded and regarded therefore regarded uninitialized.</span>
-    <span class="comment">// TODO: This is tricky to implement: Discards needs to be resolved within AND between command buffers!</span>
-    <span class="comment">//       Being able to do this would be quite nice because then we could mark any resource uninitialized at any point in time.</span>
-    <span class="comment">//       Practically speaking however, discard can only ever happen for single rendertarget surfaces.</span>
-    <span class="comment">//       Considering this, this could potentially be implemented differently since we don&#39;t really need to care about ranges of memory.</span>
-    <span class="comment">//DiscardMemory,</span>
 }
 
 <span class="comment">// Most of the time a resource is either fully uninitialized (one element) or initialized (zero elements).</span>
@@ -420,35 +465,13 @@
         }
     }
 
-    <span class="comment">// Search smallest range.end which is bigger than bound in O(log n) (with n being number of uninitialized ranges)</span>
-    <span class="kw">fn</span> <span class="ident">lower_bound</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">bound</span>: <span class="ident">Idx</span>) -&gt; <span class="ident">usize</span> {
-        <span class="comment">// This is equivalent to, except that it may return an out of bounds index instead of</span>
-        <span class="comment">//self.uninitialized_ranges.iter().position(|r| r.end &gt; bound)</span>
-
-        <span class="comment">// In future Rust versions this operation can be done with partition_point</span>
-        <span class="comment">// See https://github.com/rust-lang/rust/pull/73577/</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">left</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">right</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>.<span class="ident">len</span>();
-
-        <span class="kw">while</span> <span class="ident">left</span> <span class="op">!</span><span class="op">=</span> <span class="ident">right</span> {
-            <span class="kw">let</span> <span class="ident">mid</span> <span class="op">=</span> <span class="ident">left</span> <span class="op">+</span> (<span class="ident">right</span> <span class="op">-</span> <span class="ident">left</span>) <span class="op">/</span> <span class="number">2</span>;
-            <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>.<span class="ident">get_unchecked</span>(<span class="ident">mid</span>) };
-
-            <span class="kw">if</span> <span class="ident">value</span>.<span class="ident">end</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">bound</span> {
-                <span class="ident">left</span> <span class="op">=</span> <span class="ident">mid</span> <span class="op">+</span> <span class="number">1</span>;
-            } <span class="kw">else</span> {
-                <span class="ident">right</span> <span class="op">=</span> <span class="ident">mid</span>;
-            }
-        }
-
-        <span class="ident">left</span>
-    }
-
     <span class="comment">// Checks if there&#39;s any uninitialized ranges within a query.</span>
     <span class="comment">// If there are any, the range returned a the subrange of the query_range that contains all these uninitialized regions.</span>
     <span class="comment">// Returned range may be larger than necessary (tradeoff for making this function O(log n))</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">check</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">query_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lower_bound</span>(<span class="ident">query_range</span>.<span class="ident">start</span>);
+        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">uninitialized_ranges</span>
+            .<span class="ident">partition_point</span>(<span class="op">|</span><span class="ident">r</span><span class="op">|</span> <span class="ident">r</span>.<span class="ident">end</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">query_range</span>.<span class="ident">start</span>);
         <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>
             .<span class="ident">get</span>(<span class="ident">index</span>)
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">start_range</span><span class="op">|</span> {
@@ -475,7 +498,9 @@
     <span class="comment">// Drains uninitialized ranges in a query range.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">drain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">drain_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span>) -&gt; <span class="ident">InitTrackerDrain</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lower_bound</span>(<span class="ident">drain_range</span>.<span class="ident">start</span>);
+        <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="self">self</span>
+            .<span class="ident">uninitialized_ranges</span>
+            .<span class="ident">partition_point</span>(<span class="op">|</span><span class="ident">r</span><span class="op">|</span> <span class="ident">r</span>.<span class="ident">end</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">drain_range</span>.<span class="ident">start</span>);
         <span class="ident">InitTrackerDrain</span> {
             <span class="ident">drain_range</span>,
             <span class="ident">uninitialized_ranges</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>,
@@ -490,11 +515,44 @@
     }
 }
 
+<span class="kw">impl</span> <span class="ident">InitTracker</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+    <span class="comment">// Makes a single entry uninitialized if not already uninitialized</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">discard</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">pos</span>: <span class="ident">u32</span>) {
+        <span class="comment">// first range where end&gt;=idx</span>
+        <span class="kw">let</span> <span class="ident">r_idx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>.<span class="ident">partition_point</span>(<span class="op">|</span><span class="ident">r</span><span class="op">|</span> <span class="ident">r</span>.<span class="ident">end</span> <span class="op">&lt;</span> <span class="ident">pos</span>);
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">r</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>.<span class="ident">get</span>(<span class="ident">r_idx</span>) {
+            <span class="comment">// Extend range at end</span>
+            <span class="kw">if</span> <span class="ident">r</span>.<span class="ident">end</span> <span class="op">==</span> <span class="ident">pos</span> {
+                <span class="comment">// merge with next?</span>
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">right</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>.<span class="ident">get</span>(<span class="ident">r_idx</span> <span class="op">+</span> <span class="number">1</span>) {
+                    <span class="kw">if</span> <span class="ident">right</span>.<span class="ident">start</span> <span class="op">==</span> <span class="ident">pos</span> <span class="op">+</span> <span class="number">1</span> {
+                        <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>[<span class="ident">r_idx</span>] <span class="op">=</span> <span class="ident">r</span>.<span class="ident">start</span>..<span class="ident">right</span>.<span class="ident">end</span>;
+                        <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>.<span class="ident">remove</span>(<span class="ident">r_idx</span> <span class="op">+</span> <span class="number">1</span>);
+                        <span class="kw">return</span>;
+                    }
+                }
+                <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>[<span class="ident">r_idx</span>] <span class="op">=</span> <span class="ident">r</span>.<span class="ident">start</span>..(<span class="ident">pos</span> <span class="op">+</span> <span class="number">1</span>);
+            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">r</span>.<span class="ident">start</span> <span class="op">&gt;</span> <span class="ident">pos</span> {
+                <span class="comment">// may still extend range at beginning</span>
+                <span class="kw">if</span> <span class="ident">r</span>.<span class="ident">start</span> <span class="op">==</span> <span class="ident">pos</span> <span class="op">+</span> <span class="number">1</span> {
+                    <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>[<span class="ident">r_idx</span>] <span class="op">=</span> <span class="ident">pos</span>..<span class="ident">r</span>.<span class="ident">end</span>;
+                } <span class="kw">else</span> {
+                    <span class="comment">// previous range end must be smaller than idx, therefore no merge possible</span>
+                    <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>.<span class="ident">push</span>(<span class="ident">pos</span>..(<span class="ident">pos</span> <span class="op">+</span> <span class="number">1</span>));
+                }
+            }
+        } <span class="kw">else</span> {
+            <span class="self">self</span>.<span class="ident">uninitialized_ranges</span>.<span class="ident">push</span>(<span class="ident">pos</span>..(<span class="ident">pos</span> <span class="op">+</span> <span class="number">1</span>));
+        }
+    }
+}
+
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
 <span class="kw">mod</span> <span class="ident">test</span> {
     <span class="kw">use</span> <span class="ident">std::ops::Range</span>;
 
-    <span class="kw">type</span> <span class="ident">Tracker</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::InitTracker</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Tracker</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::InitTracker</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>;
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">check_for_newly_created_tracker</span>() {
@@ -569,23 +627,67 @@
     <span class="kw">fn</span> <span class="ident">drain_splits_ranges_correctly</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">1337</span>);
         <span class="macro">assert_eq!</span>(
-            <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">21</span>..<span class="number">42</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+            <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">21</span>..<span class="number">42</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
             <span class="macro">vec!</span>[<span class="number">21</span>..<span class="number">42</span>]
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">900</span>..<span class="number">1000</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+            <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">900</span>..<span class="number">1000</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
             <span class="macro">vec!</span>[<span class="number">900</span>..<span class="number">1000</span>]
         );
 
         <span class="comment">// Splitted ranges.</span>
         <span class="macro">assert_eq!</span>(
-            <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">5</span>..<span class="number">1003</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+            <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">5</span>..<span class="number">1003</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
             <span class="macro">vec!</span>[<span class="number">5</span>..<span class="number">21</span>, <span class="number">42</span>..<span class="number">900</span>, <span class="number">1000</span>..<span class="number">1003</span>]
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">0</span>..<span class="number">1337</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
+            <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">0</span>..<span class="number">1337</span>).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>(),
             <span class="macro">vec!</span>[<span class="number">0</span>..<span class="number">5</span>, <span class="number">1003</span>..<span class="number">1337</span>]
         );
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">discard_adds_range_on_cleared</span>() {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">10</span>);
+        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">0</span>..<span class="number">10</span>);
+        <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">0</span>);
+        <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">5</span>);
+        <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">9</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">0</span>..<span class="number">1</span>), <span class="prelude-val">Some</span>(<span class="number">0</span>..<span class="number">1</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">1</span>..<span class="number">5</span>), <span class="prelude-val">None</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">5</span>..<span class="number">6</span>), <span class="prelude-val">Some</span>(<span class="number">5</span>..<span class="number">6</span>));
+        <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">6</span>..<span class="number">9</span>), <span class="prelude-val">None</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">9</span>..<span class="number">10</span>), <span class="prelude-val">Some</span>(<span class="number">9</span>..<span class="number">10</span>));
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">discard_does_nothing_on_uncleared</span>() {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">10</span>);
+        <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">0</span>);
+        <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">5</span>);
+        <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">9</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">uninitialized_ranges</span>.<span class="ident">len</span>(), <span class="number">1</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">uninitialized_ranges</span>[<span class="number">0</span>], <span class="number">0</span>..<span class="number">10</span>);
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">discard_extends_ranges</span>() {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">10</span>);
+        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">3</span>..<span class="number">7</span>);
+        <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">2</span>);
+        <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">7</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">uninitialized_ranges</span>.<span class="ident">len</span>(), <span class="number">2</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">uninitialized_ranges</span>[<span class="number">0</span>], <span class="number">0</span>..<span class="number">3</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">uninitialized_ranges</span>[<span class="number">1</span>], <span class="number">7</span>..<span class="number">10</span>);
+    }
+
+    <span class="attribute">#[<span class="ident">test</span>]</span>
+    <span class="kw">fn</span> <span class="ident">discard_merges_ranges</span>() {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">10</span>);
+        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">3</span>..<span class="number">4</span>);
+        <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">3</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">uninitialized_ranges</span>.<span class="ident">len</span>(), <span class="number">1</span>);
+        <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">uninitialized_ranges</span>[<span class="number">0</span>], <span class="number">0</span>..<span class="number">10</span>);
     }
 }
 </code></pre></div>
