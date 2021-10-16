@@ -710,6 +710,7 @@
 <span id="710">710</span>
 <span id="711">711</span>
 <span id="712">712</span>
+<span id="713">713</span>
 </pre><pre class="rust"><code><span class="doccomment">/*!
 # OpenGL ES3 API (aka GLES3).
 
@@ -831,19 +832,21 @@ To address this, we invalidate the vertex buffers based on:
     <span class="doccomment">/// Flags that affect internal code paths but do not</span>
     <span class="doccomment">/// change the exposed feature set.</span>
     <span class="kw">struct</span> <span class="ident">PrivateCapabilities</span>: <span class="ident">u32</span> {
+        <span class="doccomment">/// Indicates support for `glBufferStorage` allocation.</span>
+        <span class="kw">const</span> <span class="ident">BUFFER_ALLOCATION</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">0</span>;
         <span class="doccomment">/// Support explicit layouts in shader.</span>
-        <span class="kw">const</span> <span class="ident">SHADER_BINDING_LAYOUT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">0</span>;
+        <span class="kw">const</span> <span class="ident">SHADER_BINDING_LAYOUT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
         <span class="doccomment">/// Support extended shadow sampling instructions.</span>
-        <span class="kw">const</span> <span class="ident">SHADER_TEXTURE_SHADOW_LOD</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
+        <span class="kw">const</span> <span class="ident">SHADER_TEXTURE_SHADOW_LOD</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
         <span class="doccomment">/// Support memory barriers.</span>
-        <span class="kw">const</span> <span class="ident">MEMORY_BARRIERS</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
+        <span class="kw">const</span> <span class="ident">MEMORY_BARRIERS</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
         <span class="doccomment">/// Vertex buffer layouts separate from the data.</span>
-        <span class="kw">const</span> <span class="ident">VERTEX_BUFFER_LAYOUT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
-        <span class="doccomment">/// Indicates that buffers used as ELEMENT_ARRAY_BUFFER may be created / initialized / used</span>
+        <span class="kw">const</span> <span class="ident">VERTEX_BUFFER_LAYOUT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
+        <span class="doccomment">/// Indicates that buffers used as `GL_ELEMENT_ARRAY_BUFFER` may be created / initialized / used</span>
         <span class="doccomment">/// as other targets, if not present they must not be mixed with other targets.</span>
-        <span class="kw">const</span> <span class="ident">INDEX_BUFFER_ROLE_CHANGE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
+        <span class="kw">const</span> <span class="ident">INDEX_BUFFER_ROLE_CHANGE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
         <span class="doccomment">/// Indicates that the device supports disabling draw buffers</span>
-        <span class="kw">const</span> <span class="ident">CAN_DISABLE_DRAW_BUFFER</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
+        <span class="kw">const</span> <span class="ident">CAN_DISABLE_DRAW_BUFFER</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">6</span>;
     }
 }
 
@@ -887,7 +890,6 @@ To address this, we invalidate the vertex buffers based on:
 <span class="kw">struct</span> <span class="ident">AdapterShared</span> {
     <span class="ident">context</span>: <span class="ident">AdapterContext</span>,
     <span class="ident">private_caps</span>: <span class="ident">PrivateCapabilities</span>,
-    <span class="ident">downlevel_flags</span>: <span class="ident">wgt::DownlevelFlags</span>,
     <span class="ident">workarounds</span>: <span class="ident">Workarounds</span>,
     <span class="ident">shading_language_version</span>: <span class="ident">naga::back::glsl::Version</span>,
 }
