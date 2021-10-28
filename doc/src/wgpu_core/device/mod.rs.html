@@ -4933,12 +4933,49 @@
 <span id="4933">4933</span>
 <span id="4934">4934</span>
 <span id="4935">4935</span>
+<span id="4936">4936</span>
+<span id="4937">4937</span>
+<span id="4938">4938</span>
+<span id="4939">4939</span>
+<span id="4940">4940</span>
+<span id="4941">4941</span>
+<span id="4942">4942</span>
+<span id="4943">4943</span>
+<span id="4944">4944</span>
+<span id="4945">4945</span>
+<span id="4946">4946</span>
+<span id="4947">4947</span>
+<span id="4948">4948</span>
+<span id="4949">4949</span>
+<span id="4950">4950</span>
+<span id="4951">4951</span>
+<span id="4952">4952</span>
+<span id="4953">4953</span>
+<span id="4954">4954</span>
+<span id="4955">4955</span>
+<span id="4956">4956</span>
+<span id="4957">4957</span>
+<span id="4958">4958</span>
+<span id="4959">4959</span>
+<span id="4960">4960</span>
+<span id="4961">4961</span>
+<span id="4962">4962</span>
+<span id="4963">4963</span>
+<span id="4964">4964</span>
+<span id="4965">4965</span>
+<span id="4966">4966</span>
+<span id="4967">4967</span>
+<span id="4968">4968</span>
+<span id="4969">4969</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
     <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Hub</span>, <span class="ident">Input</span>, <span class="ident">InvalidId</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>,
-    <span class="ident">init_tracker</span>::{<span class="ident">BufferInitTracker</span>, <span class="ident">BufferInitTrackerAction</span>, <span class="ident">MemoryInitKind</span>},
+    <span class="ident">init_tracker</span>::{
+        <span class="ident">BufferInitTracker</span>, <span class="ident">BufferInitTrackerAction</span>, <span class="ident">MemoryInitKind</span>, <span class="ident">TextureInitRange</span>,
+        <span class="ident">TextureInitTracker</span>, <span class="ident">TextureInitTrackerAction</span>,
+    },
     <span class="ident">instance</span>, <span class="ident">pipeline</span>, <span class="ident">present</span>, <span class="ident">resource</span>,
     <span class="ident">track</span>::{<span class="ident">BufferState</span>, <span class="ident">TextureSelector</span>, <span class="ident">TextureState</span>, <span class="ident">TrackerSet</span>, <span class="ident">UsageConflict</span>},
     <span class="ident">validation</span>::{<span class="self">self</span>, <span class="ident">check_buffer_usage</span>, <span class="ident">check_texture_usage</span>},
@@ -5539,6 +5576,10 @@
             <span class="ident">desc</span>: <span class="ident">desc</span>.<span class="ident">map_label</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ()),
             <span class="ident">hal_usage</span>,
             <span class="ident">format_features</span>,
+            <span class="ident">initialization_status</span>: <span class="ident">TextureInitTracker::new</span>(
+                <span class="ident">desc</span>.<span class="ident">mip_level_count</span>,
+                <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span>,
+            ),
             <span class="ident">full_range</span>: <span class="ident">TextureSelector</span> {
                 <span class="ident">levels</span>: <span class="number">0</span>..<span class="ident">desc</span>.<span class="ident">mip_level_count</span>,
                 <span class="ident">layers</span>: <span class="number">0</span>..<span class="ident">desc</span>.<span class="ident">array_layer_count</span>(),
@@ -5554,6 +5595,7 @@
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">resource::TextureDescriptor</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">resource::Texture</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">resource::CreateTextureError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">hal_usage</span> <span class="op">=</span> <span class="ident">conv::map_texture_usage</span>(<span class="ident">desc</span>.<span class="ident">usage</span>, <span class="ident">desc</span>.<span class="ident">format</span>.<span class="ident">into</span>());
+
         <span class="kw">let</span> <span class="ident">hal_desc</span> <span class="op">=</span> <span class="ident">hal::TextureDescriptor</span> {
             <span class="ident">label</span>: <span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_option</span>(),
             <span class="ident">size</span>: <span class="ident">desc</span>.<span class="ident">size</span>,
@@ -6323,6 +6365,43 @@
         })
     }
 
+    <span class="kw">fn</span> <span class="ident">create_texture_binding</span>(
+        <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">resource::TextureView</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
+        <span class="ident">texture_guard</span>: <span class="kw-2">&amp;</span><span class="ident">parking_lot::lock_api::RwLockReadGuard</span><span class="op">&lt;</span>
+            <span class="ident">parking_lot::RawRwLock</span>,
+            <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">resource::Texture</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::Id</span><span class="op">&lt;</span><span class="ident">resource::Texture</span><span class="op">&lt;</span><span class="ident">hal::api::Empty</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="op">&gt;</span>,
+        <span class="ident">internal_use</span>: <span class="ident">hal::TextureUses</span>,
+        <span class="ident">pub_usage</span>: <span class="ident">wgt::TextureUsages</span>,
+        <span class="ident">used</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TrackerSet</span>,
+        <span class="ident">used_texture_ranges</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TextureInitTrackerAction</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">binding_model::CreateBindGroupError</span><span class="op">&gt;</span> {
+        <span class="comment">// Careful here: the texture may no longer have its own ref count,</span>
+        <span class="comment">// if it was deleted by the user.</span>
+        <span class="kw">let</span> <span class="ident">parent_id</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">parent_id</span>.<span class="ident">value</span>;
+        <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">texture_guard</span>[<span class="ident">parent_id</span>];
+        <span class="ident">used</span>.<span class="ident">textures</span>
+            .<span class="ident">change_extend</span>(
+                <span class="ident">parent_id</span>,
+                <span class="kw-2">&amp;</span><span class="ident">view</span>.<span class="ident">parent_id</span>.<span class="ident">ref_count</span>,
+                <span class="ident">view</span>.<span class="ident">selector</span>.<span class="ident">clone</span>(),
+                <span class="ident">internal_use</span>,
+            )
+            .<span class="ident">map_err</span>(<span class="ident">UsageConflict::from</span>)<span class="question-mark">?</span>;
+        <span class="ident">check_texture_usage</span>(<span class="ident">texture</span>.<span class="ident">desc</span>.<span class="ident">usage</span>, <span class="ident">pub_usage</span>)<span class="question-mark">?</span>;
+
+        <span class="ident">used_texture_ranges</span>.<span class="ident">push</span>(<span class="ident">TextureInitTrackerAction</span> {
+            <span class="ident">id</span>: <span class="ident">parent_id</span>.<span class="number">0</span>,
+            <span class="ident">range</span>: <span class="ident">TextureInitRange</span> {
+                <span class="ident">mip_range</span>: <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">mip_range</span>(<span class="kw-2">&amp;</span><span class="ident">texture</span>.<span class="ident">desc</span>),
+                <span class="ident">layer_range</span>: <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">layer_range</span>(<span class="kw-2">&amp;</span><span class="ident">texture</span>.<span class="ident">desc</span>),
+            },
+            <span class="ident">kind</span>: <span class="ident">MemoryInitKind::NeedsInitializedMemory</span>,
+        });
+
+        <span class="prelude-val">Ok</span>(())
+    }
+
     <span class="kw">fn</span> <span class="ident">create_bind_group</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">self_id</span>: <span class="ident">id::DeviceId</span>,
@@ -6354,6 +6433,7 @@
         <span class="kw">let</span> (<span class="ident">sampler_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">samplers</span>.<span class="ident">read</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">used_buffer_ranges</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">used_texture_ranges</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hal_entries</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="ident">desc</span>.<span class="ident">entries</span>.<span class="ident">len</span>());
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hal_buffers</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hal_samplers</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
@@ -6454,20 +6534,14 @@
                         <span class="ident">view</span>,
                         <span class="string">&quot;SampledTexture, ReadonlyStorageTexture or WriteonlyStorageTexture&quot;</span>,
                     )<span class="question-mark">?</span>;
-
-                    <span class="comment">// Careful here: the texture may no longer have its own ref count,</span>
-                    <span class="comment">// if it was deleted by the user.</span>
-                    <span class="ident">used</span>.<span class="ident">textures</span>
-                        .<span class="ident">change_extend</span>(
-                            <span class="ident">view</span>.<span class="ident">parent_id</span>.<span class="ident">value</span>,
-                            <span class="kw-2">&amp;</span><span class="ident">view</span>.<span class="ident">parent_id</span>.<span class="ident">ref_count</span>,
-                            <span class="ident">view</span>.<span class="ident">selector</span>.<span class="ident">clone</span>(),
-                            <span class="ident">internal_use</span>,
-                        )
-                        .<span class="ident">map_err</span>(<span class="ident">UsageConflict::from</span>)<span class="question-mark">?</span>;
-                    <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">texture_guard</span>[<span class="ident">view</span>.<span class="ident">parent_id</span>.<span class="ident">value</span>];
-                    <span class="ident">check_texture_usage</span>(<span class="ident">texture</span>.<span class="ident">desc</span>.<span class="ident">usage</span>, <span class="ident">pub_usage</span>)<span class="question-mark">?</span>;
-
+                    <span class="ident"><span class="self">Self</span>::create_texture_binding</span>(
+                        <span class="ident">view</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">texture_guard</span>,
+                        <span class="ident">internal_use</span>,
+                        <span class="ident">pub_usage</span>,
+                        <span class="kw-2">&amp;mut</span> <span class="ident">used</span>,
+                        <span class="kw-2">&amp;mut</span> <span class="ident">used_texture_ranges</span>,
+                    )<span class="question-mark">?</span>;
                     <span class="kw">let</span> <span class="ident">res_index</span> <span class="op">=</span> <span class="ident">hal_textures</span>.<span class="ident">len</span>();
                     <span class="ident">hal_textures</span>.<span class="ident">push</span>(<span class="ident">hal::TextureBinding</span> {
                         <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">view</span>.<span class="ident">raw</span>,
@@ -6485,24 +6559,17 @@
                             .<span class="ident">views</span>
                             .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_view_guard</span>, <span class="ident">id</span>, (), ())
                             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error::InvalidTextureView</span>(<span class="ident">id</span>))<span class="question-mark">?</span>;
-                        <span class="kw">let</span> (<span class="ident">pub_usage</span>, <span class="ident">internal_use</span>) <span class="op">=</span> <span class="ident"><span class="self">Self</span>::texture_use_parameters</span>(
-                            <span class="ident">binding</span>, <span class="ident">decl</span>, <span class="ident">view</span>,
-                            <span class="string">&quot;SampledTextureArray, ReadonlyStorageTextureArray or WriteonlyStorageTextureArray&quot;</span>
+                        <span class="kw">let</span> (<span class="ident">pub_usage</span>, <span class="ident">internal_use</span>) <span class="op">=</span>
+                            <span class="ident"><span class="self">Self</span>::texture_use_parameters</span>(<span class="ident">binding</span>, <span class="ident">decl</span>, <span class="ident">view</span>,
+                                                         <span class="string">&quot;SampledTextureArray, ReadonlyStorageTextureArray or WriteonlyStorageTextureArray&quot;</span>)<span class="question-mark">?</span>;
+                        <span class="ident"><span class="self">Self</span>::create_texture_binding</span>(
+                            <span class="ident">view</span>,
+                            <span class="kw-2">&amp;</span><span class="ident">texture_guard</span>,
+                            <span class="ident">internal_use</span>,
+                            <span class="ident">pub_usage</span>,
+                            <span class="kw-2">&amp;mut</span> <span class="ident">used</span>,
+                            <span class="kw-2">&amp;mut</span> <span class="ident">used_texture_ranges</span>,
                         )<span class="question-mark">?</span>;
-
-                        <span class="comment">// Careful here: the texture may no longer have its own ref count,</span>
-                        <span class="comment">// if it was deleted by the user.</span>
-                        <span class="ident">used</span>.<span class="ident">textures</span>
-                            .<span class="ident">change_extend</span>(
-                                <span class="ident">view</span>.<span class="ident">parent_id</span>.<span class="ident">value</span>,
-                                <span class="kw-2">&amp;</span><span class="ident">view</span>.<span class="ident">parent_id</span>.<span class="ident">ref_count</span>,
-                                <span class="ident">view</span>.<span class="ident">selector</span>.<span class="ident">clone</span>(),
-                                <span class="ident">internal_use</span>,
-                            )
-                            .<span class="ident">map_err</span>(<span class="ident">UsageConflict::from</span>)<span class="question-mark">?</span>;
-                        <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">texture_guard</span>[<span class="ident">view</span>.<span class="ident">parent_id</span>.<span class="ident">value</span>];
-                        <span class="ident">check_texture_usage</span>(<span class="ident">texture</span>.<span class="ident">desc</span>.<span class="ident">usage</span>, <span class="ident">pub_usage</span>)<span class="question-mark">?</span>;
-
                         <span class="ident">hal_textures</span>.<span class="ident">push</span>(<span class="ident">hal::TextureBinding</span> {
                             <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">view</span>.<span class="ident">raw</span>,
                             <span class="ident">usage</span>: <span class="ident">internal_use</span>,
@@ -6554,6 +6621,7 @@
             <span class="ident">life_guard</span>: <span class="ident">LifeGuard::new</span>(<span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_or_default</span>()),
             <span class="ident">used</span>,
             <span class="ident">used_buffer_ranges</span>,
+            <span class="ident">used_texture_ranges</span>,
             <span class="ident">dynamic_binding_info</span>,
         })
     }
@@ -7782,8 +7850,8 @@
                 <span class="comment">// Zero initialize memory and then mark both staging and buffer as initialized</span>
                 <span class="comment">// (it&#39;s guaranteed that this is the case by the time the buffer is usable)</span>
                 <span class="kw">unsafe</span> { <span class="ident">ptr::write_bytes</span>(<span class="ident">mapping</span>.<span class="ident">ptr</span>.<span class="ident">as_ptr</span>(), <span class="number">0</span>, <span class="ident">buffer</span>.<span class="ident">size</span> <span class="kw">as</span> <span class="ident">usize</span>) };
-                <span class="ident">buffer</span>.<span class="ident">initialization_status</span>.<span class="ident">clear</span>(<span class="number">0</span>..<span class="ident">buffer</span>.<span class="ident">size</span>);
-                <span class="ident">stage</span>.<span class="ident">initialization_status</span>.<span class="ident">clear</span>(<span class="number">0</span>..<span class="ident">buffer</span>.<span class="ident">size</span>);
+                <span class="ident">buffer</span>.<span class="ident">initialization_status</span>.<span class="ident">drain</span>(<span class="number">0</span>..<span class="ident">buffer</span>.<span class="ident">size</span>);
+                <span class="ident">stage</span>.<span class="ident">initialization_status</span>.<span class="ident">drain</span>(<span class="number">0</span>..<span class="ident">buffer</span>.<span class="ident">size</span>);
 
                 <span class="ident">buffer</span>.<span class="ident">map_state</span> <span class="op">=</span> <span class="ident">resource::BufferMapState::Init</span> {
                     <span class="ident">ptr</span>: <span class="ident">mapping</span>.<span class="ident">ptr</span>,

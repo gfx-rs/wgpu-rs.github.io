@@ -344,6 +344,11 @@
 <span id="344">344</span>
 <span id="345">345</span>
 <span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
 </pre><pre class="rust"><code><span class="comment">// WebGPU specification requires all texture &amp; buffer memory to be zero initialized on first read.</span>
 <span class="comment">// To avoid unnecessary inits, we track the initialization status of every resource and perform inits lazily.</span>
 <span class="comment">//</span>
@@ -363,10 +368,10 @@
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt</span>, <span class="ident">iter</span>, <span class="ident">ops::Range</span>};
 
 <span class="kw">mod</span> <span class="ident">buffer</span>;
-<span class="comment">//mod texture;</span>
+<span class="kw">mod</span> <span class="ident">texture</span>;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">buffer</span>::{<span class="ident">BufferInitTracker</span>, <span class="ident">BufferInitTrackerAction</span>};
-<span class="comment">//pub(crate) use texture::{TextureInitRange, TextureInitTracker, TextureInitTrackerAction};</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident">texture</span>::{<span class="ident">TextureInitRange</span>, <span class="ident">TextureInitTracker</span>, <span class="ident">TextureInitTrackerAction</span>};
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum</span> <span class="ident">MemoryInitKind</span> {
@@ -455,6 +460,17 @@
     }
 }
 
+<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Idx</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">InitTrackerDrain</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">Idx</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">Idx</span>: <span class="ident">fmt::Debug</span> <span class="op">+</span> <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Copy</span>,
+{
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">next_index</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">first_index</span> {
+            <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="self">self</span> {}
+        }
+    }
+}
+
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span> <span class="ident">InitTracker</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">Idx</span>: <span class="ident">fmt::Debug</span> <span class="op">+</span> <span class="ident">Ord</span> <span class="op">+</span> <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Default</span>,
@@ -496,7 +512,6 @@
     }
 
     <span class="comment">// Drains uninitialized ranges in a query range.</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">drain</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">drain_range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span>) -&gt; <span class="ident">InitTrackerDrain</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">uninitialized_ranges</span>
@@ -507,11 +522,6 @@
             <span class="ident">first_index</span>: <span class="ident">index</span>,
             <span class="ident">next_index</span>: <span class="ident">index</span>,
         }
-    }
-
-    <span class="comment">// Clears uninitialized ranges in a query range.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">Idx</span><span class="op">&gt;</span>) {
-        <span class="self">self</span>.<span class="ident">drain</span>(<span class="ident">range</span>).<span class="ident">for_each</span>(<span class="ident">drop</span>);
     }
 }
 
@@ -564,9 +574,9 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">check_for_cleared_tracker</span>() {
+    <span class="kw">fn</span> <span class="ident">check_for_drained_tracker</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">10</span>);
-        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">0</span>..<span class="number">10</span>);
+        <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">0</span>..<span class="number">10</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">0</span>..<span class="number">10</span>), <span class="prelude-val">None</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">0</span>..<span class="number">3</span>), <span class="prelude-val">None</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">3</span>..<span class="number">4</span>), <span class="prelude-val">None</span>);
@@ -577,9 +587,9 @@
     <span class="kw">fn</span> <span class="ident">check_for_partially_filled_tracker</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">25</span>);
         <span class="comment">// Two regions of uninitialized memory</span>
-        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">0</span>..<span class="number">5</span>);
-        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">10</span>..<span class="number">15</span>);
-        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">20</span>..<span class="number">25</span>);
+        <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">0</span>..<span class="number">5</span>);
+        <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">10</span>..<span class="number">15</span>);
+        <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">20</span>..<span class="number">25</span>);
 
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">0</span>..<span class="number">25</span>), <span class="prelude-val">Some</span>(<span class="number">5</span>..<span class="number">25</span>)); <span class="comment">// entire range</span>
 
@@ -593,17 +603,17 @@
     }
 
     <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">clear_already_cleared</span>() {
+    <span class="kw">fn</span> <span class="ident">drain_already_drained</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">30</span>);
-        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">10</span>..<span class="number">20</span>);
+        <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">10</span>..<span class="number">20</span>);
 
         <span class="comment">// Overlapping with non-cleared</span>
-        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">5</span>..<span class="number">15</span>); <span class="comment">// Left overlap</span>
-        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">15</span>..<span class="number">25</span>); <span class="comment">// Right overlap</span>
-        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">0</span>..<span class="number">30</span>); <span class="comment">// Inner overlap</span>
+        <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">5</span>..<span class="number">15</span>); <span class="comment">// Left overlap</span>
+        <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">15</span>..<span class="number">25</span>); <span class="comment">// Right overlap</span>
+        <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">0</span>..<span class="number">30</span>); <span class="comment">// Inner overlap</span>
 
         <span class="comment">// Clear fully cleared</span>
-        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">0</span>..<span class="number">30</span>);
+        <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">0</span>..<span class="number">30</span>);
 
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">check</span>(<span class="number">0</span>..<span class="number">30</span>), <span class="prelude-val">None</span>);
     }
@@ -649,7 +659,7 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">discard_adds_range_on_cleared</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">10</span>);
-        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">0</span>..<span class="number">10</span>);
+        <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">0</span>..<span class="number">10</span>);
         <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">0</span>);
         <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">5</span>);
         <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">9</span>);
@@ -673,7 +683,7 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">discard_extends_ranges</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">10</span>);
-        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">3</span>..<span class="number">7</span>);
+        <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">3</span>..<span class="number">7</span>);
         <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">2</span>);
         <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">7</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">uninitialized_ranges</span>.<span class="ident">len</span>(), <span class="number">2</span>);
@@ -684,7 +694,7 @@
     <span class="attribute">#[<span class="ident">test</span>]</span>
     <span class="kw">fn</span> <span class="ident">discard_merges_ranges</span>() {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tracker</span> <span class="op">=</span> <span class="ident">Tracker::new</span>(<span class="number">10</span>);
-        <span class="ident">tracker</span>.<span class="ident">clear</span>(<span class="number">3</span>..<span class="number">4</span>);
+        <span class="ident">tracker</span>.<span class="ident">drain</span>(<span class="number">3</span>..<span class="number">4</span>);
         <span class="ident">tracker</span>.<span class="ident">discard</span>(<span class="number">3</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">uninitialized_ranges</span>.<span class="ident">len</span>(), <span class="number">1</span>);
         <span class="macro">assert_eq!</span>(<span class="ident">tracker</span>.<span class="ident">uninitialized_ranges</span>[<span class="number">0</span>], <span class="number">0</span>..<span class="number">10</span>);

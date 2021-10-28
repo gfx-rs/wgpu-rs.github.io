@@ -3517,6 +3517,31 @@
 <span id="3517">3517</span>
 <span id="3518">3518</span>
 <span id="3519">3519</span>
+<span id="3520">3520</span>
+<span id="3521">3521</span>
+<span id="3522">3522</span>
+<span id="3523">3523</span>
+<span id="3524">3524</span>
+<span id="3525">3525</span>
+<span id="3526">3526</span>
+<span id="3527">3527</span>
+<span id="3528">3528</span>
+<span id="3529">3529</span>
+<span id="3530">3530</span>
+<span id="3531">3531</span>
+<span id="3532">3532</span>
+<span id="3533">3533</span>
+<span id="3534">3534</span>
+<span id="3535">3535</span>
+<span id="3536">3536</span>
+<span id="3537">3537</span>
+<span id="3538">3538</span>
+<span id="3539">3539</span>
+<span id="3540">3540</span>
+<span id="3541">3541</span>
+<span id="3542">3542</span>
+<span id="3543">3543</span>
+<span id="3544">3544</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */</span>
@@ -6269,6 +6294,7 @@
     }
 
     <span class="doccomment">/// Calculates the extent at a given mip level.</span>
+    <span class="doccomment">/// Does *not* account for memory size being a multiple of block size.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mip_level_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">level</span>: <span class="ident">u32</span>, <span class="ident">is_3d_texture</span>: <span class="ident">bool</span>) -&gt; <span class="ident">Extent3d</span> {
         <span class="ident">Extent3d</span> {
             <span class="ident">width</span>: <span class="ident">u32::max</span>(<span class="number">1</span>, <span class="self">self</span>.<span class="ident">width</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">level</span>),
@@ -6852,6 +6878,30 @@
     <span class="doccomment">/// If `Some(count)`, `base_array_layer + count` must be less or equal to the underlying array count.</span>
     <span class="doccomment">/// If `None`, considered to include the rest of the array layers, but at least 1 in total.</span>
     <span class="kw">pub</span> <span class="ident">array_layer_count</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonZeroU32</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">ImageSubresourceRange</span> {
+    <span class="doccomment">/// Returns the mip level range of a subresource range describes for a specific texture.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mip_range</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">texture_desc</span>: <span class="kw-2">&amp;</span><span class="ident">TextureDescriptor</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>) -&gt; <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">base_mip_level</span>..<span class="kw">match</span> <span class="self">self</span>.<span class="ident">mip_level_count</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">mip_level_count</span>) =&gt; <span class="self">self</span>.<span class="ident">base_mip_level</span> <span class="op">+</span> <span class="ident">mip_level_count</span>.<span class="ident">get</span>(),
+            <span class="prelude-val">None</span> =&gt; <span class="ident">texture_desc</span>.<span class="ident">mip_level_count</span>,
+        }
+    }
+
+    <span class="doccomment">/// Returns the layer range of a subresource range describes for a specific texture.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">layer_range</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">texture_desc</span>: <span class="kw-2">&amp;</span><span class="ident">TextureDescriptor</span><span class="op">&lt;</span><span class="ident">L</span><span class="op">&gt;</span>) -&gt; <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">base_array_layer</span>..<span class="kw">match</span> <span class="self">self</span>.<span class="ident">array_layer_count</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">array_layer_count</span>) =&gt; <span class="self">self</span>.<span class="ident">base_array_layer</span> <span class="op">+</span> <span class="ident">array_layer_count</span>.<span class="ident">get</span>(),
+            <span class="prelude-val">None</span> =&gt; {
+                <span class="kw">if</span> <span class="ident">texture_desc</span>.<span class="ident">dimension</span> <span class="op">==</span> <span class="ident">TextureDimension::D3</span> {
+                    <span class="self">self</span>.<span class="ident">base_array_layer</span> <span class="op">+</span> <span class="number">1</span>
+                } <span class="kw">else</span> {
+                    <span class="ident">texture_desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span>
+                }
+            }
+        }
+    }
 }
 
 <span class="doccomment">/// Color variation to use when sampler addressing mode is [`AddressMode::ClampToBorder`]</span>

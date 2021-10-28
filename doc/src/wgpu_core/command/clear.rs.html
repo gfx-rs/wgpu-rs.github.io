@@ -650,13 +650,13 @@ whereas subesource range specified start {subresource_base_array_layer} and coun
         <span class="ident">get_lowest_common_denom</span>(<span class="ident">buffer_copy_pitch</span>, <span class="ident">format_desc</span>.<span class="ident">block_size</span> <span class="kw">as</span> <span class="ident">u32</span>);
 
     <span class="kw">for</span> <span class="ident">mip_level</span> <span class="kw">in</span> <span class="ident">mip_range</span> {
-        <span class="kw">let</span> <span class="ident">mip_size</span> <span class="op">=</span> <span class="ident">texture_desc</span>.<span class="ident">mip_level_size</span>(<span class="ident">mip_level</span>).<span class="ident">unwrap</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mip_size</span> <span class="op">=</span> <span class="ident">texture_desc</span>.<span class="ident">mip_level_size</span>(<span class="ident">mip_level</span>).<span class="ident">unwrap</span>();
+        <span class="comment">// Round to multiple of block size</span>
+        <span class="ident">mip_size</span>.<span class="ident">width</span> <span class="op">=</span> <span class="ident">align_to</span>(<span class="ident">mip_size</span>.<span class="ident">width</span>, <span class="ident">format_desc</span>.<span class="ident">block_dimensions</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">u32</span>);
+        <span class="ident">mip_size</span>.<span class="ident">height</span> <span class="op">=</span> <span class="ident">align_to</span>(<span class="ident">mip_size</span>.<span class="ident">height</span>, <span class="ident">format_desc</span>.<span class="ident">block_dimensions</span>.<span class="number">1</span> <span class="kw">as</span> <span class="ident">u32</span>);
 
         <span class="kw">let</span> <span class="ident">bytes_per_row</span> <span class="op">=</span> <span class="ident">align_to</span>(
-            <span class="comment">// row is at least one block wide, need to round up</span>
-            (<span class="ident">mip_size</span>.<span class="ident">width</span> <span class="op">+</span> <span class="ident">format_desc</span>.<span class="ident">block_dimensions</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">-</span> <span class="number">1</span>)
-                <span class="op">/</span> <span class="ident">format_desc</span>.<span class="ident">block_dimensions</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">u32</span>
-                <span class="op">*</span> <span class="ident">format_desc</span>.<span class="ident">block_size</span> <span class="kw">as</span> <span class="ident">u32</span>,
+            <span class="ident">mip_size</span>.<span class="ident">width</span> <span class="op">/</span> <span class="ident">format_desc</span>.<span class="ident">block_dimensions</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">*</span> <span class="ident">format_desc</span>.<span class="ident">block_size</span> <span class="kw">as</span> <span class="ident">u32</span>,
             <span class="ident">bytes_per_row_alignment</span>,
         );
 
