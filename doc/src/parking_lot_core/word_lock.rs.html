@@ -355,9 +355,9 @@
     <span class="comment">// still allowing O(1) removal of nodes from the processed part of the list.</span>
     <span class="comment">// The only cost is the O(n) processing, but this only needs to be done</span>
     <span class="comment">// once for each node, and therefore isn&#39;t too expensive.</span>
-    <span class="ident">queue_tail</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ThreadData</span><span class="op">&gt;</span>,
-    <span class="ident">prev</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ThreadData</span><span class="op">&gt;</span>,
-    <span class="ident">next</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ThreadData</span><span class="op">&gt;</span>,
+    <span class="ident">queue_tail</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="kw-2">*const</span> <span class="ident">ThreadData</span><span class="op">&gt;</span>,
+    <span class="ident">prev</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="kw-2">*const</span> <span class="ident">ThreadData</span><span class="op">&gt;</span>,
+    <span class="ident">next</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="kw-2">*const</span> <span class="ident">ThreadData</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">ThreadData</span> {
@@ -381,7 +381,7 @@
     <span class="comment">// version in thread-local storage if possible.</span>
     <span class="kw">if</span> <span class="op">!</span><span class="ident">ThreadParker::IS_CHEAP_TO_CONSTRUCT</span> {
         <span class="macro">thread_local!</span>(<span class="kw">static</span> <span class="ident">THREAD_DATA</span>: <span class="ident">ThreadData</span> <span class="op">=</span> <span class="ident">ThreadData::new</span>());
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">tls_thread_data</span>) <span class="op">=</span> <span class="ident">THREAD_DATA</span>.<span class="ident">try_with</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ThreadData</span>) {
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">tls_thread_data</span>) <span class="op">=</span> <span class="ident">THREAD_DATA</span>.<span class="ident">try_with</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">ThreadData</span>) {
             <span class="ident">thread_data_ptr</span> <span class="op">=</span> <span class="ident">tls_thread_data</span>;
         }
     }
@@ -627,8 +627,8 @@
 <span class="kw">trait</span> <span class="ident">LockState</span> {
     <span class="kw">fn</span> <span class="ident">is_locked</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span>;
     <span class="kw">fn</span> <span class="ident">is_queue_locked</span>(<span class="self">self</span>) -&gt; <span class="ident">bool</span>;
-    <span class="kw">fn</span> <span class="ident">queue_head</span>(<span class="self">self</span>) -&gt; <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ThreadData</span>;
-    <span class="kw">fn</span> <span class="ident">with_queue_head</span>(<span class="self">self</span>, <span class="ident">thread_data</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ThreadData</span>) -&gt; <span class="self">Self</span>;
+    <span class="kw">fn</span> <span class="ident">queue_head</span>(<span class="self">self</span>) -&gt; <span class="kw-2">*const</span> <span class="ident">ThreadData</span>;
+    <span class="kw">fn</span> <span class="ident">with_queue_head</span>(<span class="self">self</span>, <span class="ident">thread_data</span>: <span class="kw-2">*const</span> <span class="ident">ThreadData</span>) -&gt; <span class="self">Self</span>;
 }
 
 <span class="kw">impl</span> <span class="ident">LockState</span> <span class="kw">for</span> <span class="ident">usize</span> {
@@ -643,13 +643,13 @@
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">queue_head</span>(<span class="self">self</span>) -&gt; <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ThreadData</span> {
-        (<span class="self">self</span> <span class="op">&amp;</span> <span class="ident">QUEUE_MASK</span>) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ThreadData</span>
+    <span class="kw">fn</span> <span class="ident">queue_head</span>(<span class="self">self</span>) -&gt; <span class="kw-2">*const</span> <span class="ident">ThreadData</span> {
+        (<span class="self">self</span> <span class="op">&amp;</span> <span class="ident">QUEUE_MASK</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">ThreadData</span>
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">with_queue_head</span>(<span class="self">self</span>, <span class="ident">thread_data</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">ThreadData</span>) -&gt; <span class="self">Self</span> {
-        (<span class="self">self</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">QUEUE_MASK</span>) <span class="op">|</span> <span class="ident">thread_data</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">usize</span>
+    <span class="kw">fn</span> <span class="ident">with_queue_head</span>(<span class="self">self</span>, <span class="ident">thread_data</span>: <span class="kw-2">*const</span> <span class="ident">ThreadData</span>) -&gt; <span class="self">Self</span> {
+        (<span class="self">self</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">QUEUE_MASK</span>) <span class="op">|</span> <span class="ident">thread_data</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">usize</span>
     }
 }
 </code></pre></div>

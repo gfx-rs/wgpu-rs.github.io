@@ -537,14 +537,14 @@
 <span class="kw">unsafe</span> <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">BufferMapState</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {}
 <span class="kw">unsafe</span> <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">BufferMapState</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {}
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BufferMapCallback</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">status</span>: <span class="ident">BufferMapAsyncStatus</span>, <span class="ident">userdata</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>);
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BufferMapCallback</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">status</span>: <span class="ident">BufferMapAsyncStatus</span>, <span class="ident">userdata</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>);
 
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferMapOperation</span> {
     <span class="kw">pub</span> <span class="ident">host</span>: <span class="ident">HostMap</span>,
     <span class="kw">pub</span> <span class="ident">callback</span>: <span class="ident">BufferMapCallback</span>,
-    <span class="kw">pub</span> <span class="ident">user_data</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>,
+    <span class="kw">pub</span> <span class="ident">user_data</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>,
 }
 
 <span class="comment">//TODO: clarify if/why this is needed here</span>
@@ -694,7 +694,7 @@
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
-        <span class="kw">let</span> (<span class="ident">guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">token</span>);
+        <span class="kw">let</span> (<span class="ident">guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">read</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
         <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="ident">guard</span>.<span class="ident">get</span>(<span class="ident">id</span>).<span class="ident">ok</span>();
         <span class="kw">let</span> <span class="ident">hal_texture</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">tex</span><span class="op">|</span> <span class="ident">tex</span>.<span class="ident">inner</span>.<span class="ident">as_raw</span>().<span class="ident">unwrap</span>());
 

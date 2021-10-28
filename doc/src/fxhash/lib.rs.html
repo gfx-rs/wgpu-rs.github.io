@@ -376,7 +376,7 @@
 <span class="kw">const</span> <span class="ident">SEED</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">SEED64</span> <span class="kw">as</span> <span class="ident">usize</span>;
 
 <span class="kw">trait</span> <span class="ident">HashWord</span> {
-    <span class="kw">fn</span> <span class="ident">hash_word</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="self">Self</span>);
+    <span class="kw">fn</span> <span class="ident">hash_word</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="self">Self</span>);
 }
 
 <span class="macro">macro_rules!</span> <span class="ident">impl_hash_word</span> {
@@ -384,7 +384,7 @@
         $(
             <span class="kw">impl</span> <span class="ident">HashWord</span> <span class="kw">for</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span> {
                 <span class="attribute">#[<span class="ident">inline</span>]</span>
-                <span class="kw">fn</span> <span class="ident">hash_word</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">word</span>: <span class="self">Self</span>) {
+                <span class="kw">fn</span> <span class="ident">hash_word</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">word</span>: <span class="self">Self</span>) {
                     <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">rotate_left</span>(<span class="ident">ROTATE</span>).<span class="ident">bitxor</span>(<span class="ident">word</span>).<span class="ident">wrapping_mul</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">key</span>);
                 }
             }
@@ -461,40 +461,40 @@
 
 <span class="kw">impl</span> <span class="ident">Hasher</span> <span class="kw">for</span> <span class="ident">FxHasher</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
+    <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
         <span class="self">self</span>.<span class="ident">hash</span> <span class="op">=</span> <span class="ident">write</span>(<span class="self">self</span>.<span class="ident">hash</span>, <span class="ident">bytes</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u8</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) {
+    <span class="kw">fn</span> <span class="ident">write_u8</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u16</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u16</span>) {
+    <span class="kw">fn</span> <span class="ident">write_u16</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u16</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) {
+    <span class="kw">fn</span> <span class="ident">write_u32</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_pointer_width</span> <span class="op">=</span> <span class="string">&quot;32&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">write_u64</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u64</span>) {
+    <span class="kw">fn</span> <span class="ident">write_u64</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u64</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>);
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>((<span class="ident">i</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">usize</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_pointer_width</span> <span class="op">=</span> <span class="string">&quot;64&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">write_u64</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u64</span>) {
+    <span class="kw">fn</span> <span class="ident">write_u64</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u64</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_usize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) {
+    <span class="kw">fn</span> <span class="ident">write_usize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span>);
     }
 
@@ -525,31 +525,31 @@
 
 <span class="kw">impl</span> <span class="ident">Hasher</span> <span class="kw">for</span> <span class="ident">FxHasher64</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
+    <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
         <span class="self">self</span>.<span class="ident">hash</span> <span class="op">=</span> <span class="ident">write64</span>(<span class="self">self</span>.<span class="ident">hash</span>, <span class="ident">bytes</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u8</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) {
+    <span class="kw">fn</span> <span class="ident">write_u8</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u16</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u16</span>) {
+    <span class="kw">fn</span> <span class="ident">write_u16</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u16</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) {
+    <span class="kw">fn</span> <span class="ident">write_u32</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">write_u64</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u64</span>) {
+    <span class="kw">fn</span> <span class="ident">write_u64</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u64</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_usize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) {
+    <span class="kw">fn</span> <span class="ident">write_usize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
     }
 
@@ -580,40 +580,40 @@
 
 <span class="kw">impl</span> <span class="ident">Hasher</span> <span class="kw">for</span> <span class="ident">FxHasher32</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
+    <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">bytes</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
         <span class="self">self</span>.<span class="ident">hash</span> <span class="op">=</span> <span class="ident">write32</span>(<span class="self">self</span>.<span class="ident">hash</span>, <span class="ident">bytes</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u8</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) {
+    <span class="kw">fn</span> <span class="ident">write_u8</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u8</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u16</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u16</span>) {
+    <span class="kw">fn</span> <span class="ident">write_u16</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u16</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u32</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) {
+    <span class="kw">fn</span> <span class="ident">write_u32</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u32</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">write_u64</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u64</span>) {
+    <span class="kw">fn</span> <span class="ident">write_u64</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">u64</span>) {
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>);
         <span class="self">self</span>.<span class="ident">hash</span>.<span class="ident">hash_word</span>((<span class="ident">i</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_pointer_width</span> <span class="op">=</span> <span class="string">&quot;32&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">write_usize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) {
+    <span class="kw">fn</span> <span class="ident">write_usize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) {
         <span class="self">self</span>.<span class="ident">write_u32</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>]</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_pointer_width</span> <span class="op">=</span> <span class="string">&quot;64&quot;</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">write_usize</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) {
+    <span class="kw">fn</span> <span class="ident">write_usize</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">i</span>: <span class="ident">usize</span>) {
         <span class="self">self</span>.<span class="ident">write_u64</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
     }
 
@@ -627,7 +627,7 @@
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash64</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">u64</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">FxHasher64::default</span>();
-    <span class="ident">v</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">state</span>);
+    <span class="ident">v</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;mut</span> <span class="ident">state</span>);
     <span class="ident">state</span>.<span class="ident">finish</span>()
 }
 
@@ -635,7 +635,7 @@
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash32</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">u32</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">FxHasher32::default</span>();
-    <span class="ident">v</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">state</span>);
+    <span class="ident">v</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;mut</span> <span class="ident">state</span>);
     <span class="ident">state</span>.<span class="ident">finish</span>() <span class="kw">as</span> <span class="ident">u32</span>
 }
 
@@ -643,7 +643,7 @@
 <span class="attribute">#[<span class="ident">inline</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">hash</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Hash</span> <span class="op">+</span> <span class="question-mark">?</span><span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="ident">T</span>) -&gt; <span class="ident">usize</span> {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">FxHasher::default</span>();
-    <span class="ident">v</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">state</span>);
+    <span class="ident">v</span>.<span class="ident">hash</span>(<span class="kw-2">&amp;mut</span> <span class="ident">state</span>);
     <span class="ident">state</span>.<span class="ident">finish</span>() <span class="kw">as</span> <span class="ident">usize</span>
 }</code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="fxhash" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>

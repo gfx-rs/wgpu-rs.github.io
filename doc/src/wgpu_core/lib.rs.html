@@ -331,7 +331,7 @@
 <span class="kw">type</span> <span class="ident">Index</span> <span class="op">=</span> <span class="ident">u32</span>;
 <span class="kw">type</span> <span class="ident">Epoch</span> <span class="op">=</span> <span class="ident">u32</span>;
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">RawString</span> <span class="op">=</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">c_char</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">RawString</span> <span class="op">=</span> <span class="kw-2">*const</span> <span class="ident">c_char</span>;
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>;
 
 <span class="kw">trait</span> <span class="ident">LabelHelpers</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -364,7 +364,7 @@
     <span class="doccomment">/// This function exists to allow `Self::rich_drop_outer` and `Drop::drop` to share the same</span>
     <span class="doccomment">/// logic. To use this safely from outside of `Drop::drop`, the calling function must move</span>
     <span class="doccomment">/// `Self` into a `ManuallyDrop`.</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">rich_drop_inner</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="ident">bool</span> {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">rich_drop_inner</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">if</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_ref</span>().<span class="ident">fetch_sub</span>(<span class="number">1</span>, <span class="ident">Ordering::AcqRel</span>) <span class="op">==</span> <span class="number">1</span> {
             <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">Box::from_raw</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_ptr</span>());
             <span class="bool-val">true</span>
@@ -383,7 +383,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">RefCount</span> {
-    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">unsafe</span> {
             <span class="self">self</span>.<span class="ident">rich_drop_inner</span>();
         }
@@ -415,7 +415,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">MultiRefCount</span> {
-    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">Box::from_raw</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">as_ptr</span>()) };
     }
 }

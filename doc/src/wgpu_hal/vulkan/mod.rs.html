@@ -1088,14 +1088,14 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">Temp</span> {}
 
 <span class="kw">impl</span> <span class="ident">Temp</span> {
-    <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">marker</span>.<span class="ident">clear</span>();
         <span class="self">self</span>.<span class="ident">buffer_barriers</span>.<span class="ident">clear</span>();
         <span class="self">self</span>.<span class="ident">image_barriers</span>.<span class="ident">clear</span>();
         <span class="comment">//see also - https://github.com/NotIntMan/inplace_it/issues/8</span>
     }
 
-    <span class="kw">fn</span> <span class="ident">make_c_str</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">CStr</span> {
+    <span class="kw">fn</span> <span class="ident">make_c_str</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">CStr</span> {
         <span class="self">self</span>.<span class="ident">marker</span>.<span class="ident">clear</span>();
         <span class="self">self</span>.<span class="ident">marker</span>.<span class="ident">extend_from_slice</span>(<span class="ident">name</span>.<span class="ident">as_bytes</span>());
         <span class="self">self</span>.<span class="ident">marker</span>.<span class="ident">push</span>(<span class="number">0</span>);
@@ -1194,7 +1194,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">maintain</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">ash::Device</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="kw">crate</span>::DeviceError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">maintain</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">ash::Device</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="kw">crate</span>::DeviceError</span><span class="op">&gt;</span> {
         <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
             <span class="ident"><span class="self">Self</span>::TimelineSemaphore</span>(<span class="kw">_</span>) =&gt; {}
             <span class="ident"><span class="self">Self</span>::FencePool</span> {
@@ -1224,9 +1224,9 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 
 <span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::Queue</span><span class="op">&lt;</span><span class="ident">Api</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Queue</span> {
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">submit</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">command_buffers</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">CommandBuffer</span>],
-        <span class="ident">signal_fence</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Fence</span>, <span class="ident"><span class="kw">crate</span>::FenceValue</span>)<span class="op">&gt;</span>,
+        <span class="ident">signal_fence</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="kw-2">&amp;mut</span> <span class="ident">Fence</span>, <span class="ident"><span class="kw">crate</span>::FenceValue</span>)<span class="op">&gt;</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="kw">crate</span>::DeviceError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">vk_cmd_buffers</span> <span class="op">=</span> <span class="ident">command_buffers</span>
             .<span class="ident">iter</span>()
@@ -1248,7 +1248,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
                     <span class="ident">semaphores</span>[<span class="number">1</span>] <span class="op">=</span> <span class="ident">raw</span>;
                     <span class="ident">vk_timeline_info</span> <span class="op">=</span> <span class="ident">vk::TimelineSemaphoreSubmitInfo::builder</span>()
                         .<span class="ident">signal_semaphore_values</span>(<span class="kw-2">&amp;</span><span class="ident">signal_values</span>);
-                    <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk_info</span>.<span class="ident">push_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">vk_timeline_info</span>);
+                    <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk_info</span>.<span class="ident">push_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">vk_timeline_info</span>);
                 }
                 <span class="ident">Fence::FencePool</span> {
                     <span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">active</span>,
@@ -1289,8 +1289,8 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">present</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+        <span class="ident">surface</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Surface</span>,
         <span class="ident">texture</span>: <span class="ident">SurfaceTexture</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="kw">crate</span>::SurfaceError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">ssc</span> <span class="op">=</span> <span class="ident">surface</span>.<span class="ident">swapchain</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();

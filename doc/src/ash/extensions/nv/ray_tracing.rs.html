@@ -295,8 +295,8 @@
     ) -&gt; <span class="ident">vk::PhysicalDeviceRayTracingPropertiesNV</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">props_rt</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceRayTracingPropertiesNV::default</span>();
         {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">props</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceProperties2::builder</span>().<span class="ident">push_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">props_rt</span>);
-            <span class="ident">instance</span>.<span class="ident">get_physical_device_properties2</span>(<span class="ident">pdevice</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">props</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">props</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceProperties2::builder</span>().<span class="ident">push_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">props_rt</span>);
+            <span class="ident">instance</span>.<span class="ident">get_physical_device_properties2</span>(<span class="ident">pdevice</span>, <span class="kw-2">&amp;mut</span> <span class="ident">props</span>);
         }
         <span class="ident">props_rt</span>
     }
@@ -313,7 +313,7 @@
                 <span class="self">self</span>.<span class="ident">handle</span>,
                 <span class="ident">create_info</span>,
                 <span class="ident">allocation_callbacks</span>.<span class="ident">as_raw_ptr</span>(),
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">accel_struct</span>,
+                <span class="kw-2">&amp;mut</span> <span class="ident">accel_struct</span>,
             )
             .<span class="ident">result_with_success</span>(<span class="ident">accel_struct</span>)
     }
@@ -341,7 +341,7 @@
             .<span class="ident">get_acceleration_structure_memory_requirements_nv</span>(
                 <span class="self">self</span>.<span class="ident">handle</span>,
                 <span class="ident">info</span>,
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">requirements</span>,
+                <span class="kw-2">&amp;mut</span> <span class="ident">requirements</span>,
             );
         <span class="ident">requirements</span>
     }
@@ -462,7 +462,7 @@
         <span class="ident">pipeline</span>: <span class="ident">vk::Pipeline</span>,
         <span class="ident">first_group</span>: <span class="ident">u32</span>,
         <span class="ident">group_count</span>: <span class="ident">u32</span>,
-        <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>],
+        <span class="ident">data</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>],
     ) -&gt; <span class="ident">VkResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">ray_tracing_fn</span>
             .<span class="ident">get_ray_tracing_shader_group_handles_nv</span>(
@@ -471,7 +471,7 @@
                 <span class="ident">first_group</span>,
                 <span class="ident">group_count</span>,
                 <span class="ident">data</span>.<span class="ident">len</span>(),
-                <span class="ident">data</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
+                <span class="ident">data</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>,
             )
             .<span class="ident">into</span>()
     }
@@ -482,13 +482,13 @@
         <span class="ident">accel_struct</span>: <span class="ident">vk::AccelerationStructureNV</span>,
     ) -&gt; <span class="ident">VkResult</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">handle</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">let</span> <span class="ident">handle_ptr</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u64</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">handle</span>;
+        <span class="kw">let</span> <span class="ident">handle_ptr</span>: <span class="kw-2">*mut</span> <span class="ident">u64</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">handle</span>;
         <span class="self">self</span>.<span class="ident">ray_tracing_fn</span>
             .<span class="ident">get_acceleration_structure_handle_nv</span>(
                 <span class="self">self</span>.<span class="ident">handle</span>,
                 <span class="ident">accel_struct</span>,
                 <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>(),
-                <span class="ident">handle_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
+                <span class="ident">handle_ptr</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>,
             )
             .<span class="ident">result_with_success</span>(<span class="ident">handle</span>)
     }

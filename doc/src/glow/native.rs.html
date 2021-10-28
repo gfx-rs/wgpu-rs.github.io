@@ -2773,7 +2773,7 @@
 <span class="kw">impl</span> <span class="ident">Context</span> {
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_loader_function</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">loader_function</span>: <span class="ident">F</span>) -&gt; <span class="self">Self</span>
     <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::os::raw::c_void</span>,
+        <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="kw-2">*const</span> <span class="ident">std::os::raw::c_void</span>,
     {
         <span class="comment">// Note(Lokathor): This is wildly inefficient, because the loader_function</span>
         <span class="comment">// is doubtlessly just going to allocate the `&amp;str` we pass into a new `CString`</span>
@@ -2781,9 +2781,9 @@
         <span class="comment">// However, this is the best we can do without changing the outer function</span>
         <span class="comment">// signature into something that&#39;s less alloc crazy.</span>
         <span class="kw">let</span> <span class="ident">raw</span>: <span class="ident">native_gl::GlFns</span> <span class="op">=</span>
-            <span class="ident">native_gl::GlFns::load_with</span>(<span class="op">|</span><span class="ident">p</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::os::raw::c_char</span><span class="op">|</span> {
+            <span class="ident">native_gl::GlFns::load_with</span>(<span class="op">|</span><span class="ident">p</span>: <span class="kw-2">*const</span> <span class="ident">std::os::raw::c_char</span><span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">c_str</span> <span class="op">=</span> <span class="ident">std::ffi::CStr::from_ptr</span>(<span class="ident">p</span>);
-                <span class="ident">loader_function</span>(<span class="ident">c_str</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>()) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::os::raw::c_void</span>
+                <span class="ident">loader_function</span>(<span class="ident">c_str</span>.<span class="ident">to_str</span>().<span class="ident">unwrap</span>()) <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::os::raw::c_void</span>
             });
 
         <span class="comment">// Setup extensions and constants after the context has been built</span>
@@ -2828,7 +2828,7 @@
 }
 
 <span class="kw">impl</span> <span class="ident">std::fmt::Debug</span> <span class="kw">for</span> <span class="ident">Context</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">std::fmt::Formatter</span>) -&gt; <span class="ident">std::fmt::Result</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span>) -&gt; <span class="ident">std::fmt::Result</span> {
         <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;Native_GL_Context&quot;</span>)
     }
 }
@@ -2898,7 +2898,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_framebuffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Framebuffer</span>, <span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GenFramebuffers</span>(<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">name</span>);
+        <span class="ident">gl</span>.<span class="ident">GenFramebuffers</span>(<span class="number">1</span>, <span class="kw-2">&amp;mut</span> <span class="ident">name</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">NativeFramebuffer</span>(<span class="ident">non_zero_gl_name</span>(<span class="ident">name</span>)))
     }
 
@@ -2910,14 +2910,14 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_query</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Query</span>, <span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GenQueries</span>(<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">name</span>);
+        <span class="ident">gl</span>.<span class="ident">GenQueries</span>(<span class="number">1</span>, <span class="kw-2">&amp;mut</span> <span class="ident">name</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">NativeQuery</span>(<span class="ident">non_zero_gl_name</span>(<span class="ident">name</span>)))
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_renderbuffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Renderbuffer</span>, <span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GenRenderbuffers</span>(<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">name</span>);
+        <span class="ident">gl</span>.<span class="ident">GenRenderbuffers</span>(<span class="number">1</span>, <span class="kw-2">&amp;mut</span> <span class="ident">name</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">NativeRenderbuffer</span>(<span class="ident">non_zero_gl_name</span>(<span class="ident">name</span>)))
     }
 
@@ -2929,7 +2929,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_sampler</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Sampler</span>, <span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GenSamplers</span>(<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">name</span>);
+        <span class="ident">gl</span>.<span class="ident">GenSamplers</span>(<span class="number">1</span>, <span class="kw-2">&amp;mut</span> <span class="ident">name</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">NativeSampler</span>(<span class="ident">non_zero_gl_name</span>(<span class="ident">name</span>)))
     }
 
@@ -2948,7 +2948,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_texture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Texture</span>, <span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GenTextures</span>(<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">name</span>);
+        <span class="ident">gl</span>.<span class="ident">GenTextures</span>(<span class="number">1</span>, <span class="kw-2">&amp;mut</span> <span class="ident">name</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">NativeTexture</span>(<span class="ident">non_zero_gl_name</span>(<span class="ident">name</span>)))
     }
 
@@ -2967,7 +2967,7 @@
         <span class="ident">gl</span>.<span class="ident">ShaderSource</span>(
             <span class="ident">shader</span>.<span class="number">0</span>.<span class="ident">get</span>(),
             <span class="number">1</span>,
-            <span class="kw-2">&amp;</span>(<span class="ident">source</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">native_gl::GLchar</span>),
+            <span class="kw-2">&amp;</span>(<span class="ident">source</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">native_gl::GLchar</span>),
             <span class="kw-2">&amp;</span>(<span class="ident">source</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">native_gl::GLint</span>),
         );
     }
@@ -2980,22 +2980,22 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_shader_compile_status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">shader</span>: <span class="ident"><span class="self">Self</span>::Shader</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">status</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GetShaderiv</span>(<span class="ident">shader</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">COMPILE_STATUS</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">status</span>);
+        <span class="ident">gl</span>.<span class="ident">GetShaderiv</span>(<span class="ident">shader</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">COMPILE_STATUS</span>, <span class="kw-2">&amp;mut</span> <span class="ident">status</span>);
         <span class="number">1</span> <span class="op">==</span> <span class="ident">status</span>
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_shader_info_log</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">shader</span>: <span class="ident"><span class="self">Self</span>::Shader</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">length</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GetShaderiv</span>(<span class="ident">shader</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">INFO_LOG_LENGTH</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">length</span>);
+        <span class="ident">gl</span>.<span class="ident">GetShaderiv</span>(<span class="ident">shader</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">INFO_LOG_LENGTH</span>, <span class="kw-2">&amp;mut</span> <span class="ident">length</span>);
         <span class="kw">if</span> <span class="ident">length</span> <span class="op">&gt;</span> <span class="number">0</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">log</span> <span class="op">=</span> <span class="ident">String::with_capacity</span>(<span class="ident">length</span> <span class="kw">as</span> <span class="ident">usize</span>);
             <span class="ident">log</span>.<span class="ident">extend</span>(<span class="ident">std::iter::repeat</span>(<span class="string">&#39;\0&#39;</span>).<span class="ident">take</span>(<span class="ident">length</span> <span class="kw">as</span> <span class="ident">usize</span>));
             <span class="ident">gl</span>.<span class="ident">GetShaderInfoLog</span>(
                 <span class="ident">shader</span>.<span class="number">0</span>.<span class="ident">get</span>(),
                 <span class="ident">length</span>,
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">length</span>,
-                (<span class="kw-2">&amp;</span><span class="ident">log</span>[..]).<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">native_gl::GLchar</span>,
+                <span class="kw-2">&amp;mut</span> <span class="ident">length</span>,
+                (<span class="kw-2">&amp;</span><span class="ident">log</span>[..]).<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">native_gl::GLchar</span>,
             );
             <span class="ident">log</span>.<span class="ident">truncate</span>(<span class="ident">length</span> <span class="kw">as</span> <span class="ident">usize</span>);
             <span class="ident">log</span>
@@ -3019,8 +3019,8 @@
             <span class="ident">format</span>,
             <span class="ident">ty</span>,
             <span class="kw">match</span> <span class="ident">pixels</span> {
-                <span class="ident">PixelPackData::BufferOffset</span>(<span class="ident">offset</span>) =&gt; <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
-                <span class="ident">PixelPackData::Slice</span>(<span class="ident">data</span>) =&gt; <span class="ident">data</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
+                <span class="ident">PixelPackData::BufferOffset</span>(<span class="ident">offset</span>) =&gt; <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>,
+                <span class="ident">PixelPackData::Slice</span>(<span class="ident">data</span>) =&gt; <span class="ident">data</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>,
             },
         );
     }
@@ -3058,22 +3058,22 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_program_link_status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">program</span>: <span class="ident"><span class="self">Self</span>::Program</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">status</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GetProgramiv</span>(<span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">LINK_STATUS</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">status</span>);
+        <span class="ident">gl</span>.<span class="ident">GetProgramiv</span>(<span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">LINK_STATUS</span>, <span class="kw-2">&amp;mut</span> <span class="ident">status</span>);
         <span class="number">1</span> <span class="op">==</span> <span class="ident">status</span>
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_program_info_log</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">program</span>: <span class="ident"><span class="self">Self</span>::Program</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">length</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GetProgramiv</span>(<span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">INFO_LOG_LENGTH</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">length</span>);
+        <span class="ident">gl</span>.<span class="ident">GetProgramiv</span>(<span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">INFO_LOG_LENGTH</span>, <span class="kw-2">&amp;mut</span> <span class="ident">length</span>);
         <span class="kw">if</span> <span class="ident">length</span> <span class="op">&gt;</span> <span class="number">0</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">log</span> <span class="op">=</span> <span class="ident">String::with_capacity</span>(<span class="ident">length</span> <span class="kw">as</span> <span class="ident">usize</span>);
             <span class="ident">log</span>.<span class="ident">extend</span>(<span class="ident">std::iter::repeat</span>(<span class="string">&#39;\0&#39;</span>).<span class="ident">take</span>(<span class="ident">length</span> <span class="kw">as</span> <span class="ident">usize</span>));
             <span class="ident">gl</span>.<span class="ident">GetProgramInfoLog</span>(
                 <span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(),
                 <span class="ident">length</span>,
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">length</span>,
-                (<span class="kw-2">&amp;</span><span class="ident">log</span>[..]).<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">native_gl::GLchar</span>,
+                <span class="kw-2">&amp;mut</span> <span class="ident">length</span>,
+                (<span class="kw-2">&amp;</span><span class="ident">log</span>[..]).<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">native_gl::GLchar</span>,
             );
             <span class="ident">log</span>.<span class="ident">truncate</span>(<span class="ident">length</span> <span class="kw">as</span> <span class="ident">usize</span>);
             <span class="ident">log</span>
@@ -3085,7 +3085,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_active_uniforms</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">program</span>: <span class="ident"><span class="self">Self</span>::Program</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">count</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GetProgramiv</span>(<span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">ACTIVE_UNIFORMS</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">count</span>);
+        <span class="ident">gl</span>.<span class="ident">GetProgramiv</span>(<span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">ACTIVE_UNIFORMS</span>, <span class="kw-2">&amp;mut</span> <span class="ident">count</span>);
         <span class="ident">count</span> <span class="kw">as</span> <span class="ident">u32</span>
     }
 
@@ -3099,7 +3099,7 @@
         <span class="ident">gl</span>.<span class="ident">GetProgramiv</span>(
             <span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(),
             <span class="ident">ACTIVE_UNIFORM_MAX_LENGTH</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">uniform_max_size</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">uniform_max_size</span>,
         );
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">String::with_capacity</span>(<span class="ident">uniform_max_size</span> <span class="kw">as</span> <span class="ident">usize</span>);
@@ -3111,10 +3111,10 @@
             <span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(),
             <span class="ident">index</span>,
             <span class="ident">uniform_max_size</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">length</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">size</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">utype</span>,
-            <span class="ident">name</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">native_gl::GLchar</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">length</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">size</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">utype</span>,
+            <span class="ident">name</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">native_gl::GLchar</span>,
         );
         <span class="ident">name</span>.<span class="ident">truncate</span>(<span class="ident">length</span> <span class="kw">as</span> <span class="ident">usize</span>);
 
@@ -3129,7 +3129,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Buffer</span>, <span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GenBuffers</span>(<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">buffer</span>);
+        <span class="ident">gl</span>.<span class="ident">GenBuffers</span>(<span class="number">1</span>, <span class="kw-2">&amp;mut</span> <span class="ident">buffer</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">NativeBuffer</span>(<span class="ident">non_zero_gl_name</span>(<span class="ident">buffer</span>)))
     }
 
@@ -3214,7 +3214,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_vertex_array</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::VertexArray</span>, <span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vertex_array</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GenVertexArrays</span>(<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">vertex_array</span>);
+        <span class="ident">gl</span>.<span class="ident">GenVertexArrays</span>(<span class="number">1</span>, <span class="kw-2">&amp;mut</span> <span class="ident">vertex_array</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">NativeVertexArray</span>(<span class="ident">non_zero_gl_name</span>(<span class="ident">vertex_array</span>)))
     }
 
@@ -3283,7 +3283,7 @@
         <span class="ident">gl</span>.<span class="ident">BindFragDataLocation</span>(
             <span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(),
             <span class="ident">color_number</span>,
-            <span class="ident">name</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">native_gl::GLchar</span>,
+            <span class="ident">name</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">native_gl::GLchar</span>,
         );
     }
 
@@ -3297,7 +3297,7 @@
         <span class="ident">gl</span>.<span class="ident">BufferData</span>(
             <span class="ident">target</span>,
             <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">isize</span>,
-            <span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
             <span class="ident">usage</span>,
         );
     }
@@ -3308,24 +3308,24 @@
             <span class="ident">target</span>,
             <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">isize</span>,
             <span class="ident">src_data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">isize</span>,
-            <span class="ident">src_data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">src_data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
         );
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_buffer_sub_data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">target</span>: <span class="ident">u32</span>, <span class="ident">offset</span>: <span class="ident">i32</span>, <span class="ident">dst_data</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>]) {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_buffer_sub_data</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">target</span>: <span class="ident">u32</span>, <span class="ident">offset</span>: <span class="ident">i32</span>, <span class="ident">dst_data</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="ident">gl</span>.<span class="ident">GetBufferSubData</span>(
             <span class="ident">target</span>,
             <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">isize</span>,
             <span class="ident">dst_data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">isize</span>,
-            <span class="ident">dst_data</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">dst_data</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>,
         );
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">buffer_storage</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">target</span>: <span class="ident">u32</span>, <span class="ident">size</span>: <span class="ident">i32</span>, <span class="ident">data</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>, <span class="ident">flags</span>: <span class="ident">u32</span>) {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">size</span> <span class="kw">as</span> <span class="ident">isize</span>;
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">as_ptr</span>()).<span class="ident">unwrap_or</span>(<span class="ident">std::ptr::null</span>()) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>;
+        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">as_ptr</span>()).<span class="ident">unwrap_or</span>(<span class="ident">std::ptr::null</span>()) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>;
         <span class="kw">if</span> <span class="ident">gl</span>.<span class="ident">BufferStorage_is_loaded</span>() {
             <span class="ident">gl</span>.<span class="ident">BufferStorage</span>(<span class="ident">target</span>, <span class="ident">size</span>, <span class="ident">data</span>, <span class="ident">flags</span>);
         } <span class="kw">else</span> {
@@ -3530,7 +3530,7 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">draw_arrays_indirect_offset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">mode</span>: <span class="ident">u32</span>, <span class="ident">offset</span>: <span class="ident">i32</span>) {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
-        <span class="ident">gl</span>.<span class="ident">DrawArraysIndirect</span>(<span class="ident">mode</span>, <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>);
+        <span class="ident">gl</span>.<span class="ident">DrawArraysIndirect</span>(<span class="ident">mode</span>, <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>);
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">draw_buffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">draw_buffer</span>: <span class="ident">u32</span>) {
@@ -3549,7 +3549,7 @@
             <span class="ident">mode</span> <span class="kw">as</span> <span class="ident">u32</span>,
             <span class="ident">count</span>,
             <span class="ident">element_type</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
         );
     }
 
@@ -3566,7 +3566,7 @@
             <span class="ident">mode</span> <span class="kw">as</span> <span class="ident">u32</span>,
             <span class="ident">count</span>,
             <span class="ident">element_type</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
             <span class="ident">base_vertex</span>,
         );
     }
@@ -3584,7 +3584,7 @@
             <span class="ident">mode</span> <span class="kw">as</span> <span class="ident">u32</span>,
             <span class="ident">count</span>,
             <span class="ident">element_type</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
             <span class="ident">instance_count</span>,
         );
     }
@@ -3603,7 +3603,7 @@
             <span class="ident">mode</span> <span class="kw">as</span> <span class="ident">u32</span>,
             <span class="ident">count</span>,
             <span class="ident">element_type</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
             <span class="ident">instance_count</span>,
             <span class="ident">base_vertex</span>,
         );
@@ -3624,7 +3624,7 @@
             <span class="ident">mode</span> <span class="kw">as</span> <span class="ident">u32</span>,
             <span class="ident">count</span>,
             <span class="ident">element_type</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
             <span class="ident">instance_count</span>,
             <span class="ident">base_vertex</span>,
             <span class="ident">base_instance</span>,
@@ -3633,7 +3633,7 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">draw_elements_indirect_offset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">mode</span>: <span class="ident">u32</span>, <span class="ident">element_type</span>: <span class="ident">u32</span>, <span class="ident">offset</span>: <span class="ident">i32</span>) {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
-        <span class="ident">gl</span>.<span class="ident">DrawElementsIndirect</span>(<span class="ident">mode</span>, <span class="ident">element_type</span>, <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>);
+        <span class="ident">gl</span>.<span class="ident">DrawElementsIndirect</span>(<span class="ident">mode</span>, <span class="ident">element_type</span>, <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>);
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">enable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parameter</span>: <span class="ident">u32</span>) {
@@ -3762,52 +3762,52 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_tex_parameter_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">target</span>: <span class="ident">u32</span>, <span class="ident">parameter</span>: <span class="ident">u32</span>) -&gt; <span class="ident">i32</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GetTexParameteriv</span>(<span class="ident">target</span>, <span class="ident">parameter</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">value</span>);
+        <span class="ident">gl</span>.<span class="ident">GetTexParameteriv</span>(<span class="ident">target</span>, <span class="ident">parameter</span>, <span class="kw-2">&amp;mut</span> <span class="ident">value</span>);
         <span class="ident">value</span>
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_buffer_parameter_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">target</span>: <span class="ident">u32</span>, <span class="ident">parameter</span>: <span class="ident">u32</span>) -&gt; <span class="ident">i32</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GetBufferParameteriv</span>(<span class="ident">target</span>, <span class="ident">parameter</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">value</span>);
+        <span class="ident">gl</span>.<span class="ident">GetBufferParameteriv</span>(<span class="ident">target</span>, <span class="ident">parameter</span>, <span class="kw-2">&amp;mut</span> <span class="ident">value</span>);
         <span class="ident">value</span>
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_parameter_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parameter</span>: <span class="ident">u32</span>) -&gt; <span class="ident">i32</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GetIntegerv</span>(<span class="ident">parameter</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">value</span>);
+        <span class="ident">gl</span>.<span class="ident">GetIntegerv</span>(<span class="ident">parameter</span>, <span class="kw-2">&amp;mut</span> <span class="ident">value</span>);
         <span class="ident">value</span>
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_parameter_i32_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parameter</span>: <span class="ident">u32</span>, <span class="ident">out</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">i32</span>]) {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_parameter_i32_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parameter</span>: <span class="ident">u32</span>, <span class="ident">out</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">i32</span>]) {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
-        <span class="ident">gl</span>.<span class="ident">GetIntegerv</span>(<span class="ident">parameter</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">out</span>[<span class="number">0</span>]);
+        <span class="ident">gl</span>.<span class="ident">GetIntegerv</span>(<span class="ident">parameter</span>, <span class="kw-2">&amp;mut</span> <span class="ident">out</span>[<span class="number">0</span>]);
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_parameter_f32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parameter</span>: <span class="ident">u32</span>) -&gt; <span class="ident">f32</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value</span>: <span class="ident">f32</span> <span class="op">=</span> <span class="number">0.0</span>;
-        <span class="ident">gl</span>.<span class="ident">GetFloatv</span>(<span class="ident">parameter</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">value</span>);
+        <span class="ident">gl</span>.<span class="ident">GetFloatv</span>(<span class="ident">parameter</span>, <span class="kw-2">&amp;mut</span> <span class="ident">value</span>);
         <span class="ident">value</span>
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_parameter_f32_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parameter</span>: <span class="ident">u32</span>, <span class="ident">out</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">f32</span>]) {
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_parameter_f32_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parameter</span>: <span class="ident">u32</span>, <span class="ident">out</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">f32</span>]) {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
-        <span class="ident">gl</span>.<span class="ident">GetFloatv</span>(<span class="ident">parameter</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">out</span>[<span class="number">0</span>]);
+        <span class="ident">gl</span>.<span class="ident">GetFloatv</span>(<span class="ident">parameter</span>, <span class="kw-2">&amp;mut</span> <span class="ident">out</span>[<span class="number">0</span>]);
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_parameter_indexed_i32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parameter</span>: <span class="ident">u32</span>, <span class="ident">index</span>: <span class="ident">u32</span>) -&gt; <span class="ident">i32</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GetIntegeri_v</span>(<span class="ident">parameter</span>, <span class="ident">index</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">value</span>);
+        <span class="ident">gl</span>.<span class="ident">GetIntegeri_v</span>(<span class="ident">parameter</span>, <span class="ident">index</span>, <span class="kw-2">&amp;mut</span> <span class="ident">value</span>);
         <span class="ident">value</span>
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_parameter_indexed_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parameter</span>: <span class="ident">u32</span>, <span class="ident">index</span>: <span class="ident">u32</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="ident">raw_ptr</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">GetStringi</span>(<span class="ident">parameter</span>, <span class="ident">index</span>);
-        <span class="ident">std::ffi::CStr::from_ptr</span>(<span class="ident">raw_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">native_gl::GLchar</span>)
+        <span class="ident">std::ffi::CStr::from_ptr</span>(<span class="ident">raw_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">native_gl::GLchar</span>)
             .<span class="ident">to_str</span>()
             .<span class="ident">unwrap</span>()
             .<span class="ident">to_owned</span>()
@@ -3816,7 +3816,7 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_parameter_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parameter</span>: <span class="ident">u32</span>) -&gt; <span class="ident">String</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="ident">raw_ptr</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">GetString</span>(<span class="ident">parameter</span>);
-        <span class="ident">std::ffi::CStr::from_ptr</span>(<span class="ident">raw_ptr</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">native_gl::GLchar</span>)
+        <span class="ident">std::ffi::CStr::from_ptr</span>(<span class="ident">raw_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">native_gl::GLchar</span>)
             .<span class="ident">to_str</span>()
             .<span class="ident">unwrap</span>()
             .<span class="ident">to_owned</span>()
@@ -3830,7 +3830,7 @@
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">CString::new</span>(<span class="ident">name</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">uniform_location</span> <span class="op">=</span>
-            <span class="ident">gl</span>.<span class="ident">GetUniformLocation</span>(<span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">native_gl::GLchar</span>);
+            <span class="ident">gl</span>.<span class="ident">GetUniformLocation</span>(<span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">native_gl::GLchar</span>);
         <span class="kw">if</span> <span class="ident">uniform_location</span> <span class="op">&lt;</span> <span class="number">0</span> {
             <span class="prelude-val">None</span>
         } <span class="kw">else</span> {
@@ -3842,7 +3842,7 @@
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">CString::new</span>(<span class="ident">name</span>).<span class="ident">unwrap</span>();
         <span class="kw">let</span> <span class="ident">attrib_location</span> <span class="op">=</span>
-            <span class="ident">gl</span>.<span class="ident">GetAttribLocation</span>(<span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">native_gl::GLchar</span>);
+            <span class="ident">gl</span>.<span class="ident">GetAttribLocation</span>(<span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">name</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">native_gl::GLchar</span>);
         <span class="kw">if</span> <span class="ident">attrib_location</span> <span class="op">&lt;</span> <span class="number">0</span> {
             <span class="prelude-val">None</span>
         } <span class="kw">else</span> {
@@ -3856,14 +3856,14 @@
         <span class="ident">gl</span>.<span class="ident">BindAttribLocation</span>(
             <span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(),
             <span class="ident">index</span>,
-            <span class="ident">name</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">native_gl::GLchar</span>,
+            <span class="ident">name</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">native_gl::GLchar</span>,
         );
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_active_attributes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">program</span>: <span class="ident"><span class="self">Self</span>::Program</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">count</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GetProgramiv</span>(<span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">ACTIVE_ATTRIBUTES</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">count</span>);
+        <span class="ident">gl</span>.<span class="ident">GetProgramiv</span>(<span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">ACTIVE_ATTRIBUTES</span>, <span class="kw-2">&amp;mut</span> <span class="ident">count</span>);
         <span class="ident">count</span> <span class="kw">as</span> <span class="ident">u32</span>
     }
 
@@ -3877,7 +3877,7 @@
         <span class="ident">gl</span>.<span class="ident">GetProgramiv</span>(
             <span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(),
             <span class="ident">ACTIVE_ATTRIBUTE_MAX_LENGTH</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">attribute_max_size</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">attribute_max_size</span>,
         );
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">String::with_capacity</span>(<span class="ident">attribute_max_size</span> <span class="kw">as</span> <span class="ident">usize</span>);
         <span class="ident">name</span>.<span class="ident">extend</span>(<span class="ident">std::iter::repeat</span>(<span class="string">&#39;\0&#39;</span>).<span class="ident">take</span>(<span class="ident">attribute_max_size</span> <span class="kw">as</span> <span class="ident">usize</span>));
@@ -3888,10 +3888,10 @@
             <span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(),
             <span class="ident">index</span>,
             <span class="ident">attribute_max_size</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">length</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">size</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">atype</span>,
-            <span class="ident">name</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">native_gl::GLchar</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">length</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">size</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">atype</span>,
+            <span class="ident">name</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">native_gl::GLchar</span>,
         );
 
         <span class="ident">name</span>.<span class="ident">truncate</span>(<span class="ident">length</span> <span class="kw">as</span> <span class="ident">usize</span>);
@@ -3907,7 +3907,7 @@
             <span class="ident">fence</span>.<span class="number">0</span>,
             <span class="ident">SYNC_STATUS</span>,
             <span class="ident">values</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i32</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">len</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">len</span>,
             <span class="ident">values</span>.<span class="ident">as_mut_ptr</span>(),
         );
         <span class="ident">values</span>[<span class="number">0</span>] <span class="kw">as</span> <span class="ident">u32</span>
@@ -3981,7 +3981,7 @@
             <span class="ident">border</span>,
             <span class="ident">format</span>,
             <span class="ident">ty</span>,
-            <span class="ident">pixels</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">as_ptr</span>()).<span class="ident">unwrap_or</span>(<span class="ident">std::ptr::null</span>()) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">pixels</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">as_ptr</span>()).<span class="ident">unwrap_or</span>(<span class="ident">std::ptr::null</span>()) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
         );
     }
 
@@ -4003,7 +4003,7 @@
             <span class="ident">width</span>,
             <span class="ident">border</span>,
             <span class="ident">image_size</span>,
-            <span class="ident">pixels</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">pixels</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
         );
     }
 
@@ -4029,7 +4029,7 @@
             <span class="ident">border</span>,
             <span class="ident">format</span>,
             <span class="ident">ty</span>,
-            <span class="ident">pixels</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">as_ptr</span>()).<span class="ident">unwrap_or</span>(<span class="ident">std::ptr::null</span>()) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">pixels</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">as_ptr</span>()).<span class="ident">unwrap_or</span>(<span class="ident">std::ptr::null</span>()) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
         );
     }
 
@@ -4073,7 +4073,7 @@
             <span class="ident">height</span>,
             <span class="ident">border</span>,
             <span class="ident">image_size</span>,
-            <span class="ident">pixels</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">pixels</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
         );
     }
 
@@ -4101,7 +4101,7 @@
             <span class="ident">border</span>,
             <span class="ident">format</span>,
             <span class="ident">ty</span>,
-            <span class="ident">pixels</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">as_ptr</span>()).<span class="ident">unwrap_or</span>(<span class="ident">std::ptr::null</span>()) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">pixels</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">as_ptr</span>()).<span class="ident">unwrap_or</span>(<span class="ident">std::ptr::null</span>()) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
         );
     }
 
@@ -4127,7 +4127,7 @@
             <span class="ident">depth</span>,
             <span class="ident">border</span>,
             <span class="ident">image_size</span>,
-            <span class="ident">pixels</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">pixels</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
         );
     }
 
@@ -4185,13 +4185,13 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">program</span>: <span class="ident"><span class="self">Self</span>::Program</span>,
         <span class="ident">location</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::UniformLocation</span>,
-        <span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">i32</span>],
+        <span class="ident">v</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">i32</span>],
     ) {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="ident">gl</span>.<span class="ident">GetUniformiv</span>(
             <span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>() <span class="kw">as</span> <span class="ident">u32</span>,
             <span class="ident">location</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">i32</span>,
-            <span class="ident">v</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">i32</span>,
+            <span class="ident">v</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">i32</span>,
         )
     }
 
@@ -4199,13 +4199,13 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">program</span>: <span class="ident"><span class="self">Self</span>::Program</span>,
         <span class="ident">location</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::UniformLocation</span>,
-        <span class="ident">v</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">f32</span>],
+        <span class="ident">v</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">f32</span>],
     ) {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="ident">gl</span>.<span class="ident">GetUniformfv</span>(
             <span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>() <span class="kw">as</span> <span class="ident">u32</span>,
             <span class="ident">location</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">i32</span>,
-            <span class="ident">v</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">f32</span>,
+            <span class="ident">v</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">f32</span>,
         )
     }
 
@@ -4515,9 +4515,9 @@
         <span class="ident">offset</span>: <span class="ident">i32</span>,
         <span class="ident">length</span>: <span class="ident">i32</span>,
         <span class="ident">access</span>: <span class="ident">u32</span>,
-    ) -&gt; <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span> {
+    ) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
-        <span class="ident">gl</span>.<span class="ident">MapBufferRange</span>(<span class="ident">target</span>, <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">isize</span>, <span class="ident">length</span> <span class="kw">as</span> <span class="ident">isize</span>, <span class="ident">access</span>) <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u8</span>
+        <span class="ident">gl</span>.<span class="ident">MapBufferRange</span>(<span class="ident">target</span>, <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">isize</span>, <span class="ident">length</span> <span class="kw">as</span> <span class="ident">isize</span>, <span class="ident">access</span>) <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">flush_mapped_buffer_range</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">target</span>: <span class="ident">u32</span>, <span class="ident">offset</span>: <span class="ident">i32</span>, <span class="ident">length</span>: <span class="ident">i32</span>) {
@@ -4613,8 +4613,8 @@
             <span class="ident">format</span>,
             <span class="ident">ty</span>,
             <span class="kw">match</span> <span class="ident">pixels</span> {
-                <span class="ident">PixelUnpackData::BufferOffset</span>(<span class="ident">offset</span>) =&gt; <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
-                <span class="ident">PixelUnpackData::Slice</span>(<span class="ident">data</span>) =&gt; <span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+                <span class="ident">PixelUnpackData::BufferOffset</span>(<span class="ident">offset</span>) =&gt; <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
+                <span class="ident">PixelUnpackData::Slice</span>(<span class="ident">data</span>) =&gt; <span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
             },
         );
     }
@@ -4633,11 +4633,11 @@
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> (<span class="ident">data</span>, <span class="ident">image_size</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">pixels</span> {
             <span class="ident">CompressedPixelUnpackData::BufferRange</span>(<span class="kw-2">ref</span> <span class="ident">range</span>) =&gt; (
-                <span class="ident">range</span>.<span class="ident">start</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+                <span class="ident">range</span>.<span class="ident">start</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
                 (<span class="ident">range</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">range</span>.<span class="ident">start</span>) <span class="kw">as</span> <span class="ident">i32</span>,
             ),
             <span class="ident">CompressedPixelUnpackData::Slice</span>(<span class="ident">data</span>) =&gt; {
-                (<span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>, <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i32</span>)
+                (<span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>, <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i32</span>)
             }
         };
 
@@ -4673,8 +4673,8 @@
             <span class="ident">format</span>,
             <span class="ident">ty</span>,
             <span class="kw">match</span> <span class="ident">pixels</span> {
-                <span class="ident">PixelUnpackData::BufferOffset</span>(<span class="ident">offset</span>) =&gt; <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
-                <span class="ident">PixelUnpackData::Slice</span>(<span class="ident">data</span>) =&gt; <span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+                <span class="ident">PixelUnpackData::BufferOffset</span>(<span class="ident">offset</span>) =&gt; <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
+                <span class="ident">PixelUnpackData::Slice</span>(<span class="ident">data</span>) =&gt; <span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
             },
         );
     }
@@ -4695,11 +4695,11 @@
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> (<span class="ident">data</span>, <span class="ident">image_size</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">pixels</span> {
             <span class="ident">CompressedPixelUnpackData::BufferRange</span>(<span class="kw-2">ref</span> <span class="ident">range</span>) =&gt; (
-                <span class="ident">range</span>.<span class="ident">start</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+                <span class="ident">range</span>.<span class="ident">start</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
                 (<span class="ident">range</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">range</span>.<span class="ident">start</span>) <span class="kw">as</span> <span class="ident">i32</span>,
             ),
             <span class="ident">CompressedPixelUnpackData::Slice</span>(<span class="ident">data</span>) =&gt; {
-                (<span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>, <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i32</span>)
+                (<span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>, <span class="ident">data</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i32</span>)
             }
         };
 
@@ -4726,7 +4726,7 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">depth_range_f64_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">first</span>: <span class="ident">u32</span>, <span class="ident">count</span>: <span class="ident">i32</span>, <span class="ident">values</span>: <span class="kw-2">&amp;</span>[[<span class="ident">f64</span>; <span class="number">2</span>]]) {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
-        <span class="ident">gl</span>.<span class="ident">DepthRangeArrayv</span>(<span class="ident">first</span>, <span class="ident">count</span>, <span class="ident">values</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">f64</span>);
+        <span class="ident">gl</span>.<span class="ident">DepthRangeArrayv</span>(<span class="ident">first</span>, <span class="ident">count</span>, <span class="ident">values</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">f64</span>);
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">scissor</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">x</span>: <span class="ident">i32</span>, <span class="ident">y</span>: <span class="ident">i32</span>, <span class="ident">width</span>: <span class="ident">i32</span>, <span class="ident">height</span>: <span class="ident">i32</span>) {
@@ -4736,7 +4736,7 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">scissor_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">first</span>: <span class="ident">u32</span>, <span class="ident">count</span>: <span class="ident">i32</span>, <span class="ident">scissors</span>: <span class="kw-2">&amp;</span>[[<span class="ident">i32</span>; <span class="number">4</span>]]) {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
-        <span class="ident">gl</span>.<span class="ident">ScissorArrayv</span>(<span class="ident">first</span>, <span class="ident">count</span>, <span class="ident">scissors</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">i32</span>);
+        <span class="ident">gl</span>.<span class="ident">ScissorArrayv</span>(<span class="ident">first</span>, <span class="ident">count</span>, <span class="ident">scissors</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">i32</span>);
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">vertex_attrib_divisor</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">u32</span>, <span class="ident">divisor</span>: <span class="ident">u32</span>) {
@@ -4760,7 +4760,7 @@
             <span class="ident">data_type</span>,
             <span class="ident">normalized</span> <span class="kw">as</span> <span class="ident">u8</span>,
             <span class="ident">stride</span>,
-            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
         );
     }
 
@@ -4778,7 +4778,7 @@
             <span class="ident">size</span>,
             <span class="ident">data_type</span>,
             <span class="ident">stride</span>,
-            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
         );
     }
 
@@ -4796,7 +4796,7 @@
             <span class="ident">size</span>,
             <span class="ident">data_type</span>,
             <span class="ident">stride</span>,
-            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">std::ffi::c_void</span>,
         );
     }
 
@@ -4880,7 +4880,7 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">viewport_f32_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">first</span>: <span class="ident">u32</span>, <span class="ident">count</span>: <span class="ident">i32</span>, <span class="ident">values</span>: <span class="kw-2">&amp;</span>[[<span class="ident">f32</span>; <span class="number">4</span>]]) {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
-        <span class="ident">gl</span>.<span class="ident">ViewportArrayv</span>(<span class="ident">first</span>, <span class="ident">count</span>, <span class="ident">values</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">f32</span>);
+        <span class="ident">gl</span>.<span class="ident">ViewportArrayv</span>(<span class="ident">first</span>, <span class="ident">count</span>, <span class="ident">values</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">f32</span>);
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">blend_equation</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">mode</span>: <span class="ident">u32</span>) {
@@ -5032,7 +5032,7 @@
             <span class="ident">id</span>,
             <span class="ident">severity</span>,
             <span class="ident">length</span>,
-            <span class="ident">message</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">native_gl::GLchar</span>,
+            <span class="ident">message</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">native_gl::GLchar</span>,
         );
     }
 
@@ -5043,7 +5043,7 @@
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="ident">gl</span>.<span class="ident">DebugMessageCallback</span>(
             <span class="prelude-val">Some</span>(<span class="ident">raw_debug_message_callback</span>::<span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>),
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">callback</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">callback</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>,
         );
     }
 
@@ -5101,7 +5101,7 @@
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">as_ref</span>().<span class="ident">as_bytes</span>();
         <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i32</span>;
-        <span class="ident">gl</span>.<span class="ident">PushDebugGroup</span>(<span class="ident">source</span>, <span class="ident">id</span>, <span class="ident">length</span>, <span class="ident">msg</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">native_gl::GLchar</span>);
+        <span class="ident">gl</span>.<span class="ident">PushDebugGroup</span>(<span class="ident">source</span>, <span class="ident">id</span>, <span class="ident">length</span>, <span class="ident">msg</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">native_gl::GLchar</span>);
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">pop_debug_group</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
@@ -5123,7 +5123,7 @@
                     <span class="ident">identifier</span>,
                     <span class="ident">name</span>,
                     <span class="ident">length</span>,
-                    <span class="ident">lbl</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">native_gl::GLchar</span>,
+                    <span class="ident">lbl</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">native_gl::GLchar</span>,
                 );
             }
             <span class="prelude-val">None</span> =&gt; <span class="ident">gl</span>.<span class="ident">ObjectLabel</span>(<span class="ident">identifier</span>, <span class="ident">name</span>, <span class="number">0</span>, <span class="ident">std::ptr::null</span>()),
@@ -5138,7 +5138,7 @@
             <span class="ident">identifier</span>,
             <span class="ident">name</span>,
             <span class="self">self</span>.<span class="ident">constants</span>.<span class="ident">max_label_length</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">len</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">len</span>,
             <span class="ident">label_buf</span>.<span class="ident">as_mut_ptr</span>(),
         );
         <span class="ident">label_buf</span>.<span class="ident">set_len</span>(<span class="ident">len</span> <span class="kw">as</span> <span class="ident">usize</span>);
@@ -5159,12 +5159,12 @@
                 <span class="kw">let</span> <span class="ident">lbl</span> <span class="op">=</span> <span class="ident">l</span>.<span class="ident">as_ref</span>().<span class="ident">as_bytes</span>();
                 <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">lbl</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">i32</span>;
                 <span class="ident">gl</span>.<span class="ident">ObjectPtrLabel</span>(
-                    <span class="ident">sync</span>.<span class="number">0</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
+                    <span class="ident">sync</span>.<span class="number">0</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>,
                     <span class="ident">length</span>,
-                    <span class="ident">lbl</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">native_gl::GLchar</span>,
+                    <span class="ident">lbl</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">native_gl::GLchar</span>,
                 );
             }
-            <span class="prelude-val">None</span> =&gt; <span class="ident">gl</span>.<span class="ident">ObjectPtrLabel</span>(<span class="ident">sync</span>.<span class="number">0</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>, <span class="number">0</span>, <span class="ident">std::ptr::null</span>()),
+            <span class="prelude-val">None</span> =&gt; <span class="ident">gl</span>.<span class="ident">ObjectPtrLabel</span>(<span class="ident">sync</span>.<span class="number">0</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>, <span class="number">0</span>, <span class="ident">std::ptr::null</span>()),
         }
     }
 
@@ -5173,9 +5173,9 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">len</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">label_buf</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="self">self</span>.<span class="ident">constants</span>.<span class="ident">max_label_length</span> <span class="kw">as</span> <span class="ident">usize</span>);
         <span class="ident">gl</span>.<span class="ident">GetObjectPtrLabel</span>(
-            <span class="ident">sync</span>.<span class="number">0</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
+            <span class="ident">sync</span>.<span class="number">0</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>,
             <span class="self">self</span>.<span class="ident">constants</span>.<span class="ident">max_label_length</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">len</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">len</span>,
             <span class="ident">label_buf</span>.<span class="ident">as_mut_ptr</span>(),
         );
         <span class="ident">label_buf</span>.<span class="ident">set_len</span>(<span class="ident">len</span> <span class="kw">as</span> <span class="ident">usize</span>);
@@ -5251,8 +5251,8 @@
             <span class="ident">format</span>,
             <span class="ident">gltype</span>,
             <span class="kw">match</span> <span class="ident">pixels</span> {
-                <span class="ident">PixelPackData::BufferOffset</span>(<span class="ident">offset</span>) =&gt; <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
-                <span class="ident">PixelPackData::Slice</span>(<span class="ident">data</span>) =&gt; <span class="ident">data</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
+                <span class="ident">PixelPackData::BufferOffset</span>(<span class="ident">offset</span>) =&gt; <span class="ident">offset</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>,
+                <span class="ident">PixelPackData::Slice</span>(<span class="ident">data</span>) =&gt; <span class="ident">data</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>,
             },
         );
     }
@@ -5270,14 +5270,14 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_query_parameter_u32</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">query</span>: <span class="ident"><span class="self">Self</span>::Query</span>, <span class="ident">parameter</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">value</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GetQueryObjectuiv</span>(<span class="ident">query</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">parameter</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">value</span>);
+        <span class="ident">gl</span>.<span class="ident">GetQueryObjectuiv</span>(<span class="ident">query</span>.<span class="number">0</span>.<span class="ident">get</span>(), <span class="ident">parameter</span>, <span class="kw-2">&amp;mut</span> <span class="ident">value</span>);
         <span class="ident">value</span>
     }
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_transform_feedback</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::TransformFeedback</span>, <span class="ident">String</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">name</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="ident">gl</span>.<span class="ident">GenTransformFeedbacks</span>(<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">name</span>);
+        <span class="ident">gl</span>.<span class="ident">GenTransformFeedbacks</span>(<span class="number">1</span>, <span class="kw-2">&amp;mut</span> <span class="ident">name</span>);
         <span class="prelude-val">Ok</span>(<span class="ident">NativeTransformFeedback</span>(<span class="ident">non_zero_gl_name</span>(<span class="ident">name</span>)))
     }
 
@@ -5359,8 +5359,8 @@
             <span class="ident">index</span>,
             <span class="ident">buf_size</span> <span class="kw">as</span> <span class="ident">i32</span>,
             <span class="ident">std::ptr::null_mut</span>(),
-            <span class="ident">size</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">i32</span>,
-            <span class="ident">tftype</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">u32</span>,
+            <span class="ident">size</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">i32</span>,
+            <span class="ident">tftype</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u32</span>,
             <span class="ident">c_name_buf</span>,
         );
 
@@ -5412,7 +5412,7 @@
             <span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(),
             <span class="ident">uniform_block_index</span>,
             <span class="ident">parameter</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">value</span>
+            <span class="kw-2">&amp;mut</span> <span class="ident">value</span>
         );
         <span class="ident">value</span>
     }
@@ -5422,7 +5422,7 @@
         <span class="ident">program</span>: <span class="ident"><span class="self">Self</span>::Program</span>,
         <span class="ident">uniform_block_index</span>: <span class="ident">u32</span>,
         <span class="ident">parameter</span>: <span class="ident">u32</span>,
-        <span class="ident">out</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">i32</span>]
+        <span class="ident">out</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">i32</span>]
     ) {
         <span class="kw">let</span> <span class="ident">gl</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>;
         <span class="ident">gl</span>.<span class="ident">GetActiveUniformBlockiv</span>(
@@ -5459,7 +5459,7 @@
             <span class="ident">program</span>.<span class="number">0</span>.<span class="ident">get</span>(),
             <span class="ident">uniform_block_index</span>,
             <span class="ident">buffer</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>,
-            <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">length</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">length</span>,
             <span class="ident">buffer</span>.<span class="ident">as_mut_ptr</span>(),
         );
 
@@ -5475,7 +5475,7 @@
                 <span class="string">&quot;This operation is only safe in systems in which the alignment \
                 of a GLchar is the same as that of an u8&quot;</span>);
             <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="ident">std::slice::from_raw_parts</span>(
-                <span class="ident">buffer</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>,
+                <span class="ident">buffer</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>,
                 (<span class="ident">length</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">+</span> <span class="number">1</span>).<span class="ident">min</span>(<span class="ident">buffer</span>.<span class="ident">len</span>()));
 
             <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">CStr::from_bytes_with_nul</span>(<span class="kw-2">&amp;</span><span class="ident">buffer</span>[..])
@@ -5497,14 +5497,14 @@
     <span class="ident">id</span>: <span class="ident">u32</span>,
     <span class="ident">severity</span>: <span class="ident">u32</span>,
     <span class="ident">length</span>: <span class="ident">i32</span>,
-    <span class="ident">message</span>: <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">native_gl::GLchar</span>,
-    <span class="ident">user_param</span>: <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
+    <span class="ident">message</span>: <span class="kw-2">*const</span> <span class="ident">native_gl::GLchar</span>,
+    <span class="ident">user_param</span>: <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>,
 ) <span class="kw">where</span>
     <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>, <span class="ident">u32</span>, <span class="kw-2">&amp;</span><span class="ident">str</span>),
 {
     <span class="ident">std::panic::catch_unwind</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="ident">callback</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">F</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span>(<span class="ident">user_param</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>);
-        <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="ident">std::slice::from_raw_parts</span>(<span class="ident">message</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="ident">u8</span>, <span class="ident">length</span> <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="kw">let</span> <span class="ident">callback</span>: <span class="kw-2">&amp;mut</span> <span class="ident">F</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span>(<span class="ident">user_param</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>);
+        <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="ident">std::slice::from_raw_parts</span>(<span class="ident">message</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>, <span class="ident">length</span> <span class="kw">as</span> <span class="ident">usize</span>);
         <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">std::str::from_utf8</span>(<span class="ident">slice</span>).<span class="ident">unwrap</span>();
         (<span class="ident">callback</span>)(<span class="ident">source</span>, <span class="ident">gltype</span>, <span class="ident">id</span>, <span class="ident">severity</span>, <span class="ident">msg</span>);
     })

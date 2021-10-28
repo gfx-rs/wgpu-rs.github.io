@@ -1078,7 +1078,7 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">alloc</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">id::TypedId</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">backend</span>: <span class="ident">Backend</span>) -&gt; <span class="ident">I</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">alloc</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">id::TypedId</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">backend</span>: <span class="ident">Backend</span>) -&gt; <span class="ident">I</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">free</span>.<span class="ident">pop</span>() {
             <span class="prelude-val">Some</span>(<span class="ident">index</span>) =&gt; <span class="ident">I::zip</span>(<span class="ident">index</span>, <span class="self">self</span>.<span class="ident">epochs</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>], <span class="ident">backend</span>),
             <span class="prelude-val">None</span> =&gt; {
@@ -1090,13 +1090,13 @@
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">free</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">id::TypedId</span> <span class="op">+</span> <span class="ident">Debug</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">free</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">id::TypedId</span> <span class="op">+</span> <span class="ident">Debug</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>) {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">_backend</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">unzip</span>();
         <span class="comment">// avoid doing this check in release</span>
         <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">debug_assertions</span>) {
             <span class="macro">assert!</span>(<span class="op">!</span><span class="self">self</span>.<span class="ident">free</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">index</span>));
         }
-        <span class="kw">let</span> <span class="ident">pe</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">epochs</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>];
+        <span class="kw">let</span> <span class="ident">pe</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">epochs</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>];
         <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">pe</span>, <span class="ident">epoch</span>);
         <span class="kw-2">*</span><span class="ident">pe</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
         <span class="self">self</span>.<span class="ident">free</span>.<span class="ident">push</span>(<span class="ident">index</span>);
@@ -1142,7 +1142,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">I</span>: <span class="ident">id::TypedId</span><span class="op">&gt;</span> <span class="ident">ops::IndexMut</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">I</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span> {
+    <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">T</span> {
         <span class="self">self</span>.<span class="ident">get_mut</span>(<span class="ident">id</span>.<span class="number">0</span>).<span class="ident">unwrap</span>()
     }
 }
@@ -1177,7 +1177,7 @@
 
     <span class="doccomment">/// Get a mutable reference to an item behind a potentially invalid ID.</span>
     <span class="doccomment">/// Panics if there is an epoch mismatch, or the entry is empty.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">get_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">InvalidId</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">get_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">T</span>, <span class="ident">InvalidId</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">unzip</span>();
         <span class="kw">let</span> (<span class="ident">result</span>, <span class="ident">storage_epoch</span>) <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>] {
             <span class="ident">Element::Occupied</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">v</span>, <span class="ident">epoch</span>) =&gt; (<span class="prelude-val">Ok</span>(<span class="ident">v</span>), <span class="ident">epoch</span>),
@@ -1200,34 +1200,34 @@
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">insert_impl</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">element</span>: <span class="ident">Element</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) {
+    <span class="kw">fn</span> <span class="ident">insert_impl</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>, <span class="ident">element</span>: <span class="ident">Element</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) {
         <span class="kw">if</span> <span class="ident">index</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">len</span>() {
             <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">resize_with</span>(<span class="ident">index</span> <span class="op">+</span> <span class="number">1</span>, <span class="op">|</span><span class="op">|</span> <span class="ident">Element::Vacant</span>);
         }
-        <span class="kw">match</span> <span class="ident">std::mem::replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">index</span>], <span class="ident">element</span>) {
+        <span class="kw">match</span> <span class="ident">std::mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">index</span>], <span class="ident">element</span>) {
             <span class="ident">Element::Vacant</span> =&gt; {}
             <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Index {:?} is already occupied&quot;</span>, <span class="ident">index</span>),
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">insert</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>, <span class="ident">value</span>: <span class="ident">T</span>) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">insert</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>, <span class="ident">value</span>: <span class="ident">T</span>) {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">unzip</span>();
         <span class="self">self</span>.<span class="ident">insert_impl</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">Element::Occupied</span>(<span class="ident">value</span>, <span class="ident">epoch</span>))
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">insert_error</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>, <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">insert_error</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>, <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">unzip</span>();
         <span class="self">self</span>.<span class="ident">insert_impl</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">Element::Error</span>(<span class="ident">epoch</span>, <span class="ident">label</span>.<span class="ident">to_string</span>()))
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">force_replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>, <span class="ident">value</span>: <span class="ident">T</span>) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">force_replace</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>, <span class="ident">value</span>: <span class="ident">T</span>) {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">unzip</span>();
         <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="ident">Element::Occupied</span>(<span class="ident">value</span>, <span class="ident">epoch</span>);
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">remove</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">unzip</span>();
-        <span class="kw">match</span> <span class="ident">std::mem::replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>], <span class="ident">Element::Vacant</span>) {
+        <span class="kw">match</span> <span class="ident">std::mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>], <span class="ident">Element::Vacant</span>) {
             <span class="ident">Element::Occupied</span>(<span class="ident">value</span>, <span class="ident">storage_epoch</span>) =&gt; {
                 <span class="macro">assert_eq!</span>(<span class="ident">epoch</span>, <span class="ident">storage_epoch</span>);
                 <span class="prelude-val">Some</span>(<span class="ident">value</span>)
@@ -1238,12 +1238,12 @@
     }
 
     <span class="comment">// Prevents panic on out of range access, allows Vacant elements.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">_try_remove</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">_try_remove</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">unzip</span>();
         <span class="kw">if</span> <span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">len</span>() {
             <span class="prelude-val">None</span>
         } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Element::Occupied</span>(<span class="ident">value</span>, <span class="ident">storage_epoch</span>) <span class="op">=</span>
-            <span class="ident">std::mem::replace</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>], <span class="ident">Element::Vacant</span>)
+            <span class="ident">std::mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>], <span class="ident">Element::Vacant</span>)
         {
             <span class="macro">assert_eq!</span>(<span class="ident">epoch</span>, <span class="ident">storage_epoch</span>);
             <span class="prelude-val">Some</span>(<span class="ident">value</span>)
@@ -1385,7 +1385,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertions</span>)]</span>
         <span class="ident">ACTIVE_TOKEN</span>.<span class="ident">with</span>(<span class="op">|</span><span class="ident">active</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">old</span> <span class="op">=</span> <span class="ident">active</span>.<span class="ident">get</span>();
@@ -1545,7 +1545,7 @@
         (<span class="self">self</span>.<span class="ident">data</span>.<span class="ident">write</span>(), <span class="ident">Token::new</span>())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unregister_locked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>, <span class="ident">guard</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">I</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unregister_locked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>, <span class="ident">guard</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">I</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">guard</span>.<span class="ident">remove</span>(<span class="ident">id</span>);
         <span class="comment">//Note: careful about the order here!</span>
         <span class="self">self</span>.<span class="ident">identity</span>.<span class="ident">free</span>(<span class="ident">id</span>);
@@ -1654,7 +1654,7 @@
     <span class="comment">//TODO: instead of having a hacky `with_adapters` parameter,</span>
     <span class="comment">// we should have `clear_device(device_id)` that specifically destroys</span>
     <span class="comment">// everything related to a logical device.</span>
-    <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">surface_guard</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">Surface</span>, <span class="ident">id::SurfaceId</span><span class="op">&gt;</span>, <span class="ident">with_adapters</span>: <span class="ident">bool</span>) {
+    <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">surface_guard</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">Surface</span>, <span class="ident">id::SurfaceId</span><span class="op">&gt;</span>, <span class="ident">with_adapters</span>: <span class="ident">bool</span>) {
         <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::resource::TextureInner</span>;
         <span class="kw">use</span> <span class="ident">hal</span>::{<span class="ident">Device</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Surface</span> <span class="kw">as</span> <span class="kw">_</span>};
 
@@ -1902,7 +1902,7 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">surface_guard</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">surfaces</span>.<span class="ident">data</span>.<span class="ident">write</span>();
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="comment">// this is used for tests, which keep the adapter</span>
-        <span class="ident">hub</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">surface_guard</span>, <span class="bool-val">false</span>);
+        <span class="ident">hub</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">surface_guard</span>, <span class="bool-val">false</span>);
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generate_report</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">GlobalReport</span> {
@@ -1943,7 +1943,7 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;Global&quot;</span>);
         <span class="macro">log::info!</span>(<span class="string">&quot;Dropping Global&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">surface_guard</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">surfaces</span>.<span class="ident">data</span>.<span class="ident">write</span>();
@@ -1951,23 +1951,23 @@
         <span class="comment">// destroy hubs before the instance gets dropped</span>
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">vulkan</span>)]</span>
         {
-            <span class="self">self</span>.<span class="ident">hubs</span>.<span class="ident">vulkan</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">surface_guard</span>, <span class="bool-val">true</span>);
+            <span class="self">self</span>.<span class="ident">hubs</span>.<span class="ident">vulkan</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">surface_guard</span>, <span class="bool-val">true</span>);
         }
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">metal</span>)]</span>
         {
-            <span class="self">self</span>.<span class="ident">hubs</span>.<span class="ident">metal</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">surface_guard</span>, <span class="bool-val">true</span>);
+            <span class="self">self</span>.<span class="ident">hubs</span>.<span class="ident">metal</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">surface_guard</span>, <span class="bool-val">true</span>);
         }
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">dx12</span>)]</span>
         {
-            <span class="self">self</span>.<span class="ident">hubs</span>.<span class="ident">dx12</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">surface_guard</span>, <span class="bool-val">true</span>);
+            <span class="self">self</span>.<span class="ident">hubs</span>.<span class="ident">dx12</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">surface_guard</span>, <span class="bool-val">true</span>);
         }
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">dx11</span>)]</span>
         {
-            <span class="self">self</span>.<span class="ident">hubs</span>.<span class="ident">dx11</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">surface_guard</span>, <span class="bool-val">true</span>);
+            <span class="self">self</span>.<span class="ident">hubs</span>.<span class="ident">dx11</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">surface_guard</span>, <span class="bool-val">true</span>);
         }
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">gl</span>)]</span>
         {
-            <span class="self">self</span>.<span class="ident">hubs</span>.<span class="ident">gl</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="kw-2">*</span><span class="ident">surface_guard</span>, <span class="bool-val">true</span>);
+            <span class="self">self</span>.<span class="ident">hubs</span>.<span class="ident">gl</span>.<span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">surface_guard</span>, <span class="bool-val">true</span>);
         }
 
         <span class="comment">// destroy surfaces</span>
@@ -1984,7 +1984,7 @@
     <span class="kw">fn</span> <span class="ident">create_instance_from_hal</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">hal_instance</span>: <span class="ident"><span class="self">Self</span>::Instance</span>) -&gt; <span class="ident">Instance</span>;
     <span class="kw">fn</span> <span class="ident">hub</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(<span class="ident">global</span>: <span class="kw-2">&amp;</span><span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">G</span><span class="op">&gt;</span>;
     <span class="kw">fn</span> <span class="ident">get_surface</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
-    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
+    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>;
 }
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">vulkan</span>)]</span>
@@ -2003,7 +2003,7 @@
     <span class="kw">fn</span> <span class="ident">get_surface</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">surface</span>.<span class="ident">vulkan</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>()
     }
-    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">surface</span>.<span class="ident">vulkan</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>()
     }
 }
@@ -2023,7 +2023,7 @@
     <span class="kw">fn</span> <span class="ident">get_surface</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">surface</span>.<span class="ident">metal</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>()
     }
-    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">surface</span>.<span class="ident">metal</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>()
     }
 }
@@ -2044,7 +2044,7 @@
     <span class="kw">fn</span> <span class="ident">get_surface</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">surface</span>.<span class="ident">dx12</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>()
     }
-    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">surface</span>.<span class="ident">dx12</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>()
     }
 }
@@ -2082,7 +2082,7 @@ impl HalApi for hal::api::Dx11 {
     <span class="kw">fn</span> <span class="ident">get_surface</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">surface</span>.<span class="ident">gl</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>()
     }
-    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">get_surface_mut</span>(<span class="ident">surface</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Surface</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">HalSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
         <span class="ident">surface</span>.<span class="ident">gl</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>()
     }
 }

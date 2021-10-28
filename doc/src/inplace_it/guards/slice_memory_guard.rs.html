@@ -223,7 +223,7 @@
                 <span class="comment">// When it returns None then slicing memory and returning the guard</span>
                 <span class="prelude-val">None</span> =&gt; {
                     <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">SliceMemoryGuard</span> {
-                        <span class="ident">memory</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">memory</span>[<span class="number">0</span>..<span class="ident">index</span>],
+                        <span class="ident">memory</span>: <span class="kw-2">&amp;mut</span> <span class="ident">memory</span>[<span class="number">0</span>..<span class="ident">index</span>],
                     });
                 }
             }
@@ -238,7 +238,7 @@
 
             <span class="comment">// First, copying already fulfilled memory into the heap</span>
             <span class="ident">vec</span>.<span class="ident">set_len</span>(<span class="ident">memory</span>.<span class="ident">len</span>());
-            <span class="ident">copy_nonoverlapping</span>(<span class="ident">memory</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">T</span>, <span class="ident">vec</span>.<span class="ident">as_mut_ptr</span>(), <span class="ident">memory</span>.<span class="ident">len</span>());
+            <span class="ident">copy_nonoverlapping</span>(<span class="ident">memory</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">T</span>, <span class="ident">vec</span>.<span class="ident">as_mut_ptr</span>(), <span class="ident">memory</span>.<span class="ident">len</span>());
 
             <span class="comment">// Then, append it with the rest iterator&#39;s items</span>
             <span class="ident">vec</span>.<span class="ident">push</span>(<span class="ident">next_item</span>);
@@ -263,14 +263,14 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">DerefMut</span> <span class="kw">for</span> <span class="ident">SliceMemoryGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident"><span class="self">Self</span>::Target</span> {
-        <span class="kw">unsafe</span> { <span class="ident">transmute</span>::<span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>], <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">T</span>]<span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>.<span class="ident">memory</span>) }
+    <span class="kw">fn</span> <span class="ident">deref_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Target</span> {
+        <span class="kw">unsafe</span> { <span class="ident">transmute</span>::<span class="op">&lt;</span><span class="kw-2">&amp;mut</span> [<span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>], <span class="kw-2">&amp;mut</span> [<span class="ident">T</span>]<span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">memory</span>) }
     }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">SliceMemoryGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span><span class="op">&gt;</span> {
     <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">for</span> <span class="ident">item</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">memory</span>.<span class="ident">into_iter</span>() {
             <span class="kw">unsafe</span> { <span class="ident">drop_in_place</span>(<span class="ident">item</span>.<span class="ident">as_mut_ptr</span>()); }
         }
@@ -287,7 +287,7 @@
 
         <span class="comment">// 0 and 128 cases should work also fine</span>
         <span class="kw">for</span> <span class="ident">count</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">128</span> {
-            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">SliceMemoryGuard::new_from_iter</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">memory</span>, <span class="number">0</span>..<span class="ident">count</span>) };
+            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">SliceMemoryGuard::new_from_iter</span>(<span class="kw-2">&amp;mut</span> <span class="ident">memory</span>, <span class="number">0</span>..<span class="ident">count</span>) };
             <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_ok</span>());
             <span class="kw">let</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">unwrap</span>();
             <span class="macro">assert_eq!</span>(<span class="ident">guard</span>.<span class="ident">len</span>(), <span class="ident">count</span>);
@@ -296,7 +296,7 @@
 
         <span class="comment">// cases when Vec should be returned</span>
         <span class="kw">for</span> <span class="ident">count</span> <span class="kw">in</span> [<span class="number">129</span>, <span class="number">200</span>, <span class="number">512</span>].<span class="ident">iter</span>().<span class="ident">cloned</span>() {
-            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">SliceMemoryGuard::new_from_iter</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">memory</span>, <span class="number">0</span>..<span class="ident">count</span>) };
+            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">SliceMemoryGuard::new_from_iter</span>(<span class="kw-2">&amp;mut</span> <span class="ident">memory</span>, <span class="number">0</span>..<span class="ident">count</span>) };
             <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
             <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">result</span>.<span class="ident">err</span>().<span class="ident">unwrap</span>();
             <span class="macro">assert_eq!</span>(<span class="ident">vec</span>.<span class="ident">len</span>(), <span class="ident">count</span>);

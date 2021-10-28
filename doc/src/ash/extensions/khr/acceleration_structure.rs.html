@@ -357,8 +357,8 @@
     ) -&gt; <span class="ident">vk::PhysicalDeviceAccelerationStructurePropertiesKHR</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">props_rt</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceAccelerationStructurePropertiesKHR::default</span>();
         {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">props</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceProperties2::builder</span>().<span class="ident">push_next</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">props_rt</span>);
-            <span class="ident">instance</span>.<span class="ident">get_physical_device_properties2</span>(<span class="ident">pdevice</span>, <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">props</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">props</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceProperties2::builder</span>().<span class="ident">push_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">props_rt</span>);
+            <span class="ident">instance</span>.<span class="ident">get_physical_device_properties2</span>(<span class="ident">pdevice</span>, <span class="kw-2">&amp;mut</span> <span class="ident">props</span>);
         }
         <span class="ident">props_rt</span>
     }
@@ -375,7 +375,7 @@
                 <span class="self">self</span>.<span class="ident">handle</span>,
                 <span class="ident">create_info</span>,
                 <span class="ident">allocation_callbacks</span>.<span class="ident">as_raw_ptr</span>(),
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">accel_struct</span>,
+                <span class="kw-2">&amp;mut</span> <span class="ident">accel_struct</span>,
             )
             .<span class="ident">result_with_success</span>(<span class="ident">accel_struct</span>)
     }
@@ -490,7 +490,7 @@
         <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">vk::CopyAccelerationStructureInfoKHR</span>,
     ) -&gt; <span class="ident">VkResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">acceleration_structure_fn</span>
-            .<span class="ident">copy_acceleration_structure_khr</span>(<span class="self">self</span>.<span class="ident">handle</span>, <span class="ident">deferred_operation</span>, <span class="ident">info</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>)
+            .<span class="ident">copy_acceleration_structure_khr</span>(<span class="self">self</span>.<span class="ident">handle</span>, <span class="ident">deferred_operation</span>, <span class="ident">info</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span>)
             .<span class="ident">into</span>()
     }
 
@@ -504,7 +504,7 @@
             .<span class="ident">copy_acceleration_structure_to_memory_khr</span>(
                 <span class="self">self</span>.<span class="ident">handle</span>,
                 <span class="ident">deferred_operation</span>,
-                <span class="ident">info</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>,
+                <span class="ident">info</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span>,
             )
             .<span class="ident">into</span>()
     }
@@ -519,7 +519,7 @@
             .<span class="ident">copy_memory_to_acceleration_structure_khr</span>(
                 <span class="self">self</span>.<span class="ident">handle</span>,
                 <span class="ident">deferred_operation</span>,
-                <span class="ident">info</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>,
+                <span class="ident">info</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span>,
             )
             .<span class="ident">into</span>()
     }
@@ -529,7 +529,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">acceleration_structures</span>: <span class="kw-2">&amp;</span>[<span class="ident">vk::AccelerationStructureKHR</span>],
         <span class="ident">query_type</span>: <span class="ident">vk::QueryType</span>,
-        <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> [<span class="ident">u8</span>],
+        <span class="ident">data</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>],
         <span class="ident">stride</span>: <span class="ident">usize</span>,
     ) -&gt; <span class="ident">VkResult</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
         <span class="self">self</span>.<span class="ident">acceleration_structure_fn</span>
@@ -539,7 +539,7 @@
                 <span class="ident">acceleration_structures</span>.<span class="ident">as_ptr</span>(),
                 <span class="ident">query_type</span>,
                 <span class="ident">data</span>.<span class="ident">len</span>(),
-                <span class="ident">data</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="ident">std::ffi::c_void</span>,
+                <span class="ident">data</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>,
                 <span class="ident">stride</span>,
             )
             .<span class="ident">into</span>()
@@ -562,7 +562,7 @@
         <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">vk::CopyAccelerationStructureToMemoryInfoKHR</span>,
     ) {
         <span class="self">self</span>.<span class="ident">acceleration_structure_fn</span>
-            .<span class="ident">cmd_copy_acceleration_structure_to_memory_khr</span>(<span class="ident">command_buffer</span>, <span class="ident">info</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>);
+            .<span class="ident">cmd_copy_acceleration_structure_to_memory_khr</span>(<span class="ident">command_buffer</span>, <span class="ident">info</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span>);
     }
 
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdCopyMemoryToAccelerationStructureKHR.html&gt;&quot;</span>]</span>
@@ -572,7 +572,7 @@
         <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">vk::CopyMemoryToAccelerationStructureInfoKHR</span>,
     ) {
         <span class="self">self</span>.<span class="ident">acceleration_structure_fn</span>
-            .<span class="ident">cmd_copy_memory_to_acceleration_structure_khr</span>(<span class="ident">command_buffer</span>, <span class="ident">info</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>);
+            .<span class="ident">cmd_copy_memory_to_acceleration_structure_khr</span>(<span class="ident">command_buffer</span>, <span class="ident">info</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span>);
     }
 
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkGetAccelerationStructureHandleKHR.html&gt;&quot;</span>]</span>
@@ -581,7 +581,7 @@
         <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">vk::AccelerationStructureDeviceAddressInfoKHR</span>,
     ) -&gt; <span class="ident">vk::DeviceAddress</span> {
         <span class="self">self</span>.<span class="ident">acceleration_structure_fn</span>
-            .<span class="ident">get_acceleration_structure_device_address_khr</span>(<span class="self">self</span>.<span class="ident">handle</span>, <span class="ident">info</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>)
+            .<span class="ident">get_acceleration_structure_device_address_khr</span>(<span class="self">self</span>.<span class="ident">handle</span>, <span class="ident">info</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span>)
     }
 
     <span class="attribute">#[<span class="ident">doc</span> <span class="op">=</span> <span class="string">&quot;&lt;https://www.khronos.org/registry/vulkan/specs/1.2-extensions/man/html/vkCmdWriteAccelerationStructuresPropertiesKHR.html&gt;&quot;</span>]</span>
@@ -615,7 +615,7 @@
             .<span class="ident">get_device_acceleration_structure_compatibility_khr</span>(
                 <span class="self">self</span>.<span class="ident">handle</span>,
                 <span class="ident">version</span>,
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">compatibility</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>,
+                <span class="kw-2">&amp;mut</span> <span class="ident">compatibility</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>,
             );
 
         <span class="ident">compatibility</span>
@@ -636,9 +636,9 @@
             .<span class="ident">get_acceleration_structure_build_sizes_khr</span>(
                 <span class="self">self</span>.<span class="ident">handle</span>,
                 <span class="ident">build_type</span>,
-                <span class="ident">build_info</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw">const</span> <span class="kw">_</span>,
+                <span class="ident">build_info</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span>,
                 <span class="ident">max_primitive_counts</span>.<span class="ident">as_ptr</span>(),
-                <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">size_info</span> <span class="kw">as</span> <span class="kw-2">*</span><span class="kw-2">mut</span> <span class="kw">_</span>,
+                <span class="kw-2">&amp;mut</span> <span class="ident">size_info</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>,
             );
 
         <span class="ident">size_info</span>

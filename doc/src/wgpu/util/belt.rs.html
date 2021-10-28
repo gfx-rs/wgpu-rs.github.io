@@ -198,7 +198,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">F</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> ()<span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">Future</span> <span class="kw">for</span> <span class="ident">Join</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> ();
 
-    <span class="kw">fn</span> <span class="ident">poll</span>(<span class="self">self</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">task::Context</span>) -&gt; <span class="ident">Poll</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Output</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">poll</span>(<span class="self">self</span>: <span class="ident">Pin</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="self">Self</span><span class="op">&gt;</span>, <span class="ident">cx</span>: <span class="kw-2">&amp;mut</span> <span class="ident">task::Context</span>) -&gt; <span class="ident">Poll</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Output</span><span class="op">&gt;</span> {
         <span class="comment">// This is safe because we have no Drop implementation to violate the Pin requirements and</span>
         <span class="comment">// do not provide any means of moving the inner futures.</span>
         <span class="kw">let</span> <span class="ident">all_ready</span> <span class="op">=</span> <span class="kw">unsafe</span> {
@@ -275,8 +275,8 @@
     <span class="doccomment">/// The upload will be placed into the provided command encoder. This encoder</span>
     <span class="doccomment">/// must be submitted after `finish` is called and before `recall` is called.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_buffer</span>(
-        <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">encoder</span>: <span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="ident">CommandEncoder</span>,
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+        <span class="ident">encoder</span>: <span class="kw-2">&amp;mut</span> <span class="ident">CommandEncoder</span>,
         <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="ident">Buffer</span>,
         <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
         <span class="ident">size</span>: <span class="ident">BufferSize</span>,
@@ -329,7 +329,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// At this point, all the partially used staging buffers are closed until</span>
     <span class="doccomment">/// the GPU is done copying the data from them.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">for</span> <span class="ident">chunk</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">active_chunks</span>.<span class="ident">drain</span>(..) {
             <span class="ident">chunk</span>.<span class="ident">buffer</span>.<span class="ident">unmap</span>();
             <span class="self">self</span>.<span class="ident">closed_chunks</span>.<span class="ident">push</span>(<span class="ident">chunk</span>);
@@ -339,7 +339,7 @@
     <span class="doccomment">/// Recall all of the closed buffers back to be reused.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This has to be called after the command encoders written to `write_buffer` are submitted!</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recall</span>(<span class="kw-2">&amp;</span><span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> ()<span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recall</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> ()<span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> {
         <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">chunk</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">receiver</span>.<span class="ident">try_recv</span>() {
             <span class="ident">chunk</span>.<span class="ident">offset</span> <span class="op">=</span> <span class="number">0</span>;
             <span class="self">self</span>.<span class="ident">free_chunks</span>.<span class="ident">push</span>(<span class="ident">chunk</span>);
