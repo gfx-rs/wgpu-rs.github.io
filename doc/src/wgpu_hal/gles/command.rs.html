@@ -911,6 +911,7 @@
 <span id="911">911</span>
 <span id="912">912</span>
 <span id="913">913</span>
+<span id="914">914</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">conv</span>, <span class="ident">Command</span> <span class="kw">as</span> <span class="ident">C</span>};
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">mem</span>, <span class="ident">ops::Range</span>};
@@ -1519,12 +1520,6 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_render_pipeline</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pipeline</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::RenderPipeline</span>) {
         <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">topology</span> <span class="op">=</span> <span class="ident">conv::map_primitive_topology</span>(<span class="ident">pipeline</span>.<span class="ident">primitive</span>.<span class="ident">topology</span>);
 
-        <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">vertex_attributes</span>.<span class="ident">len</span>()..<span class="ident">pipeline</span>.<span class="ident">vertex_attributes</span>.<span class="ident">len</span>() {
-            <span class="self">self</span>.<span class="ident">cmd_buffer</span>
-                .<span class="ident">commands</span>
-                .<span class="ident">push</span>(<span class="ident">C::UnsetVertexAttribute</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>));
-        }
-
         <span class="kw">if</span> <span class="self">self</span>
             .<span class="ident">private_caps</span>
             .<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::PrivateCapabilities::VERTEX_BUFFER_LAYOUT</span>)
@@ -1539,6 +1534,13 @@
                 });
             }
         } <span class="kw">else</span> {
+            <span class="kw">for</span> <span class="ident">index</span> <span class="kw">in</span> <span class="number">0</span>..<span class="self">self</span>.<span class="ident">state</span>.<span class="ident">vertex_attributes</span>.<span class="ident">len</span>() {
+                <span class="self">self</span>.<span class="ident">cmd_buffer</span>
+                    .<span class="ident">commands</span>
+                    .<span class="ident">push</span>(<span class="ident">C::UnsetVertexAttribute</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>));
+            }
+            <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">vertex_attributes</span>.<span class="ident">clear</span>();
+
             <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">dirty_vbuf_mask</span> <span class="op">=</span> <span class="number">0</span>;
             <span class="comment">// copy vertex attributes</span>
             <span class="kw">for</span> <span class="ident">vat</span> <span class="kw">in</span> <span class="ident">pipeline</span>.<span class="ident">vertex_attributes</span>.<span class="ident">iter</span>() {
