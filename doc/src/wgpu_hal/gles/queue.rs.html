@@ -1109,6 +1109,13 @@
 <span id="1109">1109</span>
 <span id="1110">1110</span>
 <span id="1111">1111</span>
+<span id="1112">1112</span>
+<span id="1113">1113</span>
+<span id="1114">1114</span>
+<span id="1115">1115</span>
+<span id="1116">1116</span>
+<span id="1117">1117</span>
+<span id="1118">1118</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Command</span> <span class="kw">as</span> <span class="ident">C</span>;
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">glow::HasContext</span>;
@@ -1133,10 +1140,7 @@
 
 <span class="kw">fn</span> <span class="ident">is_layered_target</span>(<span class="ident">target</span>: <span class="ident"><span class="kw">super</span>::BindTarget</span>) -&gt; <span class="ident">bool</span> {
     <span class="kw">match</span> <span class="ident">target</span> {
-        <span class="ident">glow::TEXTURE_2D_ARRAY</span>
-        <span class="op">|</span> <span class="ident">glow::TEXTURE_3D</span>
-        <span class="op">|</span> <span class="ident">glow::TEXTURE_CUBE_MAP</span>
-        <span class="op">|</span> <span class="ident">glow::TEXTURE_CUBE_MAP_ARRAY</span> =&gt; <span class="bool-val">true</span>,
+        <span class="ident">glow::TEXTURE_2D_ARRAY</span> <span class="op">|</span> <span class="ident">glow::TEXTURE_3D</span> <span class="op">|</span> <span class="ident">glow::TEXTURE_CUBE_MAP_ARRAY</span> =&gt; <span class="bool-val">true</span>,
         <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
     }
 }
@@ -1204,6 +1208,14 @@
                         <span class="prelude-val">Some</span>(<span class="ident">raw</span>),
                         <span class="ident">view</span>.<span class="ident">mip_levels</span>.<span class="ident">start</span> <span class="kw">as</span> <span class="ident">i32</span>,
                         <span class="ident">view</span>.<span class="ident">array_layers</span>.<span class="ident">start</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    );
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">target</span> <span class="op">==</span> <span class="ident">glow::TEXTURE_CUBE_MAP</span> {
+                    <span class="ident">gl</span>.<span class="ident">framebuffer_texture_2d</span>(
+                        <span class="ident">fbo_target</span>,
+                        <span class="ident">attachment</span>,
+                        <span class="ident">CUBEMAP_FACES</span>[<span class="ident">view</span>.<span class="ident">array_layers</span>.<span class="ident">start</span> <span class="kw">as</span> <span class="ident">usize</span>],
+                        <span class="prelude-val">Some</span>(<span class="ident">raw</span>),
+                        <span class="ident">view</span>.<span class="ident">mip_levels</span>.<span class="ident">start</span> <span class="kw">as</span> <span class="ident">i32</span>,
                     );
                 } <span class="kw">else</span> {
                     <span class="ident">gl</span>.<span class="ident">framebuffer_texture_2d</span>(
@@ -1408,6 +1420,7 @@
                 <span class="kw-2">ref</span> <span class="ident">copy</span>,
             } =&gt; {
                 <span class="comment">//TODO: handle 3D copies</span>
+                <span class="comment">//TODO: handle cubemap copies</span>
                 <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::READ_FRAMEBUFFER</span>, <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">copy_fbo</span>));
                 <span class="kw">if</span> <span class="ident">is_layered_target</span>(<span class="ident">src_target</span>) {
                     <span class="comment">//TODO: handle GLES without framebuffer_texture_3d</span>
@@ -1657,6 +1670,7 @@
                     });
 
                 <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::READ_FRAMEBUFFER</span>, <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">copy_fbo</span>));
+                <span class="comment">//TODO: handle cubemap copies</span>
                 <span class="kw">if</span> <span class="ident">is_layered_target</span>(<span class="ident">src_target</span>) {
                     <span class="comment">//TODO: handle GLES without framebuffer_texture_3d</span>
                     <span class="ident">gl</span>.<span class="ident">framebuffer_texture_layer</span>(
