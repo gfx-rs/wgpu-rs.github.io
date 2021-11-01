@@ -884,6 +884,26 @@
 <span id="884">884</span>
 <span id="885">885</span>
 <span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
+<span id="897">897</span>
+<span id="898">898</span>
+<span id="899">899</span>
+<span id="900">900</span>
+<span id="901">901</span>
+<span id="902">902</span>
+<span id="903">903</span>
+<span id="904">904</span>
+<span id="905">905</span>
+<span id="906">906</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{<span class="ident">BindError</span>, <span class="ident">BindGroup</span>, <span class="ident">PushConstantUploadError</span>},
     <span class="ident">command</span>::{
@@ -1007,6 +1027,10 @@
         <span class="comment">//expected: BindGroupLayoutId,</span>
         <span class="comment">//provided: Option&lt;(BindGroupLayoutId, BindGroupId)&gt;,</span>
     },
+    <span class="attribute">#[<span class="ident">error</span>(
+        <span class="string">&quot;each current dispatch group size dimension ({current:?}) must be less or equal to {limit}&quot;</span>
+    )]</span>
+    <span class="ident">InvalidGroupSize</span> { <span class="ident">current</span>: [<span class="ident">u32</span>; <span class="number">3</span>], <span class="ident">limit</span>: <span class="ident">u32</span> },
 }
 
 <span class="doccomment">/// Error encountered when performing a compute pass.</span>
@@ -1421,6 +1445,22 @@
                             <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>,
                         )
                         .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
+
+                    <span class="kw">let</span> <span class="ident">groups_size_limit</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">limits</span>.<span class="ident">max_compute_workgroups_per_dimension</span>;
+
+                    <span class="kw">if</span> <span class="ident">groups</span>[<span class="number">0</span>] <span class="op">&gt;</span> <span class="ident">groups_size_limit</span>
+                        <span class="op">|</span><span class="op">|</span> <span class="ident">groups</span>[<span class="number">1</span>] <span class="op">&gt;</span> <span class="ident">groups_size_limit</span>
+                        <span class="op">|</span><span class="op">|</span> <span class="ident">groups</span>[<span class="number">2</span>] <span class="op">&gt;</span> <span class="ident">groups_size_limit</span>
+                    {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ComputePassErrorInner::Dispatch</span>(
+                            <span class="ident">DispatchError::InvalidGroupSize</span> {
+                                <span class="ident">current</span>: <span class="ident">groups</span>,
+                                <span class="ident">limit</span>: <span class="ident">groups_size_limit</span>,
+                            },
+                        ))
+                        .<span class="ident">map_pass_err</span>(<span class="ident">scope</span>);
+                    }
+
                     <span class="kw">unsafe</span> {
                         <span class="ident">raw</span>.<span class="ident">dispatch</span>(<span class="ident">groups</span>);
                     }
