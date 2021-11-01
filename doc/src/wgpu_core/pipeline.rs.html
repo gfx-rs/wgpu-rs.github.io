@@ -315,6 +315,39 @@
 <span id="315">315</span>
 <span id="316">316</span>
 <span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{<span class="ident">CreateBindGroupLayoutError</span>, <span class="ident">CreatePipelineLayoutError</span>},
     <span class="ident">device</span>::{<span class="ident">DeviceError</span>, <span class="ident">MissingDownlevelFlags</span>, <span class="ident">MissingFeatures</span>, <span class="ident">RenderPassContext</span>},
@@ -322,9 +355,10 @@
     <span class="ident">id</span>::{<span class="ident">DeviceId</span>, <span class="ident">PipelineLayoutId</span>, <span class="ident">ShaderModuleId</span>},
     <span class="ident">validation</span>, <span class="ident">Label</span>, <span class="ident">LifeGuard</span>, <span class="ident">Stored</span>,
 };
-<span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">fmt</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
+<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::large_enum_variant</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ShaderModuleSource</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
     <span class="ident">Wgsl</span>(<span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">str</span><span class="op">&gt;</span>),
     <span class="ident">Naga</span>(<span class="ident">naga::Module</span>),
@@ -363,30 +397,62 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NagaParseError</span> {
-    <span class="kw">pub</span> <span class="ident">shader_source</span>: <span class="ident">String</span>,
-    <span class="kw">pub</span> <span class="ident">error</span>: <span class="ident">naga::front::wgsl::ParseError</span>,
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderError</span><span class="op">&lt;</span><span class="ident">E</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="ident">source</span>: <span class="ident">String</span>,
+    <span class="kw">pub</span> <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">source</span>]</span>
+    <span class="kw">pub</span> <span class="ident">inner</span>: <span class="ident">E</span>,
 }
-<span class="kw">impl</span> <span class="ident">std::fmt::Display</span> <span class="kw">for</span> <span class="ident">NagaParseError</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">std::fmt::Result</span> {
+<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">ShaderError</span><span class="op">&lt;</span><span class="ident">naga::front::wgsl::ParseError</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+        <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">label</span>.<span class="ident">as_deref</span>().<span class="ident">unwrap_or_default</span>();
+        <span class="kw">let</span> <span class="ident">string</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">emit_to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">source</span>);
+        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;\nShader &#39;{}&#39; parsing {}&quot;</span>, <span class="ident">label</span>, <span class="ident">string</span>)
+    }
+}
+<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">ShaderError</span><span class="op">&lt;</span><span class="ident">naga::WithSpan</span><span class="op">&lt;</span><span class="ident">naga::valid::ValidationError</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
+        <span class="kw">use</span> <span class="ident">codespan_reporting</span>::{
+            <span class="ident">diagnostic</span>::{<span class="ident">Diagnostic</span>, <span class="ident">Label</span>},
+            <span class="ident">files::SimpleFile</span>,
+            <span class="ident">term</span>,
+        };
+
+        <span class="kw">let</span> <span class="ident">label</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">label</span>.<span class="ident">as_deref</span>().<span class="ident">unwrap_or_default</span>();
+        <span class="kw">let</span> <span class="ident">files</span> <span class="op">=</span> <span class="ident">SimpleFile::new</span>(<span class="ident">label</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">source</span>);
+        <span class="kw">let</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">term::Config::default</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">writer</span> <span class="op">=</span> <span class="ident">term::termcolor::Ansi::new</span>(<span class="ident">Vec::new</span>());
+
+        <span class="kw">let</span> <span class="ident">diagnostic</span> <span class="op">=</span> <span class="ident">Diagnostic::error</span>().<span class="ident">with_labels</span>(
+            <span class="self">self</span>.<span class="ident">inner</span>
+                .<span class="ident">spans</span>()
+                .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">&amp;</span>(<span class="ident">span</span>, <span class="kw-2">ref</span> <span class="ident">desc</span>)<span class="op">|</span> {
+                    <span class="ident">Label::primary</span>((), <span class="ident">span</span>.<span class="ident">to_range</span>().<span class="ident">unwrap</span>()).<span class="ident">with_message</span>(<span class="ident">desc</span>.<span class="ident">to_owned</span>())
+                })
+                .<span class="ident">collect</span>(),
+        );
+
+        <span class="ident">term::emit</span>(<span class="kw-2">&amp;mut</span> <span class="ident">writer</span>, <span class="kw-2">&amp;</span><span class="ident">config</span>, <span class="kw-2">&amp;</span><span class="ident">files</span>, <span class="kw-2">&amp;</span><span class="ident">diagnostic</span>).<span class="ident">expect</span>(<span class="string">&quot;cannot write error&quot;</span>);
+
         <span class="macro">write!</span>(
             <span class="ident">f</span>,
-            <span class="string">&quot;\nShader error:\n{}&quot;</span>,
-            <span class="self">self</span>.<span class="ident">error</span>.<span class="ident">emit_to_string</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shader_source</span>)
+            <span class="string">&quot;\nShader validation {}&quot;</span>,
+            <span class="ident">String::from_utf8_lossy</span>(<span class="kw-2">&amp;</span><span class="ident">writer</span>.<span class="ident">into_inner</span>())
         )
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
+<span class="comment">//Note: `Clone` would require `WithSpan: Clone`.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CreateShaderModuleError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to parse a shader&quot;</span>)]</span>
-    <span class="ident">Parsing</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">NagaParseError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">Parsing</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">ShaderError</span><span class="op">&lt;</span><span class="ident">naga::front::wgsl::ParseError</span><span class="op">&gt;</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Failed to generate the backend-specific code&quot;</span>)]</span>
     <span class="ident">Generation</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">Device</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">DeviceError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
-    <span class="ident">Validation</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">naga::valid::ValidationError</span>),
+    <span class="ident">Validation</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">ShaderError</span><span class="op">&lt;</span><span class="ident">naga::WithSpan</span><span class="op">&lt;</span><span class="ident">naga::valid::ValidationError</span><span class="op">&gt;</span><span class="op">&gt;</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">MissingFeatures</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">MissingFeatures</span>),
 }
