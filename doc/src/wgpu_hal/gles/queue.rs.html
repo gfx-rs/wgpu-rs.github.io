@@ -1116,6 +1116,12 @@
 <span id="1116">1116</span>
 <span id="1117">1117</span>
 <span id="1118">1118</span>
+<span id="1119">1119</span>
+<span id="1120">1120</span>
+<span id="1121">1121</span>
+<span id="1122">1122</span>
+<span id="1123">1123</span>
+<span id="1124">1124</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Command</span> <span class="kw">as</span> <span class="ident">C</span>;
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">glow::HasContext</span>;
@@ -1489,11 +1495,13 @@
                 <span class="ident">gl</span>.<span class="ident">bind_texture</span>(<span class="ident">dst_target</span>, <span class="prelude-val">Some</span>(<span class="ident">dst</span>));
                 <span class="ident">gl</span>.<span class="ident">pixel_store_i32</span>(<span class="ident">glow::UNPACK_ROW_LENGTH</span>, <span class="ident">row_texels</span> <span class="kw">as</span> <span class="ident">i32</span>);
                 <span class="ident">gl</span>.<span class="ident">pixel_store_i32</span>(<span class="ident">glow::UNPACK_IMAGE_HEIGHT</span>, <span class="ident">column_texels</span> <span class="kw">as</span> <span class="ident">i32</span>);
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">unbind_unpack_buffer</span> <span class="op">=</span> <span class="bool-val">false</span>;
                 <span class="kw">if</span> <span class="ident">format_info</span>.<span class="ident">block_dimensions</span> <span class="op">==</span> (<span class="number">1</span>, <span class="number">1</span>) {
                     <span class="kw">let</span> <span class="ident">buffer_data</span>;
                     <span class="kw">let</span> <span class="ident">unpack_data</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">src</span> {
                         <span class="ident"><span class="kw">super</span>::BufferInner::Buffer</span>(<span class="ident">buffer</span>) =&gt; {
                             <span class="ident">gl</span>.<span class="ident">bind_buffer</span>(<span class="ident">glow::PIXEL_UNPACK_BUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">buffer</span>));
+                            <span class="ident">unbind_unpack_buffer</span> <span class="op">=</span> <span class="bool-val">true</span>;
                             <span class="ident">glow::PixelUnpackData::BufferOffset</span>(<span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u32</span>)
                         }
                         <span class="ident"><span class="kw">super</span>::BufferInner::Data</span>(<span class="kw-2">ref</span> <span class="ident">data</span>) =&gt; {
@@ -1573,6 +1581,7 @@
                     <span class="kw">let</span> <span class="ident">unpack_data</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">src</span> {
                         <span class="ident"><span class="kw">super</span>::BufferInner::Buffer</span>(<span class="ident">buffer</span>) =&gt; {
                             <span class="ident">gl</span>.<span class="ident">bind_buffer</span>(<span class="ident">glow::PIXEL_UNPACK_BUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">buffer</span>));
+                            <span class="ident">unbind_unpack_buffer</span> <span class="op">=</span> <span class="bool-val">true</span>;
                             <span class="ident">glow::CompressedPixelUnpackData::BufferRange</span>(
                                 <span class="ident">offset</span>..<span class="ident">offset</span> <span class="op">+</span> <span class="ident">bytes_per_image</span>,
                             )
@@ -1640,6 +1649,9 @@
                         }
                         <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
                     }
+                }
+                <span class="kw">if</span> <span class="ident">unbind_unpack_buffer</span> {
+                    <span class="ident">gl</span>.<span class="ident">bind_buffer</span>(<span class="ident">glow::PIXEL_UNPACK_BUFFER</span>, <span class="prelude-val">None</span>);
                 }
             }
             <span class="ident">C::CopyTextureToBuffer</span> {
