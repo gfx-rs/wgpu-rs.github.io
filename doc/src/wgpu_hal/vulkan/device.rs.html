@@ -1767,6 +1767,12 @@
 <span id="1767">1767</span>
 <span id="1768">1768</span>
 <span id="1769">1769</span>
+<span id="1770">1770</span>
+<span id="1771">1771</span>
+<span id="1772">1772</span>
+<span id="1773">1773</span>
+<span id="1774">1774</span>
+<span id="1775">1775</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
@@ -3151,7 +3157,6 @@
         };
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_rasterization</span> <span class="op">=</span> <span class="ident">vk::PipelineRasterizationStateCreateInfo::builder</span>()
-            .<span class="ident">depth_clamp_enable</span>(<span class="ident">desc</span>.<span class="ident">primitive</span>.<span class="ident">clamp_depth</span>)
             .<span class="ident">polygon_mode</span>(<span class="ident">conv::map_polygon_mode</span>(<span class="ident">desc</span>.<span class="ident">primitive</span>.<span class="ident">polygon_mode</span>))
             .<span class="ident">front_face</span>(<span class="ident">conv::map_front_face</span>(<span class="ident">desc</span>.<span class="ident">primitive</span>.<span class="ident">front_face</span>))
             .<span class="ident">line_width</span>(<span class="number">1.0</span>);
@@ -3164,6 +3169,13 @@
                 .<span class="ident">build</span>();
         <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">primitive</span>.<span class="ident">conservative</span> {
             <span class="ident">vk_rasterization</span> <span class="op">=</span> <span class="ident">vk_rasterization</span>.<span class="ident">push_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">vk_rasterization_conservative_state</span>);
+        }
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_depth_clip_state</span> <span class="op">=</span>
+            <span class="ident">vk::PipelineRasterizationDepthClipStateCreateInfoEXT::builder</span>()
+                .<span class="ident">depth_clip_enable</span>(<span class="bool-val">false</span>)
+                .<span class="ident">build</span>();
+        <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">primitive</span>.<span class="ident">unclipped_depth</span> {
+            <span class="ident">vk_rasterization</span> <span class="op">=</span> <span class="ident">vk_rasterization</span>.<span class="ident">push_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">vk_depth_clip_state</span>);
         }
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_depth_stencil</span> <span class="op">=</span> <span class="ident">vk::PipelineDepthStencilStateCreateInfo::builder</span>();
