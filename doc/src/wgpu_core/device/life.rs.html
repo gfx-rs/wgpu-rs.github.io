@@ -733,8 +733,6 @@
 <span id="733">733</span>
 <span id="734">734</span>
 <span id="735">735</span>
-<span id="736">736</span>
-<span id="737">737</span>
 </pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::device::trace</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -823,9 +821,7 @@
 <span class="kw">struct</span> <span class="ident">NonReferencedResources</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> {
     <span class="ident">buffers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">A::Buffer</span><span class="op">&gt;</span>,
     <span class="ident">textures</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">A::Texture</span><span class="op">&gt;</span>,
-    <span class="comment">// Note: we keep the associated ID here in order to be able to check</span>
-    <span class="comment">// at any point what resources are used in a submission.</span>
-    <span class="ident">texture_views</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::TextureViewId</span><span class="op">&gt;</span>, <span class="ident">A::TextureView</span>)<span class="op">&gt;</span>,
+    <span class="ident">texture_views</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">A::TextureView</span><span class="op">&gt;</span>,
     <span class="ident">samplers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">A::Sampler</span><span class="op">&gt;</span>,
     <span class="ident">bind_groups</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">A::BindGroup</span><span class="op">&gt;</span>,
     <span class="ident">compute_pipes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">A::ComputePipeline</span><span class="op">&gt;</span>,
@@ -879,7 +875,7 @@
         }
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">texture_views</span>.<span class="ident">is_empty</span>() {
             <span class="macro">profiling::scope!</span>(<span class="string">&quot;destroy_texture_views&quot;</span>);
-            <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">raw</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">texture_views</span>.<span class="ident">drain</span>(..) {
+            <span class="kw">for</span> <span class="ident">raw</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">texture_views</span>.<span class="ident">drain</span>(..) {
                 <span class="ident">device</span>.<span class="ident">destroy_texture_view</span>(<span class="ident">raw</span>);
             }
         }
@@ -1170,7 +1166,7 @@
                             .<span class="ident">find</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">index</span> <span class="op">==</span> <span class="ident">submit_index</span>)
                             .<span class="ident">map_or</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">free_resources</span>, <span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;mut</span> <span class="ident">a</span>.<span class="ident">last_resources</span>)
                             .<span class="ident">texture_views</span>
-                            .<span class="ident">push</span>((<span class="ident">id</span>, <span class="ident">res</span>.<span class="ident">raw</span>));
+                            .<span class="ident">push</span>(<span class="ident">res</span>.<span class="ident">raw</span>);
                     }
                 }
             }
