@@ -4981,6 +4981,11 @@
 <span id="4981">4981</span>
 <span id="4982">4982</span>
 <span id="4983">4983</span>
+<span id="4984">4984</span>
+<span id="4985">4985</span>
+<span id="4986">4986</span>
+<span id="4987">4987</span>
+<span id="4988">4988</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -6504,29 +6509,34 @@
                 }
                 <span class="ident">Br::Sampler</span>(<span class="ident">id</span>) =&gt; {
                     <span class="kw">match</span> <span class="ident">decl</span>.<span class="ident">ty</span> {
-                        <span class="ident">wgt::BindingType::Sampler</span> {
-                            <span class="ident">filtering</span>,
-                            <span class="ident">comparison</span>,
-                        } =&gt; {
+                        <span class="ident">wgt::BindingType::Sampler</span>(<span class="ident">ty</span>) =&gt; {
                             <span class="kw">let</span> <span class="ident">sampler</span> <span class="op">=</span> <span class="ident">used</span>
                                 .<span class="ident">samplers</span>
                                 .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">sampler_guard</span>, <span class="ident">id</span>, (), ())
                                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">Error::InvalidSampler</span>(<span class="ident">id</span>))<span class="question-mark">?</span>;
 
-                            <span class="comment">// Check the actual sampler to also (not) be a comparison sampler</span>
-                            <span class="kw">if</span> <span class="ident">sampler</span>.<span class="ident">comparison</span> <span class="op">!</span><span class="op">=</span> <span class="ident">comparison</span> {
+                            <span class="comment">// Allowed sampler values for filtering and comparison</span>
+                            <span class="kw">let</span> (<span class="ident">allowed_filtering</span>, <span class="ident">allowed_comparison</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">ty</span> {
+                                <span class="ident">wgt::SamplerBindingType::Filtering</span> =&gt; (<span class="prelude-val">None</span>, <span class="bool-val">false</span>),
+                                <span class="ident">wgt::SamplerBindingType::NonFiltering</span> =&gt; (<span class="prelude-val">Some</span>(<span class="bool-val">false</span>), <span class="bool-val">false</span>),
+                                <span class="ident">wgt::SamplerBindingType::Comparison</span> =&gt; (<span class="prelude-val">None</span>, <span class="bool-val">true</span>),
+                            };
+
+                            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">allowed_filtering</span>) <span class="op">=</span> <span class="ident">allowed_filtering</span> {
+                                <span class="kw">if</span> <span class="ident">allowed_filtering</span> <span class="op">!</span><span class="op">=</span> <span class="ident">sampler</span>.<span class="ident">filtering</span> {
+                                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::WrongSamplerFiltering</span> {
+                                        <span class="ident">binding</span>,
+                                        <span class="ident">layout_flt</span>: <span class="ident">allowed_filtering</span>,
+                                        <span class="ident">sampler_flt</span>: <span class="ident">sampler</span>.<span class="ident">filtering</span>,
+                                    });
+                                }
+                            }
+
+                            <span class="kw">if</span> <span class="ident">allowed_comparison</span> <span class="op">!</span><span class="op">=</span> <span class="ident">sampler</span>.<span class="ident">comparison</span> {
                                 <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::WrongSamplerComparison</span> {
                                     <span class="ident">binding</span>,
-                                    <span class="ident">layout_cmp</span>: <span class="ident">comparison</span>,
+                                    <span class="ident">layout_cmp</span>: <span class="ident">allowed_comparison</span>,
                                     <span class="ident">sampler_cmp</span>: <span class="ident">sampler</span>.<span class="ident">comparison</span>,
-                                });
-                            }
-                            <span class="comment">// Check the actual sampler to be non-filtering, if required</span>
-                            <span class="kw">if</span> <span class="ident">sampler</span>.<span class="ident">filtering</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">filtering</span> {
-                                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::WrongSamplerFiltering</span> {
-                                    <span class="ident">binding</span>,
-                                    <span class="ident">layout_flt</span>: <span class="ident">filtering</span>,
-                                    <span class="ident">sampler_flt</span>: <span class="ident">sampler</span>.<span class="ident">filtering</span>,
                                 });
                             }
 

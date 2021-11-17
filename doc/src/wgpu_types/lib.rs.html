@@ -3563,6 +3563,16 @@
 <span id="3563">3563</span>
 <span id="3564">3564</span>
 <span id="3565">3565</span>
+<span id="3566">3566</span>
+<span id="3567">3567</span>
+<span id="3568">3568</span>
+<span id="3569">3569</span>
+<span id="3570">3570</span>
+<span id="3571">3571</span>
+<span id="3572">3572</span>
+<span id="3573">3573</span>
+<span id="3574">3574</span>
+<span id="3575">3575</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */</span>
@@ -6759,6 +6769,25 @@
     <span class="ident">ReadWrite</span>,
 }
 
+<span class="doccomment">/// Specific type of a sampler binding.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// WebGPU spec: &lt;https://gpuweb.github.io/gpuweb/#enumdef-gpusamplerbindingtype&gt;</span>
+<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Hash</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
+<span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serde&quot;</span>, <span class="ident">serde</span>(<span class="ident">rename_all</span> <span class="op">=</span> <span class="string">&quot;kebab-case&quot;</span>))]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SamplerBindingType</span> {
+    <span class="doccomment">/// The sampling result is produced based on more than a single color sample from a texture,</span>
+    <span class="doccomment">/// e.g. when bilinear interpolation is enabled.</span>
+    <span class="ident">Filtering</span>,
+    <span class="doccomment">/// The sampling result is produced based on a single color sample from a texture.</span>
+    <span class="ident">NonFiltering</span>,
+    <span class="doccomment">/// Use as a comparison sampler instead of a normal sampler.</span>
+    <span class="doccomment">/// For more info take a look at the analogous functionality in OpenGL: &lt;https://www.khronos.org/opengl/wiki/Sampler_Object#Comparison_mode&gt;.</span>
+    <span class="ident">Comparison</span>,
+}
+
 <span class="doccomment">/// Specific type of a binding.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// WebGPU spec: the enum of</span>
@@ -6792,16 +6821,7 @@
     <span class="doccomment">/// layout(binding = 0)</span>
     <span class="doccomment">/// uniform sampler s;</span>
     <span class="doccomment">/// ```</span>
-    <span class="ident">Sampler</span> {
-        <span class="doccomment">/// The sampling result is produced based on more than a single color sample from a texture,</span>
-        <span class="doccomment">/// e.g. when bilinear interpolation is enabled.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// A filtering sampler can only be used with a filterable texture.</span>
-        <span class="ident">filtering</span>: <span class="ident">bool</span>,
-        <span class="doccomment">/// Use as a comparison sampler instead of a normal sampler.</span>
-        <span class="doccomment">/// For more info take a look at the analogous functionality in OpenGL: &lt;https://www.khronos.org/opengl/wiki/Sampler_Object#Comparison_mode&gt;.</span>
-        <span class="ident">comparison</span>: <span class="ident">bool</span>,
-    },
+    <span class="ident">Sampler</span>(<span class="ident">SamplerBindingType</span>),
     <span class="doccomment">/// A texture binding.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Example GLSL syntax:</span>
