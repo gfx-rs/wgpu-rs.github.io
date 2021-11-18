@@ -4986,6 +4986,13 @@
 <span id="4986">4986</span>
 <span id="4987">4987</span>
 <span id="4988">4988</span>
+<span id="4989">4989</span>
+<span id="4990">4990</span>
+<span id="4991">4991</span>
+<span id="4992">4992</span>
+<span id="4993">4993</span>
+<span id="4994">4994</span>
+<span id="4995">4995</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -8192,6 +8199,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// - `hal_texture` must be created from `device_id` corresponding raw handle.</span>
     <span class="doccomment">/// - `hal_texture` must be created respecting `desc`</span>
+    <span class="doccomment">/// - `hal_texture` must be initialized</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_texture_from_hal</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">hal_texture</span>: <span class="ident">A::Texture</span>,
@@ -8231,8 +8239,14 @@
                 <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; <span class="kw">break</span> <span class="ident">error</span>,
             };
 
-            <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span>
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">texture</span> <span class="op">=</span>
                 <span class="ident">device</span>.<span class="ident">create_texture_from_hal</span>(<span class="ident">hal_texture</span>, <span class="ident">device_id</span>, <span class="ident">desc</span>, <span class="ident">format_features</span>);
+            <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">wgt::TextureUsages::COPY_DST</span>) {
+                <span class="ident">texture</span>.<span class="ident">hal_usage</span> <span class="op">|</span><span class="op">=</span> <span class="ident">hal::TextureUses::COPY_DST</span>;
+            }
+
+            <span class="ident">texture</span>.<span class="ident">initialization_status</span> <span class="op">=</span> <span class="ident">TextureInitTracker::new</span>(<span class="ident">desc</span>.<span class="ident">mip_level_count</span>, <span class="number">0</span>);
+
             <span class="kw">let</span> <span class="ident">num_levels</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">full_range</span>.<span class="ident">levels</span>.<span class="ident">end</span>;
             <span class="kw">let</span> <span class="ident">num_layers</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">full_range</span>.<span class="ident">layers</span>.<span class="ident">end</span>;
             <span class="kw">let</span> <span class="ident">ref_count</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>();
