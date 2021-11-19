@@ -33,6 +33,7 @@ sourcesIndex["profiling"] = {"name":"","files":["empty_impl.rs","lib.rs"]};
 sourcesIndex["quote"] = {"name":"","files":["ext.rs","format.rs","ident_fragment.rs","lib.rs","runtime.rs","spanned.rs","to_tokens.rs"]};
 sourcesIndex["raw_window_handle"] = {"name":"","files":["lib.rs","unix.rs"]};
 sourcesIndex["renderdoc_sys"] = {"name":"","files":["bindings.rs","lib.rs"]};
+sourcesIndex["rustc_hash"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["scopeguard"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["smallvec"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["spirv"] = {"name":"","files":["autogen_spirv.rs","lib.rs"]};

@@ -1773,6 +1773,36 @@
 <span id="1773">1773</span>
 <span id="1774">1774</span>
 <span id="1775">1775</span>
+<span id="1776">1776</span>
+<span id="1777">1777</span>
+<span id="1778">1778</span>
+<span id="1779">1779</span>
+<span id="1780">1780</span>
+<span id="1781">1781</span>
+<span id="1782">1782</span>
+<span id="1783">1783</span>
+<span id="1784">1784</span>
+<span id="1785">1785</span>
+<span id="1786">1786</span>
+<span id="1787">1787</span>
+<span id="1788">1788</span>
+<span id="1789">1789</span>
+<span id="1790">1790</span>
+<span id="1791">1791</span>
+<span id="1792">1792</span>
+<span id="1793">1793</span>
+<span id="1794">1794</span>
+<span id="1795">1795</span>
+<span id="1796">1796</span>
+<span id="1797">1797</span>
+<span id="1798">1798</span>
+<span id="1799">1799</span>
+<span id="1800">1800</span>
+<span id="1801">1801</span>
+<span id="1802">1802</span>
+<span id="1803">1803</span>
+<span id="1804">1804</span>
+<span id="1805">1805</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
@@ -1780,7 +1810,9 @@
 <span class="kw">use</span> <span class="ident">inplace_it::inplace_or_alloc_from_iter</span>;
 <span class="kw">use</span> <span class="ident">parking_lot::Mutex</span>;
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">collections::hash_map::Entry</span>, <span class="ident">ffi::CString</span>, <span class="ident">ptr</span>, <span class="ident">sync::Arc</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{
+    <span class="ident">borrow::Cow</span>, <span class="ident">collections::hash_map::Entry</span>, <span class="ident">ffi::CString</span>, <span class="ident">num::NonZeroU32</span>, <span class="ident">ptr</span>, <span class="ident">sync::Arc</span>,
+};
 
 <span class="kw">impl</span> <span class="ident"><span class="kw">super</span>::DeviceShared</span> {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_object_name</span>(
@@ -1915,9 +1947,29 @@
                     <span class="ident">vk_subpass</span>.<span class="ident">build</span>()
                 }];
 
-                <span class="kw">let</span> <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk::RenderPassCreateInfo::builder</span>()
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk::RenderPassCreateInfo::builder</span>()
                     .<span class="ident">attachments</span>(<span class="kw-2">&amp;</span><span class="ident">vk_attachments</span>)
                     .<span class="ident">subpasses</span>(<span class="kw-2">&amp;</span><span class="ident">vk_subpasses</span>);
+
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">multiview_info</span>;
+                <span class="kw">let</span> <span class="ident">mask</span>;
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">multiview</span>) <span class="op">=</span> <span class="ident">e</span>.<span class="ident">key</span>().<span class="ident">multiview</span> {
+                    <span class="comment">// Sanity checks, better to panic here than cause a driver crash</span>
+                    <span class="macro">assert!</span>(<span class="ident">multiview</span>.<span class="ident">get</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="number">8</span>);
+                    <span class="macro">assert!</span>(<span class="ident">multiview</span>.<span class="ident">get</span>() <span class="op">&gt;</span> <span class="number">1</span>);
+
+                    <span class="comment">// Right now we enable all bits on the view masks and correlation masks.</span>
+                    <span class="comment">// This means we&#39;re rendering to all views in the subpass, and that all views</span>
+                    <span class="comment">// can be rendered concurrently.</span>
+                    <span class="ident">mask</span> <span class="op">=</span> [(<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">multiview</span>.<span class="ident">get</span>()) <span class="op">-</span> <span class="number">1</span>];
+
+                    <span class="comment">// On Vulkan 1.1 or later, this is an alias for core functionality</span>
+                    <span class="ident">multiview_info</span> <span class="op">=</span> <span class="ident">vk::RenderPassMultiviewCreateInfoKHR::builder</span>()
+                        .<span class="ident">view_masks</span>(<span class="kw-2">&amp;</span><span class="ident">mask</span>)
+                        .<span class="ident">correlation_masks</span>(<span class="kw-2">&amp;</span><span class="ident">mask</span>)
+                        .<span class="ident">build</span>();
+                    <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk_info</span>.<span class="ident">push_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">multiview_info</span>);
+                }
 
                 <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">create_render_pass</span>(<span class="kw-2">&amp;</span><span class="ident">vk_info</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span> };
 
@@ -2380,10 +2432,10 @@
                 <span class="kw">let</span> <span class="ident">temp_options</span>;
                 <span class="kw">let</span> <span class="ident">options</span> <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">runtime_checks</span> {
                     <span class="ident">temp_options</span> <span class="op">=</span> <span class="ident">naga::back::spv::Options</span> {
-                        <span class="ident">bounds_check_policies</span>: <span class="ident">naga::back::BoundsCheckPolicies</span> {
-                            <span class="ident">index</span>: <span class="ident">naga::back::BoundsCheckPolicy::Unchecked</span>,
-                            <span class="ident">buffer</span>: <span class="ident">naga::back::BoundsCheckPolicy::Unchecked</span>,
-                            <span class="ident">image</span>: <span class="ident">naga::back::BoundsCheckPolicy::Unchecked</span>,
+                        <span class="ident">bounds_check_policies</span>: <span class="ident">naga::proc::BoundsCheckPolicies</span> {
+                            <span class="ident">index</span>: <span class="ident">naga::proc::BoundsCheckPolicy::Unchecked</span>,
+                            <span class="ident">buffer</span>: <span class="ident">naga::proc::BoundsCheckPolicy::Unchecked</span>,
+                            <span class="ident">image</span>: <span class="ident">naga::proc::BoundsCheckPolicy::Unchecked</span>,
                         },
                         ..<span class="self">self</span>.<span class="ident">naga_options</span>.<span class="ident">clone</span>()
                     };
@@ -2618,12 +2670,15 @@
         <span class="ident">texture</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Texture</span>,
         <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::TextureViewDescriptor</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::TextureView</span>, <span class="ident"><span class="kw">crate</span>::DeviceError</span><span class="op">&gt;</span> {
+        <span class="kw">let</span> <span class="ident">subresource_range</span> <span class="op">=</span> <span class="ident">conv::map_subresource_range</span>(<span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">range</span>, <span class="ident">texture</span>.<span class="ident">aspects</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk::ImageViewCreateInfo::builder</span>()
             .<span class="ident">flags</span>(<span class="ident">vk::ImageViewCreateFlags::empty</span>())
             .<span class="ident">image</span>(<span class="ident">texture</span>.<span class="ident">raw</span>)
             .<span class="ident">view_type</span>(<span class="ident">conv::map_view_dimension</span>(<span class="ident">desc</span>.<span class="ident">dimension</span>))
             .<span class="ident">format</span>(<span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">private_caps</span>.<span class="ident">map_texture_format</span>(<span class="ident">desc</span>.<span class="ident">format</span>))
-            .<span class="ident">subresource_range</span>(<span class="ident">conv::map_subresource_range</span>(<span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">range</span>, <span class="ident">texture</span>.<span class="ident">aspects</span>));
+            .<span class="ident">subresource_range</span>(<span class="ident">subresource_range</span>);
+        <span class="kw">let</span> <span class="ident">layers</span> <span class="op">=</span>
+            <span class="ident">NonZeroU32::new</span>(<span class="ident">subresource_range</span>.<span class="ident">layer_count</span>).<span class="ident">expect</span>(<span class="string">&quot;Unexpected zero layer count&quot;</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">image_view_info</span>;
         <span class="kw">let</span> <span class="ident">view_usage</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">private_caps</span>.<span class="ident">image_view_usage</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">is_empty</span>() {
@@ -2654,7 +2709,11 @@
             <span class="ident">view_format</span>: <span class="ident">desc</span>.<span class="ident">format</span>,
         };
 
-        <span class="prelude-val">Ok</span>(<span class="ident"><span class="kw">super</span>::TextureView</span> { <span class="ident">raw</span>, <span class="ident">attachment</span> })
+        <span class="prelude-val">Ok</span>(<span class="ident"><span class="kw">super</span>::TextureView</span> {
+            <span class="ident">raw</span>,
+            <span class="ident">layers</span>,
+            <span class="ident">attachment</span>,
+        })
     }
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">destroy_texture_view</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">view</span>: <span class="ident"><span class="kw">super</span>::TextureView</span>) {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">private_caps</span>.<span class="ident">imageless_framebuffers</span> {
@@ -3061,10 +3120,10 @@
                 }
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">naga_options</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">naga_options</span>.<span class="ident">clone</span>();
                 <span class="kw">if</span> <span class="op">!</span><span class="ident">desc</span>.<span class="ident">runtime_checks</span> {
-                    <span class="ident">naga_options</span>.<span class="ident">bounds_check_policies</span> <span class="op">=</span> <span class="ident">naga::back::BoundsCheckPolicies</span> {
-                        <span class="ident">index</span>: <span class="ident">naga::back::BoundsCheckPolicy::Unchecked</span>,
-                        <span class="ident">buffer</span>: <span class="ident">naga::back::BoundsCheckPolicy::Unchecked</span>,
-                        <span class="ident">image</span>: <span class="ident">naga::back::BoundsCheckPolicy::Unchecked</span>,
+                    <span class="ident">naga_options</span>.<span class="ident">bounds_check_policies</span> <span class="op">=</span> <span class="ident">naga::proc::BoundsCheckPolicies</span> {
+                        <span class="ident">index</span>: <span class="ident">naga::proc::BoundsCheckPolicy::Unchecked</span>,
+                        <span class="ident">buffer</span>: <span class="ident">naga::proc::BoundsCheckPolicy::Unchecked</span>,
+                        <span class="ident">image</span>: <span class="ident">naga::proc::BoundsCheckPolicy::Unchecked</span>,
                     };
                 }
                 <span class="ident">Cow::Owned</span>(
@@ -3110,6 +3169,7 @@
         ];
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">compatible_rp_key</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::RenderPassKey</span> {
             <span class="ident">sample_count</span>: <span class="ident">desc</span>.<span class="ident">multisample</span>.<span class="ident">count</span>,
+            <span class="ident">multiview</span>: <span class="ident">desc</span>.<span class="ident">multiview</span>,
             ..<span class="ident">Default::default</span>()
         };
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stages</span> <span class="op">=</span> <span class="ident">ArrayVec</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="number">2</span><span class="op">&gt;</span><span class="ident">::new</span>();

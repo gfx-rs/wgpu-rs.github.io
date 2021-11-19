@@ -2285,6 +2285,58 @@
 <span id="2285">2285</span>
 <span id="2286">2286</span>
 <span id="2287">2287</span>
+<span id="2288">2288</span>
+<span id="2289">2289</span>
+<span id="2290">2290</span>
+<span id="2291">2291</span>
+<span id="2292">2292</span>
+<span id="2293">2293</span>
+<span id="2294">2294</span>
+<span id="2295">2295</span>
+<span id="2296">2296</span>
+<span id="2297">2297</span>
+<span id="2298">2298</span>
+<span id="2299">2299</span>
+<span id="2300">2300</span>
+<span id="2301">2301</span>
+<span id="2302">2302</span>
+<span id="2303">2303</span>
+<span id="2304">2304</span>
+<span id="2305">2305</span>
+<span id="2306">2306</span>
+<span id="2307">2307</span>
+<span id="2308">2308</span>
+<span id="2309">2309</span>
+<span id="2310">2310</span>
+<span id="2311">2311</span>
+<span id="2312">2312</span>
+<span id="2313">2313</span>
+<span id="2314">2314</span>
+<span id="2315">2315</span>
+<span id="2316">2316</span>
+<span id="2317">2317</span>
+<span id="2318">2318</span>
+<span id="2319">2319</span>
+<span id="2320">2320</span>
+<span id="2321">2321</span>
+<span id="2322">2322</span>
+<span id="2323">2323</span>
+<span id="2324">2324</span>
+<span id="2325">2325</span>
+<span id="2326">2326</span>
+<span id="2327">2327</span>
+<span id="2328">2328</span>
+<span id="2329">2329</span>
+<span id="2330">2330</span>
+<span id="2331">2331</span>
+<span id="2332">2332</span>
+<span id="2333">2333</span>
+<span id="2334">2334</span>
+<span id="2335">2335</span>
+<span id="2336">2336</span>
+<span id="2337">2337</span>
+<span id="2338">2338</span>
+<span id="2339">2339</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model::BindError</span>,
     <span class="ident">command</span>::{
@@ -2296,8 +2348,8 @@
         <span class="ident">RenderCommandError</span>, <span class="ident">StateChange</span>,
     },
     <span class="ident">device</span>::{
-        <span class="ident">AttachmentData</span>, <span class="ident">MissingDownlevelFlags</span>, <span class="ident">MissingFeatures</span>, <span class="ident">RenderPassCompatibilityError</span>,
-        <span class="ident">RenderPassContext</span>,
+        <span class="ident">AttachmentData</span>, <span class="ident">Device</span>, <span class="ident">MissingDownlevelFlags</span>, <span class="ident">MissingFeatures</span>,
+        <span class="ident">RenderPassCompatibilityError</span>, <span class="ident">RenderPassContext</span>,
     },
     <span class="ident">error</span>::{<span class="ident">ErrorFormatter</span>, <span class="ident">PrettyError</span>},
     <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
@@ -2316,7 +2368,8 @@
 <span class="kw">use</span> <span class="ident">hal::CommandEncoder</span> <span class="kw">as</span> <span class="kw">_</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 <span class="kw">use</span> <span class="ident">wgt</span>::{
-    <span class="ident">BufferAddress</span>, <span class="ident">BufferSize</span>, <span class="ident">BufferUsages</span>, <span class="ident">Color</span>, <span class="ident">IndexFormat</span>, <span class="ident">TextureUsages</span>, <span class="ident">VertexStepMode</span>,
+    <span class="ident">BufferAddress</span>, <span class="ident">BufferSize</span>, <span class="ident">BufferUsages</span>, <span class="ident">Color</span>, <span class="ident">IndexFormat</span>, <span class="ident">TextureUsages</span>,
+    <span class="ident">TextureViewDimension</span>, <span class="ident">VertexStepMode</span>,
 };
 
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serial-pass&quot;</span>, <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;replay&quot;</span>))]</span>
@@ -2748,6 +2801,12 @@
     <span class="ident">Bind</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">BindError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">QueryUse</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">QueryUseError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;multiview layer count must match&quot;</span>)]</span>
+    <span class="ident">MultiViewMismatch</span>,
+    <span class="attribute">#[<span class="ident">error</span>(
+        <span class="string">&quot;multiview pass texture views with more than one array layer must have D2Array dimension&quot;</span>
+    )]</span>
+    <span class="ident">MultiViewDimensionMismatch</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">RenderPassErrorInner</span> {
@@ -2829,6 +2888,7 @@
 
     <span class="ident">pending_discard_init_fixups</span>: <span class="ident">SurfacesInDiscardState</span>,
     <span class="ident">divergent_discarded_depth_stencil_aspect</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">wgt::TextureAspect</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TextureView</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>)<span class="op">&gt;</span>,
+    <span class="ident">multiview</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonZeroU32</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span> <span class="ident">RenderPassInfo</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">A</span><span class="op">&gt;</span> {
@@ -2869,6 +2929,7 @@
     }
 
     <span class="kw">fn</span> <span class="ident">start</span>(
+        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">Device</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
         <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>,
         <span class="ident">color_attachments</span>: <span class="kw-2">&amp;</span>[<span class="ident">RenderPassColorAttachment</span>],
         <span class="ident">depth_stencil_attachment</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">RenderPassDepthStencilAttachment</span><span class="op">&gt;</span>,
@@ -2892,6 +2953,39 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">extent</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sample_count</span> <span class="op">=</span> <span class="number">0</span>;
 
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">detected_multiview</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonZeroU32</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">check_multiview</span> <span class="op">=</span> <span class="op">|</span><span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">TextureView</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">|</span> {
+            <span class="comment">// Get the multiview configuration for this texture view</span>
+            <span class="kw">let</span> <span class="ident">layers</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">selector</span>.<span class="ident">layers</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">view</span>.<span class="ident">selector</span>.<span class="ident">layers</span>.<span class="ident">start</span>;
+            <span class="kw">let</span> <span class="ident">this_multiview</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">layers</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">2</span> {
+                <span class="comment">// Trivially proven by the if above</span>
+                <span class="prelude-val">Some</span>(<span class="kw">unsafe</span> { <span class="ident">NonZeroU32::new_unchecked</span>(<span class="ident">layers</span>) })
+            } <span class="kw">else</span> {
+                <span class="prelude-val">None</span>
+            };
+
+            <span class="comment">// Make sure that if this view is a multiview, it is set to be an array</span>
+            <span class="kw">if</span> <span class="ident">this_multiview</span>.<span class="ident">is_some</span>() <span class="op">&amp;&amp;</span> <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">dimension</span> <span class="op">!</span><span class="op">=</span> <span class="ident">TextureViewDimension::D2Array</span> {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::MultiViewDimensionMismatch</span>);
+            }
+
+            <span class="comment">// Validate matching first, or store the first one</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">multiview</span>) <span class="op">=</span> <span class="ident">detected_multiview</span> {
+                <span class="kw">if</span> <span class="ident">multiview</span> <span class="op">!</span><span class="op">=</span> <span class="ident">this_multiview</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::MultiViewMismatch</span>);
+                }
+            } <span class="kw">else</span> {
+                <span class="comment">// Multiview is only supported if the feature is enabled</span>
+                <span class="kw">if</span> <span class="ident">this_multiview</span>.<span class="ident">is_some</span>() {
+                    <span class="ident">device</span>.<span class="ident">require_features</span>(<span class="ident">wgt::Features::MULTIVIEW</span>)<span class="question-mark">?</span>;
+                }
+
+                <span class="ident">detected_multiview</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">this_multiview</span>);
+            }
+
+            <span class="prelude-val">Ok</span>(())
+        };
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">add_view</span> <span class="op">=</span> <span class="op">|</span><span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="ident">TextureView</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">type_name</span><span class="op">|</span> {
             <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ex</span>) <span class="op">=</span> <span class="ident">extent</span> {
                 <span class="kw">if</span> <span class="ident">ex</span> <span class="op">!</span><span class="op">=</span> <span class="ident">view</span>.<span class="ident">extent</span> {
@@ -2924,6 +3018,7 @@
                 .<span class="ident">views</span>
                 .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">view_guard</span>, <span class="ident">at</span>.<span class="ident">view</span>, (), ())
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">RenderPassErrorInner::InvalidAttachment</span>(<span class="ident">at</span>.<span class="ident">view</span>))<span class="question-mark">?</span>;
+            <span class="ident">check_multiview</span>(<span class="ident">view</span>)<span class="question-mark">?</span>;
             <span class="ident">add_view</span>(<span class="ident">view</span>, <span class="string">&quot;depth&quot;</span>)<span class="question-mark">?</span>;
 
             <span class="kw">let</span> <span class="ident">ds_aspects</span> <span class="op">=</span> <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">aspects</span>();
@@ -3032,6 +3127,7 @@
                 .<span class="ident">views</span>
                 .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">view_guard</span>, <span class="ident">at</span>.<span class="ident">view</span>, (), ())
                 .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">RenderPassErrorInner::InvalidAttachment</span>(<span class="ident">at</span>.<span class="ident">view</span>))<span class="question-mark">?</span>;
+            <span class="ident">check_multiview</span>(<span class="ident">color_view</span>)<span class="question-mark">?</span>;
             <span class="ident">add_view</span>(<span class="ident">color_view</span>, <span class="string">&quot;color&quot;</span>)<span class="question-mark">?</span>;
 
             <span class="kw">if</span> <span class="op">!</span><span class="ident">color_view</span>
@@ -3061,6 +3157,7 @@
                     .<span class="ident">views</span>
                     .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">view_guard</span>, <span class="ident">resolve_target</span>, (), ())
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">RenderPassErrorInner::InvalidAttachment</span>(<span class="ident">resolve_target</span>))<span class="question-mark">?</span>;
+                <span class="ident">check_multiview</span>(<span class="ident">resolve_view</span>)<span class="question-mark">?</span>;
                 <span class="kw">if</span> <span class="ident">color_view</span>.<span class="ident">extent</span> <span class="op">!</span><span class="op">=</span> <span class="ident">resolve_view</span>.<span class="ident">extent</span> {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::AttachmentsDimensionMismatch</span> {
                         <span class="ident">previous</span>: (<span class="ident">attachment_type_name</span>, <span class="ident">extent</span>.<span class="ident">unwrap_or_default</span>()),
@@ -3116,9 +3213,12 @@
             <span class="ident">depth_stencil</span>: <span class="ident">depth_stencil_attachment</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">at</span><span class="op">|</span> <span class="ident">view_guard</span>.<span class="ident">get</span>(<span class="ident">at</span>.<span class="ident">view</span>).<span class="ident">unwrap</span>()),
         };
         <span class="kw">let</span> <span class="ident">extent</span> <span class="op">=</span> <span class="ident">extent</span>.<span class="ident">ok_or</span>(<span class="ident">RenderPassErrorInner::MissingAttachments</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">multiview</span> <span class="op">=</span> <span class="ident">detected_multiview</span>.<span class="ident">expect</span>(<span class="string">&quot;Multiview was not detected, no attachments&quot;</span>);
         <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="ident">RenderPassContext</span> {
             <span class="ident">attachments</span>: <span class="ident">view_data</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">view</span><span class="op">|</span> <span class="ident">view</span>.<span class="ident">desc</span>.<span class="ident">format</span>),
             <span class="ident">sample_count</span>,
+            <span class="ident">multiview</span>,
         };
 
         <span class="kw">let</span> <span class="ident">hal_desc</span> <span class="op">=</span> <span class="ident">hal::RenderPassDescriptor</span> {
@@ -3127,6 +3227,7 @@
             <span class="ident">sample_count</span>,
             <span class="ident">color_attachments</span>: <span class="kw-2">&amp;</span><span class="ident">colors</span>,
             <span class="ident">depth_stencil_attachment</span>: <span class="ident">depth_stencil</span>,
+            <span class="ident">multiview</span>,
         };
         <span class="kw">unsafe</span> {
             <span class="ident">cmd_buf</span>.<span class="ident">encoder</span>.<span class="ident">raw</span>.<span class="ident">begin_render_pass</span>(<span class="kw-2">&amp;</span><span class="ident">hal_desc</span>);
@@ -3141,6 +3242,7 @@
             <span class="ident">_phantom</span>: <span class="ident">PhantomData</span>,
             <span class="ident">pending_discard_init_fixups</span>,
             <span class="ident">divergent_discarded_depth_stencil_aspect</span>,
+            <span class="ident">multiview</span>,
         })
     }
 
@@ -3203,6 +3305,7 @@
                     <span class="ident">stencil_ops</span>,
                     <span class="ident">clear_value</span>: (<span class="number">0.0</span>, <span class="number">0</span>),
                 }),
+                <span class="ident">multiview</span>: <span class="self">self</span>.<span class="ident">multiview</span>,
             };
             <span class="kw">unsafe</span> {
                 <span class="ident">raw</span>.<span class="ident">begin_render_pass</span>(<span class="kw-2">&amp;</span><span class="ident">desc</span>);
@@ -3284,6 +3387,7 @@
             );
 
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">RenderPassInfo::start</span>(
+                <span class="ident">device</span>,
                 <span class="ident">base</span>.<span class="ident">label</span>,
                 <span class="ident">color_attachments</span>,
                 <span class="ident">depth_stencil_attachment</span>,

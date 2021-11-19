@@ -1388,6 +1388,10 @@
 <span id="1388">1388</span>
 <span id="1389">1389</span>
 <span id="1390">1390</span>
+<span id="1391">1391</span>
+<span id="1392">1392</span>
+<span id="1393">1393</span>
+<span id="1394">1394</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 ## Software implementation
@@ -1444,7 +1448,7 @@ invalidations or index format changes.
     <span class="ident">Label</span>, <span class="ident">LabelHelpers</span>, <span class="ident">LifeGuard</span>, <span class="ident">Stored</span>,
 };
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">mem</span>, <span class="ident">ops::Range</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">mem</span>, <span class="ident">num::NonZeroU32</span>, <span class="ident">ops::Range</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident">hal::CommandEncoder</span> <span class="kw">as</span> <span class="kw">_</span>;
@@ -1465,6 +1469,8 @@ invalidations or index format changes.
     <span class="doccomment">/// Sample count this render bundle is capable of rendering to. This must match the pipelines and</span>
     <span class="doccomment">/// the renderpasses it is used in.</span>
     <span class="kw">pub</span> <span class="ident">sample_count</span>: <span class="ident">u32</span>,
+    <span class="doccomment">/// If this render bundle will rendering to multiple array layers in the attachments at the same time.</span>
+    <span class="kw">pub</span> <span class="ident">multiview</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonZeroU32</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -1502,6 +1508,7 @@ invalidations or index format changes.
                     }
                     <span class="ident">sc</span>
                 },
+                <span class="ident">multiview</span>: <span class="ident">desc</span>.<span class="ident">multiview</span>,
             },
             <span class="ident">is_ds_read_only</span>: <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">depth_stencil</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">ds</span>) =&gt; {
@@ -1525,6 +1532,7 @@ invalidations or index format changes.
                     <span class="ident">depth_stencil</span>: <span class="prelude-val">None</span>,
                 },
                 <span class="ident">sample_count</span>: <span class="number">0</span>,
+                <span class="ident">multiview</span>: <span class="prelude-val">None</span>,
             },
             <span class="ident">is_ds_read_only</span>: <span class="bool-val">false</span>,
         }

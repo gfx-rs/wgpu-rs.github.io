@@ -670,6 +670,8 @@
 <span id="670">670</span>
 <span id="671">671</span>
 <span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
 </pre><pre class="rust"><code><span class="doccomment">/*!
 # Vulkan API internals.
 
@@ -703,7 +705,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 <span class="kw">mod</span> <span class="ident">device</span>;
 <span class="kw">mod</span> <span class="ident">instance</span>;
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Borrow</span>, <span class="ident">ffi::CStr</span>, <span class="ident">sync::Arc</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Borrow</span>, <span class="ident">ffi::CStr</span>, <span class="ident">num::NonZeroU32</span>, <span class="ident">sync::Arc</span>};
 
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">ash</span>::{
@@ -882,6 +884,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     <span class="ident">colors</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">ColorAttachmentKey</span>, { <span class="ident"><span class="kw">crate</span>::MAX_COLOR_TARGETS</span> }<span class="op">&gt;</span>,
     <span class="ident">depth_stencil</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DepthStencilAttachmentKey</span><span class="op">&gt;</span>,
     <span class="ident">sample_count</span>: <span class="ident">u32</span>,
+    <span class="ident">multiview</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonZeroU32</span><span class="op">&gt;</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
@@ -1045,6 +1048,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureView</span> {
     <span class="ident">raw</span>: <span class="ident">vk::ImageView</span>,
+    <span class="ident">layers</span>: <span class="ident">NonZeroU32</span>,
     <span class="ident">attachment</span>: <span class="ident">FramebufferAttachment</span>,
 }
 

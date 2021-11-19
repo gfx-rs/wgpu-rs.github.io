@@ -760,6 +760,22 @@
 <span id="760">760</span>
 <span id="761">761</span>
 <span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
@@ -1141,6 +1157,15 @@
                 <span class="ident">vk_image_views</span>.<span class="ident">push</span>(<span class="ident">at</span>.<span class="ident">view</span>.<span class="ident">raw</span>);
                 <span class="ident">fb_key</span>.<span class="ident">attachments</span>.<span class="ident">push</span>(<span class="ident">at</span>.<span class="ident">view</span>.<span class="ident">attachment</span>.<span class="ident">clone</span>());
             }
+
+            <span class="comment">// Assert this attachment is valid for the detected multiview, as a sanity check</span>
+            <span class="comment">// The driver crash for this is really bad on AMD, so the check is worth it</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">multiview</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">multiview</span> {
+                <span class="macro">assert_eq!</span>(<span class="ident">cat</span>.<span class="ident">target</span>.<span class="ident">view</span>.<span class="ident">layers</span>, <span class="ident">multiview</span>);
+                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">resolve_target</span>) <span class="op">=</span> <span class="ident">cat</span>.<span class="ident">resolve_target</span> {
+                    <span class="macro">assert_eq!</span>(<span class="ident">resolve_target</span>.<span class="ident">view</span>.<span class="ident">layers</span>, <span class="ident">multiview</span>);
+                }
+            }
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">ds</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">depth_stencil_attachment</span> {
             <span class="ident">vk_clear_values</span>.<span class="ident">push</span>(<span class="ident">vk::ClearValue</span> {
@@ -1155,8 +1180,15 @@
                 <span class="ident">stencil_ops</span>: <span class="ident">ds</span>.<span class="ident">stencil_ops</span>,
             });
             <span class="ident">fb_key</span>.<span class="ident">attachments</span>.<span class="ident">push</span>(<span class="ident">ds</span>.<span class="ident">target</span>.<span class="ident">view</span>.<span class="ident">attachment</span>.<span class="ident">clone</span>());
+
+            <span class="comment">// Assert this attachment is valid for the detected multiview, as a sanity check</span>
+            <span class="comment">// The driver crash for this is really bad on AMD, so the check is worth it</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">multiview</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">multiview</span> {
+                <span class="macro">assert_eq!</span>(<span class="ident">ds</span>.<span class="ident">target</span>.<span class="ident">view</span>.<span class="ident">layers</span>, <span class="ident">multiview</span>);
+            }
         }
         <span class="ident">rp_key</span>.<span class="ident">sample_count</span> <span class="op">=</span> <span class="ident">fb_key</span>.<span class="ident">sample_count</span>;
+        <span class="ident">rp_key</span>.<span class="ident">multiview</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">multiview</span>;
 
         <span class="kw">let</span> <span class="ident">render_area</span> <span class="op">=</span> <span class="ident">vk::Rect2D</span> {
             <span class="ident">offset</span>: <span class="ident">vk::Offset2D</span> { <span class="ident">x</span>: <span class="number">0</span>, <span class="ident">y</span>: <span class="number">0</span> },
