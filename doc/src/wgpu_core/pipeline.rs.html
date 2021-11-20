@@ -361,6 +361,18 @@
 <span id="361">361</span>
 <span id="362">362</span>
 <span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{<span class="ident">CreateBindGroupLayoutError</span>, <span class="ident">CreatePipelineLayoutError</span>},
     <span class="ident">device</span>::{<span class="ident">DeviceError</span>, <span class="ident">MissingDownlevelFlags</span>, <span class="ident">MissingFeatures</span>, <span class="ident">RenderPassContext</span>},
@@ -368,8 +380,18 @@
     <span class="ident">id</span>::{<span class="ident">DeviceId</span>, <span class="ident">PipelineLayoutId</span>, <span class="ident">ShaderModuleId</span>},
     <span class="ident">validation</span>, <span class="ident">Label</span>, <span class="ident">LifeGuard</span>, <span class="ident">Stored</span>,
 };
+<span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">error::Error</span>, <span class="ident">fmt</span>, <span class="ident">num::NonZeroU32</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
+
+<span class="doccomment">/// Information about buffer bindings, which</span>
+<span class="doccomment">/// is validated against the shader (and pipeline)</span>
+<span class="doccomment">/// at draw time as opposed to initialization time.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">LateSizedBufferGroup</span> {
+    <span class="comment">// The order has to match `BindGroup::late_buffer_binding_sizes`.</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">shader_sizes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">wgt::BufferAddress</span><span class="op">&gt;</span>,
+}
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::large_enum_variant</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ShaderModuleSource</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
@@ -538,6 +560,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">raw</span>: <span class="ident">A::ComputePipeline</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">layout_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">PipelineLayoutId</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">device_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">DeviceId</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">late_sized_buffer_groups</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">LateSizedBufferGroup</span>, { <span class="ident">hal::MAX_BIND_GROUPS</span> }<span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>,
 }
 
@@ -714,6 +737,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">flags</span>: <span class="ident">PipelineFlags</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">strip_index_format</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">wgt::IndexFormat</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">vertex_strides</span>: <span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">wgt::BufferAddress</span>, <span class="ident">wgt::VertexStepMode</span>)<span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">late_sized_buffer_groups</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">LateSizedBufferGroup</span>, { <span class="ident">hal::MAX_BIND_GROUPS</span> }<span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>,
 }
 

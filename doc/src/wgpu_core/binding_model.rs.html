@@ -783,6 +783,18 @@
 <span id="783">783</span>
 <span id="784">784</span>
 <span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">device</span>::{<span class="ident">DeviceError</span>, <span class="ident">MissingDownlevelFlags</span>, <span class="ident">MissingFeatures</span>, <span class="ident">SHADER_STAGE_COUNT</span>},
     <span class="ident">error</span>::{<span class="ident">ErrorFormatter</span>, <span class="ident">PrettyError</span>},
@@ -1503,6 +1515,9 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">used_buffer_ranges</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BufferInitTrackerAction</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">used_texture_ranges</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TextureInitTrackerAction</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">dynamic_binding_info</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BindGroupDynamicBindingData</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Actual binding sizes for buffers that don&#39;t have `min_binding_size`</span>
+    <span class="doccomment">/// specified in BGL. Listed in the order of iteration of `BGL.entries`.</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">late_buffer_binding_sizes</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">wgt::BufferSize</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">BindGroup</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
@@ -1567,6 +1582,15 @@
     <span class="ident">InvalidPipeline</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;invalid group index {0}&quot;</span>)]</span>
     <span class="ident">InvalidGroupIndex</span>(<span class="ident">u32</span>),
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>, <span class="ident">PartialEq</span>)]</span>
+<span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Buffer is bound with size {bound_size} where the shader expects {shader_size} in group[{group_index}] compact index {compact_index}&quot;</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LateMinBufferBindingSizeMismatch</span> {
+    <span class="kw">pub</span> <span class="ident">group_index</span>: <span class="ident">u32</span>,
+    <span class="kw">pub</span> <span class="ident">compact_index</span>: <span class="ident">usize</span>,
+    <span class="kw">pub</span> <span class="ident">shader_size</span>: <span class="ident">wgt::BufferAddress</span>,
+    <span class="kw">pub</span> <span class="ident">bound_size</span>: <span class="ident">wgt::BufferAddress</span>,
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu_core" data-search-index-js="../../search-index.js" data-search-js="../../search.js"></div>

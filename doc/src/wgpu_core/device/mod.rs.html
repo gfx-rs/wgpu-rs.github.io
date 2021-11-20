@@ -5009,6 +5009,64 @@
 <span id="5009">5009</span>
 <span id="5010">5010</span>
 <span id="5011">5011</span>
+<span id="5012">5012</span>
+<span id="5013">5013</span>
+<span id="5014">5014</span>
+<span id="5015">5015</span>
+<span id="5016">5016</span>
+<span id="5017">5017</span>
+<span id="5018">5018</span>
+<span id="5019">5019</span>
+<span id="5020">5020</span>
+<span id="5021">5021</span>
+<span id="5022">5022</span>
+<span id="5023">5023</span>
+<span id="5024">5024</span>
+<span id="5025">5025</span>
+<span id="5026">5026</span>
+<span id="5027">5027</span>
+<span id="5028">5028</span>
+<span id="5029">5029</span>
+<span id="5030">5030</span>
+<span id="5031">5031</span>
+<span id="5032">5032</span>
+<span id="5033">5033</span>
+<span id="5034">5034</span>
+<span id="5035">5035</span>
+<span id="5036">5036</span>
+<span id="5037">5037</span>
+<span id="5038">5038</span>
+<span id="5039">5039</span>
+<span id="5040">5040</span>
+<span id="5041">5041</span>
+<span id="5042">5042</span>
+<span id="5043">5043</span>
+<span id="5044">5044</span>
+<span id="5045">5045</span>
+<span id="5046">5046</span>
+<span id="5047">5047</span>
+<span id="5048">5048</span>
+<span id="5049">5049</span>
+<span id="5050">5050</span>
+<span id="5051">5051</span>
+<span id="5052">5052</span>
+<span id="5053">5053</span>
+<span id="5054">5054</span>
+<span id="5055">5055</span>
+<span id="5056">5056</span>
+<span id="5057">5057</span>
+<span id="5058">5058</span>
+<span id="5059">5059</span>
+<span id="5060">5060</span>
+<span id="5061">5061</span>
+<span id="5062">5062</span>
+<span id="5063">5063</span>
+<span id="5064">5064</span>
+<span id="5065">5065</span>
+<span id="5066">5066</span>
+<span id="5067">5067</span>
+<span id="5068">5068</span>
+<span id="5069">5069</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -6128,6 +6186,44 @@
             .<span class="ident">collect</span>()
     }
 
+    <span class="doccomment">/// Generate information about late-validated buffer bindings for pipelines.</span>
+    <span class="comment">//TODO: should this be combined with `get_introspection_bind_group_layouts` in some way?</span>
+    <span class="kw">fn</span> <span class="ident">make_late_sized_buffer_groups</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
+        <span class="ident">shader_binding_sizes</span>: <span class="kw-2">&amp;</span><span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">naga::ResourceBinding</span>, <span class="ident">wgt::BufferSize</span><span class="op">&gt;</span>,
+        <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident">binding_model::PipelineLayout</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
+        <span class="ident">bgl_guard</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">binding_model::BindGroupLayout</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::BindGroupLayoutId</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">pipeline::LateSizedBufferGroup</span>, { <span class="ident">hal::MAX_BIND_GROUPS</span> }<span class="op">&gt;</span> {
+        <span class="comment">// Given the shader-required binding sizes and the pipeline layout,</span>
+        <span class="comment">// return the filtered list of them in the layout order,</span>
+        <span class="comment">// removing those with given `min_binding_size`.</span>
+        <span class="ident">layout</span>
+            .<span class="ident">bind_group_layout_ids</span>
+            .<span class="ident">iter</span>()
+            .<span class="ident">enumerate</span>()
+            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">group_index</span>, <span class="kw-2">&amp;</span><span class="ident">bgl_id</span>)<span class="op">|</span> <span class="ident">pipeline::LateSizedBufferGroup</span> {
+                <span class="ident">shader_sizes</span>: <span class="ident">bgl_guard</span>[<span class="ident">bgl_id</span>]
+                    .<span class="ident">entries</span>
+                    .<span class="ident">values</span>()
+                    .<span class="ident">filter_map</span>(<span class="op">|</span><span class="ident">entry</span><span class="op">|</span> <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">ty</span> {
+                        <span class="ident">wgt::BindingType::Buffer</span> {
+                            <span class="ident">min_binding_size</span>: <span class="prelude-val">None</span>,
+                            ..
+                        } =&gt; {
+                            <span class="kw">let</span> <span class="ident">rb</span> <span class="op">=</span> <span class="ident">naga::ResourceBinding</span> {
+                                <span class="ident">group</span>: <span class="ident">group_index</span> <span class="kw">as</span> <span class="ident">u32</span>,
+                                <span class="ident">binding</span>: <span class="ident">entry</span>.<span class="ident">binding</span>,
+                            };
+                            <span class="kw">let</span> <span class="ident">shader_size</span> <span class="op">=</span>
+                                <span class="ident">shader_binding_sizes</span>.<span class="ident">get</span>(<span class="kw-2">&amp;</span><span class="ident">rb</span>).<span class="ident">map_or</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">nz</span><span class="op">|</span> <span class="ident">nz</span>.<span class="ident">get</span>());
+                            <span class="prelude-val">Some</span>(<span class="ident">shader_size</span>)
+                        }
+                        <span class="kw">_</span> =&gt; <span class="prelude-val">None</span>,
+                    })
+                    .<span class="ident">collect</span>(),
+            })
+            .<span class="ident">collect</span>()
+    }
+
     <span class="kw">fn</span> <span class="ident">create_bind_group_layout</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">self_id</span>: <span class="ident">id::DeviceId</span>,
@@ -6307,6 +6403,7 @@
         <span class="ident">decl</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::BindGroupLayoutEntry</span>,
         <span class="ident">used_buffer_ranges</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BufferInitTrackerAction</span><span class="op">&gt;</span>,
         <span class="ident">dynamic_binding_info</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">binding_model::BindGroupDynamicBindingData</span><span class="op">&gt;</span>,
+        <span class="ident">late_buffer_binding_sizes</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">wgt::BufferSize</span><span class="op">&gt;</span>,
         <span class="ident">used</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TrackerSet</span>,
         <span class="ident">storage</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">resource::Buffer</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>, <span class="ident">id::BufferId</span><span class="op">&gt;</span>,
         <span class="ident">limits</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::Limits</span>,
@@ -6404,8 +6501,10 @@
                     <span class="ident">min</span>: <span class="ident">min_size</span>,
                 });
             }
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">bind_size</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">Error::BindingZeroSize</span>(<span class="ident">bb</span>.<span class="ident">buffer_id</span>));
+        } <span class="kw">else</span> {
+            <span class="kw">let</span> <span class="ident">late_size</span> <span class="op">=</span>
+                <span class="ident">wgt::BufferSize::new</span>(<span class="ident">bind_size</span>).<span class="ident">ok_or</span>(<span class="ident">Error::BindingZeroSize</span>(<span class="ident">bb</span>.<span class="ident">buffer_id</span>))<span class="question-mark">?</span>;
+            <span class="ident">late_buffer_binding_sizes</span>.<span class="ident">push</span>(<span class="ident">late_size</span>);
         }
 
         <span class="macro">assert_eq!</span>(<span class="ident">bb</span>.<span class="ident">offset</span> <span class="op">%</span> <span class="ident">wgt::COPY_BUFFER_ALIGNMENT</span>, <span class="number">0</span>);
@@ -6481,6 +6580,7 @@
         <span class="comment">// TODO: arrayvec/smallvec</span>
         <span class="comment">// Record binding info for dynamic offset validation</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dynamic_binding_info</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">late_buffer_binding_sizes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="comment">// fill out the descriptors</span>
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">used</span> <span class="op">=</span> <span class="ident">TrackerSet::new</span>(<span class="ident">A::VARIANT</span>);
 
@@ -6510,6 +6610,7 @@
                         <span class="ident">decl</span>,
                         <span class="kw-2">&amp;mut</span> <span class="ident">used_buffer_ranges</span>,
                         <span class="kw-2">&amp;mut</span> <span class="ident">dynamic_binding_info</span>,
+                        <span class="kw-2">&amp;mut</span> <span class="ident">late_buffer_binding_sizes</span>,
                         <span class="kw-2">&amp;mut</span> <span class="ident">used</span>,
                         <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>,
                         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">limits</span>,
@@ -6531,6 +6632,7 @@
                             <span class="ident">decl</span>,
                             <span class="kw-2">&amp;mut</span> <span class="ident">used_buffer_ranges</span>,
                             <span class="kw-2">&amp;mut</span> <span class="ident">dynamic_binding_info</span>,
+                            <span class="kw-2">&amp;mut</span> <span class="ident">late_buffer_binding_sizes</span>,
                             <span class="kw-2">&amp;mut</span> <span class="ident">used</span>,
                             <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">buffer_guard</span>,
                             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">limits</span>,
@@ -6685,6 +6787,7 @@
             <span class="ident">used_buffer_ranges</span>,
             <span class="ident">used_texture_ranges</span>,
             <span class="ident">dynamic_binding_info</span>,
+            <span class="ident">late_buffer_binding_sizes</span>,
         })
     }
 
@@ -7025,6 +7128,7 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">derived_group_layouts</span> <span class="op">=</span>
             <span class="ident">ArrayVec</span>::<span class="op">&lt;</span><span class="ident">binding_model::BindEntryMap</span>, { <span class="ident">hal::MAX_BIND_GROUPS</span> }<span class="op">&gt;</span><span class="ident">::new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">shader_binding_sizes</span> <span class="op">=</span> <span class="ident">FastHashMap::default</span>();
 
         <span class="kw">let</span> <span class="ident">io</span> <span class="op">=</span> <span class="ident">validation::StageIo::default</span>();
         <span class="kw">let</span> (<span class="ident">shader_module_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">shader_modules</span>.<span class="ident">read</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
@@ -7053,6 +7157,7 @@
                 <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">interface</span>.<span class="ident">check_stage</span>(
                     <span class="ident">provided_layouts</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">as_slice</span>()),
                     <span class="kw-2">&amp;mut</span> <span class="ident">derived_group_layouts</span>,
+                    <span class="kw-2">&amp;mut</span> <span class="ident">shader_binding_sizes</span>,
                     <span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">stage</span>.<span class="ident">entry_point</span>,
                     <span class="ident">flag</span>,
                     <span class="ident">io</span>,
@@ -7073,6 +7178,9 @@
         <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">pipeline_layout_guard</span>
             .<span class="ident">get</span>(<span class="ident">pipeline_layout_id</span>)
             .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">pipeline::CreateComputePipelineError::InvalidLayout</span>)<span class="question-mark">?</span>;
+
+        <span class="kw">let</span> <span class="ident">late_sized_buffer_groups</span> <span class="op">=</span>
+            <span class="ident">Device::make_late_sized_buffer_groups</span>(<span class="kw-2">&amp;</span><span class="ident">shader_binding_sizes</span>, <span class="ident">layout</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">bgl_guard</span>);
 
         <span class="kw">let</span> <span class="ident">pipeline_desc</span> <span class="op">=</span> <span class="ident">hal::ComputePipelineDescriptor</span> {
             <span class="ident">label</span>: <span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_option</span>(),
@@ -7108,6 +7216,7 @@
                 <span class="ident">value</span>: <span class="ident">id::Valid</span>(<span class="ident">self_id</span>),
                 <span class="ident">ref_count</span>: <span class="self">self</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>(),
             },
+            <span class="ident">late_sized_buffer_groups</span>,
             <span class="ident">life_guard</span>: <span class="ident">LifeGuard::new</span>(<span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_or_default</span>()),
         };
         <span class="prelude-val">Ok</span>(<span class="ident">pipeline</span>)
@@ -7137,6 +7246,7 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">derived_group_layouts</span> <span class="op">=</span>
             <span class="ident">ArrayVec</span>::<span class="op">&lt;</span><span class="ident">binding_model::BindEntryMap</span>, { <span class="ident">hal::MAX_BIND_GROUPS</span> }<span class="op">&gt;</span><span class="ident">::new</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">shader_binding_sizes</span> <span class="op">=</span> <span class="ident">FastHashMap::default</span>();
 
         <span class="kw">let</span> <span class="ident">color_targets</span> <span class="op">=</span> <span class="ident">desc</span>
             .<span class="ident">fragment</span>
@@ -7360,6 +7470,7 @@
                     .<span class="ident">check_stage</span>(
                         <span class="ident">provided_layouts</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">as_slice</span>()),
                         <span class="kw-2">&amp;mut</span> <span class="ident">derived_group_layouts</span>,
+                        <span class="kw-2">&amp;mut</span> <span class="ident">shader_binding_sizes</span>,
                         <span class="kw-2">&amp;</span><span class="ident">stage</span>.<span class="ident">entry_point</span>,
                         <span class="ident">flag</span>,
                         <span class="ident">io</span>,
@@ -7405,6 +7516,7 @@
                             .<span class="ident">check_stage</span>(
                                 <span class="ident">provided_layouts</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">p</span><span class="op">|</span> <span class="ident">p</span>.<span class="ident">as_slice</span>()),
                                 <span class="kw-2">&amp;mut</span> <span class="ident">derived_group_layouts</span>,
+                                <span class="kw-2">&amp;mut</span> <span class="ident">shader_binding_sizes</span>,
                                 <span class="kw-2">&amp;</span><span class="ident">fragment</span>.<span class="ident">stage</span>.<span class="ident">entry_point</span>,
                                 <span class="ident">flag</span>,
                                 <span class="ident">io</span>,
@@ -7479,6 +7591,9 @@
             <span class="self">self</span>.<span class="ident">require_features</span>(<span class="ident">wgt::Features::MULTIVIEW</span>)<span class="question-mark">?</span>;
         }
 
+        <span class="kw">let</span> <span class="ident">late_sized_buffer_groups</span> <span class="op">=</span>
+            <span class="ident">Device::make_late_sized_buffer_groups</span>(<span class="kw-2">&amp;</span><span class="ident">shader_binding_sizes</span>, <span class="ident">layout</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">bgl_guard</span>);
+
         <span class="kw">let</span> <span class="ident">pipeline_desc</span> <span class="op">=</span> <span class="ident">hal::RenderPipelineDescriptor</span> {
             <span class="ident">label</span>: <span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_option</span>(),
             <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident">layout</span>.<span class="ident">raw</span>,
@@ -7550,6 +7665,7 @@
             <span class="ident">flags</span>,
             <span class="ident">strip_index_format</span>: <span class="ident">desc</span>.<span class="ident">primitive</span>.<span class="ident">strip_index_format</span>,
             <span class="ident">vertex_strides</span>,
+            <span class="ident">late_sized_buffer_groups</span>,
             <span class="ident">life_guard</span>: <span class="ident">LifeGuard::new</span>(<span class="ident">desc</span>.<span class="ident">label</span>.<span class="ident">borrow_or_default</span>()),
         };
         <span class="prelude-val">Ok</span>(<span class="ident">pipeline</span>)
