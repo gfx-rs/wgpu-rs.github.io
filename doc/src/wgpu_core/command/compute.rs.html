@@ -1205,7 +1205,7 @@
         <span class="ident">base</span>: <span class="ident">BasePassRef</span><span class="op">&lt;</span><span class="ident">ComputeCommand</span><span class="op">&gt;</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">ComputePassError</span><span class="op">&gt;</span> {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;run_compute_pass&quot;</span>, <span class="string">&quot;CommandEncoder&quot;</span>);
-        <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Pass</span>(<span class="ident">encoder_id</span>);
+        <span class="kw">let</span> <span class="ident">init_scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Pass</span>(<span class="ident">encoder_id</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
@@ -1213,8 +1213,8 @@
         <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
 
         <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">cmd_buf_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">command_buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
-        <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span>
-            <span class="ident">CommandBuffer::get_encoder_mut</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">encoder_id</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">cmd_buf</span> <span class="op">=</span> <span class="ident">CommandBuffer::get_encoder_mut</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">cmd_buf_guard</span>, <span class="ident">encoder_id</span>)
+            .<span class="ident">map_pass_err</span>(<span class="ident">init_scope</span>)<span class="question-mark">?</span>;
         <span class="comment">// will be reset to true if recording is done without errors</span>
         <span class="ident">cmd_buf</span>.<span class="ident">status</span> <span class="op">=</span> <span class="ident">CommandEncoderStatus::Error</span>;
         <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">cmd_buf</span>.<span class="ident">encoder</span>.<span class="ident">open</span>();

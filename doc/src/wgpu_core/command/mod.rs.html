@@ -487,6 +487,18 @@
 <span id="486">486</span>
 <span id="487">487</span>
 <span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
 </pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">bind</span>;
 <span class="kw">mod</span> <span class="ident">bundle</span>;
 <span class="kw">mod</span> <span class="ident">clear</span>;
@@ -545,6 +557,13 @@
         }
     }
 
+    <span class="kw">fn</span> <span class="ident">discard</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_open</span> {
+            <span class="self">self</span>.<span class="ident">is_open</span> <span class="op">=</span> <span class="bool-val">false</span>;
+            <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">discard_encoding</span>() };
+        }
+    }
+
     <span class="kw">fn</span> <span class="ident">open</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">A::CommandEncoder</span> {
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">is_open</span> {
             <span class="self">self</span>.<span class="ident">is_open</span> <span class="op">=</span> <span class="bool-val">true</span>;
@@ -552,6 +571,11 @@
             <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">begin_encoding</span>(<span class="ident">label</span>).<span class="ident">unwrap</span>() };
         }
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">raw</span>
+    }
+
+    <span class="kw">fn</span> <span class="ident">open_pass</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">label</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">&gt;</span>) {
+        <span class="self">self</span>.<span class="ident">is_open</span> <span class="op">=</span> <span class="bool-val">true</span>;
+        <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">begin_encoding</span>(<span class="ident">label</span>).<span class="ident">unwrap</span>() };
     }
 }
 
@@ -776,7 +800,7 @@
                 }
                 <span class="ident">CommandEncoderStatus::Finished</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">CommandEncoderError::NotRecording</span>),
                 <span class="ident">CommandEncoderStatus::Error</span> =&gt; {
-                    <span class="ident">cmd_buf</span>.<span class="ident">encoder</span>.<span class="ident">close</span>();
+                    <span class="ident">cmd_buf</span>.<span class="ident">encoder</span>.<span class="ident">discard</span>();
                     <span class="prelude-val">Some</span>(<span class="ident">CommandEncoderError::Invalid</span>)
                 }
             },
