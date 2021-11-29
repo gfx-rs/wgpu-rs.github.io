@@ -1152,19 +1152,6 @@
 <span id="1151">1151</span>
 <span id="1152">1152</span>
 <span id="1153">1153</span>
-<span id="1154">1154</span>
-<span id="1155">1155</span>
-<span id="1156">1156</span>
-<span id="1157">1157</span>
-<span id="1158">1158</span>
-<span id="1159">1159</span>
-<span id="1160">1160</span>
-<span id="1161">1161</span>
-<span id="1162">1162</span>
-<span id="1163">1163</span>
-<span id="1164">1164</span>
-<span id="1165">1165</span>
-<span id="1166">1166</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::auxil::map_naga_stage</span>;
 <span class="kw">use</span> <span class="ident">glow::HasContext</span>;
@@ -1724,82 +1711,34 @@
             <span class="ident"><span class="kw">super</span>::TextureInner::Renderbuffer</span> { <span class="ident">raw</span> }
         } <span class="kw">else</span> {
             <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">create_texture</span>().<span class="ident">unwrap</span>();
-            <span class="comment">//HACK: detect a cube map</span>
-            <span class="kw">let</span> <span class="ident">cube_count</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="op">==</span> <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">height</span>
-                <span class="op">&amp;&amp;</span> <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">%</span> <span class="number">6</span> <span class="op">==</span> <span class="number">0</span>
-            {
-                <span class="prelude-val">Some</span>(<span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">/</span> <span class="number">6</span>)
-            } <span class="kw">else</span> {
-                <span class="prelude-val">None</span>
-            };
-            <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">dimension</span> {
+            <span class="kw">let</span> (<span class="ident">target</span>, <span class="ident">is_3d</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">dimension</span> {
                 <span class="ident">wgt::TextureDimension::D1</span> <span class="op">|</span> <span class="ident">wgt::TextureDimension::D2</span> =&gt; {
-                    <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">sample_count</span> <span class="op">&gt;</span> <span class="number">1</span> {
-                        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">glow::TEXTURE_2D</span>;
-                        <span class="ident">gl</span>.<span class="ident">bind_texture</span>(<span class="ident">target</span>, <span class="prelude-val">Some</span>(<span class="ident">raw</span>));
-                        <span class="ident">gl</span>.<span class="ident">tex_storage_2d_multisample</span>(
-                            <span class="ident">target</span>,
-                            <span class="ident">desc</span>.<span class="ident">sample_count</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">format_desc</span>.<span class="ident">internal</span>,
-                            <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="bool-val">true</span>,
-                        );
-                        <span class="ident">target</span>
-                    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">&gt;</span> <span class="number">1</span> <span class="op">&amp;&amp;</span> <span class="ident">cube_count</span> <span class="op">!</span><span class="op">=</span> <span class="prelude-val">Some</span>(<span class="number">1</span>) {
-                        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">cube_count</span> {
-                            <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="ident">glow::TEXTURE_CUBE_MAP_ARRAY</span>,
-                            <span class="prelude-val">None</span> =&gt; <span class="ident">glow::TEXTURE_2D_ARRAY</span>,
+                    <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">&gt;</span> <span class="number">1</span> {
+                        <span class="comment">//HACK: detect a cube map</span>
+                        <span class="kw">let</span> <span class="ident">cube_count</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="op">==</span> <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">height</span>
+                            <span class="op">&amp;&amp;</span> <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">%</span> <span class="number">6</span> <span class="op">==</span> <span class="number">0</span>
+                        {
+                            <span class="prelude-val">Some</span>(<span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">/</span> <span class="number">6</span>)
+                        } <span class="kw">else</span> {
+                            <span class="prelude-val">None</span>
                         };
-                        <span class="ident">gl</span>.<span class="ident">bind_texture</span>(<span class="ident">target</span>, <span class="prelude-val">Some</span>(<span class="ident">raw</span>));
-                        <span class="ident">gl</span>.<span class="ident">tex_storage_3d</span>(
-                            <span class="ident">target</span>,
-                            <span class="ident">desc</span>.<span class="ident">mip_level_count</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">format_desc</span>.<span class="ident">internal</span>,
-                            <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                        );
-                        <span class="ident">target</span>
+                        <span class="kw">match</span> <span class="ident">cube_count</span> {
+                            <span class="prelude-val">None</span> =&gt; (<span class="ident">glow::TEXTURE_2D_ARRAY</span>, <span class="bool-val">true</span>),
+                            <span class="prelude-val">Some</span>(<span class="number">1</span>) =&gt; (<span class="ident">glow::TEXTURE_CUBE_MAP</span>, <span class="bool-val">false</span>),
+                            <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; (<span class="ident">glow::TEXTURE_CUBE_MAP_ARRAY</span>, <span class="bool-val">true</span>),
+                        }
                     } <span class="kw">else</span> {
-                        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">cube_count</span> {
-                            <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; <span class="ident">glow::TEXTURE_CUBE_MAP</span>,
-                            <span class="prelude-val">None</span> =&gt; <span class="ident">glow::TEXTURE_2D</span>,
-                        };
-                        <span class="ident">gl</span>.<span class="ident">bind_texture</span>(<span class="ident">target</span>, <span class="prelude-val">Some</span>(<span class="ident">raw</span>));
-                        <span class="ident">gl</span>.<span class="ident">tex_storage_2d</span>(
-                            <span class="ident">target</span>,
-                            <span class="ident">desc</span>.<span class="ident">mip_level_count</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">format_desc</span>.<span class="ident">internal</span>,
-                            <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                            <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                        );
-                        <span class="ident">target</span>
+                        (<span class="ident">glow::TEXTURE_2D</span>, <span class="bool-val">false</span>)
                     }
                 }
                 <span class="ident">wgt::TextureDimension::D3</span> =&gt; {
                     <span class="ident">copy_size</span>.<span class="ident">depth</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span>;
-                    <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">glow::TEXTURE_3D</span>;
-                    <span class="ident">gl</span>.<span class="ident">bind_texture</span>(<span class="ident">target</span>, <span class="prelude-val">Some</span>(<span class="ident">raw</span>));
-                    <span class="ident">gl</span>.<span class="ident">tex_storage_3d</span>(
-                        <span class="ident">target</span>,
-                        <span class="ident">desc</span>.<span class="ident">mip_level_count</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                        <span class="ident">format_desc</span>.<span class="ident">internal</span>,
-                        <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                        <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                        <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                    );
-                    <span class="ident">target</span>
+                    (<span class="ident">glow::TEXTURE_3D</span>, <span class="bool-val">true</span>)
                 }
             };
 
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>))]</span>
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">label</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">label</span> {
-                <span class="kw">if</span> <span class="ident">gl</span>.<span class="ident">supports_debug</span>() {
-                    <span class="ident">gl</span>.<span class="ident">object_label</span>(<span class="ident">glow::TEXTURE</span>, <span class="ident">mem::transmute</span>(<span class="ident">raw</span>), <span class="prelude-val">Some</span>(<span class="ident">label</span>));
-                }
-            }
-
+            <span class="ident">gl</span>.<span class="ident">bind_texture</span>(<span class="ident">target</span>, <span class="prelude-val">Some</span>(<span class="ident">raw</span>));
+            <span class="comment">//Note: this has to be done before defining the storage!</span>
             <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">format</span>.<span class="ident">describe</span>().<span class="ident">sample_type</span> {
                 <span class="ident">wgt::TextureSampleType::Float</span> { <span class="ident">filterable</span>: <span class="bool-val">false</span> }
                 <span class="op">|</span> <span class="ident">wgt::TextureSampleType::Uint</span>
@@ -1810,6 +1749,41 @@
                 }
                 <span class="ident">wgt::TextureSampleType::Float</span> { <span class="ident">filterable</span>: <span class="bool-val">true</span> }
                 <span class="op">|</span> <span class="ident">wgt::TextureSampleType::Depth</span> =&gt; {}
+            }
+
+            <span class="kw">if</span> <span class="ident">is_3d</span> {
+                <span class="ident">gl</span>.<span class="ident">tex_storage_3d</span>(
+                    <span class="ident">target</span>,
+                    <span class="ident">desc</span>.<span class="ident">mip_level_count</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    <span class="ident">format_desc</span>.<span class="ident">internal</span>,
+                    <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                );
+            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">sample_count</span> <span class="op">&gt;</span> <span class="number">1</span> {
+                <span class="ident">gl</span>.<span class="ident">tex_storage_2d_multisample</span>(
+                    <span class="ident">target</span>,
+                    <span class="ident">desc</span>.<span class="ident">sample_count</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    <span class="ident">format_desc</span>.<span class="ident">internal</span>,
+                    <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    <span class="bool-val">true</span>,
+                );
+            } <span class="kw">else</span> {
+                <span class="ident">gl</span>.<span class="ident">tex_storage_2d</span>(
+                    <span class="ident">target</span>,
+                    <span class="ident">desc</span>.<span class="ident">mip_level_count</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    <span class="ident">format_desc</span>.<span class="ident">internal</span>,
+                    <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    <span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                );
+            }
+
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>))]</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">label</span>) <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">label</span> {
+                <span class="kw">if</span> <span class="ident">gl</span>.<span class="ident">supports_debug</span>() {
+                    <span class="ident">gl</span>.<span class="ident">object_label</span>(<span class="ident">glow::TEXTURE</span>, <span class="ident">mem::transmute</span>(<span class="ident">raw</span>), <span class="prelude-val">Some</span>(<span class="ident">label</span>));
+                }
             }
 
             <span class="ident">gl</span>.<span class="ident">bind_texture</span>(<span class="ident">target</span>, <span class="prelude-val">None</span>);
