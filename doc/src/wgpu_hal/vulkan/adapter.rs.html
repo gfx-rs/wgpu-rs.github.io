@@ -1469,6 +1469,17 @@
 <span id="1468">1468</span>
 <span id="1469">1469</span>
 <span id="1470">1470</span>
+<span id="1471">1471</span>
+<span id="1472">1472</span>
+<span id="1473">1473</span>
+<span id="1474">1474</span>
+<span id="1475">1475</span>
+<span id="1476">1476</span>
+<span id="1477">1477</span>
+<span id="1478">1478</span>
+<span id="1479">1479</span>
+<span id="1480">1480</span>
+<span id="1481">1481</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">extensions::khr</span>, <span class="ident">vk</span>};
@@ -2201,16 +2212,17 @@
                 <span class="comment">// Get this now to avoid borrowing conflicts later</span>
                 <span class="kw">let</span> <span class="ident">supports_descriptor_indexing</span> <span class="op">=</span>
                     <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::ExtDescriptorIndexingFn::name</span>());
+                <span class="comment">// Always add Vk1.2 structure. Will be skipped if unknown.</span>
+                <span class="comment">//Note: we can&#39;t check if conditional on Vulkan version here, because</span>
+                <span class="comment">// we only have the `VkInstance` version but not `VkPhysicalDevice` one.</span>
+                <span class="kw">let</span> <span class="ident">vk12_next</span> <span class="op">=</span> <span class="ident">capabilities</span>
+                    .<span class="ident">vulkan_1_2</span>
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceVulkan12Properties::builder</span>().<span class="ident">build</span>());
 
                 <span class="kw">let</span> <span class="ident">core</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceProperties::builder</span>().<span class="ident">build</span>();
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceProperties2::builder</span>().<span class="ident">properties</span>(<span class="ident">core</span>);
-
-                <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">vk::API_VERSION_1_2</span> {
-                    <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">capabilities</span>
-                        .<span class="ident">vulkan_1_2</span>
-                        .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceVulkan12Properties::builder</span>().<span class="ident">build</span>());
-                    <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
-                }
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceProperties2::builder</span>()
+                    .<span class="ident">properties</span>(<span class="ident">core</span>)
+                    .<span class="ident">push_next</span>(<span class="ident">vk12_next</span>);
 
                 <span class="kw">if</span> <span class="ident">supports_descriptor_indexing</span> {
                     <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">capabilities</span>.<span class="ident">descriptor_indexing</span>.<span class="ident">insert</span>(
@@ -2222,6 +2234,10 @@
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">properites2</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">build</span>();
                 <span class="kw">unsafe</span> {
                     <span class="ident">get_device_properties</span>.<span class="ident">get_physical_device_properties2</span>(<span class="ident">phd</span>, <span class="kw-2">&amp;mut</span> <span class="ident">properites2</span>);
+                }
+                <span class="comment">// clean up Vk1.2 stuff if not supported</span>
+                <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&lt;</span> <span class="ident">vk::API_VERSION_1_2</span> {
+                    <span class="ident">capabilities</span>.<span class="ident">vulkan_1_2</span> <span class="op">=</span> <span class="prelude-val">None</span>;
                 }
                 <span class="ident">properites2</span>.<span class="ident">properties</span>
             } <span class="kw">else</span> {
@@ -2392,13 +2408,19 @@
                 <span class="op">|</span><span class="op">|</span> <span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrMaintenance1Fn::name</span>()),
             <span class="ident">imageless_framebuffers</span>: <span class="kw">match</span> <span class="ident">phd_features</span>.<span class="ident">vulkan_1_2</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">features</span>) =&gt; <span class="ident">features</span>.<span class="ident">imageless_framebuffer</span> <span class="op">==</span> <span class="ident">vk::TRUE</span>,
-                <span class="prelude-val">None</span> =&gt; <span class="ident">phd_features</span>.<span class="ident">imageless_framebuffer</span>.<span class="ident">is_some</span>(),
+                <span class="prelude-val">None</span> =&gt; <span class="kw">match</span> <span class="ident">phd_features</span>.<span class="ident">imageless_framebuffer</span> {
+                    <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">ext</span>) =&gt; <span class="ident">ext</span>.<span class="ident">imageless_framebuffer</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
+                    <span class="prelude-val">None</span> =&gt; <span class="bool-val">false</span>,
+                },
             },
             <span class="ident">image_view_usage</span>: <span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">vk::API_VERSION_1_1</span>
                 <span class="op">|</span><span class="op">|</span> <span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrMaintenance2Fn::name</span>()),
             <span class="ident">timeline_semaphores</span>: <span class="kw">match</span> <span class="ident">phd_features</span>.<span class="ident">vulkan_1_2</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">features</span>) =&gt; <span class="ident">features</span>.<span class="ident">timeline_semaphore</span> <span class="op">==</span> <span class="ident">vk::TRUE</span>,
-                <span class="prelude-val">None</span> =&gt; <span class="ident">phd_features</span>.<span class="ident">timeline_semaphore</span>.<span class="ident">is_some</span>(),
+                <span class="prelude-val">None</span> =&gt; <span class="kw">match</span> <span class="ident">phd_features</span>.<span class="ident">timeline_semaphore</span> {
+                    <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">ext</span>) =&gt; <span class="ident">ext</span>.<span class="ident">timeline_semaphore</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
+                    <span class="prelude-val">None</span> =&gt; <span class="bool-val">false</span>,
+                },
             },
             <span class="ident">texture_d24</span>: <span class="kw">unsafe</span> {
                 <span class="self">self</span>.<span class="ident">shared</span>
