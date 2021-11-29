@@ -912,6 +912,7 @@
 <span id="911">911</span>
 <span id="912">912</span>
 <span id="913">913</span>
+<span id="914">914</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">conv</span>, <span class="ident">Command</span> <span class="kw">as</span> <span class="ident">C</span>};
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">mem</span>, <span class="ident">ops::Range</span>};
@@ -1033,16 +1034,17 @@
 
     <span class="kw">fn</span> <span class="ident">rebind_sampler_states</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">dirty_textures</span>: <span class="ident">u32</span>, <span class="ident">dirty_samplers</span>: <span class="ident">u32</span>) {
         <span class="kw">for</span> (<span class="ident">texture_index</span>, <span class="ident">slot</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">texture_slots</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">sampler_index</span>) <span class="op">=</span> <span class="ident">slot</span>.<span class="ident">sampler_index</span> {
-                <span class="kw">if</span> <span class="ident">dirty_textures</span> <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">texture_index</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>
-                    <span class="op">|</span><span class="op">|</span> <span class="ident">dirty_samplers</span> <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">sampler_index</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>
-                {
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">sampler</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">samplers</span>[<span class="ident">sampler_index</span> <span class="kw">as</span> <span class="ident">usize</span>] {
-                        <span class="self">self</span>.<span class="ident">cmd_buffer</span>
-                            .<span class="ident">commands</span>
-                            .<span class="ident">push</span>(<span class="ident">C::BindSampler</span>(<span class="ident">texture_index</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">sampler</span>));
-                    }
-                }
+            <span class="kw">if</span> <span class="ident">dirty_textures</span> <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">texture_index</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>
+                <span class="op">|</span><span class="op">|</span> <span class="ident">slot</span>
+                    .<span class="ident">sampler_index</span>
+                    .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">si</span><span class="op">|</span> <span class="ident">dirty_samplers</span> <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">si</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>)
+            {
+                <span class="kw">let</span> <span class="ident">sampler</span> <span class="op">=</span> <span class="ident">slot</span>
+                    .<span class="ident">sampler_index</span>
+                    .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">si</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">samplers</span>[<span class="ident">si</span> <span class="kw">as</span> <span class="ident">usize</span>]);
+                <span class="self">self</span>.<span class="ident">cmd_buffer</span>
+                    .<span class="ident">commands</span>
+                    .<span class="ident">push</span>(<span class="ident">C::BindSampler</span>(<span class="ident">texture_index</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="ident">sampler</span>));
             }
         }
     }
