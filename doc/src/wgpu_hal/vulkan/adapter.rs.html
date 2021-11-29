@@ -1469,29 +1469,12 @@
 <span id="1468">1468</span>
 <span id="1469">1469</span>
 <span id="1470">1470</span>
-<span id="1471">1471</span>
-<span id="1472">1472</span>
-<span id="1473">1473</span>
-<span id="1474">1474</span>
-<span id="1475">1475</span>
-<span id="1476">1476</span>
-<span id="1477">1477</span>
-<span id="1478">1478</span>
-<span id="1479">1479</span>
-<span id="1480">1480</span>
-<span id="1481">1481</span>
-<span id="1482">1482</span>
-<span id="1483">1483</span>
-<span id="1484">1484</span>
-<span id="1485">1485</span>
-<span id="1486">1486</span>
-<span id="1487">1487</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">extensions::khr</span>, <span class="ident">vk</span>};
 <span class="kw">use</span> <span class="ident">parking_lot::Mutex</span>;
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">ffi::CStr</span>, <span class="ident">mem</span>, <span class="ident">ptr</span>, <span class="ident">sync::Arc</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">ffi::CStr</span>, <span class="ident">sync::Arc</span>};
 
 <span class="comment">//TODO: const fn?</span>
 <span class="kw">fn</span> <span class="ident">indexing_features</span>() -&gt; <span class="ident">wgt::Features</span> {
@@ -2045,6 +2028,9 @@
             <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">vk::KhrMaintenance1Fn::name</span>());
             <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">vk::KhrMaintenance2Fn::name</span>());
 
+            <span class="comment">// `VK_KHR_storage_buffer_storage_class` required for Naga on Vulkan 1.0 devices</span>
+            <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">vk::KhrStorageBufferStorageClassFn::name</span>());
+
             <span class="comment">// Below Vulkan 1.1 we can get multiview from an extension</span>
             <span class="kw">if</span> <span class="ident">requested_features</span>.<span class="ident">contains</span>(<span class="ident">wgt::Features::MULTIVIEW</span>) {
                 <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">vk::KhrMultiviewFn::name</span>());
@@ -2212,32 +2198,30 @@
             <span class="ident">capabilities</span>.<span class="ident">properties</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">get_device_properties</span>) <span class="op">=</span>
                 <span class="self">self</span>.<span class="ident">get_physical_device_properties</span>
             {
+                <span class="comment">// Get this now to avoid borrowing conflicts later</span>
+                <span class="kw">let</span> <span class="ident">supports_descriptor_indexing</span> <span class="op">=</span>
+                    <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::ExtDescriptorIndexingFn::name</span>());
+
                 <span class="kw">let</span> <span class="ident">core</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceProperties::builder</span>().<span class="ident">build</span>();
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">properites2</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceProperties2::builder</span>()
-                    .<span class="ident">properties</span>(<span class="ident">core</span>)
-                    .<span class="ident">build</span>();
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceProperties2::builder</span>().<span class="ident">properties</span>(<span class="ident">core</span>);
 
                 <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">vk::API_VERSION_1_2</span> {
-                    <span class="ident">capabilities</span>.<span class="ident">vulkan_1_2</span> <span class="op">=</span>
-                        <span class="prelude-val">Some</span>(<span class="ident">vk::PhysicalDeviceVulkan12Properties::builder</span>().<span class="ident">build</span>());
-
-                    <span class="kw">let</span> <span class="ident">mut_ref</span> <span class="op">=</span> <span class="ident">capabilities</span>.<span class="ident">vulkan_1_2</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>();
-                    <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span>
-                        <span class="ident">mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="ident">properites2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>);
+                    <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">capabilities</span>
+                        .<span class="ident">vulkan_1_2</span>
+                        .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceVulkan12Properties::builder</span>().<span class="ident">build</span>());
+                    <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
                 }
 
-                <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::ExtDescriptorIndexingFn::name</span>()) {
-                    <span class="ident">capabilities</span>.<span class="ident">descriptor_indexing</span> <span class="op">=</span>
-                        <span class="prelude-val">Some</span>(<span class="ident">vk::PhysicalDeviceDescriptorIndexingPropertiesEXT::builder</span>().<span class="ident">build</span>());
-
-                    <span class="kw">let</span> <span class="ident">mut_ref</span> <span class="op">=</span> <span class="ident">capabilities</span>.<span class="ident">descriptor_indexing</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>();
-                    <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span>
-                        <span class="ident">mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="ident">properites2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>);
+                <span class="kw">if</span> <span class="ident">supports_descriptor_indexing</span> {
+                    <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">capabilities</span>.<span class="ident">descriptor_indexing</span>.<span class="ident">insert</span>(
+                        <span class="ident">vk::PhysicalDeviceDescriptorIndexingPropertiesEXT::builder</span>().<span class="ident">build</span>(),
+                    );
+                    <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
                 }
 
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">properites2</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">build</span>();
                 <span class="kw">unsafe</span> {
-                    <span class="ident">get_device_properties</span>
-                        .<span class="ident">get_physical_device_properties2_khr</span>(<span class="ident">phd</span>, <span class="kw-2">&amp;mut</span> <span class="ident">properites2</span>);
+                    <span class="ident">get_device_properties</span>.<span class="ident">get_physical_device_properties2</span>(<span class="ident">phd</span>, <span class="kw-2">&amp;mut</span> <span class="ident">properites2</span>);
                 }
                 <span class="ident">properites2</span>.<span class="ident">properties</span>
             } <span class="kw">else</span> {
@@ -2251,99 +2235,72 @@
         <span class="ident">features</span>.<span class="ident">core</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">get_device_properties</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_physical_device_properties</span>
         {
             <span class="kw">let</span> <span class="ident">core</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceFeatures::builder</span>().<span class="ident">build</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features2</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceFeatures2KHR::builder</span>()
-                .<span class="ident">features</span>(<span class="ident">core</span>)
-                .<span class="ident">build</span>();
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceFeatures2KHR::builder</span>().<span class="ident">features</span>(<span class="ident">core</span>);
 
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">vk::API_VERSION_1_1</span> {
-                <span class="ident">features</span>.<span class="ident">vulkan_1_1</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">vk::PhysicalDeviceVulkan11Features::builder</span>().<span class="ident">build</span>());
-
-                <span class="kw">let</span> <span class="ident">mut_ref</span> <span class="op">=</span> <span class="ident">features</span>.<span class="ident">vulkan_1_1</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>();
-                <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>);
+                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
+                    .<span class="ident">vulkan_1_1</span>
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceVulkan11Features::builder</span>().<span class="ident">build</span>());
+                <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
 
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">vk::API_VERSION_1_2</span> {
-                <span class="ident">features</span>.<span class="ident">vulkan_1_2</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">vk::PhysicalDeviceVulkan12Features::builder</span>().<span class="ident">build</span>());
-
-                <span class="kw">let</span> <span class="ident">mut_ref</span> <span class="op">=</span> <span class="ident">features</span>.<span class="ident">vulkan_1_2</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>();
-                <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>);
+                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
+                    .<span class="ident">vulkan_1_2</span>
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceVulkan12Features::builder</span>().<span class="ident">build</span>());
+                <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
 
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::ExtDescriptorIndexingFn::name</span>()) {
-                <span class="ident">features</span>.<span class="ident">descriptor_indexing</span> <span class="op">=</span>
-                    <span class="prelude-val">Some</span>(<span class="ident">vk::PhysicalDeviceDescriptorIndexingFeaturesEXT::builder</span>().<span class="ident">build</span>());
-
-                <span class="kw">let</span> <span class="ident">mut_ref</span> <span class="op">=</span> <span class="ident">features</span>.<span class="ident">descriptor_indexing</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>();
-                <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>);
+                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
+                    .<span class="ident">descriptor_indexing</span>
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceDescriptorIndexingFeaturesEXT::builder</span>().<span class="ident">build</span>());
+                <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
 
             <span class="comment">// `VK_KHR_imageless_framebuffer` is promoted to 1.2, but has no changes, so we can keep using the extension unconditionally.</span>
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrImagelessFramebufferFn::name</span>()) {
-                <span class="ident">features</span>.<span class="ident">imageless_framebuffer</span> <span class="op">=</span>
-                    <span class="prelude-val">Some</span>(<span class="ident">vk::PhysicalDeviceImagelessFramebufferFeaturesKHR::builder</span>().<span class="ident">build</span>());
-
-                <span class="kw">let</span> <span class="ident">mut_ref</span> <span class="op">=</span> <span class="ident">features</span>.<span class="ident">imageless_framebuffer</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>();
-                <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>);
+                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
+                    .<span class="ident">imageless_framebuffer</span>
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceImagelessFramebufferFeaturesKHR::builder</span>().<span class="ident">build</span>());
+                <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
 
             <span class="comment">// `VK_KHR_timeline_semaphore` is promoted to 1.2, but has no changes, so we can keep using the extension unconditionally.</span>
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrTimelineSemaphoreFn::name</span>()) {
-                <span class="ident">features</span>.<span class="ident">timeline_semaphore</span> <span class="op">=</span>
-                    <span class="prelude-val">Some</span>(<span class="ident">vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR::builder</span>().<span class="ident">build</span>());
-
-                <span class="kw">let</span> <span class="ident">mut_ref</span> <span class="op">=</span> <span class="ident">features</span>.<span class="ident">timeline_semaphore</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>();
-                <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>);
+                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
+                    .<span class="ident">timeline_semaphore</span>
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR::builder</span>().<span class="ident">build</span>());
+                <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
 
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::ExtImageRobustnessFn::name</span>()) {
-                <span class="ident">features</span>.<span class="ident">image_robustness</span> <span class="op">=</span>
-                    <span class="prelude-val">Some</span>(<span class="ident">vk::PhysicalDeviceImageRobustnessFeaturesEXT::builder</span>().<span class="ident">build</span>());
-
-                <span class="kw">let</span> <span class="ident">mut_ref</span> <span class="op">=</span> <span class="ident">features</span>.<span class="ident">image_robustness</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>();
-                <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>);
+                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
+                    .<span class="ident">image_robustness</span>
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceImageRobustnessFeaturesEXT::builder</span>().<span class="ident">build</span>());
+                <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::ExtRobustness2Fn::name</span>()) {
-                <span class="ident">features</span>.<span class="ident">robustness2</span> <span class="op">=</span>
-                    <span class="prelude-val">Some</span>(<span class="ident">vk::PhysicalDeviceRobustness2FeaturesEXT::builder</span>().<span class="ident">build</span>());
-
-                <span class="kw">let</span> <span class="ident">mut_ref</span> <span class="op">=</span> <span class="ident">features</span>.<span class="ident">robustness2</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>();
-                <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>);
+                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
+                    .<span class="ident">robustness2</span>
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceRobustness2FeaturesEXT::builder</span>().<span class="ident">build</span>());
+                <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::ExtDepthClipEnableFn::name</span>()) {
-                <span class="ident">features</span>.<span class="ident">depth_clip_enable</span> <span class="op">=</span>
-                    <span class="prelude-val">Some</span>(<span class="ident">vk::PhysicalDeviceDepthClipEnableFeaturesEXT::builder</span>().<span class="ident">build</span>());
-
-                <span class="kw">let</span> <span class="ident">mut_ref</span> <span class="op">=</span> <span class="ident">features</span>.<span class="ident">depth_clip_enable</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>();
-                <span class="ident">mut_ref</span>.<span class="ident">p_next</span> <span class="op">=</span> <span class="ident">mem::replace</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features2</span>.<span class="ident">p_next</span>, <span class="ident">mut_ref</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>);
+                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
+                    .<span class="ident">depth_clip_enable</span>
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceDepthClipEnableFeaturesEXT::builder</span>().<span class="ident">build</span>());
+                <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
 
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features2</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">build</span>();
             <span class="kw">unsafe</span> {
-                <span class="ident">get_device_properties</span>.<span class="ident">get_physical_device_features2_khr</span>(<span class="ident">phd</span>, <span class="kw-2">&amp;mut</span> <span class="ident">features2</span>);
+                <span class="ident">get_device_properties</span>.<span class="ident">get_physical_device_features2</span>(<span class="ident">phd</span>, <span class="kw-2">&amp;mut</span> <span class="ident">features2</span>);
             }
             <span class="ident">features2</span>.<span class="ident">features</span>
         } <span class="kw">else</span> {
             <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">raw</span>.<span class="ident">get_physical_device_features</span>(<span class="ident">phd</span>) }
         };
-
-        <span class="doccomment">/// # Safety</span>
-        <span class="doccomment">/// `T` must be a struct bigger than `vk::BaseOutStructure`.</span>
-        <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">null_p_next</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">features</span>: <span class="kw-2">&amp;mut</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">features</span>) <span class="op">=</span> <span class="kw-2">*</span><span class="ident">features</span> {
-                <span class="comment">// This is technically invalid since `vk::BaseOutStructure` and `T` will probably never have the same size.</span>
-                (<span class="kw-2">*</span>(<span class="ident">features</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">T</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">vk::BaseOutStructure</span>)).<span class="ident">p_next</span> <span class="op">=</span> <span class="ident">ptr::null_mut</span>();
-            }
-        }
-
-        <span class="kw">unsafe</span> {
-            <span class="ident">null_p_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features</span>.<span class="ident">vulkan_1_1</span>);
-            <span class="ident">null_p_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features</span>.<span class="ident">vulkan_1_2</span>);
-            <span class="ident">null_p_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features</span>.<span class="ident">descriptor_indexing</span>);
-            <span class="ident">null_p_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features</span>.<span class="ident">imageless_framebuffer</span>);
-            <span class="ident">null_p_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features</span>.<span class="ident">timeline_semaphore</span>);
-            <span class="ident">null_p_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features</span>.<span class="ident">image_robustness</span>);
-            <span class="ident">null_p_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features</span>.<span class="ident">robustness2</span>);
-            <span class="ident">null_p_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">features</span>.<span class="ident">depth_clip_enable</span>);
-        }
 
         (<span class="ident">capabilities</span>, <span class="ident">features</span>)
     }
@@ -2392,9 +2349,18 @@
             <span class="ident">workarounds</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="kw">super</span>::Workarounds::SEPARATE_ENTRY_POINTS</span>;
         };
 
+        <span class="kw">if</span> <span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">==</span> <span class="ident">vk::API_VERSION_1_0</span>
+            <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrStorageBufferStorageClassFn::name</span>())
+        {
+            <span class="macro">log::warn!</span>(
+                <span class="string">&quot;SPIR-V storage buffer class is not supported, hiding adapter: {}&quot;</span>,
+                <span class="ident">info</span>.<span class="ident">name</span>
+            );
+            <span class="kw">return</span> <span class="prelude-val">None</span>;
+        }
         <span class="kw">if</span> <span class="ident">phd_features</span>.<span class="ident">core</span>.<span class="ident">sample_rate_shading</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="macro">log::error!</span>(
-                <span class="string">&quot;sample_rate_shading feature is not supported, hiding the adapter: {}&quot;</span>,
+            <span class="macro">log::warn!</span>(
+                <span class="string">&quot;sample_rate_shading feature is not supported, hiding adapter: {}&quot;</span>,
                 <span class="ident">info</span>.<span class="ident">name</span>
             );
             <span class="kw">return</span> <span class="prelude-val">None</span>;
@@ -2403,8 +2369,8 @@
             <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">phd_capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrMaintenance1Fn::name</span>())
             <span class="op">&amp;&amp;</span> <span class="ident">phd_capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&lt;</span> <span class="ident">vk::API_VERSION_1_2</span>
         {
-            <span class="macro">log::error!</span>(
-                <span class="string">&quot;viewport Y-flip is not supported, hiding the adapter: {}&quot;</span>,
+            <span class="macro">log::warn!</span>(
+                <span class="string">&quot;viewport Y-flip is not supported, hiding adapter: {}&quot;</span>,
                 <span class="ident">info</span>.<span class="ident">name</span>
             );
             <span class="kw">return</span> <span class="prelude-val">None</span>;
