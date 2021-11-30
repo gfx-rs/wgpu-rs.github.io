@@ -2217,17 +2217,17 @@
                 <span class="comment">// we only have the `VkInstance` version but not `VkPhysicalDevice` one.</span>
                 <span class="kw">let</span> <span class="ident">vk12_next</span> <span class="op">=</span> <span class="ident">capabilities</span>
                     .<span class="ident">vulkan_1_2</span>
-                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceVulkan12Properties::builder</span>().<span class="ident">build</span>());
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceVulkan12Properties::default</span>());
 
-                <span class="kw">let</span> <span class="ident">core</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceProperties::builder</span>().<span class="ident">build</span>();
+                <span class="kw">let</span> <span class="ident">core</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceProperties::default</span>();
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceProperties2::builder</span>()
                     .<span class="ident">properties</span>(<span class="ident">core</span>)
                     .<span class="ident">push_next</span>(<span class="ident">vk12_next</span>);
 
                 <span class="kw">if</span> <span class="ident">supports_descriptor_indexing</span> {
-                    <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">capabilities</span>.<span class="ident">descriptor_indexing</span>.<span class="ident">insert</span>(
-                        <span class="ident">vk::PhysicalDeviceDescriptorIndexingPropertiesEXT::builder</span>().<span class="ident">build</span>(),
-                    );
+                    <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">capabilities</span>
+                        .<span class="ident">descriptor_indexing</span>
+                        .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceDescriptorIndexingPropertiesEXT::default</span>());
                     <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
                 }
 
@@ -2236,7 +2236,7 @@
                     <span class="ident">get_device_properties</span>.<span class="ident">get_physical_device_properties2</span>(<span class="ident">phd</span>, <span class="kw-2">&amp;mut</span> <span class="ident">properites2</span>);
                 }
                 <span class="comment">// clean up Vk1.2 stuff if not supported</span>
-                <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&lt;</span> <span class="ident">vk::API_VERSION_1_2</span> {
+                <span class="kw">if</span> <span class="ident">properites2</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&lt;</span> <span class="ident">vk::API_VERSION_1_2</span> {
                     <span class="ident">capabilities</span>.<span class="ident">vulkan_1_2</span> <span class="op">=</span> <span class="prelude-val">None</span>;
                 }
                 <span class="ident">properites2</span>.<span class="ident">properties</span>
@@ -2250,27 +2250,27 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">PhysicalDeviceFeatures::default</span>();
         <span class="ident">features</span>.<span class="ident">core</span> <span class="op">=</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">get_device_properties</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_physical_device_properties</span>
         {
-            <span class="kw">let</span> <span class="ident">core</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceFeatures::builder</span>().<span class="ident">build</span>();
+            <span class="kw">let</span> <span class="ident">core</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceFeatures::default</span>();
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">vk::PhysicalDeviceFeatures2KHR::builder</span>().<span class="ident">features</span>(<span class="ident">core</span>);
 
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">vk::API_VERSION_1_1</span> {
                 <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
                     .<span class="ident">vulkan_1_1</span>
-                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceVulkan11Features::builder</span>().<span class="ident">build</span>());
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceVulkan11Features::default</span>());
                 <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
 
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">properties</span>.<span class="ident">api_version</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">vk::API_VERSION_1_2</span> {
                 <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
                     .<span class="ident">vulkan_1_2</span>
-                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceVulkan12Features::builder</span>().<span class="ident">build</span>());
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceVulkan12Features::default</span>());
                 <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
 
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::ExtDescriptorIndexingFn::name</span>()) {
                 <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
                     .<span class="ident">descriptor_indexing</span>
-                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceDescriptorIndexingFeaturesEXT::builder</span>().<span class="ident">build</span>());
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceDescriptorIndexingFeaturesEXT::default</span>());
                 <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
 
@@ -2278,7 +2278,7 @@
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrImagelessFramebufferFn::name</span>()) {
                 <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
                     .<span class="ident">imageless_framebuffer</span>
-                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceImagelessFramebufferFeaturesKHR::builder</span>().<span class="ident">build</span>());
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceImagelessFramebufferFeaturesKHR::default</span>());
                 <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
 
@@ -2286,26 +2286,26 @@
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::KhrTimelineSemaphoreFn::name</span>()) {
                 <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
                     .<span class="ident">timeline_semaphore</span>
-                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR::builder</span>().<span class="ident">build</span>());
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceTimelineSemaphoreFeaturesKHR::default</span>());
                 <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
 
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::ExtImageRobustnessFn::name</span>()) {
                 <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
                     .<span class="ident">image_robustness</span>
-                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceImageRobustnessFeaturesEXT::builder</span>().<span class="ident">build</span>());
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceImageRobustnessFeaturesEXT::default</span>());
                 <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::ExtRobustness2Fn::name</span>()) {
                 <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
                     .<span class="ident">robustness2</span>
-                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceRobustness2FeaturesEXT::builder</span>().<span class="ident">build</span>());
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceRobustness2FeaturesEXT::default</span>());
                 <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
             <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::ExtDepthClipEnableFn::name</span>()) {
                 <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
                     .<span class="ident">depth_clip_enable</span>
-                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceDepthClipEnableFeaturesEXT::builder</span>().<span class="ident">build</span>());
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceDepthClipEnableFeaturesEXT::default</span>());
                 <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
 
