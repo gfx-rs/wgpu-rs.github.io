@@ -1007,21 +1007,6 @@
 <span id="1006">1006</span>
 <span id="1007">1007</span>
 <span id="1008">1008</span>
-<span id="1009">1009</span>
-<span id="1010">1010</span>
-<span id="1011">1011</span>
-<span id="1012">1012</span>
-<span id="1013">1013</span>
-<span id="1014">1014</span>
-<span id="1015">1015</span>
-<span id="1016">1016</span>
-<span id="1017">1017</span>
-<span id="1018">1018</span>
-<span id="1019">1019</span>
-<span id="1020">1020</span>
-<span id="1021">1021</span>
-<span id="1022">1022</span>
-<span id="1023">1023</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">glow::HasContext</span>;
 <span class="kw">use</span> <span class="ident">parking_lot</span>::{<span class="ident">Mutex</span>, <span class="ident">MutexGuard</span>};
 <span class="kw">use</span> <span class="ident">raw_window_handle</span>::{<span class="ident">HasRawWindowHandle</span>, <span class="ident">RawWindowHandle</span>};
@@ -1047,14 +1032,12 @@
 
 <span class="kw">type</span> <span class="ident">WlDisplayDisconnectFun</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(<span class="ident">display</span>: <span class="kw-2">*const</span> <span class="ident">raw::c_void</span>);
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
 <span class="kw">type</span> <span class="ident">WlEglWindowCreateFun</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(
     <span class="ident">surface</span>: <span class="kw-2">*const</span> <span class="ident">raw::c_void</span>,
     <span class="ident">width</span>: <span class="ident">raw::c_int</span>,
     <span class="ident">height</span>: <span class="ident">raw::c_int</span>,
 ) -&gt; <span class="kw-2">*mut</span> <span class="ident">raw::c_void</span>;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
 <span class="kw">type</span> <span class="ident">WlEglWindowResizeFun</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;system&quot;</span> <span class="kw">fn</span>(
     <span class="ident">window</span>: <span class="kw-2">*const</span> <span class="ident">raw::c_void</span>,
     <span class="ident">width</span>: <span class="ident">raw::c_int</span>,
@@ -1621,12 +1604,10 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock</span>();
 
         <span class="kw">match</span> <span class="ident">raw_window_handle</span> {
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
             <span class="ident">Rwh::Xlib</span>(<span class="kw">_</span>) =&gt; {}
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
             <span class="ident">Rwh::Xcb</span>(<span class="kw">_</span>) =&gt; {}
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>)]</span>
-            <span class="ident">Rwh::Android</span>(<span class="ident">handle</span>) =&gt; {
+            <span class="ident">Rwh::AndroidNdk</span>(<span class="ident">handle</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">format</span> <span class="op">=</span> <span class="ident">inner</span>
                     .<span class="ident">egl</span>
                     .<span class="ident">get_config_attrib</span>(<span class="ident">inner</span>.<span class="ident">display</span>, <span class="ident">inner</span>.<span class="ident">config</span>, <span class="ident">egl::NATIVE_VISUAL_ID</span>)
@@ -1639,7 +1620,6 @@
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::InstanceError</span>);
                 }
             }
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;solaris&quot;</span>)))]</span>
             <span class="ident">Rwh::Wayland</span>(<span class="ident">handle</span>) =&gt; {
                 <span class="comment">/* Wayland displays are not sharable between surfaces so if the
                  * surface we receive from this handle is from a different
@@ -1873,29 +1853,19 @@
         <span class="kw">let</span> (<span class="ident">surface</span>, <span class="ident">wl_window</span>) <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">unconfigure_impl</span>(<span class="ident">device</span>) {
             <span class="prelude-val">Some</span>(<span class="ident">pair</span>) =&gt; <span class="ident">pair</span>,
             <span class="prelude-val">None</span> =&gt; {
-                <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>), <span class="ident">allow</span>(<span class="ident">unused_mut</span>))]</span>
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">wl_window</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
                 <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">temp_xlib_handle</span>, <span class="kw-2">mut</span> <span class="ident">temp_xcb_handle</span>);
                 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">trivial_casts</span>)]</span>
                 <span class="kw">let</span> <span class="ident">native_window_ptr</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">raw_window_handle</span> {
-                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
                     <span class="ident">Rwh::Xlib</span>(<span class="ident">handle</span>) =&gt; {
                         <span class="ident">temp_xlib_handle</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">window</span>;
                         <span class="kw-2">&amp;mut</span> <span class="ident">temp_xlib_handle</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>
                     }
-                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)))]</span>
                     <span class="ident">Rwh::Xcb</span>(<span class="ident">handle</span>) =&gt; {
                         <span class="ident">temp_xcb_handle</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">window</span>;
                         <span class="kw-2">&amp;mut</span> <span class="ident">temp_xcb_handle</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>
                     }
-                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>)]</span>
-                    <span class="ident">Rwh::Android</span>(<span class="ident">handle</span>) =&gt; <span class="ident">handle</span>.<span class="ident">a_native_window</span>,
-                    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">any</span>(
-                        <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>,
-                        <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>,
-                        <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;solaris&quot;</span>
-                    )))]</span>
+                    <span class="ident">Rwh::AndroidNdk</span>(<span class="ident">handle</span>) =&gt; <span class="ident">handle</span>.<span class="ident">a_native_window</span>,
                     <span class="ident">Rwh::Wayland</span>(<span class="ident">handle</span>) =&gt; {
                         <span class="kw">let</span> <span class="ident">library</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">wsi_library</span>.<span class="ident">as_ref</span>().<span class="ident">expect</span>(<span class="string">&quot;unsupported window&quot;</span>);
                         <span class="kw">let</span> <span class="ident">wl_egl_window_create</span>: <span class="ident">libloading::Symbol</span><span class="op">&lt;</span><span class="ident">WlEglWindowCreateFun</span><span class="op">&gt;</span> <span class="op">=</span>
@@ -2046,5 +2016,5 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">discard_texture</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_texture</span>: <span class="ident"><span class="kw">super</span>::Texture</span>) {}
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (6db0a0e9a 2021-11-29)" ></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (207c80f10 2021-11-30)" ></div>
 </body></html>

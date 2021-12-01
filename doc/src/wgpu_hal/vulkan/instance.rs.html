@@ -716,21 +716,6 @@
 <span id="715">715</span>
 <span id="716">716</span>
 <span id="717">717</span>
-<span id="718">718</span>
-<span id="719">719</span>
-<span id="720">720</span>
-<span id="721">721</span>
-<span id="722">722</span>
-<span id="723">723</span>
-<span id="724">724</span>
-<span id="725">725</span>
-<span id="726">726</span>
-<span id="727">727</span>
-<span id="728">728</span>
-<span id="729">729</span>
-<span id="730">730</span>
-<span id="731">731</span>
-<span id="732">732</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">ffi</span>::{<span class="ident">c_void</span>, <span class="ident">CStr</span>, <span class="ident">CString</span>},
     <span class="ident">slice</span>,
@@ -1274,55 +1259,40 @@
         <span class="kw">use</span> <span class="ident">raw_window_handle::RawWindowHandle</span>;
 
         <span class="kw">match</span> <span class="ident">has_handle</span>.<span class="ident">raw_window_handle</span>() {
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(
-                <span class="ident">unix</span>,
-                <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>),
-                <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>),
-                <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>),
-                <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;solaris&quot;</span>)
-            ))]</span>
             <span class="ident">RawWindowHandle::Wayland</span>(<span class="ident">handle</span>)
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">khr::WaylandSurface::name</span>()) =&gt;
             {
                 <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">create_surface_from_wayland</span>(<span class="ident">handle</span>.<span class="ident">display</span>, <span class="ident">handle</span>.<span class="ident">surface</span>))
             }
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(
-                <span class="ident">unix</span>,
-                <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>),
-                <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>),
-                <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>),
-                <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;solaris&quot;</span>)
-            ))]</span>
             <span class="ident">RawWindowHandle::Xlib</span>(<span class="ident">handle</span>)
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">khr::XlibSurface::name</span>()) =&gt;
             {
                 <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">create_surface_from_xlib</span>(<span class="ident">handle</span>.<span class="ident">display</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>, <span class="ident">handle</span>.<span class="ident">window</span>))
             }
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(
-                <span class="ident">unix</span>,
-                <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>),
-                <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>),
-                <span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>)
-            ))]</span>
             <span class="ident">RawWindowHandle::Xcb</span>(<span class="ident">handle</span>) <span class="kw">if</span> <span class="self">self</span>.<span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">khr::XcbSurface::name</span>()) =&gt; {
                 <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">create_surface_from_xcb</span>(<span class="ident">handle</span>.<span class="ident">connection</span>, <span class="ident">handle</span>.<span class="ident">window</span>))
             }
-            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>)]</span>
-            <span class="ident">RawWindowHandle::Android</span>(<span class="ident">handle</span>) =&gt; {
+            <span class="ident">RawWindowHandle::AndroidNdk</span>(<span class="ident">handle</span>) =&gt; {
                 <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">create_surface_android</span>(<span class="ident">handle</span>.<span class="ident">a_native_window</span>))
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">windows</span>)]</span>
-            <span class="ident">RawWindowHandle::Windows</span>(<span class="ident">handle</span>) =&gt; {
+            <span class="ident">RawWindowHandle::Win32</span>(<span class="ident">handle</span>) =&gt; {
                 <span class="kw">use</span> <span class="ident">winapi::um::libloaderapi::GetModuleHandleW</span>;
 
                 <span class="kw">let</span> <span class="ident">hinstance</span> <span class="op">=</span> <span class="ident">GetModuleHandleW</span>(<span class="ident">std::ptr::null</span>());
                 <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">create_surface_from_hwnd</span>(<span class="ident">hinstance</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>, <span class="ident">handle</span>.<span class="ident">hwnd</span>))
             }
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)]</span>
-            <span class="ident">RawWindowHandle::MacOS</span>(<span class="ident">handle</span>)
+            <span class="ident">RawWindowHandle::AppKit</span>(<span class="ident">handle</span>)
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">ext::MetalSurface::name</span>()) =&gt;
             {
                 <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">create_surface_from_ns_view</span>(<span class="ident">handle</span>.<span class="ident">ns_view</span>))
+            }
+            <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>)]</span>
+            <span class="ident">RawWindowHandle::UiKit</span>(<span class="ident">handle</span>)
+                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">ext::MetalSurface::name</span>()) =&gt;
+            {
+                <span class="prelude-val">Ok</span>(<span class="self">self</span>.<span class="ident">create_surface_from_ns_view</span>(<span class="ident">handle</span>.<span class="ident">ui_view</span>))
             }
             <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::InstanceError</span>),
         }
@@ -1464,5 +1434,5 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">discard_texture</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_texture</span>: <span class="ident"><span class="kw">super</span>::SurfaceTexture</span>) {}
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (6db0a0e9a 2021-11-29)" ></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (207c80f10 2021-11-30)" ></div>
 </body></html>
