@@ -716,6 +716,19 @@
 <span id="715">715</span>
 <span id="716">716</span>
 <span id="717">717</span>
+<span id="718">718</span>
+<span id="719">719</span>
+<span id="720">720</span>
+<span id="721">721</span>
+<span id="722">722</span>
+<span id="723">723</span>
+<span id="724">724</span>
+<span id="725">725</span>
+<span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">ffi</span>::{<span class="ident">c_void</span>, <span class="ident">CStr</span>, <span class="ident">CString</span>},
     <span class="ident">slice</span>,
@@ -742,10 +755,10 @@
     }
 
     <span class="kw">let</span> <span class="ident">level</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">message_severity</span> {
-        <span class="ident">vk::DebugUtilsMessageSeverityFlagsEXT::ERROR</span> =&gt; <span class="ident">log::Level::Error</span>,
-        <span class="ident">vk::DebugUtilsMessageSeverityFlagsEXT::WARNING</span> =&gt; <span class="ident">log::Level::Warn</span>,
+        <span class="ident">vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE</span> =&gt; <span class="ident">log::Level::Debug</span>,
         <span class="ident">vk::DebugUtilsMessageSeverityFlagsEXT::INFO</span> =&gt; <span class="ident">log::Level::Info</span>,
-        <span class="ident">vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE</span> =&gt; <span class="ident">log::Level::Trace</span>,
+        <span class="ident">vk::DebugUtilsMessageSeverityFlagsEXT::WARNING</span> =&gt; <span class="ident">log::Level::Warn</span>,
+        <span class="ident">vk::DebugUtilsMessageSeverityFlagsEXT::ERROR</span> =&gt; <span class="ident">log::Level::Error</span>,
         <span class="kw">_</span> =&gt; <span class="ident">log::Level::Warn</span>,
     };
 
@@ -912,9 +925,22 @@
         <span class="kw">let</span> <span class="ident">debug_utils</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">ext::DebugUtils::name</span>()) {
             <span class="macro">log::info!</span>(<span class="string">&quot;Enabling debug utils&quot;</span>);
             <span class="kw">let</span> <span class="ident">extension</span> <span class="op">=</span> <span class="ident">ext::DebugUtils::new</span>(<span class="kw-2">&amp;</span><span class="ident">entry</span>, <span class="kw-2">&amp;</span><span class="ident">raw_instance</span>);
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">severity</span> <span class="op">=</span> <span class="ident">vk::DebugUtilsMessageSeverityFlagsEXT::empty</span>();
+            <span class="kw">if</span> <span class="ident">log::max_level</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">log::LevelFilter::Debug</span> {
+                <span class="ident">severity</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE</span>;
+            }
+            <span class="kw">if</span> <span class="ident">log::max_level</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">log::LevelFilter::Info</span> {
+                <span class="ident">severity</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::DebugUtilsMessageSeverityFlagsEXT::INFO</span>;
+            }
+            <span class="kw">if</span> <span class="ident">log::max_level</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">log::LevelFilter::Warn</span> {
+                <span class="ident">severity</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::DebugUtilsMessageSeverityFlagsEXT::WARNING</span>;
+            }
+            <span class="kw">if</span> <span class="ident">log::max_level</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">log::LevelFilter::Error</span> {
+                <span class="ident">severity</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::DebugUtilsMessageSeverityFlagsEXT::ERROR</span>;
+            }
             <span class="kw">let</span> <span class="ident">vk_info</span> <span class="op">=</span> <span class="ident">vk::DebugUtilsMessengerCreateInfoEXT::builder</span>()
                 .<span class="ident">flags</span>(<span class="ident">vk::DebugUtilsMessengerCreateFlagsEXT::empty</span>())
-                .<span class="ident">message_severity</span>(<span class="ident">vk::DebugUtilsMessageSeverityFlagsEXT::all</span>())
+                .<span class="ident">message_severity</span>(<span class="ident">severity</span>)
                 .<span class="ident">message_type</span>(<span class="ident">vk::DebugUtilsMessageTypeFlagsEXT::all</span>())
                 .<span class="ident">pfn_user_callback</span>(<span class="prelude-val">Some</span>(<span class="ident">debug_utils_messenger_callback</span>));
             <span class="kw">let</span> <span class="ident">messenger</span> <span class="op">=</span> <span class="ident">extension</span>
