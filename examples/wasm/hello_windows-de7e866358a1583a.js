@@ -142,7 +142,7 @@ async function load(module, imports) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('hello_windows_bg.wasm', import.meta.url);
+        input = new URL('hello_windows-de7e866358a1583a_bg.wasm', import.meta.url);
     }
     const imports = {};
     imports.wbg = {};
