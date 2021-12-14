@@ -725,6 +725,17 @@
 <span id="724">724</span>
 <span id="725">725</span>
 <span id="726">726</span>
+<span id="727">727</span>
+<span id="728">728</span>
+<span id="729">729</span>
+<span id="730">730</span>
+<span id="731">731</span>
+<span id="732">732</span>
+<span id="733">733</span>
+<span id="734">734</span>
+<span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">glow::HasContext</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 
@@ -1012,7 +1023,6 @@
         <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(<span class="ident">wgt::DownlevelFlags::FRAGMENT_STORAGE</span>, <span class="ident">supports_storage</span>);
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">wgt::Features::empty</span>()
-            <span class="op">|</span> <span class="ident">wgt::Features::TEXTURE_COMPRESSION_ETC2</span>
             <span class="op">|</span> <span class="ident">wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span>
             <span class="op">|</span> <span class="ident">wgt::Features::CLEAR_COMMANDS</span>;
         <span class="ident">features</span>.<span class="ident">set</span>(
@@ -1027,6 +1037,18 @@
             <span class="ident">wgt::Features::VERTEX_WRITABLE_STORAGE</span>,
             <span class="ident">downlevel_flags</span>.<span class="ident">contains</span>(<span class="ident">wgt::DownlevelFlags::VERTEX_STORAGE</span>)
                 <span class="op">&amp;&amp;</span> <span class="ident">vertex_shader_storage_textures</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
+        );
+        <span class="ident">features</span>.<span class="ident">set</span>(
+            <span class="ident">wgt::Features::TEXTURE_COMPRESSION_ETC2</span>,
+            <span class="comment">// This is a part of GLES-3 but not WebGL2 core</span>
+            <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;WEBGL_compressed_texture_etc&quot;</span>),
+        );
+        <span class="comment">//Note: `wgt::Features::TEXTURE_COMPRESSION_BC` can&#39;t be fully supported, but there are</span>
+        <span class="comment">// &quot;WEBGL_compressed_texture_s3tc&quot; and &quot;WEBGL_compressed_texture_s3tc_srgb&quot; which could partially cover it</span>
+        <span class="ident">features</span>.<span class="ident">set</span>(
+            <span class="ident">wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR</span>,
+            <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_KHR_texture_compression_astc_ldr&quot;</span>)
+                <span class="op">|</span><span class="op">|</span> <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;WEBGL_compressed_texture_astc&quot;</span>),
         );
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">private_caps</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::PrivateCapabilities::empty</span>();
@@ -1049,11 +1071,11 @@
         );
         <span class="ident">private_caps</span>.<span class="ident">set</span>(
             <span class="ident"><span class="kw">super</span>::PrivateCapabilities::INDEX_BUFFER_ROLE_CHANGE</span>,
-            <span class="macro">cfg!</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)),
+            <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>),
         );
         <span class="ident">private_caps</span>.<span class="ident">set</span>(
             <span class="ident"><span class="kw">super</span>::PrivateCapabilities::CAN_DISABLE_DRAW_BUFFER</span>,
-            <span class="macro">cfg!</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)),
+            <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>),
         );
 
         <span class="kw">let</span> <span class="ident">max_texture_size</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_TEXTURE_SIZE</span>) <span class="kw">as</span> <span class="ident">u32</span>;
