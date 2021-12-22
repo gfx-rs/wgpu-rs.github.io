@@ -303,7 +303,7 @@ async function load(module, imports) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('cube_bg.wasm', import.meta.url);
+        input = new URL('cube-e7fc5e2765cd6d82_bg.wasm', import.meta.url);
     }
     const imports = {};
     imports.wbg = {};
