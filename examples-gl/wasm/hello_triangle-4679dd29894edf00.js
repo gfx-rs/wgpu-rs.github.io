@@ -319,7 +319,7 @@ async function load(module, imports) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('hello-triangle_bg.wasm', import.meta.url);
+        input = new URL('hello_triangle-4679dd29894edf00_bg.wasm', import.meta.url);
     }
     const imports = {};
     imports.wbg = {};
