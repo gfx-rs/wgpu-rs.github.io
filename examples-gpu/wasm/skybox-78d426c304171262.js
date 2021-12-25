@@ -303,7 +303,7 @@ async function load(module, imports) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('skybox_bg.wasm', import.meta.url);
+        input = new URL('skybox-78d426c304171262_bg.wasm', import.meta.url);
     }
     const imports = {};
     imports.wbg = {};
