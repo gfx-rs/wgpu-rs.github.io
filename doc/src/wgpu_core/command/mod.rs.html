@@ -516,9 +516,6 @@
 <span id="514">514</span>
 <span id="515">515</span>
 <span id="516">516</span>
-<span id="517">517</span>
-<span id="518">518</span>
-<span id="519">519</span>
 </pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">bind</span>;
 <span class="kw">mod</span> <span class="ident">bundle</span>;
 <span class="kw">mod</span> <span class="ident">clear</span>;
@@ -529,15 +526,12 @@
 <span class="kw">mod</span> <span class="ident">render</span>;
 <span class="kw">mod</span> <span class="ident">transfer</span>;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::bundle</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident"><span class="self">self</span>::clear::collect_zero_buffer_copies_for_clear_texture</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::clear::ClearError</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::compute</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::draw</span>::<span class="kw-2">*</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident"><span class="self">self</span>::clear::clear_texture_no_device</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::{
+    <span class="ident">bundle</span>::<span class="kw-2">*</span>, <span class="ident">clear::ClearError</span>, <span class="ident">compute</span>::<span class="kw-2">*</span>, <span class="ident">draw</span>::<span class="kw-2">*</span>, <span class="ident">query</span>::<span class="kw-2">*</span>, <span class="ident">render</span>::<span class="kw-2">*</span>, <span class="ident">transfer</span>::<span class="kw-2">*</span>,
+};
+
 <span class="kw">use</span> <span class="ident"><span class="self">self</span>::memory_init::CommandBufferTextureMemoryActions</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::query</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::render</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::transfer</span>::<span class="kw-2">*</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::error</span>::{<span class="ident">ErrorFormatter</span>, <span class="ident">PrettyError</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::init_tracker::BufferInitTrackerAction</span>;
@@ -622,7 +616,7 @@
     <span class="ident">buffer_memory_init_actions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">BufferInitTrackerAction</span><span class="op">&gt;</span>,
     <span class="ident">texture_memory_actions</span>: <span class="ident">CommandBufferTextureMemoryActions</span>,
     <span class="ident">limits</span>: <span class="ident">wgt::Limits</span>,
-    <span class="ident">support_clear_buffer_texture</span>: <span class="ident">bool</span>,
+    <span class="ident">support_clear_texture</span>: <span class="ident">bool</span>,
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">commands</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TraceCommand</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
@@ -650,7 +644,7 @@
             <span class="ident">buffer_memory_init_actions</span>: <span class="ident">Default::default</span>(),
             <span class="ident">texture_memory_actions</span>: <span class="ident">Default::default</span>(),
             <span class="ident">limits</span>,
-            <span class="ident">support_clear_buffer_texture</span>: <span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">wgt::Features::CLEAR_COMMANDS</span>),
+            <span class="ident">support_clear_texture</span>: <span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">wgt::Features::CLEAR_TEXTURE</span>),
             <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
             <span class="ident">commands</span>: <span class="kw">if</span> <span class="ident">enable_tracing</span> {
                 <span class="prelude-val">Some</span>(<span class="ident">Vec::new</span>())

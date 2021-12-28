@@ -933,40 +933,27 @@
 <span id="931">931</span>
 <span id="932">932</span>
 <span id="933">933</span>
-<span id="934">934</span>
-<span id="935">935</span>
-<span id="936">936</span>
-<span id="937">937</span>
-<span id="938">938</span>
-<span id="939">939</span>
-<span id="940">940</span>
-<span id="941">941</span>
-<span id="942">942</span>
-<span id="943">943</span>
-<span id="944">944</span>
-<span id="945">945</span>
-<span id="946">946</span>
-<span id="947">947</span>
-<span id="948">948</span>
 </pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::device::trace::Action</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">align_to</span>,
     <span class="ident">command</span>::{
         <span class="ident">extract_texture_selector</span>, <span class="ident">validate_linear_texture_data</span>, <span class="ident">validate_texture_copy_range</span>,
-        <span class="ident">CommandBuffer</span>, <span class="ident">CopySide</span>, <span class="ident">ImageCopyTexture</span>, <span class="ident">TransferError</span>,
+        <span class="ident">ClearError</span>, <span class="ident">CommandBuffer</span>, <span class="ident">CopySide</span>, <span class="ident">ImageCopyTexture</span>, <span class="ident">TransferError</span>,
     },
     <span class="ident">conv</span>,
     <span class="ident">device</span>::{<span class="ident">DeviceError</span>, <span class="ident">WaitIdleError</span>},
     <span class="ident">get_lowest_common_denom</span>,
     <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>,
+    <span class="ident">init_tracker</span>::{<span class="ident">has_copy_partial_init_tracker_coverage</span>, <span class="ident">TextureInitRange</span>},
     <span class="ident">resource</span>::{<span class="ident">BufferAccessError</span>, <span class="ident">BufferMapState</span>, <span class="ident">TextureInner</span>},
     <span class="ident">track</span>, <span class="ident">FastHashSet</span>,
 };
 
 <span class="kw">use</span> <span class="ident">hal</span>::{<span class="ident">CommandEncoder</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Device</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Queue</span> <span class="kw">as</span> <span class="kw">_</span>};
 <span class="kw">use</span> <span class="ident">parking_lot::Mutex</span>;
+<span class="kw">use</span> <span class="ident">smallvec::SmallVec</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">iter</span>, <span class="ident">mem</span>, <span class="ident">num::NonZeroU32</span>, <span class="ident">ptr</span>};
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
@@ -1013,7 +1000,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TempResource</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> {
     <span class="ident">Buffer</span>(<span class="ident">A::Buffer</span>),
-    <span class="ident">Texture</span>(<span class="ident">A::Texture</span>),
+    <span class="ident">Texture</span>(<span class="ident">A::Texture</span>, <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">A::TextureView</span>; <span class="number">1</span>]<span class="op">&gt;</span>),
 }
 
 <span class="doccomment">/// A queue execution for a particular command encoder.</span>
@@ -1066,7 +1053,10 @@
                 <span class="ident">TempResource::Buffer</span>(<span class="ident">buffer</span>) =&gt; <span class="kw">unsafe</span> {
                     <span class="ident">device</span>.<span class="ident">destroy_buffer</span>(<span class="ident">buffer</span>);
                 },
-                <span class="ident">TempResource::Texture</span>(<span class="ident">texture</span>) =&gt; <span class="kw">unsafe</span> {
+                <span class="ident">TempResource::Texture</span>(<span class="ident">texture</span>, <span class="ident">views</span>) =&gt; <span class="kw">unsafe</span> {
+                    <span class="kw">for</span> <span class="ident">view</span> <span class="kw">in</span> <span class="ident">views</span>.<span class="ident">into_iter</span>() {
+                        <span class="ident">device</span>.<span class="ident">destroy_texture_view</span>(<span class="ident">view</span>);
+                    }
                     <span class="ident">device</span>.<span class="ident">destroy_texture</span>(<span class="ident">texture</span>);
                 },
             }
@@ -1162,6 +1152,8 @@
     <span class="ident">Queue</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">DeviceError</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">Transfer</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">TransferError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">MemoryInitFailure</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">ClearError</span>),
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
@@ -1323,7 +1315,7 @@
             <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
         }
 
-        <span class="kw">let</span> (<span class="ident">texture_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">read</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">texture_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">write</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>); <span class="comment">// For clear we need write access to the texture. TODO: Can we acquire write lock later?</span>
         <span class="kw">let</span> (<span class="ident">selector</span>, <span class="ident">dst_base</span>, <span class="ident">texture_format</span>) <span class="op">=</span>
             <span class="ident">extract_texture_selector</span>(<span class="ident">destination</span>, <span class="ident">size</span>, <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">texture_guard</span>)<span class="question-mark">?</span>;
         <span class="kw">let</span> <span class="ident">format_desc</span> <span class="op">=</span> <span class="ident">texture_format</span>.<span class="ident">describe</span>();
@@ -1368,7 +1360,53 @@
         <span class="kw">let</span> <span class="ident">stage_size</span> <span class="op">=</span> <span class="ident">stage_bytes_per_row</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">block_rows_in_copy</span> <span class="kw">as</span> <span class="ident">u64</span>;
         <span class="kw">let</span> <span class="ident">stage</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">prepare_stage</span>(<span class="ident">stage_size</span>)<span class="question-mark">?</span>;
 
+        <span class="kw">let</span> <span class="ident">dst</span> <span class="op">=</span> <span class="ident">texture_guard</span>.<span class="ident">get_mut</span>(<span class="ident">destination</span>.<span class="ident">texture</span>).<span class="ident">unwrap</span>();
+        <span class="kw">if</span> <span class="op">!</span><span class="ident">dst</span>.<span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">wgt::TextureUsages::COPY_DST</span>) {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(
+                <span class="ident">TransferError::MissingCopyDstUsageFlag</span>(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">destination</span>.<span class="ident">texture</span>)).<span class="ident">into</span>(),
+            );
+        }
+
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">trackers</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">trackers</span>.<span class="ident">lock</span>();
+        <span class="kw">let</span> <span class="ident">encoder</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">activate</span>();
+
+        <span class="comment">// If the copy does not fully cover the layers, we need to initialize to zero *first* as we don&#39;t keep track of partial texture layer inits.</span>
+        <span class="comment">// Strictly speaking we only need to clear the areas of a layer untouched, but this would get increasingly messy.</span>
+
+        <span class="kw">let</span> <span class="ident">init_layer_range</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">dst</span>.<span class="ident">desc</span>.<span class="ident">dimension</span> <span class="op">==</span> <span class="ident">wgt::TextureDimension::D3</span> {
+            <span class="number">0</span>..<span class="number">1</span> <span class="comment">// volume textures don&#39;t have a layer range as array volumes aren&#39;t supported</span>
+        } <span class="kw">else</span> {
+            <span class="ident">destination</span>.<span class="ident">origin</span>.<span class="ident">z</span>..<span class="ident">destination</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="op">+</span> <span class="ident">size</span>.<span class="ident">depth_or_array_layers</span>
+        };
+        <span class="kw">if</span> <span class="ident">dst</span>.<span class="ident">initialization_status</span>.<span class="ident">mips</span>[<span class="ident">destination</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">usize</span>]
+            .<span class="ident">check</span>(<span class="ident">init_layer_range</span>.<span class="ident">clone</span>())
+            .<span class="ident">is_some</span>()
+        {
+            <span class="kw">if</span> <span class="ident">has_copy_partial_init_tracker_coverage</span>(<span class="ident">size</span>, <span class="ident">destination</span>.<span class="ident">mip_level</span>, <span class="kw-2">&amp;</span><span class="ident">dst</span>.<span class="ident">desc</span>) {
+                <span class="kw">for</span> <span class="ident">layer_range</span> <span class="kw">in</span> <span class="ident">dst</span>.<span class="ident">initialization_status</span>.<span class="ident">mips</span>[<span class="ident">destination</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">usize</span>]
+                    .<span class="ident">drain</span>(<span class="ident">init_layer_range</span>)
+                    .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">std::ops::Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+                {
+                    <span class="ident"><span class="kw">crate</span>::command::clear_texture_no_device</span>(
+                        <span class="ident">id::Valid</span>(<span class="ident">destination</span>.<span class="ident">texture</span>),
+                        <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">dst</span>,
+                        <span class="ident">TextureInitRange</span> {
+                            <span class="ident">mip_range</span>: <span class="ident">destination</span>.<span class="ident">mip_level</span>..(<span class="ident">destination</span>.<span class="ident">mip_level</span> <span class="op">+</span> <span class="number">1</span>),
+                            <span class="ident">layer_range</span>,
+                        },
+                        <span class="ident">encoder</span>,
+                        <span class="kw-2">&amp;mut</span> <span class="ident">trackers</span>.<span class="ident">textures</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">alignments</span>,
+                        <span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">zero_buffer</span>,
+                    )
+                    .<span class="ident">map_err</span>(<span class="ident">QueueWriteError::from</span>)<span class="question-mark">?</span>;
+                }
+            } <span class="kw">else</span> {
+                <span class="ident">dst</span>.<span class="ident">initialization_status</span>.<span class="ident">mips</span>[<span class="ident">destination</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">usize</span>]
+                    .<span class="ident">drain</span>(<span class="ident">init_layer_range</span>);
+            }
+        }
+
         <span class="kw">let</span> (<span class="ident">dst</span>, <span class="ident">transition</span>) <span class="op">=</span> <span class="ident">trackers</span>
             .<span class="ident">textures</span>
             .<span class="ident">use_replace</span>(
@@ -1379,11 +1417,6 @@
             )
             .<span class="ident">unwrap</span>();
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">dst</span>.<span class="ident">desc</span>.<span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">wgt::TextureUsages::COPY_DST</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(
-                <span class="ident">TransferError::MissingCopyDstUsageFlag</span>(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">destination</span>.<span class="ident">texture</span>)).<span class="ident">into</span>(),
-            );
-        }
         <span class="kw">let</span> (<span class="ident">hal_copy_size</span>, <span class="ident">array_layer_count</span>) <span class="op">=</span>
             <span class="ident">validate_texture_copy_range</span>(<span class="ident">destination</span>, <span class="kw-2">&amp;</span><span class="ident">dst</span>.<span class="ident">desc</span>, <span class="ident">CopySide::Destination</span>, <span class="ident">size</span>)<span class="question-mark">?</span>;
         <span class="ident">dst</span>.<span class="ident">life_guard</span>.<span class="ident">use_at</span>(<span class="ident">device</span>.<span class="ident">active_submission_index</span> <span class="op">+</span> <span class="number">1</span>);
@@ -1458,78 +1491,15 @@
             <span class="ident">usage</span>: <span class="ident">hal::BufferUses::MAP_WRITE</span>..<span class="ident">hal::BufferUses::COPY_SRC</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">encoder</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">activate</span>();
+        <span class="kw">let</span> <span class="ident">dst_raw</span> <span class="op">=</span> <span class="ident">dst</span>
+            .<span class="ident">inner</span>
+            .<span class="ident">as_raw</span>()
+            .<span class="ident">ok_or</span>(<span class="ident">TransferError::InvalidTexture</span>(<span class="ident">destination</span>.<span class="ident">texture</span>))<span class="question-mark">?</span>;
+
         <span class="kw">unsafe</span> {
             <span class="ident">encoder</span>.<span class="ident">transition_textures</span>(<span class="ident">transition</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">pending</span><span class="op">|</span> <span class="ident">pending</span>.<span class="ident">into_hal</span>(<span class="ident">dst</span>)));
             <span class="ident">encoder</span>.<span class="ident">transition_buffers</span>(<span class="ident">iter::once</span>(<span class="ident">barrier</span>));
-        }
-
-        <span class="comment">// If the copy does not fully cover the layers, we need to initialize to zero *first* as we don&#39;t keep track of partial texture layer inits.</span>
-        <span class="comment">// Strictly speaking we only need to clear the areas of a layer untouched, but this would get increasingly messy.</span>
-
-        <span class="kw">let</span> <span class="ident">init_layer_range</span> <span class="op">=</span>
-            <span class="ident">destination</span>.<span class="ident">origin</span>.<span class="ident">z</span>..<span class="ident">destination</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="op">+</span> <span class="ident">size</span>.<span class="ident">depth_or_array_layers</span>;
-        <span class="kw">if</span> <span class="ident">dst</span>.<span class="ident">initialization_status</span>.<span class="ident">mips</span>[<span class="ident">destination</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">usize</span>]
-            .<span class="ident">check</span>(<span class="ident">init_layer_range</span>.<span class="ident">clone</span>())
-            .<span class="ident">is_some</span>()
-        {
-            <span class="comment">// For clear we need write access to the texture!</span>
-            <span class="ident">drop</span>(<span class="ident">texture_guard</span>);
-            <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">texture_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">textures</span>.<span class="ident">write</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
-            <span class="kw">let</span> <span class="ident">dst</span> <span class="op">=</span> <span class="ident">texture_guard</span>.<span class="ident">get_mut</span>(<span class="ident">destination</span>.<span class="ident">texture</span>).<span class="ident">unwrap</span>();
-            <span class="kw">let</span> <span class="ident">dst_raw</span> <span class="op">=</span> <span class="ident">dst</span>
-                .<span class="ident">inner</span>
-                .<span class="ident">as_raw</span>()
-                .<span class="ident">ok_or</span>(<span class="ident">TransferError::InvalidTexture</span>(<span class="ident">destination</span>.<span class="ident">texture</span>))<span class="question-mark">?</span>;
-
-            <span class="kw">let</span> <span class="ident">layers_to_initialize</span> <span class="op">=</span> <span class="ident">dst</span>.<span class="ident">initialization_status</span>.<span class="ident">mips</span>
-                [<span class="ident">destination</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">usize</span>]
-                .<span class="ident">drain</span>(<span class="ident">init_layer_range</span>);
-
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">zero_buffer_copy_regions</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="kw">if</span> <span class="ident">size</span>.<span class="ident">width</span> <span class="op">!</span><span class="op">=</span> <span class="ident">dst</span>.<span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="op">|</span><span class="op">|</span> <span class="ident">size</span>.<span class="ident">height</span> <span class="op">!</span><span class="op">=</span> <span class="ident">dst</span>.<span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">height</span> {
-                <span class="kw">for</span> <span class="ident">layer</span> <span class="kw">in</span> <span class="ident">layers_to_initialize</span> {
-                    <span class="ident"><span class="kw">crate</span>::command::collect_zero_buffer_copies_for_clear_texture</span>(
-                        <span class="kw-2">&amp;</span><span class="ident">dst</span>.<span class="ident">desc</span>,
-                        <span class="ident">device</span>.<span class="ident">alignments</span>.<span class="ident">buffer_copy_pitch</span>.<span class="ident">get</span>() <span class="kw">as</span> <span class="ident">u32</span>,
-                        <span class="ident">destination</span>.<span class="ident">mip_level</span>..(<span class="ident">destination</span>.<span class="ident">mip_level</span> <span class="op">+</span> <span class="number">1</span>),
-                        <span class="ident">layer</span>,
-                        <span class="kw-2">&amp;mut</span> <span class="ident">zero_buffer_copy_regions</span>,
-                    );
-                }
-            }
-            <span class="kw">unsafe</span> {
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">zero_buffer_copy_regions</span>.<span class="ident">is_empty</span>() {
-                    <span class="ident">encoder</span>.<span class="ident">copy_buffer_to_texture</span>(
-                        <span class="kw-2">&amp;</span><span class="ident">device</span>.<span class="ident">zero_buffer</span>,
-                        <span class="ident">dst_raw</span>,
-                        <span class="ident">zero_buffer_copy_regions</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>(),
-                    );
-                    <span class="ident">encoder</span>.<span class="ident">transition_textures</span>(<span class="ident">zero_buffer_copy_regions</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">copy</span><span class="op">|</span> {
-                        <span class="ident">hal::TextureBarrier</span> {
-                            <span class="ident">texture</span>: <span class="ident">dst_raw</span>,
-                            <span class="ident">range</span>: <span class="ident">wgt::ImageSubresourceRange</span> {
-                                <span class="ident">aspect</span>: <span class="ident">wgt::TextureAspect::All</span>,
-                                <span class="ident">base_mip_level</span>: <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">mip_level</span>,
-                                <span class="ident">mip_level_count</span>: <span class="ident">NonZeroU32::new</span>(<span class="number">1</span>),
-                                <span class="ident">base_array_layer</span>: <span class="ident">copy</span>.<span class="ident">texture_base</span>.<span class="ident">array_layer</span>,
-                                <span class="ident">array_layer_count</span>: <span class="ident">NonZeroU32::new</span>(<span class="number">1</span>),
-                            },
-                            <span class="ident">usage</span>: <span class="ident">hal::TextureUses::COPY_DST</span>..<span class="ident">hal::TextureUses::COPY_DST</span>,
-                        }
-                    }));
-                }
-                <span class="ident">encoder</span>.<span class="ident">copy_buffer_to_texture</span>(<span class="kw-2">&amp;</span><span class="ident">stage</span>.<span class="ident">buffer</span>, <span class="ident">dst_raw</span>, <span class="ident">regions</span>);
-            }
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">dst_raw</span> <span class="op">=</span> <span class="ident">dst</span>
-                .<span class="ident">inner</span>
-                .<span class="ident">as_raw</span>()
-                .<span class="ident">ok_or</span>(<span class="ident">TransferError::InvalidTexture</span>(<span class="ident">destination</span>.<span class="ident">texture</span>))<span class="question-mark">?</span>;
-
-            <span class="kw">unsafe</span> {
-                <span class="ident">encoder</span>.<span class="ident">copy_buffer_to_texture</span>(<span class="kw-2">&amp;</span><span class="ident">stage</span>.<span class="ident">buffer</span>, <span class="ident">dst_raw</span>, <span class="ident">regions</span>);
-            }
+            <span class="ident">encoder</span>.<span class="ident">copy_buffer_to_texture</span>(<span class="kw-2">&amp;</span><span class="ident">stage</span>.<span class="ident">buffer</span>, <span class="ident">dst_raw</span>, <span class="ident">regions</span>);
         }
 
         <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">consume</span>(<span class="ident">stage</span>);

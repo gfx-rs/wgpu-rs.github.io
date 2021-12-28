@@ -510,6 +510,48 @@
 <span id="508">508</span>
 <span id="509">509</span>
 <span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">device</span>::{<span class="ident">DeviceError</span>, <span class="ident">HostMap</span>, <span class="ident">MissingFeatures</span>},
     <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Resource</span>, <span class="ident">Token</span>},
@@ -520,6 +562,7 @@
     <span class="ident">Label</span>, <span class="ident">LifeGuard</span>, <span class="ident">RefCount</span>, <span class="ident">Stored</span>,
 };
 
+<span class="kw">use</span> <span class="ident">smallvec::SmallVec</span>;
 <span class="kw">use</span> <span class="ident">thiserror::Error</span>;
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Borrow</span>, <span class="ident">num::NonZeroU8</span>, <span class="ident">ops::Range</span>, <span class="ident">ptr::NonNull</span>};
@@ -691,6 +734,19 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TextureClearMode</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> {
+    <span class="ident">BufferCopy</span>,
+    <span class="comment">// View for clear via RenderPass for every subsurface (mip/layer/slice)</span>
+    <span class="ident">RenderPass</span> {
+        <span class="ident">clear_views</span>: <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">A::TextureView</span>; <span class="number">1</span>]<span class="op">&gt;</span>,
+        <span class="ident">is_color</span>: <span class="ident">bool</span>,
+    },
+    <span class="comment">// Texture can&#39;t be cleared, attempting to do so will cause panic.</span>
+    <span class="comment">// (either because it is impossible for the type of texture or it is being destroyed)</span>
+    <span class="prelude-val">None</span>,
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Texture</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">inner</span>: <span class="ident">TextureInner</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">device_id</span>: <span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">DeviceId</span><span class="op">&gt;</span>,
@@ -700,6 +756,32 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">initialization_status</span>: <span class="ident">TextureInitTracker</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">full_range</span>: <span class="ident">TextureSelector</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">clear_mode</span>: <span class="ident">TextureClearMode</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> <span class="ident">Texture</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">get_clear_view</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">mip_level</span>: <span class="ident">u32</span>, <span class="ident">depth_or_layer</span>: <span class="ident">u32</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">A::TextureView</span> {
+        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">clear_mode</span> {
+            <span class="ident">TextureClearMode::BufferCopy</span> =&gt; {
+                <span class="macro">panic!</span>(<span class="string">&quot;Given texture is cleared with buffer copies, not render passes&quot;</span>)
+            }
+            <span class="ident">TextureClearMode::None</span> =&gt; {
+                <span class="macro">panic!</span>(<span class="string">&quot;Given texture can&#39;t be cleared&quot;</span>)
+            }
+            <span class="ident">TextureClearMode::RenderPass</span> {
+                <span class="kw-2">ref</span> <span class="ident">clear_views</span>, ..
+            } =&gt; {
+                <span class="kw">let</span> <span class="ident">index</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">desc</span>.<span class="ident">dimension</span> <span class="op">==</span> <span class="ident">wgt::TextureDimension::D3</span> {
+                    (<span class="number">0</span>..<span class="ident">mip_level</span>).<span class="ident">fold</span>(<span class="number">0</span>, <span class="op">|</span><span class="ident">acc</span>, <span class="ident">mip</span><span class="op">|</span> {
+                        <span class="ident">acc</span> <span class="op">+</span> (<span class="self">self</span>.<span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">mip</span>).<span class="ident">max</span>(<span class="number">1</span>)
+                    })
+                } <span class="kw">else</span> {
+                    <span class="ident">mip_level</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span>
+                } <span class="op">+</span> <span class="ident">depth_or_layer</span>;
+                <span class="kw-2">&amp;</span><span class="ident">clear_views</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>]
+            }
+        }
+    }
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span> <span class="ident">Global</span><span class="op">&lt;</span><span class="ident">G</span><span class="op">&gt;</span> {
@@ -767,6 +849,8 @@
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">CreateTextureError</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">Device</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">DeviceError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Depth Texture format {0:?} can&#39;t be used for volume textures&quot;</span>)]</span>
+    <span class="ident">CannotCreateDepthVolumeTexture</span>(<span class="ident">wgt::TextureFormat</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Textures cannot have empty usage flags&quot;</span>)]</span>
     <span class="ident">EmptyUsage</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>

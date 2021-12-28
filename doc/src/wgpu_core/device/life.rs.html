@@ -735,6 +735,20 @@
 <span id="733">733</span>
 <span id="734">734</span>
 <span id="735">735</span>
+<span id="736">736</span>
+<span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
 </pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::device::trace</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -993,7 +1007,10 @@
         <span class="kw">for</span> <span class="ident">res</span> <span class="kw">in</span> <span class="ident">temp_resources</span> {
             <span class="kw">match</span> <span class="ident">res</span> {
                 <span class="ident">TempResource::Buffer</span>(<span class="ident">raw</span>) =&gt; <span class="ident">last_resources</span>.<span class="ident">buffers</span>.<span class="ident">push</span>(<span class="ident">raw</span>),
-                <span class="ident">TempResource::Texture</span>(<span class="ident">raw</span>) =&gt; <span class="ident">last_resources</span>.<span class="ident">textures</span>.<span class="ident">push</span>(<span class="ident">raw</span>),
+                <span class="ident">TempResource::Texture</span>(<span class="ident">raw</span>, <span class="ident">views</span>) =&gt; {
+                    <span class="ident">last_resources</span>.<span class="ident">textures</span>.<span class="ident">push</span>(<span class="ident">raw</span>);
+                    <span class="ident">last_resources</span>.<span class="ident">texture_views</span>.<span class="ident">extend</span>(<span class="ident">views</span>);
+                }
             }
         }
 
@@ -1073,7 +1090,10 @@
             .<span class="ident">map_or</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">free_resources</span>, <span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;mut</span> <span class="ident">a</span>.<span class="ident">last_resources</span>);
         <span class="kw">match</span> <span class="ident">temp_resource</span> {
             <span class="ident">TempResource::Buffer</span>(<span class="ident">raw</span>) =&gt; <span class="ident">resources</span>.<span class="ident">buffers</span>.<span class="ident">push</span>(<span class="ident">raw</span>),
-            <span class="ident">TempResource::Texture</span>(<span class="ident">raw</span>) =&gt; <span class="ident">resources</span>.<span class="ident">textures</span>.<span class="ident">push</span>(<span class="ident">raw</span>),
+            <span class="ident">TempResource::Texture</span>(<span class="ident">raw</span>, <span class="ident">views</span>) =&gt; {
+                <span class="ident">resources</span>.<span class="ident">texture_views</span>.<span class="ident">extend</span>(<span class="ident">views</span>);
+                <span class="ident">resources</span>.<span class="ident">textures</span>.<span class="ident">push</span>(<span class="ident">raw</span>);
+            }
         }
     }
 
@@ -1192,12 +1212,20 @@
                             <span class="ident">resource::TextureInner::Native</span> { <span class="ident">raw</span>: <span class="prelude-val">Some</span>(<span class="ident">raw</span>) } =&gt; <span class="ident">raw</span>,
                             <span class="kw">_</span> =&gt; <span class="kw">continue</span>,
                         };
-                        <span class="self">self</span>.<span class="ident">active</span>
+                        <span class="kw">let</span> <span class="ident">non_referenced_resources</span> <span class="op">=</span> <span class="self">self</span>
+                            .<span class="ident">active</span>
                             .<span class="ident">iter_mut</span>()
                             .<span class="ident">find</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">index</span> <span class="op">==</span> <span class="ident">submit_index</span>)
-                            .<span class="ident">map_or</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">free_resources</span>, <span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;mut</span> <span class="ident">a</span>.<span class="ident">last_resources</span>)
-                            .<span class="ident">textures</span>
-                            .<span class="ident">push</span>(<span class="ident">raw</span>);
+                            .<span class="ident">map_or</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">free_resources</span>, <span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="kw-2">&amp;mut</span> <span class="ident">a</span>.<span class="ident">last_resources</span>);
+
+                        <span class="ident">non_referenced_resources</span>.<span class="ident">textures</span>.<span class="ident">push</span>(<span class="ident">raw</span>);
+                        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">resource::TextureClearMode::RenderPass</span> { <span class="ident">clear_views</span>, .. } <span class="op">=</span>
+                            <span class="ident">res</span>.<span class="ident">clear_mode</span>
+                        {
+                            <span class="ident">non_referenced_resources</span>
+                                .<span class="ident">texture_views</span>
+                                .<span class="ident">extend</span>(<span class="ident">clear_views</span>.<span class="ident">into_iter</span>());
+                        }
                     }
                 }
             }
