@@ -2341,6 +2341,30 @@
 <span id="2338">2338</span>
 <span id="2339">2339</span>
 <span id="2340">2340</span>
+<span id="2341">2341</span>
+<span id="2342">2342</span>
+<span id="2343">2343</span>
+<span id="2344">2344</span>
+<span id="2345">2345</span>
+<span id="2346">2346</span>
+<span id="2347">2347</span>
+<span id="2348">2348</span>
+<span id="2349">2349</span>
+<span id="2350">2350</span>
+<span id="2351">2351</span>
+<span id="2352">2352</span>
+<span id="2353">2353</span>
+<span id="2354">2354</span>
+<span id="2355">2355</span>
+<span id="2356">2356</span>
+<span id="2357">2357</span>
+<span id="2358">2358</span>
+<span id="2359">2359</span>
+<span id="2360">2360</span>
+<span id="2361">2361</span>
+<span id="2362">2362</span>
+<span id="2363">2363</span>
+<span id="2364">2364</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model::BindError</span>,
     <span class="ident">command</span>::{
@@ -2752,6 +2776,8 @@
     <span class="ident">InvalidColorAttachmentFormat</span>(<span class="ident">wgt::TextureFormat</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;attachment format {0:?} is not a depth-stencil format&quot;</span>)]</span>
     <span class="ident">InvalidDepthStencilAttachmentFormat</span>(<span class="ident">wgt::TextureFormat</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;attachment format {0:?} can not be resolved&quot;</span>)]</span>
+    <span class="ident">UnsupportedResolveTargetFormat</span>(<span class="ident">wgt::TextureFormat</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;necessary attachments are missing&quot;</span>)]</span>
     <span class="ident">MissingAttachments</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;attachments have differing sizes: {previous:?} is followed by {mismatch:?}&quot;</span>)]</span>
@@ -2761,10 +2787,15 @@
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;attachment&#39;s sample count {0} is invalid&quot;</span>)]</span>
     <span class="ident">InvalidSampleCount</span>(<span class="ident">u32</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;attachment with resolve target must be multi-sampled&quot;</span>)]</span>
-    <span class="ident">InvalidResolveSourceSampleCount</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;resolve target must have a sample count of 1&quot;</span>)]</span>
-    <span class="ident">InvalidResolveTargetSampleCount</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;resolve source must be multi-sampled (has {src} samples) while the resolve destination must not be multisampled (has {dst} samples)&quot;</span>)]</span>
+    <span class="ident">InvalidResolveSampleCounts</span> { <span class="ident">src</span>: <span class="ident">u32</span>, <span class="ident">dst</span>: <span class="ident">u32</span> },
+    <span class="attribute">#[<span class="ident">error</span>(
+        <span class="string">&quot;resource source format ({src:?}) must match the resolve destination format ({dst:?})&quot;</span>
+    )]</span>
+    <span class="ident">MismatchedResolveTextureFormat</span> {
+        <span class="ident">src</span>: <span class="ident">wgt::TextureFormat</span>,
+        <span class="ident">dst</span>: <span class="ident">wgt::TextureFormat</span>,
+    },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;surface texture is dropped before the render pass is finished&quot;</span>)]</span>
     <span class="ident">SurfaceTextureDropped</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;not enough memory left&quot;</span>)]</span>
@@ -2781,7 +2812,8 @@
     <span class="ident">MissingFeatures</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">MissingFeatures</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">MissingDownlevelFlags</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">MissingDownlevelFlags</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;indirect draw uses bytes {offset}..{end_offset} {} which overruns indirect buffer of size {buffer_size}&quot;</span>, <span class="ident">count</span>.<span class="ident">map_or_else</span>(<span class="ident">String::new</span>, <span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;(using count {})&quot;</span>, <span class="ident">v</span>)))]</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;indirect draw uses bytes {offset}..{end_offset} {} which overruns indirect buffer of size {buffer_size}&quot;</span>,
+        <span class="ident">count</span>.<span class="ident">map_or_else</span>(<span class="ident">String::new</span>, <span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="macro">format!</span>(<span class="string">&quot;(using count {})&quot;</span>, <span class="ident">v</span>)))]</span>
     <span class="ident">IndirectBufferOverrun</span> {
         <span class="ident">count</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonZeroU32</span><span class="op">&gt;</span>,
         <span class="ident">offset</span>: <span class="ident">u64</span>,
@@ -3166,6 +3198,7 @@
                     .<span class="ident">views</span>
                     .<span class="ident">use_extend</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">view_guard</span>, <span class="ident">resolve_target</span>, (), ())
                     .<span class="ident">map_err</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> <span class="ident">RenderPassErrorInner::InvalidAttachment</span>(<span class="ident">resolve_target</span>))<span class="question-mark">?</span>;
+
                 <span class="ident">check_multiview</span>(<span class="ident">resolve_view</span>)<span class="question-mark">?</span>;
                 <span class="kw">if</span> <span class="ident">color_view</span>.<span class="ident">extent</span> <span class="op">!</span><span class="op">=</span> <span class="ident">resolve_view</span>.<span class="ident">extent</span> {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::AttachmentsDimensionMismatch</span> {
@@ -3173,11 +3206,26 @@
                         <span class="ident">mismatch</span>: (<span class="string">&quot;resolve&quot;</span>, <span class="ident">resolve_view</span>.<span class="ident">extent</span>),
                     });
                 }
-                <span class="kw">if</span> <span class="ident">color_view</span>.<span class="ident">samples</span> <span class="op">==</span> <span class="number">1</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::InvalidResolveSourceSampleCount</span>);
+                <span class="kw">if</span> <span class="ident">color_view</span>.<span class="ident">samples</span> <span class="op">==</span> <span class="number">1</span> <span class="op">|</span><span class="op">|</span> <span class="ident">resolve_view</span>.<span class="ident">samples</span> <span class="op">!</span><span class="op">=</span> <span class="number">1</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::InvalidResolveSampleCounts</span> {
+                        <span class="ident">src</span>: <span class="ident">color_view</span>.<span class="ident">samples</span>,
+                        <span class="ident">dst</span>: <span class="ident">resolve_view</span>.<span class="ident">samples</span>,
+                    });
                 }
-                <span class="kw">if</span> <span class="ident">resolve_view</span>.<span class="ident">samples</span> <span class="op">!</span><span class="op">=</span> <span class="number">1</span> {
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::InvalidResolveTargetSampleCount</span>);
+                <span class="kw">if</span> <span class="ident">color_view</span>.<span class="ident">desc</span>.<span class="ident">format</span> <span class="op">!</span><span class="op">=</span> <span class="ident">resolve_view</span>.<span class="ident">desc</span>.<span class="ident">format</span> {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::MismatchedResolveTextureFormat</span> {
+                        <span class="ident">src</span>: <span class="ident">color_view</span>.<span class="ident">desc</span>.<span class="ident">format</span>,
+                        <span class="ident">dst</span>: <span class="ident">resolve_view</span>.<span class="ident">desc</span>.<span class="ident">format</span>,
+                    });
+                }
+                <span class="kw">if</span> <span class="op">!</span><span class="ident">resolve_view</span>
+                    .<span class="ident">format_features</span>
+                    .<span class="ident">flags</span>
+                    .<span class="ident">contains</span>(<span class="ident">wgt::TextureFormatFeatureFlags::MULTISAMPLE_RESOLVE</span>)
+                {
+                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">RenderPassErrorInner::UnsupportedResolveTargetFormat</span>(
+                        <span class="ident">resolve_view</span>.<span class="ident">desc</span>.<span class="ident">format</span>,
+                    ));
                 }
 
                 <span class="ident">cmd_buf</span>.<span class="ident">texture_memory_actions</span>.<span class="ident">register_implicit_init</span>(
@@ -4682,5 +4730,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (092e1c9d2 2022-01-09)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (89b9f7b28 2022-01-10)" ></div>
 </body></html>
