@@ -378,6 +378,19 @@
 <span id="375">375</span>
 <span id="376">376</span>
 <span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! Presentation.
 
 ## Lifecycle
@@ -399,9 +412,7 @@ extract it from the hub.
     <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Input</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>::{<span class="ident">DeviceId</span>, <span class="ident">SurfaceId</span>, <span class="ident">TextureId</span>, <span class="ident">Valid</span>},
     <span class="ident">init_tracker::TextureInitTracker</span>,
-    <span class="ident">resource</span>,
-    <span class="ident">track::TextureSelector</span>,
-    <span class="ident">LifeGuard</span>, <span class="ident">Stored</span>,
+    <span class="ident">resource</span>, <span class="ident">track</span>, <span class="ident">LifeGuard</span>, <span class="ident">Stored</span>,
 };
 
 <span class="kw">use</span> <span class="ident">hal</span>::{<span class="ident">Queue</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Surface</span> <span class="kw">as</span> <span class="kw">_</span>};
@@ -554,7 +565,7 @@ extract it from the hub.
                             <span class="op">|</span> <span class="ident">wgt::TextureFormatFeatureFlags::MULTISAMPLE_RESOLVE</span>,
                     },
                     <span class="ident">initialization_status</span>: <span class="ident">TextureInitTracker::new</span>(<span class="number">1</span>, <span class="number">1</span>),
-                    <span class="ident">full_range</span>: <span class="ident">TextureSelector</span> {
+                    <span class="ident">full_range</span>: <span class="ident">track::TextureSelector</span> {
                         <span class="ident">layers</span>: <span class="number">0</span>..<span class="number">1</span>,
                         <span class="ident">levels</span>: <span class="number">0</span>..<span class="number">1</span>,
                     },
@@ -568,7 +579,22 @@ extract it from the hub.
                 <span class="kw">let</span> <span class="ident">ref_count</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>();
                 <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">fid</span>.<span class="ident">assign</span>(<span class="ident">texture</span>, <span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
 
-                <span class="comment">//suf.acquired_texture = Some(suf_texture);</span>
+                {
+                    <span class="kw">use</span> <span class="ident">track::ResourceState</span> <span class="kw">as</span> <span class="kw">_</span>;
+                    <span class="comment">// register it in the device tracker as uninitialized</span>
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">trackers</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">trackers</span>.<span class="ident">lock</span>();
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">ts</span> <span class="op">=</span> <span class="ident">track::TextureState::default</span>();
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">ts</span>.<span class="ident">change</span>(
+                        <span class="ident">id</span>,
+                        <span class="ident">track::TextureSelector</span> {
+                            <span class="ident">layers</span>: <span class="number">0</span>..<span class="number">1</span>,
+                            <span class="ident">levels</span>: <span class="number">0</span>..<span class="number">1</span>,
+                        },
+                        <span class="ident">hal::TextureUses::UNINITIALIZED</span>,
+                        <span class="prelude-val">None</span>,
+                    );
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">trackers</span>.<span class="ident">textures</span>.<span class="ident">init</span>(<span class="ident">id</span>, <span class="ident">ref_count</span>.<span class="ident">clone</span>(), <span class="ident">ts</span>);
+                }
 
                 <span class="kw">if</span> <span class="ident">present</span>.<span class="ident">acquired_texture</span>.<span class="ident">is_some</span>() {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SurfaceError::AlreadyAcquired</span>);
@@ -756,5 +782,5 @@ extract it from the hub.
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (89b9f7b28 2022-01-10)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (1409c015b 2022-01-11)" ></div>
 </body></html>
