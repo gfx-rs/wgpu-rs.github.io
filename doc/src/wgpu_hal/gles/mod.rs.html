@@ -741,6 +741,17 @@
 <span id="735">735</span>
 <span id="736">736</span>
 <span id="737">737</span>
+<span id="738">738</span>
+<span id="739">739</span>
+<span id="740">740</span>
+<span id="741">741</span>
+<span id="742">742</span>
+<span id="743">743</span>
+<span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
 </pre><pre class="rust"><code><span class="doccomment">/*!
 # OpenGL ES3 API (aka GLES3).
 
@@ -831,6 +842,7 @@ To address this, we invalidate the vertex buffers based on:
 <span class="kw">const</span> <span class="ident">MAX_SAMPLERS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">16</span>;
 <span class="kw">const</span> <span class="ident">MAX_VERTEX_ATTRIBUTES</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">16</span>;
 <span class="kw">const</span> <span class="ident">ZERO_BUFFER_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">256</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">10</span>;
+<span class="kw">const</span> <span class="ident">MAX_PUSH_CONSTANTS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">16</span>;
 
 <span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::Api</span> <span class="kw">for</span> <span class="ident">Api</span> {
     <span class="kw">type</span> <span class="ident">Instance</span> <span class="op">=</span> <span class="ident">Instance</span>;
@@ -1135,13 +1147,18 @@ To address this, we invalidate the vertex buffers based on:
     <span class="ident">stride</span>: <span class="ident">u32</span>,
 }
 
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">struct</span> <span class="ident">UniformDesc</span> {
-    <span class="ident">location</span>: <span class="ident">glow::UniformLocation</span>,
-    <span class="ident">offset</span>: <span class="ident">u32</span>,
+    <span class="ident">location</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">glow::UniformLocation</span><span class="op">&gt;</span>,
+    <span class="ident">size</span>: <span class="ident">u32</span>,
     <span class="ident">utype</span>: <span class="ident">u32</span>,
 }
+
+<span class="comment">// Safe: WASM doesn&#39;t have threads</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
+<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">UniformDesc</span> {}
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
+<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">UniformDesc</span> {}
 
 <span class="doccomment">/// For each texture in the pipeline layout, store the index of the only</span>
 <span class="doccomment">/// sampler (in this layout) that the texture is used with.</span>
@@ -1150,7 +1167,7 @@ To address this, we invalidate the vertex buffers based on:
 <span class="kw">struct</span> <span class="ident">PipelineInner</span> {
     <span class="ident">program</span>: <span class="ident">glow::Program</span>,
     <span class="ident">sampler_map</span>: <span class="ident">SamplerBindMap</span>,
-    <span class="ident">uniforms</span>: <span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">UniformDesc</span>]<span class="op">&gt;</span>,
+    <span class="ident">uniforms</span>: [<span class="ident">UniformDesc</span>; <span class="ident">MAX_PUSH_CONSTANTS</span>],
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
@@ -1459,6 +1476,11 @@ To address this, we invalidate the vertex buffers based on:
     <span class="ident">InsertDebugMarker</span>(<span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>),
     <span class="ident">PushDebugGroup</span>(<span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>),
     <span class="ident">PopDebugGroup</span>,
+    <span class="ident">SetPushConstants</span> {
+        <span class="ident">uniform</span>: <span class="ident">UniformDesc</span>,
+        <span class="doccomment">/// Offset from the start of the `data_bytes`</span>
+        <span class="ident">offset</span>: <span class="ident">u32</span>,
+    },
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
@@ -1479,5 +1501,5 @@ To address this, we invalidate the vertex buffers based on:
     <span class="ident">private_caps</span>: <span class="ident">PrivateCapabilities</span>,
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (777bb86bc 2022-01-20)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (17d29dcdc 2022-01-21)" ></div>
 </body></html>
