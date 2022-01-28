@@ -1563,10 +1563,6 @@
 <span id="1558">1558</span>
 <span id="1559">1559</span>
 <span id="1560">1560</span>
-<span id="1561">1561</span>
-<span id="1562">1562</span>
-<span id="1563">1563</span>
-<span id="1564">1564</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">extensions::khr</span>, <span class="ident">vk</span>};
@@ -1669,7 +1665,9 @@
             <span class="ident">core</span>: <span class="ident">vk::PhysicalDeviceFeatures::builder</span>()
                 .<span class="ident">robust_buffer_access</span>(<span class="ident">private_caps</span>.<span class="ident">robust_buffer_access</span>)
                 .<span class="ident">independent_blend</span>(<span class="bool-val">true</span>)
-                .<span class="ident">sample_rate_shading</span>(<span class="bool-val">true</span>)
+                .<span class="ident">sample_rate_shading</span>(
+                    <span class="ident">downlevel_flags</span>.<span class="ident">contains</span>(<span class="ident">wgt::DownlevelFlags::MULTISAMPLED_SHADING</span>),
+                )
                 .<span class="ident">image_cube_array</span>(
                     <span class="ident">downlevel_flags</span>.<span class="ident">contains</span>(<span class="ident">wgt::DownlevelFlags::CUBE_ARRAY_TEXTURES</span>),
                 )
@@ -1911,6 +1909,7 @@
             <span class="ident">Df::FRAGMENT_WRITABLE_STORAGE</span>,
             <span class="self">self</span>.<span class="ident">core</span>.<span class="ident">fragment_stores_and_atomics</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
         );
+        <span class="ident">dl_flags</span>.<span class="ident">set</span>(<span class="ident">Df::MULTISAMPLED_SHADING</span>, <span class="self">self</span>.<span class="ident">core</span>.<span class="ident">sample_rate_shading</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>);
 
         <span class="ident">features</span>.<span class="ident">set</span>(
             <span class="ident">F::INDIRECT_FIRST_INSTANCE</span>,
@@ -2494,13 +2493,6 @@
         {
             <span class="macro">log::warn!</span>(
                 <span class="string">&quot;SPIR-V storage buffer class is not supported, hiding adapter: {}&quot;</span>,
-                <span class="ident">info</span>.<span class="ident">name</span>
-            );
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
-        }
-        <span class="kw">if</span> <span class="ident">phd_features</span>.<span class="ident">core</span>.<span class="ident">sample_rate_shading</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="macro">log::warn!</span>(
-                <span class="string">&quot;sample_rate_shading feature is not supported, hiding adapter: {}&quot;</span>,
                 <span class="ident">info</span>.<span class="ident">name</span>
             );
             <span class="kw">return</span> <span class="prelude-val">None</span>;
@@ -3132,5 +3124,5 @@
     <span class="ident">r16unorm</span> <span class="op">&amp;&amp;</span> <span class="ident">r16snorm</span> <span class="op">&amp;&amp;</span> <span class="ident">rg16unorm</span> <span class="op">&amp;&amp;</span> <span class="ident">rg16snorm</span> <span class="op">&amp;&amp;</span> <span class="ident">rgba16unorm</span> <span class="op">&amp;&amp;</span> <span class="ident">rgba16snorm</span>
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (6abb6385b 2022-01-26)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (21b4a9cfd 2022-01-27)" ></div>
 </body></html>
