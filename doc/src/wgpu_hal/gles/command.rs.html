@@ -968,6 +968,20 @@
 <span id="963">963</span>
 <span id="964">964</span>
 <span id="965">965</span>
+<span id="966">966</span>
+<span id="967">967</span>
+<span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
+<span id="976">976</span>
+<span id="977">977</span>
+<span id="978">978</span>
+<span id="979">979</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">conv</span>, <span class="ident">Command</span> <span class="kw">as</span> <span class="ident">C</span>};
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">mem</span>, <span class="ident">ops::Range</span>};
@@ -998,6 +1012,7 @@
     <span class="ident">has_pass_label</span>: <span class="ident">bool</span>,
     <span class="ident">instance_vbuf_mask</span>: <span class="ident">usize</span>,
     <span class="ident">dirty_vbuf_mask</span>: <span class="ident">usize</span>,
+    <span class="ident">active_first_instance</span>: <span class="ident">u32</span>,
     <span class="ident">push_offset_to_uniform</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::UniformDesc</span>, { <span class="ident"><span class="kw">super</span>::MAX_PUSH_CONSTANTS</span> }<span class="op">&gt;</span>,
 }
 
@@ -1061,34 +1076,44 @@
             .<span class="ident">private_caps</span>
             .<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::PrivateCapabilities::VERTEX_BUFFER_LAYOUT</span>)
         {
-            <span class="kw">for</span> (<span class="ident">index</span>, <span class="kw-2">&amp;</span>(<span class="kw-2">ref</span> <span class="ident">vb_desc</span>, <span class="kw-2">ref</span> <span class="ident">vb</span>)) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">vertex_buffers</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
+            <span class="kw">for</span> (<span class="ident">index</span>, <span class="ident">pair</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">vertex_buffers</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">dirty_vbuf_mask</span> <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">index</span>) <span class="op">==</span> <span class="number">0</span> {
                     <span class="kw">continue</span>;
                 }
-                <span class="kw">let</span> <span class="ident">vb</span> <span class="op">=</span> <span class="ident">vb</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
-                <span class="kw">let</span> <span class="ident">instance_offset</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">vb_desc</span>.<span class="ident">step</span> {
-                    <span class="ident">wgt::VertexStepMode::Vertex</span> =&gt; <span class="number">0</span>,
-                    <span class="ident">wgt::VertexStepMode::Instance</span> =&gt; <span class="ident">first_instance</span> <span class="op">*</span> <span class="ident">vb_desc</span>.<span class="ident">stride</span>,
+                <span class="kw">let</span> (<span class="ident">buffer_desc</span>, <span class="ident">vb</span>) <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">pair</span> {
+                    <span class="comment">// Not all dirty bindings are necessarily filled. Some may be unused.</span>
+                    (<span class="kw">_</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">continue</span>,
+                    (<span class="kw-2">ref</span> <span class="ident">vb_desc</span>, <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">vb</span>)) =&gt; (<span class="ident">vb_desc</span>.<span class="ident">clone</span>(), <span class="ident">vb</span>),
                 };
+                <span class="kw">let</span> <span class="ident">instance_offset</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">buffer_desc</span>.<span class="ident">step</span> {
+                    <span class="ident">wgt::VertexStepMode::Vertex</span> =&gt; <span class="number">0</span>,
+                    <span class="ident">wgt::VertexStepMode::Instance</span> =&gt; <span class="ident">first_instance</span> <span class="op">*</span> <span class="ident">buffer_desc</span>.<span class="ident">stride</span>,
+                };
+
                 <span class="self">self</span>.<span class="ident">cmd_buffer</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">C::SetVertexBuffer</span> {
                     <span class="ident">index</span>: <span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>,
                     <span class="ident">buffer</span>: <span class="ident"><span class="kw">super</span>::BufferBinding</span> {
                         <span class="ident">raw</span>: <span class="ident">vb</span>.<span class="ident">raw</span>,
                         <span class="ident">offset</span>: <span class="ident">vb</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">instance_offset</span> <span class="kw">as</span> <span class="ident">wgt::BufferAddress</span>,
                     },
-                    <span class="ident">buffer_desc</span>: <span class="ident">vb_desc</span>.<span class="ident">clone</span>(),
+                    <span class="ident">buffer_desc</span>,
                 });
+                <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">dirty_vbuf_mask</span> <span class="op">^</span><span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">index</span>;
             }
         } <span class="kw">else</span> {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vbuf_mask</span> <span class="op">=</span> <span class="number">0</span>;
             <span class="kw">for</span> <span class="ident">attribute</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">vertex_attributes</span>.<span class="ident">iter</span>() {
                 <span class="kw">if</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">dirty_vbuf_mask</span> <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">attribute</span>.<span class="ident">buffer_index</span>) <span class="op">==</span> <span class="number">0</span> {
                     <span class="kw">continue</span>;
                 }
-                <span class="kw">let</span> (<span class="ident">buffer_desc</span>, <span class="ident">buffer</span>) <span class="op">=</span>
-                    <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">vertex_buffers</span>[<span class="ident">attribute</span>.<span class="ident">buffer_index</span> <span class="kw">as</span> <span class="ident">usize</span>].<span class="ident">clone</span>();
+                <span class="kw">let</span> (<span class="ident">buffer_desc</span>, <span class="ident">vb</span>) <span class="op">=</span>
+                    <span class="kw">match</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">vertex_buffers</span>[<span class="ident">attribute</span>.<span class="ident">buffer_index</span> <span class="kw">as</span> <span class="ident">usize</span>] {
+                        <span class="comment">// Not all dirty bindings are necessarily filled. Some may be unused.</span>
+                        (<span class="kw">_</span>, <span class="prelude-val">None</span>) =&gt; <span class="kw">continue</span>,
+                        (<span class="kw-2">ref</span> <span class="ident">vb_desc</span>, <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">vb</span>)) =&gt; (<span class="ident">vb_desc</span>.<span class="ident">clone</span>(), <span class="ident">vb</span>),
+                    };
 
                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">attribute_desc</span> <span class="op">=</span> <span class="ident">attribute</span>.<span class="ident">clone</span>();
-                <span class="kw">let</span> <span class="ident">vb</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">unwrap</span>();
                 <span class="ident">attribute_desc</span>.<span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">vb</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u32</span>;
                 <span class="kw">if</span> <span class="ident">buffer_desc</span>.<span class="ident">step</span> <span class="op">==</span> <span class="ident">wgt::VertexStepMode::Instance</span> {
                     <span class="ident">attribute_desc</span>.<span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">buffer_desc</span>.<span class="ident">stride</span> <span class="op">*</span> <span class="ident">first_instance</span>;
@@ -1099,7 +1124,9 @@
                     <span class="ident">buffer_desc</span>,
                     <span class="ident">attribute_desc</span>,
                 });
+                <span class="ident">vbuf_mask</span> <span class="op">|</span><span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">attribute</span>.<span class="ident">buffer_index</span>;
             }
+            <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">dirty_vbuf_mask</span> <span class="op">^</span><span class="op">=</span> <span class="ident">vbuf_mask</span>;
         }
     }
 
@@ -1121,13 +1148,13 @@
     }
 
     <span class="kw">fn</span> <span class="ident">prepare_draw</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">first_instance</span>: <span class="ident">u32</span>) {
-        <span class="kw">if</span> <span class="ident">first_instance</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if</span> <span class="ident">first_instance</span> <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">active_first_instance</span> {
+            <span class="comment">// rebind all per-instance buffers on first-instance change</span>
             <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">dirty_vbuf_mask</span> <span class="op">|</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">instance_vbuf_mask</span>;
+            <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">active_first_instance</span> <span class="op">=</span> <span class="ident">first_instance</span>;
         }
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">dirty_vbuf_mask</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
             <span class="self">self</span>.<span class="ident">rebind_vertex_data</span>(<span class="ident">first_instance</span>);
-            <span class="kw">let</span> <span class="ident">vertex_rate_mask</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">dirty_vbuf_mask</span> <span class="op">&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">state</span>.<span class="ident">instance_vbuf_mask</span>;
-            <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">dirty_vbuf_mask</span> <span class="op">^</span><span class="op">=</span> <span class="ident">vertex_rate_mask</span>;
         }
     }
 
@@ -1509,6 +1536,7 @@
         }
         <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">instance_vbuf_mask</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">dirty_vbuf_mask</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">active_first_instance</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">color_targets</span>.<span class="ident">clear</span>();
         <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">vertex_attributes</span>.<span class="ident">clear</span>();
         <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">primitive</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::PrimitiveState::default</span>();
