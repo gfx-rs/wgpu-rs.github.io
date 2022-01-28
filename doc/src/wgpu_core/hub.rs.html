@@ -1054,6 +1054,38 @@
 <span id="1049">1049</span>
 <span id="1050">1050</span>
 <span id="1051">1051</span>
+<span id="1052">1052</span>
+<span id="1053">1053</span>
+<span id="1054">1054</span>
+<span id="1055">1055</span>
+<span id="1056">1056</span>
+<span id="1057">1057</span>
+<span id="1058">1058</span>
+<span id="1059">1059</span>
+<span id="1060">1060</span>
+<span id="1061">1061</span>
+<span id="1062">1062</span>
+<span id="1063">1063</span>
+<span id="1064">1064</span>
+<span id="1065">1065</span>
+<span id="1066">1066</span>
+<span id="1067">1067</span>
+<span id="1068">1068</span>
+<span id="1069">1069</span>
+<span id="1070">1070</span>
+<span id="1071">1071</span>
+<span id="1072">1072</span>
+<span id="1073">1073</span>
+<span id="1074">1074</span>
+<span id="1075">1075</span>
+<span id="1076">1076</span>
+<span id="1077">1077</span>
+<span id="1078">1078</span>
+<span id="1079">1079</span>
+<span id="1080">1080</span>
+<span id="1081">1081</span>
+<span id="1082">1082</span>
+<span id="1083">1083</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{<span class="ident">BindGroup</span>, <span class="ident">BindGroupLayout</span>, <span class="ident">PipelineLayout</span>},
     <span class="ident">command</span>::{<span class="ident">CommandBuffer</span>, <span class="ident">RenderBundle</span>},
@@ -1072,21 +1104,52 @@
 <span class="kw">use</span> <span class="ident">std::cell::Cell</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">fmt::Debug</span>, <span class="ident">marker::PhantomData</span>, <span class="ident">mem</span>, <span class="ident">ops</span>};
 
-<span class="doccomment">/// A simple structure to manage identities of objects.</span>
+<span class="doccomment">/// A simple structure to allocate [`Id`] identifiers.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Calling [`alloc`] returns a fresh, never-before-seen id. Calling [`free`]</span>
+<span class="doccomment">/// marks an id as dead; it will never be returned again by `alloc`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Use `IdentityManager::default` to construct new instances.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// `IdentityManager` returns `Id`s whose index values are suitable for use as</span>
+<span class="doccomment">/// indices into a vector of information (which you maintain elsewhere) about</span>
+<span class="doccomment">/// those ids&#39; referents:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// - Every live id has a distinct index value. Each live id&#39;s index selects a</span>
+<span class="doccomment">///   distinct element in the vector.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// - `IdentityManager` prefers low index numbers. If you size your vector to</span>
+<span class="doccomment">///   accommodate the indices produced here, the vector&#39;s length will reflect</span>
+<span class="doccomment">///   the highwater mark of actual occupancy.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// - `IdentityManager` reuses the index values of freed ids before returning</span>
+<span class="doccomment">///   ids with new index values. Freed vector entries get reused.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`Id`]: crate::id::Id</span>
+<span class="doccomment">/// [`Backend`]: wgt::Backend;</span>
+<span class="doccomment">/// [`alloc`]: IdentityManager::alloc</span>
+<span class="doccomment">/// [`free`]: IdentityManager::free</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IdentityManager</span> {
+    <span class="doccomment">/// Available index values. If empty, then `epochs.len()` is the next index</span>
+    <span class="doccomment">/// to allocate.</span>
     <span class="ident">free</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Index</span><span class="op">&gt;</span>,
+
+    <span class="doccomment">/// The next or currently-live epoch value associated with each `Id` index.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If there is a live id with index `i`, then `epochs[i]` is its epoch; any</span>
+    <span class="doccomment">/// id with the same index but an older epoch is dead.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If index `i` is currently unused, `epochs[i]` is the epoch to use in its</span>
+    <span class="doccomment">/// next `Id`.</span>
     <span class="ident">epochs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Epoch</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">IdentityManager</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_index</span>(<span class="ident">min_index</span>: <span class="ident">u32</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">free</span>: (<span class="number">0</span>..<span class="ident">min_index</span>).<span class="ident">collect</span>(),
-            <span class="ident">epochs</span>: <span class="macro">vec!</span>[<span class="number">1</span>; <span class="ident">min_index</span> <span class="kw">as</span> <span class="ident">usize</span>],
-        }
-    }
-
+    <span class="doccomment">/// Allocate a fresh, never-before-seen id with the given `backend`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The backend is incorporated into the id, so that ids allocated with</span>
+    <span class="doccomment">/// different `backend` values are always distinct.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">alloc</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">id::TypedId</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">backend</span>: <span class="ident">Backend</span>) -&gt; <span class="ident">I</span> {
         <span class="kw">match</span> <span class="self">self</span>.<span class="ident">free</span>.<span class="ident">pop</span>() {
             <span class="prelude-val">Some</span>(<span class="ident">index</span>) =&gt; <span class="ident">I::zip</span>(<span class="ident">index</span>, <span class="self">self</span>.<span class="ident">epochs</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>], <span class="ident">backend</span>),
@@ -1099,6 +1162,7 @@
         }
     }
 
+    <span class="doccomment">/// Free `id`. It will never be returned from `alloc` again.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">free</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">id::TypedId</span> <span class="op">+</span> <span class="ident">Debug</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">I</span>) {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">_backend</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="ident">unzip</span>();
         <span class="kw">let</span> <span class="ident">pe</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">epochs</span>[<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>];
@@ -1417,7 +1481,7 @@
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">IdentityHandlerFactory</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> {
     <span class="kw">type</span> <span class="ident">Filter</span>: <span class="ident">IdentityHandler</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span>;
-    <span class="kw">fn</span> <span class="ident">spawn</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">min_index</span>: <span class="ident">Index</span>) -&gt; <span class="ident"><span class="self">Self</span>::Filter</span>;
+    <span class="kw">fn</span> <span class="ident">spawn</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Filter</span>;
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
@@ -1425,8 +1489,8 @@
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">id::TypedId</span> <span class="op">+</span> <span class="ident">Debug</span><span class="op">&gt;</span> <span class="ident">IdentityHandlerFactory</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">IdentityManagerFactory</span> {
     <span class="kw">type</span> <span class="ident">Filter</span> <span class="op">=</span> <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">IdentityManager</span><span class="op">&gt;</span>;
-    <span class="kw">fn</span> <span class="ident">spawn</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">min_index</span>: <span class="ident">Index</span>) -&gt; <span class="ident"><span class="self">Self</span>::Filter</span> {
-        <span class="ident">Mutex::new</span>(<span class="ident">IdentityManager::from_index</span>(<span class="ident">min_index</span>))
+    <span class="kw">fn</span> <span class="ident">spawn</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Filter</span> {
+        <span class="ident">Mutex::new</span>(<span class="ident">IdentityManager::default</span>())
     }
 }
 
@@ -1475,7 +1539,7 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Resource</span>, <span class="ident">I</span>: <span class="ident">id::TypedId</span>, <span class="ident">F</span>: <span class="ident">IdentityHandlerFactory</span><span class="op">&lt;</span><span class="ident">I</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">Registry</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">I</span>, <span class="ident">F</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">backend</span>: <span class="ident">Backend</span>, <span class="ident">factory</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">identity</span>: <span class="ident">factory</span>.<span class="ident">spawn</span>(<span class="number">0</span>),
+            <span class="ident">identity</span>: <span class="ident">factory</span>.<span class="ident">spawn</span>(),
             <span class="ident">data</span>: <span class="ident">RwLock::new</span>(<span class="ident">Storage</span> {
                 <span class="ident">map</span>: <span class="ident">Vec::new</span>(),
                 <span class="ident">kind</span>: <span class="ident">T::TYPE</span>,
@@ -1487,7 +1551,7 @@
 
     <span class="kw">fn</span> <span class="ident">without_backend</span>(<span class="ident">factory</span>: <span class="kw-2">&amp;</span><span class="ident">F</span>, <span class="ident">kind</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
-            <span class="ident">identity</span>: <span class="ident">factory</span>.<span class="ident">spawn</span>(<span class="number">1</span>),
+            <span class="ident">identity</span>: <span class="ident">factory</span>.<span class="ident">spawn</span>(),
             <span class="ident">data</span>: <span class="ident">RwLock::new</span>(<span class="ident">Storage</span> {
                 <span class="ident">map</span>: <span class="ident">Vec::new</span>(),
                 <span class="ident">kind</span>,
