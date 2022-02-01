@@ -5209,6 +5209,8 @@
 <span id="5204">5204</span>
 <span id="5205">5205</span>
 <span id="5206">5206</span>
+<span id="5207">5207</span>
+<span id="5208">5208</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -5287,21 +5289,23 @@
 }
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RenderPassCompatibilityError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Incompatible color attachment: {0:?} != {1:?}&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Incompatible color attachment: the renderpass expected {0:?} but was given {1:?}&quot;</span>)]</span>
     <span class="ident">IncompatibleColorAttachment</span>(
         <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">TextureFormat</span>, { <span class="ident">hal::MAX_COLOR_TARGETS</span> }<span class="op">&gt;</span>,
         <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">TextureFormat</span>, { <span class="ident">hal::MAX_COLOR_TARGETS</span> }<span class="op">&gt;</span>,
     ),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Incompatible depth-stencil attachment: {0:?} != {1:?}&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">error</span>(
+        <span class="string">&quot;Incompatible depth-stencil attachment: the renderpass expected {0:?} but was given {1:?}&quot;</span>
+    )]</span>
     <span class="ident">IncompatibleDepthStencilAttachment</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TextureFormat</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">TextureFormat</span><span class="op">&gt;</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Incompatible sample count: {0:?} != {1:?}&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Incompatible sample count: the renderpass expected {0:?} but was given {1:?}&quot;</span>)]</span>
     <span class="ident">IncompatibleSampleCount</span>(<span class="ident">u32</span>, <span class="ident">u32</span>),
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Incompatible multiview: {0:?} != {1:?}&quot;</span>)]</span>
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Incompatible multiview: the renderpass expected {0:?} but was given {1:?}&quot;</span>)]</span>
     <span class="ident">IncompatibleMultiview</span>(<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonZeroU32</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">NonZeroU32</span><span class="op">&gt;</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">RenderPassContext</span> {
-    <span class="comment">// Assumed the renderpass only contains one subpass</span>
+    <span class="comment">// Assumes the renderpass only contains one subpass</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">check_compatible</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>,
