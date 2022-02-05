@@ -1206,6 +1206,9 @@
 <span id="1201">1201</span>
 <span id="1202">1202</span>
 <span id="1203">1203</span>
+<span id="1204">1204</span>
+<span id="1205">1205</span>
+<span id="1206">1206</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">binding_model::BindEntryMap</span>, <span class="ident">FastHashMap</span>, <span class="ident">FastHashSet</span>};
 <span class="kw">use</span> <span class="ident">naga::valid::GlobalUse</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::hash_map::Entry</span>, <span class="ident">fmt</span>};
@@ -1233,7 +1236,7 @@
     <span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="ident">bind</span>: <span class="ident">naga::ResourceBinding</span>,
     <span class="ident">ty</span>: <span class="ident">ResourceType</span>,
-    <span class="ident">class</span>: <span class="ident">naga::StorageClass</span>,
+    <span class="ident">class</span>: <span class="ident">naga::AddressSpace</span>,
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
@@ -1389,9 +1392,9 @@
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;type on the shader side does not match the pipeline binding&quot;</span>)]</span>
     <span class="ident">WrongType</span>,
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;storage class {binding:?} doesn&#39;t match the shader {shader:?}&quot;</span>)]</span>
-    <span class="ident">WrongStorageClass</span> {
-        <span class="ident">binding</span>: <span class="ident">naga::StorageClass</span>,
-        <span class="ident">shader</span>: <span class="ident">naga::StorageClass</span>,
+    <span class="ident">WrongAddressSpace</span> {
+        <span class="ident">binding</span>: <span class="ident">naga::AddressSpace</span>,
+        <span class="ident">shader</span>: <span class="ident">naga::AddressSpace</span>,
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;buffer structure size {0}, added to one element of an unbound array, if it&#39;s the last field, ended up greater than the given `min_binding_size`&quot;</span>)]</span>
     <span class="ident">WrongBufferSize</span>(<span class="ident">wgt::BufferSize</span>),
@@ -1581,7 +1584,7 @@
                     } =&gt; {
                         <span class="kw">let</span> (<span class="ident">class</span>, <span class="ident">global_use</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">ty</span> {
                             <span class="ident">wgt::BufferBindingType::Uniform</span> =&gt; {
-                                (<span class="ident">naga::StorageClass::Uniform</span>, <span class="ident">GlobalUse::READ</span>)
+                                (<span class="ident">naga::AddressSpace::Uniform</span>, <span class="ident">GlobalUse::READ</span>)
                             }
                             <span class="ident">wgt::BufferBindingType::Storage</span> { <span class="ident">read_only</span> } =&gt; {
                                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">global_use</span> <span class="op">=</span> <span class="ident">GlobalUse::READ</span> <span class="op">|</span> <span class="ident">GlobalUse::QUERY</span>;
@@ -1589,7 +1592,7 @@
                                 <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">naga_access</span> <span class="op">=</span> <span class="ident">naga::StorageAccess::LOAD</span>;
                                 <span class="ident">naga_access</span>.<span class="ident">set</span>(<span class="ident">naga::StorageAccess::STORE</span>, <span class="op">!</span><span class="ident">read_only</span>);
                                 (
-                                    <span class="ident">naga::StorageClass::Storage</span> {
+                                    <span class="ident">naga::AddressSpace::Storage</span> {
                                         <span class="ident">access</span>: <span class="ident">naga_access</span>,
                                     },
                                     <span class="ident">global_use</span>,
@@ -1597,7 +1600,7 @@
                             }
                         };
                         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">class</span> <span class="op">!</span><span class="op">=</span> <span class="ident">class</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongStorageClass</span> {
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongAddressSpace</span> {
                                 <span class="ident">binding</span>: <span class="ident">class</span>,
                                 <span class="ident">shader</span>: <span class="self">self</span>.<span class="ident">class</span>,
                             });
@@ -1748,8 +1751,8 @@
         <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="self">self</span>.<span class="ident">ty</span> {
             <span class="ident">ResourceType::Buffer</span> { <span class="ident">size</span> } =&gt; <span class="ident">BindingType::Buffer</span> {
                 <span class="ident">ty</span>: <span class="kw">match</span> <span class="self">self</span>.<span class="ident">class</span> {
-                    <span class="ident">naga::StorageClass::Uniform</span> =&gt; <span class="ident">wgt::BufferBindingType::Uniform</span>,
-                    <span class="ident">naga::StorageClass::Storage</span> { .. } =&gt; <span class="ident">wgt::BufferBindingType::Storage</span> {
+                    <span class="ident">naga::AddressSpace::Uniform</span> =&gt; <span class="ident">wgt::BufferBindingType::Uniform</span>,
+                    <span class="ident">naga::AddressSpace::Storage</span> { .. } =&gt; <span class="ident">wgt::BufferBindingType::Storage</span> {
                         <span class="ident">read_only</span>: <span class="op">!</span><span class="ident">shader_usage</span>.<span class="ident">contains</span>(<span class="ident">GlobalUse::WRITE</span>),
                     },
                     <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">BindingError::WrongType</span>),
@@ -2113,6 +2116,9 @@
                     <span class="ident">class</span>,
                 },
                 <span class="ident">naga::TypeInner::Sampler</span> { <span class="ident">comparison</span> } =&gt; <span class="ident">ResourceType::Sampler</span> { <span class="ident">comparison</span> },
+                <span class="ident">naga::TypeInner::Array</span> { <span class="ident">stride</span>, .. } =&gt; <span class="ident">ResourceType::Buffer</span> {
+                    <span class="ident">size</span>: <span class="ident">wgt::BufferSize::new</span>(<span class="ident">stride</span> <span class="kw">as</span> <span class="ident">u64</span>).<span class="ident">unwrap</span>(),
+                },
                 <span class="kw-2">ref</span> <span class="ident">other</span> =&gt; {
                     <span class="macro">log::error!</span>(<span class="string">&quot;Unexpected resource type: {:?}&quot;</span>, <span class="ident">other</span>);
                     <span class="kw">continue</span>;
@@ -2123,7 +2129,7 @@
                     <span class="ident">name</span>: <span class="ident">var</span>.<span class="ident">name</span>.<span class="ident">clone</span>(),
                     <span class="ident">bind</span>,
                     <span class="ident">ty</span>,
-                    <span class="ident">class</span>: <span class="ident">var</span>.<span class="ident">class</span>,
+                    <span class="ident">class</span>: <span class="ident">var</span>.<span class="ident">space</span>,
                 },
                 <span class="ident">Default::default</span>(),
             );
@@ -2410,5 +2416,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (71226d717 2022-02-04)" ></div>
 </body></html>

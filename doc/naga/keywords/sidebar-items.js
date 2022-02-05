@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["wgsl",""]]});
+initSidebarItems({"mod":[["wgsl","Reserved keywords for WGSL (WebGPU Shading Language)."]]});

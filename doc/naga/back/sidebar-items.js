@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["glsl","OpenGL shading language backend"],["spv","Standard Portable Intermediate Representation (SPIR-V) backend !"]]});
+initSidebarItems({"mod":[["glsl","Backend for GLSL (OpenGL Shading Language)."],["spv","Backend for SPIR-V (Standard Portable Intermediate Representation)."]]});

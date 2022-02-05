@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/81dc674/src/proc/layouter.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>layouter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/0ce98d6/src/proc/layouter.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>layouter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
     <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../naga/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
@@ -181,12 +181,50 @@
 <span id="176">176</span>
 <span id="177">177</span>
 <span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arena</span>::{<span class="ident">Arena</span>, <span class="ident">BadHandle</span>, <span class="ident">Handle</span>, <span class="ident">UniqueArena</span>};
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">num::NonZeroU32</span>, <span class="ident">ops</span>};
 
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Alignment</span> <span class="op">=</span> <span class="ident">NonZeroU32</span>;
 
-<span class="doccomment">/// Alignment information for a type.</span>
+<span class="doccomment">/// Size and alignment information for a type.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
@@ -195,13 +233,27 @@
     <span class="kw">pub</span> <span class="ident">alignment</span>: <span class="ident">Alignment</span>,
 }
 
+<span class="kw">impl</span> <span class="ident">TypeLayout</span> {
+    <span class="doccomment">/// Produce the stride as if this type is a base of an array.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">to_stride</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
+        <span class="ident">Layouter::round_up</span>(<span class="self">self</span>.<span class="ident">alignment</span>, <span class="self">self</span>.<span class="ident">size</span>)
+    }
+}
+
 <span class="doccomment">/// Helper processor that derives the sizes of all types.</span>
-<span class="doccomment">/// It uses the default layout algorithm/table, described in</span>
-<span class="doccomment">/// &lt;https://github.com/gpuweb/gpuweb/issues/1393&gt;</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// `Layouter` uses the default layout algorithm/table, described in</span>
+<span class="doccomment">/// [WGSL §4.3.7, &quot;Memory Layout&quot;]</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// A `Layouter` may be indexed by `Handle&lt;Type&gt;` values: `layouter[handle]` is the</span>
+<span class="doccomment">/// layout of the type whose handle is `handle`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [WGSL §4.3.7, &quot;Memory Layout&quot;](https://gpuweb.github.io/gpuweb/wgsl/#memory-layouts)</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Serialize</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">serde::Deserialize</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Layouter</span> {
+    <span class="doccomment">/// Layouts for types in an arena, indexed by `Handle` index.</span>
     <span class="ident">layouts</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">TypeLayout</span><span class="op">&gt;</span>,
 }
 
@@ -213,7 +265,7 @@
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">thiserror::Error</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TypeLayoutError</span> {
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">LayoutErrorInner</span> {
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Array element type {0:?} doesn&#39;t exist&quot;</span>)]</span>
     <span class="ident">InvalidArrayElementType</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Type</span><span class="op">&gt;</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Struct member[{0}] type {1:?} doesn&#39;t exist&quot;</span>)]</span>
@@ -228,20 +280,22 @@
 <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Error laying out type {ty:?}: {inner}&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LayoutError</span> {
     <span class="kw">pub</span> <span class="ident">ty</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Type</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">inner</span>: <span class="ident">TypeLayoutError</span>,
+    <span class="kw">pub</span> <span class="ident">inner</span>: <span class="ident">LayoutErrorInner</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">TypeLayoutError</span> {
+<span class="kw">impl</span> <span class="ident">LayoutErrorInner</span> {
     <span class="kw">fn</span> <span class="ident">with</span>(<span class="self">self</span>, <span class="ident">ty</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Type</span><span class="op">&gt;</span>) -&gt; <span class="ident">LayoutError</span> {
         <span class="ident">LayoutError</span> { <span class="ident">ty</span>, <span class="ident">inner</span>: <span class="self">self</span> }
     }
 }
 
 <span class="kw">impl</span> <span class="ident">Layouter</span> {
+    <span class="doccomment">/// Remove all entries from this `Layouter`, retaining storage.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">layouts</span>.<span class="ident">clear</span>();
     }
 
+    <span class="doccomment">/// Round `offset` up to the nearest `alignment` boundary.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">round_up</span>(<span class="ident">alignment</span>: <span class="ident">Alignment</span>, <span class="ident">offset</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
         <span class="kw">match</span> <span class="ident">offset</span> <span class="op">&amp;</span> (<span class="ident">alignment</span>.<span class="ident">get</span>() <span class="op">-</span> <span class="number">1</span>) {
             <span class="number">0</span> =&gt; <span class="ident">offset</span>,
@@ -249,6 +303,15 @@
         }
     }
 
+    <span class="doccomment">/// Return the offset and span of a struct member.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The member must fall at or after `offset`. The member&#39;s alignment and</span>
+    <span class="doccomment">/// size are `align` and `size` if given, defaulting to the values this</span>
+    <span class="doccomment">/// `Layouter` has previously determined for `ty`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The return value is the range of offsets within the containing struct to</span>
+    <span class="doccomment">/// reserve for this member, along with the alignment used. The containing</span>
+    <span class="doccomment">/// struct must have sufficient space and alignment to accommodate these.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">member_placement</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">offset</span>: <span class="ident">u32</span>,
@@ -266,6 +329,19 @@
         (<span class="ident">start</span>..<span class="ident">start</span> <span class="op">+</span> <span class="ident">span</span>, <span class="ident">alignment</span>)
     }
 
+    <span class="doccomment">/// Extend this `Layouter` with layouts for any new entries in `types`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Ensure that every type in `types` has a corresponding [TypeLayout] in</span>
+    <span class="doccomment">/// [`self.layouts`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Some front ends need to be able to compute layouts for existing types</span>
+    <span class="doccomment">/// while module construction is still in progress and new types are still</span>
+    <span class="doccomment">/// being added. This function assumes that the `TypeLayout` values already</span>
+    <span class="doccomment">/// present in `self.layouts` cover their corresponding entries in `types`,</span>
+    <span class="doccomment">/// and extends `self.layouts` as needed to cover the rest. Thus, a front</span>
+    <span class="doccomment">/// end can call this function at any time, passing its current type and</span>
+    <span class="doccomment">/// constant arenas, and then assume that layouts are available for all</span>
+    <span class="doccomment">/// types.</span>
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::or_fun_call</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">update</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
@@ -278,12 +354,12 @@
             <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">ty</span>
                 .<span class="ident">inner</span>
                 .<span class="ident">try_size</span>(<span class="ident">constants</span>)
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">error</span><span class="op">|</span> <span class="ident">TypeLayoutError::BadHandle</span>(<span class="ident">error</span>).<span class="ident">with</span>(<span class="ident">ty_handle</span>))<span class="question-mark">?</span>;
+                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">error</span><span class="op">|</span> <span class="ident">LayoutErrorInner::BadHandle</span>(<span class="ident">error</span>).<span class="ident">with</span>(<span class="ident">ty_handle</span>))<span class="question-mark">?</span>;
             <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">ty</span>.<span class="ident">inner</span> {
                 <span class="ident">Ti::Scalar</span> { <span class="ident">width</span>, .. } <span class="op">|</span> <span class="ident">Ti::Atomic</span> { <span class="ident">width</span>, .. } =&gt; <span class="ident">TypeLayout</span> {
                     <span class="ident">size</span>,
                     <span class="ident">alignment</span>: <span class="ident">Alignment::new</span>(<span class="ident">width</span> <span class="kw">as</span> <span class="ident">u32</span>)
-                        .<span class="ident">ok_or</span>(<span class="ident">TypeLayoutError::ZeroWidth</span>.<span class="ident">with</span>(<span class="ident">ty_handle</span>))<span class="question-mark">?</span>,
+                        .<span class="ident">ok_or</span>(<span class="ident">LayoutErrorInner::ZeroWidth</span>.<span class="ident">with</span>(<span class="ident">ty_handle</span>))<span class="question-mark">?</span>,
                 },
                 <span class="ident">Ti::Vector</span> {
                     <span class="ident">size</span>: <span class="ident">vec_size</span>,
@@ -298,7 +374,7 @@
                             <span class="number">2</span>
                         };
                         <span class="ident">Alignment::new</span>(<span class="ident">count</span> <span class="op">*</span> <span class="ident">width</span> <span class="kw">as</span> <span class="ident">u32</span>)
-                            .<span class="ident">ok_or</span>(<span class="ident">TypeLayoutError::ZeroWidth</span>.<span class="ident">with</span>(<span class="ident">ty_handle</span>))<span class="question-mark">?</span>
+                            .<span class="ident">ok_or</span>(<span class="ident">LayoutErrorInner::ZeroWidth</span>.<span class="ident">with</span>(<span class="ident">ty_handle</span>))<span class="question-mark">?</span>
                     },
                 },
                 <span class="ident">Ti::Matrix</span> {
@@ -310,7 +386,7 @@
                     <span class="ident">alignment</span>: {
                         <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">rows</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident"><span class="kw">crate</span>::VectorSize::Tri</span> { <span class="number">4</span> } <span class="kw">else</span> { <span class="number">2</span> };
                         <span class="ident">Alignment::new</span>(<span class="ident">count</span> <span class="op">*</span> <span class="ident">width</span> <span class="kw">as</span> <span class="ident">u32</span>)
-                            .<span class="ident">ok_or</span>(<span class="ident">TypeLayoutError::ZeroWidth</span>.<span class="ident">with</span>(<span class="ident">ty_handle</span>))<span class="question-mark">?</span>
+                            .<span class="ident">ok_or</span>(<span class="ident">LayoutErrorInner::ZeroWidth</span>.<span class="ident">with</span>(<span class="ident">ty_handle</span>))<span class="question-mark">?</span>
                     },
                 },
                 <span class="ident">Ti::Pointer</span> { .. } <span class="op">|</span> <span class="ident">Ti::ValuePointer</span> { .. } =&gt; <span class="ident">TypeLayout</span> {
@@ -326,7 +402,7 @@
                     <span class="ident">alignment</span>: <span class="kw">if</span> <span class="ident">base</span> <span class="op">&lt;</span> <span class="ident">ty_handle</span> {
                         <span class="self">self</span>[<span class="ident">base</span>].<span class="ident">alignment</span>
                     } <span class="kw">else</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TypeLayoutError::InvalidArrayElementType</span>(<span class="ident">base</span>).<span class="ident">with</span>(<span class="ident">ty_handle</span>));
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">LayoutErrorInner::InvalidArrayElementType</span>(<span class="ident">base</span>).<span class="ident">with</span>(<span class="ident">ty_handle</span>));
                     },
                 },
                 <span class="ident">Ti::Struct</span> { <span class="ident">span</span>, <span class="kw-2">ref</span> <span class="ident">members</span> } =&gt; {
@@ -335,7 +411,7 @@
                         <span class="ident">alignment</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">member</span>.<span class="ident">ty</span> <span class="op">&lt;</span> <span class="ident">ty_handle</span> {
                             <span class="ident">alignment</span>.<span class="ident">max</span>(<span class="self">self</span>[<span class="ident">member</span>.<span class="ident">ty</span>].<span class="ident">alignment</span>)
                         } <span class="kw">else</span> {
-                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TypeLayoutError::InvalidStructMemberType</span>(
+                            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">LayoutErrorInner::InvalidStructMemberType</span>(
                                 <span class="ident">index</span> <span class="kw">as</span> <span class="ident">u32</span>,
                                 <span class="ident">member</span>.<span class="ident">ty</span>,
                             )
@@ -360,5 +436,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="naga" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="naga" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (71226d717 2022-02-04)" ></div>
 </body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/81dc674/src/back/spv/helpers.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>helpers.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/0ce98d6/src/back/spv/helpers.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>helpers.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
     <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../naga/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
@@ -94,6 +94,7 @@
 <span id="89">89</span>
 <span id="90">90</span>
 <span id="91">91</span>
+<span id="92">92</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Handle</span>, <span class="ident">UniqueArena</span>};
 <span class="kw">use</span> <span class="ident">spirv::Word</span>;
 
@@ -116,15 +117,15 @@
     <span class="ident">words</span>
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">map_storage_class</span>(<span class="ident">class</span>: <span class="ident"><span class="kw">crate</span>::StorageClass</span>) -&gt; <span class="ident">spirv::StorageClass</span> {
-    <span class="kw">match</span> <span class="ident">class</span> {
-        <span class="ident"><span class="kw">crate</span>::StorageClass::Handle</span> =&gt; <span class="ident">spirv::StorageClass::UniformConstant</span>,
-        <span class="ident"><span class="kw">crate</span>::StorageClass::Function</span> =&gt; <span class="ident">spirv::StorageClass::Function</span>,
-        <span class="ident"><span class="kw">crate</span>::StorageClass::Private</span> =&gt; <span class="ident">spirv::StorageClass::Private</span>,
-        <span class="ident"><span class="kw">crate</span>::StorageClass::Storage</span> { .. } =&gt; <span class="ident">spirv::StorageClass::StorageBuffer</span>,
-        <span class="ident"><span class="kw">crate</span>::StorageClass::Uniform</span> =&gt; <span class="ident">spirv::StorageClass::Uniform</span>,
-        <span class="ident"><span class="kw">crate</span>::StorageClass::WorkGroup</span> =&gt; <span class="ident">spirv::StorageClass::Workgroup</span>,
-        <span class="ident"><span class="kw">crate</span>::StorageClass::PushConstant</span> =&gt; <span class="ident">spirv::StorageClass::PushConstant</span>,
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">map_storage_class</span>(<span class="ident">space</span>: <span class="ident"><span class="kw">crate</span>::AddressSpace</span>) -&gt; <span class="ident">spirv::StorageClass</span> {
+    <span class="kw">match</span> <span class="ident">space</span> {
+        <span class="ident"><span class="kw">crate</span>::AddressSpace::Handle</span> =&gt; <span class="ident">spirv::StorageClass::UniformConstant</span>,
+        <span class="ident"><span class="kw">crate</span>::AddressSpace::Function</span> =&gt; <span class="ident">spirv::StorageClass::Function</span>,
+        <span class="ident"><span class="kw">crate</span>::AddressSpace::Private</span> =&gt; <span class="ident">spirv::StorageClass::Private</span>,
+        <span class="ident"><span class="kw">crate</span>::AddressSpace::Storage</span> { .. } =&gt; <span class="ident">spirv::StorageClass::StorageBuffer</span>,
+        <span class="ident"><span class="kw">crate</span>::AddressSpace::Uniform</span> =&gt; <span class="ident">spirv::StorageClass::Uniform</span>,
+        <span class="ident"><span class="kw">crate</span>::AddressSpace::WorkGroup</span> =&gt; <span class="ident">spirv::StorageClass::Workgroup</span>,
+        <span class="ident"><span class="kw">crate</span>::AddressSpace::PushConstant</span> =&gt; <span class="ident">spirv::StorageClass::PushConstant</span>,
     }
 }
 
@@ -145,7 +146,7 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::StorageClass</span> {
+<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::AddressSpace</span> {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">to_spirv_semantics_and_scope</span>(<span class="self">self</span>) -&gt; (<span class="ident">spirv::MemorySemantics</span>, <span class="ident">spirv::Scope</span>) {
         <span class="kw">match</span> <span class="self">self</span> {
             <span class="ident"><span class="self">Self</span>::Storage</span> { .. } =&gt; (<span class="ident">spirv::MemorySemantics::UNIFORM_MEMORY</span>, <span class="ident">spirv::Scope::Device</span>),
@@ -161,10 +162,10 @@
 <span class="doccomment">/// Return true if the global requires a type decorated with &quot;Block&quot;.</span>
 <span class="comment">// See `back::spv::GlobalVariable::access_id` for details.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">global_needs_wrapper</span>(<span class="ident">ir_module</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::Module</span>, <span class="ident">var</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::GlobalVariable</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">class</span> {
-        <span class="ident"><span class="kw">crate</span>::StorageClass::Uniform</span>
-        <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::StorageClass::Storage</span> { .. }
-        <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::StorageClass::PushConstant</span> =&gt; {}
+    <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">space</span> {
+        <span class="ident"><span class="kw">crate</span>::AddressSpace::Uniform</span>
+        <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::AddressSpace::Storage</span> { .. }
+        <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::AddressSpace::PushConstant</span> =&gt; {}
         <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="bool-val">false</span>,
     };
     <span class="kw">match</span> <span class="ident">ir_module</span>.<span class="ident">types</span>[<span class="ident">var</span>.<span class="ident">ty</span>].<span class="ident">inner</span> {
@@ -182,9 +183,10 @@
             },
             <span class="prelude-val">None</span> =&gt; <span class="bool-val">false</span>,
         },
-        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+        <span class="comment">// if it&#39;s not a structure, let&#39;s wrap it to be able to put &quot;Block&quot;</span>
+        <span class="kw">_</span> =&gt; <span class="bool-val">true</span>,
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="naga" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="naga" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (71226d717 2022-02-04)" ></div>
 </body></html>

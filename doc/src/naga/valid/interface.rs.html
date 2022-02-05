@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/81dc674/src/valid/interface.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>interface.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/0ce98d6/src/valid/interface.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>interface.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
     <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../naga/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
@@ -530,11 +530,25 @@
 <span id="525">525</span>
 <span id="526">526</span>
 <span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{
     <span class="ident">analyzer</span>::{<span class="ident">FunctionInfo</span>, <span class="ident">GlobalUse</span>},
     <span class="ident">Capabilities</span>, <span class="ident">Disalignment</span>, <span class="ident">FunctionError</span>, <span class="ident">ModuleInfo</span>,
 };
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arena</span>::{<span class="ident">Handle</span>, <span class="ident">UniqueArena</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arena</span>::{<span class="ident">BadHandle</span>, <span class="ident">Handle</span>, <span class="ident">UniqueArena</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::span</span>::{<span class="ident">AddSpan</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">MapErrWithSpan</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">SpanProvider</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">WithSpan</span>};
 <span class="kw">use</span> <span class="ident">bit_set::BitSet</span>;
@@ -544,10 +558,12 @@
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">thiserror::Error</span>)]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">GlobalVariableError</span> {
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Usage isn&#39;t compatible with the storage class&quot;</span>)]</span>
-    <span class="ident">InvalidUsage</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Type isn&#39;t compatible with the storage class&quot;</span>)]</span>
-    <span class="ident">InvalidType</span>,
+    <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
+    <span class="ident">BadHandle</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">BadHandle</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Usage isn&#39;t compatible with address space {0:?}&quot;</span>)]</span>
+    <span class="ident">InvalidUsage</span>(<span class="ident"><span class="kw">crate</span>::AddressSpace</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Type isn&#39;t compatible with with address space {0:?}&quot;</span>)]</span>
+    <span class="ident">InvalidType</span>(<span class="ident"><span class="kw">crate</span>::AddressSpace</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Type flags {seen:?} do not meet the required {required:?}&quot;</span>)]</span>
     <span class="ident">MissingTypeFlags</span> {
         <span class="ident">required</span>: <span class="ident"><span class="kw">super</span>::TypeFlags</span>,
@@ -557,8 +573,12 @@
     <span class="ident">UnsupportedCapability</span>(<span class="ident">Capabilities</span>),
     <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Binding decoration is missing or not applicable&quot;</span>)]</span>
     <span class="ident">InvalidBinding</span>,
-    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Alignment requirements for this storage class are not met by {0:?}&quot;</span>)]</span>
-    <span class="ident">Alignment</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Type</span><span class="op">&gt;</span>, <span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">Disalignment</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Alignment requirements for address space {0:?} are not met by {1:?}&quot;</span>)]</span>
+    <span class="ident">Alignment</span>(
+        <span class="ident"><span class="kw">crate</span>::AddressSpace</span>,
+        <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Type</span><span class="op">&gt;</span>,
+        <span class="attribute">#[<span class="ident">source</span>]</span> <span class="ident">Disalignment</span>,
+    ),
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">thiserror::Error</span>)]</span>
@@ -864,25 +884,35 @@
         <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::TypeFlags</span>;
 
         <span class="macro">log::debug!</span>(<span class="string">&quot;var {:?}&quot;</span>, <span class="ident">var</span>);
-        <span class="kw">let</span> <span class="ident">type_info</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">types</span>
-            .<span class="ident">get</span>(<span class="ident">var</span>.<span class="ident">ty</span>.<span class="ident">index</span>())
-            .<span class="ident">ok_or</span>(<span class="ident">GlobalVariableError::InvalidType</span>)<span class="question-mark">?</span>;
+        <span class="kw">let</span> <span class="ident">type_info</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">types</span>.<span class="ident">get</span>(<span class="ident">var</span>.<span class="ident">ty</span>.<span class="ident">index</span>()).<span class="ident">ok_or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">BadHandle</span> {
+            <span class="ident">kind</span>: <span class="string">&quot;type&quot;</span>,
+            <span class="ident">index</span>: <span class="ident">var</span>.<span class="ident">ty</span>.<span class="ident">index</span>(),
+        })<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> (<span class="ident">required_type_flags</span>, <span class="ident">is_resource</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">class</span> {
-            <span class="ident"><span class="kw">crate</span>::StorageClass::Function</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError::InvalidUsage</span>),
-            <span class="ident"><span class="kw">crate</span>::StorageClass::Storage</span> { .. } =&gt; {
+        <span class="kw">let</span> (<span class="ident">required_type_flags</span>, <span class="ident">is_resource</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">space</span> {
+            <span class="ident"><span class="kw">crate</span>::AddressSpace::Function</span> =&gt; {
+                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError::InvalidUsage</span>(<span class="ident">var</span>.<span class="ident">space</span>))
+            }
+            <span class="ident"><span class="kw">crate</span>::AddressSpace::Storage</span> { .. } =&gt; {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>((<span class="ident">ty_handle</span>, <span class="ident">disalignment</span>)) <span class="op">=</span> <span class="ident">type_info</span>.<span class="ident">storage_layout</span> {
                     <span class="kw">if</span> <span class="self">self</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::ValidationFlags::STRUCT_LAYOUTS</span>) {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError::Alignment</span>(<span class="ident">ty_handle</span>, <span class="ident">disalignment</span>));
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError::Alignment</span>(
+                            <span class="ident">var</span>.<span class="ident">space</span>,
+                            <span class="ident">ty_handle</span>,
+                            <span class="ident">disalignment</span>,
+                        ));
                     }
                 }
                 (<span class="ident">TypeFlags::DATA</span> <span class="op">|</span> <span class="ident">TypeFlags::HOST_SHARED</span>, <span class="bool-val">true</span>)
             }
-            <span class="ident"><span class="kw">crate</span>::StorageClass::Uniform</span> =&gt; {
+            <span class="ident"><span class="kw">crate</span>::AddressSpace::Uniform</span> =&gt; {
                 <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Err</span>((<span class="ident">ty_handle</span>, <span class="ident">disalignment</span>)) <span class="op">=</span> <span class="ident">type_info</span>.<span class="ident">uniform_layout</span> {
                     <span class="kw">if</span> <span class="self">self</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::ValidationFlags::STRUCT_LAYOUTS</span>) {
-                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError::Alignment</span>(<span class="ident">ty_handle</span>, <span class="ident">disalignment</span>));
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError::Alignment</span>(
+                            <span class="ident">var</span>.<span class="ident">space</span>,
+                            <span class="ident">ty_handle</span>,
+                            <span class="ident">disalignment</span>,
+                        ));
                     }
                 }
                 (
@@ -890,11 +920,19 @@
                     <span class="bool-val">true</span>,
                 )
             }
-            <span class="ident"><span class="kw">crate</span>::StorageClass::Handle</span> =&gt; (<span class="ident">TypeFlags::empty</span>(), <span class="bool-val">true</span>),
-            <span class="ident"><span class="kw">crate</span>::StorageClass::Private</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::StorageClass::WorkGroup</span> =&gt; {
+            <span class="ident"><span class="kw">crate</span>::AddressSpace::Handle</span> =&gt; {
+                <span class="kw">match</span> <span class="ident">types</span>[<span class="ident">var</span>.<span class="ident">ty</span>].<span class="ident">inner</span> {
+                    <span class="ident"><span class="kw">crate</span>::TypeInner::Image</span> { .. } <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::TypeInner::Sampler</span> { .. } =&gt; {}
+                    <span class="kw">_</span> =&gt; {
+                        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError::InvalidType</span>(<span class="ident">var</span>.<span class="ident">space</span>));
+                    }
+                };
+                (<span class="ident">TypeFlags::empty</span>(), <span class="bool-val">true</span>)
+            }
+            <span class="ident"><span class="kw">crate</span>::AddressSpace::Private</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::AddressSpace::WorkGroup</span> =&gt; {
                 (<span class="ident">TypeFlags::DATA</span> <span class="op">|</span> <span class="ident">TypeFlags::SIZED</span>, <span class="bool-val">false</span>)
             }
-            <span class="ident"><span class="kw">crate</span>::StorageClass::PushConstant</span> =&gt; {
+            <span class="ident"><span class="kw">crate</span>::AddressSpace::PushConstant</span> =&gt; {
                 <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">capabilities</span>.<span class="ident">contains</span>(<span class="ident">Capabilities::PUSH_CONSTANT</span>) {
                     <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError::UnsupportedCapability</span>(
                         <span class="ident">Capabilities::PUSH_CONSTANT</span>,
@@ -906,16 +944,6 @@
                 )
             }
         };
-
-        <span class="kw">let</span> <span class="ident">is_handle</span> <span class="op">=</span> <span class="ident">var</span>.<span class="ident">class</span> <span class="op">==</span> <span class="ident"><span class="kw">crate</span>::StorageClass::Handle</span>;
-        <span class="kw">let</span> <span class="ident">good_type</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">types</span>[<span class="ident">var</span>.<span class="ident">ty</span>].<span class="ident">inner</span> {
-            <span class="ident"><span class="kw">crate</span>::TypeInner::Struct</span> { .. } =&gt; <span class="op">!</span><span class="ident">is_handle</span>,
-            <span class="ident"><span class="kw">crate</span>::TypeInner::Image</span> { .. } <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::TypeInner::Sampler</span> { .. } =&gt; <span class="ident">is_handle</span>,
-            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
-        };
-        <span class="kw">if</span> <span class="ident">is_resource</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">good_type</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError::InvalidType</span>);
-        }
 
         <span class="kw">if</span> <span class="op">!</span><span class="ident">type_info</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">required_type_flags</span>) {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">GlobalVariableError::MissingTypeFlags</span> {
@@ -1018,19 +1046,19 @@
                 <span class="kw">continue</span>;
             }
 
-            <span class="kw">let</span> <span class="ident">allowed_usage</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">class</span> {
-                <span class="ident"><span class="kw">crate</span>::StorageClass::Function</span> =&gt; <span class="macro">unreachable!</span>(),
-                <span class="ident"><span class="kw">crate</span>::StorageClass::Uniform</span> =&gt; <span class="ident">GlobalUse::READ</span> <span class="op">|</span> <span class="ident">GlobalUse::QUERY</span>,
-                <span class="ident"><span class="kw">crate</span>::StorageClass::Storage</span> { <span class="ident">access</span> } =&gt; <span class="ident">storage_usage</span>(<span class="ident">access</span>),
-                <span class="ident"><span class="kw">crate</span>::StorageClass::Handle</span> =&gt; <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">var</span>.<span class="ident">ty</span>].<span class="ident">inner</span> {
+            <span class="kw">let</span> <span class="ident">allowed_usage</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">var</span>.<span class="ident">space</span> {
+                <span class="ident"><span class="kw">crate</span>::AddressSpace::Function</span> =&gt; <span class="macro">unreachable!</span>(),
+                <span class="ident"><span class="kw">crate</span>::AddressSpace::Uniform</span> =&gt; <span class="ident">GlobalUse::READ</span> <span class="op">|</span> <span class="ident">GlobalUse::QUERY</span>,
+                <span class="ident"><span class="kw">crate</span>::AddressSpace::Storage</span> { <span class="ident">access</span> } =&gt; <span class="ident">storage_usage</span>(<span class="ident">access</span>),
+                <span class="ident"><span class="kw">crate</span>::AddressSpace::Handle</span> =&gt; <span class="kw">match</span> <span class="ident">module</span>.<span class="ident">types</span>[<span class="ident">var</span>.<span class="ident">ty</span>].<span class="ident">inner</span> {
                     <span class="ident"><span class="kw">crate</span>::TypeInner::Image</span> {
                         <span class="ident">class</span>: <span class="ident"><span class="kw">crate</span>::ImageClass::Storage</span> { <span class="ident">access</span>, .. },
                         ..
                     } =&gt; <span class="ident">storage_usage</span>(<span class="ident">access</span>),
                     <span class="kw">_</span> =&gt; <span class="ident">GlobalUse::READ</span> <span class="op">|</span> <span class="ident">GlobalUse::QUERY</span>,
                 },
-                <span class="ident"><span class="kw">crate</span>::StorageClass::Private</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::StorageClass::WorkGroup</span> =&gt; <span class="ident">GlobalUse::all</span>(),
-                <span class="ident"><span class="kw">crate</span>::StorageClass::PushConstant</span> =&gt; <span class="ident">GlobalUse::READ</span>,
+                <span class="ident"><span class="kw">crate</span>::AddressSpace::Private</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::AddressSpace::WorkGroup</span> =&gt; <span class="ident">GlobalUse::all</span>(),
+                <span class="ident"><span class="kw">crate</span>::AddressSpace::PushConstant</span> =&gt; <span class="ident">GlobalUse::READ</span>,
             };
             <span class="kw">if</span> <span class="op">!</span><span class="ident">allowed_usage</span>.<span class="ident">contains</span>(<span class="ident">usage</span>) {
                 <span class="macro">log::warn!</span>(<span class="string">&quot;\tUsage error for: {:?}&quot;</span>, <span class="ident">var</span>);
@@ -1058,5 +1086,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="naga" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="naga" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (71226d717 2022-02-04)" ></div>
 </body></html>

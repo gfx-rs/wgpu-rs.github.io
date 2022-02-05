@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/81dc674/src/proc/index.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>index.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/0ce98d6/src/proc/index.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>index.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
     <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../naga/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
@@ -390,7 +390,11 @@
 <span id="385">385</span>
 <span id="386">386</span>
 <span id="387">387</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Definitions for index bounds checking.</span>
+<span id="388">388</span>
+<span id="389">389</span>
+</pre><pre class="rust"><code><span class="doccomment">/*!
+Definitions for index bounds checking.
+*/</span>
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">valid</span>, <span class="ident">Handle</span>, <span class="ident">UniqueArena</span>};
 <span class="kw">use</span> <span class="ident">bit_set::BitSet</span>;
@@ -462,13 +466,13 @@
 
     <span class="doccomment">/// How should the generated code handle array, vector, or matrix indices</span>
     <span class="doccomment">/// that are out of range, when those values live in a [`GlobalVariable`] in</span>
-    <span class="doccomment">/// the [`Storage`] or [`Uniform`] storage classes?</span>
+    <span class="doccomment">/// the [`Storage`] or [`Uniform`] address spaces?</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Some graphics hardware provides &quot;robust buffer access&quot;, a feature that</span>
     <span class="doccomment">/// ensures that using a pointer cannot access memory outside the &#39;buffer&#39;</span>
     <span class="doccomment">/// that it was derived from. In Naga terms, this means that the hardware</span>
     <span class="doccomment">/// ensures that pointers computed by applying [`Access`] and</span>
-    <span class="doccomment">/// [`AccessIndex`] expressions to a [`GlobalVariable`] whose [`class`] is</span>
+    <span class="doccomment">/// [`AccessIndex`] expressions to a [`GlobalVariable`] whose [`space`] is</span>
     <span class="doccomment">/// [`Storage`] or [`Uniform`] will never read or write memory outside that</span>
     <span class="doccomment">/// global variable.</span>
     <span class="doccomment">///</span>
@@ -486,13 +490,13 @@
     <span class="doccomment">/// the same as `index_bounds_check_policy`.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`GlobalVariable`]: crate::GlobalVariable</span>
-    <span class="doccomment">/// [`class`]: crate::GlobalVariable::class</span>
+    <span class="doccomment">/// [`space`]: crate::GlobalVariable::space</span>
     <span class="doccomment">/// [`Restrict`]: crate::back::BoundsCheckPolicy::Restrict</span>
     <span class="doccomment">/// [`ReadZeroSkipWrite`]: crate::back::BoundsCheckPolicy::ReadZeroSkipWrite</span>
     <span class="doccomment">/// [`Access`]: crate::Expression::Access</span>
     <span class="doccomment">/// [`AccessIndex`]: crate::Expression::AccessIndex</span>
-    <span class="doccomment">/// [`Storage`]: crate::StorageClass::Storage</span>
-    <span class="doccomment">/// [`Uniform`]: crate::StorageClass::Uniform</span>
+    <span class="doccomment">/// [`Storage`]: crate::AddressSpace::Storage</span>
+    <span class="doccomment">/// [`Uniform`]: crate::AddressSpace::Uniform</span>
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">serde</span>(<span class="ident">default</span>))]</span>
     <span class="kw">pub</span> <span class="ident">buffer</span>: <span class="ident">BoundsCheckPolicy</span>,
 
@@ -530,10 +534,10 @@
         <span class="ident">types</span>: <span class="kw-2">&amp;</span><span class="ident">UniqueArena</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::Type</span><span class="op">&gt;</span>,
         <span class="ident">info</span>: <span class="kw-2">&amp;</span><span class="ident">valid::FunctionInfo</span>,
     ) -&gt; <span class="ident">BoundsCheckPolicy</span> {
-        <span class="kw">match</span> <span class="ident">info</span>[<span class="ident">access</span>].<span class="ident">ty</span>.<span class="ident">inner_with</span>(<span class="ident">types</span>).<span class="ident">pointer_class</span>() {
-            <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::StorageClass::Storage</span> { <span class="ident">access</span>: <span class="kw">_</span> })
-            <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::StorageClass::Uniform</span>) =&gt; <span class="self">self</span>.<span class="ident">buffer</span>,
-            <span class="comment">// This covers other storage classes, but also accessing vectors and</span>
+        <span class="kw">match</span> <span class="ident">info</span>[<span class="ident">access</span>].<span class="ident">ty</span>.<span class="ident">inner_with</span>(<span class="ident">types</span>).<span class="ident">pointer_space</span>() {
+            <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::AddressSpace::Storage</span> { <span class="ident">access</span>: <span class="kw">_</span> })
+            <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::AddressSpace::Uniform</span>) =&gt; <span class="self">self</span>.<span class="ident">buffer</span>,
+            <span class="comment">// This covers other address spaces, but also accessing vectors and</span>
             <span class="comment">// matrices by value, where no pointer is involved.</span>
             <span class="kw">_</span> =&gt; <span class="self">self</span>.<span class="ident">index</span>,
         }
@@ -778,5 +782,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="naga" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="naga" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (71226d717 2022-02-04)" ></div>
 </body></html>

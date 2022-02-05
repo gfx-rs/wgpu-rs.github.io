@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/81dc674/src/back/spv/selection.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>selection.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/0ce98d6/src/back/spv/selection.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>selection.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
     <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../naga/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
@@ -258,62 +258,66 @@
 <span id="253">253</span>
 <span id="254">254</span>
 <span id="255">255</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Generate SPIR-V conditional structures.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Builders for `if` structures with `and`s.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The types in this module track the information needed to emit SPIR-V code</span>
-<span class="doccomment">//! for complex conditional structures, like those whose conditions involve</span>
-<span class="doccomment">//! short-circuiting &#39;and&#39; and &#39;or&#39; structures. These track labels and can emit</span>
-<span class="doccomment">//! `OpPhi` instructions to merge values produced along different paths.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! This currently only supports exactly the forms Naga uses, so it doesn&#39;t</span>
-<span class="doccomment">//! support `or` or `else`, and only supports zero or one merged values.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Naga needs to emit code roughly like this:</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```ignore</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!     value = DEFAULT;</span>
-<span class="doccomment">//!     if COND1 &amp;&amp; COND2 {</span>
-<span class="doccomment">//!         value = THEN_VALUE;</span>
-<span class="doccomment">//!     }</span>
-<span class="doccomment">//!     // use value</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Assuming `ctx` and `block` are a mutable references to a [`BlockContext`]</span>
-<span class="doccomment">//! and the current [`Block`], and `merge_type` is the SPIR-V type for the</span>
-<span class="doccomment">//! merged value `value`, we can build SPIR-V for the code above like so:</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```ignore</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!     let cond = Selection::start(block, merge_type);</span>
-<span class="doccomment">//!         // ... compute `cond1` ...</span>
-<span class="doccomment">//!     cond.if_true(ctx, cond1, DEFAULT);</span>
-<span class="doccomment">//!         // ... compute `cond2` ...</span>
-<span class="doccomment">//!     cond.if_true(ctx, cond2, DEFAULT);</span>
-<span class="doccomment">//!         // ... compute THEN_VALUE</span>
-<span class="doccomment">//!     let merged_value = cond.finish(ctx, THEN_VALUE);</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! After this, `merged_value` is either `DEFAULT` or `THEN_VALUE`, depending on</span>
-<span class="doccomment">//! the path by which the merged block was reached.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! This takes care of writing all branch instructions, including an</span>
-<span class="doccomment">//! `OpSelectionMerge` annotation in the header block; starting new blocks and</span>
-<span class="doccomment">//! assigning them labels; and emitting the `OpPhi` that gathers together the</span>
-<span class="doccomment">//! right sources for the merged values, for every path through the selection</span>
-<span class="doccomment">//! construct.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! When there is no merged value to produce, you can pass `()` for `merge_type`</span>
-<span class="doccomment">//! and the merge values. In this case no `OpPhi` instructions are produced, and</span>
-<span class="doccomment">//! the `finish` method returns `()`.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! To enforce proper nesting, a `Selection` takes ownership of the `&amp;mut Block`</span>
-<span class="doccomment">//! pointer for the duration of its lifetime. To obtain the block for generating</span>
-<span class="doccomment">//! code in the selection&#39;s body, call the `Selection::block` method.</span>
+<span id="256">256</span>
+<span id="257">257</span>
+</pre><pre class="rust"><code><span class="doccomment">/*!
+Generate SPIR-V conditional structures.
+
+Builders for `if` structures with `and`s.
+
+The types in this module track the information needed to emit SPIR-V code
+for complex conditional structures, like those whose conditions involve
+short-circuiting &#39;and&#39; and &#39;or&#39; structures. These track labels and can emit
+`OpPhi` instructions to merge values produced along different paths.
+
+This currently only supports exactly the forms Naga uses, so it doesn&#39;t
+support `or` or `else`, and only supports zero or one merged values.
+
+Naga needs to emit code roughly like this:
+
+```ignore
+
+    value = DEFAULT;
+    if COND1 &amp;&amp; COND2 {
+        value = THEN_VALUE;
+    }
+    // use value
+
+```
+
+Assuming `ctx` and `block` are a mutable references to a [`BlockContext`]
+and the current [`Block`], and `merge_type` is the SPIR-V type for the
+merged value `value`, we can build SPIR-V for the code above like so:
+
+```ignore
+
+    let cond = Selection::start(block, merge_type);
+        // ... compute `cond1` ...
+    cond.if_true(ctx, cond1, DEFAULT);
+        // ... compute `cond2` ...
+    cond.if_true(ctx, cond2, DEFAULT);
+        // ... compute THEN_VALUE
+    let merged_value = cond.finish(ctx, THEN_VALUE);
+
+```
+
+After this, `merged_value` is either `DEFAULT` or `THEN_VALUE`, depending on
+the path by which the merged block was reached.
+
+This takes care of writing all branch instructions, including an
+`OpSelectionMerge` annotation in the header block; starting new blocks and
+assigning them labels; and emitting the `OpPhi` that gathers together the
+right sources for the merged values, for every path through the selection
+construct.
+
+When there is no merged value to produce, you can pass `()` for `merge_type`
+and the merge values. In this case no `OpPhi` instructions are produced, and
+the `finish` method returns `()`.
+
+To enforce proper nesting, a `Selection` takes ownership of the `&amp;mut Block`
+pointer for the duration of its lifetime. To obtain the block for generating
+code in the selection&#39;s body, call the `Selection::block` method.
+*/</span>
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Block</span>, <span class="ident">BlockContext</span>, <span class="ident">Instruction</span>};
 <span class="kw">use</span> <span class="ident">spirv::Word</span>;
@@ -514,5 +518,5 @@
     <span class="kw">fn</span> <span class="ident">write_phis</span>(<span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut</span> <span class="ident">BlockContext</span>, <span class="kw">_</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Block</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span>[((), <span class="ident">Word</span>)]) {}
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="naga" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="naga" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (71226d717 2022-02-04)" ></div>
 </body></html>

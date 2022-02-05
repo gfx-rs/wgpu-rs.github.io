@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/81dc674/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/0ce98d6/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script src="../../crates.js"></script><script defer src="../../main.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script>
     <noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../naga/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
@@ -1652,6 +1652,14 @@
 <span id="1647">1647</span>
 <span id="1648">1648</span>
 <span id="1649">1649</span>
+<span id="1650">1650</span>
+<span id="1651">1651</span>
+<span id="1652">1652</span>
+<span id="1653">1653</span>
+<span id="1654">1654</span>
+<span id="1655">1655</span>
+<span id="1656">1656</span>
+<span id="1657">1657</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! Universal shader translator.
 
 The central structure of the crate is [`Module`]. A `Module` contains:
@@ -1746,7 +1754,7 @@ Naga&#39;s rules for when `Expression`s are evaluated are as follows:
         does not.
 
     -   A `GlobalVariable` expression referring to a global in the
-        [`StorageClass::Handle`] storage class produces the value directly, not
+        [`AddressSpace::Handle`] address space produces the value directly, not
         a pointer. Such global variables hold opaque types like shaders or
         images, and cannot be assigned to.
 
@@ -1836,8 +1844,7 @@ tree.
 
 [`Validator::validate`]: valid::Validator::validate
 [`ModuleInfo`]: valid::ModuleInfo
-
-!*/</span>
+*/</span>
 
 <span class="comment">// TODO: use `strip_prefix` instead when Rust 1.45 &lt;= MSRV</span>
 <span class="attribute">#![<span class="ident">allow</span>(
@@ -1889,18 +1896,23 @@ tree.
 <span class="doccomment">/// Map of expressions that have associated variable names</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type</span> <span class="ident">NamedExpressions</span> <span class="op">=</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">Handle</span><span class="op">&lt;</span><span class="ident">Expression</span><span class="op">&gt;</span>, <span class="ident">String</span><span class="op">&gt;</span>;
 
-<span class="doccomment">/// Early fragment tests. In a standard situation if a driver determines that it is possible to</span>
-<span class="doccomment">/// switch on early depth test it will. Typical situations when early depth test is switched off:</span>
-<span class="doccomment">///   - Calling ```discard``` in a shader.</span>
+<span class="doccomment">/// Early fragment tests.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// In a standard situation, if a driver determines that it is possible to switch on early depth test, it will.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Typical situations when early depth test is switched off:</span>
+<span class="doccomment">///   - Calling `discard` in a shader.</span>
 <span class="doccomment">///   - Writing to the depth buffer, unless ConservativeDepth is enabled.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// SPIR-V: ExecutionMode EarlyFragmentTests</span>
-<span class="doccomment">/// In GLSL: layout(early_fragment_tests) in;</span>
-<span class="doccomment">/// HLSL: Attribute earlydepthstencil</span>
+<span class="doccomment">/// To use in a shader:</span>
+<span class="doccomment">///   - GLSL: `layout(early_fragment_tests) in;`</span>
+<span class="doccomment">///   - HLSL: `Attribute earlydepthstencil`</span>
+<span class="doccomment">///   - SPIR-V: `ExecutionMode EarlyFragmentTests`</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// For more, see:</span>
 <span class="doccomment">///   - &lt;https://www.khronos.org/opengl/wiki/Early_Fragment_Test#Explicit_specification&gt;</span>
 <span class="doccomment">///   - &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/sm5-attributes-earlydepthstencil&gt;</span>
+<span class="doccomment">///   - &lt;https://www.khronos.org/registry/SPIR-V/specs/unified1/SPIRV.html#Execution_Mode&gt;</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">Eq</span>, <span class="ident">Ord</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
@@ -1910,20 +1922,22 @@ tree.
 }
 <span class="doccomment">/// Enables adjusting depth without disabling early Z.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// SPIR-V: ExecutionMode DepthGreater/DepthLess/DepthUnchanged</span>
-<span class="doccomment">/// GLSL: layout (depth_&lt;greater/less/unchanged/any&gt;) out float gl_FragDepth;</span>
-<span class="doccomment">///   - ```depth_any``` option behaves as if the layout qualifier was not present.</span>
-<span class="doccomment">/// HLSL: SV_Depth/SV_DepthGreaterEqual/SV_DepthLessEqual</span>
+<span class="doccomment">/// To use in a shader:</span>
+<span class="doccomment">///   - GLSL: `layout (depth_&lt;greater/less/unchanged/any&gt;) out float gl_FragDepth;`</span>
+<span class="doccomment">///     - `depth_any` option behaves as if the layout qualifier was not present.</span>
+<span class="doccomment">///   - HLSL: `SV_DepthGreaterEqual`/`SV_DepthLessEqual`/`SV_Depth`</span>
+<span class="doccomment">///   - SPIR-V: `ExecutionMode Depth&lt;Greater/Less/Unchanged&gt;`</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// For more, see:</span>
 <span class="doccomment">///   - &lt;https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_conservative_depth.txt&gt;</span>
 <span class="doccomment">///   - &lt;https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-semantics#system-value-semantics&gt;</span>
+<span class="doccomment">///   - &lt;https://www.khronos.org/registry/SPIR-V/specs/unified1/SPIRV.html#Execution_Mode&gt;</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">Eq</span>, <span class="ident">Ord</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;arbitrary&quot;</span>, <span class="ident">derive</span>(<span class="ident">Arbitrary</span>))]</span>
 <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ConservativeDepth</span> {
-    <span class="doccomment">/// Shader may rewrite depth only with a value greater than calculated;</span>
+    <span class="doccomment">/// Shader may rewrite depth only with a value greater than calculated.</span>
     <span class="ident">GreaterEqual</span>,
 
     <span class="doccomment">/// Shader may rewrite depth smaller than one that would have been written without the modification.</span>
@@ -1945,12 +1959,12 @@ tree.
     <span class="ident">Compute</span>,
 }
 
-<span class="doccomment">/// Class of storage for variables.</span>
+<span class="doccomment">/// Addressing space of variables.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">Eq</span>, <span class="ident">Ord</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;arbitrary&quot;</span>, <span class="ident">derive</span>(<span class="ident">Arbitrary</span>))]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">StorageClass</span> {
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AddressSpace</span> {
     <span class="doccomment">/// Function locals.</span>
     <span class="ident">Function</span>,
     <span class="doccomment">/// Private data, per invocation, mutable.</span>
@@ -2128,7 +2142,7 @@ tree.
     }
 }
 
-<span class="comment">// Storage image format.</span>
+<span class="doccomment">/// Image storage format.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">Eq</span>, <span class="ident">Ord</span>, <span class="ident">PartialEq</span>, <span class="ident">PartialOrd</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
@@ -2269,7 +2283,7 @@ tree.
     <span class="doccomment">/// [`AccessIndex`]: Expression::AccessIndex</span>
     <span class="ident">Pointer</span> {
         <span class="ident">base</span>: <span class="ident">Handle</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span>,
-        <span class="ident">class</span>: <span class="ident">StorageClass</span>,
+        <span class="ident">space</span>: <span class="ident">AddressSpace</span>,
     },
 
     <span class="doccomment">/// Pointer to a scalar or vector.</span>
@@ -2288,7 +2302,7 @@ tree.
         <span class="ident">size</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">VectorSize</span><span class="op">&gt;</span>,
         <span class="ident">kind</span>: <span class="ident">ScalarKind</span>,
         <span class="ident">width</span>: <span class="ident">Bytes</span>,
-        <span class="ident">class</span>: <span class="ident">StorageClass</span>,
+        <span class="ident">space</span>: <span class="ident">AddressSpace</span>,
     },
 
     <span class="doccomment">/// Homogenous list of elements.</span>
@@ -2300,7 +2314,8 @@ tree.
     <span class="doccomment">/// An `Array` is [`SIZED`] unless its `size` is [`Dynamic`].</span>
     <span class="doccomment">/// Dynamically-sized arrays may only appear in a few situations:</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// -   They may appear as the last member of a [`Struct`].</span>
+    <span class="doccomment">/// -   They may appear as the type of a [`GlobalVariable`], or as the last</span>
+    <span class="doccomment">///     member of a [`Struct`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// -   They may appear as the base type of a [`Pointer`]. An</span>
     <span class="doccomment">///     [`AccessIndex`] expression referring to a struct&#39;s final</span>
@@ -2441,7 +2456,7 @@ tree.
     <span class="doccomment">/// Name of the variable, if any.</span>
     <span class="kw">pub</span> <span class="ident">name</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
     <span class="doccomment">/// How this variable is to be stored.</span>
-    <span class="kw">pub</span> <span class="ident">class</span>: <span class="ident">StorageClass</span>,
+    <span class="kw">pub</span> <span class="ident">space</span>: <span class="ident">AddressSpace</span>,
     <span class="doccomment">/// For resources, defines the binding point.</span>
     <span class="kw">pub</span> <span class="ident">binding</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ResourceBinding</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The type of this variable.</span>
@@ -2689,9 +2704,9 @@ tree.
     <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;arbitrary&quot;</span>, <span class="ident">derive</span>(<span class="ident">Arbitrary</span>))]</span>
     <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
     <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Barrier</span>: <span class="ident">u32</span> {
-        <span class="doccomment">/// Barrier affects all `StorageClass::Storage` accesses.</span>
+        <span class="doccomment">/// Barrier affects all `AddressSpace::Storage` accesses.</span>
         <span class="kw">const</span> <span class="ident">STORAGE</span> <span class="op">=</span> <span class="number">0x1</span>;
-        <span class="doccomment">/// Barrier affects all `StorageClass::WorkGroup` accesses.</span>
+        <span class="doccomment">/// Barrier affects all `AddressSpace::WorkGroup` accesses.</span>
         <span class="kw">const</span> <span class="ident">WORK_GROUP</span> <span class="op">=</span> <span class="number">0x2</span>;
     }
 }
@@ -2719,7 +2734,7 @@ tree.
     <span class="doccomment">/// Indexing a [`Matrix`] produces a [`Vector`].</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Indexing a [`Pointer`] to any of the above produces a pointer to the</span>
-    <span class="doccomment">/// element/component type, in the same [`class`]. In the case of [`Array`],</span>
+    <span class="doccomment">/// element/component type, in the same [`space`]. In the case of [`Array`],</span>
     <span class="doccomment">/// the result is an actual [`Pointer`], but for vectors and matrices, there</span>
     <span class="doccomment">/// may not be any type in the arena representing the component&#39;s type, so</span>
     <span class="doccomment">/// those produce [`ValuePointer`] types equivalent to the appropriate</span>
@@ -2748,7 +2763,7 @@ tree.
     <span class="doccomment">/// [`Matrix`]: TypeInner::Matrix</span>
     <span class="doccomment">/// [`Array`]: TypeInner::Array</span>
     <span class="doccomment">/// [`Pointer`]: TypeInner::Pointer</span>
-    <span class="doccomment">/// [`class`]: TypeInner::Pointer::class</span>
+    <span class="doccomment">/// [`space`]: TypeInner::Pointer::space</span>
     <span class="doccomment">/// [`ValuePointer`]: TypeInner::ValuePointer</span>
     <span class="doccomment">/// [`Float`]: ScalarKind::Float</span>
     <span class="ident">Access</span> {
@@ -2793,16 +2808,16 @@ tree.
 
     <span class="doccomment">/// Reference a global variable.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// If the given `GlobalVariable`&#39;s [`class`] is [`StorageClass::Handle`],</span>
+    <span class="doccomment">/// If the given `GlobalVariable`&#39;s [`space`] is [`AddressSpace::Handle`],</span>
     <span class="doccomment">/// then the variable stores some opaque type like a sampler or an image,</span>
     <span class="doccomment">/// and a `GlobalVariable` expression referring to it produces the</span>
     <span class="doccomment">/// variable&#39;s value directly.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// For any other storage class, a `GlobalVariable` expression produces a</span>
+    <span class="doccomment">/// For any other address space, a `GlobalVariable` expression produces a</span>
     <span class="doccomment">/// pointer to the variable&#39;s value. You must use a [`Load`] expression to</span>
     <span class="doccomment">/// retrieve its value, or a [`Store`] statement to assign it a new value.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// [`class`]: GlobalVariable::class</span>
+    <span class="doccomment">/// [`space`]: GlobalVariable::space</span>
     <span class="doccomment">/// [`Load`]: Expression::Load</span>
     <span class="doccomment">/// [`Store`]: Statement::Store</span>
     <span class="ident">GlobalVariable</span>(<span class="ident">Handle</span><span class="op">&lt;</span><span class="ident">GlobalVariable</span><span class="op">&gt;</span>),
@@ -2987,7 +3002,7 @@ tree.
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">block::Block</span>;
 
-<span class="doccomment">/// The value of the switch case</span>
+<span class="doccomment">/// The value of the switch case.</span>
 <span class="comment">// Clone is used only for error reporting and is not intended for end users</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
@@ -3175,6 +3190,7 @@ tree.
     <span class="kw">pub</span> <span class="ident">binding</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Binding</span><span class="op">&gt;</span>,
 }
 
+<span class="doccomment">/// A function result.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">Serialize</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
@@ -3287,13 +3303,13 @@ tree.
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;deserialize&quot;</span>, <span class="ident">derive</span>(<span class="ident">Deserialize</span>))]</span>
 <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;arbitrary&quot;</span>, <span class="ident">derive</span>(<span class="ident">Arbitrary</span>))]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Module</span> {
-    <span class="doccomment">/// Storage for the types defined in this module.</span>
+    <span class="doccomment">/// Arena for the types defined in this module.</span>
     <span class="kw">pub</span> <span class="ident">types</span>: <span class="ident">UniqueArena</span><span class="op">&lt;</span><span class="ident">Type</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Storage for the constants defined in this module.</span>
+    <span class="doccomment">/// Arena for the constants defined in this module.</span>
     <span class="kw">pub</span> <span class="ident">constants</span>: <span class="ident">Arena</span><span class="op">&lt;</span><span class="ident">Constant</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Storage for the global variables defined in this module.</span>
+    <span class="doccomment">/// Arena for the global variables defined in this module.</span>
     <span class="kw">pub</span> <span class="ident">global_variables</span>: <span class="ident">Arena</span><span class="op">&lt;</span><span class="ident">GlobalVariable</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Storage for the functions defined in this module.</span>
+    <span class="doccomment">/// Arena for the functions defined in this module.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Each function must appear in this arena strictly before all its callers.</span>
     <span class="doccomment">/// Recursion is not supported.</span>
@@ -3302,5 +3318,5 @@ tree.
     <span class="kw">pub</span> <span class="ident">entry_points</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">EntryPoint</span><span class="op">&gt;</span>,
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="naga" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="naga" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (71226d717 2022-02-04)" ></div>
 </body></html>
