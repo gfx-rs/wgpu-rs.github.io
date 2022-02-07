@@ -1168,6 +1168,18 @@
 <span id="1163">1163</span>
 <span id="1164">1164</span>
 <span id="1165">1165</span>
+<span id="1166">1166</span>
+<span id="1167">1167</span>
+<span id="1168">1168</span>
+<span id="1169">1169</span>
+<span id="1170">1170</span>
+<span id="1171">1171</span>
+<span id="1172">1172</span>
+<span id="1173">1173</span>
+<span id="1174">1174</span>
+<span id="1175">1175</span>
+<span id="1176">1176</span>
+<span id="1177">1177</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">glow::HasContext</span>;
 <span class="kw">use</span> <span class="ident">parking_lot</span>::{<span class="ident">Mutex</span>, <span class="ident">MutexGuard</span>};
 <span class="kw">use</span> <span class="ident">raw_window_handle</span>::{<span class="ident">HasRawWindowHandle</span>, <span class="ident">RawWindowHandle</span>};
@@ -2164,7 +2176,19 @@
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;emscripten&quot;</span>)]</span>
                     (<span class="ident">WindowKind::Unknown</span>, <span class="ident">Rwh::Web</span>(<span class="ident">handle</span>)) =&gt; <span class="ident">handle</span>.<span class="ident">id</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">std::ffi::c_void</span>,
                     (<span class="ident">WindowKind::Unknown</span>, <span class="ident">Rwh::Win32</span>(<span class="ident">handle</span>)) =&gt; <span class="ident">handle</span>.<span class="ident">hwnd</span>,
-                    (<span class="ident">WindowKind::Unknown</span>, <span class="ident">Rwh::AppKit</span>(<span class="ident">handle</span>)) =&gt; <span class="ident">handle</span>.<span class="ident">ns_view</span>,
+                    (<span class="ident">WindowKind::Unknown</span>, <span class="ident">Rwh::AppKit</span>(<span class="ident">handle</span>)) =&gt; {
+                        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>))]</span>
+                        <span class="kw">let</span> <span class="ident">window_ptr</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">ns_view</span>;
+                        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>)]</span>
+                        <span class="kw">let</span> <span class="ident">window_ptr</span> <span class="op">=</span> {
+                            <span class="kw">use</span> <span class="ident">objc</span>::{<span class="ident">msg_send</span>, <span class="ident">runtime::Object</span>, <span class="ident">sel</span>, <span class="ident">sel_impl</span>};
+                            <span class="comment">// ns_view always have a layer and don&#39;t need to verify that it exists.</span>
+                            <span class="kw">let</span> <span class="ident">layer</span>: <span class="kw-2">*mut</span> <span class="ident">Object</span> <span class="op">=</span>
+                                <span class="macro">msg_send!</span>[<span class="ident">handle</span>.<span class="ident">ns_view</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">Object</span>, <span class="ident">layer</span>];
+                            <span class="ident">layer</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">ffi::c_void</span>
+                        };
+                        <span class="ident">window_ptr</span>
+                    }
                     <span class="kw">_</span> =&gt; {
                         <span class="macro">log::warn!</span>(
                             <span class="string">&quot;Initialized platform {:?} doesn&#39;t work with window {:?}&quot;</span>,
@@ -2180,7 +2204,7 @@
                     <span class="comment">// We don&#39;t want any of the buffering done by the driver, because we</span>
                     <span class="comment">// manage a swapchain on our side.</span>
                     <span class="comment">// Some drivers just fail on surface creation seeing `EGL_SINGLE_BUFFER`.</span>
-                    <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>)
+                    <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>))
                         <span class="op">|</span><span class="op">|</span> <span class="macro">cfg!</span>(<span class="ident">windows</span>)
                         <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">wsi</span>.<span class="ident">kind</span> <span class="op">==</span> <span class="ident">WindowKind::AngleX11</span>
                     {
@@ -2334,5 +2358,5 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">discard_texture</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_texture</span>: <span class="ident"><span class="kw">super</span>::Texture</span>) {}
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (88fb06a1f 2022-02-05)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (f624427f8 2022-02-06)" ></div>
 </body></html>
