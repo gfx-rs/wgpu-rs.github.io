@@ -436,12 +436,21 @@
 <span id="431">431</span>
 <span id="432">432</span>
 <span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
 </pre><pre class="rust"><code><span class="kw">impl</span> <span class="ident"><span class="kw">super</span>::AdapterShared</span> {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">describe_texture_format</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">texture_format</span>: <span class="ident">wgt::TextureFormat</span>,
     ) -&gt; <span class="ident"><span class="kw">super</span>::TextureFormatDesc</span> {
         <span class="kw">use</span> <span class="ident">wgt::TextureFormat</span> <span class="kw">as</span> <span class="ident">Tf</span>;
+        <span class="kw">use</span> <span class="ident">wgt</span>::{<span class="ident">AstcBlock</span>, <span class="ident">AstcChannel</span>};
 
         <span class="kw">let</span> (<span class="ident">internal</span>, <span class="ident">external</span>, <span class="ident">data_type</span>) <span class="op">=</span> <span class="kw">match</span> <span class="ident">texture_format</span> {
             <span class="ident">Tf::R8Unorm</span> =&gt; (<span class="ident">glow::R8</span>, <span class="ident">glow::RED</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
@@ -542,46 +551,53 @@
             <span class="ident">Tf::EacR11Snorm</span> =&gt; (<span class="ident">glow::COMPRESSED_SIGNED_R11_EAC</span>, <span class="ident">glow::RED</span>, <span class="number">0</span>),
             <span class="ident">Tf::EacRg11Unorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RG11_EAC</span>, <span class="ident">glow::RG</span>, <span class="number">0</span>),
             <span class="ident">Tf::EacRg11Snorm</span> =&gt; (<span class="ident">glow::COMPRESSED_SIGNED_RG11_EAC</span>, <span class="ident">glow::RG</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc4x4RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_4x4_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc4x4RgbaUnormSrgb</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc5x4RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_5x4_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc5x4RgbaUnormSrgb</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc5x5RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_5x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc5x5RgbaUnormSrgb</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc6x5RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_6x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc6x5RgbaUnormSrgb</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc6x6RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_6x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc6x6RgbaUnormSrgb</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc8x5RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_8x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc8x5RgbaUnormSrgb</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc8x6RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_8x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc8x6RgbaUnormSrgb</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc8x8RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_8x8_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc8x8RgbaUnormSrgb</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc10x5RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_10x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc10x5RgbaUnormSrgb</span> =&gt; {
-                (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
-            }
-            <span class="ident">Tf::Astc10x6RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_10x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc10x6RgbaUnormSrgb</span> =&gt; {
-                (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
-            }
-            <span class="ident">Tf::Astc10x8RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_10x8_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc10x8RgbaUnormSrgb</span> =&gt; {
-                (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
-            }
-            <span class="ident">Tf::Astc10x10RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_10x10_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc10x10RgbaUnormSrgb</span> =&gt; {
-                (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
-            }
-            <span class="ident">Tf::Astc12x10RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_12x10_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc12x10RgbaUnormSrgb</span> =&gt; {
-                (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
-            }
-            <span class="ident">Tf::Astc12x12RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_12x12_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc12x12RgbaUnormSrgb</span> =&gt; {
-                (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
-            }
+            <span class="ident">Tf::Astc</span> { <span class="ident">block</span>, <span class="ident">channel</span> } =&gt; <span class="kw">match</span> <span class="ident">channel</span> {
+                <span class="ident">AstcChannel::Unorm</span> =&gt; <span class="kw">match</span> <span class="ident">block</span> {
+                    <span class="ident">AstcBlock::B4x4</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_4x4_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B5x4</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_5x4_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B5x5</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_5x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B6x5</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_6x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B6x6</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_6x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B8x5</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_8x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B8x6</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_8x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B8x8</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_8x8_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B10x5</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_10x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B10x6</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_10x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B10x8</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_10x8_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B10x10</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_10x10_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B12x10</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_12x10_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B12x12</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_12x12_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                },
+                <span class="ident">AstcChannel::UnormSrgb</span> =&gt; <span class="kw">match</span> <span class="ident">block</span> {
+                    <span class="ident">AstcBlock::B4x4</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B5x4</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B5x5</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B6x5</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B6x6</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B8x5</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B8x6</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B8x8</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+                    <span class="ident">AstcBlock::B10x5</span> =&gt; {
+                        (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
+                    }
+                    <span class="ident">AstcBlock::B10x6</span> =&gt; {
+                        (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
+                    }
+                    <span class="ident">AstcBlock::B10x8</span> =&gt; {
+                        (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
+                    }
+                    <span class="ident">AstcBlock::B10x10</span> =&gt; {
+                        (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
+                    }
+                    <span class="ident">AstcBlock::B12x10</span> =&gt; {
+                        (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
+                    }
+                    <span class="ident">AstcBlock::B12x12</span> =&gt; {
+                        (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
+                    }
+                },
+                <span class="ident">AstcChannel::Hdr</span> =&gt; <span class="macro">unimplemented!</span>(),
+            },
         };
 
         <span class="ident"><span class="kw">super</span>::TextureFormatDesc</span> {
@@ -870,5 +886,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (1e12aef3f 2022-02-13)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (c5c610aad 2022-02-14)" ></div>
 </body></html>
