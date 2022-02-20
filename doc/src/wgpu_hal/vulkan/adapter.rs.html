@@ -1567,6 +1567,34 @@
 <span id="1562">1562</span>
 <span id="1563">1563</span>
 <span id="1564">1564</span>
+<span id="1565">1565</span>
+<span id="1566">1566</span>
+<span id="1567">1567</span>
+<span id="1568">1568</span>
+<span id="1569">1569</span>
+<span id="1570">1570</span>
+<span id="1571">1571</span>
+<span id="1572">1572</span>
+<span id="1573">1573</span>
+<span id="1574">1574</span>
+<span id="1575">1575</span>
+<span id="1576">1576</span>
+<span id="1577">1577</span>
+<span id="1578">1578</span>
+<span id="1579">1579</span>
+<span id="1580">1580</span>
+<span id="1581">1581</span>
+<span id="1582">1582</span>
+<span id="1583">1583</span>
+<span id="1584">1584</span>
+<span id="1585">1585</span>
+<span id="1586">1586</span>
+<span id="1587">1587</span>
+<span id="1588">1588</span>
+<span id="1589">1589</span>
+<span id="1590">1590</span>
+<span id="1591">1591</span>
+<span id="1592">1592</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">extensions::khr</span>, <span class="ident">vk</span>};
@@ -1594,6 +1622,7 @@
     <span class="ident">robustness2</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">vk::PhysicalDeviceRobustness2FeaturesEXT</span><span class="op">&gt;</span>,
     <span class="ident">depth_clip_enable</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">vk::PhysicalDeviceDepthClipEnableFeaturesEXT</span><span class="op">&gt;</span>,
     <span class="ident">multiview</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">vk::PhysicalDeviceMultiviewFeaturesKHR</span><span class="op">&gt;</span>,
+    <span class="ident">astc_hdr</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">vk::PhysicalDeviceTextureCompressionASTCHDRFeaturesEXT</span><span class="op">&gt;</span>,
 }
 
 <span class="comment">// This is safe because the structs have `p_next: *mut c_void`, which we null out/never read.</span>
@@ -1626,6 +1655,9 @@
             <span class="ident">info</span> <span class="op">=</span> <span class="ident">info</span>.<span class="ident">push_next</span>(<span class="ident">feature</span>);
         }
         <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">feature</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">depth_clip_enable</span> {
+            <span class="ident">info</span> <span class="op">=</span> <span class="ident">info</span>.<span class="ident">push_next</span>(<span class="ident">feature</span>);
+        }
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">feature</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">astc_hdr</span> {
             <span class="ident">info</span> <span class="op">=</span> <span class="ident">info</span>.<span class="ident">push_next</span>(<span class="ident">feature</span>);
         }
         <span class="ident">info</span>
@@ -1889,6 +1921,15 @@
             } <span class="kw">else</span> {
                 <span class="prelude-val">None</span>
             },
+            <span class="ident">astc_hdr</span>: <span class="kw">if</span> <span class="ident">enabled_extensions</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">vk::ExtTextureCompressionAstcHdrFn::name</span>()) {
+                <span class="prelude-val">Some</span>(
+                    <span class="ident">vk::PhysicalDeviceTextureCompressionASTCHDRFeaturesEXT::builder</span>()
+                        .<span class="ident">texture_compression_astc_hdr</span>(<span class="bool-val">true</span>)
+                        .<span class="ident">build</span>(),
+                )
+            } <span class="kw">else</span> {
+                <span class="prelude-val">None</span>
+            },
         }
     }
 
@@ -2092,6 +2133,13 @@
             <span class="ident">is_format_16bit_norm_supported</span>(<span class="ident">caps</span>),
         );
 
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">astc_hdr</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">astc_hdr</span> {
+            <span class="ident">features</span>.<span class="ident">set</span>(
+                <span class="ident">F::TEXTURE_COMPRESSION_ASTC_HDR</span>,
+                <span class="ident">astc_hdr</span>.<span class="ident">texture_compression_astc_hdr</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span>,
+            );
+        }
+
         (<span class="ident">features</span>, <span class="ident">dl_flags</span>)
     }
 
@@ -2201,6 +2249,10 @@
 
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>))]</span>
         <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">vk::KhrPortabilitySubsetFn::name</span>());
+
+        <span class="kw">if</span> <span class="ident">requested_features</span>.<span class="ident">contains</span>(<span class="ident">wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR</span>) {
+            <span class="ident">extensions</span>.<span class="ident">push</span>(<span class="ident">vk::ExtTextureCompressionAstcHdrFn::name</span>())
+        }
 
         <span class="ident">extensions</span>
     }
@@ -2432,6 +2484,12 @@
                 <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
                     .<span class="ident">depth_clip_enable</span>
                     .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceDepthClipEnableFeaturesEXT::default</span>());
+                <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
+            }
+            <span class="kw">if</span> <span class="ident">capabilities</span>.<span class="ident">supports_extension</span>(<span class="ident">vk::ExtTextureCompressionAstcHdrFn::name</span>()) {
+                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">features</span>
+                    .<span class="ident">astc_hdr</span>
+                    .<span class="ident">insert</span>(<span class="ident">vk::PhysicalDeviceTextureCompressionASTCHDRFeaturesEXT::default</span>());
                 <span class="ident">builder</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">push_next</span>(<span class="ident">next</span>);
             }
 
@@ -2970,7 +3028,6 @@
         <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">private_caps</span>.<span class="ident">can_present</span> {
             <span class="kw">return</span> <span class="prelude-val">None</span>;
         }
-
         <span class="kw">let</span> <span class="ident">queue_family_index</span> <span class="op">=</span> <span class="number">0</span>; <span class="comment">//TODO</span>
         {
             <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkGetPhysicalDeviceSurfaceSupportKHR&quot;</span>);
@@ -3078,7 +3135,6 @@
                     .<span class="ident">any</span>(<span class="op">|</span><span class="ident">sf</span><span class="op">|</span> <span class="ident">sf</span>.<span class="ident">format</span> <span class="op">==</span> <span class="ident">vk_format</span> <span class="op">|</span><span class="op">|</span> <span class="ident">sf</span>.<span class="ident">format</span> <span class="op">==</span> <span class="ident">vk::Format::UNDEFINED</span>)
             })
             .<span class="ident">collect</span>();
-
         <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::SurfaceCapabilities</span> {
             <span class="ident">formats</span>,
             <span class="ident">swap_chain_sizes</span>: <span class="ident">caps</span>.<span class="ident">min_image_count</span>..<span class="op">=</span><span class="ident">max_image_count</span>,
@@ -3132,5 +3188,5 @@
     <span class="ident">r16unorm</span> <span class="op">&amp;&amp;</span> <span class="ident">r16snorm</span> <span class="op">&amp;&amp;</span> <span class="ident">rg16unorm</span> <span class="op">&amp;&amp;</span> <span class="ident">rg16snorm</span> <span class="op">&amp;&amp;</span> <span class="ident">rgba16unorm</span> <span class="op">&amp;&amp;</span> <span class="ident">rgba16snorm</span>
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (b17226fcc 2022-02-18)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (3b348d932 2022-02-19)" ></div>
 </body></html>
