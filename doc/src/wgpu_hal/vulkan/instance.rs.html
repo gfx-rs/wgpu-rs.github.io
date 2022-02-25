@@ -747,6 +747,16 @@
 <span id="742">742</span>
 <span id="743">743</span>
 <span id="744">744</span>
+<span id="745">745</span>
+<span id="746">746</span>
+<span id="747">747</span>
+<span id="748">748</span>
+<span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">ffi</span>::{<span class="ident">c_void</span>, <span class="ident">CStr</span>, <span class="ident">CString</span>},
     <span class="ident">slice</span>,
@@ -793,14 +803,16 @@
         <span class="ident">CStr::from_ptr</span>(<span class="ident">cd</span>.<span class="ident">p_message</span>).<span class="ident">to_string_lossy</span>()
     };
 
-    <span class="macro">log::log!</span>(
-        <span class="ident">level</span>,
-        <span class="string">&quot;{:?} [{} (0x{:x})]\n\t{}&quot;</span>,
-        <span class="ident">message_type</span>,
-        <span class="ident">message_id_name</span>,
-        <span class="ident">cd</span>.<span class="ident">message_id_number</span>,
-        <span class="ident">message</span>,
-    );
+    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">std::panic::catch_unwind</span>(<span class="op">|</span><span class="op">|</span> {
+        <span class="macro">log::log!</span>(
+            <span class="ident">level</span>,
+            <span class="string">&quot;{:?} [{} (0x{:x})]\n\t{}&quot;</span>,
+            <span class="ident">message_type</span>,
+            <span class="ident">message_id_name</span>,
+            <span class="ident">cd</span>.<span class="ident">message_id_number</span>,
+            <span class="ident">message</span>,
+        );
+    });
 
     <span class="kw">if</span> <span class="ident">cd</span>.<span class="ident">queue_label_count</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
         <span class="kw">let</span> <span class="ident">labels</span> <span class="op">=</span> <span class="ident">slice::from_raw_parts</span>(<span class="ident">cd</span>.<span class="ident">p_queue_labels</span>, <span class="ident">cd</span>.<span class="ident">queue_label_count</span> <span class="kw">as</span> <span class="ident">usize</span>);
@@ -813,7 +825,10 @@
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">lbl</span><span class="op">|</span> <span class="ident">CStr::from_ptr</span>(<span class="ident">lbl</span>).<span class="ident">to_string_lossy</span>())
             })
             .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-        <span class="macro">log::log!</span>(<span class="ident">level</span>, <span class="string">&quot;\tqueues: {}&quot;</span>, <span class="ident">names</span>.<span class="ident">join</span>(<span class="string">&quot;, &quot;</span>));
+
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">std::panic::catch_unwind</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="macro">log::log!</span>(<span class="ident">level</span>, <span class="string">&quot;\tqueues: {}&quot;</span>, <span class="ident">names</span>.<span class="ident">join</span>(<span class="string">&quot;, &quot;</span>));
+        });
     }
 
     <span class="kw">if</span> <span class="ident">cd</span>.<span class="ident">cmd_buf_label_count</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
@@ -827,7 +842,10 @@
                     .<span class="ident">map</span>(<span class="op">|</span><span class="ident">lbl</span><span class="op">|</span> <span class="ident">CStr::from_ptr</span>(<span class="ident">lbl</span>).<span class="ident">to_string_lossy</span>())
             })
             .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-        <span class="macro">log::log!</span>(<span class="ident">level</span>, <span class="string">&quot;\tcommand buffers: {}&quot;</span>, <span class="ident">names</span>.<span class="ident">join</span>(<span class="string">&quot;, &quot;</span>));
+
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">std::panic::catch_unwind</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="macro">log::log!</span>(<span class="ident">level</span>, <span class="string">&quot;\tcommand buffers: {}&quot;</span>, <span class="ident">names</span>.<span class="ident">join</span>(<span class="string">&quot;, &quot;</span>));
+        });
     }
 
     <span class="kw">if</span> <span class="ident">cd</span>.<span class="ident">object_count</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
@@ -848,7 +866,9 @@
                 )
             })
             .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-        <span class="macro">log::log!</span>(<span class="ident">level</span>, <span class="string">&quot;\tobjects: {}&quot;</span>, <span class="ident">names</span>.<span class="ident">join</span>(<span class="string">&quot;, &quot;</span>));
+        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">std::panic::catch_unwind</span>(<span class="op">|</span><span class="op">|</span> {
+            <span class="macro">log::log!</span>(<span class="ident">level</span>, <span class="string">&quot;\tobjects: {}&quot;</span>, <span class="ident">names</span>.<span class="ident">join</span>(<span class="string">&quot;, &quot;</span>));
+        });
     }
 
     <span class="comment">// uncommenting this is useful for tests</span>
