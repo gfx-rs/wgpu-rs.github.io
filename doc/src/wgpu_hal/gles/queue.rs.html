@@ -1200,6 +1200,15 @@
 <span id="1195">1195</span>
 <span id="1196">1196</span>
 <span id="1197">1197</span>
+<span id="1198">1198</span>
+<span id="1199">1199</span>
+<span id="1200">1200</span>
+<span id="1201">1201</span>
+<span id="1202">1202</span>
+<span id="1203">1203</span>
+<span id="1204">1204</span>
+<span id="1205">1205</span>
+<span id="1206">1206</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Command</span> <span class="kw">as</span> <span class="ident">C</span>;
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">glow::HasContext</span>;
@@ -1654,9 +1663,18 @@
                         <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
                     }
                 } <span class="kw">else</span> {
-                    <span class="kw">let</span> <span class="ident">bytes_per_image</span> <span class="op">=</span>
-                        <span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">rows_per_image</span>.<span class="ident">map_or</span>(<span class="number">1</span>, <span class="op">|</span><span class="ident">rpi</span><span class="op">|</span> <span class="ident">rpi</span>.<span class="ident">get</span>())
-                            <span class="op">*</span> <span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">bytes_per_row</span>.<span class="ident">map_or</span>(<span class="number">1</span>, <span class="op">|</span><span class="ident">bpr</span><span class="op">|</span> <span class="ident">bpr</span>.<span class="ident">get</span>());
+                    <span class="kw">let</span> <span class="ident">bytes_per_row</span> <span class="op">=</span> <span class="ident">copy</span>
+                        .<span class="ident">buffer_layout</span>
+                        .<span class="ident">bytes_per_row</span>
+                        .<span class="ident">map_or</span>(<span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="op">*</span> <span class="ident">format_info</span>.<span class="ident">block_size</span> <span class="kw">as</span> <span class="ident">u32</span>, <span class="op">|</span><span class="ident">bpr</span><span class="op">|</span> {
+                            <span class="ident">bpr</span>.<span class="ident">get</span>()
+                        });
+                    <span class="kw">let</span> <span class="ident">rows_per_image</span> <span class="op">=</span> <span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">rows_per_image</span>.<span class="ident">map_or</span>(
+                        <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="op">/</span> <span class="ident">format_info</span>.<span class="ident">block_dimensions</span>.<span class="number">1</span> <span class="kw">as</span> <span class="ident">u32</span>,
+                        <span class="op">|</span><span class="ident">rpi</span><span class="op">|</span> <span class="ident">rpi</span>.<span class="ident">get</span>(),
+                    );
+
+                    <span class="kw">let</span> <span class="ident">bytes_per_image</span> <span class="op">=</span> <span class="ident">bytes_per_row</span> <span class="op">*</span> <span class="ident">rows_per_image</span>;
                     <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">copy</span>.<span class="ident">buffer_layout</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u32</span>;
 
                     <span class="kw">let</span> <span class="ident">buffer_data</span>;
@@ -2398,5 +2416,5 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident"><span class="kw">super</span>::Queue</span> {}
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (532d3cda9 2022-02-23)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (4b043faba 2022-02-24)" ></div>
 </body></html>

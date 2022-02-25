@@ -5218,6 +5218,9 @@
 <span id="5213">5213</span>
 <span id="5214">5214</span>
 <span id="5215">5215</span>
+<span id="5216">5216</span>
+<span id="5217">5217</span>
+<span id="5218">5218</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -7955,10 +7958,13 @@
         <span class="kw">let</span> <span class="ident">format_desc</span> <span class="op">=</span> <span class="ident">format</span>.<span class="ident">describe</span>();
         <span class="self">self</span>.<span class="ident">require_features</span>(<span class="ident">format_desc</span>.<span class="ident">required_features</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="self">self</span>
+        <span class="kw">let</span> <span class="ident">using_device_features</span> <span class="op">=</span> <span class="self">self</span>
             .<span class="ident">features</span>
-            .<span class="ident">contains</span>(<span class="ident">wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span>)
-        {
+            .<span class="ident">contains</span>(<span class="ident">wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span>);
+        <span class="comment">// If we&#39;re running downlevel, we need to manually ask the backend what we can use as we can&#39;t trust WebGPU.</span>
+        <span class="kw">let</span> <span class="ident">downlevel</span> <span class="op">=</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">downlevel</span>.<span class="ident">is_webgpu_compliant</span>();
+
+        <span class="kw">if</span> <span class="ident">using_device_features</span> <span class="op">|</span><span class="op">|</span> <span class="ident">downlevel</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">adapter</span>.<span class="ident">get_texture_format_features</span>(<span class="ident">format</span>))
         } <span class="kw">else</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">format_desc</span>.<span class="ident">guaranteed_format_features</span>)
@@ -10434,5 +10440,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (532d3cda9 2022-02-23)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (4b043faba 2022-02-24)" ></div>
 </body></html>
