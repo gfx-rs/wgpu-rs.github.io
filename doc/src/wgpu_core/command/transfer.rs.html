@@ -1020,12 +1020,26 @@
 <span id="1015">1015</span>
 <span id="1016">1016</span>
 <span id="1017">1017</span>
+<span id="1018">1018</span>
+<span id="1019">1019</span>
+<span id="1020">1020</span>
+<span id="1021">1021</span>
+<span id="1022">1022</span>
+<span id="1023">1023</span>
+<span id="1024">1024</span>
+<span id="1025">1025</span>
+<span id="1026">1026</span>
+<span id="1027">1027</span>
+<span id="1028">1028</span>
+<span id="1029">1029</span>
+<span id="1030">1030</span>
+<span id="1031">1031</span>
 </pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::device::trace::Command</span> <span class="kw">as</span> <span class="ident">TraceCommand</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">command</span>::{<span class="ident">CommandBuffer</span>, <span class="ident">CommandEncoderError</span>},
     <span class="ident">conv</span>,
-    <span class="ident">device::Device</span>,
+    <span class="ident">device</span>::{<span class="ident">Device</span>, <span class="ident">MissingDownlevelFlags</span>},
     <span class="ident">error</span>::{<span class="ident">ErrorFormatter</span>, <span class="ident">PrettyError</span>},
     <span class="ident">hub</span>::{<span class="ident">Global</span>, <span class="ident">GlobalIdentityHandlerFactory</span>, <span class="ident">HalApi</span>, <span class="ident">Storage</span>, <span class="ident">Token</span>},
     <span class="ident">id</span>::{<span class="ident">BufferId</span>, <span class="ident">CommandEncoderId</span>, <span class="ident">Id</span>, <span class="ident">TextureId</span>, <span class="ident">Valid</span>},
@@ -1130,6 +1144,8 @@
     },
     <span class="attribute">#[<span class="ident">error</span>(<span class="ident">transparent</span>)]</span>
     <span class="ident">MemoryInitFailure</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident"><span class="kw">super</span>::ClearError</span>),
+    <span class="attribute">#[<span class="ident">error</span>(<span class="string">&quot;Cannot encode this copy because of a missing downelevel flag&quot;</span>)]</span>
+    <span class="ident">MissingDownlevelFlags</span>(<span class="attribute">#[<span class="ident">from</span>]</span> <span class="ident">MissingDownlevelFlags</span>),
 }
 
 <span class="kw">impl</span> <span class="ident">PrettyError</span> <span class="kw">for</span> <span class="ident">TransferError</span> {
@@ -1861,6 +1877,18 @@
             );
         }
 
+        <span class="kw">if</span> <span class="ident">format_desc</span>.<span class="ident">sample_type</span> <span class="op">==</span> <span class="ident">wgt::TextureSampleType::Depth</span>
+            <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">device</span>
+                .<span class="ident">downlevel</span>
+                .<span class="ident">flags</span>
+                .<span class="ident">contains</span>(<span class="ident">wgt::DownlevelFlags::DEPTH_TEXTURE_AND_BUFFER_COPIES</span>)
+        {
+            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">TransferError::MissingDownlevelFlags</span>(<span class="ident">MissingDownlevelFlags</span>(
+                <span class="ident">wgt::DownlevelFlags::DEPTH_TEXTURE_AND_BUFFER_COPIES</span>,
+            ))
+            .<span class="ident">into</span>());
+        }
+
         <span class="ident">cmd_buf</span>
             .<span class="ident">buffer_memory_init_actions</span>
             .<span class="ident">extend</span>(<span class="ident">dst_buffer</span>.<span class="ident">initialization_status</span>.<span class="ident">create_action</span>(
@@ -2038,5 +2066,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (4b043faba 2022-02-24)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (4ce374923 2022-02-28)" ></div>
 </body></html>

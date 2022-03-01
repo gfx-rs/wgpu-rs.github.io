@@ -3820,73 +3820,6 @@
 <span id="3815">3815</span>
 <span id="3816">3816</span>
 <span id="3817">3817</span>
-<span id="3818">3818</span>
-<span id="3819">3819</span>
-<span id="3820">3820</span>
-<span id="3821">3821</span>
-<span id="3822">3822</span>
-<span id="3823">3823</span>
-<span id="3824">3824</span>
-<span id="3825">3825</span>
-<span id="3826">3826</span>
-<span id="3827">3827</span>
-<span id="3828">3828</span>
-<span id="3829">3829</span>
-<span id="3830">3830</span>
-<span id="3831">3831</span>
-<span id="3832">3832</span>
-<span id="3833">3833</span>
-<span id="3834">3834</span>
-<span id="3835">3835</span>
-<span id="3836">3836</span>
-<span id="3837">3837</span>
-<span id="3838">3838</span>
-<span id="3839">3839</span>
-<span id="3840">3840</span>
-<span id="3841">3841</span>
-<span id="3842">3842</span>
-<span id="3843">3843</span>
-<span id="3844">3844</span>
-<span id="3845">3845</span>
-<span id="3846">3846</span>
-<span id="3847">3847</span>
-<span id="3848">3848</span>
-<span id="3849">3849</span>
-<span id="3850">3850</span>
-<span id="3851">3851</span>
-<span id="3852">3852</span>
-<span id="3853">3853</span>
-<span id="3854">3854</span>
-<span id="3855">3855</span>
-<span id="3856">3856</span>
-<span id="3857">3857</span>
-<span id="3858">3858</span>
-<span id="3859">3859</span>
-<span id="3860">3860</span>
-<span id="3861">3861</span>
-<span id="3862">3862</span>
-<span id="3863">3863</span>
-<span id="3864">3864</span>
-<span id="3865">3865</span>
-<span id="3866">3866</span>
-<span id="3867">3867</span>
-<span id="3868">3868</span>
-<span id="3869">3869</span>
-<span id="3870">3870</span>
-<span id="3871">3871</span>
-<span id="3872">3872</span>
-<span id="3873">3873</span>
-<span id="3874">3874</span>
-<span id="3875">3875</span>
-<span id="3876">3876</span>
-<span id="3877">3877</span>
-<span id="3878">3878</span>
-<span id="3879">3879</span>
-<span id="3880">3880</span>
-<span id="3881">3881</span>
-<span id="3882">3882</span>
-<span id="3883">3883</span>
-<span id="3884">3884</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */</span>
@@ -4880,6 +4813,10 @@
         <span class="doccomment">/// Supports sample-rate shading.</span>
         <span class="kw">const</span> <span class="ident">MULTISAMPLED_SHADING</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">12</span>;
 
+        <span class="doccomment">/// Supports copies between depth textures and buffers.</span>
+        <span class="doccomment">///</span>
+        <span class="doccomment">/// GLES/WebGL don&#39;t support this.</span>
+        <span class="kw">const</span> <span class="ident">DEPTH_TEXTURE_AND_BUFFER_COPIES</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">13</span>;
     }
 }
 
@@ -5897,6 +5834,7 @@
         <span class="kw">let</span> <span class="ident">all_flags</span> <span class="op">=</span> <span class="ident">TextureUsages::all</span>();
 
         <span class="comment">// See &lt;https://gpuweb.github.io/gpuweb/#texture-format-caps&gt; for reference</span>
+        <span class="attribute">#[<span class="ident">rustfmt::skip</span>]</span> <span class="comment">// lets make a nice table</span>
         <span class="kw">let</span> (
             <span class="ident">required_features</span>,
             <span class="ident">sample_type</span>,
@@ -5908,159 +5846,95 @@
             <span class="ident">components</span>,
         ) <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span> {
             <span class="comment">// Normal 8 bit textures</span>
-            <span class="ident"><span class="self">Self</span>::R8Unorm</span> =&gt; (
-                <span class="ident">native</span>,
-                <span class="ident">float</span>,
-                <span class="ident">linear</span>,
-                <span class="ident">msaa_resolve</span>,
-                (<span class="number">1</span>, <span class="number">1</span>),
-                <span class="number">1</span>,
-                <span class="ident">attachment</span>,
-                <span class="number">1</span>,
-            ),
-            <span class="ident"><span class="self">Self</span>::R8Snorm</span> =&gt; (<span class="ident">native</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">1</span>, <span class="ident">basic</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::R8Uint</span> =&gt; (<span class="ident">native</span>, <span class="ident">uint</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">1</span>, <span class="ident">attachment</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::R8Sint</span> =&gt; (<span class="ident">native</span>, <span class="ident">sint</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">1</span>, <span class="ident">attachment</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::R8Unorm</span> =&gt;             (   <span class="ident">native</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>, <span class="ident">msaa_resolve</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">1</span>, <span class="ident">attachment</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::R8Snorm</span> =&gt;             (   <span class="ident">native</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">1</span>,      <span class="ident">basic</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::R8Uint</span> =&gt;              (   <span class="ident">native</span>,    <span class="ident">uint</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">1</span>, <span class="ident">attachment</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::R8Sint</span> =&gt;              (   <span class="ident">native</span>,    <span class="ident">sint</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">1</span>, <span class="ident">attachment</span>, <span class="number">1</span>),
 
             <span class="comment">// Normal 16 bit textures</span>
-            <span class="ident"><span class="self">Self</span>::R16Uint</span> =&gt; (<span class="ident">native</span>, <span class="ident">uint</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">2</span>, <span class="ident">attachment</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::R16Sint</span> =&gt; (<span class="ident">native</span>, <span class="ident">sint</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">2</span>, <span class="ident">attachment</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::R16Float</span> =&gt; (
-                <span class="ident">native</span>,
-                <span class="ident">float</span>,
-                <span class="ident">linear</span>,
-                <span class="ident">msaa_resolve</span>,
-                (<span class="number">1</span>, <span class="number">1</span>),
-                <span class="number">2</span>,
-                <span class="ident">attachment</span>,
-                <span class="number">1</span>,
-            ),
-            <span class="ident"><span class="self">Self</span>::Rg8Unorm</span> =&gt; (
-                <span class="ident">native</span>,
-                <span class="ident">float</span>,
-                <span class="ident">linear</span>,
-                <span class="ident">msaa_resolve</span>,
-                (<span class="number">1</span>, <span class="number">1</span>),
-                <span class="number">2</span>,
-                <span class="ident">attachment</span>,
-                <span class="number">2</span>,
-            ),
-            <span class="ident"><span class="self">Self</span>::Rg8Snorm</span> =&gt; (<span class="ident">native</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">2</span>, <span class="ident">attachment</span>, <span class="number">2</span>),
-            <span class="ident"><span class="self">Self</span>::Rg8Uint</span> =&gt; (<span class="ident">native</span>, <span class="ident">uint</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">2</span>, <span class="ident">attachment</span>, <span class="number">2</span>),
-            <span class="ident"><span class="self">Self</span>::Rg8Sint</span> =&gt; (<span class="ident">native</span>, <span class="ident">sint</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">2</span>, <span class="ident">basic</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::R16Uint</span> =&gt;             (   <span class="ident">native</span>,    <span class="ident">uint</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">2</span>, <span class="ident">attachment</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::R16Sint</span> =&gt;             (   <span class="ident">native</span>,    <span class="ident">sint</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">2</span>, <span class="ident">attachment</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::R16Float</span> =&gt;            (   <span class="ident">native</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>, <span class="ident">msaa_resolve</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">2</span>, <span class="ident">attachment</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::Rg8Unorm</span> =&gt;            (   <span class="ident">native</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>, <span class="ident">msaa_resolve</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">2</span>, <span class="ident">attachment</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Rg8Snorm</span> =&gt;            (   <span class="ident">native</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">2</span>, <span class="ident">attachment</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Rg8Uint</span> =&gt;             (   <span class="ident">native</span>,    <span class="ident">uint</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">2</span>, <span class="ident">attachment</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Rg8Sint</span> =&gt;             (   <span class="ident">native</span>,    <span class="ident">sint</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">2</span>,      <span class="ident">basic</span>, <span class="number">2</span>),
 
             <span class="comment">// Normal 32 bit textures</span>
-            <span class="ident"><span class="self">Self</span>::R32Uint</span> =&gt; (<span class="ident">native</span>, <span class="ident">uint</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">all_flags</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::R32Sint</span> =&gt; (<span class="ident">native</span>, <span class="ident">sint</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">all_flags</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::R32Float</span> =&gt; (<span class="ident">native</span>, <span class="ident">nearest</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">all_flags</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::Rg16Uint</span> =&gt; (<span class="ident">native</span>, <span class="ident">uint</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">2</span>),
-            <span class="ident"><span class="self">Self</span>::Rg16Sint</span> =&gt; (<span class="ident">native</span>, <span class="ident">sint</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">2</span>),
-            <span class="ident"><span class="self">Self</span>::Rg16Float</span> =&gt; (
-                <span class="ident">native</span>,
-                <span class="ident">float</span>,
-                <span class="ident">linear</span>,
-                <span class="ident">msaa_resolve</span>,
-                (<span class="number">1</span>, <span class="number">1</span>),
-                <span class="number">4</span>,
-                <span class="ident">attachment</span>,
-                <span class="number">2</span>,
-            ),
-            <span class="ident"><span class="self">Self</span>::Rgba8Unorm</span> =&gt; (<span class="ident">native</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">msaa_resolve</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">all_flags</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Rgba8UnormSrgb</span> =&gt; (
-                <span class="ident">native</span>,
-                <span class="ident">float</span>,
-                <span class="ident">corrected</span>,
-                <span class="ident">msaa_resolve</span>,
-                (<span class="number">1</span>, <span class="number">1</span>),
-                <span class="number">4</span>,
-                <span class="ident">attachment</span>,
-                <span class="number">4</span>,
-            ),
-            <span class="ident"><span class="self">Self</span>::Rgba8Snorm</span> =&gt; (<span class="ident">native</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">storage</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Rgba8Uint</span> =&gt; (<span class="ident">native</span>, <span class="ident">uint</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">all_flags</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Rgba8Sint</span> =&gt; (<span class="ident">native</span>, <span class="ident">sint</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">all_flags</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Bgra8Unorm</span> =&gt; (
-                <span class="ident">native</span>,
-                <span class="ident">float</span>,
-                <span class="ident">linear</span>,
-                <span class="ident">msaa_resolve</span>,
-                (<span class="number">1</span>, <span class="number">1</span>),
-                <span class="number">4</span>,
-                <span class="ident">attachment</span>,
-                <span class="number">4</span>,
-            ),
-            <span class="ident"><span class="self">Self</span>::Bgra8UnormSrgb</span> =&gt; (
-                <span class="ident">native</span>,
-                <span class="ident">float</span>,
-                <span class="ident">corrected</span>,
-                <span class="ident">msaa_resolve</span>,
-                (<span class="number">1</span>, <span class="number">1</span>),
-                <span class="number">4</span>,
-                <span class="ident">attachment</span>,
-                <span class="number">4</span>,
-            ),
+            <span class="ident"><span class="self">Self</span>::R32Uint</span> =&gt;             (   <span class="ident">native</span>,    <span class="ident">uint</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>,  <span class="ident">all_flags</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::R32Sint</span> =&gt;             (   <span class="ident">native</span>,    <span class="ident">sint</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>,  <span class="ident">all_flags</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::R32Float</span> =&gt;            (   <span class="ident">native</span>, <span class="ident">nearest</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>,  <span class="ident">all_flags</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::Rg16Uint</span> =&gt;            (   <span class="ident">native</span>,    <span class="ident">uint</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Rg16Sint</span> =&gt;            (   <span class="ident">native</span>,    <span class="ident">sint</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Rg16Float</span> =&gt;           (   <span class="ident">native</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>, <span class="ident">msaa_resolve</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Rgba8Unorm</span> =&gt;          (   <span class="ident">native</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>, <span class="ident">msaa_resolve</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>,  <span class="ident">all_flags</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Rgba8UnormSrgb</span> =&gt;      (   <span class="ident">native</span>,   <span class="ident">float</span>, <span class="ident">corrected</span>, <span class="ident">msaa_resolve</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Rgba8Snorm</span> =&gt;          (   <span class="ident">native</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>,    <span class="ident">storage</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Rgba8Uint</span> =&gt;           (   <span class="ident">native</span>,    <span class="ident">uint</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>,  <span class="ident">all_flags</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Rgba8Sint</span> =&gt;           (   <span class="ident">native</span>,    <span class="ident">sint</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>,  <span class="ident">all_flags</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Bgra8Unorm</span> =&gt;          (   <span class="ident">native</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>, <span class="ident">msaa_resolve</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Bgra8UnormSrgb</span> =&gt;      (   <span class="ident">native</span>,   <span class="ident">float</span>, <span class="ident">corrected</span>, <span class="ident">msaa_resolve</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">4</span>),
 
             <span class="comment">// Packed 32 bit textures</span>
-            <span class="ident"><span class="self">Self</span>::Rgb10a2Unorm</span> =&gt; (
-                <span class="ident">native</span>,
-                <span class="ident">float</span>,
-                <span class="ident">linear</span>,
-                <span class="ident">msaa_resolve</span>,
-                (<span class="number">1</span>, <span class="number">1</span>),
-                <span class="number">4</span>,
-                <span class="ident">attachment</span>,
-                <span class="number">4</span>,
-            ),
-            <span class="ident"><span class="self">Self</span>::Rg11b10Float</span> =&gt; (<span class="ident">native</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">basic</span>, <span class="number">3</span>),
+            <span class="ident"><span class="self">Self</span>::Rgb10a2Unorm</span> =&gt;        (   <span class="ident">native</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>, <span class="ident">msaa_resolve</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Rg11b10Float</span> =&gt;        (   <span class="ident">native</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>,      <span class="ident">basic</span>, <span class="number">3</span>),
 
-            <span class="comment">// Packed 32 bit textures</span>
-            <span class="ident"><span class="self">Self</span>::Rg32Uint</span> =&gt; (<span class="ident">native</span>, <span class="ident">uint</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">8</span>, <span class="ident">all_flags</span>, <span class="number">2</span>),
-            <span class="ident"><span class="self">Self</span>::Rg32Sint</span> =&gt; (<span class="ident">native</span>, <span class="ident">sint</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">8</span>, <span class="ident">all_flags</span>, <span class="number">2</span>),
-            <span class="ident"><span class="self">Self</span>::Rg32Float</span> =&gt; (<span class="ident">native</span>, <span class="ident">nearest</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">8</span>, <span class="ident">all_flags</span>, <span class="number">2</span>),
-            <span class="ident"><span class="self">Self</span>::Rgba16Uint</span> =&gt; (<span class="ident">native</span>, <span class="ident">uint</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">8</span>, <span class="ident">all_flags</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Rgba16Sint</span> =&gt; (<span class="ident">native</span>, <span class="ident">sint</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">8</span>, <span class="ident">all_flags</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Rgba16Float</span> =&gt; (<span class="ident">native</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">msaa_resolve</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">8</span>, <span class="ident">all_flags</span>, <span class="number">4</span>),
+            <span class="comment">// Packed 32 bit textures  </span>
+            <span class="ident"><span class="self">Self</span>::Rg32Uint</span> =&gt;            (   <span class="ident">native</span>,    <span class="ident">uint</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">8</span>,  <span class="ident">all_flags</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Rg32Sint</span> =&gt;            (   <span class="ident">native</span>,    <span class="ident">sint</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">8</span>,  <span class="ident">all_flags</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Rg32Float</span> =&gt;           (   <span class="ident">native</span>, <span class="ident">nearest</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">8</span>,  <span class="ident">all_flags</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Rgba16Uint</span> =&gt;          (   <span class="ident">native</span>,    <span class="ident">uint</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">8</span>,  <span class="ident">all_flags</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Rgba16Sint</span> =&gt;          (   <span class="ident">native</span>,    <span class="ident">sint</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">8</span>,  <span class="ident">all_flags</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Rgba16Float</span> =&gt;         (   <span class="ident">native</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>, <span class="ident">msaa_resolve</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">8</span>,  <span class="ident">all_flags</span>, <span class="number">4</span>),
 
-            <span class="comment">// Packed 32 bit textures</span>
-            <span class="ident"><span class="self">Self</span>::Rgba32Uint</span> =&gt; (<span class="ident">native</span>, <span class="ident">uint</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">16</span>, <span class="ident">all_flags</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Rgba32Sint</span> =&gt; (<span class="ident">native</span>, <span class="ident">sint</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">16</span>, <span class="ident">all_flags</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Rgba32Float</span> =&gt; (<span class="ident">native</span>, <span class="ident">nearest</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">16</span>, <span class="ident">all_flags</span>, <span class="number">4</span>),
+            <span class="comment">// Packed 32 bit textures  </span>
+            <span class="ident"><span class="self">Self</span>::Rgba32Uint</span> =&gt;          (   <span class="ident">native</span>,    <span class="ident">uint</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">16</span>,  <span class="ident">all_flags</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Rgba32Sint</span> =&gt;          (   <span class="ident">native</span>,    <span class="ident">sint</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">16</span>,  <span class="ident">all_flags</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Rgba32Float</span> =&gt;         (   <span class="ident">native</span>, <span class="ident">nearest</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">16</span>,  <span class="ident">all_flags</span>, <span class="number">4</span>),
 
             <span class="comment">// Depth-stencil textures</span>
-            <span class="ident"><span class="self">Self</span>::Depth32Float</span> =&gt; (<span class="ident">native</span>, <span class="ident">depth</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::Depth24Plus</span> =&gt; (<span class="ident">native</span>, <span class="ident">depth</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::Depth24PlusStencil8</span> =&gt; (<span class="ident">native</span>, <span class="ident">depth</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Depth32Float</span> =&gt;        (   <span class="ident">native</span>,   <span class="ident">depth</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::Depth24Plus</span> =&gt;         (   <span class="ident">native</span>,   <span class="ident">depth</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::Depth24PlusStencil8</span> =&gt; (   <span class="ident">native</span>,   <span class="ident">depth</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>, <span class="ident">attachment</span>, <span class="number">2</span>),
 
-            <span class="comment">// Packed uncompressed</span>
-            <span class="ident"><span class="self">Self</span>::Rgb9e5Ufloat</span> =&gt; (<span class="ident">native</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">basic</span>, <span class="number">3</span>),
+            <span class="comment">// Packed uncompressed  </span>
+            <span class="ident"><span class="self">Self</span>::Rgb9e5Ufloat</span> =&gt;        (   <span class="ident">native</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>,      <span class="ident">basic</span>, <span class="number">3</span>),
+
+            <span class="comment">// Optional normalized 16-bit-per-channel formats</span>
+            <span class="ident"><span class="self">Self</span>::R16Unorm</span> =&gt;            (<span class="ident">norm16bit</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">2</span>,    <span class="ident">storage</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::R16Snorm</span> =&gt;            (<span class="ident">norm16bit</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">2</span>,    <span class="ident">storage</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::Rg16Unorm</span> =&gt;           (<span class="ident">norm16bit</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>,    <span class="ident">storage</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Rg16Snorm</span> =&gt;           (<span class="ident">norm16bit</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">4</span>,    <span class="ident">storage</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Rgba16Unorm</span> =&gt;         (<span class="ident">norm16bit</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">8</span>,    <span class="ident">storage</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Rgba16Snorm</span> =&gt;         (<span class="ident">norm16bit</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>),  <span class="number">8</span>,    <span class="ident">storage</span>, <span class="number">4</span>),
 
             <span class="comment">// BCn compressed textures</span>
-            <span class="ident"><span class="self">Self</span>::Bc1RgbaUnorm</span> =&gt; (<span class="ident">bc</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Bc1RgbaUnormSrgb</span> =&gt; (<span class="ident">bc</span>, <span class="ident">float</span>, <span class="ident">corrected</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Bc2RgbaUnorm</span> =&gt; (<span class="ident">bc</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Bc2RgbaUnormSrgb</span> =&gt; (<span class="ident">bc</span>, <span class="ident">float</span>, <span class="ident">corrected</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Bc3RgbaUnorm</span> =&gt; (<span class="ident">bc</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Bc3RgbaUnormSrgb</span> =&gt; (<span class="ident">bc</span>, <span class="ident">float</span>, <span class="ident">corrected</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Bc4RUnorm</span> =&gt; (<span class="ident">bc</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::Bc4RSnorm</span> =&gt; (<span class="ident">bc</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::Bc5RgUnorm</span> =&gt; (<span class="ident">bc</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">2</span>),
-            <span class="ident"><span class="self">Self</span>::Bc5RgSnorm</span> =&gt; (<span class="ident">bc</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">2</span>),
-            <span class="ident"><span class="self">Self</span>::Bc6hRgbUfloat</span> =&gt; (<span class="ident">bc</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">3</span>),
-            <span class="ident"><span class="self">Self</span>::Bc6hRgbSfloat</span> =&gt; (<span class="ident">bc</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">3</span>),
-            <span class="ident"><span class="self">Self</span>::Bc7RgbaUnorm</span> =&gt; (<span class="ident">bc</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Bc7RgbaUnormSrgb</span> =&gt; (<span class="ident">bc</span>, <span class="ident">float</span>, <span class="ident">corrected</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Bc1RgbaUnorm</span> =&gt;        (       <span class="ident">bc</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>),  <span class="number">8</span>,      <span class="ident">basic</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Bc1RgbaUnormSrgb</span> =&gt;    (       <span class="ident">bc</span>,   <span class="ident">float</span>, <span class="ident">corrected</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>),  <span class="number">8</span>,      <span class="ident">basic</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Bc2RgbaUnorm</span> =&gt;        (       <span class="ident">bc</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>,      <span class="ident">basic</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Bc2RgbaUnormSrgb</span> =&gt;    (       <span class="ident">bc</span>,   <span class="ident">float</span>, <span class="ident">corrected</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>,      <span class="ident">basic</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Bc3RgbaUnorm</span> =&gt;        (       <span class="ident">bc</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>,      <span class="ident">basic</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Bc3RgbaUnormSrgb</span> =&gt;    (       <span class="ident">bc</span>,   <span class="ident">float</span>, <span class="ident">corrected</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>,      <span class="ident">basic</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Bc4RUnorm</span> =&gt;           (       <span class="ident">bc</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>),  <span class="number">8</span>,      <span class="ident">basic</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::Bc4RSnorm</span> =&gt;           (       <span class="ident">bc</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>),  <span class="number">8</span>,      <span class="ident">basic</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::Bc5RgUnorm</span> =&gt;          (       <span class="ident">bc</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>,      <span class="ident">basic</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Bc5RgSnorm</span> =&gt;          (       <span class="ident">bc</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>,      <span class="ident">basic</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Bc6hRgbUfloat</span> =&gt;       (       <span class="ident">bc</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>,      <span class="ident">basic</span>, <span class="number">3</span>),
+            <span class="ident"><span class="self">Self</span>::Bc6hRgbSfloat</span> =&gt;       (       <span class="ident">bc</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>,      <span class="ident">basic</span>, <span class="number">3</span>),
+            <span class="ident"><span class="self">Self</span>::Bc7RgbaUnorm</span> =&gt;        (       <span class="ident">bc</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>,      <span class="ident">basic</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Bc7RgbaUnormSrgb</span> =&gt;    (       <span class="ident">bc</span>,   <span class="ident">float</span>, <span class="ident">corrected</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>,      <span class="ident">basic</span>, <span class="number">4</span>),
 
             <span class="comment">// ETC compressed textures</span>
-            <span class="ident"><span class="self">Self</span>::Etc2Rgb8Unorm</span> =&gt; (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>, <span class="number">3</span>),
-            <span class="ident"><span class="self">Self</span>::Etc2Rgb8UnormSrgb</span> =&gt; (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">corrected</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>, <span class="number">3</span>),
-            <span class="ident"><span class="self">Self</span>::Etc2Rgb8A1Unorm</span> =&gt; (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Etc2Rgb8A1UnormSrgb</span> =&gt; (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">corrected</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Etc2Rgba8Unorm</span> =&gt; (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Etc2Rgba8UnormSrgb</span> =&gt; (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">corrected</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::EacR11Unorm</span> =&gt; (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::EacR11Snorm</span> =&gt; (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">8</span>, <span class="ident">basic</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::EacRg11Unorm</span> =&gt; (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">2</span>),
-            <span class="ident"><span class="self">Self</span>::EacRg11Snorm</span> =&gt; (<span class="ident">etc2</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::Etc2Rgb8Unorm</span> =&gt;       (     <span class="ident">etc2</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>),  <span class="number">8</span>,      <span class="ident">basic</span>, <span class="number">3</span>),
+            <span class="ident"><span class="self">Self</span>::Etc2Rgb8UnormSrgb</span> =&gt;   (     <span class="ident">etc2</span>,   <span class="ident">float</span>, <span class="ident">corrected</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>),  <span class="number">8</span>,      <span class="ident">basic</span>, <span class="number">3</span>),
+            <span class="ident"><span class="self">Self</span>::Etc2Rgb8A1Unorm</span> =&gt;     (     <span class="ident">etc2</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>),  <span class="number">8</span>,      <span class="ident">basic</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Etc2Rgb8A1UnormSrgb</span> =&gt; (     <span class="ident">etc2</span>,   <span class="ident">float</span>, <span class="ident">corrected</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>),  <span class="number">8</span>,      <span class="ident">basic</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Etc2Rgba8Unorm</span> =&gt;      (     <span class="ident">etc2</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>,      <span class="ident">basic</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::Etc2Rgba8UnormSrgb</span> =&gt;  (     <span class="ident">etc2</span>,   <span class="ident">float</span>, <span class="ident">corrected</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>,      <span class="ident">basic</span>, <span class="number">4</span>),
+            <span class="ident"><span class="self">Self</span>::EacR11Unorm</span> =&gt;         (     <span class="ident">etc2</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>),  <span class="number">8</span>,      <span class="ident">basic</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::EacR11Snorm</span> =&gt;         (     <span class="ident">etc2</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>),  <span class="number">8</span>,      <span class="ident">basic</span>, <span class="number">1</span>),
+            <span class="ident"><span class="self">Self</span>::EacRg11Unorm</span> =&gt;        (     <span class="ident">etc2</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>,      <span class="ident">basic</span>, <span class="number">2</span>),
+            <span class="ident"><span class="self">Self</span>::EacRg11Snorm</span> =&gt;        (     <span class="ident">etc2</span>,   <span class="ident">float</span>,    <span class="ident">linear</span>,         <span class="ident">noaa</span>, (<span class="number">4</span>, <span class="number">4</span>), <span class="number">16</span>,      <span class="ident">basic</span>, <span class="number">2</span>),
 
             <span class="comment">// ASTC compressed textures</span>
             <span class="ident"><span class="self">Self</span>::Astc</span> { <span class="ident">block</span>, <span class="ident">channel</span> } =&gt; {
@@ -6087,14 +5961,6 @@
                 };
                 (<span class="ident">feature</span>, <span class="ident">float</span>, <span class="ident">color_space</span>, <span class="ident">noaa</span>, <span class="ident">dimensions</span>, <span class="number">16</span>, <span class="ident">basic</span>, <span class="number">4</span>)
             }
-
-            <span class="comment">// Optional normalized 16-bit-per-channel formats</span>
-            <span class="ident"><span class="self">Self</span>::R16Unorm</span> =&gt; (<span class="ident">norm16bit</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">2</span>, <span class="ident">storage</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::R16Snorm</span> =&gt; (<span class="ident">norm16bit</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">2</span>, <span class="ident">storage</span>, <span class="number">1</span>),
-            <span class="ident"><span class="self">Self</span>::Rg16Unorm</span> =&gt; (<span class="ident">norm16bit</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">storage</span>, <span class="number">2</span>),
-            <span class="ident"><span class="self">Self</span>::Rg16Snorm</span> =&gt; (<span class="ident">norm16bit</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">4</span>, <span class="ident">storage</span>, <span class="number">2</span>),
-            <span class="ident"><span class="self">Self</span>::Rgba16Unorm</span> =&gt; (<span class="ident">norm16bit</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">8</span>, <span class="ident">storage</span>, <span class="number">4</span>),
-            <span class="ident"><span class="self">Self</span>::Rgba16Snorm</span> =&gt; (<span class="ident">norm16bit</span>, <span class="ident">float</span>, <span class="ident">linear</span>, <span class="ident">msaa</span>, (<span class="number">1</span>, <span class="number">1</span>), <span class="number">8</span>, <span class="ident">storage</span>, <span class="number">4</span>),
         };
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">msaa_flags</span>;
@@ -7772,5 +7638,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu_types" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (4b043faba 2022-02-24)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu_types" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (4ce374923 2022-02-28)" ></div>
 </body></html>

@@ -1158,6 +1158,40 @@
 <span id="1153">1153</span>
 <span id="1154">1154</span>
 <span id="1155">1155</span>
+<span id="1156">1156</span>
+<span id="1157">1157</span>
+<span id="1158">1158</span>
+<span id="1159">1159</span>
+<span id="1160">1160</span>
+<span id="1161">1161</span>
+<span id="1162">1162</span>
+<span id="1163">1163</span>
+<span id="1164">1164</span>
+<span id="1165">1165</span>
+<span id="1166">1166</span>
+<span id="1167">1167</span>
+<span id="1168">1168</span>
+<span id="1169">1169</span>
+<span id="1170">1170</span>
+<span id="1171">1171</span>
+<span id="1172">1172</span>
+<span id="1173">1173</span>
+<span id="1174">1174</span>
+<span id="1175">1175</span>
+<span id="1176">1176</span>
+<span id="1177">1177</span>
+<span id="1178">1178</span>
+<span id="1179">1179</span>
+<span id="1180">1180</span>
+<span id="1181">1181</span>
+<span id="1182">1182</span>
+<span id="1183">1183</span>
+<span id="1184">1184</span>
+<span id="1185">1185</span>
+<span id="1186">1186</span>
+<span id="1187">1187</span>
+<span id="1188">1188</span>
+<span id="1189">1189</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library describes the internal unsafe graphics abstraction API.
  *  It follows WebGPU for the most part, re-using wgpu-types,
  *  with the following deviations:
@@ -1244,6 +1278,7 @@
     <span class="ident">num</span>::{<span class="ident">NonZeroU32</span>, <span class="ident">NonZeroU8</span>},
     <span class="ident">ops</span>::{<span class="ident">Range</span>, <span class="ident">RangeInclusive</span>},
     <span class="ident">ptr::NonNull</span>,
+    <span class="ident">sync::atomic::AtomicBool</span>,
 };
 
 <span class="kw">use</span> <span class="ident">bitflags::bitflags</span>;
@@ -2308,11 +2343,44 @@
     <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
 }
 
+<span class="doccomment">/// Stores if any API validation error has occurred in this process</span>
+<span class="doccomment">/// since it was last reset.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This is used for internal wgpu testing only and _must not_ be used</span>
+<span class="doccomment">/// as a way to check for errors.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This works as a static because `cargo nextest` runs all of our</span>
+<span class="doccomment">/// tests in separate processes, so each test gets its own canary.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This prevents the issue of one validation error terminating the</span>
+<span class="doccomment">/// entire process.</span>
+<span class="kw">pub</span> <span class="kw">static</span> <span class="ident">VALIDATION_CANARY</span>: <span class="ident">ValidationCanary</span> <span class="op">=</span> <span class="ident">ValidationCanary</span> {
+    <span class="ident">inner</span>: <span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>),
+};
+
+<span class="doccomment">/// Flag for internal testing.</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ValidationCanary</span> {
+    <span class="ident">inner</span>: <span class="ident">AtomicBool</span>,
+}
+
+<span class="kw">impl</span> <span class="ident">ValidationCanary</span> {
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span> <span class="comment">// in some configurations this function is dead</span>
+    <span class="kw">fn</span> <span class="ident">set</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">std::sync::atomic::Ordering::SeqCst</span>);
+    }
+
+    <span class="doccomment">/// Returns true if any API validation error has occurred in this process</span>
+    <span class="doccomment">/// since the last call to this function.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_and_reset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">swap</span>(<span class="bool-val">false</span>, <span class="ident">std::sync::atomic::Ordering::SeqCst</span>)
+    }
+}
+
 <span class="attribute">#[<span class="ident">test</span>]</span>
 <span class="kw">fn</span> <span class="ident">test_default_limits</span>() {
     <span class="kw">let</span> <span class="ident">limits</span> <span class="op">=</span> <span class="ident">wgt::Limits::default</span>();
     <span class="macro">assert!</span>(<span class="ident">limits</span>.<span class="ident">max_bind_groups</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">MAX_BIND_GROUPS</span> <span class="kw">as</span> <span class="ident">u32</span>);
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (4b043faba 2022-02-24)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (4ce374923 2022-02-28)" ></div>
 </body></html>
