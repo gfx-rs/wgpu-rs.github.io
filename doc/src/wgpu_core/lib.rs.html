@@ -280,6 +280,60 @@
 <span id="275">275</span>
 <span id="276">276</span>
 <span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library safely implements WebGPU on native platforms.
  *  It is designed for integration into browsers, as well as wrapping
  *  into other language-specific user-friendly libraries.
@@ -332,7 +386,11 @@
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Cow</span>, <span class="ident">os::raw::c_char</span>, <span class="ident">ptr</span>, <span class="ident">sync::atomic</span>};
 
+<span class="doccomment">/// The index of a queue submission.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// These are the values stored in `Device::fence`.</span>
 <span class="kw">type</span> <span class="ident">SubmissionIndex</span> <span class="op">=</span> <span class="ident">hal::FenceValue</span>;
+
 <span class="kw">type</span> <span class="ident">Index</span> <span class="op">=</span> <span class="ident">u32</span>;
 <span class="kw">type</span> <span class="ident">Epoch</span> <span class="op">=</span> <span class="ident">u32</span>;
 
@@ -353,6 +411,15 @@
 }
 
 <span class="doccomment">/// Reference count object that is 1:1 with each reference.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// All the clones of a given `RefCount` point to the same</span>
+<span class="doccomment">/// heap-allocated atomic reference count. When the count drops to</span>
+<span class="doccomment">/// zero, only the count is freed. No other automatic cleanup takes</span>
+<span class="doccomment">/// place; this is just a reference count, not a smart pointer.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// `RefCount` values are created only by [`LifeGuard::new`] and by</span>
+<span class="doccomment">/// `Clone`, so every `RefCount` is implicitly tied to some</span>
+<span class="doccomment">/// [`LifeGuard`].</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">RefCount</span>(<span class="ident">ptr::NonNull</span><span class="op">&lt;</span><span class="ident">AtomicUsize</span><span class="op">&gt;</span>);
 
@@ -404,10 +471,48 @@
     }
 }
 
+<span class="doccomment">/// Information needed to decide when it&#39;s safe to free some wgpu-core</span>
+<span class="doccomment">/// resource.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Each type representing a `wgpu-core` resource, like [`Device`],</span>
+<span class="doccomment">/// [`Buffer`], etc., contains a `LifeGuard` which indicates whether</span>
+<span class="doccomment">/// it is safe to free.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// A resource may need to be retained for any of several reasons:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// - The user may hold a reference to it (via a `wgpu::Buffer`, say).</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// - Other resources may depend on it (a texture view&#39;s backing</span>
+<span class="doccomment">///   texture, for example).</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// - It may be used by commands sent to the GPU that have not yet</span>
+<span class="doccomment">///   finished execution.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`Device`]: device::Device</span>
+<span class="doccomment">/// [`Buffer`]: resource::Buffer</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LifeGuard</span> {
+    <span class="doccomment">/// `RefCount` for the user&#39;s reference to this resource.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// When the user first creates a `wgpu-core` resource, this `RefCount` is</span>
+    <span class="doccomment">/// created along with the resource&#39;s `LifeGuard`. When the user drops the</span>
+    <span class="doccomment">/// resource, we swap this out for `None`. Note that the resource may</span>
+    <span class="doccomment">/// still be held alive by other resources.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Any `Stored&lt;T&gt;` value holds a clone of this `RefCount` along with the id</span>
+    <span class="doccomment">/// of a `T` resource.</span>
     <span class="ident">ref_count</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">RefCount</span><span class="op">&gt;</span>,
+
+    <span class="doccomment">/// The index of the last queue submission in which the resource</span>
+    <span class="doccomment">/// was used.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Each queue submission is fenced and assigned an index number</span>
+    <span class="doccomment">/// sequentially. Thus, when a queue submission completes, we know any</span>
+    <span class="doccomment">/// resources used in that submission and any lower-numbered submissions are</span>
+    <span class="doccomment">/// no longer in use by the GPU.</span>
     <span class="ident">submission_index</span>: <span class="ident">AtomicUsize</span>,
+
+    <span class="doccomment">/// The `label` from the descriptor used to create the resource.</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">debug_assertions</span>)]</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">label</span>: <span class="ident">String</span>,
 }
@@ -428,7 +533,10 @@
         <span class="self">self</span>.<span class="ident">ref_count</span>.<span class="ident">clone</span>().<span class="ident">unwrap</span>()
     }
 
-    <span class="doccomment">/// Returns `true` if the resource is still needed by the user.</span>
+    <span class="doccomment">/// Record that this resource will be used by the queue submission with the</span>
+    <span class="doccomment">/// given index.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Returns `true` if the resource is still held by the user.</span>
     <span class="kw">fn</span> <span class="ident">use_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">submit_index</span>: <span class="ident">SubmissionIndex</span>) -&gt; <span class="ident">bool</span> {
         <span class="self">self</span>.<span class="ident">submission_index</span>
             .<span class="ident">store</span>(<span class="ident">submit_index</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Ordering::Release</span>);
@@ -558,5 +666,5 @@ platform supports.&quot;</span>;
     <span class="macro">assert_eq!</span>(<span class="ident">get_greatest_common_divisor</span>(<span class="number">7</span>, <span class="number">7</span>), <span class="number">7</span>);
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (9f4dc0b4d 2022-03-23)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (1d9c262ee 2022-03-26)" ></div>
 </body></html>

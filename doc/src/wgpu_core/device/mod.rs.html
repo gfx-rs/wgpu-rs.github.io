@@ -5229,6 +5229,20 @@
 <span id="5224">5224</span>
 <span id="5225">5225</span>
 <span id="5226">5226</span>
+<span id="5227">5227</span>
+<span id="5228">5228</span>
+<span id="5229">5229</span>
+<span id="5230">5230</span>
+<span id="5231">5231</span>
+<span id="5232">5232</span>
+<span id="5233">5233</span>
+<span id="5234">5234</span>
+<span id="5235">5235</span>
+<span id="5236">5236</span>
+<span id="5237">5237</span>
+<span id="5238">5238</span>
+<span id="5239">5239</span>
+<span id="5240">5240</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -5504,6 +5518,8 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">trackers</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">TrackerSet</span><span class="op">&gt;</span>,
     <span class="comment">// Life tracker should be locked right after the device and before anything else.</span>
     <span class="ident">life_tracker</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">life::LifetimeTracker</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Temporary storage for resource management functions. Cleared at the end</span>
+    <span class="doccomment">/// of every call (unless an error occurs).</span>
     <span class="ident">temp_suspected</span>: <span class="ident">life::SuspectedResources</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">alignments</span>: <span class="ident">hal::Alignments</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">limits</span>: <span class="ident">wgt::Limits</span>,
@@ -5651,6 +5667,11 @@
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;maintain&quot;</span>, <span class="string">&quot;Device&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">life_tracker</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lock_life</span>(<span class="ident">token</span>);
 
+        <span class="comment">// Normally, `temp_suspected` exists only to save heap</span>
+        <span class="comment">// allocations: it&#39;s cleared at the start of the function</span>
+        <span class="comment">// call, and cleared by the end. But `Global::queue_submit` is</span>
+        <span class="comment">// fallible; if it exits early, it may leave some resources in</span>
+        <span class="comment">// `temp_suspected`.</span>
         <span class="ident">life_tracker</span>
             .<span class="ident">suspected_resources</span>
             .<span class="ident">extend</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">temp_suspected</span>);
@@ -10092,6 +10113,7 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Check `device_id` for freeable resources and completed buffer mappings.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">device_poll</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">device_id</span>: <span class="ident">id::DeviceId</span>,
@@ -10112,6 +10134,9 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Poll all devices belonging to the backend `A`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If `force_wait` is true, block until all buffer mappings are done.</span>
     <span class="kw">fn</span> <span class="ident">poll_devices</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">force_wait</span>: <span class="ident">bool</span>,
@@ -10129,6 +10154,9 @@
         <span class="prelude-val">Ok</span>(())
     }
 
+    <span class="doccomment">/// Poll all devices on all backends.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This is the implementation of `wgpu::Instance::poll_all`.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poll_all_devices</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">force_wait</span>: <span class="ident">bool</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">WaitIdleError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">closures</span> <span class="op">=</span> <span class="ident">UserClosures::default</span>();
 
@@ -10456,5 +10484,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (9f4dc0b4d 2022-03-23)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (1d9c262ee 2022-03-26)" ></div>
 </body></html>

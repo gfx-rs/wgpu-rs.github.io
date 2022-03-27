@@ -752,6 +752,85 @@
 <span id="747">747</span>
 <span id="748">748</span>
 <span id="749">749</span>
+<span id="750">750</span>
+<span id="751">751</span>
+<span id="752">752</span>
+<span id="753">753</span>
+<span id="754">754</span>
+<span id="755">755</span>
+<span id="756">756</span>
+<span id="757">757</span>
+<span id="758">758</span>
+<span id="759">759</span>
+<span id="760">760</span>
+<span id="761">761</span>
+<span id="762">762</span>
+<span id="763">763</span>
+<span id="764">764</span>
+<span id="765">765</span>
+<span id="766">766</span>
+<span id="767">767</span>
+<span id="768">768</span>
+<span id="769">769</span>
+<span id="770">770</span>
+<span id="771">771</span>
+<span id="772">772</span>
+<span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
+<span id="818">818</span>
+<span id="819">819</span>
+<span id="820">820</span>
+<span id="821">821</span>
+<span id="822">822</span>
+<span id="823">823</span>
+<span id="824">824</span>
+<span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
 </pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::device::trace</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -835,7 +914,7 @@
     }
 }
 
-<span class="doccomment">/// A struct that keeps lists of resources that are no longer needed.</span>
+<span class="doccomment">/// Raw backend resources that should be freed shortly.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">NonReferencedResources</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> {
     <span class="ident">buffers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">A::Buffer</span><span class="op">&gt;</span>,
@@ -943,10 +1022,29 @@
     }
 }
 
+<span class="doccomment">/// Resources used by a queue submission, and work to be done once it completes.</span>
 <span class="kw">struct</span> <span class="ident">ActiveSubmission</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// The index of the submission we track.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// When `Device::fence`&#39;s value is greater than or equal to this, our queue</span>
+    <span class="doccomment">/// submission has completed.</span>
     <span class="ident">index</span>: <span class="ident">SubmissionIndex</span>,
+
+    <span class="doccomment">/// Resources to be freed once this queue submission has completed.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// When the device is polled, for completed submissions,</span>
+    <span class="doccomment">/// `triage_submissions` merges these into</span>
+    <span class="doccomment">/// `LifetimeTracker::free_resources`. From there,</span>
+    <span class="doccomment">/// `LifetimeTracker::cleanup` passes them to the hal to be freed.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This includes things like temporary resources and resources that are</span>
+    <span class="doccomment">/// used by submitted commands but have been dropped by the user (meaning that</span>
+    <span class="doccomment">/// this submission is their last reference.)</span>
     <span class="ident">last_resources</span>: <span class="ident">NonReferencedResources</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
+
+    <span class="doccomment">/// Buffers to be mapped once this submission has completed.</span>
     <span class="ident">mapped</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+
     <span class="ident">encoders</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">EncoderInFlight</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">work_done_closures</span>: <span class="ident">SmallVec</span><span class="op">&lt;</span>[<span class="ident">SubmittedWorkDoneClosure</span>; <span class="number">1</span>]<span class="op">&gt;</span>,
 }
@@ -959,31 +1057,75 @@
     <span class="ident">StuckGpu</span>,
 }
 
-<span class="doccomment">/// A struct responsible for tracking resource lifetimes.</span>
+<span class="doccomment">/// Resource tracking for a device.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Here is how host mapping is handled:</span>
-<span class="doccomment">///   1. When mapping is requested we add the buffer to the life_tracker list of `mapped` buffers.</span>
-<span class="doccomment">///   2. When `triage_suspected` is called, it checks the last submission index associated with each of the mapped buffer,</span>
-<span class="doccomment">/// and register the buffer with either a submission in flight, or straight into `ready_to_map` vector.</span>
-<span class="doccomment">///   3. When `ActiveSubmission` is retired, the mapped buffers associated with it are moved to `ready_to_map` vector.</span>
-<span class="doccomment">///   4. Finally, `handle_mapping` issues all the callbacks.</span>
+<span class="doccomment">/// ## Host mapping buffers</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// A buffer cannot be mapped until all active queue submissions that use it</span>
+<span class="doccomment">/// have completed. To that end:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// -   Each buffer&#39;s `LifeGuard::submission_index` records the index of the</span>
+<span class="doccomment">///     most recent queue submission that uses that buffer.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// -   Calling `map_async` adds the buffer to `self.mapped`, and changes</span>
+<span class="doccomment">///     `Buffer::map_state` to prevent it from being used in any new</span>
+<span class="doccomment">///     submissions.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// -   When the device is polled, the following `LifetimeTracker` methods decide</span>
+<span class="doccomment">///     what should happen next:</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     1)  `triage_mapped` drains `self.mapped`, checking the submission index</span>
+<span class="doccomment">///         of each buffer against the queue submissions that have finished</span>
+<span class="doccomment">///         execution. Buffers used by submissions still in flight go in</span>
+<span class="doccomment">///         `self.active[index].mapped`, and the rest go into</span>
+<span class="doccomment">///         `self.ready_to_map`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     2)  `triage_submissions` moves entries in `self.active[i]` for completed</span>
+<span class="doccomment">///         submissions to `self.ready_to_map`.  At this point, both</span>
+<span class="doccomment">///         `self.active` and `self.ready_to_map` are up to date with the given</span>
+<span class="doccomment">///         submission index.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     3)  `handle_mapping` drains `self.ready_to_map` and actually maps the</span>
+<span class="doccomment">///         buffers, collecting a list of notification closures to call. But any</span>
+<span class="doccomment">///         buffers that were dropped by the user get moved to</span>
+<span class="doccomment">///         `self.free_resources`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">///     4)  `cleanup` frees everything in `free_resources`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// Only `self.mapped` holds a `RefCount` for the buffer; it is dropped by</span>
+<span class="doccomment">/// `triage_mapped`.</span>
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">LifetimeTracker</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">hal::Api</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Resources that the user has requested be mapped, but are still in use.</span>
+    <span class="doccomment">/// Resources that the user has requested be mapped, but which are used by</span>
+    <span class="doccomment">/// queue submissions still in flight.</span>
     <span class="ident">mapped</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+
     <span class="doccomment">/// Buffers can be used in a submission that is yet to be made, by the</span>
     <span class="doccomment">/// means of `write_buffer()`, so we have a special place for them.</span>
     <span class="kw">pub</span> <span class="ident">future_suspected_buffers</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+
     <span class="doccomment">/// Textures can be used in the upcoming submission by `write_texture`.</span>
     <span class="kw">pub</span> <span class="ident">future_suspected_textures</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Stored</span><span class="op">&lt;</span><span class="ident">id::TextureId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+
     <span class="doccomment">/// Resources that are suspected for destruction.</span>
     <span class="kw">pub</span> <span class="ident">suspected_resources</span>: <span class="ident">SuspectedResources</span>,
-    <span class="doccomment">/// Resources that are not referenced any more but still used by GPU.</span>
-    <span class="doccomment">/// Grouped by submissions associated with a fence and a submission index.</span>
-    <span class="doccomment">/// The active submissions have to be stored in FIFO order: oldest come first.</span>
+
+    <span class="doccomment">/// Resources used by queue submissions still in flight. One entry per</span>
+    <span class="doccomment">/// submission, with older submissions appearing before younger.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Entries are added by `track_submission` and drained by</span>
+    <span class="doccomment">/// `LifetimeTracker::triage_submissions`. Lots of methods contribute data</span>
+    <span class="doccomment">/// to particular entries.</span>
     <span class="ident">active</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">ActiveSubmission</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Resources that are neither referenced or used, just life_tracker</span>
-    <span class="doccomment">/// actual deletion.</span>
+
+    <span class="doccomment">/// Raw backend resources that are neither referenced nor used.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// These are freed by `LifeTracker::cleanup`, which is called from periodic</span>
+    <span class="doccomment">/// maintenance functions like `Global::device_poll`, and when a device is</span>
+    <span class="doccomment">/// destroyed.</span>
     <span class="ident">free_resources</span>: <span class="ident">NonReferencedResources</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>,
+
+    <span class="doccomment">/// Buffers the user has asked us to map, and which are not used by any</span>
+    <span class="doccomment">/// queue submission still in flight.</span>
     <span class="ident">ready_to_map</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">id::Valid</span><span class="op">&lt;</span><span class="ident">id::BufferId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
@@ -1000,6 +1142,7 @@
         }
     }
 
+    <span class="doccomment">/// Start tracking resources associated with a new queue submission.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">track_submission</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">index</span>: <span class="ident">SubmissionIndex</span>,
@@ -1043,7 +1186,13 @@
         <span class="self">self</span>.<span class="ident">mapped</span>.<span class="ident">push</span>(<span class="ident">Stored</span> { <span class="ident">value</span>, <span class="ident">ref_count</span> });
     }
 
-    <span class="doccomment">/// Returns the last submission index that is done.</span>
+    <span class="doccomment">/// Sort out the consequences of completed submissions.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Assume that all submissions up through `last_done` have completed.</span>
+    <span class="doccomment">/// Buffers they used are now ready to map. Resources for which they were</span>
+    <span class="doccomment">/// the final use are now ready to free.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Return a list of `SubmittedWorkDoneClosure`s to run.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">triage_submissions</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
@@ -1401,6 +1550,10 @@
         }
     }
 
+    <span class="doccomment">/// Determine which buffers are ready to map, and which must wait for the</span>
+    <span class="doccomment">/// GPU.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See the documentation for [`LifetimeTracker`] for details.</span>
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">triage_mapped</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">hub</span>: <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="ident">A</span>, <span class="ident">G</span><span class="op">&gt;</span>,
@@ -1431,6 +1584,11 @@
         }
     }
 
+    <span class="doccomment">/// Map the buffers in `self.ready_to_map`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Return a list of mapping notifications to send.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// See the documentation for [`LifetimeTracker`] for details.</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">handle_mapping</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
@@ -1502,5 +1660,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (9f4dc0b4d 2022-03-23)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (1d9c262ee 2022-03-26)" ></div>
 </body></html>
