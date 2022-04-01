@@ -5323,6 +5323,24 @@
 <span id="5318">5318</span>
 <span id="5319">5319</span>
 <span id="5320">5320</span>
+<span id="5321">5321</span>
+<span id="5322">5322</span>
+<span id="5323">5323</span>
+<span id="5324">5324</span>
+<span id="5325">5325</span>
+<span id="5326">5326</span>
+<span id="5327">5327</span>
+<span id="5328">5328</span>
+<span id="5329">5329</span>
+<span id="5330">5330</span>
+<span id="5331">5331</span>
+<span id="5332">5332</span>
+<span id="5333">5333</span>
+<span id="5334">5334</span>
+<span id="5335">5335</span>
+<span id="5336">5336</span>
+<span id="5337">5337</span>
+<span id="5338">5338</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -9845,8 +9863,17 @@
                 <span class="prelude-val">Ok</span>(<span class="ident">pair</span>) =&gt; <span class="ident">pair</span>,
                 <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="kw">break</span> <span class="ident">e</span>,
             };
+            <span class="kw">let</span> <span class="ident">ref_count</span> <span class="op">=</span> <span class="ident">pipeline</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>();
 
             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">fid</span>.<span class="ident">assign</span>(<span class="ident">pipeline</span>, <span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
+            <span class="macro">log::info!</span>(<span class="string">&quot;Created render pipeline {:?} with {:?}&quot;</span>, <span class="ident">id</span>, <span class="ident">desc</span>);
+
+            <span class="ident">device</span>
+                .<span class="ident">trackers</span>
+                .<span class="ident">lock</span>()
+                .<span class="ident">render_pipes</span>
+                .<span class="ident">init</span>(<span class="ident">id</span>, <span class="ident">ref_count</span>, <span class="ident">PhantomData</span>)
+                .<span class="ident">unwrap</span>();
             <span class="kw">return</span> (<span class="ident">id</span>.<span class="number">0</span>, <span class="prelude-val">None</span>);
         };
 
@@ -9977,8 +10004,17 @@
                 <span class="prelude-val">Ok</span>(<span class="ident">pair</span>) =&gt; <span class="ident">pair</span>,
                 <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; <span class="kw">break</span> <span class="ident">e</span>,
             };
+            <span class="kw">let</span> <span class="ident">ref_count</span> <span class="op">=</span> <span class="ident">pipeline</span>.<span class="ident">life_guard</span>.<span class="ident">add_ref</span>();
 
             <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="ident">fid</span>.<span class="ident">assign</span>(<span class="ident">pipeline</span>, <span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
+            <span class="macro">log::info!</span>(<span class="string">&quot;Created compute pipeline {:?} with {:?}&quot;</span>, <span class="ident">id</span>, <span class="ident">desc</span>);
+
+            <span class="ident">device</span>
+                .<span class="ident">trackers</span>
+                .<span class="ident">lock</span>()
+                .<span class="ident">compute_pipes</span>
+                .<span class="ident">init</span>(<span class="ident">id</span>, <span class="ident">ref_count</span>, <span class="ident">PhantomData</span>)
+                .<span class="ident">unwrap</span>();
             <span class="kw">return</span> (<span class="ident">id</span>.<span class="number">0</span>, <span class="prelude-val">None</span>);
         };
 
