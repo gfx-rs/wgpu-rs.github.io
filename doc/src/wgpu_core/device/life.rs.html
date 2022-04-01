@@ -846,6 +846,59 @@
 <span id="841">841</span>
 <span id="842">842</span>
 <span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
+<span id="848">848</span>
+<span id="849">849</span>
+<span id="850">850</span>
+<span id="851">851</span>
+<span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
+<span id="865">865</span>
+<span id="866">866</span>
+<span id="867">867</span>
+<span id="868">868</span>
+<span id="869">869</span>
+<span id="870">870</span>
+<span id="871">871</span>
+<span id="872">872</span>
+<span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
+<span id="894">894</span>
+<span id="895">895</span>
+<span id="896">896</span>
 </pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::device::trace</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -1209,10 +1262,24 @@
     <span class="doccomment">/// Sort out the consequences of completed submissions.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Assume that all submissions up through `last_done` have completed.</span>
-    <span class="doccomment">/// Buffers they used are now ready to map. Resources for which they were</span>
-    <span class="doccomment">/// the final use are now ready to free.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Return a list of `SubmittedWorkDoneClosure`s to run.</span>
+    <span class="doccomment">/// -   Buffers used by those submissions are now ready to map, if</span>
+    <span class="doccomment">///     requested. Add any buffers in the submission&#39;s [`mapped`] list to</span>
+    <span class="doccomment">///     [`self.ready_to_map`], where [`LifetimeTracker::handle_mapping`] will find</span>
+    <span class="doccomment">///     them.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// -   Resources whose final use was in those submissions are now ready to</span>
+    <span class="doccomment">///     free. Add any resources in the submission&#39;s [`last_resources`] table</span>
+    <span class="doccomment">///     to [`self.free_resources`], where [`LifetimeTracker::cleanup`] will find</span>
+    <span class="doccomment">///     them.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Return a list of [`SubmittedWorkDoneClosure`]s to run.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`mapped`]: ActiveSubmission::mapped</span>
+    <span class="doccomment">/// [`self.ready_to_map`]: LifetimeTracker::ready_to_map</span>
+    <span class="doccomment">/// [`last_resources`]: ActiveSubmission::last_resources</span>
+    <span class="doccomment">/// [`self.free_resources`]: LifetimeTracker::free_resources</span>
+    <span class="doccomment">/// [`SubmittedWorkDoneClosure`]: crate::device::queue::SubmittedWorkDoneClosure</span>
     <span class="attribute">#[<span class="ident">must_use</span>]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">triage_submissions</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
@@ -1283,6 +1350,45 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span> <span class="ident">LifetimeTracker</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// Identify resources to free, according to `trackers` and `self.suspected_resources`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Given `trackers`, the [`TrackerSet`] belonging to same [`Device`] as</span>
+    <span class="doccomment">/// `self`, and `hub`, the [`Hub`] to which that `Device` belongs:</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Remove from `trackers` each resource mentioned in</span>
+    <span class="doccomment">/// [`self.suspected_resources`]. If `trackers` held the final reference to</span>
+    <span class="doccomment">/// that resource, add it to the appropriate free list, to be destroyed by</span>
+    <span class="doccomment">/// the hal:</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// -   Add resources used by queue submissions still in flight to the</span>
+    <span class="doccomment">///     [`last_resources`] table of the last such submission&#39;s entry in</span>
+    <span class="doccomment">///     [`self.active`]. When that submission has finished execution. the</span>
+    <span class="doccomment">///     [`triage_submissions`] method will move them to</span>
+    <span class="doccomment">///     [`self.free_resources`].</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// -   Add resources that can be freed right now to [`self.free_resources`]</span>
+    <span class="doccomment">///     directly. [`LifetimeTracker::cleanup`] will take care of them as</span>
+    <span class="doccomment">///     part of this poll.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// ## Entrained resources</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This function finds resources that are used only by other resources</span>
+    <span class="doccomment">/// ready to be freed, and adds those to the free lists as well. For</span>
+    <span class="doccomment">/// example, if there&#39;s some texture `T` used only by some texture view</span>
+    <span class="doccomment">/// `TV`, then if `TV` can be freed, `T` gets added to the free lists too.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Since `wgpu-core` resource ownership patterns are acyclic, we can visit</span>
+    <span class="doccomment">/// each type that can be owned after all types that could possibly own</span>
+    <span class="doccomment">/// it. This way, we can detect all free-able objects in a single pass,</span>
+    <span class="doccomment">/// simply by starting with types that are roots of the ownership DAG (like</span>
+    <span class="doccomment">/// render bundles) and working our way towards leaf types (like buffers).</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`Device`]: super::Device</span>
+    <span class="doccomment">/// [`self.suspected_resources`]: LifetimeTracker::suspected_resources</span>
+    <span class="doccomment">/// [`last_resources`]: ActiveSubmission::last_resources</span>
+    <span class="doccomment">/// [`self.active`]: LifetimeTracker::active</span>
+    <span class="doccomment">/// [`triage_submissions`]: LifetimeTracker::triage_submissions</span>
+    <span class="doccomment">/// [`self.free_resources`]: LifetimeTracker::free_resources</span>
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">triage_suspected</span><span class="op">&lt;</span><span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">hub</span>: <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="ident">A</span>, <span class="ident">G</span><span class="op">&gt;</span>,

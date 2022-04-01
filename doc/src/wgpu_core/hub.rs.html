@@ -1109,6 +1109,20 @@
 <span id="1104">1104</span>
 <span id="1105">1105</span>
 <span id="1106">1106</span>
+<span id="1107">1107</span>
+<span id="1108">1108</span>
+<span id="1109">1109</span>
+<span id="1110">1110</span>
+<span id="1111">1111</span>
+<span id="1112">1112</span>
+<span id="1113">1113</span>
+<span id="1114">1114</span>
+<span id="1115">1115</span>
+<span id="1116">1116</span>
+<span id="1117">1117</span>
+<span id="1118">1118</span>
+<span id="1119">1119</span>
+<span id="1120">1120</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{<span class="ident">BindGroup</span>, <span class="ident">BindGroupLayout</span>, <span class="ident">PipelineLayout</span>},
     <span class="ident">command</span>::{<span class="ident">CommandBuffer</span>, <span class="ident">RenderBundle</span>},
@@ -1135,8 +1149,7 @@
 <span class="doccomment">/// Use `IdentityManager::default` to construct new instances.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// `IdentityManager` returns `Id`s whose index values are suitable for use as</span>
-<span class="doccomment">/// indices into a vector of information (which you maintain elsewhere) about</span>
-<span class="doccomment">/// those ids&#39; referents:</span>
+<span class="doccomment">/// indices into a `Storage&lt;T&gt;` that holds those ids&#39; referents:</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// - Every live id has a distinct index value. Each live id&#39;s index selects a</span>
 <span class="doccomment">///   distinct element in the vector.</span>
@@ -1199,10 +1212,20 @@
     }
 }
 
+<span class="doccomment">/// An entry in a `Storage::map` table.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">enum</span> <span class="ident">Element</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="doccomment">/// There are no live ids with this index.</span>
     <span class="ident">Vacant</span>,
+
+    <span class="doccomment">/// There is one live id with this index, allocated at the given</span>
+    <span class="doccomment">/// epoch.</span>
     <span class="ident">Occupied</span>(<span class="ident">T</span>, <span class="ident">Epoch</span>),
+
+    <span class="doccomment">/// Like `Occupied`, but an error occurred when creating the</span>
+    <span class="doccomment">/// resource.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The given `String` is the resource&#39;s descriptor label.</span>
     <span class="ident">Error</span>(<span class="ident">Epoch</span>, <span class="ident">String</span>),
 }
 
@@ -1223,6 +1246,11 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">InvalidId</span>;
 
+<span class="doccomment">/// A table of `T` values indexed by the id type `I`.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// The table is represented as a vector indexed by the ids&#39; index</span>
+<span class="doccomment">/// values, so you should use an id allocator like `IdentityManager`</span>
+<span class="doccomment">/// that keeps the index values dense and close to zero.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Storage</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">I</span>: <span class="ident">id::TypedId</span><span class="op">&gt;</span> {
     <span class="ident">map</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Element</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -1380,7 +1408,7 @@
 <span class="doccomment">/// If type A implements `Access&lt;B&gt;`, that means we are allowed to proceed</span>
 <span class="doccomment">/// with locking resource `B` after we lock `A`.</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// The implenentations basically describe the edges in a directed graph</span>
+<span class="doccomment">/// The implementations basically describe the edges in a directed graph</span>
 <span class="doccomment">/// of lock transitions. As long as it doesn&#39;t have loops, we can have</span>
 <span class="doccomment">/// multiple concurrent paths on this graph (from multiple threads) without</span>
 <span class="doccomment">/// deadlocks, i.e. there is always a path whose next resource is not locked</span>

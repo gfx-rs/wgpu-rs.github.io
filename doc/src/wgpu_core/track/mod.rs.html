@@ -654,6 +654,32 @@
 <span id="649">649</span>
 <span id="650">650</span>
 <span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+<span id="663">663</span>
+<span id="664">664</span>
+<span id="665">665</span>
+<span id="666">666</span>
+<span id="667">667</span>
+<span id="668">668</span>
+<span id="669">669</span>
+<span id="670">670</span>
+<span id="671">671</span>
+<span id="672">672</span>
+<span id="673">673</span>
+<span id="674">674</span>
+<span id="675">675</span>
+<span id="676">676</span>
+<span id="677">677</span>
 </pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">buffer</span>;
 <span class="kw">mod</span> <span class="ident">range</span>;
 <span class="kw">mod</span> <span class="ident">texture</span>;
@@ -886,9 +912,17 @@
         }
     }
 
-    <span class="doccomment">/// Remove the resource from the tracker if it is holding the last reference.</span>
+    <span class="doccomment">/// Remove the resource `id`, only if `self` is holding the last reference to it.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Return `true` if we did remove the resource.</span>
+    <span class="doccomment">/// Return `true` if we did remove the resource; the underlying hal resource</span>
+    <span class="doccomment">/// is ready to be freed.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This is generally only meaningful to apply to members of</span>
+    <span class="doccomment">/// [`Device::trackers`], which holds all resources allocated with that</span>
+    <span class="doccomment">/// [`Device`]. Other trackers should never be the final reference.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`Device`]: crate::device::Device</span>
+    <span class="doccomment">/// [`Device::trackers`]: crate::device::Device::trackers</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">remove_abandoned</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">id</span>: <span class="ident">Valid</span><span class="op">&lt;</span><span class="ident">S::Id</span><span class="op">&gt;</span>) -&gt; <span class="ident">bool</span> {
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">epoch</span>, <span class="ident">backend</span>) <span class="op">=</span> <span class="ident">id</span>.<span class="number">0</span>.<span class="ident">unzip</span>();
         <span class="macro">debug_assert_eq!</span>(<span class="ident">backend</span>, <span class="self">self</span>.<span class="ident">backend</span>);
@@ -943,7 +977,9 @@
         <span class="self">self</span>.<span class="ident">map</span>.<span class="ident">clear</span>();
     }
 
-    <span class="doccomment">/// Initialize a resource to be used.</span>
+    <span class="doccomment">/// Begin tracking a new resource `id` in state `state`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Hold `ref_count` in the tracker.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns false if the resource is already registered.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">init</span>(
@@ -980,8 +1016,18 @@
         <span class="ident">res</span>.<span class="ident">state</span>.<span class="ident">query</span>(<span class="ident">selector</span>)
     }
 
-    <span class="doccomment">/// Make sure that a resource is tracked, and return a mutable</span>
-    <span class="doccomment">/// reference to it.</span>
+    <span class="doccomment">/// Make sure that a resource is tracked, and return a mutable reference to it.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If the resource isn&#39;t tracked, start it in the default state, and take a</span>
+    <span class="doccomment">/// clone of `ref_count`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The `self_backend` and `map` arguments should be the `backend` and `map`</span>
+    <span class="doccomment">/// fields of a `ResourceTracker`. Ideally this function would just take</span>
+    <span class="doccomment">/// `&amp;mut self` and access those from there, but that would upset the borrow</span>
+    <span class="doccomment">/// checker in some callers, who want to borrow `ResourceTracker::temp`</span>
+    <span class="doccomment">/// alongside our return value. The approach taken here has the caller</span>
+    <span class="doccomment">/// borrow both `map` and `temp`, so the borrow checker can see that they</span>
+    <span class="doccomment">/// don&#39;t alias.</span>
     <span class="kw">fn</span> <span class="ident">get_or_insert</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="ident">self_backend</span>: <span class="ident">wgt::Backend</span>,
         <span class="ident">map</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">Index</span>, <span class="ident">Resource</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -1003,6 +1049,7 @@
         }
     }
 
+    <span class="doccomment">/// Return a mutable reference to `id`&#39;s state.</span>
     <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="ident">self_backend</span>: <span class="ident">wgt::Backend</span>,
         <span class="ident">map</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="ident">FastHashMap</span><span class="op">&lt;</span><span class="ident">Index</span>, <span class="ident">Resource</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span>,
@@ -1015,7 +1062,7 @@
         <span class="ident">e</span>
     }
 
-    <span class="doccomment">/// Extend the usage of a specified resource.</span>
+    <span class="doccomment">/// Extend the usage of `id`, tracking it if necessary.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// Returns conflicting transition as an error.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">change_extend</span>(
@@ -1209,6 +1256,11 @@
 }
 
 <span class="doccomment">/// A set of trackers for all relevant resources.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// `Device` uses this to track all resources allocated from that device.</span>
+<span class="doccomment">/// Resources like `BindGroup`, `CommandBuffer`, and so on that may own a</span>
+<span class="doccomment">/// variety of other resources also use a value of this type to keep track of</span>
+<span class="doccomment">/// everything they&#39;re depending on.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct</span> <span class="ident">TrackerSet</span> {
     <span class="kw">pub</span> <span class="ident">buffers</span>: <span class="ident">ResourceTracker</span><span class="op">&lt;</span><span class="ident">BufferState</span><span class="op">&gt;</span>,
