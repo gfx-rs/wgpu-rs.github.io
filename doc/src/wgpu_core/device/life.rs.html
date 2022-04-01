@@ -831,6 +831,21 @@
 <span id="826">826</span>
 <span id="827">827</span>
 <span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
 </pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::device::trace</span>;
 <span class="kw">use</span> <span class="kw">crate</span>::{
@@ -1142,6 +1157,11 @@
         }
     }
 
+    <span class="doccomment">/// Return true if there are no queue submissions still in flight.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">queue_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
+        <span class="self">self</span>.<span class="ident">active</span>.<span class="ident">is_empty</span>()
+    }
+
     <span class="doccomment">/// Start tracking resources associated with a new queue submission.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">track_submission</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
@@ -1278,6 +1298,7 @@
 
             <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">suspected_resources</span>.<span class="ident">render_bundles</span>.<span class="ident">pop</span>() {
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">bundles</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Bundle {:?} will be destroyed&quot;</span>, <span class="ident">id</span>);
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
                         <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyRenderBundle</span>(<span class="ident">id</span>.<span class="number">0</span>));
@@ -1296,6 +1317,7 @@
 
             <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">id</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">suspected_resources</span>.<span class="ident">bind_groups</span>.<span class="ident">pop</span>() {
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">bind_groups</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Bind group {:?} will be destroyed&quot;</span>, <span class="ident">id</span>);
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
                         <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyBindGroup</span>(<span class="ident">id</span>.<span class="number">0</span>));
@@ -1327,6 +1349,7 @@
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">list</span> <span class="op">=</span> <span class="ident">mem::take</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">suspected_resources</span>.<span class="ident">texture_views</span>);
             <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="ident">list</span>.<span class="ident">drain</span>(..) {
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">views</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Texture view {:?} will be destroyed&quot;</span>, <span class="ident">id</span>);
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
                         <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyTextureView</span>(<span class="ident">id</span>.<span class="number">0</span>));
@@ -1353,6 +1376,7 @@
 
             <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">suspected_resources</span>.<span class="ident">textures</span>.<span class="ident">drain</span>(..) {
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">textures</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Texture {:?} will be destroyed&quot;</span>, <span class="ident">id</span>);
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
                         <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyTexture</span>(<span class="ident">id</span>.<span class="number">0</span>));
@@ -1389,6 +1413,7 @@
 
             <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">suspected_resources</span>.<span class="ident">samplers</span>.<span class="ident">drain</span>(..) {
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">samplers</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Sampler {:?} will be destroyed&quot;</span>, <span class="ident">id</span>);
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
                         <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroySampler</span>(<span class="ident">id</span>.<span class="number">0</span>));
@@ -1413,11 +1438,11 @@
 
             <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">suspected_resources</span>.<span class="ident">buffers</span>.<span class="ident">drain</span>(..) {
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">buffers</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Buffer {:?} will be destroyed&quot;</span>, <span class="ident">id</span>);
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
                         <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyBuffer</span>(<span class="ident">id</span>.<span class="number">0</span>));
                     }
-                    <span class="macro">log::debug!</span>(<span class="string">&quot;Buffer {:?} is detached&quot;</span>, <span class="ident">id</span>);
 
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">res</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">unregister_locked</span>(<span class="ident">id</span>.<span class="number">0</span>, <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">guard</span>) {
                         <span class="kw">let</span> <span class="ident">submit_index</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">life_guard</span>.<span class="ident">life_count</span>();
@@ -1441,6 +1466,7 @@
 
             <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">suspected_resources</span>.<span class="ident">compute_pipelines</span>.<span class="ident">drain</span>(..) {
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">compute_pipes</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Compute pipeline {:?} will be destroyed&quot;</span>, <span class="ident">id</span>);
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
                         <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyComputePipeline</span>(<span class="ident">id</span>.<span class="number">0</span>));
@@ -1465,6 +1491,7 @@
 
             <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">suspected_resources</span>.<span class="ident">render_pipelines</span>.<span class="ident">drain</span>(..) {
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">render_pipes</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Render pipeline {:?} will be destroyed&quot;</span>, <span class="ident">id</span>);
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
                         <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyRenderPipeline</span>(<span class="ident">id</span>.<span class="number">0</span>));
@@ -1493,6 +1520,7 @@
             {
                 <span class="comment">//Note: this has to happen after all the suspected pipelines are destroyed</span>
                 <span class="kw">if</span> <span class="ident">ref_count</span>.<span class="ident">load</span>() <span class="op">==</span> <span class="number">1</span> {
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Pipeline layout {:?} will be destroyed&quot;</span>, <span class="ident">id</span>);
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
                         <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyPipelineLayout</span>(<span class="ident">id</span>.<span class="number">0</span>));
@@ -1517,6 +1545,7 @@
                 <span class="comment">//Note: same BGL can appear multiple times in the list, but only the last</span>
                 <span class="comment">// encounter could drop the refcount to 0.</span>
                 <span class="kw">if</span> <span class="ident">guard</span>[<span class="ident">id</span>].<span class="ident">multi_ref_count</span>.<span class="ident">dec_and_check_empty</span>() {
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Bind group layout {:?} will be destroyed&quot;</span>, <span class="ident">id</span>);
                     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;trace&quot;</span>)]</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">trace</span> {
                         <span class="ident">t</span>.<span class="ident">lock</span>().<span class="ident">add</span>(<span class="ident">trace::Action::DestroyBindGroupLayout</span>(<span class="ident">id</span>.<span class="number">0</span>));
@@ -1534,6 +1563,7 @@
 
             <span class="kw">for</span> <span class="ident">id</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">suspected_resources</span>.<span class="ident">query_sets</span>.<span class="ident">drain</span>(..) {
                 <span class="kw">if</span> <span class="ident">trackers</span>.<span class="ident">query_sets</span>.<span class="ident">remove_abandoned</span>(<span class="ident">id</span>) {
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Query set {:?} will be destroyed&quot;</span>, <span class="ident">id</span>);
                     <span class="comment">// #[cfg(feature = &quot;trace&quot;)]</span>
                     <span class="comment">// trace.map(|t| t.lock().add(trace::Action::DestroyComputePipeline(id.0)));</span>
                     <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">res</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">query_sets</span>.<span class="ident">unregister_locked</span>(<span class="ident">id</span>.<span class="number">0</span>, <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">guard</span>) {

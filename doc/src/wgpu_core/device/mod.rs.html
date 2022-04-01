@@ -5243,6 +5243,83 @@
 <span id="5238">5238</span>
 <span id="5239">5239</span>
 <span id="5240">5240</span>
+<span id="5241">5241</span>
+<span id="5242">5242</span>
+<span id="5243">5243</span>
+<span id="5244">5244</span>
+<span id="5245">5245</span>
+<span id="5246">5246</span>
+<span id="5247">5247</span>
+<span id="5248">5248</span>
+<span id="5249">5249</span>
+<span id="5250">5250</span>
+<span id="5251">5251</span>
+<span id="5252">5252</span>
+<span id="5253">5253</span>
+<span id="5254">5254</span>
+<span id="5255">5255</span>
+<span id="5256">5256</span>
+<span id="5257">5257</span>
+<span id="5258">5258</span>
+<span id="5259">5259</span>
+<span id="5260">5260</span>
+<span id="5261">5261</span>
+<span id="5262">5262</span>
+<span id="5263">5263</span>
+<span id="5264">5264</span>
+<span id="5265">5265</span>
+<span id="5266">5266</span>
+<span id="5267">5267</span>
+<span id="5268">5268</span>
+<span id="5269">5269</span>
+<span id="5270">5270</span>
+<span id="5271">5271</span>
+<span id="5272">5272</span>
+<span id="5273">5273</span>
+<span id="5274">5274</span>
+<span id="5275">5275</span>
+<span id="5276">5276</span>
+<span id="5277">5277</span>
+<span id="5278">5278</span>
+<span id="5279">5279</span>
+<span id="5280">5280</span>
+<span id="5281">5281</span>
+<span id="5282">5282</span>
+<span id="5283">5283</span>
+<span id="5284">5284</span>
+<span id="5285">5285</span>
+<span id="5286">5286</span>
+<span id="5287">5287</span>
+<span id="5288">5288</span>
+<span id="5289">5289</span>
+<span id="5290">5290</span>
+<span id="5291">5291</span>
+<span id="5292">5292</span>
+<span id="5293">5293</span>
+<span id="5294">5294</span>
+<span id="5295">5295</span>
+<span id="5296">5296</span>
+<span id="5297">5297</span>
+<span id="5298">5298</span>
+<span id="5299">5299</span>
+<span id="5300">5300</span>
+<span id="5301">5301</span>
+<span id="5302">5302</span>
+<span id="5303">5303</span>
+<span id="5304">5304</span>
+<span id="5305">5305</span>
+<span id="5306">5306</span>
+<span id="5307">5307</span>
+<span id="5308">5308</span>
+<span id="5309">5309</span>
+<span id="5310">5310</span>
+<span id="5311">5311</span>
+<span id="5312">5312</span>
+<span id="5313">5313</span>
+<span id="5314">5314</span>
+<span id="5315">5315</span>
+<span id="5316">5316</span>
+<span id="5317">5317</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -5255,8 +5332,8 @@
     <span class="ident">instance</span>, <span class="ident">pipeline</span>, <span class="ident">present</span>, <span class="ident">resource</span>,
     <span class="ident">track</span>::{<span class="ident">BufferState</span>, <span class="ident">TextureSelector</span>, <span class="ident">TextureState</span>, <span class="ident">TrackerSet</span>, <span class="ident">UsageConflict</span>},
     <span class="ident">validation</span>::{<span class="self">self</span>, <span class="ident">check_buffer_usage</span>, <span class="ident">check_texture_usage</span>},
-    <span class="ident">FastHashMap</span>, <span class="ident">Label</span>, <span class="ident">LabelHelpers</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">LifeGuard</span>, <span class="ident">MultiRefCount</span>, <span class="ident">Stored</span>, <span class="ident">SubmissionIndex</span>,
-    <span class="ident">DOWNLEVEL_ERROR_MESSAGE</span>,
+    <span class="ident">FastHashMap</span>, <span class="ident">Label</span>, <span class="ident">LabelHelpers</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">LifeGuard</span>, <span class="ident">MultiRefCount</span>, <span class="ident">RefCount</span>, <span class="ident">Stored</span>,
+    <span class="ident">SubmissionIndex</span>, <span class="ident">DOWNLEVEL_ERROR_MESSAGE</span>,
 };
 
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
@@ -5511,6 +5588,14 @@
     <span class="comment">//desc_allocator: Mutex&lt;descriptor::DescriptorAllocator&lt;A&gt;&gt;,</span>
     <span class="comment">//Note: The submission index here corresponds to the last submission that is done.</span>
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">life_guard</span>: <span class="ident">LifeGuard</span>,
+
+    <span class="doccomment">/// A clone of `life_guard.ref_count`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Holding a separate clone of the `RefCount` here lets us tell whether the</span>
+    <span class="doccomment">/// device is referenced by other resources, even if `life_guard.ref_count`</span>
+    <span class="doccomment">/// was set to `None` by a call to `device_drop`.</span>
+    <span class="ident">ref_count</span>: <span class="ident">RefCount</span>,
+
     <span class="ident">command_allocator</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">CommandAllocator</span><span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">active_submission_index</span>: <span class="ident">SubmissionIndex</span>,
     <span class="ident">fence</span>: <span class="ident">A::Fence</span>,
@@ -5616,12 +5701,15 @@
                 }));
         }
 
+        <span class="kw">let</span> <span class="ident">life_guard</span> <span class="op">=</span> <span class="ident">LifeGuard::new</span>(<span class="string">&quot;&lt;device&gt;&quot;</span>);
+        <span class="kw">let</span> <span class="ident">ref_count</span> <span class="op">=</span> <span class="ident">life_guard</span>.<span class="ident">add_ref</span>();
         <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
             <span class="ident">raw</span>: <span class="ident">open</span>.<span class="ident">device</span>,
             <span class="ident">adapter_id</span>,
             <span class="ident">queue</span>: <span class="ident">open</span>.<span class="ident">queue</span>,
             <span class="ident">zero_buffer</span>,
-            <span class="ident">life_guard</span>: <span class="ident">LifeGuard::new</span>(<span class="string">&quot;&lt;device&gt;&quot;</span>),
+            <span class="ident">life_guard</span>,
+            <span class="ident">ref_count</span>,
             <span class="ident">command_allocator</span>: <span class="ident">Mutex::new</span>(<span class="ident">com_alloc</span>),
             <span class="ident">active_submission_index</span>: <span class="number">0</span>,
             <span class="ident">fence</span>,
@@ -5658,12 +5746,22 @@
         <span class="self">self</span>.<span class="ident">life_tracker</span>.<span class="ident">lock</span>()
     }
 
+    <span class="doccomment">/// Check this device for completed commands.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// Return a pair `(closures, queue_empty)`, where:</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// - `closures` is a list of actions to take: mapping buffers, notifying the user</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// - `queue_empty` is a boolean indicating whether there are more queue</span>
+    <span class="doccomment">///   submissions still in flight. (We have to take the locks needed to</span>
+    <span class="doccomment">///   produce this information for other reasons, so we might as well just</span>
+    <span class="doccomment">///   return it to our callers.)</span>
     <span class="kw">fn</span> <span class="ident">maintain</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span>, <span class="lifetime">&#39;token</span>: <span class="lifetime">&#39;this</span>, <span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;this</span> <span class="self">self</span>,
         <span class="ident">hub</span>: <span class="kw-2">&amp;</span><span class="ident">Hub</span><span class="op">&lt;</span><span class="ident">A</span>, <span class="ident">G</span><span class="op">&gt;</span>,
         <span class="ident">force_wait</span>: <span class="ident">bool</span>,
         <span class="ident">token</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;token</span>, <span class="self">Self</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">UserClosures</span>, <span class="ident">WaitIdleError</span><span class="op">&gt;</span> {
+    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident">UserClosures</span>, <span class="ident">bool</span>), <span class="ident">WaitIdleError</span><span class="op">&gt;</span> {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;maintain&quot;</span>, <span class="string">&quot;Device&quot;</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">life_tracker</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">lock_life</span>(<span class="ident">token</span>);
 
@@ -5706,10 +5804,11 @@
         <span class="kw">let</span> <span class="ident">mapping_closures</span> <span class="op">=</span> <span class="ident">life_tracker</span>.<span class="ident">handle_mapping</span>(<span class="ident">hub</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">trackers</span>, <span class="ident">token</span>);
         <span class="ident">life_tracker</span>.<span class="ident">cleanup</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">raw</span>);
 
-        <span class="prelude-val">Ok</span>(<span class="ident">UserClosures</span> {
+        <span class="kw">let</span> <span class="ident">closures</span> <span class="op">=</span> <span class="ident">UserClosures</span> {
             <span class="ident">mappings</span>: <span class="ident">mapping_closures</span>,
             <span class="ident">submissions</span>: <span class="ident">submission_closures</span>,
-        })
+        };
+        <span class="prelude-val">Ok</span>((<span class="ident">closures</span>, <span class="ident">life_tracker</span>.<span class="ident">queue_empty</span>()))
     }
 
     <span class="kw">fn</span> <span class="ident">untrack</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span>, <span class="lifetime">&#39;token</span>: <span class="lifetime">&#39;this</span>, <span class="ident">G</span>: <span class="ident">GlobalIdentityHandlerFactory</span><span class="op">&gt;</span>(
@@ -8565,11 +8664,11 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">buffer_drop</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buffer_id</span>: <span class="ident">id::BufferId</span>, <span class="ident">wait</span>: <span class="ident">bool</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;Buffer&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;buffer {:?} is dropped&quot;</span>, <span class="ident">buffer_id</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
 
-        <span class="macro">log::info!</span>(<span class="string">&quot;Buffer {:?} is dropped&quot;</span>, <span class="ident">buffer_id</span>);
         <span class="kw">let</span> (<span class="ident">ref_count</span>, <span class="ident">last_submit_index</span>, <span class="ident">device_id</span>) <span class="op">=</span> {
             <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">buffer_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">buffers</span>.<span class="ident">write</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
             <span class="kw">match</span> <span class="ident">buffer_guard</span>.<span class="ident">get_mut</span>(<span class="ident">buffer_id</span>) {
@@ -8807,6 +8906,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">texture_drop</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">texture_id</span>: <span class="ident">id::TextureId</span>, <span class="ident">wait</span>: <span class="ident">bool</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;Texture&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;texture {:?} is dropped&quot;</span>, <span class="ident">texture_id</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
@@ -8912,6 +9012,7 @@
         <span class="ident">wait</span>: <span class="ident">bool</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">resource::TextureViewDestroyError</span><span class="op">&gt;</span> {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;TextureView&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;texture view {:?} is dropped&quot;</span>, <span class="ident">texture_view_id</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
@@ -9005,6 +9106,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sampler_drop</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">sampler_id</span>: <span class="ident">id::SamplerId</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;Sampler&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;sampler {:?} is dropped&quot;</span>, <span class="ident">sampler_id</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
@@ -9104,6 +9206,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bind_group_layout_drop</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">bind_group_layout_id</span>: <span class="ident">id::BindGroupLayoutId</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;BindGroupLayout&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;bind group layout {:?} is dropped&quot;</span>, <span class="ident">bind_group_layout_id</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
@@ -9177,6 +9280,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pipeline_layout_drop</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pipeline_layout_id</span>: <span class="ident">id::PipelineLayoutId</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;PipelineLayout&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;pipeline layout {:?} is dropped&quot;</span>, <span class="ident">pipeline_layout_id</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
@@ -9271,6 +9375,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bind_group_drop</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">bind_group_id</span>: <span class="ident">id::BindGroupId</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;BindGroup&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;bind group {:?} is dropped&quot;</span>, <span class="ident">bind_group_id</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
@@ -9411,6 +9516,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">shader_module_drop</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">shader_module_id</span>: <span class="ident">id::ShaderModuleId</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;ShaderModule&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;shader module {:?} is dropped&quot;</span>, <span class="ident">shader_module_id</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
@@ -9485,6 +9591,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">command_encoder_drop</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">command_encoder_id</span>: <span class="ident">id::CommandEncoderId</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;CommandEncoder&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;command encoder {:?} is dropped&quot;</span>, <span class="ident">command_encoder_id</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
@@ -9501,6 +9608,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">command_buffer_drop</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">command_buffer_id</span>: <span class="ident">id::CommandBufferId</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;CommandBuffer&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;command buffer {:?} is dropped&quot;</span>, <span class="ident">command_buffer_id</span>);
         <span class="self">self</span>.<span class="ident">command_encoder_drop</span>::<span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>(<span class="ident">command_buffer_id</span>)
     }
 
@@ -9579,6 +9687,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">render_bundle_drop</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">render_bundle_id</span>: <span class="ident">id::RenderBundleId</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;RenderBundle&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;render bundle {:?} is dropped&quot;</span>, <span class="ident">render_bundle_id</span>);
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
 
@@ -9655,6 +9764,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">query_set_drop</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">query_set_id</span>: <span class="ident">id::QuerySetId</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;QuerySet&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;query set {:?} is dropped&quot;</span>, <span class="ident">query_set_id</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
@@ -9787,6 +9897,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">render_pipeline_drop</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">render_pipeline_id</span>: <span class="ident">id::RenderPipelineId</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;RenderPipeline&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;render pipeline {:?} is dropped&quot;</span>, <span class="ident">render_pipeline_id</span>);
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
         <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
@@ -9918,6 +10029,7 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">compute_pipeline_drop</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">compute_pipeline_id</span>: <span class="ident">id::ComputePipelineId</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;ComputePipeline&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;compute pipeline {:?} is dropped&quot;</span>, <span class="ident">compute_pipeline_id</span>);
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
         <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
@@ -10119,7 +10231,7 @@
         <span class="ident">device_id</span>: <span class="ident">id::DeviceId</span>,
         <span class="ident">force_wait</span>: <span class="ident">bool</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">WaitIdleError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">closures</span> <span class="op">=</span> {
+        <span class="kw">let</span> (<span class="ident">closures</span>, <span class="kw">_</span>) <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
             <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
@@ -10145,12 +10257,27 @@
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;poll_devices&quot;</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
-        <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
-        <span class="kw">for</span> (<span class="kw">_</span>, <span class="ident">device</span>) <span class="kw">in</span> <span class="ident">device_guard</span>.<span class="ident">iter</span>(<span class="ident">A::VARIANT</span>) {
-            <span class="kw">let</span> <span class="ident">cbs</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">maintain</span>(<span class="ident">hub</span>, <span class="ident">force_wait</span>, <span class="kw-2">&amp;mut</span> <span class="ident">token</span>)<span class="question-mark">?</span>;
-            <span class="ident">closures</span>.<span class="ident">extend</span>(<span class="ident">cbs</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">devices_to_drop</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        {
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
+            <span class="kw">let</span> (<span class="ident">device_guard</span>, <span class="kw-2">mut</span> <span class="ident">token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">read</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
+
+            <span class="kw">for</span> (<span class="ident">id</span>, <span class="ident">device</span>) <span class="kw">in</span> <span class="ident">device_guard</span>.<span class="ident">iter</span>(<span class="ident">A::VARIANT</span>) {
+                <span class="kw">let</span> (<span class="ident">cbs</span>, <span class="ident">queue_empty</span>) <span class="op">=</span> <span class="ident">device</span>.<span class="ident">maintain</span>(<span class="ident">hub</span>, <span class="ident">force_wait</span>, <span class="kw-2">&amp;mut</span> <span class="ident">token</span>)<span class="question-mark">?</span>;
+
+                <span class="comment">// If the device&#39;s own `RefCount` clone is the only one left, and</span>
+                <span class="comment">// its submission queue is empty, then it can be freed.</span>
+                <span class="kw">if</span> <span class="ident">queue_empty</span> <span class="op">&amp;&amp;</span> <span class="ident">device</span>.<span class="ident">ref_count</span>.<span class="ident">load</span>() <span class="op">==</span> <span class="number">1</span> {
+                    <span class="ident">devices_to_drop</span>.<span class="ident">push</span>(<span class="ident">id</span>);
+                }
+                <span class="ident">closures</span>.<span class="ident">extend</span>(<span class="ident">cbs</span>);
+            }
         }
+
+        <span class="kw">for</span> <span class="ident">device_id</span> <span class="kw">in</span> <span class="ident">devices_to_drop</span> {
+            <span class="self">self</span>.<span class="ident">exit_device</span>::<span class="op">&lt;</span><span class="ident">A</span><span class="op">&gt;</span>(<span class="ident">device_id</span>);
+        }
+
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -10212,22 +10339,49 @@
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">device_drop</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device_id</span>: <span class="ident">id::DeviceId</span>) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;drop&quot;</span>, <span class="string">&quot;Device&quot;</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;device {:?} is dropped&quot;</span>, <span class="ident">device_id</span>);
 
         <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
-        <span class="kw">let</span> (<span class="ident">device</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">unregister</span>(<span class="ident">device_id</span>, <span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">device</span>) <span class="op">=</span> <span class="ident">device</span> {
-            <span class="ident">device</span>.<span class="ident">prepare_to_die</span>();
 
-            <span class="comment">// Adapter is only referenced by the device and itself.</span>
-            <span class="comment">// This isn&#39;t a robust way to destroy them, we should find a better one.</span>
-            <span class="kw">if</span> <span class="ident">device</span>.<span class="ident">adapter_id</span>.<span class="ident">ref_count</span>.<span class="ident">load</span>() <span class="op">==</span> <span class="number">1</span> {
-                <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">hub</span>
-                    .<span class="ident">adapters</span>
-                    .<span class="ident">unregister</span>(<span class="ident">device</span>.<span class="ident">adapter_id</span>.<span class="ident">value</span>.<span class="number">0</span>, <span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
+        <span class="comment">// For now, just drop the `RefCount` in `device.life_guard`, which</span>
+        <span class="comment">// stands for the user&#39;s reference to the device. We&#39;ll take care of</span>
+        <span class="comment">// cleaning up the device when we&#39;re polled, once its queue submissions</span>
+        <span class="comment">// have completed and it is no longer needed by other resources.</span>
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">device_guard</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">write</span>(<span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="ident">device</span>) <span class="op">=</span> <span class="ident">device_guard</span>.<span class="ident">get_mut</span>(<span class="ident">device_id</span>) {
+            <span class="ident">device</span>.<span class="ident">life_guard</span>.<span class="ident">ref_count</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>();
+        }
+    }
+
+    <span class="doccomment">/// Exit the unreferenced, inactive device `device_id`.</span>
+    <span class="kw">fn</span> <span class="ident">exit_device</span><span class="op">&lt;</span><span class="ident">A</span>: <span class="ident">HalApi</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device_id</span>: <span class="ident">id::DeviceId</span>) {
+        <span class="kw">let</span> <span class="ident">hub</span> <span class="op">=</span> <span class="ident">A::hub</span>(<span class="self">self</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">token</span> <span class="op">=</span> <span class="ident">Token::root</span>();
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">free_adapter_id</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        {
+            <span class="kw">let</span> (<span class="ident">device</span>, <span class="kw-2">mut</span> <span class="ident">_token</span>) <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">devices</span>.<span class="ident">unregister</span>(<span class="ident">device_id</span>, <span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">device</span>) <span class="op">=</span> <span class="ident">device</span> {
+                <span class="comment">// The things `Device::prepare_to_die` takes care are mostly</span>
+                <span class="comment">// unnecessary here. We know our queue is empty, so we don&#39;t</span>
+                <span class="comment">// need to wait for submissions or triage them. We know we were</span>
+                <span class="comment">// just polled, so `life_tracker.free_resources` is empty.</span>
+                <span class="macro">debug_assert!</span>(<span class="ident">device</span>.<span class="ident">lock_life</span>(<span class="kw-2">&amp;mut</span> <span class="ident">_token</span>).<span class="ident">queue_empty</span>());
+                <span class="ident">device</span>.<span class="ident">pending_writes</span>.<span class="ident">deactivate</span>();
+
+                <span class="comment">// Adapter is only referenced by the device and itself.</span>
+                <span class="comment">// This isn&#39;t a robust way to destroy them, we should find a better one.</span>
+                <span class="kw">if</span> <span class="ident">device</span>.<span class="ident">adapter_id</span>.<span class="ident">ref_count</span>.<span class="ident">load</span>() <span class="op">==</span> <span class="number">1</span> {
+                    <span class="ident">free_adapter_id</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">device</span>.<span class="ident">adapter_id</span>.<span class="ident">value</span>.<span class="number">0</span>);
+                }
+
+                <span class="ident">device</span>.<span class="ident">dispose</span>();
             }
+        }
 
-            <span class="ident">device</span>.<span class="ident">dispose</span>();
+        <span class="comment">// Free the adapter now that we&#39;ve dropped the `Device` token.</span>
+        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">free_adapter_id</span>) <span class="op">=</span> <span class="ident">free_adapter_id</span> {
+            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">hub</span>.<span class="ident">adapters</span>.<span class="ident">unregister</span>(<span class="ident">free_adapter_id</span>, <span class="kw-2">&amp;mut</span> <span class="ident">token</span>);
         }
     }
 
