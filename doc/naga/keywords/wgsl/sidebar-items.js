@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["RESERVED","Reserved keywords."]]});
+initSidebarItems({"constant":[["RESERVED",""]]});

@@ -43,6 +43,7 @@ sourcesIndex["syn"] = {"name":"","dirs":[{"name":"gen","files":["clone.rs","gen_
 sourcesIndex["termcolor"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["thiserror"] = {"name":"","files":["aserror.rs","display.rs","lib.rs"]};
 sourcesIndex["thiserror_impl"] = {"name":"","files":["ast.rs","attr.rs","expand.rs","fmt.rs","generics.rs","lib.rs","prop.rs","valid.rs"]};
+sourcesIndex["unicode_id"] = {"name":"","files":["lib.rs","tables.rs"]};
 sourcesIndex["unicode_width"] = {"name":"","files":["lib.rs","tables.rs"]};
 sourcesIndex["unicode_xid"] = {"name":"","files":["lib.rs","tables.rs"]};
 sourcesIndex["wgpu"] = {"name":"","dirs":[{"name":"backend","files":["direct.rs","mod.rs","native_gpu_future.rs"]},{"name":"util","files":["belt.rs","device.rs","encoder.rs","indirect.rs","init.rs","mod.rs"]}],"files":["lib.rs","macros.rs"]};

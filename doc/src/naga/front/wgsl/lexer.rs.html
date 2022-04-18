@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/1720725/src/front/wgsl/lexer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lexer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/naga-dbb2b19faed49210/0e2bb01/src/front/wgsl/lexer.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lexer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script src="../../../../crates.js"></script><script defer src="../../../../main.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script>
     <noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../naga/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
@@ -754,19 +754,7 @@
 <span id="749">749</span>
 <span id="750">750</span>
 <span id="751">751</span>
-<span id="752">752</span>
-<span id="753">753</span>
-<span id="754">754</span>
-<span id="755">755</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">conv</span>, <span class="ident">Error</span>, <span class="ident">ExpectedToken</span>, <span class="ident">NumberType</span>, <span class="ident">Span</span>, <span class="ident">Token</span>, <span class="ident">TokenSpan</span>};
-
-<span class="kw">fn</span> <span class="ident">_consume_str</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>, <span class="ident">what</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="ident">what</span>) {
-        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="ident">input</span>[<span class="ident">what</span>.<span class="ident">len</span>()..])
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    }
-}
 
 <span class="kw">fn</span> <span class="ident">consume_any</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">what</span>: <span class="kw">impl</span> <span class="ident">Fn</span>(<span class="ident">char</span>) -&gt; <span class="ident">bool</span>) -&gt; (<span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="ident">str</span>) {
     <span class="kw">let</span> <span class="ident">pos</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">find</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="op">!</span><span class="ident">what</span>(<span class="ident">c</span>)).<span class="ident">unwrap_or</span>(<span class="ident">input</span>.<span class="ident">len</span>());
@@ -777,8 +765,8 @@
 <span class="doccomment">/// Returns whether the prefix was present and could therefore be skipped,</span>
 <span class="doccomment">/// the remaining str and the number of *bytes* skipped.</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">try_skip_prefix</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>, <span class="ident">prefix</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b</span> <span class="ident">str</span>) -&gt; (<span class="ident">bool</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>, <span class="ident">usize</span>) {
-    <span class="kw">if</span> <span class="ident">input</span>.<span class="ident">starts_with</span>(<span class="ident">prefix</span>) {
-        (<span class="bool-val">true</span>, <span class="kw-2">&amp;</span><span class="ident">input</span>[<span class="ident">prefix</span>.<span class="ident">len</span>()..], <span class="ident">prefix</span>.<span class="ident">len</span>())
+    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">rem</span>) <span class="op">=</span> <span class="ident">input</span>.<span class="ident">strip_prefix</span>(<span class="ident">prefix</span>) {
+        (<span class="bool-val">true</span>, <span class="ident">rem</span>, <span class="ident">prefix</span>.<span class="ident">len</span>())
     } <span class="kw">else</span> {
         (<span class="bool-val">false</span>, <span class="ident">input</span>, <span class="number">0</span>)
     }
@@ -954,12 +942,7 @@
 
             <span class="ident">NumberLexerState</span> {
                 <span class="ident">hex</span>,
-                <span class="ident">digit_state</span>: <span class="ident">NLDigitState::DigitsThenDot</span>,
-                ..
-            }
-            <span class="op">|</span> <span class="ident">NumberLexerState</span> {
-                <span class="ident">hex</span>,
-                <span class="ident">digit_state</span>: <span class="ident">NLDigitState::DigitAfterDot</span>,
+                <span class="ident">digit_state</span>: <span class="ident">NLDigitState::DigitsThenDot</span> <span class="op">|</span> <span class="ident">NLDigitState::DigitAfterDot</span>,
                 ..
             } =&gt; <span class="kw">match</span> <span class="ident">c</span> {
                 <span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span> =&gt; {
@@ -991,11 +974,7 @@
             },
 
             <span class="ident">NumberLexerState</span> {
-                <span class="ident">digit_state</span>: <span class="ident">NLDigitState::SignAfterExponent</span>,
-                ..
-            }
-            <span class="op">|</span> <span class="ident">NumberLexerState</span> {
-                <span class="ident">digit_state</span>: <span class="ident">NLDigitState::DigitAfterExponent</span>,
+                <span class="ident">digit_state</span>: <span class="ident">NLDigitState::SignAfterExponent</span> <span class="op">|</span> <span class="ident">NLDigitState::DigitAfterExponent</span>,
                 ..
             } =&gt; <span class="kw">match</span> <span class="ident">c</span> {
                 <span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span> =&gt; {
@@ -1041,22 +1020,14 @@
     )
 }
 
-<span class="kw">fn</span> <span class="ident">consume_token</span>(<span class="kw-2">mut</span> <span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">generic</span>: <span class="ident">bool</span>) -&gt; (<span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="ident">str</span>) {
+<span class="kw">fn</span> <span class="ident">consume_token</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">generic</span>: <span class="ident">bool</span>) -&gt; (<span class="ident">Token</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span><span class="ident">str</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chars</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">chars</span>();
     <span class="kw">let</span> <span class="ident">cur</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
         <span class="prelude-val">Some</span>(<span class="ident">c</span>) =&gt; <span class="ident">c</span>,
-        <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> (<span class="ident">Token::End</span>, <span class="ident">input</span>),
+        <span class="prelude-val">None</span> =&gt; <span class="kw">return</span> (<span class="ident">Token::End</span>, <span class="string">&quot;&quot;</span>),
     };
     <span class="kw">match</span> <span class="ident">cur</span> {
-        <span class="string">&#39;:&#39;</span> =&gt; {
-            <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
-            <span class="kw">if</span> <span class="ident">chars</span>.<span class="ident">next</span>() <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="string">&#39;:&#39;</span>) {
-                (<span class="ident">Token::DoubleColon</span>, <span class="ident">chars</span>.<span class="ident">as_str</span>())
-            } <span class="kw">else</span> {
-                (<span class="ident">Token::Separator</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
-            }
-        }
-        <span class="string">&#39;;&#39;</span> <span class="op">|</span> <span class="string">&#39;,&#39;</span> =&gt; (<span class="ident">Token::Separator</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
+        <span class="string">&#39;:&#39;</span> <span class="op">|</span> <span class="string">&#39;;&#39;</span> <span class="op">|</span> <span class="string">&#39;,&#39;</span> =&gt; (<span class="ident">Token::Separator</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
         <span class="string">&#39;.&#39;</span> =&gt; {
             <span class="kw">let</span> <span class="ident">og_chars</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
             <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
@@ -1067,130 +1038,140 @@
         <span class="string">&#39;@&#39;</span> =&gt; (<span class="ident">Token::Attribute</span>, <span class="ident">chars</span>.<span class="ident">as_str</span>()),
         <span class="string">&#39;(&#39;</span> <span class="op">|</span> <span class="string">&#39;)&#39;</span> <span class="op">|</span> <span class="string">&#39;{&#39;</span> <span class="op">|</span> <span class="string">&#39;}&#39;</span> <span class="op">|</span> <span class="string">&#39;[&#39;</span> <span class="op">|</span> <span class="string">&#39;]&#39;</span> =&gt; (<span class="ident">Token::Paren</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
         <span class="string">&#39;&lt;&#39;</span> <span class="op">|</span> <span class="string">&#39;&gt;&#39;</span> =&gt; {
-            <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
-            <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>();
-            <span class="kw">if</span> <span class="ident">next</span> <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">generic</span> {
-                (<span class="ident">Token::LogicalOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">next</span> <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">cur</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">generic</span> {
-                <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
-                <span class="kw">if</span> <span class="ident">chars</span>.<span class="ident">next</span>() <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) {
-                    (<span class="ident">Token::AssignmentOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
-                } <span class="kw">else</span> {
-                    (<span class="ident">Token::ShiftOperation</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
+            <span class="kw">let</span> <span class="ident">og_chars</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+            <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
+                <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) <span class="kw">if</span> <span class="op">!</span><span class="ident">generic</span> =&gt; (<span class="ident">Token::LogicalOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
+                <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="kw">if</span> <span class="ident">c</span> <span class="op">==</span> <span class="ident">cur</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">generic</span> =&gt; {
+                    <span class="kw">let</span> <span class="ident">og_chars</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+                    <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
+                        <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) =&gt; (<span class="ident">Token::AssignmentOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
+                        <span class="kw">_</span> =&gt; (<span class="ident">Token::ShiftOperation</span>(<span class="ident">cur</span>), <span class="ident">og_chars</span>),
+                    }
                 }
-            } <span class="kw">else</span> {
-                (<span class="ident">Token::Paren</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
+                <span class="kw">_</span> =&gt; (<span class="ident">Token::Paren</span>(<span class="ident">cur</span>), <span class="ident">og_chars</span>),
             }
         }
         <span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span> =&gt; <span class="ident">consume_number</span>(<span class="ident">input</span>),
-        <span class="string">&#39;_&#39;</span> <span class="op">|</span> <span class="string">&#39;a&#39;</span>..<span class="op">=</span><span class="string">&#39;z&#39;</span> <span class="op">|</span> <span class="string">&#39;A&#39;</span>..<span class="op">=</span><span class="string">&#39;Z&#39;</span> =&gt; {
-            <span class="kw">let</span> (<span class="ident">word</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="ident">consume_any</span>(<span class="ident">input</span>, <span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span>.<span class="ident">is_ascii_alphanumeric</span>() <span class="op">|</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="string">&#39;_&#39;</span>);
-            (<span class="ident">Token::Word</span>(<span class="ident">word</span>), <span class="ident">rest</span>)
-        }
-        <span class="string">&#39;&quot;&#39;</span> =&gt; {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>().<span class="ident">splitn</span>(<span class="number">2</span>, <span class="string">&#39;&quot;&#39;</span>);
-
-            <span class="comment">// splitn returns an iterator with at least one element, so unwrapping is fine</span>
-            <span class="kw">let</span> <span class="ident">quote_content</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">next</span>().<span class="ident">unwrap</span>();
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">rest</span>) <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">next</span>() {
-                (<span class="ident">Token::String</span>(<span class="ident">quote_content</span>), <span class="ident">rest</span>)
-            } <span class="kw">else</span> {
-                (<span class="ident">Token::UnterminatedString</span>, <span class="ident">quote_content</span>)
-            }
-        }
         <span class="string">&#39;/&#39;</span> =&gt; {
-            <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+            <span class="kw">let</span> <span class="ident">og_chars</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
             <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
                 <span class="prelude-val">Some</span>(<span class="string">&#39;/&#39;</span>) =&gt; {
-                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">position</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="string">&#39;\n&#39;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="string">&#39;\r&#39;</span>);
+                    <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">position</span>(<span class="ident">is_comment_end</span>);
                     (<span class="ident">Token::Trivia</span>, <span class="ident">chars</span>.<span class="ident">as_str</span>())
                 }
                 <span class="prelude-val">Some</span>(<span class="string">&#39;*&#39;</span>) =&gt; {
-                    <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
-
                     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">depth</span> <span class="op">=</span> <span class="number">1</span>;
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prev</span> <span class="op">=</span> <span class="string">&#39;\0&#39;</span>;
+                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prev</span> <span class="op">=</span> <span class="prelude-val">None</span>;
 
                     <span class="kw">for</span> <span class="ident">c</span> <span class="kw">in</span> <span class="kw-2">&amp;mut</span> <span class="ident">chars</span> {
                         <span class="kw">match</span> (<span class="ident">prev</span>, <span class="ident">c</span>) {
-                            (<span class="string">&#39;*&#39;</span>, <span class="string">&#39;/&#39;</span>) =&gt; {
-                                <span class="ident">prev</span> <span class="op">=</span> <span class="string">&#39;\0&#39;</span>;
+                            (<span class="prelude-val">Some</span>(<span class="string">&#39;*&#39;</span>), <span class="string">&#39;/&#39;</span>) =&gt; {
+                                <span class="ident">prev</span> <span class="op">=</span> <span class="prelude-val">None</span>;
                                 <span class="ident">depth</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
                                 <span class="kw">if</span> <span class="ident">depth</span> <span class="op">==</span> <span class="number">0</span> {
-                                    <span class="kw">break</span>;
+                                    <span class="kw">return</span> (<span class="ident">Token::Trivia</span>, <span class="ident">chars</span>.<span class="ident">as_str</span>());
                                 }
                             }
-                            (<span class="string">&#39;/&#39;</span>, <span class="string">&#39;*&#39;</span>) =&gt; {
-                                <span class="ident">prev</span> <span class="op">=</span> <span class="string">&#39;\0&#39;</span>;
+                            (<span class="prelude-val">Some</span>(<span class="string">&#39;/&#39;</span>), <span class="string">&#39;*&#39;</span>) =&gt; {
+                                <span class="ident">prev</span> <span class="op">=</span> <span class="prelude-val">None</span>;
                                 <span class="ident">depth</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
                             }
                             <span class="kw">_</span> =&gt; {
-                                <span class="ident">prev</span> <span class="op">=</span> <span class="ident">c</span>;
+                                <span class="ident">prev</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">c</span>);
                             }
                         }
                     }
 
-                    <span class="kw">if</span> <span class="ident">depth</span> <span class="op">&gt;</span> <span class="number">0</span> {
-                        (<span class="ident">Token::UnterminatedBlockComment</span>, <span class="ident">input</span>)
-                    } <span class="kw">else</span> {
-                        (<span class="ident">Token::Trivia</span>, <span class="ident">chars</span>.<span class="ident">as_str</span>())
-                    }
+                    (<span class="ident">Token::End</span>, <span class="string">&quot;&quot;</span>)
                 }
                 <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) =&gt; (<span class="ident">Token::AssignmentOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
-                <span class="kw">_</span> =&gt; (<span class="ident">Token::Operation</span>(<span class="ident">cur</span>), <span class="ident">input</span>),
+                <span class="kw">_</span> =&gt; (<span class="ident">Token::Operation</span>(<span class="ident">cur</span>), <span class="ident">og_chars</span>),
             }
         }
         <span class="string">&#39;-&#39;</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">sub_input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+            <span class="kw">let</span> <span class="ident">og_chars</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
             <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
                 <span class="prelude-val">Some</span>(<span class="string">&#39;&gt;&#39;</span>) =&gt; (<span class="ident">Token::Arrow</span>, <span class="ident">chars</span>.<span class="ident">as_str</span>()),
-                <span class="prelude-val">Some</span>(<span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span>) <span class="op">|</span> <span class="prelude-val">Some</span>(<span class="string">&#39;.&#39;</span>) =&gt; <span class="ident">consume_number</span>(<span class="ident">input</span>),
+                <span class="prelude-val">Some</span>(<span class="string">&#39;0&#39;</span>..<span class="op">=</span><span class="string">&#39;9&#39;</span> <span class="op">|</span> <span class="string">&#39;.&#39;</span>) =&gt; <span class="ident">consume_number</span>(<span class="ident">input</span>),
                 <span class="prelude-val">Some</span>(<span class="string">&#39;-&#39;</span>) =&gt; (<span class="ident">Token::DecrementOperation</span>, <span class="ident">chars</span>.<span class="ident">as_str</span>()),
                 <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) =&gt; (<span class="ident">Token::AssignmentOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
-                <span class="kw">_</span> =&gt; (<span class="ident">Token::Operation</span>(<span class="ident">cur</span>), <span class="ident">sub_input</span>),
+                <span class="kw">_</span> =&gt; (<span class="ident">Token::Operation</span>(<span class="ident">cur</span>), <span class="ident">og_chars</span>),
             }
         }
         <span class="string">&#39;+&#39;</span> =&gt; {
-            <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+            <span class="kw">let</span> <span class="ident">og_chars</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
             <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
                 <span class="prelude-val">Some</span>(<span class="string">&#39;+&#39;</span>) =&gt; (<span class="ident">Token::IncrementOperation</span>, <span class="ident">chars</span>.<span class="ident">as_str</span>()),
                 <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) =&gt; (<span class="ident">Token::AssignmentOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
-                <span class="kw">_</span> =&gt; (<span class="ident">Token::Operation</span>(<span class="ident">cur</span>), <span class="ident">input</span>),
+                <span class="kw">_</span> =&gt; (<span class="ident">Token::Operation</span>(<span class="ident">cur</span>), <span class="ident">og_chars</span>),
             }
         }
         <span class="string">&#39;*&#39;</span> <span class="op">|</span> <span class="string">&#39;%&#39;</span> <span class="op">|</span> <span class="string">&#39;^&#39;</span> =&gt; {
-            <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
-            <span class="kw">if</span> <span class="ident">chars</span>.<span class="ident">next</span>() <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) {
-                (<span class="ident">Token::AssignmentOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
-            } <span class="kw">else</span> {
-                (<span class="ident">Token::Operation</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
+            <span class="kw">let</span> <span class="ident">og_chars</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+            <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
+                <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) =&gt; (<span class="ident">Token::AssignmentOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
+                <span class="kw">_</span> =&gt; (<span class="ident">Token::Operation</span>(<span class="ident">cur</span>), <span class="ident">og_chars</span>),
             }
         }
-        <span class="string">&#39;!&#39;</span> <span class="op">|</span> <span class="string">&#39;~&#39;</span> =&gt; {
-            <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
-            <span class="kw">if</span> <span class="ident">chars</span>.<span class="ident">next</span>() <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) {
-                (<span class="ident">Token::LogicalOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
-            } <span class="kw">else</span> {
-                (<span class="ident">Token::Operation</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
+        <span class="string">&#39;~&#39;</span> =&gt; (<span class="ident">Token::Operation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
+        <span class="string">&#39;=&#39;</span> <span class="op">|</span> <span class="string">&#39;!&#39;</span> =&gt; {
+            <span class="kw">let</span> <span class="ident">og_chars</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+            <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
+                <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) =&gt; (<span class="ident">Token::LogicalOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
+                <span class="kw">_</span> =&gt; (<span class="ident">Token::Operation</span>(<span class="ident">cur</span>), <span class="ident">og_chars</span>),
             }
         }
-        <span class="string">&#39;=&#39;</span> <span class="op">|</span> <span class="string">&#39;&amp;&#39;</span> <span class="op">|</span> <span class="string">&#39;|&#39;</span> =&gt; {
-            <span class="ident">input</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
-            <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">next</span>();
-            <span class="kw">if</span> <span class="ident">next</span> <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="ident">cur</span>) {
-                (<span class="ident">Token::LogicalOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">next</span> <span class="op">==</span> <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) {
-                (<span class="ident">Token::AssignmentOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>())
-            } <span class="kw">else</span> {
-                (<span class="ident">Token::Operation</span>(<span class="ident">cur</span>), <span class="ident">input</span>)
+        <span class="string">&#39;&amp;&#39;</span> <span class="op">|</span> <span class="string">&#39;|&#39;</span> =&gt; {
+            <span class="kw">let</span> <span class="ident">og_chars</span> <span class="op">=</span> <span class="ident">chars</span>.<span class="ident">as_str</span>();
+            <span class="kw">match</span> <span class="ident">chars</span>.<span class="ident">next</span>() {
+                <span class="prelude-val">Some</span>(<span class="ident">c</span>) <span class="kw">if</span> <span class="ident">c</span> <span class="op">==</span> <span class="ident">cur</span> =&gt; (<span class="ident">Token::LogicalOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
+                <span class="prelude-val">Some</span>(<span class="string">&#39;=&#39;</span>) =&gt; (<span class="ident">Token::AssignmentOperation</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
+                <span class="kw">_</span> =&gt; (<span class="ident">Token::Operation</span>(<span class="ident">cur</span>), <span class="ident">og_chars</span>),
             }
         }
-        <span class="string">&#39; &#39;</span> <span class="op">|</span> <span class="string">&#39;\n&#39;</span> <span class="op">|</span> <span class="string">&#39;\r&#39;</span> <span class="op">|</span> <span class="string">&#39;\t&#39;</span> =&gt; {
-            <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="ident">consume_any</span>(<span class="ident">input</span>, <span class="op">|</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="string">&#39; &#39;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="string">&#39;\n&#39;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="string">&#39;\r&#39;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="string">&#39;\t&#39;</span>);
+        <span class="kw">_</span> <span class="kw">if</span> <span class="ident">is_blankspace</span>(<span class="ident">cur</span>) =&gt; {
+            <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="ident">consume_any</span>(<span class="ident">input</span>, <span class="ident">is_blankspace</span>);
             (<span class="ident">Token::Trivia</span>, <span class="ident">rest</span>)
+        }
+        <span class="kw">_</span> <span class="kw">if</span> <span class="ident">is_word_start</span>(<span class="ident">cur</span>) =&gt; {
+            <span class="kw">let</span> (<span class="ident">word</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="ident">consume_any</span>(<span class="ident">input</span>, <span class="ident">is_word_part</span>);
+            (<span class="ident">Token::Word</span>(<span class="ident">word</span>), <span class="ident">rest</span>)
         }
         <span class="kw">_</span> =&gt; (<span class="ident">Token::Unknown</span>(<span class="ident">cur</span>), <span class="ident">chars</span>.<span class="ident">as_str</span>()),
     }
+}
+
+<span class="doccomment">/// Returns whether or not a char is a comment end</span>
+<span class="doccomment">/// (Unicode Pattern_White_Space excluding U+0020, U+0009, U+200E and U+200F)</span>
+<span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_comment_end</span>(<span class="ident">c</span>: <span class="ident">char</span>) -&gt; <span class="ident">bool</span> {
+    <span class="kw">match</span> <span class="ident">c</span> {
+        <span class="string">&#39;\u{000a}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{000d}&#39;</span> <span class="op">|</span> <span class="string">&#39;\u{0085}&#39;</span> <span class="op">|</span> <span class="string">&#39;\u{2028}&#39;</span> <span class="op">|</span> <span class="string">&#39;\u{2029}&#39;</span> =&gt; <span class="bool-val">true</span>,
+        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+    }
+}
+
+<span class="doccomment">/// Returns whether or not a char is a blankspace (Unicode Pattern_White_Space)</span>
+<span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_blankspace</span>(<span class="ident">c</span>: <span class="ident">char</span>) -&gt; <span class="ident">bool</span> {
+    <span class="kw">match</span> <span class="ident">c</span> {
+        <span class="string">&#39;\u{0020}&#39;</span>
+        <span class="op">|</span> <span class="string">&#39;\u{0009}&#39;</span>..<span class="op">=</span><span class="string">&#39;\u{000d}&#39;</span>
+        <span class="op">|</span> <span class="string">&#39;\u{0085}&#39;</span>
+        <span class="op">|</span> <span class="string">&#39;\u{200e}&#39;</span>
+        <span class="op">|</span> <span class="string">&#39;\u{200f}&#39;</span>
+        <span class="op">|</span> <span class="string">&#39;\u{2028}&#39;</span>
+        <span class="op">|</span> <span class="string">&#39;\u{2029}&#39;</span> =&gt; <span class="bool-val">true</span>,
+        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+    }
+}
+
+<span class="doccomment">/// Returns whether or not a char is a word start (Unicode XID_Start + &#39;_&#39;)</span>
+<span class="kw">fn</span> <span class="ident">is_word_start</span>(<span class="ident">c</span>: <span class="ident">char</span>) -&gt; <span class="ident">bool</span> {
+    <span class="ident">c</span> <span class="op">==</span> <span class="string">&#39;_&#39;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">unicode_id::UnicodeID::is_id_start</span>(<span class="ident">c</span>)
+}
+
+<span class="doccomment">/// Returns whether or not a char is a word part (Unicode XID_Continue)</span>
+<span class="kw">fn</span> <span class="ident">is_word_part</span>(<span class="ident">c</span>: <span class="ident">char</span>) -&gt; <span class="ident">bool</span> {
+    <span class="ident">unicode_id::UnicodeID::is_id_continue</span>(<span class="ident">c</span>)
 }
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
@@ -1200,14 +1181,14 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Lexer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">Lexer</span> {
             <span class="ident">input</span>,
             <span class="ident">source</span>: <span class="ident">input</span>,
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">_leftover_span</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Span</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">_leftover_span</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Span</span> {
         <span class="self">self</span>.<span class="ident">source</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="self">self</span>.<span class="ident">input</span>.<span class="ident">len</span>()..<span class="self">self</span>.<span class="ident">source</span>.<span class="ident">len</span>()
     }
 
@@ -1237,11 +1218,11 @@
         (<span class="ident">token</span>, <span class="ident">rest</span>)
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">current_byte_offset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">current_byte_offset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="self">self</span>.<span class="ident">source</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="self">self</span>.<span class="ident">input</span>.<span class="ident">len</span>()
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">span_from</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">usize</span>) -&gt; <span class="ident">Span</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">span_from</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">usize</span>) -&gt; <span class="ident">Span</span> {
         <span class="ident">offset</span>..<span class="self">self</span>.<span class="ident">current_byte_offset</span>()
     }
 
@@ -1451,13 +1432,24 @@
         ],
     );
     <span class="ident">sub_test</span>(
-        <span class="string">&quot;æNoø&quot;</span>,
-        <span class="kw-2">&amp;</span>[<span class="ident">Token::Unknown</span>(<span class="string">&#39;æ&#39;</span>), <span class="ident">Token::Word</span>(<span class="string">&quot;No&quot;</span>), <span class="ident">Token::Unknown</span>(<span class="string">&#39;ø&#39;</span>)],
+        <span class="string">&quot;Δέλτα réflexion Кызыл 𐰓𐰏𐰇 朝焼け سلام 검정 שָׁלוֹם गुलाबी փիրուզ&quot;</span>,
+        <span class="kw-2">&amp;</span>[
+            <span class="ident">Token::Word</span>(<span class="string">&quot;Δέλτα&quot;</span>),
+            <span class="ident">Token::Word</span>(<span class="string">&quot;réflexion&quot;</span>),
+            <span class="ident">Token::Word</span>(<span class="string">&quot;Кызыл&quot;</span>),
+            <span class="ident">Token::Word</span>(<span class="string">&quot;𐰓𐰏𐰇&quot;</span>),
+            <span class="ident">Token::Word</span>(<span class="string">&quot;朝焼け&quot;</span>),
+            <span class="ident">Token::Word</span>(<span class="string">&quot;سلام&quot;</span>),
+            <span class="ident">Token::Word</span>(<span class="string">&quot;검정&quot;</span>),
+            <span class="ident">Token::Word</span>(<span class="string">&quot;שָׁלוֹם&quot;</span>),
+            <span class="ident">Token::Word</span>(<span class="string">&quot;गुलाबी&quot;</span>),
+            <span class="ident">Token::Word</span>(<span class="string">&quot;փիրուզ&quot;</span>),
+        ],
     );
+    <span class="ident">sub_test</span>(<span class="string">&quot;æNoø&quot;</span>, <span class="kw-2">&amp;</span>[<span class="ident">Token::Word</span>(<span class="string">&quot;æNoø&quot;</span>)]);
     <span class="ident">sub_test</span>(<span class="string">&quot;No¾&quot;</span>, <span class="kw-2">&amp;</span>[<span class="ident">Token::Word</span>(<span class="string">&quot;No&quot;</span>), <span class="ident">Token::Unknown</span>(<span class="string">&#39;¾&#39;</span>)]);
-    <span class="ident">sub_test</span>(<span class="string">&quot;No好&quot;</span>, <span class="kw-2">&amp;</span>[<span class="ident">Token::Word</span>(<span class="string">&quot;No&quot;</span>), <span class="ident">Token::Unknown</span>(<span class="string">&#39;好&#39;</span>)]);
+    <span class="ident">sub_test</span>(<span class="string">&quot;No好&quot;</span>, <span class="kw-2">&amp;</span>[<span class="ident">Token::Word</span>(<span class="string">&quot;No好&quot;</span>)]);
     <span class="ident">sub_test</span>(<span class="string">&quot;_No&quot;</span>, <span class="kw-2">&amp;</span>[<span class="ident">Token::Word</span>(<span class="string">&quot;_No&quot;</span>)]);
-    <span class="ident">sub_test</span>(<span class="string">&quot;\&quot;\u{2}ПЀ\u{0}\&quot;&quot;</span>, <span class="kw-2">&amp;</span>[<span class="ident">Token::String</span>(<span class="string">&quot;\u{2}ПЀ\u{0}&quot;</span>)]); <span class="comment">// https://github.com/gfx-rs/naga/issues/90</span>
     <span class="ident">sub_test</span>(
         <span class="string">&quot;*/*/***/*//=/*****//&quot;</span>,
         <span class="kw-2">&amp;</span>[
