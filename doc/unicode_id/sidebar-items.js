@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["UNICODE_VERSION","The version of Unicode that this version of unicode-id is based on."]],"trait":[["UnicodeID","Methods for determining if a character is a valid identifier character."]]});
