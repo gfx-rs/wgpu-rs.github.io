@@ -291,7 +291,7 @@ async function load(module, imports) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('msaa-line_bg.wasm', import.meta.url);
+        input = new URL('msaa_line-86826a267eaa0271_bg.wasm', import.meta.url);
     }
     const imports = {};
     imports.wbg = {};
