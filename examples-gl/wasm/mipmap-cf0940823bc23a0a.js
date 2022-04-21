@@ -319,7 +319,7 @@ async function load(module, imports) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('mipmap_bg.wasm', import.meta.url);
+        input = new URL('mipmap-cf0940823bc23a0a_bg.wasm', import.meta.url);
     }
     const imports = {};
     imports.wbg = {};
