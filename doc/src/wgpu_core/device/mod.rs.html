@@ -5343,6 +5343,9 @@
 <span id="5338">5338</span>
 <span id="5339">5339</span>
 <span id="5340">5340</span>
+<span id="5341">5341</span>
+<span id="5342">5342</span>
+<span id="5343">5343</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>, <span class="ident">command</span>, <span class="ident">conv</span>,
     <span class="ident">device::life::WaitIdleError</span>,
@@ -6201,10 +6204,7 @@
             }
             <span class="prelude-val">None</span> =&gt; <span class="kw">match</span> <span class="ident">texture</span>.<span class="ident">desc</span>.<span class="ident">dimension</span> {
                 <span class="ident">wgt::TextureDimension::D1</span> =&gt; <span class="ident">wgt::TextureViewDimension::D1</span>,
-                <span class="ident">wgt::TextureDimension::D2</span>
-                    <span class="kw">if</span> <span class="ident">texture</span>.<span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">&gt;</span> <span class="number">1</span>
-                        <span class="op">&amp;&amp;</span> <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">array_layer_count</span>.<span class="ident">is_none</span>() =&gt;
-                {
+                <span class="ident">wgt::TextureDimension::D2</span> <span class="kw">if</span> <span class="ident">texture</span>.<span class="ident">desc</span>.<span class="ident">size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">&gt;</span> <span class="number">1</span> =&gt; {
                     <span class="ident">wgt::TextureViewDimension::D2Array</span>
                 }
                 <span class="ident">wgt::TextureDimension::D2</span> =&gt; <span class="ident">wgt::TextureViewDimension::D2</span>,
@@ -6216,7 +6216,13 @@
             <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">base_mip_level</span> <span class="op">+</span> <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">mip_level_count</span>.<span class="ident">map_or</span>(<span class="number">1</span>, <span class="op">|</span><span class="ident">count</span><span class="op">|</span> <span class="ident">count</span>.<span class="ident">get</span>());
         <span class="kw">let</span> <span class="ident">required_layer_count</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">array_layer_count</span> {
             <span class="prelude-val">Some</span>(<span class="ident">count</span>) =&gt; <span class="ident">desc</span>.<span class="ident">range</span>.<span class="ident">base_array_layer</span> <span class="op">+</span> <span class="ident">count</span>.<span class="ident">get</span>(),
-            <span class="prelude-val">None</span> =&gt; <span class="ident">texture</span>.<span class="ident">desc</span>.<span class="ident">array_layer_count</span>(),
+            <span class="prelude-val">None</span> =&gt; <span class="kw">match</span> <span class="ident">view_dim</span> {
+                <span class="ident">wgt::TextureViewDimension::D1</span>
+                <span class="op">|</span> <span class="ident">wgt::TextureViewDimension::D2</span>
+                <span class="op">|</span> <span class="ident">wgt::TextureViewDimension::D3</span> =&gt; <span class="number">1</span>,
+                <span class="ident">wgt::TextureViewDimension::Cube</span> =&gt; <span class="number">6</span>,
+                <span class="kw">_</span> =&gt; <span class="ident">texture</span>.<span class="ident">desc</span>.<span class="ident">array_layer_count</span>(),
+            },
         };
         <span class="kw">let</span> <span class="ident">level_end</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">full_range</span>.<span class="ident">levels</span>.<span class="ident">end</span>;
         <span class="kw">let</span> <span class="ident">layer_end</span> <span class="op">=</span> <span class="ident">texture</span>.<span class="ident">full_range</span>.<span class="ident">layers</span>.<span class="ident">end</span>;
