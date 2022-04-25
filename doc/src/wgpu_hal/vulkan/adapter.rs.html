@@ -1594,20 +1594,17 @@
 <span id="1589">1589</span>
 <span id="1590">1590</span>
 <span id="1591">1591</span>
-<span id="1592">1592</span>
-<span id="1593">1593</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">extensions::khr</span>, <span class="ident">vk</span>};
 <span class="kw">use</span> <span class="ident">parking_lot::Mutex</span>;
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">ffi::CStr</span>, <span class="ident">sync::Arc</span>};
+<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::BTreeMap</span>, <span class="ident">ffi::CStr</span>, <span class="ident">sync::Arc</span>};
 
 <span class="comment">//TODO: const fn?</span>
 <span class="kw">fn</span> <span class="ident">indexing_features</span>() -&gt; <span class="ident">wgt::Features</span> {
     <span class="ident">wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING</span>
         <span class="op">|</span> <span class="ident">wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</span>
-        <span class="op">|</span> <span class="ident">wgt::Features::UNSIZED_BINDING_ARRAY</span>
 }
 
 <span class="doccomment">/// Aggregate of the `vk::PhysicalDevice*Features` structs used by `gfx`.</span>
@@ -1810,9 +1807,6 @@
                             <span class="ident">uab_types</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::UpdateAfterBindTypes::STORAGE_BUFFER</span>),
                         )
                         .<span class="ident">descriptor_binding_partially_bound</span>(<span class="ident">needs_partially_bound</span>)
-                        .<span class="ident">runtime_descriptor_array</span>(
-                            <span class="ident">requested_features</span>.<span class="ident">contains</span>(<span class="ident">wgt::Features::UNSIZED_BINDING_ARRAY</span>),
-                        )
                         <span class="comment">//.sampler_filter_minmax(requested_features.contains(wgt::Features::SAMPLER_REDUCTION))</span>
                         .<span class="ident">imageless_framebuffer</span>(<span class="ident">private_caps</span>.<span class="ident">imageless_framebuffers</span>)
                         .<span class="ident">timeline_semaphore</span>(<span class="ident">private_caps</span>.<span class="ident">timeline_semaphores</span>)
@@ -1851,9 +1845,6 @@
                             <span class="ident">uab_types</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::UpdateAfterBindTypes::STORAGE_BUFFER</span>),
                         )
                         .<span class="ident">descriptor_binding_partially_bound</span>(<span class="ident">needs_partially_bound</span>)
-                        .<span class="ident">runtime_descriptor_array</span>(
-                            <span class="ident">requested_features</span>.<span class="ident">contains</span>(<span class="ident">wgt::Features::UNSIZED_BINDING_ARRAY</span>),
-                        )
                         .<span class="ident">build</span>(),
                 )
             } <span class="kw">else</span> {
@@ -2069,9 +2060,6 @@
             ) {
                 <span class="ident">features</span>.<span class="ident">insert</span>(<span class="ident">F::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</span>);
             }
-            <span class="kw">if</span> <span class="ident">vulkan_1_2</span>.<span class="ident">runtime_descriptor_array</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">F::UNSIZED_BINDING_ARRAY</span>;
-            }
             <span class="kw">if</span> <span class="ident">vulkan_1_2</span>.<span class="ident">descriptor_binding_partially_bound</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">intel_windows</span> {
                 <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">F::PARTIALLY_BOUND_BINDING_ARRAY</span>;
             }
@@ -2116,9 +2104,6 @@
             }
             <span class="kw">if</span> <span class="ident">descriptor_indexing</span>.<span class="ident">descriptor_binding_partially_bound</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">intel_windows</span> {
                 <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">F::PARTIALLY_BOUND_BINDING_ARRAY</span>;
-            }
-            <span class="kw">if</span> <span class="ident">descriptor_indexing</span>.<span class="ident">runtime_descriptor_array</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="ident">features</span> <span class="op">|</span><span class="op">=</span> <span class="ident">F::UNSIZED_BINDING_ARRAY</span>;
             }
         }
 
@@ -2781,6 +2766,13 @@
                 <span class="ident">capabilities</span>.<span class="ident">push</span>(<span class="ident">spv::Capability::MultiView</span>);
             }
 
+            <span class="kw">if</span> <span class="ident">features</span>.<span class="ident">intersects</span>(
+                <span class="ident">wgt::Features::SAMPLED_TEXTURE_AND_STORAGE_BUFFER_ARRAY_NON_UNIFORM_INDEXING</span>
+                    <span class="op">|</span> <span class="ident">wgt::Features::UNIFORM_BUFFER_AND_STORAGE_TEXTURE_ARRAY_NON_UNIFORM_INDEXING</span>,
+            ) {
+                <span class="ident">capabilities</span>.<span class="ident">push</span>(<span class="ident">spv::Capability::ShaderNonUniform</span>);
+            }
+
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">spv::WriterFlags::empty</span>();
             <span class="ident">flags</span>.<span class="ident">set</span>(
                 <span class="ident">spv::WriterFlags::DEBUG</span>,
@@ -2813,7 +2805,11 @@
                     } <span class="kw">else</span> {
                         <span class="ident">naga::proc::BoundsCheckPolicy::Restrict</span>
                     },
+                    <span class="comment">// TODO: support bounds checks on binding arrays</span>
+                    <span class="ident">binding_array</span>: <span class="ident">naga::proc::BoundsCheckPolicy::Unchecked</span>,
                 },
+                <span class="comment">// We need to build this separately for each invocation, so just default it out here</span>
+                <span class="ident">binding_map</span>: <span class="ident">BTreeMap::default</span>(),
             }
         };
 
