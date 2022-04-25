@@ -915,6 +915,24 @@
 <span id="910">910</span>
 <span id="911">911</span>
 <span id="912">912</span>
+<span id="913">913</span>
+<span id="914">914</span>
+<span id="915">915</span>
+<span id="916">916</span>
+<span id="917">917</span>
+<span id="918">918</span>
+<span id="919">919</span>
+<span id="920">920</span>
+<span id="921">921</span>
+<span id="922">922</span>
+<span id="923">923</span>
+<span id="924">924</span>
+<span id="925">925</span>
+<span id="926">926</span>
+<span id="927">927</span>
+<span id="928">928</span>
+<span id="929">929</span>
+<span id="930">930</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model</span>::{
         <span class="ident">BindError</span>, <span class="ident">BindGroup</span>, <span class="ident">LateMinBufferBindingSizeMismatch</span>, <span class="ident">PushConstantUploadError</span>,
@@ -923,8 +941,8 @@
         <span class="ident">bind::Binder</span>,
         <span class="ident">end_pipeline_statistics_query</span>,
         <span class="ident">memory_init</span>::{<span class="ident">fixup_discarded_surfaces</span>, <span class="ident">SurfacesInDiscardState</span>},
-        <span class="ident">BasePass</span>, <span class="ident">BasePassRef</span>, <span class="ident">CommandBuffer</span>, <span class="ident">CommandEncoderError</span>, <span class="ident">CommandEncoderStatus</span>,
-        <span class="ident">MapPassErr</span>, <span class="ident">PassErrorScope</span>, <span class="ident">QueryUseError</span>, <span class="ident">StateChange</span>,
+        <span class="ident">BasePass</span>, <span class="ident">BasePassRef</span>, <span class="ident">BindGroupStateChange</span>, <span class="ident">CommandBuffer</span>, <span class="ident">CommandEncoderError</span>,
+        <span class="ident">CommandEncoderStatus</span>, <span class="ident">MapPassErr</span>, <span class="ident">PassErrorScope</span>, <span class="ident">QueryUseError</span>, <span class="ident">StateChange</span>,
     },
     <span class="ident">device::MissingDownlevelFlags</span>,
     <span class="ident">error</span>::{<span class="ident">ErrorFormatter</span>, <span class="ident">PrettyError</span>},
@@ -993,6 +1011,12 @@
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ComputePass</span> {
     <span class="ident">base</span>: <span class="ident">BasePass</span><span class="op">&lt;</span><span class="ident">ComputeCommand</span><span class="op">&gt;</span>,
     <span class="ident">parent_id</span>: <span class="ident">id::CommandEncoderId</span>,
+
+    <span class="comment">// Resource binding dedupe state.</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serial-pass&quot;</span>, <span class="ident">serde</span>(<span class="ident">skip</span>))]</span>
+    <span class="ident">current_bind_groups</span>: <span class="ident">BindGroupStateChange</span>,
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serial-pass&quot;</span>, <span class="ident">serde</span>(<span class="ident">skip</span>))]</span>
+    <span class="ident">current_pipeline</span>: <span class="ident">StateChange</span><span class="op">&lt;</span><span class="ident">id::ComputePipelineId</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">ComputePass</span> {
@@ -1000,6 +1024,9 @@
         <span class="self">Self</span> {
             <span class="ident">base</span>: <span class="ident">BasePass::new</span>(<span class="kw-2">&amp;</span><span class="ident">desc</span>.<span class="ident">label</span>),
             <span class="ident">parent_id</span>,
+
+            <span class="ident">current_bind_groups</span>: <span class="ident">BindGroupStateChange::new</span>(),
+            <span class="ident">current_pipeline</span>: <span class="ident">StateChange::new</span>(),
         }
     }
 
@@ -1139,7 +1166,7 @@
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
 <span class="kw">struct</span> <span class="ident">State</span> {
     <span class="ident">binder</span>: <span class="ident">Binder</span>,
-    <span class="ident">pipeline</span>: <span class="ident">StateChange</span><span class="op">&lt;</span><span class="ident">id::ComputePipelineId</span><span class="op">&gt;</span>,
+    <span class="ident">pipeline</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">id::ComputePipelineId</span><span class="op">&gt;</span>,
     <span class="ident">trackers</span>: <span class="ident">StatefulTrackerSubset</span>,
     <span class="ident">debug_scope_depth</span>: <span class="ident">u32</span>,
 }
@@ -1153,7 +1180,7 @@
                 <span class="ident">index</span>: <span class="ident">bind_mask</span>.<span class="ident">trailing_zeros</span>(),
             });
         }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">pipeline</span>.<span class="ident">is_unset</span>() {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">pipeline</span>.<span class="ident">is_none</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DispatchError::MissingPipeline</span>);
         }
         <span class="self">self</span>.<span class="ident">binder</span>.<span class="ident">check_late_buffer_bindings</span>()<span class="question-mark">?</span>;
@@ -1242,7 +1269,7 @@
 
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="ident">State</span> {
             <span class="ident">binder</span>: <span class="ident">Binder::new</span>(),
-            <span class="ident">pipeline</span>: <span class="ident">StateChange::new</span>(),
+            <span class="ident">pipeline</span>: <span class="prelude-val">None</span>,
             <span class="ident">trackers</span>: <span class="ident">StatefulTrackerSubset::new</span>(<span class="ident">A::VARIANT</span>),
             <span class="ident">debug_scope_depth</span>: <span class="number">0</span>,
         };
@@ -1337,9 +1364,7 @@
                 <span class="ident">ComputeCommand::SetPipeline</span>(<span class="ident">pipeline_id</span>) =&gt; {
                     <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::SetPipelineCompute</span>(<span class="ident">pipeline_id</span>);
 
-                    <span class="kw">if</span> <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">set_and_check_redundant</span>(<span class="ident">pipeline_id</span>) {
-                        <span class="kw">continue</span>;
-                    }
+                    <span class="ident">state</span>.<span class="ident">pipeline</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">pipeline_id</span>);
 
                     <span class="kw">let</span> <span class="ident">pipeline</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
                         .<span class="ident">trackers</span>
@@ -1441,7 +1466,7 @@
                 <span class="ident">ComputeCommand::Dispatch</span>(<span class="ident">groups</span>) =&gt; {
                     <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Dispatch</span> {
                         <span class="ident">indirect</span>: <span class="bool-val">false</span>,
-                        <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
+                        <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>,
                     };
 
                     <span class="ident">fixup_discarded_surfaces</span>(
@@ -1485,7 +1510,7 @@
                 <span class="ident">ComputeCommand::DispatchIndirect</span> { <span class="ident">buffer_id</span>, <span class="ident">offset</span> } =&gt; {
                     <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Dispatch</span> {
                         <span class="ident">indirect</span>: <span class="bool-val">true</span>,
-                        <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
+                        <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>,
                     };
 
                     <span class="ident">state</span>.<span class="ident">is_ready</span>().<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
@@ -1667,16 +1692,23 @@
         <span class="ident">offsets</span>: <span class="kw-2">*const</span> <span class="ident">DynamicOffset</span>,
         <span class="ident">offset_length</span>: <span class="ident">usize</span>,
     ) {
+        <span class="kw">let</span> <span class="ident">redundant</span> <span class="op">=</span> <span class="ident">pass</span>.<span class="ident">current_bind_groups</span>.<span class="ident">set_and_check_redundant</span>(
+            <span class="ident">bind_group_id</span>,
+            <span class="ident">index</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">dynamic_offsets</span>,
+            <span class="ident">offsets</span>,
+            <span class="ident">offset_length</span>,
+        );
+
+        <span class="kw">if</span> <span class="ident">redundant</span> {
+            <span class="kw">return</span>;
+        }
+
         <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">ComputeCommand::SetBindGroup</span> {
             <span class="ident">index</span>: <span class="ident">index</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
             <span class="ident">num_dynamic_offsets</span>: <span class="ident">offset_length</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
             <span class="ident">bind_group_id</span>,
         });
-        <span class="kw">if</span> <span class="ident">offset_length</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">pass</span>.<span class="ident">base</span>
-                .<span class="ident">dynamic_offsets</span>
-                .<span class="ident">extend_from_slice</span>(<span class="ident">slice::from_raw_parts</span>(<span class="ident">offsets</span>, <span class="ident">offset_length</span>));
-        }
     }
 
     <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
@@ -1684,6 +1716,10 @@
         <span class="ident">pass</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ComputePass</span>,
         <span class="ident">pipeline_id</span>: <span class="ident">id::ComputePipelineId</span>,
     ) {
+        <span class="kw">if</span> <span class="ident">pass</span>.<span class="ident">current_pipeline</span>.<span class="ident">set_and_check_redundant</span>(<span class="ident">pipeline_id</span>) {
+            <span class="kw">return</span>;
+        }
+
         <span class="ident">pass</span>.<span class="ident">base</span>
             .<span class="ident">commands</span>
             .<span class="ident">push</span>(<span class="ident">ComputeCommand::SetPipeline</span>(<span class="ident">pipeline_id</span>));
@@ -1828,5 +1864,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (879aff385 2022-04-20)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (18f314e70 2022-04-24)" ></div>
 </body></html>

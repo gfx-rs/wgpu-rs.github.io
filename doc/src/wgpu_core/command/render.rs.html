@@ -2367,15 +2367,33 @@
 <span id="2362">2362</span>
 <span id="2363">2363</span>
 <span id="2364">2364</span>
+<span id="2365">2365</span>
+<span id="2366">2366</span>
+<span id="2367">2367</span>
+<span id="2368">2368</span>
+<span id="2369">2369</span>
+<span id="2370">2370</span>
+<span id="2371">2371</span>
+<span id="2372">2372</span>
+<span id="2373">2373</span>
+<span id="2374">2374</span>
+<span id="2375">2375</span>
+<span id="2376">2376</span>
+<span id="2377">2377</span>
+<span id="2378">2378</span>
+<span id="2379">2379</span>
+<span id="2380">2380</span>
+<span id="2381">2381</span>
+<span id="2382">2382</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model::BindError</span>,
     <span class="ident">command</span>::{
         <span class="ident">bind::Binder</span>,
         <span class="ident">end_pipeline_statistics_query</span>,
         <span class="ident">memory_init</span>::{<span class="ident">fixup_discarded_surfaces</span>, <span class="ident">SurfacesInDiscardState</span>},
-        <span class="ident">BasePass</span>, <span class="ident">BasePassRef</span>, <span class="ident">CommandBuffer</span>, <span class="ident">CommandEncoderError</span>, <span class="ident">CommandEncoderStatus</span>, <span class="ident">DrawError</span>,
-        <span class="ident">ExecutionError</span>, <span class="ident">MapPassErr</span>, <span class="ident">PassErrorScope</span>, <span class="ident">QueryResetMap</span>, <span class="ident">QueryUseError</span>, <span class="ident">RenderCommand</span>,
-        <span class="ident">RenderCommandError</span>, <span class="ident">StateChange</span>,
+        <span class="ident">BasePass</span>, <span class="ident">BasePassRef</span>, <span class="ident">BindGroupStateChange</span>, <span class="ident">CommandBuffer</span>, <span class="ident">CommandEncoderError</span>,
+        <span class="ident">CommandEncoderStatus</span>, <span class="ident">DrawError</span>, <span class="ident">ExecutionError</span>, <span class="ident">MapPassErr</span>, <span class="ident">PassErrorScope</span>, <span class="ident">QueryResetMap</span>,
+        <span class="ident">QueryUseError</span>, <span class="ident">RenderCommand</span>, <span class="ident">RenderCommandError</span>, <span class="ident">StateChange</span>,
     },
     <span class="ident">device</span>::{
         <span class="ident">AttachmentData</span>, <span class="ident">Device</span>, <span class="ident">MissingDownlevelFlags</span>, <span class="ident">MissingFeatures</span>,
@@ -2533,6 +2551,12 @@
     <span class="ident">parent_id</span>: <span class="ident">id::CommandEncoderId</span>,
     <span class="ident">color_targets</span>: <span class="ident">ArrayVec</span><span class="op">&lt;</span><span class="ident">RenderPassColorAttachment</span>, { <span class="ident">hal::MAX_COLOR_TARGETS</span> }<span class="op">&gt;</span>,
     <span class="ident">depth_stencil_target</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">RenderPassDepthStencilAttachment</span><span class="op">&gt;</span>,
+
+    <span class="comment">// Resource binding dedupe state.</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serial-pass&quot;</span>, <span class="ident">serde</span>(<span class="ident">skip</span>))]</span>
+    <span class="ident">current_bind_groups</span>: <span class="ident">BindGroupStateChange</span>,
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serial-pass&quot;</span>, <span class="ident">serde</span>(<span class="ident">skip</span>))]</span>
+    <span class="ident">current_pipeline</span>: <span class="ident">StateChange</span><span class="op">&lt;</span><span class="ident">id::RenderPipelineId</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">RenderPass</span> {
@@ -2542,6 +2566,9 @@
             <span class="ident">parent_id</span>,
             <span class="ident">color_targets</span>: <span class="ident">desc</span>.<span class="ident">color_attachments</span>.<span class="ident">iter</span>().<span class="ident">cloned</span>().<span class="ident">collect</span>(),
             <span class="ident">depth_stencil_target</span>: <span class="ident">desc</span>.<span class="ident">depth_stencil_attachment</span>.<span class="ident">cloned</span>(),
+
+            <span class="ident">current_bind_groups</span>: <span class="ident">BindGroupStateChange::new</span>(),
+            <span class="ident">current_pipeline</span>: <span class="ident">StateChange::new</span>(),
         }
     }
 
@@ -2706,7 +2733,7 @@
     <span class="ident">binder</span>: <span class="ident">Binder</span>,
     <span class="ident">blend_constant</span>: <span class="ident">OptionalState</span>,
     <span class="ident">stencil_reference</span>: <span class="ident">u32</span>,
-    <span class="ident">pipeline</span>: <span class="ident">StateChange</span><span class="op">&lt;</span><span class="ident">id::RenderPipelineId</span><span class="op">&gt;</span>,
+    <span class="ident">pipeline</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">id::RenderPipelineId</span><span class="op">&gt;</span>,
     <span class="ident">index</span>: <span class="ident">IndexState</span>,
     <span class="ident">vertex</span>: <span class="ident">VertexState</span>,
     <span class="ident">debug_scope_depth</span>: <span class="ident">u32</span>,
@@ -2730,7 +2757,7 @@
                 <span class="ident">index</span>: <span class="ident">bind_mask</span>.<span class="ident">trailing_zeros</span>(),
             });
         }
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">pipeline</span>.<span class="ident">is_unset</span>() {
+        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">pipeline</span>.<span class="ident">is_none</span>() {
             <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">DrawError::MissingPipeline</span>);
         }
         <span class="kw">if</span> <span class="self">self</span>.<span class="ident">blend_constant</span> <span class="op">==</span> <span class="ident">OptionalState::Required</span> {
@@ -2761,7 +2788,7 @@
     <span class="doccomment">/// Reset the `RenderBundle`-related states.</span>
     <span class="kw">fn</span> <span class="ident">reset_bundle</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">binder</span>.<span class="ident">reset</span>();
-        <span class="self">self</span>.<span class="ident">pipeline</span>.<span class="ident">reset</span>();
+        <span class="self">self</span>.<span class="ident">pipeline</span> <span class="op">=</span> <span class="prelude-val">None</span>;
         <span class="self">self</span>.<span class="ident">index</span>.<span class="ident">reset</span>();
         <span class="self">self</span>.<span class="ident">vertex</span>.<span class="ident">reset</span>();
     }
@@ -3461,7 +3488,7 @@
                 <span class="ident">binder</span>: <span class="ident">Binder::new</span>(),
                 <span class="ident">blend_constant</span>: <span class="ident">OptionalState::Unused</span>,
                 <span class="ident">stencil_reference</span>: <span class="number">0</span>,
-                <span class="ident">pipeline</span>: <span class="ident">StateChange::new</span>(),
+                <span class="ident">pipeline</span>: <span class="prelude-val">None</span>,
                 <span class="ident">index</span>: <span class="ident">IndexState::default</span>(),
                 <span class="ident">vertex</span>: <span class="ident">VertexState::default</span>(),
                 <span class="ident">debug_scope_depth</span>: <span class="number">0</span>,
@@ -3556,9 +3583,7 @@
                     }
                     <span class="ident">RenderCommand::SetPipeline</span>(<span class="ident">pipeline_id</span>) =&gt; {
                         <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::SetPipelineRender</span>(<span class="ident">pipeline_id</span>);
-                        <span class="kw">if</span> <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">set_and_check_redundant</span>(<span class="ident">pipeline_id</span>) {
-                            <span class="kw">continue</span>;
-                        }
+                        <span class="ident">state</span>.<span class="ident">pipeline</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">pipeline_id</span>);
 
                         <span class="kw">let</span> <span class="ident">pipeline</span> <span class="op">=</span> <span class="ident">cmd_buf</span>
                             .<span class="ident">trackers</span>
@@ -3874,7 +3899,7 @@
                         <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Draw</span> {
                             <span class="ident">indexed</span>,
                             <span class="ident">indirect</span>: <span class="bool-val">false</span>,
-                            <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
+                            <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>,
                         };
                         <span class="ident">state</span>.<span class="ident">is_ready</span>(<span class="ident">indexed</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
@@ -3914,7 +3939,7 @@
                         <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Draw</span> {
                             <span class="ident">indexed</span>,
                             <span class="ident">indirect</span>: <span class="bool-val">false</span>,
-                            <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
+                            <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>,
                         };
                         <span class="ident">state</span>.<span class="ident">is_ready</span>(<span class="ident">indexed</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
@@ -3958,7 +3983,7 @@
                         <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Draw</span> {
                             <span class="ident">indexed</span>,
                             <span class="ident">indirect</span>: <span class="bool-val">true</span>,
-                            <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
+                            <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>,
                         };
                         <span class="ident">state</span>.<span class="ident">is_ready</span>(<span class="ident">indexed</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
@@ -4031,7 +4056,7 @@
                         <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Draw</span> {
                             <span class="ident">indexed</span>,
                             <span class="ident">indirect</span>: <span class="bool-val">true</span>,
-                            <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
+                            <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>,
                         };
                         <span class="ident">state</span>.<span class="ident">is_ready</span>(<span class="ident">indexed</span>).<span class="ident">map_pass_err</span>(<span class="ident">scope</span>)<span class="question-mark">?</span>;
 
@@ -4381,16 +4406,23 @@
         <span class="ident">offsets</span>: <span class="kw-2">*const</span> <span class="ident">DynamicOffset</span>,
         <span class="ident">offset_length</span>: <span class="ident">usize</span>,
     ) {
+        <span class="kw">let</span> <span class="ident">redundant</span> <span class="op">=</span> <span class="ident">pass</span>.<span class="ident">current_bind_groups</span>.<span class="ident">set_and_check_redundant</span>(
+            <span class="ident">bind_group_id</span>,
+            <span class="ident">index</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">dynamic_offsets</span>,
+            <span class="ident">offsets</span>,
+            <span class="ident">offset_length</span>,
+        );
+
+        <span class="kw">if</span> <span class="ident">redundant</span> {
+            <span class="kw">return</span>;
+        }
+
         <span class="ident">pass</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">RenderCommand::SetBindGroup</span> {
             <span class="ident">index</span>: <span class="ident">index</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
             <span class="ident">num_dynamic_offsets</span>: <span class="ident">offset_length</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
             <span class="ident">bind_group_id</span>,
         });
-        <span class="kw">if</span> <span class="ident">offset_length</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">pass</span>.<span class="ident">base</span>
-                .<span class="ident">dynamic_offsets</span>
-                .<span class="ident">extend_from_slice</span>(<span class="ident">slice::from_raw_parts</span>(<span class="ident">offsets</span>, <span class="ident">offset_length</span>));
-        }
     }
 
     <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
@@ -4398,6 +4430,10 @@
         <span class="ident">pass</span>: <span class="kw-2">&amp;mut</span> <span class="ident">RenderPass</span>,
         <span class="ident">pipeline_id</span>: <span class="ident">id::RenderPipelineId</span>,
     ) {
+        <span class="kw">if</span> <span class="ident">pass</span>.<span class="ident">current_pipeline</span>.<span class="ident">set_and_check_redundant</span>(<span class="ident">pipeline_id</span>) {
+            <span class="kw">return</span>;
+        }
+
         <span class="ident">pass</span>.<span class="ident">base</span>
             .<span class="ident">commands</span>
             .<span class="ident">push</span>(<span class="ident">RenderCommand::SetPipeline</span>(<span class="ident">pipeline_id</span>));
@@ -4732,5 +4768,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (879aff385 2022-04-20)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (18f314e70 2022-04-24)" ></div>
 </body></html>

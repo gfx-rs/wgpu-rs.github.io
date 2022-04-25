@@ -519,6 +519,59 @@
 <span id="514">514</span>
 <span id="515">515</span>
 <span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
 </pre><pre class="rust"><code><span class="kw">mod</span> <span class="ident">bind</span>;
 <span class="kw">mod</span> <span class="ident">bundle</span>;
 <span class="kw">mod</span> <span class="ident">clear</span>;
@@ -528,6 +581,8 @@
 <span class="kw">mod</span> <span class="ident">query</span>;
 <span class="kw">mod</span> <span class="ident">render</span>;
 <span class="kw">mod</span> <span class="ident">transfer</span>;
+
+<span class="kw">use</span> <span class="ident">std::slice</span>;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">use</span> <span class="ident"><span class="self">self</span>::clear::clear_texture_no_device</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="self">self</span>::{
@@ -926,7 +981,7 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
 <span class="kw">struct</span> <span class="ident">StateChange</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="ident">last_state</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 }
@@ -940,11 +995,62 @@
         <span class="self">self</span>.<span class="ident">last_state</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">new_state</span>);
         <span class="ident">already_set</span>
     }
-    <span class="kw">fn</span> <span class="ident">is_unset</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">last_state</span>.<span class="ident">is_none</span>()
-    }
     <span class="kw">fn</span> <span class="ident">reset</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="self">self</span>.<span class="ident">last_state</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+    }
+}
+
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">PartialEq</span><span class="op">&gt;</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">StateChange</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
+        <span class="ident"><span class="self">Self</span>::new</span>()
+    }
+}
+
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
+<span class="kw">struct</span> <span class="ident">BindGroupStateChange</span> {
+    <span class="ident">last_states</span>: [<span class="ident">StateChange</span><span class="op">&lt;</span><span class="ident">id::BindGroupId</span><span class="op">&gt;</span>; <span class="ident">hal::MAX_BIND_GROUPS</span>],
+}
+
+<span class="kw">impl</span> <span class="ident">BindGroupStateChange</span> {
+    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
+        <span class="self">Self</span> {
+            <span class="ident">last_states</span>: [<span class="ident">StateChange::new</span>(); <span class="ident">hal::MAX_BIND_GROUPS</span>],
+        }
+    }
+
+    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_and_check_redundant</span>(
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+        <span class="ident">bind_group_id</span>: <span class="ident">id::BindGroupId</span>,
+        <span class="ident">index</span>: <span class="ident">u32</span>,
+        <span class="ident">dynamic_offsets</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>,
+        <span class="ident">offsets</span>: <span class="kw-2">*const</span> <span class="ident">wgt::DynamicOffset</span>,
+        <span class="ident">offset_length</span>: <span class="ident">usize</span>,
+    ) -&gt; <span class="ident">bool</span> {
+        <span class="comment">// For now never deduplicate bind groups with dynamic offsets.</span>
+        <span class="kw">if</span> <span class="ident">offset_length</span> <span class="op">==</span> <span class="number">0</span> {
+            <span class="comment">// If this get returns None, that means we&#39;re well over the limit, so let the call through to get a proper error</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">current_bind_group</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">last_states</span>.<span class="ident">get_mut</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>) {
+                <span class="comment">// Bail out if we&#39;re binding the same bind group.</span>
+                <span class="kw">if</span> <span class="ident">current_bind_group</span>.<span class="ident">set_and_check_redundant</span>(<span class="ident">bind_group_id</span>) {
+                    <span class="kw">return</span> <span class="bool-val">true</span>;
+                }
+            }
+        } <span class="kw">else</span> {
+            <span class="comment">// We intentionally remove the memory of this bind group if we have dynamic offsets,</span>
+            <span class="comment">// such that if you try to bind this bind group later with _no_ dynamic offsets it</span>
+            <span class="comment">// tries to bind it again and gives a proper validation error.</span>
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">current_bind_group</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">last_states</span>.<span class="ident">get_mut</span>(<span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span>) {
+                <span class="ident">current_bind_group</span>.<span class="ident">reset</span>();
+            }
+            <span class="ident">dynamic_offsets</span>.<span class="ident">extend_from_slice</span>(<span class="ident">slice::from_raw_parts</span>(<span class="ident">offsets</span>, <span class="ident">offset_length</span>));
+        }
+        <span class="bool-val">false</span>
+    }
+}
+
+<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">BindGroupStateChange</span> {
+    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
+        <span class="ident"><span class="self">Self</span>::new</span>()
     }
 }
 
@@ -1036,5 +1142,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (879aff385 2022-04-20)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (18f314e70 2022-04-24)" ></div>
 </body></html>

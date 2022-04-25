@@ -1399,6 +1399,27 @@
 <span id="1394">1394</span>
 <span id="1395">1395</span>
 <span id="1396">1396</span>
+<span id="1397">1397</span>
+<span id="1398">1398</span>
+<span id="1399">1399</span>
+<span id="1400">1400</span>
+<span id="1401">1401</span>
+<span id="1402">1402</span>
+<span id="1403">1403</span>
+<span id="1404">1404</span>
+<span id="1405">1405</span>
+<span id="1406">1406</span>
+<span id="1407">1407</span>
+<span id="1408">1408</span>
+<span id="1409">1409</span>
+<span id="1410">1410</span>
+<span id="1411">1411</span>
+<span id="1412">1412</span>
+<span id="1413">1413</span>
+<span id="1414">1414</span>
+<span id="1415">1415</span>
+<span id="1416">1416</span>
+<span id="1417">1417</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! Render Bundles
 
 ## Software implementation
@@ -1437,8 +1458,8 @@ invalidations or index format changes.
 <span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">binding_model::buffer_binding_type_alignment</span>,
     <span class="ident">command</span>::{
-        <span class="ident">BasePass</span>, <span class="ident">DrawError</span>, <span class="ident">MapPassErr</span>, <span class="ident">PassErrorScope</span>, <span class="ident">RenderCommand</span>, <span class="ident">RenderCommandError</span>,
-        <span class="ident">StateChange</span>,
+        <span class="ident">BasePass</span>, <span class="ident">BindGroupStateChange</span>, <span class="ident">DrawError</span>, <span class="ident">MapPassErr</span>, <span class="ident">PassErrorScope</span>, <span class="ident">RenderCommand</span>,
+        <span class="ident">RenderCommandError</span>, <span class="ident">StateChange</span>,
     },
     <span class="ident">conv</span>,
     <span class="ident">device</span>::{
@@ -1487,6 +1508,12 @@ invalidations or index format changes.
     <span class="ident">parent_id</span>: <span class="ident">id::DeviceId</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">context</span>: <span class="ident">RenderPassContext</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">is_ds_read_only</span>: <span class="ident">bool</span>,
+
+    <span class="comment">// Resource binding dedupe state.</span>
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serial-pass&quot;</span>, <span class="ident">serde</span>(<span class="ident">skip</span>))]</span>
+    <span class="ident">current_bind_groups</span>: <span class="ident">BindGroupStateChange</span>,
+    <span class="attribute">#[<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;serial-pass&quot;</span>, <span class="ident">serde</span>(<span class="ident">skip</span>))]</span>
+    <span class="ident">current_pipeline</span>: <span class="ident">StateChange</span><span class="op">&lt;</span><span class="ident">id::RenderPipelineId</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">RenderBundleEncoder</span> {
@@ -1527,6 +1554,9 @@ invalidations or index format changes.
                 }
                 <span class="prelude-val">None</span> =&gt; <span class="bool-val">false</span>,
             },
+
+            <span class="ident">current_bind_groups</span>: <span class="ident">BindGroupStateChange::new</span>(),
+            <span class="ident">current_pipeline</span>: <span class="ident">StateChange::new</span>(),
         })
     }
 
@@ -1544,6 +1574,9 @@ invalidations or index format changes.
                 <span class="ident">multiview</span>: <span class="prelude-val">None</span>,
             },
             <span class="ident">is_ds_read_only</span>: <span class="bool-val">false</span>,
+
+            <span class="ident">current_bind_groups</span>: <span class="ident">BindGroupStateChange::new</span>(),
+            <span class="ident">current_pipeline</span>: <span class="ident">StateChange::new</span>(),
         }
     }
 
@@ -1581,7 +1614,7 @@ invalidations or index format changes.
             <span class="ident">raw_dynamic_offsets</span>: <span class="ident">Vec::new</span>(),
             <span class="ident">flat_dynamic_offsets</span>: <span class="ident">Vec::new</span>(),
             <span class="ident">used_bind_groups</span>: <span class="number">0</span>,
-            <span class="ident">pipeline</span>: <span class="ident">StateChange::new</span>(),
+            <span class="ident">pipeline</span>: <span class="prelude-val">None</span>,
         };
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">commands</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">base</span>.<span class="ident">as_ref</span>();
@@ -1653,9 +1686,8 @@ invalidations or index format changes.
                 }
                 <span class="ident">RenderCommand::SetPipeline</span>(<span class="ident">pipeline_id</span>) =&gt; {
                     <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::SetPipelineRender</span>(<span class="ident">pipeline_id</span>);
-                    <span class="kw">if</span> <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">set_and_check_redundant</span>(<span class="ident">pipeline_id</span>) {
-                        <span class="kw">continue</span>;
-                    }
+
+                    <span class="ident">state</span>.<span class="ident">pipeline</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">pipeline_id</span>);
 
                     <span class="kw">let</span> <span class="ident">pipeline</span> <span class="op">=</span> <span class="ident">state</span>
                         .<span class="ident">trackers</span>
@@ -1771,7 +1803,7 @@ invalidations or index format changes.
                     <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Draw</span> {
                         <span class="ident">indexed</span>: <span class="bool-val">false</span>,
                         <span class="ident">indirect</span>: <span class="bool-val">false</span>,
-                        <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
+                        <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>,
                     };
                     <span class="kw">let</span> <span class="ident">vertex_limits</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">vertex_limits</span>();
                     <span class="kw">let</span> <span class="ident">last_vertex</span> <span class="op">=</span> <span class="ident">first_vertex</span> <span class="op">+</span> <span class="ident">vertex_count</span>;
@@ -1806,7 +1838,7 @@ invalidations or index format changes.
                     <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Draw</span> {
                         <span class="ident">indexed</span>: <span class="bool-val">true</span>,
                         <span class="ident">indirect</span>: <span class="bool-val">false</span>,
-                        <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
+                        <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>,
                     };
                     <span class="comment">//TODO: validate that base_vertex + max_index() is within the provided range</span>
                     <span class="kw">let</span> <span class="ident">vertex_limits</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">vertex_limits</span>();
@@ -1842,7 +1874,7 @@ invalidations or index format changes.
                     <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Draw</span> {
                         <span class="ident">indexed</span>: <span class="bool-val">false</span>,
                         <span class="ident">indirect</span>: <span class="bool-val">true</span>,
-                        <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
+                        <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>,
                     };
                     <span class="ident">device</span>
                         .<span class="ident">require_downlevel_flags</span>(<span class="ident">wgt::DownlevelFlags::INDIRECT_EXECUTION</span>)
@@ -1875,7 +1907,7 @@ invalidations or index format changes.
                     <span class="kw">let</span> <span class="ident">scope</span> <span class="op">=</span> <span class="ident">PassErrorScope::Draw</span> {
                         <span class="ident">indexed</span>: <span class="bool-val">true</span>,
                         <span class="ident">indirect</span>: <span class="bool-val">true</span>,
-                        <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>.<span class="ident">last_state</span>,
+                        <span class="ident">pipeline</span>: <span class="ident">state</span>.<span class="ident">pipeline</span>,
                     };
                     <span class="ident">device</span>
                         .<span class="ident">require_downlevel_flags</span>(<span class="ident">wgt::DownlevelFlags::INDIRECT_EXECUTION</span>)
@@ -2391,7 +2423,7 @@ invalidations or index format changes.
     <span class="ident">raw_dynamic_offsets</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">wgt::DynamicOffset</span><span class="op">&gt;</span>,
     <span class="ident">flat_dynamic_offsets</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">wgt::DynamicOffset</span><span class="op">&gt;</span>,
     <span class="ident">used_bind_groups</span>: <span class="ident">usize</span>,
-    <span class="ident">pipeline</span>: <span class="ident">StateChange</span><span class="op">&lt;</span><span class="ident">id::RenderPipelineId</span><span class="op">&gt;</span>,
+    <span class="ident">pipeline</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">id::RenderPipelineId</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">State</span> {
@@ -2623,17 +2655,23 @@ invalidations or index format changes.
         <span class="ident">offsets</span>: <span class="kw-2">*const</span> <span class="ident">DynamicOffset</span>,
         <span class="ident">offset_length</span>: <span class="ident">usize</span>,
     ) {
+        <span class="kw">let</span> <span class="ident">redundant</span> <span class="op">=</span> <span class="ident">bundle</span>.<span class="ident">current_bind_groups</span>.<span class="ident">set_and_check_redundant</span>(
+            <span class="ident">bind_group_id</span>,
+            <span class="ident">index</span>,
+            <span class="kw-2">&amp;mut</span> <span class="ident">bundle</span>.<span class="ident">base</span>.<span class="ident">dynamic_offsets</span>,
+            <span class="ident">offsets</span>,
+            <span class="ident">offset_length</span>,
+        );
+
+        <span class="kw">if</span> <span class="ident">redundant</span> {
+            <span class="kw">return</span>;
+        }
+
         <span class="ident">bundle</span>.<span class="ident">base</span>.<span class="ident">commands</span>.<span class="ident">push</span>(<span class="ident">RenderCommand::SetBindGroup</span> {
             <span class="ident">index</span>: <span class="ident">index</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
             <span class="ident">num_dynamic_offsets</span>: <span class="ident">offset_length</span>.<span class="ident">try_into</span>().<span class="ident">unwrap</span>(),
             <span class="ident">bind_group_id</span>,
         });
-        <span class="kw">if</span> <span class="ident">offset_length</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="ident">bundle</span>
-                .<span class="ident">base</span>
-                .<span class="ident">dynamic_offsets</span>
-                .<span class="ident">extend_from_slice</span>(<span class="ident">slice::from_raw_parts</span>(<span class="ident">offsets</span>, <span class="ident">offset_length</span>));
-        }
     }
 
     <span class="attribute">#[<span class="ident">no_mangle</span>]</span>
@@ -2641,6 +2679,10 @@ invalidations or index format changes.
         <span class="ident">bundle</span>: <span class="kw-2">&amp;mut</span> <span class="ident">RenderBundleEncoder</span>,
         <span class="ident">pipeline_id</span>: <span class="ident">id::RenderPipelineId</span>,
     ) {
+        <span class="kw">if</span> <span class="ident">bundle</span>.<span class="ident">current_pipeline</span>.<span class="ident">set_and_check_redundant</span>(<span class="ident">pipeline_id</span>) {
+            <span class="kw">return</span>;
+        }
+
         <span class="ident">bundle</span>
             .<span class="ident">base</span>
             .<span class="ident">commands</span>
@@ -2796,5 +2838,5 @@ invalidations or index format changes.
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (879aff385 2022-04-20)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_core" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (18f314e70 2022-04-24)" ></div>
 </body></html>
