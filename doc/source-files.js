@@ -20,7 +20,6 @@ sourcesIndex["hashbrown"] = {"name":"","dirs":[{"name":"external_trait_impls","f
 sourcesIndex["hexf_parse"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["indexmap"] = {"name":"","dirs":[{"name":"map","dirs":[{"name":"core","files":["raw.rs"]}],"files":["core.rs"]}],"files":["equivalent.rs","lib.rs","macros.rs","map.rs","mutable_keys.rs","set.rs","util.rs"]};
 sourcesIndex["inplace_it"] = {"name":"","dirs":[{"name":"guards","files":["mod.rs","slice_memory_guard.rs","uninitialized_slice_memory_guard.rs"]}],"files":["alloc_array.rs","fixed_array.rs","lib.rs"]};
-sourcesIndex["instant"] = {"name":"","files":["lib.rs","native.rs"]};
 sourcesIndex["khronos_egl"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["libc"] = {"name":"","dirs":[{"name":"unix","dirs":[{"name":"linux_like","dirs":[{"name":"linux","dirs":[{"name":"arch","dirs":[{"name":"generic","files":["mod.rs"]}],"files":["mod.rs"]},{"name":"gnu","dirs":[{"name":"b64","dirs":[{"name":"x86_64","files":["align.rs","mod.rs","not_x32.rs"]}],"files":["mod.rs"]}],"files":["align.rs","mod.rs"]}],"files":["align.rs","mod.rs"]}],"files":["mod.rs"]}],"files":["align.rs","mod.rs"]}],"files":["fixed_width_ints.rs","lib.rs","macros.rs"]};
 sourcesIndex["libloading"] = {"name":"","dirs":[{"name":"os","dirs":[{"name":"unix","files":["consts.rs","mod.rs"]}],"files":["mod.rs"]}],"files":["changelog.rs","error.rs","lib.rs","util.rs"]};
