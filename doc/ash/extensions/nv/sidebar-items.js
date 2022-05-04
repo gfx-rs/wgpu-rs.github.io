@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["DeviceDiagnosticCheckpoints","https://www.khronos.org/registry/vulkan/specs/1.3-extensions/man/html/VK_NV_device_diagnostic_checkpoints.html"],["MeshShader",""],["RayTracing",""]]});

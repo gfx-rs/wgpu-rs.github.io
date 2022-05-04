@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["codespan_reporting"] = [{"text":"impl <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/convert/trait.Into.html\" title=\"trait core::convert::Into\">Into</a>&lt;<a class=\"enum\" href=\"termcolor/enum.ColorChoice.html\" title=\"enum termcolor::ColorChoice\">ColorChoice</a>&gt; for <a class=\"struct\" href=\"codespan_reporting/term/struct.ColorArg.html\" title=\"struct codespan_reporting::term::ColorArg\">ColorArg</a>","synthetic":false,"types":["codespan_reporting::term::ColorArg"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["QueueSubmitError",""],["QueueWriteError",""],["TempResource",""]],"struct":[["InvalidQueue",""],["SubmittedWorkDoneClosure",""]],"type":[["OnSubmittedWorkDoneCallback",""]]});
