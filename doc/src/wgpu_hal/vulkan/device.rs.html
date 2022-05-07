@@ -3667,7 +3667,7 @@
         <span class="ident">wait_value</span>: <span class="ident"><span class="kw">crate</span>::FenceValue</span>,
         <span class="ident">timeout_ms</span>: <span class="ident">u32</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident"><span class="kw">crate</span>::DeviceError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">timeout_us</span> <span class="op">=</span> <span class="ident">timeout_ms</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident"><span class="kw">super</span>::MILLIS_TO_NANOS</span>;
+        <span class="kw">let</span> <span class="ident">timeout_ns</span> <span class="op">=</span> <span class="ident">timeout_ms</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident"><span class="kw">super</span>::MILLIS_TO_NANOS</span>;
         <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">fence</span> {
             <span class="ident"><span class="kw">super</span>::Fence::TimelineSemaphore</span>(<span class="ident">raw</span>) =&gt; {
                 <span class="kw">let</span> <span class="ident">semaphores</span> <span class="op">=</span> [<span class="ident">raw</span>];
@@ -3677,10 +3677,10 @@
                     .<span class="ident">values</span>(<span class="kw-2">&amp;</span><span class="ident">values</span>);
                 <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">extension_fns</span>.<span class="ident">timeline_semaphore</span> {
                     <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">super</span>::ExtensionFn::Extension</span>(<span class="kw-2">ref</span> <span class="ident">ext</span>)) =&gt; {
-                        <span class="ident">ext</span>.<span class="ident">wait_semaphores</span>(<span class="kw-2">&amp;</span><span class="ident">vk_info</span>, <span class="ident">timeout_us</span>)
+                        <span class="ident">ext</span>.<span class="ident">wait_semaphores</span>(<span class="kw-2">&amp;</span><span class="ident">vk_info</span>, <span class="ident">timeout_ns</span>)
                     }
                     <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">super</span>::ExtensionFn::Promoted</span>) =&gt; {
-                        <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">wait_semaphores</span>(<span class="kw-2">&amp;</span><span class="ident">vk_info</span>, <span class="ident">timeout_us</span>)
+                        <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">wait_semaphores</span>(<span class="kw-2">&amp;</span><span class="ident">vk_info</span>, <span class="ident">timeout_ns</span>)
                     }
                     <span class="prelude-val">None</span> =&gt; <span class="macro">unreachable!</span>(),
                 };
@@ -3700,7 +3700,7 @@
                 } <span class="kw">else</span> {
                     <span class="kw">match</span> <span class="ident">active</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span><span class="op">&amp;&amp;</span>(<span class="ident">value</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">value</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">wait_value</span>) {
                         <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>(<span class="kw">_</span>, <span class="ident">raw</span>)) =&gt; {
-                            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">wait_for_fences</span>(<span class="kw-2">&amp;</span>[<span class="ident">raw</span>], <span class="bool-val">true</span>, <span class="ident">timeout_us</span>) {
+                            <span class="kw">match</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">raw</span>.<span class="ident">wait_for_fences</span>(<span class="kw-2">&amp;</span>[<span class="ident">raw</span>], <span class="bool-val">true</span>, <span class="ident">timeout_ns</span>) {
                                 <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">true</span>),
                                 <span class="prelude-val">Err</span>(<span class="ident">vk::Result::TIMEOUT</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="bool-val">false</span>),
                                 <span class="prelude-val">Err</span>(<span class="ident">other</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">other</span>.<span class="ident">into</span>()),
@@ -3774,5 +3774,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (e1b71feb5 2022-05-03)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (77652b9ef 2022-05-06)" ></div>
 </body></html>
