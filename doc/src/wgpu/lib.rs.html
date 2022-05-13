@@ -4650,11 +4650,11 @@
 <span class="doccomment">/// Corresponds to [WebGPU `GPURenderPassColorAttachment`](</span>
 <span class="doccomment">/// https://gpuweb.github.io/gpuweb/#color-attachments).</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderPassColorAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderPassColorAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;tex</span><span class="op">&gt;</span> {
     <span class="doccomment">/// The view to use as an attachment.</span>
-    <span class="kw">pub</span> <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TextureView</span>,
+    <span class="kw">pub</span> <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tex</span> <span class="ident">TextureView</span>,
     <span class="doccomment">/// The view that will receive the resolved output if multisampling is used.</span>
-    <span class="kw">pub</span> <span class="ident">resolve_target</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TextureView</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">resolve_target</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;tex</span> <span class="ident">TextureView</span><span class="op">&gt;</span>,
     <span class="doccomment">/// What operations will be performed on this color attachment.</span>
     <span class="kw">pub</span> <span class="ident">ops</span>: <span class="ident">Operations</span><span class="op">&lt;</span><span class="ident">Color</span><span class="op">&gt;</span>,
 }
@@ -4666,9 +4666,9 @@
 <span class="doccomment">/// Corresponds to [WebGPU `GPURenderPassDepthStencilAttachment`](</span>
 <span class="doccomment">/// https://gpuweb.github.io/gpuweb/#depth-stencil-attachments).</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderPassDepthStencilAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderPassDepthStencilAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;tex</span><span class="op">&gt;</span> {
     <span class="doccomment">/// The view to use as an attachment.</span>
-    <span class="kw">pub</span> <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">TextureView</span>,
+    <span class="kw">pub</span> <span class="ident">view</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tex</span> <span class="ident">TextureView</span>,
     <span class="doccomment">/// What operations will be performed on the depth part of the attachment.</span>
     <span class="kw">pub</span> <span class="ident">depth_ops</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Operations</span><span class="op">&lt;</span><span class="ident">f32</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="doccomment">/// What operations will be performed on the stencil part of the attachment.</span>
@@ -4869,19 +4869,19 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// For use with [`CommandEncoder::begin_render_pass`].</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// Note: separate lifetimes are needed because the texture views</span>
-<span class="doccomment">/// have to live as long as the pass is recorded, while everything else doesn&#39;t.</span>
+<span class="doccomment">/// Note: separate lifetimes are needed because the texture views (`&#39;tex`)</span>
+<span class="doccomment">/// have to live as long as the pass is recorded, while everything else (`&#39;desc`) doesn&#39;t.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Corresponds to [WebGPU `GPURenderPassDescriptor`](</span>
 <span class="doccomment">/// https://gpuweb.github.io/gpuweb/#dictdef-gpurenderpassdescriptor).</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderPassDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderPassDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;tex</span>, <span class="lifetime">&#39;desc</span><span class="op">&gt;</span> {
     <span class="doccomment">/// Debug label of the render pass. This will show up in graphics debuggers for easy identification.</span>
-    <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;desc</span><span class="op">&gt;</span>,
     <span class="doccomment">/// The color attachments of the render pass.</span>
-    <span class="kw">pub</span> <span class="ident">color_attachments</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b</span> [<span class="ident">RenderPassColorAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>],
+    <span class="kw">pub</span> <span class="ident">color_attachments</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;desc</span> [<span class="ident">RenderPassColorAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;tex</span><span class="op">&gt;</span>],
     <span class="doccomment">/// The depth and stencil attachment of the render pass, if any.</span>
-    <span class="kw">pub</span> <span class="ident">depth_stencil_attachment</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">RenderPassDepthStencilAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">depth_stencil_attachment</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">RenderPassDepthStencilAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;tex</span><span class="op">&gt;</span><span class="op">&gt;</span>,
 }
 
 <span class="doccomment">/// Describes how the vertex buffer is interpreted.</span>
@@ -5970,10 +5970,10 @@
     <span class="doccomment">/// Begins recording of a render pass.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// This function returns a [`RenderPass`] object which records a single render pass.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">begin_render_pass</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">RenderPassDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="ident">RenderPass</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">begin_render_pass</span><span class="op">&lt;</span><span class="lifetime">&#39;pass</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="lifetime">&#39;pass</span> <span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident">RenderPassDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;pass</span>, <span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="ident">RenderPass</span><span class="op">&lt;</span><span class="lifetime">&#39;pass</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">id</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
         <span class="ident">RenderPass</span> {
             <span class="ident">id</span>: <span class="ident">Context::command_encoder_begin_render_pass</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="ident">id</span>, <span class="ident">desc</span>),
