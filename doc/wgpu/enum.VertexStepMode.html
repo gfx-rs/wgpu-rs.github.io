@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Rate that determines when vertex data is advanced."><meta name="keywords" content="rust, rustlang, rust-lang, VertexStepMode"><title>VertexStepMode in wgpu - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script src="../crates.js"></script><script defer src="../main.js"></script>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Whether a vertex buffer is indexed by vertex or by instance."><meta name="keywords" content="rust, rustlang, rust-lang, VertexStepMode"><title>VertexStepMode in wgpu - Rust</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../normalize.css"><link rel="stylesheet" type="text/css" href="../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../dark.css" disabled><link rel="stylesheet" type="text/css" href="../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../storage.js"></script><script src="../crates.js"></script><script defer src="../main.js"></script>
     <noscript><link rel="stylesheet" href="../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../favicon.svg"></head><body class="rustdoc enum"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../wgpu/index.html"><div class="logo-container"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/master/logo.png" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
@@ -12,7 +12,41 @@
 pub enum VertexStepMode {
     Vertex,
     Instance,
-}</code></pre></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Rate that determines when vertex data is advanced.</p>
+}</code></pre></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Whether a vertex buffer is indexed by vertex or by instance.</p>
+<p>Consider a call to <a href="../wgpu/struct.RenderPass.html#method.draw"><code>RenderPass::draw</code></a> like this:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore"><code><span class="ident">render_pass</span>.<span class="ident">draw</span>(<span class="ident">vertices</span>, <span class="ident">instances</span>)</code></pre></div>
+<p>where <code>vertices</code> is a <code>Range&lt;u32&gt;</code> of vertex indices, and
+<code>instances</code> is a <code>Range&lt;u32&gt;</code> of instance indices.</p>
+<p>For this call, <code>wgpu</code> invokes the vertex shader entry point once
+for every possible <code>(v, i)</code> pair, where <code>v</code> is drawn from
+<code>vertices</code> and <code>i</code> is drawn from <code>instances</code>. These invocations
+may happen in any order, and will usually run in parallel.</p>
+<p>Each vertex buffer has a step mode, established by the
+<a href="../wgpu/struct.VertexBufferLayout.html#structfield.step_mode"><code>step_mode</code></a> field of its <a href="../wgpu/struct.VertexBufferLayout.html"><code>VertexBufferLayout</code></a>, given when the
+pipeline was created. Buffers whose step mode is <a href="enum.VertexStepMode.html#variant.Vertex"><code>Vertex</code></a> use
+<code>v</code> as the index into their contents, whereas buffers whose step
+mode is <a href="enum.VertexStepMode.html#variant.Instance"><code>Instance</code></a> use <code>i</code>. The indicated buffer element then
+contributes zero or more attribute values for the <code>(v, i)</code> vertex
+shader invocation to use, based on the <a href="../wgpu/struct.VertexBufferLayout.html"><code>VertexBufferLayout</code></a>’s
+<a href="../wgpu/struct.VertexBufferLayout.html#structfield.attributes"><code>attributes</code></a> list.</p>
+<p>You can visualize the results from all these vertex shader
+invocations as a matrix with a row for each <code>i</code> from <code>instances</code>,
+and with a column for each <code>v</code> from <code>vertices</code>. In one sense, <code>v</code>
+and <code>i</code> are symmetrical: both are used to index vertex buffers and
+provide attribute values.  But the key difference between <code>v</code> and
+<code>i</code> is that line and triangle primitives are built from the values
+of each row, along which <code>i</code> is constant and <code>v</code> varies, not the
+columns.</p>
+<p>An indexed draw call works similarly:</p>
+
+<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore"><code><span class="ident">render_pass</span>.<span class="ident">draw_indexed</span>(<span class="ident">indices</span>, <span class="ident">base_vertex</span>, <span class="ident">instances</span>)</code></pre></div>
+<p>The only difference is that <code>v</code> values are drawn from the contents
+of the index buffer—specifically, the subrange of the index
+buffer given by <code>indices</code>—instead of simply being sequential
+integers, as they are in a <code>draw</code> call.</p>
+<p>A non-instanced call, where <code>instances</code> is <code>0..1</code>, is simply a
+matrix with only one row.</p>
 <p>Corresponds to <a href="https://gpuweb.github.io/gpuweb/#enumdef-gpuvertexstepmode">WebGPU <code>GPUVertexStepMode</code></a>.</p>
 </div></details><h2 id="variants" class="variants small-section-header">Variants<a href="#variants" class="anchor"></a></h2><h3 id="variant.Vertex" class="variant small-section-header"><a href="#variant.Vertex" class="anchor field"></a><code>Vertex</code></h3><div class="docblock"><p>Vertex data is advanced every vertex.</p>
 </div><h3 id="variant.Instance" class="variant small-section-header"><a href="#variant.Instance" class="anchor field"></a><code>Instance</code></h3><div class="docblock"><p>Vertex data is advanced every instance.</p>
