@@ -1010,7 +1010,7 @@
             <span class="ident">vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL</span>
         }
         <span class="kw">_</span> =&gt; {
-            <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">is_empty</span>() {
+            <span class="kw">if</span> <span class="ident">usage</span> <span class="op">==</span> <span class="ident"><span class="kw">crate</span>::TextureUses::PRESENT</span> {
                 <span class="ident">vk::ImageLayout::PRESENT_SRC_KHR</span>
             } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">is_color</span> {
                 <span class="ident">vk::ImageLayout::GENERAL</span>
@@ -1040,7 +1040,7 @@
     ) {
         <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT</span>;
     }
-    <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_WRITE</span>) {
+    <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ_WRITE</span>) {
         <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::ImageUsageFlags::STORAGE</span>;
     }
     <span class="ident">flags</span>
@@ -1086,12 +1086,12 @@
         <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">shader_stages</span>;
         <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::SHADER_READ</span>;
     }
-    <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_WRITE</span>) {
+    <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ_WRITE</span>) {
         <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">shader_stages</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::SHADER_WRITE</span>;
+        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::SHADER_READ</span> <span class="op">|</span> <span class="ident">vk::AccessFlags::SHADER_WRITE</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">usage</span> <span class="op">==</span> <span class="ident"><span class="kw">crate</span>::TextureUses::UNINITIALIZED</span> <span class="op">|</span><span class="op">|</span> <span class="ident">usage</span>.<span class="ident">is_empty</span>() {
+    <span class="kw">if</span> <span class="ident">usage</span> <span class="op">==</span> <span class="ident"><span class="kw">crate</span>::TextureUses::UNINITIALIZED</span> <span class="op">|</span><span class="op">|</span> <span class="ident">usage</span> <span class="op">==</span> <span class="ident"><span class="kw">crate</span>::TextureUses::PRESENT</span> {
         (
             <span class="ident">vk::PipelineStageFlags::TOP_OF_PIPE</span>,
             <span class="ident">vk::AccessFlags::empty</span>(),
@@ -1119,7 +1119,7 @@
         <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_READ</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_WRITE</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">vk::ImageUsageFlags::STORAGE</span>) {
-        <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_WRITE</span>;
+        <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ_WRITE</span>;
     }
     <span class="ident">bits</span>
 }
@@ -1267,7 +1267,7 @@
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::UNIFORM</span>) {
         <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::BufferUsageFlags::UNIFORM_BUFFER</span>;
     }
-    <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::STORAGE_READ</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::BufferUses::STORAGE_WRITE</span>) {
+    <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::STORAGE_READ</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::BufferUses::STORAGE_READ_WRITE</span>) {
         <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::BufferUsageFlags::STORAGE_BUFFER</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::INDEX</span>) {
@@ -1315,9 +1315,9 @@
         <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">shader_stages</span>;
         <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::SHADER_READ</span>;
     }
-    <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::STORAGE_WRITE</span>) {
+    <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::STORAGE_READ_WRITE</span>) {
         <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">shader_stages</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::SHADER_WRITE</span>;
+        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::SHADER_READ</span> <span class="op">|</span> <span class="ident">vk::AccessFlags::SHADER_WRITE</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::INDEX</span>) {
         <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::PipelineStageFlags::VERTEX_INPUT</span>;

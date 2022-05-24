@@ -1200,6 +1200,30 @@
 <span id="1193">1193</span>
 <span id="1194">1194</span>
 <span id="1195">1195</span>
+<span id="1196">1196</span>
+<span id="1197">1197</span>
+<span id="1198">1198</span>
+<span id="1199">1199</span>
+<span id="1200">1200</span>
+<span id="1201">1201</span>
+<span id="1202">1202</span>
+<span id="1203">1203</span>
+<span id="1204">1204</span>
+<span id="1205">1205</span>
+<span id="1206">1206</span>
+<span id="1207">1207</span>
+<span id="1208">1208</span>
+<span id="1209">1209</span>
+<span id="1210">1210</span>
+<span id="1211">1211</span>
+<span id="1212">1212</span>
+<span id="1213">1213</span>
+<span id="1214">1214</span>
+<span id="1215">1215</span>
+<span id="1216">1216</span>
+<span id="1217">1217</span>
+<span id="1218">1218</span>
+<span id="1219">1219</span>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library describes the internal unsafe graphics abstraction API.
  *  It follows WebGPU for the most part, re-using wgpu-types,
  *  with the following deviations:
@@ -1830,53 +1854,77 @@
 
 <span class="macro">bitflags::bitflags!</span> {
     <span class="doccomment">/// Similar to `wgt::BufferUsages` but for internal use.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferUses</span>: <span class="ident">u32</span> {
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferUses</span>: <span class="ident">u16</span> {
+        <span class="doccomment">/// The argument to a read-only mapping.</span>
         <span class="kw">const</span> <span class="ident">MAP_READ</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">0</span>;
+        <span class="doccomment">/// The argument to a write-only mapping.</span>
         <span class="kw">const</span> <span class="ident">MAP_WRITE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
+        <span class="doccomment">/// The source of a hardware copy.</span>
         <span class="kw">const</span> <span class="ident">COPY_SRC</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
+        <span class="doccomment">/// The destination of a hardware copy.</span>
         <span class="kw">const</span> <span class="ident">COPY_DST</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
+        <span class="doccomment">/// The index buffer used for drawing.</span>
         <span class="kw">const</span> <span class="ident">INDEX</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
+        <span class="doccomment">/// A vertex buffer used for drawing.</span>
         <span class="kw">const</span> <span class="ident">VERTEX</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
+        <span class="doccomment">/// A uniform buffer bound in a bind group.</span>
         <span class="kw">const</span> <span class="ident">UNIFORM</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">6</span>;
+        <span class="doccomment">/// A read-only storage buffer used in a bind group.</span>
         <span class="kw">const</span> <span class="ident">STORAGE_READ</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">7</span>;
-        <span class="kw">const</span> <span class="ident">STORAGE_WRITE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>;
+        <span class="doccomment">/// A read-write or write-only buffer used in a bind group.</span>
+        <span class="kw">const</span> <span class="ident">STORAGE_READ_WRITE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>;
+        <span class="doccomment">/// The indirect or count buffer in a indirect draw or dispatch.</span>
         <span class="kw">const</span> <span class="ident">INDIRECT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">9</span>;
-        <span class="doccomment">/// The combination of usages that can be used together (read-only).</span>
+        <span class="doccomment">/// The combination of states that a buffer may be in _at the same time_.</span>
         <span class="kw">const</span> <span class="ident">INCLUSIVE</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::MAP_READ</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::COPY_SRC</span>.<span class="ident">bits</span> <span class="op">|</span>
             <span class="ident"><span class="self">Self</span>::INDEX</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::VERTEX</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::UNIFORM</span>.<span class="ident">bits</span> <span class="op">|</span>
             <span class="ident"><span class="self">Self</span>::STORAGE_READ</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::INDIRECT</span>.<span class="ident">bits</span>;
-        <span class="doccomment">/// The combination of exclusive usages (write-only and read-write).</span>
-        <span class="doccomment">/// These usages may still show up with others, but can&#39;t automatically be combined.</span>
-        <span class="kw">const</span> <span class="ident">EXCLUSIVE</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::MAP_WRITE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::COPY_DST</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::STORAGE_WRITE</span>.<span class="ident">bits</span>;
+        <span class="doccomment">/// The combination of states that a buffer must exclusively be in.</span>
+        <span class="kw">const</span> <span class="ident">EXCLUSIVE</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::MAP_WRITE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::COPY_DST</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::STORAGE_READ_WRITE</span>.<span class="ident">bits</span>;
         <span class="doccomment">/// The combination of all usages that the are guaranteed to be be ordered by the hardware.</span>
-        <span class="doccomment">/// If a usage is not ordered, then even if it doesn&#39;t change between draw calls, there</span>
-        <span class="doccomment">/// still need to be pipeline barriers inserted for synchronization.</span>
+        <span class="doccomment">/// If a usage is ordered, then if the buffer state doesn&#39;t change between draw calls, there</span>
+        <span class="doccomment">/// are no barriers needed for synchronization.</span>
         <span class="kw">const</span> <span class="ident">ORDERED</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::INCLUSIVE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::MAP_WRITE</span>.<span class="ident">bits</span>;
     }
 }
 
 <span class="macro">bitflags::bitflags!</span> {
     <span class="doccomment">/// Similar to `wgt::TextureUsages` but for internal use.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureUses</span>: <span class="ident">u32</span> {
-        <span class="kw">const</span> <span class="ident">COPY_SRC</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">0</span>;
-        <span class="kw">const</span> <span class="ident">COPY_DST</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
-        <span class="kw">const</span> <span class="ident">RESOURCE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
-        <span class="kw">const</span> <span class="ident">COLOR_TARGET</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
-        <span class="kw">const</span> <span class="ident">DEPTH_STENCIL_READ</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
-        <span class="kw">const</span> <span class="ident">DEPTH_STENCIL_WRITE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
-        <span class="kw">const</span> <span class="ident">STORAGE_READ</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">6</span>;
-        <span class="kw">const</span> <span class="ident">STORAGE_WRITE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">7</span>;
-        <span class="doccomment">/// The combination of usages that can be used together (read-only).</span>
+    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureUses</span>: <span class="ident">u16</span> {
+        <span class="doccomment">/// The texture is in unknown state.</span>
+        <span class="kw">const</span> <span class="ident">UNINITIALIZED</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">0</span>;
+        <span class="doccomment">/// Ready to present image to the surface.</span>
+        <span class="kw">const</span> <span class="ident">PRESENT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
+        <span class="doccomment">/// The source of a hardware copy.</span>
+        <span class="kw">const</span> <span class="ident">COPY_SRC</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
+        <span class="doccomment">/// The destination of a hardware copy.</span>
+        <span class="kw">const</span> <span class="ident">COPY_DST</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
+        <span class="doccomment">/// Read-only sampled or fetched resource.</span>
+        <span class="kw">const</span> <span class="ident">RESOURCE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
+        <span class="doccomment">/// The color target of a renderpass.</span>
+        <span class="kw">const</span> <span class="ident">COLOR_TARGET</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
+        <span class="doccomment">/// Read-only depth stencil usage.</span>
+        <span class="kw">const</span> <span class="ident">DEPTH_STENCIL_READ</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">6</span>;
+        <span class="doccomment">/// Read-write depth stencil usage</span>
+        <span class="kw">const</span> <span class="ident">DEPTH_STENCIL_WRITE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">7</span>;
+        <span class="doccomment">/// Read-only storage buffer usage. Corresponds to a UAV in d3d, so is exclusive, despite being read only.</span>
+        <span class="kw">const</span> <span class="ident">STORAGE_READ</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>;
+        <span class="doccomment">/// Read-write or write-only storage buffer usage.</span>
+        <span class="kw">const</span> <span class="ident">STORAGE_READ_WRITE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">9</span>;
+        <span class="doccomment">/// The combination of states that a texture may be in _at the same time_.</span>
         <span class="kw">const</span> <span class="ident">INCLUSIVE</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::COPY_SRC</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::RESOURCE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::DEPTH_STENCIL_READ</span>.<span class="ident">bits</span>;
-        <span class="doccomment">/// The combination of exclusive usages (write-only and read-write).</span>
-        <span class="doccomment">/// These usages may still show up with others, but can&#39;t automatically be combined.</span>
-        <span class="kw">const</span> <span class="ident">EXCLUSIVE</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::COPY_DST</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::COLOR_TARGET</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::DEPTH_STENCIL_WRITE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::STORAGE_READ</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::STORAGE_WRITE</span>.<span class="ident">bits</span>;
+        <span class="doccomment">/// The combination of states that a texture must exclusively be in.</span>
+        <span class="kw">const</span> <span class="ident">EXCLUSIVE</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::COPY_DST</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::COLOR_TARGET</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::DEPTH_STENCIL_WRITE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::STORAGE_READ</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::STORAGE_READ_WRITE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::PRESENT</span>.<span class="ident">bits</span>;
         <span class="doccomment">/// The combination of all usages that the are guaranteed to be be ordered by the hardware.</span>
-        <span class="doccomment">/// If a usage is not ordered, then even if it doesn&#39;t change between draw calls, there</span>
-        <span class="doccomment">/// still need to be pipeline barriers inserted for synchronization.</span>
+        <span class="doccomment">/// If a usage is ordered, then if the texture state doesn&#39;t change between draw calls, there</span>
+        <span class="doccomment">/// are no barriers needed for synchronization.</span>
         <span class="kw">const</span> <span class="ident">ORDERED</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::INCLUSIVE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::COLOR_TARGET</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::DEPTH_STENCIL_WRITE</span>.<span class="ident">bits</span> <span class="op">|</span> <span class="ident"><span class="self">Self</span>::STORAGE_READ</span>.<span class="ident">bits</span>;
-        <span class="comment">//TODO: remove this</span>
-        <span class="kw">const</span> <span class="ident">UNINITIALIZED</span> <span class="op">=</span> <span class="number">0xFFFF</span>;
+
+        <span class="doccomment">/// Flag used by the wgpu-core texture tracker to say a texture is in different states for every sub-resource</span>
+        <span class="kw">const</span> <span class="ident">COMPLEX</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">10</span>;
+        <span class="doccomment">/// Flag used by the wgpu-core texture tracker to say that the tracker does not know the state of the sub-resource.</span>
+        <span class="doccomment">/// This is different from UNINITIALIZED as that says the tracker does know, but the texture has not been initialized.</span>
+        <span class="kw">const</span> <span class="ident">UNKNOWN</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">11</span>;
     }
 }
 
