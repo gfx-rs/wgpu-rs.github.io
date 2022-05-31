@@ -3512,6 +3512,23 @@
 <span id="3503">3503</span>
 <span id="3504">3504</span>
 <span id="3505">3505</span>
+<span id="3506">3506</span>
+<span id="3507">3507</span>
+<span id="3508">3508</span>
+<span id="3509">3509</span>
+<span id="3510">3510</span>
+<span id="3511">3511</span>
+<span id="3512">3512</span>
+<span id="3513">3513</span>
+<span id="3514">3514</span>
+<span id="3515">3515</span>
+<span id="3516">3516</span>
+<span id="3517">3517</span>
+<span id="3518">3518</span>
+<span id="3519">3519</span>
+<span id="3520">3520</span>
+<span id="3521">3521</span>
+<span id="3522">3522</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! To start using the API, create an [`Instance`].</span>
@@ -3705,8 +3722,6 @@
     <span class="kw">type</span> <span class="ident">RequestAdapterFuture</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::AdapterId</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
     <span class="kw">type</span> <span class="ident">RequestDeviceFuture</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident"><span class="self">Self</span>::DeviceId</span>, <span class="ident"><span class="self">Self</span>::QueueId</span>), <span class="ident">RequestDeviceError</span><span class="op">&gt;</span><span class="op">&gt;</span>
         <span class="op">+</span> <span class="ident">Send</span>;
-    <span class="kw">type</span> <span class="ident">MapAsyncFuture</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BufferAsyncError</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
-    <span class="kw">type</span> <span class="ident">OnSubmittedWorkDoneFuture</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> ()<span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
     <span class="kw">type</span> <span class="ident">PopErrorScopeFuture</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Error</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
 
     <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">backends</span>: <span class="ident">Backends</span>) -&gt; <span class="self">Self</span>;
@@ -3850,7 +3865,11 @@
         <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::BufferId</span>,
         <span class="ident">mode</span>: <span class="ident">MapMode</span>,
         <span class="ident">range</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">BufferAddress</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="ident"><span class="self">Self</span>::MapAsyncFuture</span>;
+        <span class="comment">// Note: we keep this as an `impl` through the context because the native backend</span>
+        <span class="comment">// needs to wrap it with a wrapping closure. queue_on_submitted_work_done doesn&#39;t</span>
+        <span class="comment">// need this wrapping closure, so can be made a Box immediately.</span>
+        <span class="ident">callback</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>(<span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BufferAsyncError</span><span class="op">&gt;</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    );
     <span class="kw">fn</span> <span class="ident">buffer_get_mapped_range</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::BufferId</span>,
@@ -4009,7 +4028,12 @@
     <span class="kw">fn</span> <span class="ident">queue_on_submitted_work_done</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::QueueId</span>,
-    ) -&gt; <span class="ident"><span class="self">Self</span>::OnSubmittedWorkDoneFuture</span>;
+        <span class="comment">// Note: we force the caller to box this because neither backend needs to</span>
+        <span class="comment">// wrap the callback and this prevents us from needing to make more functions</span>
+        <span class="comment">// generic than we have to. `buffer_map_async` needs to be wrapped on the native</span>
+        <span class="comment">// backend, so we don&#39;t box until after it has been wrapped.</span>
+        <span class="ident">callback</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">FnOnce</span>() <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span><span class="op">&gt;</span>,
+    );
 
     <span class="kw">fn</span> <span class="ident">device_start_capture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::DeviceId</span>);
     <span class="kw">fn</span> <span class="ident">device_stop_capture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::DeviceId</span>);
@@ -5893,20 +5917,20 @@
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">BufferSlice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="comment">//TODO: fn slice(&amp;self) -&gt; Self</span>
-
-    <span class="doccomment">/// Map the buffer. Buffer is ready to map once the future is resolved.</span>
+    <span class="doccomment">/// Map the buffer. Buffer is ready to map once the callback is called.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// For the future to complete, `device.poll(...)` must be called elsewhere in the runtime, possibly integrated</span>
-    <span class="doccomment">/// into an event loop, run on a separate thread, or continually polled in the same task runtime that this</span>
-    <span class="doccomment">/// future will be run on.</span>
+    <span class="doccomment">/// For the callback to complete, either `queue.submit(..)`, `instance.poll_all(..)`, or `device.poll(..)`</span>
+    <span class="doccomment">/// must be called elsewhere in the runtime, possibly integrated into an event loop or run on a separate thread.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// It&#39;s expected that wgpu will eventually supply its own event loop infrastructure that will be easy to integrate</span>
-    <span class="doccomment">/// into other event loops, like winit&#39;s.</span>
+    <span class="doccomment">/// The callback will be called on the thread that first calls the above functions after the gpu work</span>
+    <span class="doccomment">/// has completed. There are no restrictions on the code you can run in the callback, however on native the</span>
+    <span class="doccomment">/// call to the function will not complete until the callback returns, so prefer keeping callbacks short</span>
+    <span class="doccomment">/// and used to set flags, send messages, etc.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_async</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">mode</span>: <span class="ident">MapMode</span>,
-    ) -&gt; <span class="kw">impl</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BufferAsyncError</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> {
+        <span class="ident">callback</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>(<span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">BufferAsyncError</span><span class="op">&gt;</span>) <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>,
+    ) {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mc</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">map_context</span>.<span class="ident">lock</span>();
         <span class="macro">assert_eq!</span>(
             <span class="ident">mc</span>.<span class="ident">initial_range</span>,
@@ -5925,6 +5949,7 @@
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">id</span>,
             <span class="ident">mode</span>,
             <span class="self">self</span>.<span class="ident">offset</span>..<span class="ident">end</span>,
+            <span class="ident">callback</span>,
         )
     }
 
@@ -6897,10 +6922,19 @@
         <span class="ident">Context::queue_get_timestamp_period</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
     }
 
-    <span class="doccomment">/// Returns a future that resolves once all the work submitted by this point</span>
-    <span class="doccomment">/// is done processing on GPU.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">on_submitted_work_done</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> ()<span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span> {
-        <span class="ident">Context::queue_on_submitted_work_done</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>)
+    <span class="doccomment">/// Registers a callback when the previous call to submit finishes running on the gpu. This callback</span>
+    <span class="doccomment">/// being called implies that all mapped buffer callbacks attached to the same submission have also</span>
+    <span class="doccomment">/// been called.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// For the callback to complete, either `queue.submit(..)`, `instance.poll_all(..)`, or `device.poll(..)`</span>
+    <span class="doccomment">/// must be called elsewhere in the runtime, possibly integrated into an event loop or run on a separate thread.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// The callback will be called on the thread that first calls the above functions after the gpu work</span>
+    <span class="doccomment">/// has completed. There are no restrictions on the code you can run in the callback, however on native the</span>
+    <span class="doccomment">/// call to the function will not complete until the callback returns, so prefer keeping callbacks short</span>
+    <span class="doccomment">/// and used to set flags, send messages, etc.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">on_submitted_work_done</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">callback</span>: <span class="kw">impl</span> <span class="ident">FnOnce</span>() <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>) {
+        <span class="ident">Context::queue_on_submitted_work_done</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>, <span class="ident">Box::new</span>(<span class="ident">callback</span>))
     }
 }
 
@@ -7018,5 +7052,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (28b891916 2022-05-29)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (c35035cef 2022-05-30)" ></div>
 </body></html>
