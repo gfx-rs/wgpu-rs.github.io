@@ -778,6 +778,50 @@
 <span id="771">771</span>
 <span id="772">772</span>
 <span id="773">773</span>
+<span id="774">774</span>
+<span id="775">775</span>
+<span id="776">776</span>
+<span id="777">777</span>
+<span id="778">778</span>
+<span id="779">779</span>
+<span id="780">780</span>
+<span id="781">781</span>
+<span id="782">782</span>
+<span id="783">783</span>
+<span id="784">784</span>
+<span id="785">785</span>
+<span id="786">786</span>
+<span id="787">787</span>
+<span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
+<span id="815">815</span>
+<span id="816">816</span>
+<span id="817">817</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">ffi</span>::{<span class="ident">c_void</span>, <span class="ident">CStr</span>, <span class="ident">CString</span>},
     <span class="ident">slice</span>,
@@ -994,10 +1038,13 @@
     <span class="doccomment">/// - `raw_instance` must be created respecting `driver_api_version`, `extensions` and `flags`</span>
     <span class="doccomment">/// - `extensions` must be a superset of `required_extensions()` and must be created from the</span>
     <span class="doccomment">///   same entry, driver_api_version and flags.</span>
+    <span class="doccomment">/// - `android_sdk_version` is ignored and can be `0` for all platforms besides Android</span>
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::too_many_arguments</span>)]</span>
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">from_raw</span>(
         <span class="ident">entry</span>: <span class="ident">ash::Entry</span>,
         <span class="ident">raw_instance</span>: <span class="ident">ash::Instance</span>,
         <span class="ident">driver_api_version</span>: <span class="ident">u32</span>,
+        <span class="ident">android_sdk_version</span>: <span class="ident">u32</span>,
         <span class="ident">extensions</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span><span class="op">&gt;</span>,
         <span class="ident">flags</span>: <span class="ident"><span class="kw">crate</span>::InstanceFlags</span>,
         <span class="ident">has_nv_optimus</span>: <span class="ident">bool</span>,
@@ -1063,6 +1110,7 @@
                 <span class="ident">entry</span>,
                 <span class="ident">has_nv_optimus</span>,
                 <span class="ident">driver_api_version</span>,
+                <span class="ident">android_sdk_version</span>,
             }),
             <span class="ident">extensions</span>,
         })
@@ -1337,6 +1385,28 @@
             <span class="ident">layers</span>
         };
 
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>)]</span>
+        <span class="kw">let</span> <span class="ident">android_sdk_version</span> <span class="op">=</span> {
+            <span class="comment">// See: https://developer.android.com/reference/android/os/Build.VERSION_CODES</span>
+            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prop</span> <span class="op">=</span> <span class="ident">android_properties::getprop</span>(<span class="string">&quot;ro.build.version.sdk&quot;</span>);
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">val</span>) <span class="op">=</span> <span class="ident">prop</span>.<span class="ident">value</span>() {
+                <span class="kw">match</span> <span class="ident">val</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>() {
+                    <span class="prelude-val">Ok</span>(<span class="ident">sdk_ver</span>) =&gt; <span class="ident">sdk_ver</span>,
+                    <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
+                        <span class="macro">log::error!</span>(
+                            <span class="string">&quot;Couldn&#39;t parse Android&#39;s ro.build.version.sdk system property ({val}): {err}&quot;</span>
+                        );
+                        <span class="number">0</span>
+                    }
+                }
+            } <span class="kw">else</span> {
+                <span class="macro">log::error!</span>(<span class="string">&quot;Couldn&#39;t read Android&#39;s ro.build.version.sdk system property&quot;</span>);
+                <span class="number">0</span>
+            }
+        };
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>))]</span>
+        <span class="kw">let</span> <span class="ident">android_sdk_version</span> <span class="op">=</span> <span class="number">0</span>;
+
         <span class="kw">let</span> <span class="ident">vk_instance</span> <span class="op">=</span> {
             <span class="kw">let</span> <span class="ident">str_pointers</span> <span class="op">=</span> <span class="ident">layers</span>
                 .<span class="ident">iter</span>()
@@ -1363,6 +1433,7 @@
             <span class="ident">entry</span>,
             <span class="ident">vk_instance</span>,
             <span class="ident">driver_api_version</span>,
+            <span class="ident">android_sdk_version</span>,
             <span class="ident">extensions</span>,
             <span class="ident">desc</span>.<span class="ident">flags</span>,
             <span class="ident">has_nv_optimus</span>,
@@ -1487,10 +1558,27 @@
 
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">acquire_texture</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">timeout_ms</span>: <span class="ident">u32</span>,
+        <span class="ident">timeout</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">std::time::Duration</span><span class="op">&gt;</span>,
     ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::AcquiredSurfaceTexture</span><span class="op">&lt;</span><span class="ident"><span class="kw">super</span>::Api</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident"><span class="kw">crate</span>::SurfaceError</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="ident">sc</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">swapchain</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">timeout_ns</span> <span class="op">=</span> <span class="ident">timeout_ms</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident"><span class="kw">super</span>::MILLIS_TO_NANOS</span>;
+
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">timeout_ns</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">timeout</span> {
+            <span class="prelude-val">Some</span>(<span class="ident">duration</span>) =&gt; <span class="ident">duration</span>.<span class="ident">as_nanos</span>() <span class="kw">as</span> <span class="ident">u64</span>,
+            <span class="prelude-val">None</span> =&gt; <span class="ident">u64::MAX</span>,
+        };
+
+        <span class="comment">// AcquireNextImageKHR on Android (prior to Android 11) doesn&#39;t support timeouts</span>
+        <span class="comment">// and will also log verbose warnings if tying to use a timeout.</span>
+        <span class="comment">//</span>
+        <span class="comment">// Android 10 implementation for reference:</span>
+        <span class="comment">// https://android.googlesource.com/platform/frameworks/native/+/refs/tags/android-mainline-10.0.0_r13/vulkan/libvulkan/swapchain.cpp#1426</span>
+        <span class="comment">// Android 11 implementation for reference:</span>
+        <span class="comment">// https://android.googlesource.com/platform/frameworks/native/+/refs/tags/android-mainline-11.0.0_r45/vulkan/libvulkan/swapchain.cpp#1438</span>
+        <span class="comment">//</span>
+        <span class="comment">// Android 11 corresponds to an SDK_INT/ro.build.version.sdk of 30</span>
+        <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>) <span class="op">&amp;&amp;</span> <span class="self">self</span>.<span class="ident">instance</span>.<span class="ident">android_sdk_version</span> <span class="op">&lt;</span> <span class="number">30</span> {
+            <span class="ident">timeout_ns</span> <span class="op">=</span> <span class="ident">u64::MAX</span>;
+        }
 
         <span class="comment">// will block if no image is available</span>
         <span class="kw">let</span> (<span class="ident">index</span>, <span class="ident">suboptimal</span>) <span class="op">=</span>
