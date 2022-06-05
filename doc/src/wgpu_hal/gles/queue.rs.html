@@ -1213,6 +1213,17 @@
 <span id="1206">1206</span>
 <span id="1207">1207</span>
 <span id="1208">1208</span>
+<span id="1209">1209</span>
+<span id="1210">1210</span>
+<span id="1211">1211</span>
+<span id="1212">1212</span>
+<span id="1213">1213</span>
+<span id="1214">1214</span>
+<span id="1215">1215</span>
+<span id="1216">1216</span>
+<span id="1217">1217</span>
+<span id="1218">1218</span>
+<span id="1219">1219</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Command</span> <span class="kw">as</span> <span class="ident">C</span>;
 <span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
 <span class="kw">use</span> <span class="ident">glow::HasContext</span>;
@@ -1523,10 +1534,10 @@
                 <span class="ident">src_target</span>,
                 <span class="ident">dst</span>,
                 <span class="ident">dst_target</span>,
+                <span class="ident">dst_is_cubemap</span>,
                 <span class="kw-2">ref</span> <span class="ident">copy</span>,
             } =&gt; {
                 <span class="comment">//TODO: handle 3D copies</span>
-                <span class="comment">//TODO: handle cubemap copies</span>
                 <span class="ident">gl</span>.<span class="ident">bind_framebuffer</span>(<span class="ident">glow::READ_FRAMEBUFFER</span>, <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">copy_fbo</span>));
                 <span class="kw">if</span> <span class="ident">is_layered_target</span>(<span class="ident">src_target</span>) {
                     <span class="comment">//TODO: handle GLES without framebuffer_texture_3d</span>
@@ -1548,7 +1559,18 @@
                 }
 
                 <span class="ident">gl</span>.<span class="ident">bind_texture</span>(<span class="ident">dst_target</span>, <span class="prelude-val">Some</span>(<span class="ident">dst</span>));
-                <span class="kw">if</span> <span class="ident">is_layered_target</span>(<span class="ident">dst_target</span>) {
+                <span class="kw">if</span> <span class="ident">dst_is_cubemap</span> {
+                    <span class="ident">gl</span>.<span class="ident">copy_tex_sub_image_2d</span>(
+                        <span class="ident">CUBEMAP_FACES</span>[<span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">array_layer</span> <span class="kw">as</span> <span class="ident">usize</span>],
+                        <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">src_base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                        <span class="ident">copy</span>.<span class="ident">size</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">i32</span>,
+                    );
+                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">is_layered_target</span>(<span class="ident">dst_target</span>) {
                     <span class="ident">gl</span>.<span class="ident">copy_tex_sub_image_3d</span>(
                         <span class="ident">dst_target</span>,
                         <span class="ident">copy</span>.<span class="ident">dst_base</span>.<span class="ident">mip_level</span> <span class="kw">as</span> <span class="ident">i32</span>,
@@ -2422,5 +2444,5 @@
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>)]</span>
 <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident"><span class="kw">super</span>::Queue</span> {}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (a6b8c6954 2022-06-03)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (4e725bad7 2022-06-04)" ></div>
 </body></html>

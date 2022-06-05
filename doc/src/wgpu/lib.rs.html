@@ -3529,6 +3529,11 @@
 <span id="3520">3520</span>
 <span id="3521">3521</span>
 <span id="3522">3522</span>
+<span id="3523">3523</span>
+<span id="3524">3524</span>
+<span id="3525">3525</span>
+<span id="3526">3526</span>
+<span id="3527">3527</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! To start using the API, create an [`Instance`].</span>
@@ -3718,6 +3723,7 @@
     <span class="kw">type</span> <span class="ident">SurfaceId</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>;
 
     <span class="kw">type</span> <span class="ident">SurfaceOutputDetail</span>: <span class="ident">Send</span>;
+    <span class="kw">type</span> <span class="ident">SubmissionIndex</span>: <span class="ident">Debug</span> <span class="op">+</span> <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Clone</span> <span class="op">+</span> <span class="ident">Send</span> <span class="op">+</span> <span class="lifetime">&#39;static</span>;
 
     <span class="kw">type</span> <span class="ident">RequestAdapterFuture</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::AdapterId</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Send</span>;
     <span class="kw">type</span> <span class="ident">RequestDeviceFuture</span>: <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(<span class="ident"><span class="self">Self</span>::DeviceId</span>, <span class="ident"><span class="self">Self</span>::QueueId</span>), <span class="ident">RequestDeviceError</span><span class="op">&gt;</span><span class="op">&gt;</span>
@@ -4023,7 +4029,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::QueueId</span>,
         <span class="ident">command_buffers</span>: <span class="ident">I</span>,
-    );
+    ) -&gt; <span class="ident"><span class="self">Self</span>::SubmissionIndex</span>;
     <span class="kw">fn</span> <span class="ident">queue_get_timestamp_period</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::QueueId</span>) -&gt; <span class="ident">f32</span>;
     <span class="kw">fn</span> <span class="ident">queue_on_submitted_work_done</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -4088,15 +4094,11 @@
     <span class="ident">id</span>: <span class="op">&lt;</span><span class="ident">C</span> <span class="kw">as</span> <span class="ident">Context</span><span class="op">&gt;</span><span class="ident">::DeviceId</span>,
 }
 
-<span class="doccomment">/// Passed to [`Device::poll`] to control if it should block or not. This has no effect on</span>
-<span class="doccomment">/// the web.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Maintain</span> {
-    <span class="doccomment">/// Block</span>
-    <span class="ident">Wait</span>,
-    <span class="doccomment">/// Don&#39;t block</span>
-    <span class="ident">Poll</span>,
-}
+<span class="doccomment">/// Identifier for a particular call to [`Queue::submit`]. Can be used</span>
+<span class="doccomment">/// as part of an argument to [`Device::poll`] to block for a particular</span>
+<span class="doccomment">/// submission to finish.</span>
+<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SubmissionIndex</span>(<span class="op">&lt;</span><span class="ident">C</span> <span class="kw">as</span> <span class="ident">Context</span><span class="op">&gt;</span><span class="ident">::SubmissionIndex</span>);
 
 <span class="doccomment">/// The main purpose of this struct is to resolve mapped ranges (convert sizes</span>
 <span class="doccomment">/// to end points), and to ensure that the sub-ranges don&#39;t intersect.</span>
@@ -4789,6 +4791,9 @@
 <span class="doccomment">/// Corresponds to [WebGPU `GPUQuerySetDescriptor`](</span>
 <span class="doccomment">/// https://gpuweb.github.io/gpuweb/#dictdef-gpuquerysetdescriptor).</span>
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">QuerySetDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">wgt::QuerySetDescriptor</span><span class="op">&lt;</span><span class="ident">Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">wgt::Maintain</span> <span class="kw">as</span> <span class="ident">MaintainBase</span>;
+<span class="doccomment">/// Passed to [`Device::poll`] to control how and if it should block.</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Maintain</span> <span class="op">=</span> <span class="ident">wgt::Maintain</span><span class="op">&lt;</span><span class="ident">SubmissionIndex</span><span class="op">&gt;</span>;
 
 <span class="doccomment">/// Describes a [`TextureView`].</span>
 <span class="doccomment">///</span>
@@ -6905,14 +6910,19 @@
     }
 
     <span class="doccomment">/// Submits a series of finished command buffers for execution.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">submit</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">CommandBuffer</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">command_buffers</span>: <span class="ident">I</span>) {
-        <span class="ident">Context::queue_submit</span>(
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">submit</span><span class="op">&lt;</span><span class="ident">I</span>: <span class="ident">IntoIterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">CommandBuffer</span><span class="op">&gt;</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        <span class="ident">command_buffers</span>: <span class="ident">I</span>,
+    ) -&gt; <span class="ident">SubmissionIndex</span> {
+        <span class="kw">let</span> <span class="ident">raw</span> <span class="op">=</span> <span class="ident">Context::queue_submit</span>(
             <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>,
             <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>,
             <span class="ident">command_buffers</span>
                 .<span class="ident">into_iter</span>()
                 .<span class="ident">map</span>(<span class="op">|</span><span class="kw-2">mut</span> <span class="ident">comb</span><span class="op">|</span> <span class="ident">comb</span>.<span class="ident">id</span>.<span class="ident">take</span>().<span class="ident">unwrap</span>()),
         );
+
+        <span class="ident">SubmissionIndex</span>(<span class="ident">raw</span>)
     }
 
     <span class="doccomment">/// Gets the amount of nanoseconds each tick of a timestamp query represents.</span>
@@ -7052,5 +7062,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (a6b8c6954 2022-06-03)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (4e725bad7 2022-06-04)" ></div>
 </body></html>
