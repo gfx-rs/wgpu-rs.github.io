@@ -3532,6 +3532,19 @@
 <span id="3523">3523</span>
 <span id="3524">3524</span>
 <span id="3525">3525</span>
+<span id="3526">3526</span>
+<span id="3527">3527</span>
+<span id="3528">3528</span>
+<span id="3529">3529</span>
+<span id="3530">3530</span>
+<span id="3531">3531</span>
+<span id="3532">3532</span>
+<span id="3533">3533</span>
+<span id="3534">3534</span>
+<span id="3535">3535</span>
+<span id="3536">3536</span>
+<span id="3537">3537</span>
+<span id="3538">3538</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! To start using the API, create an [`Instance`].</span>
@@ -6550,34 +6563,46 @@
 
 <span class="doccomment">/// [`Features::PUSH_CONSTANTS`] must be enabled on the device in order to call these functions.</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">RenderPass</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Set push constant data.</span>
+    <span class="doccomment">/// Set push constant data for subsequent draw calls.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Offset is measured in bytes, but must be a multiple of [`PUSH_CONSTANT_ALIGNMENT`].</span>
+    <span class="doccomment">/// Write the bytes in `data` at offset `offset` within push constant</span>
+    <span class="doccomment">/// storage, all of which are accessible by all the pipeline stages in</span>
+    <span class="doccomment">/// `stages`, and no others.  Both `offset` and the length of `data` must be</span>
+    <span class="doccomment">/// multiples of [`PUSH_CONSTANT_ALIGNMENT`], which is always 4.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Data size must be a multiple of 4 and must have an alignment of 4.</span>
-    <span class="doccomment">/// For example, with an offset of 4 and an array of `[u8; 8]`, that will write to the range</span>
-    <span class="doccomment">/// of 4..12.</span>
+    <span class="doccomment">/// For example, if `offset` is `4` and `data` is eight bytes long, this</span>
+    <span class="doccomment">/// call will write `data` to bytes `4..12` of push constant storage.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// For each byte in the range of push constant data written, the union of the stages of all push constant</span>
-    <span class="doccomment">/// ranges that covers that byte must be exactly `stages`. There&#39;s no good way of explaining this simply,</span>
-    <span class="doccomment">/// so here are some examples:</span>
+    <span class="doccomment">/// # Stage matching</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// ```text</span>
-    <span class="doccomment">/// For the given ranges:</span>
-    <span class="doccomment">/// - 0..4 Vertex</span>
-    <span class="doccomment">/// - 4..8 Fragment</span>
-    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// Every byte in the affected range of push constant storage must be</span>
+    <span class="doccomment">/// accessible to exactly the same set of pipeline stages, which must match</span>
+    <span class="doccomment">/// `stages`. If there are two bytes of storage that are accessible by</span>
+    <span class="doccomment">/// different sets of pipeline stages - say, one is accessible by fragment</span>
+    <span class="doccomment">/// shaders, and the other is accessible by both fragment shaders and vertex</span>
+    <span class="doccomment">/// shaders - then no single `set_push_constants` call may affect both of</span>
+    <span class="doccomment">/// them; to write both, you must make multiple calls, each with the</span>
+    <span class="doccomment">/// appropriate `stages` value.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// You would need to upload this in two set_push_constants calls. First for the `Vertex` range, second for the `Fragment` range.</span>
+    <span class="doccomment">/// Which pipeline stages may access a given byte is determined by the</span>
+    <span class="doccomment">/// pipeline&#39;s [`PushConstant`] global variable and (if it is a struct) its</span>
+    <span class="doccomment">/// members&#39; offsets.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// ```text</span>
-    <span class="doccomment">/// For the given ranges:</span>
-    <span class="doccomment">/// - 0..8  Vertex</span>
-    <span class="doccomment">/// - 4..12 Fragment</span>
-    <span class="doccomment">/// ```</span>
+    <span class="doccomment">/// For example, suppose you have twelve bytes of push constant storage,</span>
+    <span class="doccomment">/// where bytes `0..8` are accessed by the vertex shader, and bytes `4..12`</span>
+    <span class="doccomment">/// are accessed by the fragment shader. This means there are three byte</span>
+    <span class="doccomment">/// ranges each accessed by a different set of stages:</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// You would need to upload this in three set_push_constants calls. First for the `Vertex` only range 0..4, second</span>
-    <span class="doccomment">/// for the `Vertex | Fragment` range 4..8, third for the `Fragment` range 8..12.</span>
+    <span class="doccomment">/// - Bytes `0..4` are accessed only by the fragment shader.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// - Bytes `4..8` are accessed by both the fragment shader and the vertex shader.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// - Bytes `8..12 are accessed only by the vertex shader.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// To write all twelve bytes requires three `set_push_constants` calls, one</span>
+    <span class="doccomment">/// for each range, each passing the matching `stages` mask.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// [`PushConstant`]: https://docs.rs/naga/latest/naga/enum.StorageClass.html#variant.PushConstant</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_push_constants</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">stages</span>: <span class="ident">ShaderStages</span>, <span class="ident">offset</span>: <span class="ident">u32</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
         <span class="self">self</span>.<span class="ident">id</span>.<span class="ident">set_push_constants</span>(<span class="ident">stages</span>, <span class="ident">offset</span>, <span class="ident">data</span>);
     }
@@ -6685,13 +6710,14 @@
 
 <span class="doccomment">/// [`Features::PUSH_CONSTANTS`] must be enabled on the device in order to call these functions.</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">ComputePass</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Set push constant data.</span>
+    <span class="doccomment">/// Set push constant data for subsequent dispatch calls.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Offset is measured in bytes, but must be a multiple of [`PUSH_CONSTANT_ALIGNMENT`].</span>
+    <span class="doccomment">/// Write the bytes in `data` at offset `offset` within push constant</span>
+    <span class="doccomment">/// storage.  Both `offset` and the length of `data` must be</span>
+    <span class="doccomment">/// multiples of [`PUSH_CONSTANT_ALIGNMENT`], which is always 4.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// Data size must be a multiple of 4 and must have an alignment of 4.</span>
-    <span class="doccomment">/// For example, with an offset of 4 and an array of `[u8; 8]`, that will write to the range</span>
-    <span class="doccomment">/// of 4..12.</span>
+    <span class="doccomment">/// For example, if `offset` is `4` and `data` is eight bytes long, this</span>
+    <span class="doccomment">/// call will write `data` to bytes `4..12` of push constant storage.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_push_constants</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u32</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
         <span class="self">self</span>.<span class="ident">id</span>.<span class="ident">set_push_constants</span>(<span class="ident">offset</span>, <span class="ident">data</span>);
     }
@@ -7058,5 +7084,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (420c970cb 2022-06-09)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.63.0-nightly (ec55c6130 2022-06-10)" ></div>
 </body></html>
