@@ -809,6 +809,16 @@
 <span id="802">802</span>
 <span id="803">803</span>
 <span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
+<span id="809">809</span>
+<span id="810">810</span>
+<span id="811">811</span>
+<span id="812">812</span>
+<span id="813">813</span>
+<span id="814">814</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">glow::HasContext</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 <span class="kw">use</span> <span class="ident">wgt::AstcChannel</span>;
@@ -1101,6 +1111,8 @@
             <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;EXT_texture_filter_anisotropic&quot;</span>),
         );
 
+        <span class="kw">let</span> <span class="ident">is_ext_color_buffer_float_supported</span> <span class="op">=</span> <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;EXT_color_buffer_float&quot;</span>);
+
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">wgt::Features::empty</span>()
             <span class="op">|</span> <span class="ident">wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span>
             <span class="op">|</span> <span class="ident">wgt::Features::CLEAR_TEXTURE</span>
@@ -1311,6 +1323,7 @@
                     <span class="ident">workarounds</span>,
                     <span class="ident">shading_language_version</span>,
                     <span class="ident">max_texture_size</span>,
+                    <span class="ident">is_ext_color_buffer_float_supported</span>,
                 }),
             },
             <span class="ident">info</span>: <span class="ident"><span class="self">Self</span>::make_info</span>(<span class="ident">vendor</span>, <span class="ident">renderer</span>),
@@ -1430,6 +1443,13 @@
             <span class="ident">unfilterable</span> <span class="op">|</span> <span class="ident">Tfc::COLOR_ATTACHMENT</span> <span class="op">|</span> <span class="ident">Tfc::MULTISAMPLE</span> <span class="op">|</span> <span class="ident">Tfc::MULTISAMPLE_RESOLVE</span>;
         <span class="kw">let</span> <span class="ident">filterable_renderable</span> <span class="op">=</span> <span class="ident">filterable</span> <span class="op">|</span> <span class="ident">renderable</span> <span class="op">|</span> <span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>;
         <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">Tfc::STORAGE</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE_READ_WRITE</span>;
+
+        <span class="kw">let</span> <span class="ident">float_renderable</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">is_ext_color_buffer_float_supported</span> {
+            <span class="ident">Tfc::COLOR_ATTACHMENT</span> <span class="op">|</span> <span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>
+        } <span class="kw">else</span> {
+            <span class="ident">Tfc::empty</span>()
+        };
+
         <span class="kw">match</span> <span class="ident">format</span> {
             <span class="ident">Tf::R8Unorm</span> =&gt; <span class="ident">filterable_renderable</span>,
             <span class="ident">Tf::R8Snorm</span> =&gt; <span class="ident">filterable</span>,
@@ -1439,37 +1459,37 @@
             <span class="ident">Tf::R16Sint</span> =&gt; <span class="ident">renderable</span>,
             <span class="ident">Tf::R16Unorm</span> =&gt; <span class="ident">empty</span>,
             <span class="ident">Tf::R16Snorm</span> =&gt; <span class="ident">empty</span>,
-            <span class="ident">Tf::R16Float</span> =&gt; <span class="ident">filterable</span>,
+            <span class="ident">Tf::R16Float</span> =&gt; <span class="ident">filterable</span> <span class="op">|</span> <span class="ident">float_renderable</span>,
             <span class="ident">Tf::Rg8Unorm</span> =&gt; <span class="ident">filterable_renderable</span>,
             <span class="ident">Tf::Rg8Snorm</span> =&gt; <span class="ident">filterable</span>,
             <span class="ident">Tf::Rg8Uint</span> =&gt; <span class="ident">renderable</span>,
             <span class="ident">Tf::Rg8Sint</span> =&gt; <span class="ident">renderable</span>,
             <span class="ident">Tf::R32Uint</span> =&gt; <span class="ident">renderable</span> <span class="op">|</span> <span class="ident">storage</span>,
             <span class="ident">Tf::R32Sint</span> =&gt; <span class="ident">renderable</span> <span class="op">|</span> <span class="ident">storage</span>,
-            <span class="ident">Tf::R32Float</span> =&gt; <span class="ident">unfilterable</span> <span class="op">|</span> <span class="ident">storage</span>,
+            <span class="ident">Tf::R32Float</span> =&gt; <span class="ident">unfilterable</span> <span class="op">|</span> <span class="ident">storage</span> <span class="op">|</span> <span class="ident">float_renderable</span>,
             <span class="ident">Tf::Rg16Uint</span> =&gt; <span class="ident">renderable</span>,
             <span class="ident">Tf::Rg16Sint</span> =&gt; <span class="ident">renderable</span>,
             <span class="ident">Tf::Rg16Unorm</span> =&gt; <span class="ident">empty</span>,
             <span class="ident">Tf::Rg16Snorm</span> =&gt; <span class="ident">empty</span>,
-            <span class="ident">Tf::Rg16Float</span> =&gt; <span class="ident">filterable</span>,
+            <span class="ident">Tf::Rg16Float</span> =&gt; <span class="ident">filterable</span> <span class="op">|</span> <span class="ident">float_renderable</span>,
             <span class="ident">Tf::Rgba8Unorm</span> <span class="op">|</span> <span class="ident">Tf::Rgba8UnormSrgb</span> =&gt; <span class="ident">filterable_renderable</span> <span class="op">|</span> <span class="ident">storage</span>,
             <span class="ident">Tf::Bgra8Unorm</span> <span class="op">|</span> <span class="ident">Tf::Bgra8UnormSrgb</span> =&gt; <span class="ident">filterable_renderable</span>,
             <span class="ident">Tf::Rgba8Snorm</span> =&gt; <span class="ident">filterable</span>,
             <span class="ident">Tf::Rgba8Uint</span> =&gt; <span class="ident">renderable</span> <span class="op">|</span> <span class="ident">storage</span>,
             <span class="ident">Tf::Rgba8Sint</span> =&gt; <span class="ident">renderable</span> <span class="op">|</span> <span class="ident">storage</span>,
             <span class="ident">Tf::Rgb10a2Unorm</span> =&gt; <span class="ident">filterable_renderable</span>,
-            <span class="ident">Tf::Rg11b10Float</span> =&gt; <span class="ident">filterable</span>,
+            <span class="ident">Tf::Rg11b10Float</span> =&gt; <span class="ident">filterable</span> <span class="op">|</span> <span class="ident">float_renderable</span>,
             <span class="ident">Tf::Rg32Uint</span> =&gt; <span class="ident">renderable</span>,
             <span class="ident">Tf::Rg32Sint</span> =&gt; <span class="ident">renderable</span>,
-            <span class="ident">Tf::Rg32Float</span> =&gt; <span class="ident">unfilterable</span>,
+            <span class="ident">Tf::Rg32Float</span> =&gt; <span class="ident">unfilterable</span> <span class="op">|</span> <span class="ident">float_renderable</span>,
             <span class="ident">Tf::Rgba16Uint</span> =&gt; <span class="ident">renderable</span> <span class="op">|</span> <span class="ident">storage</span>,
             <span class="ident">Tf::Rgba16Sint</span> =&gt; <span class="ident">renderable</span> <span class="op">|</span> <span class="ident">storage</span>,
             <span class="ident">Tf::Rgba16Unorm</span> =&gt; <span class="ident">empty</span>,
             <span class="ident">Tf::Rgba16Snorm</span> =&gt; <span class="ident">empty</span>,
-            <span class="ident">Tf::Rgba16Float</span> =&gt; <span class="ident">filterable</span> <span class="op">|</span> <span class="ident">storage</span>,
+            <span class="ident">Tf::Rgba16Float</span> =&gt; <span class="ident">filterable</span> <span class="op">|</span> <span class="ident">storage</span> <span class="op">|</span> <span class="ident">float_renderable</span>,
             <span class="ident">Tf::Rgba32Uint</span> =&gt; <span class="ident">renderable</span> <span class="op">|</span> <span class="ident">storage</span>,
             <span class="ident">Tf::Rgba32Sint</span> =&gt; <span class="ident">renderable</span> <span class="op">|</span> <span class="ident">storage</span>,
-            <span class="ident">Tf::Rgba32Float</span> =&gt; <span class="ident">unfilterable</span> <span class="op">|</span> <span class="ident">storage</span>,
+            <span class="ident">Tf::Rgba32Float</span> =&gt; <span class="ident">unfilterable</span> <span class="op">|</span> <span class="ident">storage</span> <span class="op">|</span> <span class="ident">float_renderable</span>,
             <span class="ident">Tf::Depth32Float</span>
             <span class="op">|</span> <span class="ident">Tf::Depth32FloatStencil8</span>
             <span class="op">|</span> <span class="ident">Tf::Depth24Plus</span>
