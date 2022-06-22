@@ -1681,6 +1681,16 @@
 <span id="1675">1675</span>
 <span id="1676">1676</span>
 <span id="1677">1677</span>
+<span id="1678">1678</span>
+<span id="1679">1679</span>
+<span id="1680">1680</span>
+<span id="1681">1681</span>
+<span id="1682">1682</span>
+<span id="1683">1683</span>
+<span id="1684">1684</span>
+<span id="1685">1685</span>
+<span id="1686">1686</span>
+<span id="1687">1687</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
 
 <span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">extensions::khr</span>, <span class="ident">vk</span>};
@@ -2451,6 +2461,15 @@
             .<span class="ident">min</span>(<span class="ident">limits</span>.<span class="ident">max_compute_work_group_count</span>[<span class="number">1</span>])
             .<span class="ident">min</span>(<span class="ident">limits</span>.<span class="ident">max_compute_work_group_count</span>[<span class="number">2</span>]);
 
+        <span class="comment">// Prevent very large buffers on mesa and most android devices.</span>
+        <span class="kw">let</span> <span class="ident">is_nvidia</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">properties</span>.<span class="ident">vendor_id</span> <span class="op">==</span> <span class="ident"><span class="kw">crate</span>::auxil::db::nvidia::VENDOR</span>;
+        <span class="kw">let</span> <span class="ident">max_buffer_size</span> <span class="op">=</span>
+            <span class="kw">if</span> (<span class="macro">cfg!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;linux&quot;</span>) <span class="op">|</span><span class="op">|</span> <span class="macro">cfg!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>)) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">is_nvidia</span> {
+                <span class="ident">i32::MAX</span> <span class="kw">as</span> <span class="ident">u64</span>
+            } <span class="kw">else</span> {
+                <span class="ident">u64::MAX</span>
+            };
+
         <span class="ident">wgt::Limits</span> {
             <span class="ident">max_texture_dimension_1d</span>: <span class="ident">limits</span>.<span class="ident">max_image_dimension1_d</span>,
             <span class="ident">max_texture_dimension_2d</span>: <span class="ident">limits</span>.<span class="ident">max_image_dimension2_d</span>,
@@ -2491,6 +2510,7 @@
             <span class="ident">max_compute_workgroup_size_y</span>: <span class="ident">max_compute_workgroup_sizes</span>[<span class="number">1</span>],
             <span class="ident">max_compute_workgroup_size_z</span>: <span class="ident">max_compute_workgroup_sizes</span>[<span class="number">2</span>],
             <span class="ident">max_compute_workgroups_per_dimension</span>,
+            <span class="ident">max_buffer_size</span>,
         }
     }
 
