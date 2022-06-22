@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["VENDOR",""]]});
+window.SIDEBAR_ITEMS = {"constant":[["VENDOR",""]]};

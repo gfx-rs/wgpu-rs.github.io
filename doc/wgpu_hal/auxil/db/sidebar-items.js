@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["intel",""],["nvidia",""],["qualcomm",""]]});
+window.SIDEBAR_ITEMS = {"mod":[["intel",""],["nvidia",""],["qualcomm",""]]};
