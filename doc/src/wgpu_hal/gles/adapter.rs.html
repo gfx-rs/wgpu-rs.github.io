@@ -829,6 +829,28 @@
 <span id="823">823</span>
 <span id="824">824</span>
 <span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
+<span id="831">831</span>
+<span id="832">832</span>
+<span id="833">833</span>
+<span id="834">834</span>
+<span id="835">835</span>
+<span id="836">836</span>
+<span id="837">837</span>
+<span id="838">838</span>
+<span id="839">839</span>
+<span id="840">840</span>
+<span id="841">841</span>
+<span id="842">842</span>
+<span id="843">843</span>
+<span id="844">844</span>
+<span id="845">845</span>
+<span id="846">846</span>
+<span id="847">847</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">glow::HasContext</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 <span class="kw">use</span> <span class="ident">wgt::AstcChannel</span>;
@@ -1131,8 +1153,6 @@
             <span class="op">!</span>(<span class="macro">cfg!</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>) <span class="op">|</span><span class="op">|</span> <span class="ident">is_angle</span>),
         );
 
-        <span class="kw">let</span> <span class="ident">is_ext_color_buffer_float_supported</span> <span class="op">=</span> <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;EXT_color_buffer_float&quot;</span>);
-
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">wgt::Features::empty</span>()
             <span class="op">|</span> <span class="ident">wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span>
             <span class="op">|</span> <span class="ident">wgt::Features::CLEAR_TEXTURE</span>
@@ -1210,6 +1230,17 @@
         <span class="ident">private_caps</span>.<span class="ident">set</span>(
             <span class="ident"><span class="kw">super</span>::PrivateCapabilities::GET_BUFFER_SUB_DATA</span>,
             <span class="macro">cfg!</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;wasm32&quot;</span>),
+        );
+        <span class="kw">let</span> <span class="ident">color_buffer_float</span> <span class="op">=</span> <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_color_buffer_float&quot;</span>)
+            <span class="op">|</span><span class="op">|</span> <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;EXT_color_buffer_float&quot;</span>);
+        <span class="kw">let</span> <span class="ident">color_buffer_half_float</span> <span class="op">=</span> <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_color_buffer_half_float&quot;</span>);
+        <span class="ident">private_caps</span>.<span class="ident">set</span>(
+            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_HALF_FLOAT</span>,
+            <span class="ident">color_buffer_half_float</span> <span class="op">|</span><span class="op">|</span> <span class="ident">color_buffer_float</span>,
+        );
+        <span class="ident">private_caps</span>.<span class="ident">set</span>(
+            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_FLOAT</span>,
+            <span class="ident">color_buffer_float</span>,
         );
 
         <span class="kw">let</span> <span class="ident">max_texture_size</span> <span class="op">=</span> <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_TEXTURE_SIZE</span>) <span class="kw">as</span> <span class="ident">u32</span>;
@@ -1344,7 +1375,6 @@
                     <span class="ident">workarounds</span>,
                     <span class="ident">shading_language_version</span>,
                     <span class="ident">max_texture_size</span>,
-                    <span class="ident">is_ext_color_buffer_float_supported</span>,
                 }),
             },
             <span class="ident">info</span>: <span class="ident"><span class="self">Self</span>::make_info</span>(<span class="ident">vendor</span>, <span class="ident">renderer</span>),
@@ -1465,7 +1495,21 @@
         <span class="kw">let</span> <span class="ident">filterable_renderable</span> <span class="op">=</span> <span class="ident">filterable</span> <span class="op">|</span> <span class="ident">renderable</span> <span class="op">|</span> <span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>;
         <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">Tfc::STORAGE</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE_READ_WRITE</span>;
 
-        <span class="kw">let</span> <span class="ident">float_renderable</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">is_ext_color_buffer_float_supported</span> {
+        <span class="kw">let</span> <span class="ident">half_float_renderable</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>
+            .<span class="ident">shared</span>
+            .<span class="ident">private_caps</span>
+            .<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_HALF_FLOAT</span>)
+        {
+            <span class="ident">Tfc::COLOR_ATTACHMENT</span> <span class="op">|</span> <span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>
+        } <span class="kw">else</span> {
+            <span class="ident">Tfc::empty</span>()
+        };
+
+        <span class="kw">let</span> <span class="ident">float_renderable</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>
+            .<span class="ident">shared</span>
+            .<span class="ident">private_caps</span>
+            .<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_FLOAT</span>)
+        {
             <span class="ident">Tfc::COLOR_ATTACHMENT</span> <span class="op">|</span> <span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>
         } <span class="kw">else</span> {
             <span class="ident">Tfc::empty</span>()
@@ -1480,7 +1524,7 @@
             <span class="ident">Tf::R16Sint</span> =&gt; <span class="ident">renderable</span>,
             <span class="ident">Tf::R16Unorm</span> =&gt; <span class="ident">empty</span>,
             <span class="ident">Tf::R16Snorm</span> =&gt; <span class="ident">empty</span>,
-            <span class="ident">Tf::R16Float</span> =&gt; <span class="ident">filterable</span> <span class="op">|</span> <span class="ident">float_renderable</span>,
+            <span class="ident">Tf::R16Float</span> =&gt; <span class="ident">filterable</span> <span class="op">|</span> <span class="ident">half_float_renderable</span>,
             <span class="ident">Tf::Rg8Unorm</span> =&gt; <span class="ident">filterable_renderable</span>,
             <span class="ident">Tf::Rg8Snorm</span> =&gt; <span class="ident">filterable</span>,
             <span class="ident">Tf::Rg8Uint</span> =&gt; <span class="ident">renderable</span>,
@@ -1492,7 +1536,7 @@
             <span class="ident">Tf::Rg16Sint</span> =&gt; <span class="ident">renderable</span>,
             <span class="ident">Tf::Rg16Unorm</span> =&gt; <span class="ident">empty</span>,
             <span class="ident">Tf::Rg16Snorm</span> =&gt; <span class="ident">empty</span>,
-            <span class="ident">Tf::Rg16Float</span> =&gt; <span class="ident">filterable</span> <span class="op">|</span> <span class="ident">float_renderable</span>,
+            <span class="ident">Tf::Rg16Float</span> =&gt; <span class="ident">filterable</span> <span class="op">|</span> <span class="ident">half_float_renderable</span>,
             <span class="ident">Tf::Rgba8Unorm</span> <span class="op">|</span> <span class="ident">Tf::Rgba8UnormSrgb</span> =&gt; <span class="ident">filterable_renderable</span> <span class="op">|</span> <span class="ident">storage</span>,
             <span class="ident">Tf::Bgra8Unorm</span> <span class="op">|</span> <span class="ident">Tf::Bgra8UnormSrgb</span> =&gt; <span class="ident">filterable_renderable</span>,
             <span class="ident">Tf::Rgba8Snorm</span> =&gt; <span class="ident">filterable</span>,
@@ -1507,7 +1551,7 @@
             <span class="ident">Tf::Rgba16Sint</span> =&gt; <span class="ident">renderable</span> <span class="op">|</span> <span class="ident">storage</span>,
             <span class="ident">Tf::Rgba16Unorm</span> =&gt; <span class="ident">empty</span>,
             <span class="ident">Tf::Rgba16Snorm</span> =&gt; <span class="ident">empty</span>,
-            <span class="ident">Tf::Rgba16Float</span> =&gt; <span class="ident">filterable</span> <span class="op">|</span> <span class="ident">storage</span> <span class="op">|</span> <span class="ident">float_renderable</span>,
+            <span class="ident">Tf::Rgba16Float</span> =&gt; <span class="ident">filterable</span> <span class="op">|</span> <span class="ident">storage</span> <span class="op">|</span> <span class="ident">half_float_renderable</span>,
             <span class="ident">Tf::Rgba32Uint</span> =&gt; <span class="ident">renderable</span> <span class="op">|</span> <span class="ident">storage</span>,
             <span class="ident">Tf::Rgba32Sint</span> =&gt; <span class="ident">renderable</span> <span class="op">|</span> <span class="ident">storage</span>,
             <span class="ident">Tf::Rgba32Float</span> =&gt; <span class="ident">unfilterable</span> <span class="op">|</span> <span class="ident">storage</span> <span class="op">|</span> <span class="ident">float_renderable</span>,
