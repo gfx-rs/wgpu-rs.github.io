@@ -856,6 +856,18 @@
 <span id="850">850</span>
 <span id="851">851</span>
 <span id="852">852</span>
+<span id="853">853</span>
+<span id="854">854</span>
+<span id="855">855</span>
+<span id="856">856</span>
+<span id="857">857</span>
+<span id="858">858</span>
+<span id="859">859</span>
+<span id="860">860</span>
+<span id="861">861</span>
+<span id="862">862</span>
+<span id="863">863</span>
+<span id="864">864</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">glow::HasContext</span>;
 <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
 <span class="kw">use</span> <span class="ident">wgt::AstcChannel</span>;
@@ -1383,6 +1395,7 @@
                     <span class="ident">context</span>,
                     <span class="ident">private_caps</span>,
                     <span class="ident">workarounds</span>,
+                    <span class="ident">features</span>,
                     <span class="ident">shading_language_version</span>,
                     <span class="ident">max_texture_size</span>,
                 }),
@@ -1497,33 +1510,44 @@
         <span class="comment">// The storage types are based on table 8.26, in section</span>
         <span class="comment">// &quot;TEXTURE IMAGE LOADS AND STORES&quot; of OpenGLES-3.2 spec.</span>
         <span class="kw">let</span> <span class="ident">empty</span> <span class="op">=</span> <span class="ident">Tfc::empty</span>();
-        <span class="kw">let</span> <span class="ident">unfilterable</span> <span class="op">=</span> <span class="ident">Tfc::SAMPLED</span>;
-        <span class="kw">let</span> <span class="ident">depth</span> <span class="op">=</span> <span class="ident">Tfc::SAMPLED</span> <span class="op">|</span> <span class="ident">Tfc::MULTISAMPLE</span> <span class="op">|</span> <span class="ident">Tfc::DEPTH_STENCIL_ATTACHMENT</span>;
+        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">Tfc::COPY_SRC</span> <span class="op">|</span> <span class="ident">Tfc::COPY_DST</span>;
+        <span class="kw">let</span> <span class="ident">unfilterable</span> <span class="op">=</span> <span class="ident">base</span> <span class="op">|</span> <span class="ident">Tfc::SAMPLED</span>;
+        <span class="kw">let</span> <span class="ident">depth</span> <span class="op">=</span> <span class="ident">base</span> <span class="op">|</span> <span class="ident">Tfc::SAMPLED</span> <span class="op">|</span> <span class="ident">Tfc::MULTISAMPLE</span> <span class="op">|</span> <span class="ident">Tfc::DEPTH_STENCIL_ATTACHMENT</span>;
         <span class="kw">let</span> <span class="ident">filterable</span> <span class="op">=</span> <span class="ident">unfilterable</span> <span class="op">|</span> <span class="ident">Tfc::SAMPLED_LINEAR</span>;
         <span class="kw">let</span> <span class="ident">renderable</span> <span class="op">=</span>
             <span class="ident">unfilterable</span> <span class="op">|</span> <span class="ident">Tfc::COLOR_ATTACHMENT</span> <span class="op">|</span> <span class="ident">Tfc::MULTISAMPLE</span> <span class="op">|</span> <span class="ident">Tfc::MULTISAMPLE_RESOLVE</span>;
         <span class="kw">let</span> <span class="ident">filterable_renderable</span> <span class="op">=</span> <span class="ident">filterable</span> <span class="op">|</span> <span class="ident">renderable</span> <span class="op">|</span> <span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>;
-        <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">Tfc::STORAGE</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE_READ_WRITE</span>;
+        <span class="kw">let</span> <span class="ident">storage</span> <span class="op">=</span> <span class="ident">base</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE</span> <span class="op">|</span> <span class="ident">Tfc::STORAGE_READ_WRITE</span>;
 
-        <span class="kw">let</span> <span class="ident">half_float_renderable</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>
-            .<span class="ident">shared</span>
-            .<span class="ident">private_caps</span>
-            .<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_HALF_FLOAT</span>)
-        {
-            <span class="ident">Tfc::COLOR_ATTACHMENT</span> <span class="op">|</span> <span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>
-        } <span class="kw">else</span> {
-            <span class="ident">Tfc::empty</span>()
+        <span class="kw">let</span> <span class="ident">feature_fn</span> <span class="op">=</span> <span class="op">|</span><span class="ident">f</span>, <span class="ident">caps</span><span class="op">|</span> {
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">f</span>) {
+                <span class="ident">caps</span>
+            } <span class="kw">else</span> {
+                <span class="ident">empty</span>
+            }
         };
 
-        <span class="kw">let</span> <span class="ident">float_renderable</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>
-            .<span class="ident">shared</span>
-            .<span class="ident">private_caps</span>
-            .<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_FLOAT</span>)
-        {
-            <span class="ident">Tfc::COLOR_ATTACHMENT</span> <span class="op">|</span> <span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>
-        } <span class="kw">else</span> {
-            <span class="ident">Tfc::empty</span>()
+        <span class="kw">let</span> <span class="ident">bcn_features</span> <span class="op">=</span> <span class="ident">feature_fn</span>(<span class="ident">wgt::Features::TEXTURE_COMPRESSION_BC</span>, <span class="ident">filterable</span>);
+        <span class="kw">let</span> <span class="ident">etc2_features</span> <span class="op">=</span> <span class="ident">feature_fn</span>(<span class="ident">wgt::Features::TEXTURE_COMPRESSION_ETC2</span>, <span class="ident">filterable</span>);
+        <span class="kw">let</span> <span class="ident">astc_features</span> <span class="op">=</span> <span class="ident">feature_fn</span>(<span class="ident">wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR</span>, <span class="ident">filterable</span>);
+
+        <span class="kw">let</span> <span class="ident">private_caps_fn</span> <span class="op">=</span> <span class="op">|</span><span class="ident">f</span>, <span class="ident">caps</span><span class="op">|</span> {
+            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">private_caps</span>.<span class="ident">contains</span>(<span class="ident">f</span>) {
+                <span class="ident">caps</span>
+            } <span class="kw">else</span> {
+                <span class="ident">empty</span>
+            }
         };
+
+        <span class="kw">let</span> <span class="ident">half_float_renderable</span> <span class="op">=</span> <span class="ident">private_caps_fn</span>(
+            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_HALF_FLOAT</span>,
+            <span class="ident">Tfc::COLOR_ATTACHMENT</span> <span class="op">|</span> <span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>,
+        );
+
+        <span class="kw">let</span> <span class="ident">float_renderable</span> <span class="op">=</span> <span class="ident">private_caps_fn</span>(
+            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_FLOAT</span>,
+            <span class="ident">Tfc::COLOR_ATTACHMENT</span> <span class="op">|</span> <span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>,
+        );
 
         <span class="kw">match</span> <span class="ident">format</span> {
             <span class="ident">Tf::R8Unorm</span> =&gt; <span class="ident">filterable_renderable</span>,
@@ -1570,8 +1594,8 @@
             <span class="op">|</span> <span class="ident">Tf::Depth24Plus</span>
             <span class="op">|</span> <span class="ident">Tf::Depth24PlusStencil8</span>
             <span class="op">|</span> <span class="ident">Tf::Depth24UnormStencil8</span> =&gt; <span class="ident">depth</span>,
-            <span class="ident">Tf::Rgb9e5Ufloat</span>
-            <span class="op">|</span> <span class="ident">Tf::Bc1RgbaUnorm</span>
+            <span class="ident">Tf::Rgb9e5Ufloat</span> =&gt; <span class="ident">filterable</span>,
+            <span class="ident">Tf::Bc1RgbaUnorm</span>
             <span class="op">|</span> <span class="ident">Tf::Bc1RgbaUnormSrgb</span>
             <span class="op">|</span> <span class="ident">Tf::Bc2RgbaUnorm</span>
             <span class="op">|</span> <span class="ident">Tf::Bc2RgbaUnormSrgb</span>
@@ -1584,8 +1608,8 @@
             <span class="op">|</span> <span class="ident">Tf::Bc6hRgbSfloat</span>
             <span class="op">|</span> <span class="ident">Tf::Bc6hRgbUfloat</span>
             <span class="op">|</span> <span class="ident">Tf::Bc7RgbaUnorm</span>
-            <span class="op">|</span> <span class="ident">Tf::Bc7RgbaUnormSrgb</span>
-            <span class="op">|</span> <span class="ident">Tf::Etc2Rgb8Unorm</span>
+            <span class="op">|</span> <span class="ident">Tf::Bc7RgbaUnormSrgb</span> =&gt; <span class="ident">bcn_features</span>,
+            <span class="ident">Tf::Etc2Rgb8Unorm</span>
             <span class="op">|</span> <span class="ident">Tf::Etc2Rgb8UnormSrgb</span>
             <span class="op">|</span> <span class="ident">Tf::Etc2Rgb8A1Unorm</span>
             <span class="op">|</span> <span class="ident">Tf::Etc2Rgb8A1UnormSrgb</span>
@@ -1594,15 +1618,15 @@
             <span class="op">|</span> <span class="ident">Tf::EacR11Unorm</span>
             <span class="op">|</span> <span class="ident">Tf::EacR11Snorm</span>
             <span class="op">|</span> <span class="ident">Tf::EacRg11Unorm</span>
-            <span class="op">|</span> <span class="ident">Tf::EacRg11Snorm</span>
-            <span class="op">|</span> <span class="ident">Tf::Astc</span> {
+            <span class="op">|</span> <span class="ident">Tf::EacRg11Snorm</span> =&gt; <span class="ident">etc2_features</span>,
+            <span class="ident">Tf::Astc</span> {
                 <span class="ident">block</span>: <span class="kw">_</span>,
                 <span class="ident">channel</span>: <span class="ident">AstcChannel::Unorm</span> <span class="op">|</span> <span class="ident">AstcChannel::UnormSrgb</span>,
-            } =&gt; <span class="ident">filterable</span>,
+            } =&gt; <span class="ident">astc_features</span>,
             <span class="ident">Tf::Astc</span> {
                 <span class="ident">block</span>: <span class="kw">_</span>,
                 <span class="ident">channel</span>: <span class="ident">AstcChannel::Hdr</span>,
-            } =&gt; <span class="ident">empty</span>,
+            } =&gt; <span class="ident">Tfc::empty</span>(),
         }
     }
 
