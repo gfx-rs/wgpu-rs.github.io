@@ -798,44 +798,6 @@
 <span id="792">792</span>
 <span id="793">793</span>
 <span id="794">794</span>
-<span id="795">795</span>
-<span id="796">796</span>
-<span id="797">797</span>
-<span id="798">798</span>
-<span id="799">799</span>
-<span id="800">800</span>
-<span id="801">801</span>
-<span id="802">802</span>
-<span id="803">803</span>
-<span id="804">804</span>
-<span id="805">805</span>
-<span id="806">806</span>
-<span id="807">807</span>
-<span id="808">808</span>
-<span id="809">809</span>
-<span id="810">810</span>
-<span id="811">811</span>
-<span id="812">812</span>
-<span id="813">813</span>
-<span id="814">814</span>
-<span id="815">815</span>
-<span id="816">816</span>
-<span id="817">817</span>
-<span id="818">818</span>
-<span id="819">819</span>
-<span id="820">820</span>
-<span id="821">821</span>
-<span id="822">822</span>
-<span id="823">823</span>
-<span id="824">824</span>
-<span id="825">825</span>
-<span id="826">826</span>
-<span id="827">827</span>
-<span id="828">828</span>
-<span id="829">829</span>
-<span id="830">830</span>
-<span id="831">831</span>
-<span id="832">832</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{
     <span class="ident">ffi</span>::{<span class="ident">c_void</span>, <span class="ident">CStr</span>, <span class="ident">CString</span>},
     <span class="ident">slice</span>,
@@ -1253,46 +1215,8 @@
 
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;macos&quot;</span>, <span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>))]</span>
     <span class="kw">fn</span> <span class="ident">create_surface_from_view</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">view</span>: <span class="kw-2">*mut</span> <span class="ident">c_void</span>) -&gt; <span class="ident"><span class="kw">super</span>::Surface</span> {
-        <span class="kw">use</span> <span class="ident">core_graphics_types</span>::{<span class="ident">base::CGFloat</span>, <span class="ident">geometry::CGRect</span>};
-        <span class="kw">use</span> <span class="ident">objc</span>::{
-            <span class="ident">class</span>, <span class="ident">msg_send</span>,
-            <span class="ident">runtime</span>::{<span class="ident">Object</span>, <span class="ident">BOOL</span>, <span class="ident">YES</span>},
-            <span class="ident">sel</span>, <span class="ident">sel_impl</span>,
-        };
-
         <span class="kw">let</span> <span class="ident">layer</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">view</span> <span class="op">=</span> <span class="ident">view</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">Object</span>;
-            <span class="kw">let</span> <span class="ident">existing</span>: <span class="kw-2">*mut</span> <span class="ident">Object</span> <span class="op">=</span> <span class="macro">msg_send!</span>[<span class="ident">view</span>, <span class="ident">layer</span>];
-            <span class="kw">let</span> <span class="ident">class</span> <span class="op">=</span> <span class="macro">class!</span>(<span class="ident">CAMetalLayer</span>);
-
-            <span class="kw">let</span> <span class="ident">use_current</span>: <span class="ident">BOOL</span> <span class="op">=</span> <span class="macro">msg_send!</span>[<span class="ident">existing</span>, <span class="ident">isKindOfClass</span>: <span class="ident">class</span>];
-            <span class="kw">if</span> <span class="ident">use_current</span> <span class="op">==</span> <span class="ident">YES</span> {
-                <span class="ident">existing</span>
-            } <span class="kw">else</span> {
-                <span class="kw">let</span> <span class="ident">new_layer</span>: <span class="kw-2">*mut</span> <span class="ident">Object</span> <span class="op">=</span> <span class="macro">msg_send!</span>[<span class="ident">class</span>, <span class="ident">new</span>];
-                <span class="kw">let</span> <span class="ident">frame</span>: <span class="ident">CGRect</span> <span class="op">=</span> <span class="macro">msg_send!</span>[<span class="ident">existing</span>, <span class="ident">bounds</span>];
-                <span class="kw">let</span> () <span class="op">=</span> <span class="macro">msg_send!</span>[<span class="ident">new_layer</span>, <span class="ident">setFrame</span>: <span class="ident">frame</span>];
-
-                <span class="kw">let</span> <span class="ident">scale_factor</span>: <span class="ident">CGFloat</span> <span class="op">=</span> <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;ios&quot;</span>) {
-                    <span class="kw">let</span> () <span class="op">=</span> <span class="macro">msg_send!</span>[<span class="ident">existing</span>, <span class="ident">addSublayer</span>: <span class="ident">new_layer</span>];
-                    <span class="comment">// On iOS, `create_surface_from_view` may be called before the application initialization is complete,</span>
-                    <span class="comment">// `msg_send![view, window]` and `msg_send![window, screen]` will get null.</span>
-                    <span class="kw">let</span> <span class="ident">screen</span>: <span class="kw-2">*mut</span> <span class="ident">Object</span> <span class="op">=</span> <span class="macro">msg_send!</span>[<span class="macro">class!</span>(<span class="ident">UIScreen</span>), <span class="ident">mainScreen</span>];
-                    <span class="macro">msg_send!</span>[<span class="ident">screen</span>, <span class="ident">nativeScale</span>]
-                } <span class="kw">else</span> {
-                    <span class="kw">let</span> () <span class="op">=</span> <span class="macro">msg_send!</span>[<span class="ident">view</span>, <span class="ident">setLayer</span>: <span class="ident">new_layer</span>];
-                    <span class="kw">let</span> () <span class="op">=</span> <span class="macro">msg_send!</span>[<span class="ident">view</span>, <span class="ident">setWantsLayer</span>: <span class="ident">YES</span>];
-                    <span class="kw">let</span> <span class="ident">window</span>: <span class="kw-2">*mut</span> <span class="ident">Object</span> <span class="op">=</span> <span class="macro">msg_send!</span>[<span class="ident">view</span>, <span class="ident">window</span>];
-                    <span class="kw">if</span> <span class="op">!</span><span class="ident">window</span>.<span class="ident">is_null</span>() {
-                        <span class="macro">msg_send!</span>[<span class="ident">window</span>, <span class="ident">backingScaleFactor</span>]
-                    } <span class="kw">else</span> {
-                        <span class="number">1.0</span>
-                    }
-                };
-                <span class="kw">let</span> () <span class="op">=</span> <span class="macro">msg_send!</span>[<span class="ident">new_layer</span>, <span class="ident">setContentsScale</span>: <span class="ident">scale_factor</span>];
-
-                <span class="ident">new_layer</span>
-            }
+            <span class="ident"><span class="kw">crate</span>::metal::Surface::get_metal_layer</span>(<span class="ident">view</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">objc::runtime::Object</span>, <span class="prelude-val">None</span>)
         };
 
         <span class="kw">let</span> <span class="ident">surface</span> <span class="op">=</span> {
@@ -1669,5 +1593,5 @@
     <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">discard_texture</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">_texture</span>: <span class="ident"><span class="kw">super</span>::SurfaceTexture</span>) {}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (6dba4ed21 2022-07-09)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (c396bb3b8 2022-07-10)" ></div>
 </body></html>
