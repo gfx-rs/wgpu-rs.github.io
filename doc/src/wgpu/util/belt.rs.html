@@ -179,6 +179,16 @@
 <span id="171">171</span>
 <span id="172">172</span>
 <span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">util::align_to</span>, <span class="ident">Buffer</span>, <span class="ident">BufferAddress</span>, <span class="ident">BufferDescriptor</span>, <span class="ident">BufferSize</span>, <span class="ident">BufferUsages</span>,
     <span class="ident">BufferViewMut</span>, <span class="ident">CommandEncoder</span>, <span class="ident">Device</span>, <span class="ident">MapMode</span>,
@@ -269,23 +279,27 @@
             .<span class="ident">position</span>(<span class="op">|</span><span class="ident">chunk</span><span class="op">|</span> <span class="ident">chunk</span>.<span class="ident">offset</span> <span class="op">+</span> <span class="ident">size</span>.<span class="ident">get</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="ident">chunk</span>.<span class="ident">size</span>)
         {
             <span class="self">self</span>.<span class="ident">active_chunks</span>.<span class="ident">swap_remove</span>(<span class="ident">index</span>)
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">free_chunks</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">position</span>(<span class="op">|</span><span class="ident">chunk</span><span class="op">|</span> <span class="ident">size</span>.<span class="ident">get</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="ident">chunk</span>.<span class="ident">size</span>)
-        {
-            <span class="self">self</span>.<span class="ident">free_chunks</span>.<span class="ident">swap_remove</span>(<span class="ident">index</span>)
         } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">chunk_size</span>.<span class="ident">max</span>(<span class="ident">size</span>.<span class="ident">get</span>());
-            <span class="ident">Chunk</span> {
-                <span class="ident">buffer</span>: <span class="ident">Arc::new</span>(<span class="ident">device</span>.<span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">BufferDescriptor</span> {
-                    <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;(wgpu internal) StagingBelt staging buffer&quot;</span>),
+            <span class="self">self</span>.<span class="ident">receive_chunks</span>(); <span class="comment">// ensure self.free_chunks is up to date</span>
+
+            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>) <span class="op">=</span> <span class="self">self</span>
+                .<span class="ident">free_chunks</span>
+                .<span class="ident">iter</span>()
+                .<span class="ident">position</span>(<span class="op">|</span><span class="ident">chunk</span><span class="op">|</span> <span class="ident">size</span>.<span class="ident">get</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="ident">chunk</span>.<span class="ident">size</span>)
+            {
+                <span class="self">self</span>.<span class="ident">free_chunks</span>.<span class="ident">swap_remove</span>(<span class="ident">index</span>)
+            } <span class="kw">else</span> {
+                <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">chunk_size</span>.<span class="ident">max</span>(<span class="ident">size</span>.<span class="ident">get</span>());
+                <span class="ident">Chunk</span> {
+                    <span class="ident">buffer</span>: <span class="ident">Arc::new</span>(<span class="ident">device</span>.<span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">BufferDescriptor</span> {
+                        <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;(wgpu internal) StagingBelt staging buffer&quot;</span>),
+                        <span class="ident">size</span>,
+                        <span class="ident">usage</span>: <span class="ident">BufferUsages::MAP_WRITE</span> <span class="op">|</span> <span class="ident">BufferUsages::COPY_SRC</span>,
+                        <span class="ident">mapped_at_creation</span>: <span class="bool-val">true</span>,
+                    })),
                     <span class="ident">size</span>,
-                    <span class="ident">usage</span>: <span class="ident">BufferUsages::MAP_WRITE</span> <span class="op">|</span> <span class="ident">BufferUsages::COPY_SRC</span>,
-                    <span class="ident">mapped_at_creation</span>: <span class="bool-val">true</span>,
-                })),
-                <span class="ident">size</span>,
-                <span class="ident">offset</span>: <span class="number">0</span>,
+                    <span class="ident">offset</span>: <span class="number">0</span>,
+                }
             }
         };
 
@@ -323,10 +337,7 @@
     <span class="doccomment">/// [`StagingBelt::write_buffer()`] are submitted. Additional calls are harmless.</span>
     <span class="doccomment">/// Not calling this as soon as possible may result in increased buffer memory usage.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recall</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">chunk</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">receiver</span>.<span class="ident">try_recv</span>() {
-            <span class="ident">chunk</span>.<span class="ident">offset</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="self">self</span>.<span class="ident">free_chunks</span>.<span class="ident">push</span>(<span class="ident">chunk</span>);
-        }
+        <span class="self">self</span>.<span class="ident">receive_chunks</span>();
 
         <span class="kw">let</span> <span class="ident">sender</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">sender</span>;
         <span class="kw">for</span> <span class="ident">chunk</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">closed_chunks</span>.<span class="ident">drain</span>(..) {
@@ -338,6 +349,15 @@
                 .<span class="ident">map_async</span>(<span class="ident">MapMode::Write</span>, <span class="kw">move</span> <span class="op">|</span><span class="kw">_</span><span class="op">|</span> {
                     <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">sender</span>.<span class="ident">send</span>(<span class="ident">chunk</span>);
                 });
+        }
+    }
+
+    <span class="doccomment">/// Move all chunks that the GPU is done with (and are now mapped again)</span>
+    <span class="doccomment">/// from `self.receiver` to `self.free_chunks`.</span>
+    <span class="kw">fn</span> <span class="ident">receive_chunks</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
+        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">chunk</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">receiver</span>.<span class="ident">try_recv</span>() {
+            <span class="ident">chunk</span>.<span class="ident">offset</span> <span class="op">=</span> <span class="number">0</span>;
+            <span class="self">self</span>.<span class="ident">free_chunks</span>.<span class="ident">push</span>(<span class="ident">chunk</span>);
         }
     }
 }
