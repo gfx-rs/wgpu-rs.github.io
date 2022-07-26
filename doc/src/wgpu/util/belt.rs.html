@@ -158,6 +158,27 @@
 <span id="150">150</span>
 <span id="151">151</span>
 <span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
     <span class="ident">util::align_to</span>, <span class="ident">Buffer</span>, <span class="ident">BufferAddress</span>, <span class="ident">BufferDescriptor</span>, <span class="ident">BufferSize</span>, <span class="ident">BufferUsages</span>,
     <span class="ident">BufferViewMut</span>, <span class="ident">CommandEncoder</span>, <span class="ident">Device</span>, <span class="ident">MapMode</span>,
@@ -171,37 +192,47 @@
     <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
 }
 
-<span class="doccomment">/// Staging belt is a machine that uploads data.</span>
+<span class="doccomment">/// Efficiently performs many buffer writes by sharing and reusing temporary buffers.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Internally it uses a ring-buffer of staging buffers that are sub-allocated.</span>
-<span class="doccomment">/// It has an advantage over [`Queue::write_buffer`] in a way that it returns a mutable slice,</span>
+<span class="doccomment">/// It has an advantage over [`Queue::write_buffer()`] in a way that it returns a mutable slice,</span>
 <span class="doccomment">/// which you can fill to avoid an extra data copy.</span>
 <span class="doccomment">///</span>
 <span class="doccomment">/// Using a staging belt is slightly complicated, and generally goes as follows:</span>
-<span class="doccomment">/// - Write to buffers that need writing to using [`StagingBelt::write_buffer`].</span>
-<span class="doccomment">/// - Call `finish`.</span>
-<span class="doccomment">/// - Submit all command encoders used with `StagingBelt::write_buffer`.</span>
-<span class="doccomment">/// - Call `recall`</span>
+<span class="doccomment">/// 1. Write to buffers that need writing to using [`StagingBelt::write_buffer()`].</span>
+<span class="doccomment">/// 2. Call [`StagingBelt::finish()`].</span>
+<span class="doccomment">/// 3. Submit all command encoders that were used in step 1.</span>
+<span class="doccomment">/// 4. Call [`StagingBelt::recall()`].</span>
 <span class="doccomment">///</span>
-<span class="doccomment">/// [`Queue::write_buffer`]: crate::Queue::write_buffer</span>
+<span class="doccomment">/// [`Queue::write_buffer()`]: crate::Queue::write_buffer</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StagingBelt</span> {
     <span class="ident">chunk_size</span>: <span class="ident">BufferAddress</span>,
-    <span class="doccomment">/// Chunks that we are actively using for pending transfers at this moment.</span>
+    <span class="doccomment">/// Chunks into which we are accumulating data to be transferred.</span>
     <span class="ident">active_chunks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Chunk</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Chunks that have scheduled transfers already.</span>
+    <span class="doccomment">/// Chunks that have scheduled transfers already; they are unmapped and some</span>
+    <span class="doccomment">/// command encoder has one or more `copy_buffer_to_buffer` commands with them</span>
+    <span class="doccomment">/// as source.</span>
     <span class="ident">closed_chunks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Chunk</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// Chunks that are back from the GPU and ready to be used.</span>
+    <span class="doccomment">/// Chunks that are back from the GPU and ready to be mapped for write and put</span>
+    <span class="doccomment">/// into `active_chunks`.</span>
     <span class="ident">free_chunks</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Chunk</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// When closed chunks are mapped again, the map callback sends them here.</span>
     <span class="ident">sender</span>: <span class="ident">mpsc::Sender</span><span class="op">&lt;</span><span class="ident">Chunk</span><span class="op">&gt;</span>,
+    <span class="doccomment">/// Free chunks are received here to be put on `self.free_chunks`.</span>
     <span class="ident">receiver</span>: <span class="ident">mpsc::Receiver</span><span class="op">&lt;</span><span class="ident">Chunk</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span> <span class="ident">StagingBelt</span> {
     <span class="doccomment">/// Create a new staging belt.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// The `chunk_size` is the unit of internal buffer allocation.</span>
-    <span class="doccomment">/// It&#39;s better when it&#39;s big, but ideally still 1-4 times less than</span>
-    <span class="doccomment">/// the total amount of data uploaded per submission.</span>
+    <span class="doccomment">/// The `chunk_size` is the unit of internal buffer allocation; writes will be</span>
+    <span class="doccomment">/// sub-allocated within each chunk. Therefore, for optimal use of memory, the</span>
+    <span class="doccomment">/// chunk size should be:</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// * larger than the largest single [`StagingBelt::write_buffer()`] operation;</span>
+    <span class="doccomment">/// * 1-4 times less than the total amount of data uploaded per submission</span>
+    <span class="doccomment">///   (per [`StagingBelt::finish()`]); and</span>
+    <span class="doccomment">/// * bigger is better, within these bounds.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">chunk_size</span>: <span class="ident">BufferAddress</span>) -&gt; <span class="self">Self</span> {
         <span class="kw">let</span> (<span class="ident">sender</span>, <span class="ident">receiver</span>) <span class="op">=</span> <span class="ident">mpsc::channel</span>();
         <span class="ident">StagingBelt</span> {
@@ -218,7 +249,12 @@
     <span class="doccomment">/// at the specified offset.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The upload will be placed into the provided command encoder. This encoder</span>
-    <span class="doccomment">/// must be submitted after `finish` is called and before `recall` is called.</span>
+    <span class="doccomment">/// must be submitted after [`StagingBelt::finish()`] is called and before</span>
+    <span class="doccomment">/// [`StagingBelt::recall()`] is called.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// If the `size` is greater than the size of any free internal buffer, a new buffer</span>
+    <span class="doccomment">/// will be allocated for it. Therefore, the `chunk_size` passed to [`StagingBelt::new()`]</span>
+    <span class="doccomment">/// should ideally be larger than every such size.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_buffer</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">encoder</span>: <span class="kw-2">&amp;mut</span> <span class="ident">CommandEncoder</span>,
@@ -268,8 +304,12 @@
 
     <span class="doccomment">/// Prepare currently mapped buffers for use in a submission.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// At this point, all the partially used staging buffers are closed until</span>
-    <span class="doccomment">/// the GPU is done copying the data from them.</span>
+    <span class="doccomment">/// This must be called before the command encoder(s) provided to</span>
+    <span class="doccomment">/// [`StagingBelt::write_buffer()`] are submitted.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// At this point, all the partially used staging buffers are closed (cannot be used for</span>
+    <span class="doccomment">/// further writes) until after [`StagingBelt::recall()`] is called *and* the GPU is done</span>
+    <span class="doccomment">/// copying the data from them.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">for</span> <span class="ident">chunk</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">active_chunks</span>.<span class="ident">drain</span>(..) {
             <span class="ident">chunk</span>.<span class="ident">buffer</span>.<span class="ident">unmap</span>();
@@ -279,7 +319,9 @@
 
     <span class="doccomment">/// Recall all of the closed buffers back to be reused.</span>
     <span class="doccomment">///</span>
-    <span class="doccomment">/// This has to be called after the command encoders written to `write_buffer` are submitted!</span>
+    <span class="doccomment">/// This must only be called after the command encoder(s) provided to</span>
+    <span class="doccomment">/// [`StagingBelt::write_buffer()`] are submitted. Additional calls are harmless.</span>
+    <span class="doccomment">/// Not calling this as soon as possible may result in increased buffer memory usage.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recall</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">chunk</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">receiver</span>.<span class="ident">try_recv</span>() {
             <span class="ident">chunk</span>.<span class="ident">offset</span> <span class="op">=</span> <span class="number">0</span>;
