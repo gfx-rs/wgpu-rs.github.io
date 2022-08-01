@@ -120,6 +120,23 @@
 <span id="120">120</span>
 <span id="121">121</span>
 <span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
 </pre><pre class="rust"><code><span class="doccomment">//! RenderDoc integration - &lt;https://renderdoc.org/&gt;</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">ffi</span>, <span class="ident">os</span>, <span class="ident">ptr</span>};
@@ -150,6 +167,10 @@
     },
 }
 
+<span class="comment">// TODO: replace with libloading API once supported</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">unix</span>)]</span>
+<span class="kw">const</span> <span class="ident">RTLD_NOLOAD</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="number">0x4</span>;
+
 <span class="kw">impl</span> <span class="ident">RenderDoc</span> {
     <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
         <span class="kw">type</span> <span class="ident">GetApiFn</span> <span class="op">=</span> <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">version</span>: <span class="ident">u32</span>, <span class="ident">out</span>: <span class="kw-2">*mut</span> <span class="kw-2">*mut</span> <span class="ident">ffi::c_void</span>) -&gt; <span class="ident">i32</span>;
@@ -161,7 +182,20 @@
         <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> <span class="op">=</span> <span class="string">&quot;android&quot;</span>)]</span>
         <span class="kw">let</span> <span class="ident">renderdoc_filename</span> <span class="op">=</span> <span class="string">&quot;libVkLayer_GLES_RenderDoc.so&quot;</span>;
 
-        <span class="kw">let</span> <span class="ident">renderdoc_lib</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">libloading::Library::new</span>(<span class="ident">renderdoc_filename</span>) {
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">unix</span>)]</span>
+        <span class="kw">let</span> <span class="ident">renderdoc_result</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">libloading::Library</span>, <span class="ident">libloading::Error</span><span class="op">&gt;</span> <span class="op">=</span>
+            <span class="ident">libloading::os::unix::Library::open</span>(
+                <span class="prelude-val">Some</span>(<span class="ident">renderdoc_filename</span>),
+                <span class="ident">libloading::os::unix::RTLD_NOW</span> <span class="op">|</span> <span class="ident">RTLD_NOLOAD</span>,
+            )
+            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">lib</span><span class="op">|</span> <span class="ident">lib</span>.<span class="ident">into</span>());
+
+        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">windows</span>)]</span>
+        <span class="kw">let</span> <span class="ident">renderdoc_result</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">libloading::Library</span>, <span class="ident">libloading::Error</span><span class="op">&gt;</span> <span class="op">=</span>
+            <span class="ident">libloading::os::windows::Library::open_already_loaded</span>(<span class="ident">renderdoc_filename</span>)
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">lib</span><span class="op">|</span> <span class="ident">lib</span>.<span class="ident">into</span>());
+
+        <span class="kw">let</span> <span class="ident">renderdoc_lib</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">renderdoc_result</span> {
             <span class="prelude-val">Ok</span>(<span class="ident">lib</span>) =&gt; <span class="ident">lib</span>,
             <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
                 <span class="kw">return</span> <span class="ident">RenderDoc::NotAvailable</span> {
@@ -243,4 +277,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (f9cba6374 2022-07-31)" ></div></body></html>
