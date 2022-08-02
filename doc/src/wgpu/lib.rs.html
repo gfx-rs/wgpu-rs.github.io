@@ -3651,6 +3651,22 @@
 <span id="3649">3649</span>
 <span id="3650">3650</span>
 <span id="3651">3651</span>
+<span id="3652">3652</span>
+<span id="3653">3653</span>
+<span id="3654">3654</span>
+<span id="3655">3655</span>
+<span id="3656">3656</span>
+<span id="3657">3657</span>
+<span id="3658">3658</span>
+<span id="3659">3659</span>
+<span id="3660">3660</span>
+<span id="3661">3661</span>
+<span id="3662">3662</span>
+<span id="3663">3663</span>
+<span id="3664">3664</span>
+<span id="3665">3665</span>
+<span id="3666">3666</span>
+<span id="3667">3667</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! To start using the API, create an [`Instance`].</span>
@@ -4312,6 +4328,7 @@
     <span class="ident">context</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">C</span><span class="op">&gt;</span>,
     <span class="ident">id</span>: <span class="op">&lt;</span><span class="ident">C</span> <span class="kw">as</span> <span class="ident">Context</span><span class="op">&gt;</span><span class="ident">::BufferId</span>,
     <span class="ident">map_context</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">MapContext</span><span class="op">&gt;</span>,
+    <span class="ident">size</span>: <span class="ident">wgt::BufferAddress</span>,
     <span class="ident">usage</span>: <span class="ident">BufferUsages</span>,
 }
 
@@ -5782,6 +5799,7 @@
             <span class="ident">context</span>: <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">context</span>),
             <span class="ident">id</span>: <span class="ident">Context::device_create_buffer</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>, <span class="ident">desc</span>),
             <span class="ident">map_context</span>: <span class="ident">Mutex::new</span>(<span class="ident">map_context</span>),
+            <span class="ident">size</span>: <span class="ident">desc</span>.<span class="ident">size</span>,
             <span class="ident">usage</span>: <span class="ident">desc</span>.<span class="ident">usage</span>,
         }
     }
@@ -6078,6 +6096,20 @@
     <span class="doccomment">/// Destroy the associated native resources as soon as possible.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">destroy</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="ident">Context::buffer_destroy</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">id</span>);
+    }
+
+    <span class="doccomment">/// Returns the length of the buffer allocation in bytes.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This is always equal to the `size` that was specified when creating the buffer.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">wgt::BufferAddress</span> {
+        <span class="self">self</span>.<span class="ident">size</span>
+    }
+
+    <span class="doccomment">/// Returns the allowed usages for this `Buffer`.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// This is always equal to the `usage` that was specified when creating the buffer.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">usage</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">BufferUsages</span> {
+        <span class="self">self</span>.<span class="ident">usage</span>
     }
 }
 
