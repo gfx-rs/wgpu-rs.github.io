@@ -107,32 +107,32 @@
 <span class="doccomment">/// Offsets are calculated automatically.</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
 <span class="macro">macro_rules!</span> <span class="ident">vertex_attr_array</span> {
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">loc</span>:<span class="ident">expr</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fmt</span>:<span class="ident">ident</span>),<span class="op">*</span> $(,)<span class="question-mark">?</span>) =&gt; {
+    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">loc</span>:<span class="ident">expr</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fmt</span>:<span class="ident">ident</span>),* $(,)<span class="question-mark">?</span>) =&gt; {
         <span class="macro-nonterminal">$</span><span class="macro">crate::vertex_attr_array!</span>([] ; <span class="number">0</span>; $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">loc</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">fmt</span> ,)<span class="kw-2">*</span>)
     };
     ([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">expr</span>,)<span class="kw-2">*</span>] ; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">off</span>:<span class="ident">expr</span> ;) =&gt; { [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>,)<span class="kw-2">*</span>] };
     ([$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>:<span class="ident">expr</span>,)<span class="kw-2">*</span>] ; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">off</span>:<span class="ident">expr</span> ; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">loc</span>:<span class="ident">expr</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">item</span>:<span class="ident">ident</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ll</span>:<span class="ident">expr</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ii</span>:<span class="ident">ident</span> ,)<span class="kw-2">*</span>) =&gt; {
         <span class="macro-nonterminal">$</span><span class="macro">crate::vertex_attr_array!</span>(
-            [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>,)<span class="op">*</span>
+            [$(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">t</span>,)*
             <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::VertexAttribute</span> {
                 <span class="ident">format</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::VertexFormat</span> :: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">item</span>,
                 <span class="ident">offset</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">off</span>,
                 <span class="ident">shader_location</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">loc</span>,
             },];
-            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">off</span> <span class="op">+</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::VertexFormat</span> :: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">item</span>.<span class="ident">size</span>();
-            $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ll</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ii</span> ,)<span class="op">*</span>
+            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">off</span> + <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::VertexFormat</span> :: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">item</span>.<span class="ident">size</span>();
+            $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">ll</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ii</span> ,)*
         )
     };
 }
 
 <span class="attribute">#[<span class="ident">test</span>]</span>
 <span class="kw">fn</span> <span class="ident">test_vertex_attr_array</span>() {
-    <span class="kw">let</span> <span class="ident">attrs</span> <span class="op">=</span> <span class="macro">vertex_attr_array!</span>[<span class="number">0</span> =&gt; <span class="ident">Float32x2</span>, <span class="number">3</span> =&gt; <span class="ident">Uint16x4</span>];
+    <span class="kw">let</span> <span class="ident">attrs</span> = <span class="macro">vertex_attr_array!</span>[<span class="number">0</span> =&gt; <span class="ident">Float32x2</span>, <span class="number">3</span> =&gt; <span class="ident">Uint16x4</span>];
     <span class="comment">// VertexAttribute does not support PartialEq, so we cannot test directly</span>
     <span class="macro">assert_eq!</span>(<span class="ident">attrs</span>.<span class="ident">len</span>(), <span class="number">2</span>);
     <span class="macro">assert_eq!</span>(<span class="ident">attrs</span>[<span class="number">0</span>].<span class="ident">offset</span>, <span class="number">0</span>);
     <span class="macro">assert_eq!</span>(<span class="ident">attrs</span>[<span class="number">0</span>].<span class="ident">shader_location</span>, <span class="number">0</span>);
-    <span class="macro">assert_eq!</span>(<span class="ident">attrs</span>[<span class="number">1</span>].<span class="ident">offset</span>, <span class="ident">std::mem::size_of</span>::<span class="op">&lt;</span>(<span class="ident">f32</span>, <span class="ident">f32</span>)<span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>);
+    <span class="macro">assert_eq!</span>(<span class="ident">attrs</span>[<span class="number">1</span>].<span class="ident">offset</span>, <span class="ident">std::mem::size_of</span>::&lt;(<span class="ident">f32</span>, <span class="ident">f32</span>)&gt;() <span class="kw">as</span> <span class="ident">u64</span>);
     <span class="macro">assert_eq!</span>(<span class="ident">attrs</span>[<span class="number">1</span>].<span class="ident">shader_location</span>, <span class="number">3</span>);
 }
 
@@ -142,7 +142,7 @@
 <span class="doccomment">///</span>
 <span class="doccomment">/// Return type: [`crate::ShaderModuleDescriptor`]</span>
 <span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;spirv&quot;</span>)]</span>
+<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> = <span class="string">&quot;spirv&quot;</span>)]</span>
 <span class="macro">macro_rules!</span> <span class="ident">include_spirv</span> {
     ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">token</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) =&gt; {
         {
@@ -187,4 +187,4 @@
     };
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (d394408fb 2022-08-07)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (f22819bcc 2022-08-12)" ></div></body></html>

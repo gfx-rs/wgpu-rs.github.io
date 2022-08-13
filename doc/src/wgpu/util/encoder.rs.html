@@ -209,7 +209,7 @@
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">BindGroup</span>, <span class="ident">Buffer</span>, <span class="ident">BufferSlice</span>, <span class="ident">RenderBundleEncoder</span>, <span class="ident">RenderPass</span>, <span class="ident">RenderPipeline</span>};
 
 <span class="doccomment">/// Methods shared by [`RenderPass`] and [`RenderBundleEncoder`].</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RenderEncoder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RenderEncoder</span>&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="doccomment">/// Sets the active bind group for a given bind group index. The bind group layout</span>
     <span class="doccomment">/// in the active pipeline when any `draw()` function is called must match the layout of this bind group.</span>
     <span class="doccomment">///</span>
@@ -225,7 +225,7 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// Subsequent calls to [`draw_indexed`](RenderEncoder::draw_indexed) on this [`RenderEncoder`] will</span>
     <span class="doccomment">/// use `buffer` as the source index buffer.</span>
-    <span class="kw">fn</span> <span class="ident">set_index_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">index_format</span>: <span class="ident">IndexFormat</span>);
+    <span class="kw">fn</span> <span class="ident">set_index_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span>&lt;<span class="lifetime">&#39;a</span>&gt;, <span class="ident">index_format</span>: <span class="ident">IndexFormat</span>);
 
     <span class="doccomment">/// Assign a vertex buffer to a slot.</span>
     <span class="doccomment">///</span>
@@ -237,18 +237,18 @@
     <span class="doccomment">///</span>
     <span class="doccomment">/// [`draw`]: RenderEncoder::draw</span>
     <span class="doccomment">/// [`draw_indexed`]: RenderEncoder::draw_indexed</span>
-    <span class="kw">fn</span> <span class="ident">set_vertex_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">slot</span>: <span class="ident">u32</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>);
+    <span class="kw">fn</span> <span class="ident">set_vertex_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">slot</span>: <span class="ident">u32</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span>&lt;<span class="lifetime">&#39;a</span>&gt;);
 
     <span class="doccomment">/// Draws primitives from the active vertex buffer(s).</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The active vertex buffers can be set with [`RenderEncoder::set_vertex_buffer`].</span>
-    <span class="kw">fn</span> <span class="ident">draw</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vertices</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">instances</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>);
+    <span class="kw">fn</span> <span class="ident">draw</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vertices</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;, <span class="ident">instances</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;);
 
     <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffers.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// The active index buffer can be set with [`RenderEncoder::set_index_buffer`], while the active</span>
     <span class="doccomment">/// vertex buffers can be set with [`RenderEncoder::set_vertex_buffer`].</span>
-    <span class="kw">fn</span> <span class="ident">draw_indexed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">indices</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">base_vertex</span>: <span class="ident">i32</span>, <span class="ident">instances</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>);
+    <span class="kw">fn</span> <span class="ident">draw_indexed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">indices</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;, <span class="ident">base_vertex</span>: <span class="ident">i32</span>, <span class="ident">instances</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;);
 
     <span class="doccomment">/// Draws primitives from the active vertex buffer(s) based on the contents of the `indirect_buffer`.</span>
     <span class="doccomment">///</span>
@@ -303,7 +303,7 @@
     <span class="kw">fn</span> <span class="ident">set_push_constants</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">stages</span>: <span class="ident">wgt::ShaderStages</span>, <span class="ident">offset</span>: <span class="ident">u32</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]);
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">RenderEncoder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RenderPass</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; <span class="ident">RenderEncoder</span>&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for</span> <span class="ident">RenderPass</span>&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
     <span class="kw">fn</span> <span class="ident">set_bind_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">u32</span>, <span class="ident">bind_group</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BindGroup</span>, <span class="ident">offsets</span>: <span class="kw-2">&amp;</span>[<span class="ident">DynamicOffset</span>]) {
         <span class="ident"><span class="self">Self</span>::set_bind_group</span>(<span class="self">self</span>, <span class="ident">index</span>, <span class="ident">bind_group</span>, <span class="ident">offsets</span>);
@@ -315,22 +315,22 @@
     }
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_index_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">index_format</span>: <span class="ident">IndexFormat</span>) {
+    <span class="kw">fn</span> <span class="ident">set_index_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span>&lt;<span class="lifetime">&#39;a</span>&gt;, <span class="ident">index_format</span>: <span class="ident">IndexFormat</span>) {
         <span class="ident"><span class="self">Self</span>::set_index_buffer</span>(<span class="self">self</span>, <span class="ident">buffer_slice</span>, <span class="ident">index_format</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_vertex_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">slot</span>: <span class="ident">u32</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) {
+    <span class="kw">fn</span> <span class="ident">set_vertex_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">slot</span>: <span class="ident">u32</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span>&lt;<span class="lifetime">&#39;a</span>&gt;) {
         <span class="ident"><span class="self">Self</span>::set_vertex_buffer</span>(<span class="self">self</span>, <span class="ident">slot</span>, <span class="ident">buffer_slice</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">draw</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vertices</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">instances</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>) {
+    <span class="kw">fn</span> <span class="ident">draw</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vertices</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;, <span class="ident">instances</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;) {
         <span class="ident"><span class="self">Self</span>::draw</span>(<span class="self">self</span>, <span class="ident">vertices</span>, <span class="ident">instances</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">draw_indexed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">indices</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">base_vertex</span>: <span class="ident">i32</span>, <span class="ident">instances</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>) {
+    <span class="kw">fn</span> <span class="ident">draw_indexed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">indices</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;, <span class="ident">base_vertex</span>: <span class="ident">i32</span>, <span class="ident">instances</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;) {
         <span class="ident"><span class="self">Self</span>::draw_indexed</span>(<span class="self">self</span>, <span class="ident">indices</span>, <span class="ident">base_vertex</span>, <span class="ident">instances</span>);
     }
 
@@ -354,7 +354,7 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">RenderEncoder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">RenderBundleEncoder</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; <span class="ident">RenderEncoder</span>&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for</span> <span class="ident">RenderBundleEncoder</span>&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
     <span class="kw">fn</span> <span class="ident">set_bind_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">u32</span>, <span class="ident">bind_group</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BindGroup</span>, <span class="ident">offsets</span>: <span class="kw-2">&amp;</span>[<span class="ident">DynamicOffset</span>]) {
         <span class="ident"><span class="self">Self</span>::set_bind_group</span>(<span class="self">self</span>, <span class="ident">index</span>, <span class="ident">bind_group</span>, <span class="ident">offsets</span>);
@@ -366,22 +366,22 @@
     }
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_index_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="ident">index_format</span>: <span class="ident">IndexFormat</span>) {
+    <span class="kw">fn</span> <span class="ident">set_index_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span>&lt;<span class="lifetime">&#39;a</span>&gt;, <span class="ident">index_format</span>: <span class="ident">IndexFormat</span>) {
         <span class="ident"><span class="self">Self</span>::set_index_buffer</span>(<span class="self">self</span>, <span class="ident">buffer_slice</span>, <span class="ident">index_format</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_vertex_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">slot</span>: <span class="ident">u32</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) {
+    <span class="kw">fn</span> <span class="ident">set_vertex_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">slot</span>: <span class="ident">u32</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span>&lt;<span class="lifetime">&#39;a</span>&gt;) {
         <span class="ident"><span class="self">Self</span>::set_vertex_buffer</span>(<span class="self">self</span>, <span class="ident">slot</span>, <span class="ident">buffer_slice</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">draw</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vertices</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">instances</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>) {
+    <span class="kw">fn</span> <span class="ident">draw</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vertices</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;, <span class="ident">instances</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;) {
         <span class="ident"><span class="self">Self</span>::draw</span>(<span class="self">self</span>, <span class="ident">vertices</span>, <span class="ident">instances</span>);
     }
 
     <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">draw_indexed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">indices</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>, <span class="ident">base_vertex</span>: <span class="ident">i32</span>, <span class="ident">instances</span>: <span class="ident">Range</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>) {
+    <span class="kw">fn</span> <span class="ident">draw_indexed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">indices</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;, <span class="ident">base_vertex</span>: <span class="ident">i32</span>, <span class="ident">instances</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;) {
         <span class="ident"><span class="self">Self</span>::draw_indexed</span>(<span class="self">self</span>, <span class="ident">indices</span>, <span class="ident">base_vertex</span>, <span class="ident">instances</span>);
     }
 
@@ -405,4 +405,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (d394408fb 2022-08-07)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (f22819bcc 2022-08-12)" ></div></body></html>

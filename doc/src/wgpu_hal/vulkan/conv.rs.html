@@ -969,7 +969,7 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_vk_surface_formats</span>(<span class="ident">sf</span>: <span class="ident">vk::SurfaceFormatKHR</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">wgt::TextureFormat</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_vk_surface_formats</span>(<span class="ident">sf</span>: <span class="ident">vk::SurfaceFormatKHR</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="ident">wgt::TextureFormat</span>&gt; {
     <span class="kw">use</span> <span class="ident">ash::vk::Format</span> <span class="kw">as</span> <span class="ident">F</span>;
     <span class="kw">use</span> <span class="ident">wgt::TextureFormat</span> <span class="kw">as</span> <span class="ident">Tf</span>;
     <span class="comment">// List we care about pulled from https://vulkan.gpuinfo.org/listsurfaceformats.php</span>
@@ -987,13 +987,13 @@
     })
 }
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::Attachment</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident"><span class="kw">super</span>::Api</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::Attachment</span>&lt;<span class="lifetime">&#39;_</span>, <span class="ident"><span class="kw">super</span>::Api</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">make_attachment_key</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">ops</span>: <span class="ident"><span class="kw">crate</span>::AttachmentOps</span>,
         <span class="ident">caps</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::PrivateCapabilities</span>,
     ) -&gt; <span class="ident"><span class="kw">super</span>::AttachmentKey</span> {
-        <span class="kw">let</span> <span class="ident">aspects</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">view</span>.<span class="ident">aspects</span>();
+        <span class="kw">let</span> <span class="ident">aspects</span> = <span class="self">self</span>.<span class="ident">view</span>.<span class="ident">aspects</span>();
         <span class="ident"><span class="kw">super</span>::AttachmentKey</span> {
             <span class="ident">format</span>: <span class="ident">caps</span>.<span class="ident">map_texture_format</span>(<span class="self">self</span>.<span class="ident">view</span>.<span class="ident">attachment</span>.<span class="ident">view_format</span>),
             <span class="ident">layout</span>: <span class="ident">derive_image_layout</span>(<span class="self">self</span>.<span class="ident">usage</span>, <span class="ident">aspects</span>),
@@ -1002,9 +1002,9 @@
     }
 }
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::ColorAttachment</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span>, <span class="ident"><span class="kw">super</span>::Api</span><span class="op">&gt;</span> {
+<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::ColorAttachment</span>&lt;<span class="lifetime">&#39;_</span>, <span class="ident"><span class="kw">super</span>::Api</span>&gt; {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">make_vk_clear_color</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">vk::ClearColorValue</span> {
-        <span class="kw">let</span> <span class="ident">cv</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">clear_value</span>;
+        <span class="kw">let</span> <span class="ident">cv</span> = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">clear_value</span>;
         <span class="kw">match</span> <span class="self">self</span>
             .<span class="ident">target</span>
             .<span class="ident">view</span>
@@ -1013,7 +1013,7 @@
             .<span class="ident">describe</span>()
             .<span class="ident">sample_type</span>
         {
-            <span class="ident">wgt::TextureSampleType::Float</span> { .. } <span class="op">|</span> <span class="ident">wgt::TextureSampleType::Depth</span> =&gt; {
+            <span class="ident">wgt::TextureSampleType::Float</span> { .. } | <span class="ident">wgt::TextureSampleType::Depth</span> =&gt; {
                 <span class="ident">vk::ClearColorValue</span> {
                     <span class="ident">float32</span>: [<span class="ident">cv</span>.<span class="ident">r</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="ident">cv</span>.<span class="ident">g</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="ident">cv</span>.<span class="ident">b</span> <span class="kw">as</span> <span class="ident">f32</span>, <span class="ident">cv</span>.<span class="ident">a</span> <span class="kw">as</span> <span class="ident">f32</span>],
                 }
@@ -1033,7 +1033,7 @@
     <span class="ident">aspects</span>: <span class="ident"><span class="kw">crate</span>::FormatAspects</span>,
 ) -&gt; <span class="ident">vk::ImageLayout</span> {
     <span class="comment">//Note: depth textures are always sampled with RODS layout</span>
-    <span class="kw">let</span> <span class="ident">is_color</span> <span class="op">=</span> <span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::FormatAspects::COLOR</span>);
+    <span class="kw">let</span> <span class="ident">is_color</span> = <span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::FormatAspects::COLOR</span>);
     <span class="kw">match</span> <span class="ident">usage</span> {
         <span class="ident"><span class="kw">crate</span>::TextureUses::UNINITIALIZED</span> =&gt; <span class="ident">vk::ImageLayout::UNDEFINED</span>,
         <span class="ident"><span class="kw">crate</span>::TextureUses::COPY_SRC</span> =&gt; <span class="ident">vk::ImageLayout::TRANSFER_SRC_OPTIMAL</span>,
@@ -1044,7 +1044,7 @@
             <span class="ident">vk::ImageLayout::DEPTH_STENCIL_ATTACHMENT_OPTIMAL</span>
         }
         <span class="kw">_</span> =&gt; {
-            <span class="kw">if</span> <span class="ident">usage</span> <span class="op">==</span> <span class="ident"><span class="kw">crate</span>::TextureUses::PRESENT</span> {
+            <span class="kw">if</span> <span class="ident">usage</span> == <span class="ident"><span class="kw">crate</span>::TextureUses::PRESENT</span> {
                 <span class="ident">vk::ImageLayout::PRESENT_SRC_KHR</span>
             } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">is_color</span> {
                 <span class="ident">vk::ImageLayout::GENERAL</span>
@@ -1056,26 +1056,26 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_texture_usage</span>(<span class="ident">usage</span>: <span class="ident"><span class="kw">crate</span>::TextureUses</span>) -&gt; <span class="ident">vk::ImageUsageFlags</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">vk::ImageUsageFlags::empty</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> = <span class="ident">vk::ImageUsageFlags::empty</span>();
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::COPY_SRC</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::ImageUsageFlags::TRANSFER_SRC</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::ImageUsageFlags::TRANSFER_SRC</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::COPY_DST</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::ImageUsageFlags::TRANSFER_DST</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::ImageUsageFlags::TRANSFER_DST</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::RESOURCE</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::ImageUsageFlags::SAMPLED</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::ImageUsageFlags::SAMPLED</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::COLOR_TARGET</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::ImageUsageFlags::COLOR_ATTACHMENT</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::ImageUsageFlags::COLOR_ATTACHMENT</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(
-        <span class="ident"><span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_READ</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_WRITE</span>,
+        <span class="ident"><span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_READ</span> | <span class="ident"><span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_WRITE</span>,
     ) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT</span>;
     }
-    <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ_WRITE</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::ImageUsageFlags::STORAGE</span>;
+    <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ</span> | <span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ_WRITE</span>) {
+        <span class="ident">flags</span> |= <span class="ident">vk::ImageUsageFlags::STORAGE</span>;
     }
     <span class="ident">flags</span>
 }
@@ -1083,49 +1083,49 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_texture_usage_to_barrier</span>(
     <span class="ident">usage</span>: <span class="ident"><span class="kw">crate</span>::TextureUses</span>,
 ) -&gt; (<span class="ident">vk::PipelineStageFlags</span>, <span class="ident">vk::AccessFlags</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stages</span> <span class="op">=</span> <span class="ident">vk::PipelineStageFlags::empty</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">access</span> <span class="op">=</span> <span class="ident">vk::AccessFlags::empty</span>();
-    <span class="kw">let</span> <span class="ident">shader_stages</span> <span class="op">=</span> <span class="ident">vk::PipelineStageFlags::VERTEX_SHADER</span>
-        <span class="op">|</span> <span class="ident">vk::PipelineStageFlags::FRAGMENT_SHADER</span>
-        <span class="op">|</span> <span class="ident">vk::PipelineStageFlags::COMPUTE_SHADER</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stages</span> = <span class="ident">vk::PipelineStageFlags::empty</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">access</span> = <span class="ident">vk::AccessFlags::empty</span>();
+    <span class="kw">let</span> <span class="ident">shader_stages</span> = <span class="ident">vk::PipelineStageFlags::VERTEX_SHADER</span>
+        | <span class="ident">vk::PipelineStageFlags::FRAGMENT_SHADER</span>
+        | <span class="ident">vk::PipelineStageFlags::COMPUTE_SHADER</span>;
 
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::COPY_SRC</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::PipelineStageFlags::TRANSFER</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::TRANSFER_READ</span>;
+        <span class="ident">stages</span> |= <span class="ident">vk::PipelineStageFlags::TRANSFER</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::TRANSFER_READ</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::COPY_DST</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::PipelineStageFlags::TRANSFER</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::TRANSFER_WRITE</span>;
+        <span class="ident">stages</span> |= <span class="ident">vk::PipelineStageFlags::TRANSFER</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::TRANSFER_WRITE</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::RESOURCE</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">shader_stages</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::SHADER_READ</span>;
+        <span class="ident">stages</span> |= <span class="ident">shader_stages</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::SHADER_READ</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::COLOR_TARGET</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::COLOR_ATTACHMENT_READ</span> <span class="op">|</span> <span class="ident">vk::AccessFlags::COLOR_ATTACHMENT_WRITE</span>;
+        <span class="ident">stages</span> |= <span class="ident">vk::PipelineStageFlags::COLOR_ATTACHMENT_OUTPUT</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::COLOR_ATTACHMENT_READ</span> | <span class="ident">vk::AccessFlags::COLOR_ATTACHMENT_WRITE</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_READ</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::PipelineStageFlags::EARLY_FRAGMENT_TESTS</span>
-            <span class="op">|</span> <span class="ident">vk::PipelineStageFlags::LATE_FRAGMENT_TESTS</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_READ</span>;
+        <span class="ident">stages</span> |= <span class="ident">vk::PipelineStageFlags::EARLY_FRAGMENT_TESTS</span>
+            | <span class="ident">vk::PipelineStageFlags::LATE_FRAGMENT_TESTS</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_READ</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_WRITE</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::PipelineStageFlags::EARLY_FRAGMENT_TESTS</span>
-            <span class="op">|</span> <span class="ident">vk::PipelineStageFlags::LATE_FRAGMENT_TESTS</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_READ</span>
-            <span class="op">|</span> <span class="ident">vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_WRITE</span>;
+        <span class="ident">stages</span> |= <span class="ident">vk::PipelineStageFlags::EARLY_FRAGMENT_TESTS</span>
+            | <span class="ident">vk::PipelineStageFlags::LATE_FRAGMENT_TESTS</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_READ</span>
+            | <span class="ident">vk::AccessFlags::DEPTH_STENCIL_ATTACHMENT_WRITE</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">shader_stages</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::SHADER_READ</span>;
+        <span class="ident">stages</span> |= <span class="ident">shader_stages</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::SHADER_READ</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ_WRITE</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">shader_stages</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::SHADER_READ</span> <span class="op">|</span> <span class="ident">vk::AccessFlags::SHADER_WRITE</span>;
+        <span class="ident">stages</span> |= <span class="ident">shader_stages</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::SHADER_READ</span> | <span class="ident">vk::AccessFlags::SHADER_WRITE</span>;
     }
 
-    <span class="kw">if</span> <span class="ident">usage</span> <span class="op">==</span> <span class="ident"><span class="kw">crate</span>::TextureUses::UNINITIALIZED</span> <span class="op">|</span><span class="op">|</span> <span class="ident">usage</span> <span class="op">==</span> <span class="ident"><span class="kw">crate</span>::TextureUses::PRESENT</span> {
+    <span class="kw">if</span> <span class="ident">usage</span> == <span class="ident"><span class="kw">crate</span>::TextureUses::UNINITIALIZED</span> || <span class="ident">usage</span> == <span class="ident"><span class="kw">crate</span>::TextureUses::PRESENT</span> {
         (
             <span class="ident">vk::PipelineStageFlags::TOP_OF_PIPE</span>,
             <span class="ident">vk::AccessFlags::empty</span>(),
@@ -1136,24 +1136,24 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_vk_image_usage</span>(<span class="ident">usage</span>: <span class="ident">vk::ImageUsageFlags</span>) -&gt; <span class="ident"><span class="kw">crate</span>::TextureUses</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bits</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::TextureUses::empty</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bits</span> = <span class="ident"><span class="kw">crate</span>::TextureUses::empty</span>();
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">vk::ImageUsageFlags::TRANSFER_SRC</span>) {
-        <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="kw">crate</span>::TextureUses::COPY_SRC</span>;
+        <span class="ident">bits</span> |= <span class="ident"><span class="kw">crate</span>::TextureUses::COPY_SRC</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">vk::ImageUsageFlags::TRANSFER_DST</span>) {
-        <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="kw">crate</span>::TextureUses::COPY_DST</span>;
+        <span class="ident">bits</span> |= <span class="ident"><span class="kw">crate</span>::TextureUses::COPY_DST</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">vk::ImageUsageFlags::SAMPLED</span>) {
-        <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="kw">crate</span>::TextureUses::RESOURCE</span>;
+        <span class="ident">bits</span> |= <span class="ident"><span class="kw">crate</span>::TextureUses::RESOURCE</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">vk::ImageUsageFlags::COLOR_ATTACHMENT</span>) {
-        <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="kw">crate</span>::TextureUses::COLOR_TARGET</span>;
+        <span class="ident">bits</span> |= <span class="ident"><span class="kw">crate</span>::TextureUses::COLOR_TARGET</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">vk::ImageUsageFlags::DEPTH_STENCIL_ATTACHMENT</span>) {
-        <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_READ</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_WRITE</span>;
+        <span class="ident">bits</span> |= <span class="ident"><span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_READ</span> | <span class="ident"><span class="kw">crate</span>::TextureUses::DEPTH_STENCIL_WRITE</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident">vk::ImageUsageFlags::STORAGE</span>) {
-        <span class="ident">bits</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ_WRITE</span>;
+        <span class="ident">bits</span> |= <span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ</span> | <span class="ident"><span class="kw">crate</span>::TextureUses::STORAGE_READ_WRITE</span>;
     }
     <span class="ident">bits</span>
 }
@@ -1214,15 +1214,15 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_aspects</span>(<span class="ident">aspects</span>: <span class="ident"><span class="kw">crate</span>::FormatAspects</span>) -&gt; <span class="ident">vk::ImageAspectFlags</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">vk::ImageAspectFlags::empty</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> = <span class="ident">vk::ImageAspectFlags::empty</span>();
     <span class="kw">if</span> <span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::FormatAspects::COLOR</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::ImageAspectFlags::COLOR</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::ImageAspectFlags::COLOR</span>;
     }
     <span class="kw">if</span> <span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::FormatAspects::DEPTH</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::ImageAspectFlags::DEPTH</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::ImageAspectFlags::DEPTH</span>;
     }
     <span class="kw">if</span> <span class="ident">aspects</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::FormatAspects::STENCIL</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::ImageAspectFlags::STENCIL</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::ImageAspectFlags::STENCIL</span>;
     }
     <span class="ident">flags</span>
 }
@@ -1230,12 +1230,12 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_attachment_ops</span>(
     <span class="ident">op</span>: <span class="ident"><span class="kw">crate</span>::AttachmentOps</span>,
 ) -&gt; (<span class="ident">vk::AttachmentLoadOp</span>, <span class="ident">vk::AttachmentStoreOp</span>) {
-    <span class="kw">let</span> <span class="ident">load_op</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">op</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::AttachmentOps::LOAD</span>) {
+    <span class="kw">let</span> <span class="ident">load_op</span> = <span class="kw">if</span> <span class="ident">op</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::AttachmentOps::LOAD</span>) {
         <span class="ident">vk::AttachmentLoadOp::LOAD</span>
     } <span class="kw">else</span> {
         <span class="ident">vk::AttachmentLoadOp::CLEAR</span>
     };
-    <span class="kw">let</span> <span class="ident">store_op</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">op</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::AttachmentOps::STORE</span>) {
+    <span class="kw">let</span> <span class="ident">store_op</span> = <span class="kw">if</span> <span class="ident">op</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::AttachmentOps::STORE</span>) {
         <span class="ident">vk::AttachmentStoreOp::STORE</span>
     } <span class="kw">else</span> {
         <span class="ident">vk::AttachmentStoreOp::DONT_CARE</span>
@@ -1249,20 +1249,20 @@
         <span class="ident">wgt::PresentMode::Mailbox</span> =&gt; <span class="ident">vk::PresentModeKHR::MAILBOX</span>,
         <span class="ident">wgt::PresentMode::Fifo</span> =&gt; <span class="ident">vk::PresentModeKHR::FIFO</span>,
         <span class="ident">wgt::PresentMode::FifoRelaxed</span> =&gt; <span class="ident">vk::PresentModeKHR::FIFO_RELAXED</span>,
-        <span class="ident">wgt::PresentMode::AutoNoVsync</span> <span class="op">|</span> <span class="ident">wgt::PresentMode::AutoVsync</span> =&gt; {
+        <span class="ident">wgt::PresentMode::AutoNoVsync</span> | <span class="ident">wgt::PresentMode::AutoVsync</span> =&gt; {
             <span class="macro">unreachable!</span>(<span class="string">&quot;Cannot create swapchain with Auto PresentationMode&quot;</span>)
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_vk_present_mode</span>(<span class="ident">mode</span>: <span class="ident">vk::PresentModeKHR</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">wgt::PresentMode</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">mode</span> <span class="op">==</span> <span class="ident">vk::PresentModeKHR::IMMEDIATE</span> {
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_vk_present_mode</span>(<span class="ident">mode</span>: <span class="ident">vk::PresentModeKHR</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="ident">wgt::PresentMode</span>&gt; {
+    <span class="kw">if</span> <span class="ident">mode</span> == <span class="ident">vk::PresentModeKHR::IMMEDIATE</span> {
         <span class="prelude-val">Some</span>(<span class="ident">wgt::PresentMode::Immediate</span>)
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">mode</span> <span class="op">==</span> <span class="ident">vk::PresentModeKHR::MAILBOX</span> {
+    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">mode</span> == <span class="ident">vk::PresentModeKHR::MAILBOX</span> {
         <span class="prelude-val">Some</span>(<span class="ident">wgt::PresentMode::Mailbox</span>)
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">mode</span> <span class="op">==</span> <span class="ident">vk::PresentModeKHR::FIFO</span> {
+    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">mode</span> == <span class="ident">vk::PresentModeKHR::FIFO</span> {
         <span class="prelude-val">Some</span>(<span class="ident">wgt::PresentMode::Fifo</span>)
-    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">mode</span> <span class="op">==</span> <span class="ident">vk::PresentModeKHR::FIFO_RELAXED</span> {
+    } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">mode</span> == <span class="ident">vk::PresentModeKHR::FIFO_RELAXED</span> {
         <span class="comment">//Some(wgt::PresentMode::Relaxed)</span>
         <span class="prelude-val">None</span>
     } <span class="kw">else</span> {
@@ -1279,8 +1279,8 @@
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_vk_composite_alpha</span>(<span class="ident">flags</span>: <span class="ident">vk::CompositeAlphaFlagsKHR</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident"><span class="kw">crate</span>::CompositeAlphaMode</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">modes</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_vk_composite_alpha</span>(<span class="ident">flags</span>: <span class="ident">vk::CompositeAlphaFlagsKHR</span>) -&gt; <span class="ident">Vec</span>&lt;<span class="ident"><span class="kw">crate</span>::CompositeAlphaMode</span>&gt; {
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">modes</span> = <span class="ident">Vec::new</span>();
     <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">vk::CompositeAlphaFlagsKHR::OPAQUE</span>) {
         <span class="ident">modes</span>.<span class="ident">push</span>(<span class="ident"><span class="kw">crate</span>::CompositeAlphaMode::Opaque</span>);
     }
@@ -1294,27 +1294,27 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_buffer_usage</span>(<span class="ident">usage</span>: <span class="ident"><span class="kw">crate</span>::BufferUses</span>) -&gt; <span class="ident">vk::BufferUsageFlags</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">vk::BufferUsageFlags::empty</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> = <span class="ident">vk::BufferUsageFlags::empty</span>();
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::COPY_SRC</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::BufferUsageFlags::TRANSFER_SRC</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::BufferUsageFlags::TRANSFER_SRC</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::COPY_DST</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::BufferUsageFlags::TRANSFER_DST</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::BufferUsageFlags::TRANSFER_DST</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::UNIFORM</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::BufferUsageFlags::UNIFORM_BUFFER</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::BufferUsageFlags::UNIFORM_BUFFER</span>;
     }
-    <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::STORAGE_READ</span> <span class="op">|</span> <span class="ident"><span class="kw">crate</span>::BufferUses::STORAGE_READ_WRITE</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::BufferUsageFlags::STORAGE_BUFFER</span>;
+    <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::STORAGE_READ</span> | <span class="ident"><span class="kw">crate</span>::BufferUses::STORAGE_READ_WRITE</span>) {
+        <span class="ident">flags</span> |= <span class="ident">vk::BufferUsageFlags::STORAGE_BUFFER</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::INDEX</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::BufferUsageFlags::INDEX_BUFFER</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::BufferUsageFlags::INDEX_BUFFER</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::VERTEX</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::BufferUsageFlags::VERTEX_BUFFER</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::BufferUsageFlags::VERTEX_BUFFER</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::INDIRECT</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::BufferUsageFlags::INDIRECT_BUFFER</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::BufferUsageFlags::INDIRECT_BUFFER</span>;
     }
     <span class="ident">flags</span>
 }
@@ -1322,51 +1322,51 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_buffer_usage_to_barrier</span>(
     <span class="ident">usage</span>: <span class="ident"><span class="kw">crate</span>::BufferUses</span>,
 ) -&gt; (<span class="ident">vk::PipelineStageFlags</span>, <span class="ident">vk::AccessFlags</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stages</span> <span class="op">=</span> <span class="ident">vk::PipelineStageFlags::empty</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">access</span> <span class="op">=</span> <span class="ident">vk::AccessFlags::empty</span>();
-    <span class="kw">let</span> <span class="ident">shader_stages</span> <span class="op">=</span> <span class="ident">vk::PipelineStageFlags::VERTEX_SHADER</span>
-        <span class="op">|</span> <span class="ident">vk::PipelineStageFlags::FRAGMENT_SHADER</span>
-        <span class="op">|</span> <span class="ident">vk::PipelineStageFlags::COMPUTE_SHADER</span>;
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stages</span> = <span class="ident">vk::PipelineStageFlags::empty</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">access</span> = <span class="ident">vk::AccessFlags::empty</span>();
+    <span class="kw">let</span> <span class="ident">shader_stages</span> = <span class="ident">vk::PipelineStageFlags::VERTEX_SHADER</span>
+        | <span class="ident">vk::PipelineStageFlags::FRAGMENT_SHADER</span>
+        | <span class="ident">vk::PipelineStageFlags::COMPUTE_SHADER</span>;
 
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::MAP_READ</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::PipelineStageFlags::HOST</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::HOST_READ</span>;
+        <span class="ident">stages</span> |= <span class="ident">vk::PipelineStageFlags::HOST</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::HOST_READ</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::MAP_WRITE</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::PipelineStageFlags::HOST</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::HOST_WRITE</span>;
+        <span class="ident">stages</span> |= <span class="ident">vk::PipelineStageFlags::HOST</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::HOST_WRITE</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::COPY_SRC</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::PipelineStageFlags::TRANSFER</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::TRANSFER_READ</span>;
+        <span class="ident">stages</span> |= <span class="ident">vk::PipelineStageFlags::TRANSFER</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::TRANSFER_READ</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::COPY_DST</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::PipelineStageFlags::TRANSFER</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::TRANSFER_WRITE</span>;
+        <span class="ident">stages</span> |= <span class="ident">vk::PipelineStageFlags::TRANSFER</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::TRANSFER_WRITE</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::UNIFORM</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">shader_stages</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::UNIFORM_READ</span>;
+        <span class="ident">stages</span> |= <span class="ident">shader_stages</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::UNIFORM_READ</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::STORAGE_READ</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">shader_stages</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::SHADER_READ</span>;
+        <span class="ident">stages</span> |= <span class="ident">shader_stages</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::SHADER_READ</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">intersects</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::STORAGE_READ_WRITE</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">shader_stages</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::SHADER_READ</span> <span class="op">|</span> <span class="ident">vk::AccessFlags::SHADER_WRITE</span>;
+        <span class="ident">stages</span> |= <span class="ident">shader_stages</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::SHADER_READ</span> | <span class="ident">vk::AccessFlags::SHADER_WRITE</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::INDEX</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::PipelineStageFlags::VERTEX_INPUT</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::INDEX_READ</span>;
+        <span class="ident">stages</span> |= <span class="ident">vk::PipelineStageFlags::VERTEX_INPUT</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::INDEX_READ</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::VERTEX</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::PipelineStageFlags::VERTEX_INPUT</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::VERTEX_ATTRIBUTE_READ</span>;
+        <span class="ident">stages</span> |= <span class="ident">vk::PipelineStageFlags::VERTEX_INPUT</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::VERTEX_ATTRIBUTE_READ</span>;
     }
     <span class="kw">if</span> <span class="ident">usage</span>.<span class="ident">contains</span>(<span class="ident"><span class="kw">crate</span>::BufferUses::INDIRECT</span>) {
-        <span class="ident">stages</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::PipelineStageFlags::DRAW_INDIRECT</span>;
-        <span class="ident">access</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::AccessFlags::INDIRECT_COMMAND_READ</span>;
+        <span class="ident">stages</span> |= <span class="ident">vk::PipelineStageFlags::DRAW_INDIRECT</span>;
+        <span class="ident">access</span> |= <span class="ident">vk::AccessFlags::INDIRECT_COMMAND_READ</span>;
     }
 
     (<span class="ident">stages</span>, <span class="ident">access</span>)
@@ -1399,7 +1399,7 @@
         <span class="ident">width</span>: <span class="ident">extent</span>.<span class="ident">width</span>,
         <span class="ident">height</span>: <span class="ident">extent</span>.<span class="ident">height</span>,
         <span class="ident">depth</span>: <span class="kw">match</span> <span class="ident">dim</span> {
-            <span class="ident">wgt::TextureDimension::D1</span> <span class="op">|</span> <span class="ident">wgt::TextureDimension::D2</span> =&gt; <span class="number">1</span>,
+            <span class="ident">wgt::TextureDimension::D1</span> | <span class="ident">wgt::TextureDimension::D2</span> =&gt; <span class="number">1</span>,
             <span class="ident">wgt::TextureDimension::D3</span> =&gt; <span class="ident">extent</span>.<span class="ident">depth_or_array_layers</span>,
         },
     }
@@ -1410,7 +1410,7 @@
     <span class="ident">texture_aspect</span>: <span class="ident"><span class="kw">crate</span>::FormatAspects</span>,
 ) -&gt; <span class="ident">vk::ImageSubresourceRange</span> {
     <span class="ident">vk::ImageSubresourceRange</span> {
-        <span class="ident">aspect_mask</span>: <span class="ident">map_aspects</span>(<span class="ident"><span class="kw">crate</span>::FormatAspects::from</span>(<span class="ident">range</span>.<span class="ident">aspect</span>) <span class="op">&amp;</span> <span class="ident">texture_aspect</span>),
+        <span class="ident">aspect_mask</span>: <span class="ident">map_aspects</span>(<span class="ident"><span class="kw">crate</span>::FormatAspects::from</span>(<span class="ident">range</span>.<span class="ident">aspect</span>) &amp; <span class="ident">texture_aspect</span>),
         <span class="ident">base_mip_level</span>: <span class="ident">range</span>.<span class="ident">base_mip_level</span>,
         <span class="ident">level_count</span>: <span class="ident">range</span>
             .<span class="ident">mip_level_count</span>
@@ -1426,13 +1426,13 @@
     <span class="ident">base</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::TextureCopyBase</span>,
     <span class="ident">texture_aspect</span>: <span class="ident"><span class="kw">crate</span>::FormatAspects</span>,
 ) -&gt; (<span class="ident">vk::ImageSubresourceLayers</span>, <span class="ident">vk::Offset3D</span>) {
-    <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">vk::Offset3D</span> {
+    <span class="kw">let</span> <span class="ident">offset</span> = <span class="ident">vk::Offset3D</span> {
         <span class="ident">x</span>: <span class="ident">base</span>.<span class="ident">origin</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
         <span class="ident">y</span>: <span class="ident">base</span>.<span class="ident">origin</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
         <span class="ident">z</span>: <span class="ident">base</span>.<span class="ident">origin</span>.<span class="ident">z</span> <span class="kw">as</span> <span class="ident">i32</span>,
     };
-    <span class="kw">let</span> <span class="ident">subresource</span> <span class="op">=</span> <span class="ident">vk::ImageSubresourceLayers</span> {
-        <span class="ident">aspect_mask</span>: <span class="ident">map_aspects</span>(<span class="ident">base</span>.<span class="ident">aspect</span> <span class="op">&amp;</span> <span class="ident">texture_aspect</span>),
+    <span class="kw">let</span> <span class="ident">subresource</span> = <span class="ident">vk::ImageSubresourceLayers</span> {
+        <span class="ident">aspect_mask</span>: <span class="ident">map_aspects</span>(<span class="ident">base</span>.<span class="ident">aspect</span> &amp; <span class="ident">texture_aspect</span>),
         <span class="ident">mip_level</span>: <span class="ident">base</span>.<span class="ident">mip_level</span>,
         <span class="ident">base_array_layer</span>: <span class="ident">base</span>.<span class="ident">array_layer</span>,
         <span class="ident">layer_count</span>: <span class="number">1</span>,
@@ -1466,7 +1466,7 @@
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_border_color</span>(<span class="ident">border_color</span>: <span class="ident">wgt::SamplerBorderColor</span>) -&gt; <span class="ident">vk::BorderColor</span> {
     <span class="kw">match</span> <span class="ident">border_color</span> {
-        <span class="ident">wgt::SamplerBorderColor::TransparentBlack</span> <span class="op">|</span> <span class="ident">wgt::SamplerBorderColor::Zero</span> =&gt; {
+        <span class="ident">wgt::SamplerBorderColor::TransparentBlack</span> | <span class="ident">wgt::SamplerBorderColor::Zero</span> =&gt; {
             <span class="ident">vk::BorderColor::FLOAT_TRANSPARENT_BLACK</span>
         }
         <span class="ident">wgt::SamplerBorderColor::OpaqueBlack</span> =&gt; <span class="ident">vk::BorderColor::FLOAT_OPAQUE_BLACK</span>,
@@ -1489,15 +1489,15 @@
 }
 
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_shader_stage</span>(<span class="ident">stage</span>: <span class="ident">wgt::ShaderStages</span>) -&gt; <span class="ident">vk::ShaderStageFlags</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">vk::ShaderStageFlags::empty</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> = <span class="ident">vk::ShaderStageFlags::empty</span>();
     <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt::ShaderStages::VERTEX</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::ShaderStageFlags::VERTEX</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::ShaderStageFlags::VERTEX</span>;
     }
     <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt::ShaderStages::FRAGMENT</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::ShaderStageFlags::FRAGMENT</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::ShaderStageFlags::FRAGMENT</span>;
     }
     <span class="kw">if</span> <span class="ident">stage</span>.<span class="ident">contains</span>(<span class="ident">wgt::ShaderStages::COMPUTE</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::ShaderStageFlags::COMPUTE</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::ShaderStageFlags::COMPUTE</span>;
     }
     <span class="ident">flags</span>
 }
@@ -1620,9 +1620,9 @@
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_blend_component</span>(
     <span class="ident">component</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::BlendComponent</span>,
 ) -&gt; (<span class="ident">vk::BlendOp</span>, <span class="ident">vk::BlendFactor</span>, <span class="ident">vk::BlendFactor</span>) {
-    <span class="kw">let</span> <span class="ident">op</span> <span class="op">=</span> <span class="ident">map_blend_op</span>(<span class="ident">component</span>.<span class="ident">operation</span>);
-    <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="ident">map_blend_factor</span>(<span class="ident">component</span>.<span class="ident">src_factor</span>);
-    <span class="kw">let</span> <span class="ident">dst</span> <span class="op">=</span> <span class="ident">map_blend_factor</span>(<span class="ident">component</span>.<span class="ident">dst_factor</span>);
+    <span class="kw">let</span> <span class="ident">op</span> = <span class="ident">map_blend_op</span>(<span class="ident">component</span>.<span class="ident">operation</span>);
+    <span class="kw">let</span> <span class="ident">src</span> = <span class="ident">map_blend_factor</span>(<span class="ident">component</span>.<span class="ident">src_factor</span>);
+    <span class="kw">let</span> <span class="ident">dst</span> = <span class="ident">map_blend_factor</span>(<span class="ident">component</span>.<span class="ident">dst_factor</span>);
     (<span class="ident">op</span>, <span class="ident">src</span>, <span class="ident">dst</span>)
 }
 
@@ -1630,23 +1630,23 @@
     <span class="ident">types</span>: <span class="ident">wgt::PipelineStatisticsTypes</span>,
 ) -&gt; <span class="ident">vk::QueryPipelineStatisticFlags</span> {
     <span class="kw">use</span> <span class="ident">wgt::PipelineStatisticsTypes</span> <span class="kw">as</span> <span class="ident">Pst</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">vk::QueryPipelineStatisticFlags::empty</span>();
+    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> = <span class="ident">vk::QueryPipelineStatisticFlags::empty</span>();
     <span class="kw">if</span> <span class="ident">types</span>.<span class="ident">contains</span>(<span class="ident">Pst::VERTEX_SHADER_INVOCATIONS</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::QueryPipelineStatisticFlags::VERTEX_SHADER_INVOCATIONS</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::QueryPipelineStatisticFlags::VERTEX_SHADER_INVOCATIONS</span>;
     }
     <span class="kw">if</span> <span class="ident">types</span>.<span class="ident">contains</span>(<span class="ident">Pst::CLIPPER_INVOCATIONS</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::QueryPipelineStatisticFlags::CLIPPING_INVOCATIONS</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::QueryPipelineStatisticFlags::CLIPPING_INVOCATIONS</span>;
     }
     <span class="kw">if</span> <span class="ident">types</span>.<span class="ident">contains</span>(<span class="ident">Pst::CLIPPER_PRIMITIVES_OUT</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::QueryPipelineStatisticFlags::CLIPPING_PRIMITIVES</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::QueryPipelineStatisticFlags::CLIPPING_PRIMITIVES</span>;
     }
     <span class="kw">if</span> <span class="ident">types</span>.<span class="ident">contains</span>(<span class="ident">Pst::FRAGMENT_SHADER_INVOCATIONS</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::QueryPipelineStatisticFlags::FRAGMENT_SHADER_INVOCATIONS</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::QueryPipelineStatisticFlags::FRAGMENT_SHADER_INVOCATIONS</span>;
     }
     <span class="kw">if</span> <span class="ident">types</span>.<span class="ident">contains</span>(<span class="ident">Pst::COMPUTE_SHADER_INVOCATIONS</span>) {
-        <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">vk::QueryPipelineStatisticFlags::COMPUTE_SHADER_INVOCATIONS</span>;
+        <span class="ident">flags</span> |= <span class="ident">vk::QueryPipelineStatisticFlags::COMPUTE_SHADER_INVOCATIONS</span>;
     }
     <span class="ident">flags</span>
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (d394408fb 2022-08-07)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (f22819bcc 2022-08-12)" ></div></body></html>

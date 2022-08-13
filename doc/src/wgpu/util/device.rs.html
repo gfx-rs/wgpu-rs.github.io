@@ -151,9 +151,9 @@
 
 <span class="doccomment">/// Describes a [Buffer](crate::Buffer) when allocating.</span>
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferInitDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BufferInitDescriptor</span>&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="doccomment">/// Debug label of a buffer. This will show up in graphics debuggers for easy identification.</span>
-    <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident"><span class="kw">crate</span>::Label</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span> <span class="ident">label</span>: <span class="ident"><span class="kw">crate</span>::Label</span>&lt;<span class="lifetime">&#39;a</span>&gt;,
     <span class="doccomment">/// Contents of a buffer on creation.</span>
     <span class="kw">pub</span> <span class="ident">contents</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>],
     <span class="doccomment">/// Usages of a buffer. If the buffer is used in any way that isn&#39;t specified here, the operation</span>
@@ -187,10 +187,10 @@
 }
 
 <span class="kw">impl</span> <span class="ident">DeviceExt</span> <span class="kw">for</span> <span class="ident"><span class="kw">crate</span>::Device</span> {
-    <span class="kw">fn</span> <span class="ident">create_buffer_init</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">descriptor</span>: <span class="kw-2">&amp;</span><span class="ident">BufferInitDescriptor</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">crate</span>::Buffer</span> {
+    <span class="kw">fn</span> <span class="ident">create_buffer_init</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">descriptor</span>: <span class="kw-2">&amp;</span><span class="ident">BufferInitDescriptor</span>&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="ident"><span class="kw">crate</span>::Buffer</span> {
         <span class="comment">// Skip mapping if the buffer is zero sized</span>
         <span class="kw">if</span> <span class="ident">descriptor</span>.<span class="ident">contents</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">let</span> <span class="ident">wgt_descriptor</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::BufferDescriptor</span> {
+            <span class="kw">let</span> <span class="ident">wgt_descriptor</span> = <span class="ident"><span class="kw">crate</span>::BufferDescriptor</span> {
                 <span class="ident">label</span>: <span class="ident">descriptor</span>.<span class="ident">label</span>,
                 <span class="ident">size</span>: <span class="number">0</span>,
                 <span class="ident">usage</span>: <span class="ident">descriptor</span>.<span class="ident">usage</span>,
@@ -199,23 +199,23 @@
 
             <span class="self">self</span>.<span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">wgt_descriptor</span>)
         } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">unpadded_size</span> <span class="op">=</span> <span class="ident">descriptor</span>.<span class="ident">contents</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident"><span class="kw">crate</span>::BufferAddress</span>;
+            <span class="kw">let</span> <span class="ident">unpadded_size</span> = <span class="ident">descriptor</span>.<span class="ident">contents</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident"><span class="kw">crate</span>::BufferAddress</span>;
             <span class="comment">// Valid vulkan usage is</span>
             <span class="comment">// 1. buffer size must be a multiple of COPY_BUFFER_ALIGNMENT.</span>
             <span class="comment">// 2. buffer size must be greater than 0.</span>
             <span class="comment">// Therefore we round the value up to the nearest multiple, and ensure it&#39;s at least COPY_BUFFER_ALIGNMENT.</span>
-            <span class="kw">let</span> <span class="ident">align_mask</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::COPY_BUFFER_ALIGNMENT</span> <span class="op">-</span> <span class="number">1</span>;
-            <span class="kw">let</span> <span class="ident">padded_size</span> <span class="op">=</span>
-                ((<span class="ident">unpadded_size</span> <span class="op">+</span> <span class="ident">align_mask</span>) <span class="op">&amp;</span> <span class="op">!</span><span class="ident">align_mask</span>).<span class="ident">max</span>(<span class="ident"><span class="kw">crate</span>::COPY_BUFFER_ALIGNMENT</span>);
+            <span class="kw">let</span> <span class="ident">align_mask</span> = <span class="ident"><span class="kw">crate</span>::COPY_BUFFER_ALIGNMENT</span> - <span class="number">1</span>;
+            <span class="kw">let</span> <span class="ident">padded_size</span> =
+                ((<span class="ident">unpadded_size</span> + <span class="ident">align_mask</span>) &amp; !<span class="ident">align_mask</span>).<span class="ident">max</span>(<span class="ident"><span class="kw">crate</span>::COPY_BUFFER_ALIGNMENT</span>);
 
-            <span class="kw">let</span> <span class="ident">wgt_descriptor</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::BufferDescriptor</span> {
+            <span class="kw">let</span> <span class="ident">wgt_descriptor</span> = <span class="ident"><span class="kw">crate</span>::BufferDescriptor</span> {
                 <span class="ident">label</span>: <span class="ident">descriptor</span>.<span class="ident">label</span>,
                 <span class="ident">size</span>: <span class="ident">padded_size</span>,
                 <span class="ident">usage</span>: <span class="ident">descriptor</span>.<span class="ident">usage</span>,
                 <span class="ident">mapped_at_creation</span>: <span class="bool-val">true</span>,
             };
 
-            <span class="kw">let</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">wgt_descriptor</span>);
+            <span class="kw">let</span> <span class="ident">buffer</span> = <span class="self">self</span>.<span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">wgt_descriptor</span>);
 
             <span class="ident">buffer</span>.<span class="ident">slice</span>(..).<span class="ident">get_mapped_range_mut</span>()[..<span class="ident">unpadded_size</span> <span class="kw">as</span> <span class="ident">usize</span>]
                 .<span class="ident">copy_from_slice</span>(<span class="ident">descriptor</span>.<span class="ident">contents</span>);
@@ -232,36 +232,36 @@
         <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
     ) -&gt; <span class="ident"><span class="kw">crate</span>::Texture</span> {
         <span class="comment">// Implicitly add the COPY_DST usage</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">desc</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">to_owned</span>();
-        <span class="ident">desc</span>.<span class="ident">usage</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="kw">crate</span>::TextureUsages::COPY_DST</span>;
-        <span class="kw">let</span> <span class="ident">texture</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">create_texture</span>(<span class="kw-2">&amp;</span><span class="ident">desc</span>);
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">desc</span> = <span class="ident">desc</span>.<span class="ident">to_owned</span>();
+        <span class="ident">desc</span>.<span class="ident">usage</span> |= <span class="ident"><span class="kw">crate</span>::TextureUsages::COPY_DST</span>;
+        <span class="kw">let</span> <span class="ident">texture</span> = <span class="self">self</span>.<span class="ident">create_texture</span>(<span class="kw-2">&amp;</span><span class="ident">desc</span>);
 
-        <span class="kw">let</span> <span class="ident">format_info</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">format</span>.<span class="ident">describe</span>();
-        <span class="kw">let</span> <span class="ident">layer_iterations</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">array_layer_count</span>();
+        <span class="kw">let</span> <span class="ident">format_info</span> = <span class="ident">desc</span>.<span class="ident">format</span>.<span class="ident">describe</span>();
+        <span class="kw">let</span> <span class="ident">layer_iterations</span> = <span class="ident">desc</span>.<span class="ident">array_layer_count</span>();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">binary_offset</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">binary_offset</span> = <span class="number">0</span>;
         <span class="kw">for</span> <span class="ident">layer</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">layer_iterations</span> {
             <span class="kw">for</span> <span class="ident">mip</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">desc</span>.<span class="ident">mip_level_count</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mip_size</span> <span class="op">=</span> <span class="ident">desc</span>.<span class="ident">mip_level_size</span>(<span class="ident">mip</span>).<span class="ident">unwrap</span>();
+                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">mip_size</span> = <span class="ident">desc</span>.<span class="ident">mip_level_size</span>(<span class="ident">mip</span>).<span class="ident">unwrap</span>();
                 <span class="comment">// copying layers separately</span>
-                <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">dimension</span> <span class="op">!</span><span class="op">=</span> <span class="ident">wgt::TextureDimension::D3</span> {
-                    <span class="ident">mip_size</span>.<span class="ident">depth_or_array_layers</span> <span class="op">=</span> <span class="number">1</span>;
+                <span class="kw">if</span> <span class="ident">desc</span>.<span class="ident">dimension</span> != <span class="ident">wgt::TextureDimension::D3</span> {
+                    <span class="ident">mip_size</span>.<span class="ident">depth_or_array_layers</span> = <span class="number">1</span>;
                 }
 
                 <span class="comment">// When uploading mips of compressed textures and the mip is supposed to be</span>
                 <span class="comment">// a size that isn&#39;t a multiple of the block size, the mip needs to be uploaded</span>
                 <span class="comment">// as its &quot;physical size&quot; which is the size rounded up to the nearest block size.</span>
-                <span class="kw">let</span> <span class="ident">mip_physical</span> <span class="op">=</span> <span class="ident">mip_size</span>.<span class="ident">physical_size</span>(<span class="ident">desc</span>.<span class="ident">format</span>);
+                <span class="kw">let</span> <span class="ident">mip_physical</span> = <span class="ident">mip_size</span>.<span class="ident">physical_size</span>(<span class="ident">desc</span>.<span class="ident">format</span>);
 
                 <span class="comment">// All these calculations are performed on the physical size as that&#39;s the</span>
                 <span class="comment">// data that exists in the buffer.</span>
-                <span class="kw">let</span> <span class="ident">width_blocks</span> <span class="op">=</span> <span class="ident">mip_physical</span>.<span class="ident">width</span> <span class="op">/</span> <span class="ident">format_info</span>.<span class="ident">block_dimensions</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">u32</span>;
-                <span class="kw">let</span> <span class="ident">height_blocks</span> <span class="op">=</span> <span class="ident">mip_physical</span>.<span class="ident">height</span> <span class="op">/</span> <span class="ident">format_info</span>.<span class="ident">block_dimensions</span>.<span class="number">1</span> <span class="kw">as</span> <span class="ident">u32</span>;
+                <span class="kw">let</span> <span class="ident">width_blocks</span> = <span class="ident">mip_physical</span>.<span class="ident">width</span> / <span class="ident">format_info</span>.<span class="ident">block_dimensions</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">u32</span>;
+                <span class="kw">let</span> <span class="ident">height_blocks</span> = <span class="ident">mip_physical</span>.<span class="ident">height</span> / <span class="ident">format_info</span>.<span class="ident">block_dimensions</span>.<span class="number">1</span> <span class="kw">as</span> <span class="ident">u32</span>;
 
-                <span class="kw">let</span> <span class="ident">bytes_per_row</span> <span class="op">=</span> <span class="ident">width_blocks</span> <span class="op">*</span> <span class="ident">format_info</span>.<span class="ident">block_size</span> <span class="kw">as</span> <span class="ident">u32</span>;
-                <span class="kw">let</span> <span class="ident">data_size</span> <span class="op">=</span> <span class="ident">bytes_per_row</span> <span class="op">*</span> <span class="ident">height_blocks</span> <span class="op">*</span> <span class="ident">mip_size</span>.<span class="ident">depth_or_array_layers</span>;
+                <span class="kw">let</span> <span class="ident">bytes_per_row</span> = <span class="ident">width_blocks</span> * <span class="ident">format_info</span>.<span class="ident">block_size</span> <span class="kw">as</span> <span class="ident">u32</span>;
+                <span class="kw">let</span> <span class="ident">data_size</span> = <span class="ident">bytes_per_row</span> * <span class="ident">height_blocks</span> * <span class="ident">mip_size</span>.<span class="ident">depth_or_array_layers</span>;
 
-                <span class="kw">let</span> <span class="ident">end_offset</span> <span class="op">=</span> <span class="ident">binary_offset</span> <span class="op">+</span> <span class="ident">data_size</span> <span class="kw">as</span> <span class="ident">usize</span>;
+                <span class="kw">let</span> <span class="ident">end_offset</span> = <span class="ident">binary_offset</span> + <span class="ident">data_size</span> <span class="kw">as</span> <span class="ident">usize</span>;
 
                 <span class="ident">queue</span>.<span class="ident">write_texture</span>(
                     <span class="ident"><span class="kw">crate</span>::ImageCopyTexture</span> {
@@ -287,7 +287,7 @@
                     <span class="ident">mip_physical</span>,
                 );
 
-                <span class="ident">binary_offset</span> <span class="op">=</span> <span class="ident">end_offset</span>;
+                <span class="ident">binary_offset</span> = <span class="ident">end_offset</span>;
             }
         }
 
@@ -295,4 +295,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (d394408fb 2022-08-07)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (f22819bcc 2022-08-12)" ></div></body></html>
