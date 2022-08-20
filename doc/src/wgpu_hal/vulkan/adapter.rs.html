@@ -1656,14 +1656,6 @@
 <span id="1656">1656</span>
 <span id="1657">1657</span>
 <span id="1658">1658</span>
-<span id="1659">1659</span>
-<span id="1660">1660</span>
-<span id="1661">1661</span>
-<span id="1662">1662</span>
-<span id="1663">1663</span>
-<span id="1664">1664</span>
-<span id="1665">1665</span>
-<span id="1666">1666</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
@@ -2008,7 +2000,12 @@
         }
     }
 
-    <span class="kw">fn </span>to_wgpu(<span class="kw-2">&amp;</span><span class="self">self</span>, caps: <span class="kw-2">&amp;</span>PhysicalDeviceCapabilities) -&gt; (wgt::Features, wgt::DownlevelFlags) {
+    <span class="kw">fn </span>to_wgpu(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        instance: <span class="kw-2">&amp;</span>ash::Instance,
+        phd: vk::PhysicalDevice,
+        caps: <span class="kw-2">&amp;</span>PhysicalDeviceCapabilities,
+    ) -&gt; (wgt::Features, wgt::DownlevelFlags) {
         <span class="kw">use </span><span class="kw">crate</span>::auxil::db;
         <span class="kw">use </span>wgt::{DownlevelFlags <span class="kw">as </span>Df, Features <span class="kw">as </span>F};
         <span class="kw">let </span><span class="kw-2">mut </span>features = F::empty()
@@ -2198,7 +2195,7 @@
 
         features.set(
             F::TEXTURE_FORMAT_16BIT_NORM,
-            is_format_16bit_norm_supported(caps),
+            is_format_16bit_norm_supported(instance, phd),
         );
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>astc_hdr) = <span class="self">self</span>.astc_hdr {
@@ -2219,7 +2216,9 @@
 
         features.set(
             F::DEPTH32FLOAT_STENCIL8,
-            caps.supports_format(
+            supports_format(
+                instance,
+                phd,
                 vk::Format::D32_SFLOAT_S8_UINT,
                 vk::ImageTiling::OPTIMAL,
                 vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT,
@@ -2228,7 +2227,9 @@
 
         features.set(
             F::DEPTH24UNORM_STENCIL8,
-            caps.supports_format(
+            supports_format(
+                instance,
+                phd,
                 vk::Format::D24_UNORM_S8_UINT,
                 vk::ImageTiling::OPTIMAL,
                 vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT,
@@ -2255,7 +2256,6 @@
     properties: vk::PhysicalDeviceProperties,
     vulkan_1_2: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceVulkan12Properties&gt;,
     descriptor_indexing: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceDescriptorIndexingPropertiesEXT&gt;,
-    formats: Vec&lt;vk::FormatProperties&gt;,
 }
 
 <span class="comment">// This is safe because the structs have `p_next: *mut c_void`, which we null out/never read.
@@ -2271,22 +2271,6 @@
         <span class="self">self</span>.supported_extensions
             .iter()
             .any(|ep| <span class="kw">unsafe </span>{ CStr::from_ptr(ep.extension_name.as_ptr()) } == extension)
-    }
-
-    <span class="kw">fn </span>supports_format(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        format: vk::Format,
-        tiling: vk::ImageTiling,
-        features: vk::FormatFeatureFlags,
-    ) -&gt; bool {
-        <span class="self">self</span>.formats
-            .get(format.as_raw() <span class="kw">as </span>usize)
-            .map(|properties| <span class="kw">match </span>tiling {
-                vk::ImageTiling::LINEAR =&gt; properties.linear_tiling_features.contains(features),
-                vk::ImageTiling::OPTIMAL =&gt; properties.optimal_tiling_features.contains(features),
-                <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
-            })
-            .unwrap()
     }
 
     <span class="doccomment">/// Map `requested_features` to the list of Vulkan extension strings required to create the logical device.
@@ -2534,7 +2518,6 @@
             } <span class="kw">else </span>{
                 <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.get_physical_device_properties(phd) }
             };
-            capabilities.formats = query_format_properties(<span class="kw-2">&amp;</span><span class="self">self</span>.raw, phd);
 
             capabilities
         };
@@ -2662,7 +2645,8 @@
             backend: wgt::Backend::Vulkan,
         };
 
-        <span class="kw">let </span>(available_features, downlevel_flags) = phd_features.to_wgpu(<span class="kw-2">&amp;</span>phd_capabilities);
+        <span class="kw">let </span>(available_features, downlevel_flags) =
+            phd_features.to_wgpu(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw, phd, <span class="kw-2">&amp;</span>phd_capabilities);
         <span class="kw">let </span><span class="kw-2">mut </span>workarounds = <span class="kw">super</span>::Workarounds::empty();
         {
             <span class="comment">// see https://github.com/gfx-rs/gfx/issues/1930
@@ -2965,7 +2949,6 @@
             }
         };
 
-        <span class="macro">log::info!</span>(<span class="string">&quot;Private capabilities: {:?}&quot;</span>, <span class="self">self</span>.private_caps);
         <span class="kw">let </span>raw_queue = {
             <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkGetDeviceQueue&quot;</span>);
             raw_device.get_device_queue(family_index, queue_index)
@@ -3115,13 +3098,9 @@
 
         <span class="kw">let </span>vk_format = <span class="self">self</span>.private_caps.map_texture_format(format);
         <span class="kw">let </span>properties = <span class="self">self
-            </span>.phd_capabilities
-            .formats
-            .get(vk_format.as_raw() <span class="kw">as </span>usize);
-        <span class="kw">let </span>properties = <span class="kw">match </span>properties {
-            <span class="prelude-val">Some</span>(p) =&gt; p,
-            <span class="prelude-val">None </span>=&gt; <span class="kw">return </span>Tfc::empty(),
-        };
+            </span>.instance
+            .raw
+            .get_physical_device_format_properties(<span class="self">self</span>.raw, vk_format);
         <span class="kw">let </span>features = properties.optimal_tiling_features;
 
         <span class="kw">let </span><span class="kw-2">mut </span>flags = Tfc::empty();
@@ -3293,42 +3272,47 @@
     }
 }
 
-<span class="doccomment">/// Querys properties of all known image formats. The raw value of `vk::Format` corresponds
-/// to the index of the returned Vec.
-</span><span class="kw">fn </span>query_format_properties(
-    instance: <span class="kw-2">&amp;</span>ash::Instance,
-    physical_device: vk::PhysicalDevice,
-) -&gt; Vec&lt;vk::FormatProperties&gt; {
-    <span class="comment">// vk::Format::UNDEFINED
-    </span><span class="kw">const </span>FORMAT_MIN: i32 = <span class="number">0</span>;
-
-    <span class="comment">// vk::Format::ASTC_12X12_SRGB_BLOCK
-    </span><span class="kw">const </span>FORMAT_MAX: i32 = <span class="number">184</span>;
-
-    <span class="macro">debug_assert_eq!</span>(FORMAT_MAX, vk::Format::ASTC_12X12_SRGB_BLOCK.as_raw());
-
-    (FORMAT_MIN..(FORMAT_MAX + <span class="number">1</span>))
-        .map(|raw| {
-            <span class="kw">let </span>image_format = vk::Format::from_raw(raw);
-            <span class="kw">unsafe </span>{ instance.get_physical_device_format_properties(physical_device, image_format) }
-        })
-        .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
-}
-
-<span class="kw">fn </span>is_format_16bit_norm_supported(caps: <span class="kw-2">&amp;</span>PhysicalDeviceCapabilities) -&gt; bool {
+<span class="kw">fn </span>is_format_16bit_norm_supported(instance: <span class="kw-2">&amp;</span>ash::Instance, phd: vk::PhysicalDevice) -&gt; bool {
     <span class="kw">let </span>tiling = vk::ImageTiling::OPTIMAL;
     <span class="kw">let </span>features = vk::FormatFeatureFlags::SAMPLED_IMAGE
         | vk::FormatFeatureFlags::STORAGE_IMAGE
         | vk::FormatFeatureFlags::TRANSFER_SRC
         | vk::FormatFeatureFlags::TRANSFER_DST;
-    <span class="kw">let </span>r16unorm = caps.supports_format(vk::Format::R16_UNORM, tiling, features);
-    <span class="kw">let </span>r16snorm = caps.supports_format(vk::Format::R16_SNORM, tiling, features);
-    <span class="kw">let </span>rg16unorm = caps.supports_format(vk::Format::R16G16_UNORM, tiling, features);
-    <span class="kw">let </span>rg16snorm = caps.supports_format(vk::Format::R16G16_SNORM, tiling, features);
-    <span class="kw">let </span>rgba16unorm = caps.supports_format(vk::Format::R16G16B16A16_UNORM, tiling, features);
-    <span class="kw">let </span>rgba16snorm = caps.supports_format(vk::Format::R16G16B16A16_SNORM, tiling, features);
+    <span class="kw">let </span>r16unorm = supports_format(instance, phd, vk::Format::R16_UNORM, tiling, features);
+    <span class="kw">let </span>r16snorm = supports_format(instance, phd, vk::Format::R16_SNORM, tiling, features);
+    <span class="kw">let </span>rg16unorm = supports_format(instance, phd, vk::Format::R16G16_UNORM, tiling, features);
+    <span class="kw">let </span>rg16snorm = supports_format(instance, phd, vk::Format::R16G16_SNORM, tiling, features);
+    <span class="kw">let </span>rgba16unorm = supports_format(
+        instance,
+        phd,
+        vk::Format::R16G16B16A16_UNORM,
+        tiling,
+        features,
+    );
+    <span class="kw">let </span>rgba16snorm = supports_format(
+        instance,
+        phd,
+        vk::Format::R16G16B16A16_SNORM,
+        tiling,
+        features,
+    );
 
     r16unorm &amp;&amp; r16snorm &amp;&amp; rg16unorm &amp;&amp; rg16snorm &amp;&amp; rgba16unorm &amp;&amp; rgba16snorm
+}
+
+<span class="kw">fn </span>supports_format(
+    instance: <span class="kw-2">&amp;</span>ash::Instance,
+    phd: vk::PhysicalDevice,
+    format: vk::Format,
+    tiling: vk::ImageTiling,
+    features: vk::FormatFeatureFlags,
+) -&gt; bool {
+    <span class="kw">let </span>properties = <span class="kw">unsafe </span>{ instance.get_physical_device_format_properties(phd, format) };
+    <span class="kw">match </span>tiling {
+        vk::ImageTiling::LINEAR =&gt; properties.linear_tiling_features.contains(features),
+        vk::ImageTiling::OPTIMAL =&gt; properties.optimal_tiling_features.contains(features),
+        <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+    }
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (e1b28cd2f 2022-08-19)" ></div></body></html>
