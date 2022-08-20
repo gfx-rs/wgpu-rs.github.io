@@ -787,794 +787,794 @@
 <span id="787">787</span>
 <span id="788">788</span>
 <span id="789">789</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::conv</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
-<span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
-<span class="kw">use</span> <span class="ident">ash</span>::{<span class="ident">extensions::ext</span>, <span class="ident">vk</span>};
-<span class="kw">use</span> <span class="ident">inplace_it::inplace_or_alloc_from_iter</span>;
+<span class="kw">use </span>arrayvec::ArrayVec;
+<span class="kw">use </span>ash::{extensions::ext, vk};
+<span class="kw">use </span>inplace_it::inplace_or_alloc_from_iter;
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">mem</span>, <span class="ident">ops::Range</span>, <span class="ident">slice</span>};
+<span class="kw">use </span>std::{mem, ops::Range, slice};
 
-<span class="kw">const</span> <span class="ident">ALLOCATION_GRANULARITY</span>: <span class="ident">u32</span> = <span class="number">16</span>;
-<span class="kw">const</span> <span class="ident">DST_IMAGE_LAYOUT</span>: <span class="ident">vk::ImageLayout</span> = <span class="ident">vk::ImageLayout::TRANSFER_DST_OPTIMAL</span>;
+<span class="kw">const </span>ALLOCATION_GRANULARITY: u32 = <span class="number">16</span>;
+<span class="kw">const </span>DST_IMAGE_LAYOUT: vk::ImageLayout = vk::ImageLayout::TRANSFER_DST_OPTIMAL;
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">super</span>::Texture</span> {
-    <span class="kw">fn</span> <span class="ident">map_buffer_copies</span>&lt;<span class="ident">T</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">regions</span>: <span class="ident">T</span>) -&gt; <span class="kw">impl</span> <span class="ident">Iterator</span>&lt;<span class="ident">Item</span> = <span class="ident">vk::BufferImageCopy</span>&gt;
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Iterator</span>&lt;<span class="ident">Item</span> = <span class="ident"><span class="kw">crate</span>::BufferTextureCopy</span>&gt;,
+<span class="kw">impl </span><span class="kw">super</span>::Texture {
+    <span class="kw">fn </span>map_buffer_copies&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, regions: T) -&gt; <span class="kw">impl </span>Iterator&lt;Item = vk::BufferImageCopy&gt;
+    <span class="kw">where
+        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::BufferTextureCopy&gt;,
     {
-        <span class="kw">let</span> <span class="ident">aspects</span> = <span class="self">self</span>.<span class="ident">aspects</span>;
-        <span class="kw">let</span> <span class="ident">fi</span> = <span class="self">self</span>.<span class="ident">format_info</span>;
-        <span class="kw">let</span> <span class="ident">copy_size</span> = <span class="self">self</span>.<span class="ident">copy_size</span>;
-        <span class="ident">regions</span>.<span class="ident">map</span>(<span class="kw">move</span> |<span class="ident">r</span>| {
-            <span class="kw">let</span> <span class="ident">extent</span> = <span class="ident">r</span>.<span class="ident">texture_base</span>.<span class="ident">max_copy_size</span>(<span class="kw-2">&amp;</span><span class="ident">copy_size</span>).<span class="ident">min</span>(<span class="kw-2">&amp;</span><span class="ident">r</span>.<span class="ident">size</span>);
-            <span class="kw">let</span> (<span class="ident">image_subresource</span>, <span class="ident">image_offset</span>) =
-                <span class="ident">conv::map_subresource_layers</span>(<span class="kw-2">&amp;</span><span class="ident">r</span>.<span class="ident">texture_base</span>, <span class="ident">aspects</span>);
-            <span class="ident">vk::BufferImageCopy</span> {
-                <span class="ident">buffer_offset</span>: <span class="ident">r</span>.<span class="ident">buffer_layout</span>.<span class="ident">offset</span>,
-                <span class="ident">buffer_row_length</span>: <span class="ident">r</span>.<span class="ident">buffer_layout</span>.<span class="ident">bytes_per_row</span>.<span class="ident">map_or</span>(<span class="number">0</span>, |<span class="ident">bpr</span>| {
-                    <span class="ident">fi</span>.<span class="ident">block_dimensions</span>.<span class="number">0</span> <span class="kw">as</span> <span class="ident">u32</span> * (<span class="ident">bpr</span>.<span class="ident">get</span>() / <span class="ident">fi</span>.<span class="ident">block_size</span> <span class="kw">as</span> <span class="ident">u32</span>)
+        <span class="kw">let </span>aspects = <span class="self">self</span>.aspects;
+        <span class="kw">let </span>fi = <span class="self">self</span>.format_info;
+        <span class="kw">let </span>copy_size = <span class="self">self</span>.copy_size;
+        regions.map(<span class="kw">move </span>|r| {
+            <span class="kw">let </span>extent = r.texture_base.max_copy_size(<span class="kw-2">&amp;</span>copy_size).min(<span class="kw-2">&amp;</span>r.size);
+            <span class="kw">let </span>(image_subresource, image_offset) =
+                conv::map_subresource_layers(<span class="kw-2">&amp;</span>r.texture_base, aspects);
+            vk::BufferImageCopy {
+                buffer_offset: r.buffer_layout.offset,
+                buffer_row_length: r.buffer_layout.bytes_per_row.map_or(<span class="number">0</span>, |bpr| {
+                    fi.block_dimensions.<span class="number">0 </span><span class="kw">as </span>u32 * (bpr.get() / fi.block_size <span class="kw">as </span>u32)
                 }),
-                <span class="ident">buffer_image_height</span>: <span class="ident">r</span>
-                    .<span class="ident">buffer_layout</span>
-                    .<span class="ident">rows_per_image</span>
-                    .<span class="ident">map_or</span>(<span class="number">0</span>, |<span class="ident">rpi</span>| <span class="ident">rpi</span>.<span class="ident">get</span>() * <span class="ident">fi</span>.<span class="ident">block_dimensions</span>.<span class="number">1</span> <span class="kw">as</span> <span class="ident">u32</span>),
-                <span class="ident">image_subresource</span>,
-                <span class="ident">image_offset</span>,
-                <span class="ident">image_extent</span>: <span class="ident">conv::map_copy_extent</span>(<span class="kw-2">&amp;</span><span class="ident">extent</span>),
+                buffer_image_height: r
+                    .buffer_layout
+                    .rows_per_image
+                    .map_or(<span class="number">0</span>, |rpi| rpi.get() * fi.block_dimensions.<span class="number">1 </span><span class="kw">as </span>u32),
+                image_subresource,
+                image_offset,
+                image_extent: conv::map_copy_extent(<span class="kw-2">&amp;</span>extent),
             }
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">super</span>::DeviceShared</span> {
-    <span class="kw">fn</span> <span class="ident">debug_messenger</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="ident">ext::DebugUtils</span>&gt; {
-        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">instance</span>.<span class="ident">debug_utils</span>.<span class="ident">as_ref</span>()<span class="question-mark">?</span>.<span class="ident">extension</span>)
+<span class="kw">impl </span><span class="kw">super</span>::DeviceShared {
+    <span class="kw">fn </span>debug_messenger(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ext::DebugUtils&gt; {
+        <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.debug_utils.as_ref()<span class="question-mark">?</span>.extension)
     }
 }
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::CommandEncoder</span>&lt;<span class="ident"><span class="kw">super</span>::Api</span>&gt; <span class="kw">for</span> <span class="ident"><span class="kw">super</span>::CommandEncoder</span> {
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">begin_encoding</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">label</span>: <span class="ident"><span class="kw">crate</span>::Label</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="ident"><span class="kw">crate</span>::DeviceError</span>&gt; {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">free</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">let</span> <span class="ident">vk_info</span> = <span class="ident">vk::CommandBufferAllocateInfo::builder</span>()
-                .<span class="ident">command_pool</span>(<span class="self">self</span>.<span class="ident">raw</span>)
-                .<span class="ident">command_buffer_count</span>(<span class="ident">ALLOCATION_GRANULARITY</span>)
-                .<span class="ident">build</span>();
-            <span class="kw">let</span> <span class="ident">cmd_buf_vec</span> = <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">allocate_command_buffers</span>(<span class="kw-2">&amp;</span><span class="ident">vk_info</span>)<span class="question-mark">?</span>;
-            <span class="self">self</span>.<span class="ident">free</span>.<span class="ident">extend</span>(<span class="ident">cmd_buf_vec</span>);
+<span class="kw">impl </span><span class="kw">crate</span>::CommandEncoder&lt;<span class="kw">super</span>::Api&gt; <span class="kw">for </span><span class="kw">super</span>::CommandEncoder {
+    <span class="kw">unsafe fn </span>begin_encoding(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw">crate</span>::Label) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.free.is_empty() {
+            <span class="kw">let </span>vk_info = vk::CommandBufferAllocateInfo::builder()
+                .command_pool(<span class="self">self</span>.raw)
+                .command_buffer_count(ALLOCATION_GRANULARITY)
+                .build();
+            <span class="kw">let </span>cmd_buf_vec = <span class="self">self</span>.device.raw.allocate_command_buffers(<span class="kw-2">&amp;</span>vk_info)<span class="question-mark">?</span>;
+            <span class="self">self</span>.free.extend(cmd_buf_vec);
         }
-        <span class="kw">let</span> <span class="ident">raw</span> = <span class="self">self</span>.<span class="ident">free</span>.<span class="ident">pop</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let </span>raw = <span class="self">self</span>.free.pop().unwrap();
 
-        <span class="comment">// Set the name unconditionally, since there might be a</span>
-        <span class="comment">// previous name assigned to this.</span>
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">set_object_name</span>(
-            <span class="ident">vk::ObjectType::COMMAND_BUFFER</span>,
-            <span class="ident">raw</span>,
-            <span class="ident">label</span>.<span class="ident">unwrap_or_default</span>(),
+        <span class="comment">// Set the name unconditionally, since there might be a
+        // previous name assigned to this.
+        </span><span class="self">self</span>.device.set_object_name(
+            vk::ObjectType::COMMAND_BUFFER,
+            raw,
+            label.unwrap_or_default(),
         );
 
-        <span class="comment">// Reset this in case the last renderpass was never ended.</span>
-        <span class="self">self</span>.<span class="ident">rpass_debug_marker_active</span> = <span class="bool-val">false</span>;
+        <span class="comment">// Reset this in case the last renderpass was never ended.
+        </span><span class="self">self</span>.rpass_debug_marker_active = <span class="bool-val">false</span>;
 
-        <span class="kw">let</span> <span class="ident">vk_info</span> = <span class="ident">vk::CommandBufferBeginInfo::builder</span>()
-            .<span class="ident">flags</span>(<span class="ident">vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT</span>)
-            .<span class="ident">build</span>();
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">begin_command_buffer</span>(<span class="ident">raw</span>, <span class="kw-2">&amp;</span><span class="ident">vk_info</span>)<span class="question-mark">?</span>;
-        <span class="self">self</span>.<span class="ident">active</span> = <span class="ident">raw</span>;
+        <span class="kw">let </span>vk_info = vk::CommandBufferBeginInfo::builder()
+            .flags(vk::CommandBufferUsageFlags::ONE_TIME_SUBMIT)
+            .build();
+        <span class="self">self</span>.device.raw.begin_command_buffer(raw, <span class="kw-2">&amp;</span>vk_info)<span class="question-mark">?</span>;
+        <span class="self">self</span>.active = raw;
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">end_encoding</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="ident"><span class="kw">super</span>::CommandBuffer</span>, <span class="ident"><span class="kw">crate</span>::DeviceError</span>&gt; {
-        <span class="kw">let</span> <span class="ident">raw</span> = <span class="self">self</span>.<span class="ident">active</span>;
-        <span class="self">self</span>.<span class="ident">active</span> = <span class="ident">vk::CommandBuffer::null</span>();
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">end_command_buffer</span>(<span class="ident">raw</span>)<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="ident"><span class="kw">super</span>::CommandBuffer</span> { <span class="ident">raw</span> })
+    <span class="kw">unsafe fn </span>end_encoding(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::CommandBuffer, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="kw">let </span>raw = <span class="self">self</span>.active;
+        <span class="self">self</span>.active = vk::CommandBuffer::null();
+        <span class="self">self</span>.device.raw.end_command_buffer(raw)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="kw">super</span>::CommandBuffer { raw })
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">discard_encoding</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">discarded</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">active</span>);
-        <span class="self">self</span>.<span class="ident">active</span> = <span class="ident">vk::CommandBuffer::null</span>();
+    <span class="kw">unsafe fn </span>discard_encoding(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.discarded.push(<span class="self">self</span>.active);
+        <span class="self">self</span>.active = vk::CommandBuffer::null();
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">reset_all</span>&lt;<span class="ident">I</span>&gt;(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">cmd_bufs</span>: <span class="ident">I</span>)
-    <span class="kw">where</span>
-        <span class="ident">I</span>: <span class="ident">Iterator</span>&lt;<span class="ident">Item</span> = <span class="ident"><span class="kw">super</span>::CommandBuffer</span>&gt;,
+    <span class="kw">unsafe fn </span>reset_all&lt;I&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, cmd_bufs: I)
+    <span class="kw">where
+        </span>I: Iterator&lt;Item = <span class="kw">super</span>::CommandBuffer&gt;,
     {
-        <span class="self">self</span>.<span class="ident">temp</span>.<span class="ident">clear</span>();
-        <span class="self">self</span>.<span class="ident">free</span>
-            .<span class="ident">extend</span>(<span class="ident">cmd_bufs</span>.<span class="ident">into_iter</span>().<span class="ident">map</span>(|<span class="ident">cmd_buf</span>| <span class="ident">cmd_buf</span>.<span class="ident">raw</span>));
-        <span class="self">self</span>.<span class="ident">free</span>.<span class="ident">append</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">discarded</span>);
-        <span class="kw">let</span> <span class="kw">_</span> = <span class="self">self</span>
-            .<span class="ident">device</span>
-            .<span class="ident">raw</span>
-            .<span class="ident">reset_command_pool</span>(<span class="self">self</span>.<span class="ident">raw</span>, <span class="ident">vk::CommandPoolResetFlags::RELEASE_RESOURCES</span>);
+        <span class="self">self</span>.temp.clear();
+        <span class="self">self</span>.free
+            .extend(cmd_bufs.into_iter().map(|cmd_buf| cmd_buf.raw));
+        <span class="self">self</span>.free.append(<span class="kw-2">&amp;mut </span><span class="self">self</span>.discarded);
+        <span class="kw">let _ </span>= <span class="self">self
+            </span>.device
+            .raw
+            .reset_command_pool(<span class="self">self</span>.raw, vk::CommandPoolResetFlags::RELEASE_RESOURCES);
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">transition_buffers</span>&lt;<span class="lifetime">&#39;a</span>, <span class="ident">T</span>&gt;(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">barriers</span>: <span class="ident">T</span>)
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Iterator</span>&lt;<span class="ident">Item</span> = <span class="ident"><span class="kw">crate</span>::BufferBarrier</span>&lt;<span class="lifetime">&#39;a</span>, <span class="ident"><span class="kw">super</span>::Api</span>&gt;&gt;,
+    <span class="kw">unsafe fn </span>transition_buffers&lt;<span class="lifetime">&#39;a</span>, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, barriers: T)
+    <span class="kw">where
+        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::BufferBarrier&lt;<span class="lifetime">&#39;a</span>, <span class="kw">super</span>::Api&gt;&gt;,
     {
-        <span class="comment">//Note: this is done so that we never end up with empty stage flags</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">src_stages</span> = <span class="ident">vk::PipelineStageFlags::TOP_OF_PIPE</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dst_stages</span> = <span class="ident">vk::PipelineStageFlags::BOTTOM_OF_PIPE</span>;
-        <span class="kw">let</span> <span class="ident">vk_barriers</span> = <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">temp</span>.<span class="ident">buffer_barriers</span>;
-        <span class="ident">vk_barriers</span>.<span class="ident">clear</span>();
+        <span class="comment">//Note: this is done so that we never end up with empty stage flags
+        </span><span class="kw">let </span><span class="kw-2">mut </span>src_stages = vk::PipelineStageFlags::TOP_OF_PIPE;
+        <span class="kw">let </span><span class="kw-2">mut </span>dst_stages = vk::PipelineStageFlags::BOTTOM_OF_PIPE;
+        <span class="kw">let </span>vk_barriers = <span class="kw-2">&amp;mut </span><span class="self">self</span>.temp.buffer_barriers;
+        vk_barriers.clear();
 
-        <span class="kw">for</span> <span class="ident">bar</span> <span class="kw">in</span> <span class="ident">barriers</span> {
-            <span class="kw">let</span> (<span class="ident">src_stage</span>, <span class="ident">src_access</span>) = <span class="ident">conv::map_buffer_usage_to_barrier</span>(<span class="ident">bar</span>.<span class="ident">usage</span>.<span class="ident">start</span>);
-            <span class="ident">src_stages</span> |= <span class="ident">src_stage</span>;
-            <span class="kw">let</span> (<span class="ident">dst_stage</span>, <span class="ident">dst_access</span>) = <span class="ident">conv::map_buffer_usage_to_barrier</span>(<span class="ident">bar</span>.<span class="ident">usage</span>.<span class="ident">end</span>);
-            <span class="ident">dst_stages</span> |= <span class="ident">dst_stage</span>;
+        <span class="kw">for </span>bar <span class="kw">in </span>barriers {
+            <span class="kw">let </span>(src_stage, src_access) = conv::map_buffer_usage_to_barrier(bar.usage.start);
+            src_stages |= src_stage;
+            <span class="kw">let </span>(dst_stage, dst_access) = conv::map_buffer_usage_to_barrier(bar.usage.end);
+            dst_stages |= dst_stage;
 
-            <span class="ident">vk_barriers</span>.<span class="ident">push</span>(
-                <span class="ident">vk::BufferMemoryBarrier::builder</span>()
-                    .<span class="ident">buffer</span>(<span class="ident">bar</span>.<span class="ident">buffer</span>.<span class="ident">raw</span>)
-                    .<span class="ident">size</span>(<span class="ident">vk::WHOLE_SIZE</span>)
-                    .<span class="ident">src_access_mask</span>(<span class="ident">src_access</span>)
-                    .<span class="ident">dst_access_mask</span>(<span class="ident">dst_access</span>)
-                    .<span class="ident">build</span>(),
+            vk_barriers.push(
+                vk::BufferMemoryBarrier::builder()
+                    .buffer(bar.buffer.raw)
+                    .size(vk::WHOLE_SIZE)
+                    .src_access_mask(src_access)
+                    .dst_access_mask(dst_access)
+                    .build(),
             )
         }
 
-        <span class="kw">if</span> !<span class="ident">vk_barriers</span>.<span class="ident">is_empty</span>() {
-            <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_pipeline_barrier</span>(
-                <span class="self">self</span>.<span class="ident">active</span>,
-                <span class="ident">src_stages</span>,
-                <span class="ident">dst_stages</span>,
-                <span class="ident">vk::DependencyFlags::empty</span>(),
+        <span class="kw">if </span>!vk_barriers.is_empty() {
+            <span class="self">self</span>.device.raw.cmd_pipeline_barrier(
+                <span class="self">self</span>.active,
+                src_stages,
+                dst_stages,
+                vk::DependencyFlags::empty(),
                 <span class="kw-2">&amp;</span>[],
-                <span class="ident">vk_barriers</span>,
+                vk_barriers,
                 <span class="kw-2">&amp;</span>[],
             );
         }
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">transition_textures</span>&lt;<span class="lifetime">&#39;a</span>, <span class="ident">T</span>&gt;(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">barriers</span>: <span class="ident">T</span>)
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Iterator</span>&lt;<span class="ident">Item</span> = <span class="ident"><span class="kw">crate</span>::TextureBarrier</span>&lt;<span class="lifetime">&#39;a</span>, <span class="ident"><span class="kw">super</span>::Api</span>&gt;&gt;,
+    <span class="kw">unsafe fn </span>transition_textures&lt;<span class="lifetime">&#39;a</span>, T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, barriers: T)
+    <span class="kw">where
+        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::TextureBarrier&lt;<span class="lifetime">&#39;a</span>, <span class="kw">super</span>::Api&gt;&gt;,
     {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">src_stages</span> = <span class="ident">vk::PipelineStageFlags::empty</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">dst_stages</span> = <span class="ident">vk::PipelineStageFlags::empty</span>();
-        <span class="kw">let</span> <span class="ident">vk_barriers</span> = <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">temp</span>.<span class="ident">image_barriers</span>;
-        <span class="ident">vk_barriers</span>.<span class="ident">clear</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>src_stages = vk::PipelineStageFlags::empty();
+        <span class="kw">let </span><span class="kw-2">mut </span>dst_stages = vk::PipelineStageFlags::empty();
+        <span class="kw">let </span>vk_barriers = <span class="kw-2">&amp;mut </span><span class="self">self</span>.temp.image_barriers;
+        vk_barriers.clear();
 
-        <span class="kw">for</span> <span class="ident">bar</span> <span class="kw">in</span> <span class="ident">barriers</span> {
-            <span class="kw">let</span> <span class="ident">range</span> = <span class="ident">conv::map_subresource_range</span>(<span class="kw-2">&amp;</span><span class="ident">bar</span>.<span class="ident">range</span>, <span class="ident">bar</span>.<span class="ident">texture</span>.<span class="ident">aspects</span>);
-            <span class="kw">let</span> (<span class="ident">src_stage</span>, <span class="ident">src_access</span>) = <span class="ident">conv::map_texture_usage_to_barrier</span>(<span class="ident">bar</span>.<span class="ident">usage</span>.<span class="ident">start</span>);
-            <span class="kw">let</span> <span class="ident">src_layout</span> = <span class="ident">conv::derive_image_layout</span>(<span class="ident">bar</span>.<span class="ident">usage</span>.<span class="ident">start</span>, <span class="ident">bar</span>.<span class="ident">texture</span>.<span class="ident">aspects</span>);
-            <span class="ident">src_stages</span> |= <span class="ident">src_stage</span>;
-            <span class="kw">let</span> (<span class="ident">dst_stage</span>, <span class="ident">dst_access</span>) = <span class="ident">conv::map_texture_usage_to_barrier</span>(<span class="ident">bar</span>.<span class="ident">usage</span>.<span class="ident">end</span>);
-            <span class="kw">let</span> <span class="ident">dst_layout</span> = <span class="ident">conv::derive_image_layout</span>(<span class="ident">bar</span>.<span class="ident">usage</span>.<span class="ident">end</span>, <span class="ident">bar</span>.<span class="ident">texture</span>.<span class="ident">aspects</span>);
-            <span class="ident">dst_stages</span> |= <span class="ident">dst_stage</span>;
+        <span class="kw">for </span>bar <span class="kw">in </span>barriers {
+            <span class="kw">let </span>range = conv::map_subresource_range(<span class="kw-2">&amp;</span>bar.range, bar.texture.aspects);
+            <span class="kw">let </span>(src_stage, src_access) = conv::map_texture_usage_to_barrier(bar.usage.start);
+            <span class="kw">let </span>src_layout = conv::derive_image_layout(bar.usage.start, bar.texture.aspects);
+            src_stages |= src_stage;
+            <span class="kw">let </span>(dst_stage, dst_access) = conv::map_texture_usage_to_barrier(bar.usage.end);
+            <span class="kw">let </span>dst_layout = conv::derive_image_layout(bar.usage.end, bar.texture.aspects);
+            dst_stages |= dst_stage;
 
-            <span class="ident">vk_barriers</span>.<span class="ident">push</span>(
-                <span class="ident">vk::ImageMemoryBarrier::builder</span>()
-                    .<span class="ident">image</span>(<span class="ident">bar</span>.<span class="ident">texture</span>.<span class="ident">raw</span>)
-                    .<span class="ident">subresource_range</span>(<span class="ident">range</span>)
-                    .<span class="ident">src_access_mask</span>(<span class="ident">src_access</span>)
-                    .<span class="ident">dst_access_mask</span>(<span class="ident">dst_access</span>)
-                    .<span class="ident">old_layout</span>(<span class="ident">src_layout</span>)
-                    .<span class="ident">new_layout</span>(<span class="ident">dst_layout</span>)
-                    .<span class="ident">build</span>(),
+            vk_barriers.push(
+                vk::ImageMemoryBarrier::builder()
+                    .image(bar.texture.raw)
+                    .subresource_range(range)
+                    .src_access_mask(src_access)
+                    .dst_access_mask(dst_access)
+                    .old_layout(src_layout)
+                    .new_layout(dst_layout)
+                    .build(),
             );
         }
 
-        <span class="kw">if</span> !<span class="ident">vk_barriers</span>.<span class="ident">is_empty</span>() {
-            <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_pipeline_barrier</span>(
-                <span class="self">self</span>.<span class="ident">active</span>,
-                <span class="ident">src_stages</span>,
-                <span class="ident">dst_stages</span>,
-                <span class="ident">vk::DependencyFlags::empty</span>(),
+        <span class="kw">if </span>!vk_barriers.is_empty() {
+            <span class="self">self</span>.device.raw.cmd_pipeline_barrier(
+                <span class="self">self</span>.active,
+                src_stages,
+                dst_stages,
+                vk::DependencyFlags::empty(),
                 <span class="kw-2">&amp;</span>[],
                 <span class="kw-2">&amp;</span>[],
-                <span class="ident">vk_barriers</span>,
+                vk_barriers,
             );
         }
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">clear_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Buffer</span>, <span class="ident">range</span>: <span class="ident"><span class="kw">crate</span>::MemoryRange</span>) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_fill_buffer</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="ident">buffer</span>.<span class="ident">raw</span>,
-            <span class="ident">range</span>.<span class="ident">start</span>,
-            <span class="ident">range</span>.<span class="ident">end</span> - <span class="ident">range</span>.<span class="ident">start</span>,
+    <span class="kw">unsafe fn </span>clear_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer, range: <span class="kw">crate</span>::MemoryRange) {
+        <span class="self">self</span>.device.raw.cmd_fill_buffer(
+            <span class="self">self</span>.active,
+            buffer.raw,
+            range.start,
+            range.end - range.start,
             <span class="number">0</span>,
         );
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">copy_buffer_to_buffer</span>&lt;<span class="ident">T</span>&gt;(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Buffer</span>,
-        <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Buffer</span>,
-        <span class="ident">regions</span>: <span class="ident">T</span>,
-    ) <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Iterator</span>&lt;<span class="ident">Item</span> = <span class="ident"><span class="kw">crate</span>::BufferCopy</span>&gt;,
+    <span class="kw">unsafe fn </span>copy_buffer_to_buffer&lt;T&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        src: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer,
+        dst: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer,
+        regions: T,
+    ) <span class="kw">where
+        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::BufferCopy&gt;,
     {
-        <span class="kw">let</span> <span class="ident">vk_regions_iter</span> = <span class="ident">regions</span>.<span class="ident">map</span>(|<span class="ident">r</span>| <span class="ident">vk::BufferCopy</span> {
-            <span class="ident">src_offset</span>: <span class="ident">r</span>.<span class="ident">src_offset</span>,
-            <span class="ident">dst_offset</span>: <span class="ident">r</span>.<span class="ident">dst_offset</span>,
-            <span class="ident">size</span>: <span class="ident">r</span>.<span class="ident">size</span>.<span class="ident">get</span>(),
+        <span class="kw">let </span>vk_regions_iter = regions.map(|r| vk::BufferCopy {
+            src_offset: r.src_offset,
+            dst_offset: r.dst_offset,
+            size: r.size.get(),
         });
 
-        <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">vk_regions_iter</span>, |<span class="ident">vk_regions</span>| {
-            <span class="self">self</span>.<span class="ident">device</span>
-                .<span class="ident">raw</span>
-                .<span class="ident">cmd_copy_buffer</span>(<span class="self">self</span>.<span class="ident">active</span>, <span class="ident">src</span>.<span class="ident">raw</span>, <span class="ident">dst</span>.<span class="ident">raw</span>, <span class="ident">vk_regions</span>)
+        inplace_or_alloc_from_iter(vk_regions_iter, |vk_regions| {
+            <span class="self">self</span>.device
+                .raw
+                .cmd_copy_buffer(<span class="self">self</span>.active, src.raw, dst.raw, vk_regions)
         })
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">copy_texture_to_texture</span>&lt;<span class="ident">T</span>&gt;(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Texture</span>,
-        <span class="ident">src_usage</span>: <span class="ident"><span class="kw">crate</span>::TextureUses</span>,
-        <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Texture</span>,
-        <span class="ident">regions</span>: <span class="ident">T</span>,
-    ) <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Iterator</span>&lt;<span class="ident">Item</span> = <span class="ident"><span class="kw">crate</span>::TextureCopy</span>&gt;,
+    <span class="kw">unsafe fn </span>copy_texture_to_texture&lt;T&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        src: <span class="kw-2">&amp;</span><span class="kw">super</span>::Texture,
+        src_usage: <span class="kw">crate</span>::TextureUses,
+        dst: <span class="kw-2">&amp;</span><span class="kw">super</span>::Texture,
+        regions: T,
+    ) <span class="kw">where
+        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::TextureCopy&gt;,
     {
-        <span class="kw">let</span> <span class="ident">src_layout</span> = <span class="ident">conv::derive_image_layout</span>(<span class="ident">src_usage</span>, <span class="ident">src</span>.<span class="ident">aspects</span>);
+        <span class="kw">let </span>src_layout = conv::derive_image_layout(src_usage, src.aspects);
 
-        <span class="kw">let</span> <span class="ident">vk_regions_iter</span> = <span class="ident">regions</span>.<span class="ident">map</span>(|<span class="ident">r</span>| {
-            <span class="kw">let</span> (<span class="ident">src_subresource</span>, <span class="ident">src_offset</span>) =
-                <span class="ident">conv::map_subresource_layers</span>(<span class="kw-2">&amp;</span><span class="ident">r</span>.<span class="ident">src_base</span>, <span class="ident">src</span>.<span class="ident">aspects</span>);
-            <span class="kw">let</span> (<span class="ident">dst_subresource</span>, <span class="ident">dst_offset</span>) =
-                <span class="ident">conv::map_subresource_layers</span>(<span class="kw-2">&amp;</span><span class="ident">r</span>.<span class="ident">dst_base</span>, <span class="ident">dst</span>.<span class="ident">aspects</span>);
-            <span class="kw">let</span> <span class="ident">extent</span> = <span class="ident">r</span>
-                .<span class="ident">size</span>
-                .<span class="ident">min</span>(<span class="kw-2">&amp;</span><span class="ident">r</span>.<span class="ident">src_base</span>.<span class="ident">max_copy_size</span>(<span class="kw-2">&amp;</span><span class="ident">src</span>.<span class="ident">copy_size</span>))
-                .<span class="ident">min</span>(<span class="kw-2">&amp;</span><span class="ident">r</span>.<span class="ident">dst_base</span>.<span class="ident">max_copy_size</span>(<span class="kw-2">&amp;</span><span class="ident">dst</span>.<span class="ident">copy_size</span>));
-            <span class="ident">vk::ImageCopy</span> {
-                <span class="ident">src_subresource</span>,
-                <span class="ident">src_offset</span>,
-                <span class="ident">dst_subresource</span>,
-                <span class="ident">dst_offset</span>,
-                <span class="ident">extent</span>: <span class="ident">conv::map_copy_extent</span>(<span class="kw-2">&amp;</span><span class="ident">extent</span>),
+        <span class="kw">let </span>vk_regions_iter = regions.map(|r| {
+            <span class="kw">let </span>(src_subresource, src_offset) =
+                conv::map_subresource_layers(<span class="kw-2">&amp;</span>r.src_base, src.aspects);
+            <span class="kw">let </span>(dst_subresource, dst_offset) =
+                conv::map_subresource_layers(<span class="kw-2">&amp;</span>r.dst_base, dst.aspects);
+            <span class="kw">let </span>extent = r
+                .size
+                .min(<span class="kw-2">&amp;</span>r.src_base.max_copy_size(<span class="kw-2">&amp;</span>src.copy_size))
+                .min(<span class="kw-2">&amp;</span>r.dst_base.max_copy_size(<span class="kw-2">&amp;</span>dst.copy_size));
+            vk::ImageCopy {
+                src_subresource,
+                src_offset,
+                dst_subresource,
+                dst_offset,
+                extent: conv::map_copy_extent(<span class="kw-2">&amp;</span>extent),
             }
         });
 
-        <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">vk_regions_iter</span>, |<span class="ident">vk_regions</span>| {
-            <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_copy_image</span>(
-                <span class="self">self</span>.<span class="ident">active</span>,
-                <span class="ident">src</span>.<span class="ident">raw</span>,
-                <span class="ident">src_layout</span>,
-                <span class="ident">dst</span>.<span class="ident">raw</span>,
-                <span class="ident">DST_IMAGE_LAYOUT</span>,
-                <span class="ident">vk_regions</span>,
+        inplace_or_alloc_from_iter(vk_regions_iter, |vk_regions| {
+            <span class="self">self</span>.device.raw.cmd_copy_image(
+                <span class="self">self</span>.active,
+                src.raw,
+                src_layout,
+                dst.raw,
+                DST_IMAGE_LAYOUT,
+                vk_regions,
             );
         });
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">copy_buffer_to_texture</span>&lt;<span class="ident">T</span>&gt;(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Buffer</span>,
-        <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Texture</span>,
-        <span class="ident">regions</span>: <span class="ident">T</span>,
-    ) <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Iterator</span>&lt;<span class="ident">Item</span> = <span class="ident"><span class="kw">crate</span>::BufferTextureCopy</span>&gt;,
+    <span class="kw">unsafe fn </span>copy_buffer_to_texture&lt;T&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        src: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer,
+        dst: <span class="kw-2">&amp;</span><span class="kw">super</span>::Texture,
+        regions: T,
+    ) <span class="kw">where
+        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::BufferTextureCopy&gt;,
     {
-        <span class="kw">let</span> <span class="ident">vk_regions_iter</span> = <span class="ident">dst</span>.<span class="ident">map_buffer_copies</span>(<span class="ident">regions</span>);
+        <span class="kw">let </span>vk_regions_iter = dst.map_buffer_copies(regions);
 
-        <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">vk_regions_iter</span>, |<span class="ident">vk_regions</span>| {
-            <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_copy_buffer_to_image</span>(
-                <span class="self">self</span>.<span class="ident">active</span>,
-                <span class="ident">src</span>.<span class="ident">raw</span>,
-                <span class="ident">dst</span>.<span class="ident">raw</span>,
-                <span class="ident">DST_IMAGE_LAYOUT</span>,
-                <span class="ident">vk_regions</span>,
+        inplace_or_alloc_from_iter(vk_regions_iter, |vk_regions| {
+            <span class="self">self</span>.device.raw.cmd_copy_buffer_to_image(
+                <span class="self">self</span>.active,
+                src.raw,
+                dst.raw,
+                DST_IMAGE_LAYOUT,
+                vk_regions,
             );
         });
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">copy_texture_to_buffer</span>&lt;<span class="ident">T</span>&gt;(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Texture</span>,
-        <span class="ident">src_usage</span>: <span class="ident"><span class="kw">crate</span>::TextureUses</span>,
-        <span class="ident">dst</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Buffer</span>,
-        <span class="ident">regions</span>: <span class="ident">T</span>,
-    ) <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">Iterator</span>&lt;<span class="ident">Item</span> = <span class="ident"><span class="kw">crate</span>::BufferTextureCopy</span>&gt;,
+    <span class="kw">unsafe fn </span>copy_texture_to_buffer&lt;T&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        src: <span class="kw-2">&amp;</span><span class="kw">super</span>::Texture,
+        src_usage: <span class="kw">crate</span>::TextureUses,
+        dst: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer,
+        regions: T,
+    ) <span class="kw">where
+        </span>T: Iterator&lt;Item = <span class="kw">crate</span>::BufferTextureCopy&gt;,
     {
-        <span class="kw">let</span> <span class="ident">src_layout</span> = <span class="ident">conv::derive_image_layout</span>(<span class="ident">src_usage</span>, <span class="ident">src</span>.<span class="ident">aspects</span>);
-        <span class="kw">let</span> <span class="ident">vk_regions_iter</span> = <span class="ident">src</span>.<span class="ident">map_buffer_copies</span>(<span class="ident">regions</span>);
+        <span class="kw">let </span>src_layout = conv::derive_image_layout(src_usage, src.aspects);
+        <span class="kw">let </span>vk_regions_iter = src.map_buffer_copies(regions);
 
-        <span class="ident">inplace_or_alloc_from_iter</span>(<span class="ident">vk_regions_iter</span>, |<span class="ident">vk_regions</span>| {
-            <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_copy_image_to_buffer</span>(
-                <span class="self">self</span>.<span class="ident">active</span>,
-                <span class="ident">src</span>.<span class="ident">raw</span>,
-                <span class="ident">src_layout</span>,
-                <span class="ident">dst</span>.<span class="ident">raw</span>,
-                <span class="ident">vk_regions</span>,
+        inplace_or_alloc_from_iter(vk_regions_iter, |vk_regions| {
+            <span class="self">self</span>.device.raw.cmd_copy_image_to_buffer(
+                <span class="self">self</span>.active,
+                src.raw,
+                src_layout,
+                dst.raw,
+                vk_regions,
             );
         });
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">begin_query</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">set</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::QuerySet</span>, <span class="ident">index</span>: <span class="ident">u32</span>) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_begin_query</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="ident">set</span>.<span class="ident">raw</span>,
-            <span class="ident">index</span>,
-            <span class="ident">vk::QueryControlFlags::empty</span>(),
+    <span class="kw">unsafe fn </span>begin_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span><span class="kw">super</span>::QuerySet, index: u32) {
+        <span class="self">self</span>.device.raw.cmd_begin_query(
+            <span class="self">self</span>.active,
+            set.raw,
+            index,
+            vk::QueryControlFlags::empty(),
         );
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">end_query</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">set</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::QuerySet</span>, <span class="ident">index</span>: <span class="ident">u32</span>) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_end_query</span>(<span class="self">self</span>.<span class="ident">active</span>, <span class="ident">set</span>.<span class="ident">raw</span>, <span class="ident">index</span>);
+    <span class="kw">unsafe fn </span>end_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span><span class="kw">super</span>::QuerySet, index: u32) {
+        <span class="self">self</span>.device.raw.cmd_end_query(<span class="self">self</span>.active, set.raw, index);
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">write_timestamp</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">set</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::QuerySet</span>, <span class="ident">index</span>: <span class="ident">u32</span>) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_write_timestamp</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="ident">vk::PipelineStageFlags::BOTTOM_OF_PIPE</span>,
-            <span class="ident">set</span>.<span class="ident">raw</span>,
-            <span class="ident">index</span>,
+    <span class="kw">unsafe fn </span>write_timestamp(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span><span class="kw">super</span>::QuerySet, index: u32) {
+        <span class="self">self</span>.device.raw.cmd_write_timestamp(
+            <span class="self">self</span>.active,
+            vk::PipelineStageFlags::BOTTOM_OF_PIPE,
+            set.raw,
+            index,
         );
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">reset_queries</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">set</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::QuerySet</span>, <span class="ident">range</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_reset_query_pool</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="ident">set</span>.<span class="ident">raw</span>,
-            <span class="ident">range</span>.<span class="ident">start</span>,
-            <span class="ident">range</span>.<span class="ident">end</span> - <span class="ident">range</span>.<span class="ident">start</span>,
+    <span class="kw">unsafe fn </span>reset_queries(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span><span class="kw">super</span>::QuerySet, range: Range&lt;u32&gt;) {
+        <span class="self">self</span>.device.raw.cmd_reset_query_pool(
+            <span class="self">self</span>.active,
+            set.raw,
+            range.start,
+            range.end - range.start,
         );
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">copy_query_results</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">set</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::QuerySet</span>,
-        <span class="ident">range</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;,
-        <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Buffer</span>,
-        <span class="ident">offset</span>: <span class="ident">wgt::BufferAddress</span>,
-        <span class="ident">stride</span>: <span class="ident">wgt::BufferSize</span>,
+    <span class="kw">unsafe fn </span>copy_query_results(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        set: <span class="kw-2">&amp;</span><span class="kw">super</span>::QuerySet,
+        range: Range&lt;u32&gt;,
+        buffer: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer,
+        offset: wgt::BufferAddress,
+        stride: wgt::BufferSize,
     ) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_copy_query_pool_results</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="ident">set</span>.<span class="ident">raw</span>,
-            <span class="ident">range</span>.<span class="ident">start</span>,
-            <span class="ident">range</span>.<span class="ident">end</span> - <span class="ident">range</span>.<span class="ident">start</span>,
-            <span class="ident">buffer</span>.<span class="ident">raw</span>,
-            <span class="ident">offset</span>,
-            <span class="ident">stride</span>.<span class="ident">get</span>(),
-            <span class="ident">vk::QueryResultFlags::TYPE_64</span> | <span class="ident">vk::QueryResultFlags::WAIT</span>,
+        <span class="self">self</span>.device.raw.cmd_copy_query_pool_results(
+            <span class="self">self</span>.active,
+            set.raw,
+            range.start,
+            range.end - range.start,
+            buffer.raw,
+            offset,
+            stride.get(),
+            vk::QueryResultFlags::TYPE_64 | vk::QueryResultFlags::WAIT,
         );
     }
 
-    <span class="comment">// render</span>
+    <span class="comment">// render
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">begin_render_pass</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::RenderPassDescriptor</span>&lt;<span class="ident"><span class="kw">super</span>::Api</span>&gt;) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_clear_values</span> =
-            <span class="ident">ArrayVec</span>::&lt;<span class="ident">vk::ClearValue</span>, { <span class="ident"><span class="kw">super</span>::MAX_TOTAL_ATTACHMENTS</span> }&gt;<span class="ident">::new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_image_views</span> = <span class="ident">ArrayVec</span>::&lt;<span class="ident">vk::ImageView</span>, { <span class="ident"><span class="kw">super</span>::MAX_TOTAL_ATTACHMENTS</span> }&gt;<span class="ident">::new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rp_key</span> = <span class="ident"><span class="kw">super</span>::RenderPassKey::default</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fb_key</span> = <span class="ident"><span class="kw">super</span>::FramebufferKey</span> {
-            <span class="ident">attachments</span>: <span class="ident">ArrayVec::default</span>(),
-            <span class="ident">extent</span>: <span class="ident">desc</span>.<span class="ident">extent</span>,
-            <span class="ident">sample_count</span>: <span class="ident">desc</span>.<span class="ident">sample_count</span>,
+    </span><span class="kw">unsafe fn </span>begin_render_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPassDescriptor&lt;<span class="kw">super</span>::Api&gt;) {
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_clear_values =
+            ArrayVec::&lt;vk::ClearValue, { <span class="kw">super</span>::MAX_TOTAL_ATTACHMENTS }&gt;::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_image_views = ArrayVec::&lt;vk::ImageView, { <span class="kw">super</span>::MAX_TOTAL_ATTACHMENTS }&gt;::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>rp_key = <span class="kw">super</span>::RenderPassKey::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>fb_key = <span class="kw">super</span>::FramebufferKey {
+            attachments: ArrayVec::default(),
+            extent: desc.extent,
+            sample_count: desc.sample_count,
         };
-        <span class="kw">let</span> <span class="ident">caps</span> = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">device</span>.<span class="ident">private_caps</span>;
+        <span class="kw">let </span>caps = <span class="kw-2">&amp;</span><span class="self">self</span>.device.private_caps;
 
-        <span class="kw">for</span> <span class="ident">cat</span> <span class="kw">in</span> <span class="ident">desc</span>.<span class="ident">color_attachments</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">cat</span>) = <span class="ident">cat</span>.<span class="ident">as_ref</span>() {
-                <span class="ident">vk_clear_values</span>.<span class="ident">push</span>(<span class="ident">vk::ClearValue</span> {
-                    <span class="ident">color</span>: <span class="ident">cat</span>.<span class="ident">make_vk_clear_color</span>(),
+        <span class="kw">for </span>cat <span class="kw">in </span>desc.color_attachments {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(cat) = cat.as_ref() {
+                vk_clear_values.push(vk::ClearValue {
+                    color: cat.make_vk_clear_color(),
                 });
-                <span class="ident">vk_image_views</span>.<span class="ident">push</span>(<span class="ident">cat</span>.<span class="ident">target</span>.<span class="ident">view</span>.<span class="ident">raw</span>);
-                <span class="kw">let</span> <span class="ident">color</span> = <span class="ident"><span class="kw">super</span>::ColorAttachmentKey</span> {
-                    <span class="ident">base</span>: <span class="ident">cat</span>.<span class="ident">target</span>.<span class="ident">make_attachment_key</span>(<span class="ident">cat</span>.<span class="ident">ops</span>, <span class="ident">caps</span>),
-                    <span class="ident">resolve</span>: <span class="ident">cat</span>.<span class="ident">resolve_target</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(|<span class="ident">target</span>| {
-                        <span class="ident">target</span>.<span class="ident">make_attachment_key</span>(<span class="ident"><span class="kw">crate</span>::AttachmentOps::STORE</span>, <span class="ident">caps</span>)
+                vk_image_views.push(cat.target.view.raw);
+                <span class="kw">let </span>color = <span class="kw">super</span>::ColorAttachmentKey {
+                    base: cat.target.make_attachment_key(cat.ops, caps),
+                    resolve: cat.resolve_target.as_ref().map(|target| {
+                        target.make_attachment_key(<span class="kw">crate</span>::AttachmentOps::STORE, caps)
                     }),
                 };
 
-                <span class="ident">rp_key</span>.<span class="ident">colors</span>.<span class="ident">push</span>(<span class="prelude-val">Some</span>(<span class="ident">color</span>));
-                <span class="ident">fb_key</span>.<span class="ident">attachments</span>.<span class="ident">push</span>(<span class="ident">cat</span>.<span class="ident">target</span>.<span class="ident">view</span>.<span class="ident">attachment</span>.<span class="ident">clone</span>());
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">at</span>) = <span class="ident">cat</span>.<span class="ident">resolve_target</span> {
-                    <span class="ident">vk_clear_values</span>.<span class="ident">push</span>(<span class="ident">mem::zeroed</span>());
-                    <span class="ident">vk_image_views</span>.<span class="ident">push</span>(<span class="ident">at</span>.<span class="ident">view</span>.<span class="ident">raw</span>);
-                    <span class="ident">fb_key</span>.<span class="ident">attachments</span>.<span class="ident">push</span>(<span class="ident">at</span>.<span class="ident">view</span>.<span class="ident">attachment</span>.<span class="ident">clone</span>());
+                rp_key.colors.push(<span class="prelude-val">Some</span>(color));
+                fb_key.attachments.push(cat.target.view.attachment.clone());
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>at) = cat.resolve_target {
+                    vk_clear_values.push(mem::zeroed());
+                    vk_image_views.push(at.view.raw);
+                    fb_key.attachments.push(at.view.attachment.clone());
                 }
 
-                <span class="comment">// Assert this attachment is valid for the detected multiview, as a sanity check</span>
-                <span class="comment">// The driver crash for this is really bad on AMD, so the check is worth it</span>
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">multiview</span>) = <span class="ident">desc</span>.<span class="ident">multiview</span> {
-                    <span class="macro">assert_eq!</span>(<span class="ident">cat</span>.<span class="ident">target</span>.<span class="ident">view</span>.<span class="ident">layers</span>, <span class="ident">multiview</span>);
-                    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">resolve_target</span>) = <span class="ident">cat</span>.<span class="ident">resolve_target</span> {
-                        <span class="macro">assert_eq!</span>(<span class="ident">resolve_target</span>.<span class="ident">view</span>.<span class="ident">layers</span>, <span class="ident">multiview</span>);
+                <span class="comment">// Assert this attachment is valid for the detected multiview, as a sanity check
+                // The driver crash for this is really bad on AMD, so the check is worth it
+                </span><span class="kw">if let </span><span class="prelude-val">Some</span>(multiview) = desc.multiview {
+                    <span class="macro">assert_eq!</span>(cat.target.view.layers, multiview);
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>resolve_target) = cat.resolve_target {
+                        <span class="macro">assert_eq!</span>(resolve_target.view.layers, multiview);
                     }
                 }
-            } <span class="kw">else</span> {
-                <span class="ident">rp_key</span>.<span class="ident">colors</span>.<span class="ident">push</span>(<span class="prelude-val">None</span>);
+            } <span class="kw">else </span>{
+                rp_key.colors.push(<span class="prelude-val">None</span>);
             }
         }
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw-2">ref</span> <span class="ident">ds</span>) = <span class="ident">desc</span>.<span class="ident">depth_stencil_attachment</span> {
-            <span class="ident">vk_clear_values</span>.<span class="ident">push</span>(<span class="ident">vk::ClearValue</span> {
-                <span class="ident">depth_stencil</span>: <span class="ident">vk::ClearDepthStencilValue</span> {
-                    <span class="ident">depth</span>: <span class="ident">ds</span>.<span class="ident">clear_value</span>.<span class="number">0</span>,
-                    <span class="ident">stencil</span>: <span class="ident">ds</span>.<span class="ident">clear_value</span>.<span class="number">1</span>,
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>ds) = desc.depth_stencil_attachment {
+            vk_clear_values.push(vk::ClearValue {
+                depth_stencil: vk::ClearDepthStencilValue {
+                    depth: ds.clear_value.<span class="number">0</span>,
+                    stencil: ds.clear_value.<span class="number">1</span>,
                 },
             });
-            <span class="ident">vk_image_views</span>.<span class="ident">push</span>(<span class="ident">ds</span>.<span class="ident">target</span>.<span class="ident">view</span>.<span class="ident">raw</span>);
-            <span class="ident">rp_key</span>.<span class="ident">depth_stencil</span> = <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">super</span>::DepthStencilAttachmentKey</span> {
-                <span class="ident">base</span>: <span class="ident">ds</span>.<span class="ident">target</span>.<span class="ident">make_attachment_key</span>(<span class="ident">ds</span>.<span class="ident">depth_ops</span>, <span class="ident">caps</span>),
-                <span class="ident">stencil_ops</span>: <span class="ident">ds</span>.<span class="ident">stencil_ops</span>,
+            vk_image_views.push(ds.target.view.raw);
+            rp_key.depth_stencil = <span class="prelude-val">Some</span>(<span class="kw">super</span>::DepthStencilAttachmentKey {
+                base: ds.target.make_attachment_key(ds.depth_ops, caps),
+                stencil_ops: ds.stencil_ops,
             });
-            <span class="ident">fb_key</span>.<span class="ident">attachments</span>.<span class="ident">push</span>(<span class="ident">ds</span>.<span class="ident">target</span>.<span class="ident">view</span>.<span class="ident">attachment</span>.<span class="ident">clone</span>());
+            fb_key.attachments.push(ds.target.view.attachment.clone());
 
-            <span class="comment">// Assert this attachment is valid for the detected multiview, as a sanity check</span>
-            <span class="comment">// The driver crash for this is really bad on AMD, so the check is worth it</span>
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">multiview</span>) = <span class="ident">desc</span>.<span class="ident">multiview</span> {
-                <span class="macro">assert_eq!</span>(<span class="ident">ds</span>.<span class="ident">target</span>.<span class="ident">view</span>.<span class="ident">layers</span>, <span class="ident">multiview</span>);
+            <span class="comment">// Assert this attachment is valid for the detected multiview, as a sanity check
+            // The driver crash for this is really bad on AMD, so the check is worth it
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(multiview) = desc.multiview {
+                <span class="macro">assert_eq!</span>(ds.target.view.layers, multiview);
             }
         }
-        <span class="ident">rp_key</span>.<span class="ident">sample_count</span> = <span class="ident">fb_key</span>.<span class="ident">sample_count</span>;
-        <span class="ident">rp_key</span>.<span class="ident">multiview</span> = <span class="ident">desc</span>.<span class="ident">multiview</span>;
+        rp_key.sample_count = fb_key.sample_count;
+        rp_key.multiview = desc.multiview;
 
-        <span class="kw">let</span> <span class="ident">render_area</span> = <span class="ident">vk::Rect2D</span> {
-            <span class="ident">offset</span>: <span class="ident">vk::Offset2D</span> { <span class="ident">x</span>: <span class="number">0</span>, <span class="ident">y</span>: <span class="number">0</span> },
-            <span class="ident">extent</span>: <span class="ident">vk::Extent2D</span> {
-                <span class="ident">width</span>: <span class="ident">desc</span>.<span class="ident">extent</span>.<span class="ident">width</span>,
-                <span class="ident">height</span>: <span class="ident">desc</span>.<span class="ident">extent</span>.<span class="ident">height</span>,
+        <span class="kw">let </span>render_area = vk::Rect2D {
+            offset: vk::Offset2D { x: <span class="number">0</span>, y: <span class="number">0 </span>},
+            extent: vk::Extent2D {
+                width: desc.extent.width,
+                height: desc.extent.height,
             },
         };
-        <span class="kw">let</span> <span class="ident">vk_viewports</span> = [<span class="ident">vk::Viewport</span> {
-            <span class="ident">x</span>: <span class="number">0.0</span>,
-            <span class="ident">y</span>: <span class="kw">if</span> <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">private_caps</span>.<span class="ident">flip_y_requires_shift</span> {
-                <span class="ident">desc</span>.<span class="ident">extent</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">f32</span>
-            } <span class="kw">else</span> {
-                <span class="number">0.0</span>
-            },
-            <span class="ident">width</span>: <span class="ident">desc</span>.<span class="ident">extent</span>.<span class="ident">width</span> <span class="kw">as</span> <span class="ident">f32</span>,
-            <span class="ident">height</span>: -(<span class="ident">desc</span>.<span class="ident">extent</span>.<span class="ident">height</span> <span class="kw">as</span> <span class="ident">f32</span>),
-            <span class="ident">min_depth</span>: <span class="number">0.0</span>,
-            <span class="ident">max_depth</span>: <span class="number">1.0</span>,
+        <span class="kw">let </span>vk_viewports = [vk::Viewport {
+            x: <span class="number">0.0</span>,
+            y: <span class="kw">if </span><span class="self">self</span>.device.private_caps.flip_y_requires_shift {
+                desc.extent.height <span class="kw">as </span>f32
+            } <span class="kw">else </span>{
+                <span class="number">0.0
+            </span>},
+            width: desc.extent.width <span class="kw">as </span>f32,
+            height: -(desc.extent.height <span class="kw">as </span>f32),
+            min_depth: <span class="number">0.0</span>,
+            max_depth: <span class="number">1.0</span>,
         }];
 
-        <span class="kw">let</span> <span class="ident">raw_pass</span> = <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">make_render_pass</span>(<span class="ident">rp_key</span>).<span class="ident">unwrap</span>();
-        <span class="kw">let</span> <span class="ident">raw_framebuffer</span> = <span class="self">self</span>
-            .<span class="ident">device</span>
-            .<span class="ident">make_framebuffer</span>(<span class="ident">fb_key</span>, <span class="ident">raw_pass</span>, <span class="ident">desc</span>.<span class="ident">label</span>)
-            .<span class="ident">unwrap</span>();
+        <span class="kw">let </span>raw_pass = <span class="self">self</span>.device.make_render_pass(rp_key).unwrap();
+        <span class="kw">let </span>raw_framebuffer = <span class="self">self
+            </span>.device
+            .make_framebuffer(fb_key, raw_pass, desc.label)
+            .unwrap();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_info</span> = <span class="ident">vk::RenderPassBeginInfo::builder</span>()
-            .<span class="ident">render_pass</span>(<span class="ident">raw_pass</span>)
-            .<span class="ident">render_area</span>(<span class="ident">render_area</span>)
-            .<span class="ident">clear_values</span>(<span class="kw-2">&amp;</span><span class="ident">vk_clear_values</span>)
-            .<span class="ident">framebuffer</span>(<span class="ident">raw_framebuffer</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_attachment_info</span> = <span class="kw">if</span> <span class="ident">caps</span>.<span class="ident">imageless_framebuffers</span> {
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::RenderPassBeginInfo::builder()
+            .render_pass(raw_pass)
+            .render_area(render_area)
+            .clear_values(<span class="kw-2">&amp;</span>vk_clear_values)
+            .framebuffer(raw_framebuffer);
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_attachment_info = <span class="kw">if </span>caps.imageless_framebuffers {
             <span class="prelude-val">Some</span>(
-                <span class="ident">vk::RenderPassAttachmentBeginInfo::builder</span>()
-                    .<span class="ident">attachments</span>(<span class="kw-2">&amp;</span><span class="ident">vk_image_views</span>)
-                    .<span class="ident">build</span>(),
+                vk::RenderPassAttachmentBeginInfo::builder()
+                    .attachments(<span class="kw-2">&amp;</span>vk_image_views)
+                    .build(),
             )
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        };
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">attachment_info</span>) = <span class="ident">vk_attachment_info</span>.<span class="ident">as_mut</span>() {
-            <span class="ident">vk_info</span> = <span class="ident">vk_info</span>.<span class="ident">push_next</span>(<span class="ident">attachment_info</span>);
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>};
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(attachment_info) = vk_attachment_info.as_mut() {
+            vk_info = vk_info.push_next(attachment_info);
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">label</span>) = <span class="ident">desc</span>.<span class="ident">label</span> {
-            <span class="self">self</span>.<span class="ident">begin_debug_marker</span>(<span class="ident">label</span>);
-            <span class="self">self</span>.<span class="ident">rpass_debug_marker_active</span> = <span class="bool-val">true</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
+            <span class="self">self</span>.begin_debug_marker(label);
+            <span class="self">self</span>.rpass_debug_marker_active = <span class="bool-val">true</span>;
         }
 
-        <span class="self">self</span>.<span class="ident">device</span>
-            .<span class="ident">raw</span>
-            .<span class="ident">cmd_set_viewport</span>(<span class="self">self</span>.<span class="ident">active</span>, <span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">vk_viewports</span>);
-        <span class="self">self</span>.<span class="ident">device</span>
-            .<span class="ident">raw</span>
-            .<span class="ident">cmd_set_scissor</span>(<span class="self">self</span>.<span class="ident">active</span>, <span class="number">0</span>, <span class="kw-2">&amp;</span>[<span class="ident">render_area</span>]);
-        <span class="self">self</span>.<span class="ident">device</span>
-            .<span class="ident">raw</span>
-            .<span class="ident">cmd_begin_render_pass</span>(<span class="self">self</span>.<span class="ident">active</span>, <span class="kw-2">&amp;</span><span class="ident">vk_info</span>, <span class="ident">vk::SubpassContents::INLINE</span>);
+        <span class="self">self</span>.device
+            .raw
+            .cmd_set_viewport(<span class="self">self</span>.active, <span class="number">0</span>, <span class="kw-2">&amp;</span>vk_viewports);
+        <span class="self">self</span>.device
+            .raw
+            .cmd_set_scissor(<span class="self">self</span>.active, <span class="number">0</span>, <span class="kw-2">&amp;</span>[render_area]);
+        <span class="self">self</span>.device
+            .raw
+            .cmd_begin_render_pass(<span class="self">self</span>.active, <span class="kw-2">&amp;</span>vk_info, vk::SubpassContents::INLINE);
 
-        <span class="self">self</span>.<span class="ident">bind_point</span> = <span class="ident">vk::PipelineBindPoint::GRAPHICS</span>;
+        <span class="self">self</span>.bind_point = vk::PipelineBindPoint::GRAPHICS;
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">end_render_pass</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_end_render_pass</span>(<span class="self">self</span>.<span class="ident">active</span>);
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">rpass_debug_marker_active</span> {
-            <span class="self">self</span>.<span class="ident">end_debug_marker</span>();
-            <span class="self">self</span>.<span class="ident">rpass_debug_marker_active</span> = <span class="bool-val">false</span>;
+    <span class="kw">unsafe fn </span>end_render_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.device.raw.cmd_end_render_pass(<span class="self">self</span>.active);
+        <span class="kw">if </span><span class="self">self</span>.rpass_debug_marker_active {
+            <span class="self">self</span>.end_debug_marker();
+            <span class="self">self</span>.rpass_debug_marker_active = <span class="bool-val">false</span>;
         }
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_bind_group</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::PipelineLayout</span>,
-        <span class="ident">index</span>: <span class="ident">u32</span>,
-        <span class="ident">group</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::BindGroup</span>,
-        <span class="ident">dynamic_offsets</span>: <span class="kw-2">&amp;</span>[<span class="ident">wgt::DynamicOffset</span>],
+    <span class="kw">unsafe fn </span>set_bind_group(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        layout: <span class="kw-2">&amp;</span><span class="kw">super</span>::PipelineLayout,
+        index: u32,
+        group: <span class="kw-2">&amp;</span><span class="kw">super</span>::BindGroup,
+        dynamic_offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
     ) {
-        <span class="kw">let</span> <span class="ident">sets</span> = [<span class="kw-2">*</span><span class="ident">group</span>.<span class="ident">set</span>.<span class="ident">raw</span>()];
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_bind_descriptor_sets</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="self">self</span>.<span class="ident">bind_point</span>,
-            <span class="ident">layout</span>.<span class="ident">raw</span>,
-            <span class="ident">index</span>,
-            <span class="kw-2">&amp;</span><span class="ident">sets</span>,
-            <span class="ident">dynamic_offsets</span>,
+        <span class="kw">let </span>sets = [<span class="kw-2">*</span>group.set.raw()];
+        <span class="self">self</span>.device.raw.cmd_bind_descriptor_sets(
+            <span class="self">self</span>.active,
+            <span class="self">self</span>.bind_point,
+            layout.raw,
+            index,
+            <span class="kw-2">&amp;</span>sets,
+            dynamic_offsets,
         );
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_push_constants</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">layout</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::PipelineLayout</span>,
-        <span class="ident">stages</span>: <span class="ident">wgt::ShaderStages</span>,
-        <span class="ident">offset</span>: <span class="ident">u32</span>,
-        <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>],
+    <span class="kw">unsafe fn </span>set_push_constants(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        layout: <span class="kw-2">&amp;</span><span class="kw">super</span>::PipelineLayout,
+        stages: wgt::ShaderStages,
+        offset: u32,
+        data: <span class="kw-2">&amp;</span>[u32],
     ) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_push_constants</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="ident">layout</span>.<span class="ident">raw</span>,
-            <span class="ident">conv::map_shader_stage</span>(<span class="ident">stages</span>),
-            <span class="ident">offset</span>,
-            <span class="ident">slice::from_raw_parts</span>(<span class="ident">data</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">data</span>.<span class="ident">len</span>() * <span class="number">4</span>),
-        );
-    }
-
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">insert_debug_marker</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">label</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ext</span>) = <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">debug_messenger</span>() {
-            <span class="kw">let</span> <span class="ident">cstr</span> = <span class="self">self</span>.<span class="ident">temp</span>.<span class="ident">make_c_str</span>(<span class="ident">label</span>);
-            <span class="kw">let</span> <span class="ident">vk_label</span> = <span class="ident">vk::DebugUtilsLabelEXT::builder</span>().<span class="ident">label_name</span>(<span class="ident">cstr</span>).<span class="ident">build</span>();
-            <span class="ident">ext</span>.<span class="ident">cmd_insert_debug_utils_label</span>(<span class="self">self</span>.<span class="ident">active</span>, <span class="kw-2">&amp;</span><span class="ident">vk_label</span>);
-        }
-    }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">begin_debug_marker</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">group_label</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ext</span>) = <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">debug_messenger</span>() {
-            <span class="kw">let</span> <span class="ident">cstr</span> = <span class="self">self</span>.<span class="ident">temp</span>.<span class="ident">make_c_str</span>(<span class="ident">group_label</span>);
-            <span class="kw">let</span> <span class="ident">vk_label</span> = <span class="ident">vk::DebugUtilsLabelEXT::builder</span>().<span class="ident">label_name</span>(<span class="ident">cstr</span>).<span class="ident">build</span>();
-            <span class="ident">ext</span>.<span class="ident">cmd_begin_debug_utils_label</span>(<span class="self">self</span>.<span class="ident">active</span>, <span class="kw-2">&amp;</span><span class="ident">vk_label</span>);
-        }
-    }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">end_debug_marker</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">ext</span>) = <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">debug_messenger</span>() {
-            <span class="ident">ext</span>.<span class="ident">cmd_end_debug_utils_label</span>(<span class="self">self</span>.<span class="ident">active</span>);
-        }
-    }
-
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_render_pipeline</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pipeline</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::RenderPipeline</span>) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_bind_pipeline</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="ident">vk::PipelineBindPoint::GRAPHICS</span>,
-            <span class="ident">pipeline</span>.<span class="ident">raw</span>,
+        <span class="self">self</span>.device.raw.cmd_push_constants(
+            <span class="self">self</span>.active,
+            layout.raw,
+            conv::map_shader_stage(stages),
+            offset,
+            slice::from_raw_parts(data.as_ptr() <span class="kw">as _</span>, data.len() * <span class="number">4</span>),
         );
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_index_buffer</span>&lt;<span class="lifetime">&#39;a</span>&gt;(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">binding</span>: <span class="ident"><span class="kw">crate</span>::BufferBinding</span>&lt;<span class="lifetime">&#39;a</span>, <span class="ident"><span class="kw">super</span>::Api</span>&gt;,
-        <span class="ident">format</span>: <span class="ident">wgt::IndexFormat</span>,
-    ) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_bind_index_buffer</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="ident">binding</span>.<span class="ident">buffer</span>.<span class="ident">raw</span>,
-            <span class="ident">binding</span>.<span class="ident">offset</span>,
-            <span class="ident">conv::map_index_format</span>(<span class="ident">format</span>),
+    <span class="kw">unsafe fn </span>insert_debug_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(ext) = <span class="self">self</span>.device.debug_messenger() {
+            <span class="kw">let </span>cstr = <span class="self">self</span>.temp.make_c_str(label);
+            <span class="kw">let </span>vk_label = vk::DebugUtilsLabelEXT::builder().label_name(cstr).build();
+            ext.cmd_insert_debug_utils_label(<span class="self">self</span>.active, <span class="kw-2">&amp;</span>vk_label);
+        }
+    }
+    <span class="kw">unsafe fn </span>begin_debug_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, group_label: <span class="kw-2">&amp;</span>str) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(ext) = <span class="self">self</span>.device.debug_messenger() {
+            <span class="kw">let </span>cstr = <span class="self">self</span>.temp.make_c_str(group_label);
+            <span class="kw">let </span>vk_label = vk::DebugUtilsLabelEXT::builder().label_name(cstr).build();
+            ext.cmd_begin_debug_utils_label(<span class="self">self</span>.active, <span class="kw-2">&amp;</span>vk_label);
+        }
+    }
+    <span class="kw">unsafe fn </span>end_debug_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(ext) = <span class="self">self</span>.device.debug_messenger() {
+            ext.cmd_end_debug_utils_label(<span class="self">self</span>.active);
+        }
+    }
+
+    <span class="kw">unsafe fn </span>set_render_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span><span class="kw">super</span>::RenderPipeline) {
+        <span class="self">self</span>.device.raw.cmd_bind_pipeline(
+            <span class="self">self</span>.active,
+            vk::PipelineBindPoint::GRAPHICS,
+            pipeline.raw,
         );
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_vertex_buffer</span>&lt;<span class="lifetime">&#39;a</span>&gt;(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">index</span>: <span class="ident">u32</span>,
-        <span class="ident">binding</span>: <span class="ident"><span class="kw">crate</span>::BufferBinding</span>&lt;<span class="lifetime">&#39;a</span>, <span class="ident"><span class="kw">super</span>::Api</span>&gt;,
+
+    <span class="kw">unsafe fn </span>set_index_buffer&lt;<span class="lifetime">&#39;a</span>&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        binding: <span class="kw">crate</span>::BufferBinding&lt;<span class="lifetime">&#39;a</span>, <span class="kw">super</span>::Api&gt;,
+        format: wgt::IndexFormat,
     ) {
-        <span class="kw">let</span> <span class="ident">vk_buffers</span> = [<span class="ident">binding</span>.<span class="ident">buffer</span>.<span class="ident">raw</span>];
-        <span class="kw">let</span> <span class="ident">vk_offsets</span> = [<span class="ident">binding</span>.<span class="ident">offset</span>];
-        <span class="self">self</span>.<span class="ident">device</span>
-            .<span class="ident">raw</span>
-            .<span class="ident">cmd_bind_vertex_buffers</span>(<span class="self">self</span>.<span class="ident">active</span>, <span class="ident">index</span>, <span class="kw-2">&amp;</span><span class="ident">vk_buffers</span>, <span class="kw-2">&amp;</span><span class="ident">vk_offsets</span>);
+        <span class="self">self</span>.device.raw.cmd_bind_index_buffer(
+            <span class="self">self</span>.active,
+            binding.buffer.raw,
+            binding.offset,
+            conv::map_index_format(format),
+        );
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_viewport</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rect</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::Rect</span>&lt;<span class="ident">f32</span>&gt;, <span class="ident">depth_range</span>: <span class="ident">Range</span>&lt;<span class="ident">f32</span>&gt;) {
-        <span class="kw">let</span> <span class="ident">vk_viewports</span> = [<span class="ident">vk::Viewport</span> {
-            <span class="ident">x</span>: <span class="ident">rect</span>.<span class="ident">x</span>,
-            <span class="ident">y</span>: <span class="kw">if</span> <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">private_caps</span>.<span class="ident">flip_y_requires_shift</span> {
-                <span class="ident">rect</span>.<span class="ident">y</span> + <span class="ident">rect</span>.<span class="ident">h</span>
-            } <span class="kw">else</span> {
-                <span class="ident">rect</span>.<span class="ident">y</span>
+    <span class="kw">unsafe fn </span>set_vertex_buffer&lt;<span class="lifetime">&#39;a</span>&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        index: u32,
+        binding: <span class="kw">crate</span>::BufferBinding&lt;<span class="lifetime">&#39;a</span>, <span class="kw">super</span>::Api&gt;,
+    ) {
+        <span class="kw">let </span>vk_buffers = [binding.buffer.raw];
+        <span class="kw">let </span>vk_offsets = [binding.offset];
+        <span class="self">self</span>.device
+            .raw
+            .cmd_bind_vertex_buffers(<span class="self">self</span>.active, index, <span class="kw-2">&amp;</span>vk_buffers, <span class="kw-2">&amp;</span>vk_offsets);
+    }
+    <span class="kw">unsafe fn </span>set_viewport(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rect: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Rect&lt;f32&gt;, depth_range: Range&lt;f32&gt;) {
+        <span class="kw">let </span>vk_viewports = [vk::Viewport {
+            x: rect.x,
+            y: <span class="kw">if </span><span class="self">self</span>.device.private_caps.flip_y_requires_shift {
+                rect.y + rect.h
+            } <span class="kw">else </span>{
+                rect.y
             },
-            <span class="ident">width</span>: <span class="ident">rect</span>.<span class="ident">w</span>,
-            <span class="ident">height</span>: -<span class="ident">rect</span>.<span class="ident">h</span>, <span class="comment">// flip Y</span>
-            <span class="ident">min_depth</span>: <span class="ident">depth_range</span>.<span class="ident">start</span>,
-            <span class="ident">max_depth</span>: <span class="ident">depth_range</span>.<span class="ident">end</span>,
+            width: rect.w,
+            height: -rect.h, <span class="comment">// flip Y
+            </span>min_depth: depth_range.start,
+            max_depth: depth_range.end,
         }];
-        <span class="self">self</span>.<span class="ident">device</span>
-            .<span class="ident">raw</span>
-            .<span class="ident">cmd_set_viewport</span>(<span class="self">self</span>.<span class="ident">active</span>, <span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">vk_viewports</span>);
+        <span class="self">self</span>.device
+            .raw
+            .cmd_set_viewport(<span class="self">self</span>.active, <span class="number">0</span>, <span class="kw-2">&amp;</span>vk_viewports);
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_scissor_rect</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rect</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::Rect</span>&lt;<span class="ident">u32</span>&gt;) {
-        <span class="kw">let</span> <span class="ident">vk_scissors</span> = [<span class="ident">vk::Rect2D</span> {
-            <span class="ident">offset</span>: <span class="ident">vk::Offset2D</span> {
-                <span class="ident">x</span>: <span class="ident">rect</span>.<span class="ident">x</span> <span class="kw">as</span> <span class="ident">i32</span>,
-                <span class="ident">y</span>: <span class="ident">rect</span>.<span class="ident">y</span> <span class="kw">as</span> <span class="ident">i32</span>,
+    <span class="kw">unsafe fn </span>set_scissor_rect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rect: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Rect&lt;u32&gt;) {
+        <span class="kw">let </span>vk_scissors = [vk::Rect2D {
+            offset: vk::Offset2D {
+                x: rect.x <span class="kw">as </span>i32,
+                y: rect.y <span class="kw">as </span>i32,
             },
-            <span class="ident">extent</span>: <span class="ident">vk::Extent2D</span> {
-                <span class="ident">width</span>: <span class="ident">rect</span>.<span class="ident">w</span>,
-                <span class="ident">height</span>: <span class="ident">rect</span>.<span class="ident">h</span>,
+            extent: vk::Extent2D {
+                width: rect.w,
+                height: rect.h,
             },
         }];
-        <span class="self">self</span>.<span class="ident">device</span>
-            .<span class="ident">raw</span>
-            .<span class="ident">cmd_set_scissor</span>(<span class="self">self</span>.<span class="ident">active</span>, <span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">vk_scissors</span>);
+        <span class="self">self</span>.device
+            .raw
+            .cmd_set_scissor(<span class="self">self</span>.active, <span class="number">0</span>, <span class="kw-2">&amp;</span>vk_scissors);
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_stencil_reference</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">u32</span>) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_set_stencil_reference</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="ident">vk::StencilFaceFlags::FRONT_AND_BACK</span>,
-            <span class="ident">value</span>,
+    <span class="kw">unsafe fn </span>set_stencil_reference(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: u32) {
+        <span class="self">self</span>.device.raw.cmd_set_stencil_reference(
+            <span class="self">self</span>.active,
+            vk::StencilFaceFlags::FRONT_AND_BACK,
+            value,
         );
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_blend_constants</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">color</span>: <span class="kw-2">&amp;</span>[<span class="ident">f32</span>; <span class="number">4</span>]) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_set_blend_constants</span>(<span class="self">self</span>.<span class="ident">active</span>, <span class="ident">color</span>);
+    <span class="kw">unsafe fn </span>set_blend_constants(<span class="kw-2">&amp;mut </span><span class="self">self</span>, color: <span class="kw-2">&amp;</span>[f32; <span class="number">4</span>]) {
+        <span class="self">self</span>.device.raw.cmd_set_blend_constants(<span class="self">self</span>.active, color);
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">draw</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">start_vertex</span>: <span class="ident">u32</span>,
-        <span class="ident">vertex_count</span>: <span class="ident">u32</span>,
-        <span class="ident">start_instance</span>: <span class="ident">u32</span>,
-        <span class="ident">instance_count</span>: <span class="ident">u32</span>,
+    <span class="kw">unsafe fn </span>draw(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        start_vertex: u32,
+        vertex_count: u32,
+        start_instance: u32,
+        instance_count: u32,
     ) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_draw</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="ident">vertex_count</span>,
-            <span class="ident">instance_count</span>,
-            <span class="ident">start_vertex</span>,
-            <span class="ident">start_instance</span>,
+        <span class="self">self</span>.device.raw.cmd_draw(
+            <span class="self">self</span>.active,
+            vertex_count,
+            instance_count,
+            start_vertex,
+            start_instance,
         );
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">draw_indexed</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">start_index</span>: <span class="ident">u32</span>,
-        <span class="ident">index_count</span>: <span class="ident">u32</span>,
-        <span class="ident">base_vertex</span>: <span class="ident">i32</span>,
-        <span class="ident">start_instance</span>: <span class="ident">u32</span>,
-        <span class="ident">instance_count</span>: <span class="ident">u32</span>,
+    <span class="kw">unsafe fn </span>draw_indexed(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        start_index: u32,
+        index_count: u32,
+        base_vertex: i32,
+        start_instance: u32,
+        instance_count: u32,
     ) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_draw_indexed</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="ident">index_count</span>,
-            <span class="ident">instance_count</span>,
-            <span class="ident">start_index</span>,
-            <span class="ident">base_vertex</span>,
-            <span class="ident">start_instance</span>,
+        <span class="self">self</span>.device.raw.cmd_draw_indexed(
+            <span class="self">self</span>.active,
+            index_count,
+            instance_count,
+            start_index,
+            base_vertex,
+            start_instance,
         );
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">draw_indirect</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Buffer</span>,
-        <span class="ident">offset</span>: <span class="ident">wgt::BufferAddress</span>,
-        <span class="ident">draw_count</span>: <span class="ident">u32</span>,
+    <span class="kw">unsafe fn </span>draw_indirect(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        buffer: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer,
+        offset: wgt::BufferAddress,
+        draw_count: u32,
     ) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_draw_indirect</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="ident">buffer</span>.<span class="ident">raw</span>,
-            <span class="ident">offset</span>,
-            <span class="ident">draw_count</span>,
-            <span class="ident">mem::size_of</span>::&lt;<span class="ident">wgt::DrawIndirectArgs</span>&gt;() <span class="kw">as</span> <span class="ident">u32</span>,
+        <span class="self">self</span>.device.raw.cmd_draw_indirect(
+            <span class="self">self</span>.active,
+            buffer.raw,
+            offset,
+            draw_count,
+            mem::size_of::&lt;wgt::DrawIndirectArgs&gt;() <span class="kw">as </span>u32,
         );
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">draw_indexed_indirect</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Buffer</span>,
-        <span class="ident">offset</span>: <span class="ident">wgt::BufferAddress</span>,
-        <span class="ident">draw_count</span>: <span class="ident">u32</span>,
+    <span class="kw">unsafe fn </span>draw_indexed_indirect(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        buffer: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer,
+        offset: wgt::BufferAddress,
+        draw_count: u32,
     ) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_draw_indexed_indirect</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="ident">buffer</span>.<span class="ident">raw</span>,
-            <span class="ident">offset</span>,
-            <span class="ident">draw_count</span>,
-            <span class="ident">mem::size_of</span>::&lt;<span class="ident">wgt::DrawIndexedIndirectArgs</span>&gt;() <span class="kw">as</span> <span class="ident">u32</span>,
+        <span class="self">self</span>.device.raw.cmd_draw_indexed_indirect(
+            <span class="self">self</span>.active,
+            buffer.raw,
+            offset,
+            draw_count,
+            mem::size_of::&lt;wgt::DrawIndexedIndirectArgs&gt;() <span class="kw">as </span>u32,
         );
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">draw_indirect_count</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Buffer</span>,
-        <span class="ident">offset</span>: <span class="ident">wgt::BufferAddress</span>,
-        <span class="ident">count_buffer</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Buffer</span>,
-        <span class="ident">count_offset</span>: <span class="ident">wgt::BufferAddress</span>,
-        <span class="ident">max_count</span>: <span class="ident">u32</span>,
+    <span class="kw">unsafe fn </span>draw_indirect_count(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        buffer: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer,
+        offset: wgt::BufferAddress,
+        count_buffer: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer,
+        count_offset: wgt::BufferAddress,
+        max_count: u32,
     ) {
-        <span class="kw">let</span> <span class="ident">stride</span> = <span class="ident">mem::size_of</span>::&lt;<span class="ident">wgt::DrawIndirectArgs</span>&gt;() <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">extension_fns</span>.<span class="ident">draw_indirect_count</span> {
-            <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">super</span>::ExtensionFn::Extension</span>(<span class="kw-2">ref</span> <span class="ident">t</span>)) =&gt; {
-                <span class="ident">t</span>.<span class="ident">cmd_draw_indirect_count</span>(
-                    <span class="self">self</span>.<span class="ident">active</span>,
-                    <span class="ident">buffer</span>.<span class="ident">raw</span>,
-                    <span class="ident">offset</span>,
-                    <span class="ident">count_buffer</span>.<span class="ident">raw</span>,
-                    <span class="ident">count_offset</span>,
-                    <span class="ident">max_count</span>,
-                    <span class="ident">stride</span>,
+        <span class="kw">let </span>stride = mem::size_of::&lt;wgt::DrawIndirectArgs&gt;() <span class="kw">as </span>u32;
+        <span class="kw">match </span><span class="self">self</span>.device.extension_fns.draw_indirect_count {
+            <span class="prelude-val">Some</span>(<span class="kw">super</span>::ExtensionFn::Extension(<span class="kw-2">ref </span>t)) =&gt; {
+                t.cmd_draw_indirect_count(
+                    <span class="self">self</span>.active,
+                    buffer.raw,
+                    offset,
+                    count_buffer.raw,
+                    count_offset,
+                    max_count,
+                    stride,
                 );
             }
-            <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">super</span>::ExtensionFn::Promoted</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_draw_indirect_count</span>(
-                    <span class="self">self</span>.<span class="ident">active</span>,
-                    <span class="ident">buffer</span>.<span class="ident">raw</span>,
-                    <span class="ident">offset</span>,
-                    <span class="ident">count_buffer</span>.<span class="ident">raw</span>,
-                    <span class="ident">count_offset</span>,
-                    <span class="ident">max_count</span>,
-                    <span class="ident">stride</span>,
+            <span class="prelude-val">Some</span>(<span class="kw">super</span>::ExtensionFn::Promoted) =&gt; {
+                <span class="self">self</span>.device.raw.cmd_draw_indirect_count(
+                    <span class="self">self</span>.active,
+                    buffer.raw,
+                    offset,
+                    count_buffer.raw,
+                    count_offset,
+                    max_count,
+                    stride,
                 );
             }
-            <span class="prelude-val">None</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Feature `DRAW_INDIRECT_COUNT` not enabled&quot;</span>),
+            <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Feature `DRAW_INDIRECT_COUNT` not enabled&quot;</span>),
         }
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">draw_indexed_indirect_count</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Buffer</span>,
-        <span class="ident">offset</span>: <span class="ident">wgt::BufferAddress</span>,
-        <span class="ident">count_buffer</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Buffer</span>,
-        <span class="ident">count_offset</span>: <span class="ident">wgt::BufferAddress</span>,
-        <span class="ident">max_count</span>: <span class="ident">u32</span>,
+    <span class="kw">unsafe fn </span>draw_indexed_indirect_count(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        buffer: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer,
+        offset: wgt::BufferAddress,
+        count_buffer: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer,
+        count_offset: wgt::BufferAddress,
+        max_count: u32,
     ) {
-        <span class="kw">let</span> <span class="ident">stride</span> = <span class="ident">mem::size_of</span>::&lt;<span class="ident">wgt::DrawIndexedIndirectArgs</span>&gt;() <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">extension_fns</span>.<span class="ident">draw_indirect_count</span> {
-            <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">super</span>::ExtensionFn::Extension</span>(<span class="kw-2">ref</span> <span class="ident">t</span>)) =&gt; {
-                <span class="ident">t</span>.<span class="ident">cmd_draw_indexed_indirect_count</span>(
-                    <span class="self">self</span>.<span class="ident">active</span>,
-                    <span class="ident">buffer</span>.<span class="ident">raw</span>,
-                    <span class="ident">offset</span>,
-                    <span class="ident">count_buffer</span>.<span class="ident">raw</span>,
-                    <span class="ident">count_offset</span>,
-                    <span class="ident">max_count</span>,
-                    <span class="ident">stride</span>,
+        <span class="kw">let </span>stride = mem::size_of::&lt;wgt::DrawIndexedIndirectArgs&gt;() <span class="kw">as </span>u32;
+        <span class="kw">match </span><span class="self">self</span>.device.extension_fns.draw_indirect_count {
+            <span class="prelude-val">Some</span>(<span class="kw">super</span>::ExtensionFn::Extension(<span class="kw-2">ref </span>t)) =&gt; {
+                t.cmd_draw_indexed_indirect_count(
+                    <span class="self">self</span>.active,
+                    buffer.raw,
+                    offset,
+                    count_buffer.raw,
+                    count_offset,
+                    max_count,
+                    stride,
                 );
             }
-            <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">super</span>::ExtensionFn::Promoted</span>) =&gt; {
-                <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_draw_indexed_indirect_count</span>(
-                    <span class="self">self</span>.<span class="ident">active</span>,
-                    <span class="ident">buffer</span>.<span class="ident">raw</span>,
-                    <span class="ident">offset</span>,
-                    <span class="ident">count_buffer</span>.<span class="ident">raw</span>,
-                    <span class="ident">count_offset</span>,
-                    <span class="ident">max_count</span>,
-                    <span class="ident">stride</span>,
+            <span class="prelude-val">Some</span>(<span class="kw">super</span>::ExtensionFn::Promoted) =&gt; {
+                <span class="self">self</span>.device.raw.cmd_draw_indexed_indirect_count(
+                    <span class="self">self</span>.active,
+                    buffer.raw,
+                    offset,
+                    count_buffer.raw,
+                    count_offset,
+                    max_count,
+                    stride,
                 );
             }
-            <span class="prelude-val">None</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Feature `DRAW_INDIRECT_COUNT` not enabled&quot;</span>),
-        }
-    }
-
-    <span class="comment">// compute</span>
-
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">begin_compute_pass</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">desc</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::ComputePassDescriptor</span>) {
-        <span class="self">self</span>.<span class="ident">bind_point</span> = <span class="ident">vk::PipelineBindPoint::COMPUTE</span>;
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">label</span>) = <span class="ident">desc</span>.<span class="ident">label</span> {
-            <span class="self">self</span>.<span class="ident">begin_debug_marker</span>(<span class="ident">label</span>);
-            <span class="self">self</span>.<span class="ident">rpass_debug_marker_active</span> = <span class="bool-val">true</span>;
-        }
-    }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">end_compute_pass</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">rpass_debug_marker_active</span> {
-            <span class="self">self</span>.<span class="ident">end_debug_marker</span>();
-            <span class="self">self</span>.<span class="ident">rpass_debug_marker_active</span> = <span class="bool-val">false</span>
+            <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Feature `DRAW_INDIRECT_COUNT` not enabled&quot;</span>),
         }
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_compute_pipeline</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pipeline</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::ComputePipeline</span>) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>.<span class="ident">cmd_bind_pipeline</span>(
-            <span class="self">self</span>.<span class="ident">active</span>,
-            <span class="ident">vk::PipelineBindPoint::COMPUTE</span>,
-            <span class="ident">pipeline</span>.<span class="ident">raw</span>,
+    <span class="comment">// compute
+
+    </span><span class="kw">unsafe fn </span>begin_compute_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ComputePassDescriptor) {
+        <span class="self">self</span>.bind_point = vk::PipelineBindPoint::COMPUTE;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
+            <span class="self">self</span>.begin_debug_marker(label);
+            <span class="self">self</span>.rpass_debug_marker_active = <span class="bool-val">true</span>;
+        }
+    }
+    <span class="kw">unsafe fn </span>end_compute_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">if </span><span class="self">self</span>.rpass_debug_marker_active {
+            <span class="self">self</span>.end_debug_marker();
+            <span class="self">self</span>.rpass_debug_marker_active = <span class="bool-val">false
+        </span>}
+    }
+
+    <span class="kw">unsafe fn </span>set_compute_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span><span class="kw">super</span>::ComputePipeline) {
+        <span class="self">self</span>.device.raw.cmd_bind_pipeline(
+            <span class="self">self</span>.active,
+            vk::PipelineBindPoint::COMPUTE,
+            pipeline.raw,
         );
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">dispatch</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">count</span>: [<span class="ident">u32</span>; <span class="number">3</span>]) {
-        <span class="self">self</span>.<span class="ident">device</span>
-            .<span class="ident">raw</span>
-            .<span class="ident">cmd_dispatch</span>(<span class="self">self</span>.<span class="ident">active</span>, <span class="ident">count</span>[<span class="number">0</span>], <span class="ident">count</span>[<span class="number">1</span>], <span class="ident">count</span>[<span class="number">2</span>]);
+    <span class="kw">unsafe fn </span>dispatch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, count: [u32; <span class="number">3</span>]) {
+        <span class="self">self</span>.device
+            .raw
+            .cmd_dispatch(<span class="self">self</span>.active, count[<span class="number">0</span>], count[<span class="number">1</span>], count[<span class="number">2</span>]);
     }
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">dispatch_indirect</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Buffer</span>, <span class="ident">offset</span>: <span class="ident">wgt::BufferAddress</span>) {
-        <span class="self">self</span>.<span class="ident">device</span>
-            .<span class="ident">raw</span>
-            .<span class="ident">cmd_dispatch_indirect</span>(<span class="self">self</span>.<span class="ident">active</span>, <span class="ident">buffer</span>.<span class="ident">raw</span>, <span class="ident">offset</span>)
+    <span class="kw">unsafe fn </span>dispatch_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer, offset: wgt::BufferAddress) {
+        <span class="self">self</span>.device
+            .raw
+            .cmd_dispatch_indirect(<span class="self">self</span>.active, buffer.raw, offset)
     }
 }
 
-<span class="attribute">#[<span class="ident">test</span>]</span>
-<span class="kw">fn</span> <span class="ident">check_dst_image_layout</span>() {
+<span class="attribute">#[test]</span>
+<span class="kw">fn </span>check_dst_image_layout() {
     <span class="macro">assert_eq!</span>(
-        <span class="ident">conv::derive_image_layout</span>(<span class="ident"><span class="kw">crate</span>::TextureUses::COPY_DST</span>, <span class="ident"><span class="kw">crate</span>::FormatAspects::empty</span>()),
-        <span class="ident">DST_IMAGE_LAYOUT</span>
+        conv::derive_image_layout(<span class="kw">crate</span>::TextureUses::COPY_DST, <span class="kw">crate</span>::FormatAspects::empty()),
+        DST_IMAGE_LAYOUT
     );
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (75b7e52e9 2022-08-13)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (e1b28cd2f 2022-08-19)" ></div></body></html>

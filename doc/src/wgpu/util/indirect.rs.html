@@ -81,86 +81,86 @@
 <span id="79">79</span>
 <span id="80">80</span>
 <span id="81">81</span>
-</pre><pre class="rust"><code><span class="doccomment">/// The structure expected in `indirect_buffer` for [`RenderEncoder::draw_indirect`](crate::util::RenderEncoder::draw_indirect).</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrawIndirect</span> {
-    <span class="doccomment">/// The number of vertices to draw.</span>
-    <span class="kw">pub</span> <span class="ident">vertex_count</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The number of instances to draw.</span>
-    <span class="kw">pub</span> <span class="ident">instance_count</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The Index of the first vertex to draw.</span>
-    <span class="kw">pub</span> <span class="ident">base_vertex</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The instance ID of the first instance to draw.</span>
-    <span class="doccomment">/// Has to be 0, unless [`Features::INDIRECT_FIRST_INSTANCE`](crate::Features::INDIRECT_FIRST_INSTANCE) is enabled.</span>
-    <span class="kw">pub</span> <span class="ident">base_instance</span>: <span class="ident">u32</span>,
+</pre><pre class="rust"><code><span class="doccomment">/// The structure expected in `indirect_buffer` for [`RenderEncoder::draw_indirect`](crate::util::RenderEncoder::draw_indirect).
+</span><span class="attribute">#[repr(C)]</span>
+<span class="attribute">#[derive(Copy, Clone, Debug, Default)]</span>
+<span class="kw">pub struct </span>DrawIndirect {
+    <span class="doccomment">/// The number of vertices to draw.
+    </span><span class="kw">pub </span>vertex_count: u32,
+    <span class="doccomment">/// The number of instances to draw.
+    </span><span class="kw">pub </span>instance_count: u32,
+    <span class="doccomment">/// The Index of the first vertex to draw.
+    </span><span class="kw">pub </span>base_vertex: u32,
+    <span class="doccomment">/// The instance ID of the first instance to draw.
+    /// Has to be 0, unless [`Features::INDIRECT_FIRST_INSTANCE`](crate::Features::INDIRECT_FIRST_INSTANCE) is enabled.
+    </span><span class="kw">pub </span>base_instance: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">DrawIndirect</span> {
-    <span class="doccomment">/// Returns the bytes representation of the struct, ready to be written in a [`Buffer`](crate::Buffer).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="kw">unsafe</span> {
-            <span class="ident">std::mem::transmute</span>(<span class="ident">std::slice::from_raw_parts</span>(
-                <span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>,
-                <span class="ident">std::mem::size_of</span>::&lt;<span class="self">Self</span>&gt;(),
+<span class="kw">impl </span>DrawIndirect {
+    <span class="doccomment">/// Returns the bytes representation of the struct, ready to be written in a [`Buffer`](crate::Buffer).
+    </span><span class="kw">pub fn </span>as_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="kw">unsafe </span>{
+            std::mem::transmute(std::slice::from_raw_parts(
+                <span class="self">self </span><span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>u8,
+                std::mem::size_of::&lt;<span class="self">Self</span>&gt;(),
             ))
         }
     }
 }
 
-<span class="doccomment">/// The structure expected in `indirect_buffer` for [`RenderEncoder::draw_indexed_indirect`](crate::util::RenderEncoder::draw_indexed_indirect).</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrawIndexedIndirect</span> {
-    <span class="doccomment">/// The number of vertices to draw.</span>
-    <span class="kw">pub</span> <span class="ident">vertex_count</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The number of instances to draw.</span>
-    <span class="kw">pub</span> <span class="ident">instance_count</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The base index within the index buffer.</span>
-    <span class="kw">pub</span> <span class="ident">base_index</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The value added to the vertex index before indexing into the vertex buffer.</span>
-    <span class="kw">pub</span> <span class="ident">vertex_offset</span>: <span class="ident">i32</span>,
-    <span class="doccomment">/// The instance ID of the first instance to draw.</span>
-    <span class="doccomment">/// Has to be 0, unless [`Features::INDIRECT_FIRST_INSTANCE`](crate::Features::INDIRECT_FIRST_INSTANCE) is enabled.</span>
-    <span class="kw">pub</span> <span class="ident">base_instance</span>: <span class="ident">u32</span>,
+<span class="doccomment">/// The structure expected in `indirect_buffer` for [`RenderEncoder::draw_indexed_indirect`](crate::util::RenderEncoder::draw_indexed_indirect).
+</span><span class="attribute">#[repr(C)]</span>
+<span class="attribute">#[derive(Copy, Clone, Debug, Default)]</span>
+<span class="kw">pub struct </span>DrawIndexedIndirect {
+    <span class="doccomment">/// The number of vertices to draw.
+    </span><span class="kw">pub </span>vertex_count: u32,
+    <span class="doccomment">/// The number of instances to draw.
+    </span><span class="kw">pub </span>instance_count: u32,
+    <span class="doccomment">/// The base index within the index buffer.
+    </span><span class="kw">pub </span>base_index: u32,
+    <span class="doccomment">/// The value added to the vertex index before indexing into the vertex buffer.
+    </span><span class="kw">pub </span>vertex_offset: i32,
+    <span class="doccomment">/// The instance ID of the first instance to draw.
+    /// Has to be 0, unless [`Features::INDIRECT_FIRST_INSTANCE`](crate::Features::INDIRECT_FIRST_INSTANCE) is enabled.
+    </span><span class="kw">pub </span>base_instance: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">DrawIndexedIndirect</span> {
-    <span class="doccomment">/// Returns the bytes representation of the struct, ready to be written in a [`Buffer`](crate::Buffer).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="kw">unsafe</span> {
-            <span class="ident">std::mem::transmute</span>(<span class="ident">std::slice::from_raw_parts</span>(
-                <span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>,
-                <span class="ident">std::mem::size_of</span>::&lt;<span class="self">Self</span>&gt;(),
+<span class="kw">impl </span>DrawIndexedIndirect {
+    <span class="doccomment">/// Returns the bytes representation of the struct, ready to be written in a [`Buffer`](crate::Buffer).
+    </span><span class="kw">pub fn </span>as_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="kw">unsafe </span>{
+            std::mem::transmute(std::slice::from_raw_parts(
+                <span class="self">self </span><span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>u8,
+                std::mem::size_of::&lt;<span class="self">Self</span>&gt;(),
             ))
         }
     }
 }
 
-<span class="doccomment">/// The structure expected in `indirect_buffer` for [`ComputePass::dispatch_workgroups_indirect`](crate::ComputePass::dispatch_workgroups_indirect).</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// x, y and z denote the number of work groups to dispatch in each dimension.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DispatchIndirect</span> {
-    <span class="doccomment">/// The number of work groups in X dimension.</span>
-    <span class="kw">pub</span> <span class="ident">x</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The number of work groups in Y dimension.</span>
-    <span class="kw">pub</span> <span class="ident">y</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The number of work groups in Z dimension.</span>
-    <span class="kw">pub</span> <span class="ident">z</span>: <span class="ident">u32</span>,
+<span class="doccomment">/// The structure expected in `indirect_buffer` for [`ComputePass::dispatch_workgroups_indirect`](crate::ComputePass::dispatch_workgroups_indirect).
+///
+/// x, y and z denote the number of work groups to dispatch in each dimension.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="attribute">#[derive(Copy, Clone, Debug, Default)]</span>
+<span class="kw">pub struct </span>DispatchIndirect {
+    <span class="doccomment">/// The number of work groups in X dimension.
+    </span><span class="kw">pub </span>x: u32,
+    <span class="doccomment">/// The number of work groups in Y dimension.
+    </span><span class="kw">pub </span>y: u32,
+    <span class="doccomment">/// The number of work groups in Z dimension.
+    </span><span class="kw">pub </span>z: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">DispatchIndirect</span> {
-    <span class="doccomment">/// Returns the bytes representation of the struct, ready to be written in a [`Buffer`](crate::Buffer).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_bytes</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="kw">unsafe</span> {
-            <span class="ident">std::mem::transmute</span>(<span class="ident">std::slice::from_raw_parts</span>(
-                <span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>,
-                <span class="ident">std::mem::size_of</span>::&lt;<span class="self">Self</span>&gt;(),
+<span class="kw">impl </span>DispatchIndirect {
+    <span class="doccomment">/// Returns the bytes representation of the struct, ready to be written in a [`Buffer`](crate::Buffer).
+    </span><span class="kw">pub fn </span>as_bytes(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="kw">unsafe </span>{
+            std::mem::transmute(std::slice::from_raw_parts(
+                <span class="self">self </span><span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>u8,
+                std::mem::size_of::&lt;<span class="self">Self</span>&gt;(),
             ))
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (75b7e52e9 2022-08-13)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (e1b28cd2f 2022-08-19)" ></div></body></html>

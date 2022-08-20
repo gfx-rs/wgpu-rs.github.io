@@ -137,144 +137,144 @@
 <span id="137">137</span>
 <span id="138">138</span>
 <span id="139">139</span>
-</pre><pre class="rust"><code><span class="doccomment">//! RenderDoc integration - &lt;https://renderdoc.org/&gt;</span>
+</pre><pre class="rust"><code><span class="doccomment">//! RenderDoc integration - &lt;https://renderdoc.org/&gt;
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">ffi</span>, <span class="ident">os</span>, <span class="ident">ptr</span>};
+</span><span class="kw">use </span>std::{ffi, os, ptr};
 
-<span class="doccomment">/// The dynamically loaded RenderDoc API function table</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderDocApi</span> {
-    <span class="ident">api</span>: <span class="ident">renderdoc_sys::RENDERDOC_API_1_4_1</span>,
-    <span class="ident">lib</span>: <span class="ident">libloading::Library</span>,
+<span class="doccomment">/// The dynamically loaded RenderDoc API function table
+</span><span class="attribute">#[repr(C)]</span>
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>RenderDocApi {
+    api: renderdoc_sys::RENDERDOC_API_1_4_1,
+    lib: libloading::Library,
 }
 
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">RenderDocApi</span> {}
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">RenderDocApi</span> {}
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>RenderDocApi {}
+<span class="kw">unsafe impl </span>Sync <span class="kw">for </span>RenderDocApi {}
 
-<span class="doccomment">/// RenderDoc API type</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RenderDoc</span> {
-    <span class="doccomment">/// RenderDoc functionality is available</span>
-    <span class="ident">Available</span> {
-        <span class="doccomment">/// RenderDoc API with function pointers</span>
-        <span class="ident">api</span>: <span class="ident">RenderDocApi</span>,
+<span class="doccomment">/// RenderDoc API type
+</span><span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub enum </span>RenderDoc {
+    <span class="doccomment">/// RenderDoc functionality is available
+    </span>Available {
+        <span class="doccomment">/// RenderDoc API with function pointers
+        </span>api: RenderDocApi,
     },
-    <span class="doccomment">/// RenderDoc functionality is _not_ available</span>
-    <span class="ident">NotAvailable</span> {
-        <span class="doccomment">/// A description why renderdoc functionality is not available</span>
-        <span class="ident">reason</span>: <span class="ident">String</span>,
+    <span class="doccomment">/// RenderDoc functionality is _not_ available
+    </span>NotAvailable {
+        <span class="doccomment">/// A description why renderdoc functionality is not available
+        </span>reason: String,
     },
 }
 
-<span class="comment">// TODO: replace with libloading API once supported</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">unix</span>)]</span>
-<span class="kw">const</span> <span class="ident">RTLD_NOLOAD</span>: <span class="ident">i32</span> = <span class="number">0x4</span>;
+<span class="comment">// TODO: replace with libloading API once supported
+</span><span class="attribute">#[cfg(unix)]</span>
+<span class="kw">const </span>RTLD_NOLOAD: i32 = <span class="number">0x4</span>;
 
-<span class="kw">impl</span> <span class="ident">RenderDoc</span> {
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="kw">type</span> <span class="ident">GetApiFn</span> = <span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="ident">version</span>: <span class="ident">u32</span>, <span class="ident">out</span>: <span class="kw-2">*mut</span> <span class="kw-2">*mut</span> <span class="ident">ffi::c_void</span>) -&gt; <span class="ident">i32</span>;
+<span class="kw">impl </span>RenderDoc {
+    <span class="kw">pub unsafe fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="kw">type </span>GetApiFn = <span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn</span>(version: u32, out: <span class="kw-2">*mut *mut </span>ffi::c_void) -&gt; i32;
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">windows</span>)]</span>
-        <span class="kw">let</span> <span class="ident">renderdoc_filename</span> = <span class="string">&quot;renderdoc.dll&quot;</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">unix</span>, <span class="ident">not</span>(<span class="ident">target_os</span> = <span class="string">&quot;android&quot;</span>)))]</span>
-        <span class="kw">let</span> <span class="ident">renderdoc_filename</span> = <span class="string">&quot;librenderdoc.so&quot;</span>;
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_os</span> = <span class="string">&quot;android&quot;</span>)]</span>
-        <span class="kw">let</span> <span class="ident">renderdoc_filename</span> = <span class="string">&quot;libVkLayer_GLES_RenderDoc.so&quot;</span>;
+        <span class="attribute">#[cfg(windows)]</span>
+        <span class="kw">let </span>renderdoc_filename = <span class="string">&quot;renderdoc.dll&quot;</span>;
+        <span class="attribute">#[cfg(all(unix, not(target_os = <span class="string">&quot;android&quot;</span>)))]</span>
+        <span class="kw">let </span>renderdoc_filename = <span class="string">&quot;librenderdoc.so&quot;</span>;
+        <span class="attribute">#[cfg(target_os = <span class="string">&quot;android&quot;</span>)]</span>
+        <span class="kw">let </span>renderdoc_filename = <span class="string">&quot;libVkLayer_GLES_RenderDoc.so&quot;</span>;
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">unix</span>)]</span>
-        <span class="kw">let</span> <span class="ident">renderdoc_result</span>: <span class="prelude-ty">Result</span>&lt;<span class="ident">libloading::Library</span>, <span class="ident">libloading::Error</span>&gt; =
-            <span class="ident">libloading::os::unix::Library::open</span>(
-                <span class="prelude-val">Some</span>(<span class="ident">renderdoc_filename</span>),
-                <span class="ident">libloading::os::unix::RTLD_NOW</span> | <span class="ident">RTLD_NOLOAD</span>,
+        <span class="attribute">#[cfg(unix)]</span>
+        <span class="kw">let </span>renderdoc_result: <span class="prelude-ty">Result</span>&lt;libloading::Library, libloading::Error&gt; =
+            libloading::os::unix::Library::open(
+                <span class="prelude-val">Some</span>(renderdoc_filename),
+                libloading::os::unix::RTLD_NOW | RTLD_NOLOAD,
             )
-            .<span class="ident">map</span>(|<span class="ident">lib</span>| <span class="ident">lib</span>.<span class="ident">into</span>());
+            .map(|lib| lib.into());
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">windows</span>)]</span>
-        <span class="kw">let</span> <span class="ident">renderdoc_result</span>: <span class="prelude-ty">Result</span>&lt;<span class="ident">libloading::Library</span>, <span class="ident">libloading::Error</span>&gt; =
-            <span class="ident">libloading::os::windows::Library::open_already_loaded</span>(<span class="ident">renderdoc_filename</span>)
-                .<span class="ident">map</span>(|<span class="ident">lib</span>| <span class="ident">lib</span>.<span class="ident">into</span>());
+        <span class="attribute">#[cfg(windows)]</span>
+        <span class="kw">let </span>renderdoc_result: <span class="prelude-ty">Result</span>&lt;libloading::Library, libloading::Error&gt; =
+            libloading::os::windows::Library::open_already_loaded(renderdoc_filename)
+                .map(|lib| lib.into());
 
-        <span class="kw">let</span> <span class="ident">renderdoc_lib</span> = <span class="kw">match</span> <span class="ident">renderdoc_result</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">lib</span>) =&gt; <span class="ident">lib</span>,
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-                <span class="kw">return</span> <span class="ident">RenderDoc::NotAvailable</span> {
-                    <span class="ident">reason</span>: <span class="macro">format!</span>(
+        <span class="kw">let </span>renderdoc_lib = <span class="kw">match </span>renderdoc_result {
+            <span class="prelude-val">Ok</span>(lib) =&gt; lib,
+            <span class="prelude-val">Err</span>(e) =&gt; {
+                <span class="kw">return </span>RenderDoc::NotAvailable {
+                    reason: <span class="macro">format!</span>(
                         <span class="string">&quot;Unable to load renderdoc library &#39;{}&#39;: {:?}&quot;</span>,
-                        <span class="ident">renderdoc_filename</span>, <span class="ident">e</span>
+                        renderdoc_filename, e
                     ),
                 }
             }
         };
 
-        <span class="kw">let</span> <span class="ident">get_api</span>: <span class="ident">libloading::Symbol</span>&lt;<span class="ident">GetApiFn</span>&gt; = <span class="kw">match</span> <span class="ident">renderdoc_lib</span>.<span class="ident">get</span>(<span class="string">b&quot;RENDERDOC_GetAPI\0&quot;</span>) {
-            <span class="prelude-val">Ok</span>(<span class="ident">api</span>) =&gt; <span class="ident">api</span>,
-            <span class="prelude-val">Err</span>(<span class="ident">e</span>) =&gt; {
-                <span class="kw">return</span> <span class="ident">RenderDoc::NotAvailable</span> {
-                    <span class="ident">reason</span>: <span class="macro">format!</span>(
+        <span class="kw">let </span>get_api: libloading::Symbol&lt;GetApiFn&gt; = <span class="kw">match </span>renderdoc_lib.get(<span class="string">b&quot;RENDERDOC_GetAPI\0&quot;</span>) {
+            <span class="prelude-val">Ok</span>(api) =&gt; api,
+            <span class="prelude-val">Err</span>(e) =&gt; {
+                <span class="kw">return </span>RenderDoc::NotAvailable {
+                    reason: <span class="macro">format!</span>(
                         <span class="string">&quot;Unable to get RENDERDOC_GetAPI from renderdoc library &#39;{}&#39;: {:?}&quot;</span>,
-                        <span class="ident">renderdoc_filename</span>, <span class="ident">e</span>
+                        renderdoc_filename, e
                     ),
                 }
             }
         };
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">obj</span> = <span class="ident">ptr::null_mut</span>();
-        <span class="kw">match</span> <span class="ident">get_api</span>(<span class="number">10401</span>, <span class="kw-2">&amp;mut</span> <span class="ident">obj</span>) {
-            <span class="number">1</span> =&gt; <span class="ident">RenderDoc::Available</span> {
-                <span class="ident">api</span>: <span class="ident">RenderDocApi</span> {
-                    <span class="ident">api</span>: <span class="kw-2">*</span>(<span class="ident">obj</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">renderdoc_sys::RENDERDOC_API_1_4_1</span>),
-                    <span class="ident">lib</span>: <span class="ident">renderdoc_lib</span>,
+        <span class="kw">let </span><span class="kw-2">mut </span>obj = ptr::null_mut();
+        <span class="kw">match </span>get_api(<span class="number">10401</span>, <span class="kw-2">&amp;mut </span>obj) {
+            <span class="number">1 </span>=&gt; RenderDoc::Available {
+                api: RenderDocApi {
+                    api: <span class="kw-2">*</span>(obj <span class="kw">as </span><span class="kw-2">*mut </span>renderdoc_sys::RENDERDOC_API_1_4_1),
+                    lib: renderdoc_lib,
                 },
             },
-            <span class="ident">return_value</span> =&gt; <span class="ident">RenderDoc::NotAvailable</span> {
-                <span class="ident">reason</span>: <span class="macro">format!</span>(
+            return_value =&gt; RenderDoc::NotAvailable {
+                reason: <span class="macro">format!</span>(
                     <span class="string">&quot;Unable to get API from renderdoc library &#39;{}&#39;: {}&quot;</span>,
-                    <span class="ident">renderdoc_filename</span>, <span class="ident">return_value</span>
+                    renderdoc_filename, return_value
                 ),
             },
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">RenderDoc</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="kw">if</span> !<span class="macro">cfg!</span>(<span class="ident">debug_assertions</span>) {
-            <span class="kw">return</span> <span class="ident">RenderDoc::NotAvailable</span> {
-                <span class="ident">reason</span>: <span class="string">&quot;RenderDoc support is only enabled with &#39;debug_assertions&#39;&quot;</span>.<span class="ident">into</span>(),
+<span class="kw">impl </span>Default <span class="kw">for </span>RenderDoc {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="kw">if </span>!<span class="macro">cfg!</span>(debug_assertions) {
+            <span class="kw">return </span>RenderDoc::NotAvailable {
+                reason: <span class="string">&quot;RenderDoc support is only enabled with &#39;debug_assertions&#39;&quot;</span>.into(),
             };
         }
-        <span class="kw">unsafe</span> { <span class="ident"><span class="self">Self</span>::new</span>() }
+        <span class="kw">unsafe </span>{ <span class="self">Self</span>::new() }
     }
 }
-<span class="doccomment">/// A implementation specific handle</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">Handle</span> = <span class="kw-2">*mut</span> <span class="ident">os::raw::c_void</span>;
+<span class="doccomment">/// A implementation specific handle
+</span><span class="kw">pub type </span>Handle = <span class="kw-2">*mut </span>os::raw::c_void;
 
-<span class="kw">impl</span> <span class="ident">RenderDoc</span> {
-    <span class="doccomment">/// Start a RenderDoc frame capture</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">start_frame_capture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device_handle</span>: <span class="ident">Handle</span>, <span class="ident">window_handle</span>: <span class="ident">Handle</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Available</span> { <span class="ident">api</span>: <span class="kw-2">ref</span> <span class="ident">entry</span> } =&gt; {
-                <span class="ident">entry</span>.<span class="ident">api</span>.<span class="ident">StartFrameCapture</span>.<span class="ident">unwrap</span>()(<span class="ident">device_handle</span>, <span class="ident">window_handle</span>);
-                <span class="bool-val">true</span>
-            }
-            <span class="ident"><span class="self">Self</span>::NotAvailable</span> { <span class="kw-2">ref</span> <span class="ident">reason</span> } =&gt; {
-                <span class="macro">log::warn!</span>(<span class="string">&quot;Could not start RenderDoc frame capture: {}&quot;</span>, <span class="ident">reason</span>);
-                <span class="bool-val">false</span>
-            }
+<span class="kw">impl </span>RenderDoc {
+    <span class="doccomment">/// Start a RenderDoc frame capture
+    </span><span class="kw">pub unsafe fn </span>start_frame_capture(<span class="kw-2">&amp;</span><span class="self">self</span>, device_handle: Handle, window_handle: Handle) -&gt; bool {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            <span class="self">Self</span>::Available { api: <span class="kw-2">ref </span>entry } =&gt; {
+                entry.api.StartFrameCapture.unwrap()(device_handle, window_handle);
+                <span class="bool-val">true
+            </span>}
+            <span class="self">Self</span>::NotAvailable { <span class="kw-2">ref </span>reason } =&gt; {
+                <span class="macro">log::warn!</span>(<span class="string">&quot;Could not start RenderDoc frame capture: {}&quot;</span>, reason);
+                <span class="bool-val">false
+            </span>}
         }
     }
 
-    <span class="doccomment">/// End a RenderDoc frame capture</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">end_frame_capture</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">device_handle</span>: <span class="ident">Handle</span>, <span class="ident">window_handle</span>: <span class="ident">Handle</span>) {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Available</span> { <span class="ident">api</span>: <span class="kw-2">ref</span> <span class="ident">entry</span> } =&gt; {
-                <span class="ident">entry</span>.<span class="ident">api</span>.<span class="ident">EndFrameCapture</span>.<span class="ident">unwrap</span>()(<span class="ident">device_handle</span>, <span class="ident">window_handle</span>);
+    <span class="doccomment">/// End a RenderDoc frame capture
+    </span><span class="kw">pub unsafe fn </span>end_frame_capture(<span class="kw-2">&amp;</span><span class="self">self</span>, device_handle: Handle, window_handle: Handle) {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            <span class="self">Self</span>::Available { api: <span class="kw-2">ref </span>entry } =&gt; {
+                entry.api.EndFrameCapture.unwrap()(device_handle, window_handle);
             }
-            <span class="ident"><span class="self">Self</span>::NotAvailable</span> { <span class="kw-2">ref</span> <span class="ident">reason</span> } =&gt; {
-                <span class="macro">log::warn!</span>(<span class="string">&quot;Could not end RenderDoc frame capture: {}&quot;</span>, <span class="ident">reason</span>)
+            <span class="self">Self</span>::NotAvailable { <span class="kw-2">ref </span>reason } =&gt; {
+                <span class="macro">log::warn!</span>(<span class="string">&quot;Could not end RenderDoc frame capture: {}&quot;</span>, reason)
             }
         };
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (75b7e52e9 2022-08-13)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (e1b28cd2f 2022-08-19)" ></div></body></html>

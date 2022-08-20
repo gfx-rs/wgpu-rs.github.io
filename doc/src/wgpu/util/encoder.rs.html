@@ -202,207 +202,207 @@
 <span id="200">200</span>
 <span id="201">201</span>
 <span id="202">202</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::ops::Range</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>std::ops::Range;
 
-<span class="kw">use</span> <span class="ident">wgt</span>::{<span class="ident">BufferAddress</span>, <span class="ident">DynamicOffset</span>, <span class="ident">IndexFormat</span>};
+<span class="kw">use </span>wgt::{BufferAddress, DynamicOffset, IndexFormat};
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">BindGroup</span>, <span class="ident">Buffer</span>, <span class="ident">BufferSlice</span>, <span class="ident">RenderBundleEncoder</span>, <span class="ident">RenderPass</span>, <span class="ident">RenderPipeline</span>};
+<span class="kw">use crate</span>::{BindGroup, Buffer, BufferSlice, RenderBundleEncoder, RenderPass, RenderPipeline};
 
-<span class="doccomment">/// Methods shared by [`RenderPass`] and [`RenderBundleEncoder`].</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RenderEncoder</span>&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="doccomment">/// Sets the active bind group for a given bind group index. The bind group layout</span>
-    <span class="doccomment">/// in the active pipeline when any `draw()` function is called must match the layout of this bind group.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the bind group have dynamic offsets, provide them in order of their declaration.</span>
-    <span class="kw">fn</span> <span class="ident">set_bind_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">u32</span>, <span class="ident">bind_group</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BindGroup</span>, <span class="ident">offsets</span>: <span class="kw-2">&amp;</span>[<span class="ident">DynamicOffset</span>]);
+<span class="doccomment">/// Methods shared by [`RenderPass`] and [`RenderBundleEncoder`].
+</span><span class="kw">pub trait </span>RenderEncoder&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// Sets the active bind group for a given bind group index. The bind group layout
+    /// in the active pipeline when any `draw()` function is called must match the layout of this bind group.
+    ///
+    /// If the bind group have dynamic offsets, provide them in order of their declaration.
+    </span><span class="kw">fn </span>set_bind_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: u32, bind_group: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>BindGroup, offsets: <span class="kw-2">&amp;</span>[DynamicOffset]);
 
-    <span class="doccomment">/// Sets the active render pipeline.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Subsequent draw calls will exhibit the behavior defined by `pipeline`.</span>
-    <span class="kw">fn</span> <span class="ident">set_pipeline</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pipeline</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">RenderPipeline</span>);
+    <span class="doccomment">/// Sets the active render pipeline.
+    ///
+    /// Subsequent draw calls will exhibit the behavior defined by `pipeline`.
+    </span><span class="kw">fn </span>set_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>RenderPipeline);
 
-    <span class="doccomment">/// Sets the active index buffer.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Subsequent calls to [`draw_indexed`](RenderEncoder::draw_indexed) on this [`RenderEncoder`] will</span>
-    <span class="doccomment">/// use `buffer` as the source index buffer.</span>
-    <span class="kw">fn</span> <span class="ident">set_index_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span>&lt;<span class="lifetime">&#39;a</span>&gt;, <span class="ident">index_format</span>: <span class="ident">IndexFormat</span>);
+    <span class="doccomment">/// Sets the active index buffer.
+    ///
+    /// Subsequent calls to [`draw_indexed`](RenderEncoder::draw_indexed) on this [`RenderEncoder`] will
+    /// use `buffer` as the source index buffer.
+    </span><span class="kw">fn </span>set_index_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer_slice: BufferSlice&lt;<span class="lifetime">&#39;a</span>&gt;, index_format: IndexFormat);
 
-    <span class="doccomment">/// Assign a vertex buffer to a slot.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Subsequent calls to [`draw`] and [`draw_indexed`] on this</span>
-    <span class="doccomment">/// [`RenderEncoder`] will use `buffer` as one of the source vertex buffers.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The `slot` refers to the index of the matching descriptor in</span>
-    <span class="doccomment">/// [VertexState::buffers](crate::VertexState::buffers).</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// [`draw`]: RenderEncoder::draw</span>
-    <span class="doccomment">/// [`draw_indexed`]: RenderEncoder::draw_indexed</span>
-    <span class="kw">fn</span> <span class="ident">set_vertex_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">slot</span>: <span class="ident">u32</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span>&lt;<span class="lifetime">&#39;a</span>&gt;);
+    <span class="doccomment">/// Assign a vertex buffer to a slot.
+    ///
+    /// Subsequent calls to [`draw`] and [`draw_indexed`] on this
+    /// [`RenderEncoder`] will use `buffer` as one of the source vertex buffers.
+    ///
+    /// The `slot` refers to the index of the matching descriptor in
+    /// [VertexState::buffers](crate::VertexState::buffers).
+    ///
+    /// [`draw`]: RenderEncoder::draw
+    /// [`draw_indexed`]: RenderEncoder::draw_indexed
+    </span><span class="kw">fn </span>set_vertex_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: u32, buffer_slice: BufferSlice&lt;<span class="lifetime">&#39;a</span>&gt;);
 
-    <span class="doccomment">/// Draws primitives from the active vertex buffer(s).</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The active vertex buffers can be set with [`RenderEncoder::set_vertex_buffer`].</span>
-    <span class="kw">fn</span> <span class="ident">draw</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vertices</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;, <span class="ident">instances</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;);
+    <span class="doccomment">/// Draws primitives from the active vertex buffer(s).
+    ///
+    /// The active vertex buffers can be set with [`RenderEncoder::set_vertex_buffer`].
+    </span><span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vertices: Range&lt;u32&gt;, instances: Range&lt;u32&gt;);
 
-    <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffers.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The active index buffer can be set with [`RenderEncoder::set_index_buffer`], while the active</span>
-    <span class="doccomment">/// vertex buffers can be set with [`RenderEncoder::set_vertex_buffer`].</span>
-    <span class="kw">fn</span> <span class="ident">draw_indexed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">indices</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;, <span class="ident">base_vertex</span>: <span class="ident">i32</span>, <span class="ident">instances</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;);
+    <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffers.
+    ///
+    /// The active index buffer can be set with [`RenderEncoder::set_index_buffer`], while the active
+    /// vertex buffers can be set with [`RenderEncoder::set_vertex_buffer`].
+    </span><span class="kw">fn </span>draw_indexed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indices: Range&lt;u32&gt;, base_vertex: i32, instances: Range&lt;u32&gt;);
 
-    <span class="doccomment">/// Draws primitives from the active vertex buffer(s) based on the contents of the `indirect_buffer`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The active vertex buffers can be set with [`RenderEncoder::set_vertex_buffer`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The structure expected in `indirect_buffer` must conform to [`DrawIndirect`](crate::util::DrawIndirect).</span>
-    <span class="kw">fn</span> <span class="ident">draw_indirect</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">indirect_buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Buffer</span>, <span class="ident">indirect_offset</span>: <span class="ident">BufferAddress</span>);
+    <span class="doccomment">/// Draws primitives from the active vertex buffer(s) based on the contents of the `indirect_buffer`.
+    ///
+    /// The active vertex buffers can be set with [`RenderEncoder::set_vertex_buffer`].
+    ///
+    /// The structure expected in `indirect_buffer` must conform to [`DrawIndirect`](crate::util::DrawIndirect).
+    </span><span class="kw">fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Buffer, indirect_offset: BufferAddress);
 
-    <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffers,</span>
-    <span class="doccomment">/// based on the contents of the `indirect_buffer`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The active index buffer can be set with [`RenderEncoder::set_index_buffer`], while the active</span>
-    <span class="doccomment">/// vertex buffers can be set with [`RenderEncoder::set_vertex_buffer`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The structure expected in `indirect_buffer` must conform to [`DrawIndexedIndirect`](crate::util::DrawIndexedIndirect).</span>
-    <span class="kw">fn</span> <span class="ident">draw_indexed_indirect</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">indirect_buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Buffer</span>,
-        <span class="ident">indirect_offset</span>: <span class="ident">BufferAddress</span>,
+    <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffers,
+    /// based on the contents of the `indirect_buffer`.
+    ///
+    /// The active index buffer can be set with [`RenderEncoder::set_index_buffer`], while the active
+    /// vertex buffers can be set with [`RenderEncoder::set_vertex_buffer`].
+    ///
+    /// The structure expected in `indirect_buffer` must conform to [`DrawIndexedIndirect`](crate::util::DrawIndexedIndirect).
+    </span><span class="kw">fn </span>draw_indexed_indirect(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Buffer,
+        indirect_offset: BufferAddress,
     );
 
-    <span class="doccomment">/// [`wgt::Features::PUSH_CONSTANTS`] must be enabled on the device in order to call this function.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Set push constant data.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Offset is measured in bytes, but must be a multiple of [`wgt::PUSH_CONSTANT_ALIGNMENT`].</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Data size must be a multiple of 4 and must be aligned to the 4s, so we take an array of u32.</span>
-    <span class="doccomment">/// For example, with an offset of 4 and an array of `[u32; 3]`, that will write to the range</span>
-    <span class="doccomment">/// of 4..16.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// For each byte in the range of push constant data written, the union of the stages of all push constant</span>
-    <span class="doccomment">/// ranges that covers that byte must be exactly `stages`. There&#39;s no good way of explaining this simply,</span>
-    <span class="doccomment">/// so here are some examples:</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```text</span>
-    <span class="doccomment">/// For the given ranges:</span>
-    <span class="doccomment">/// - 0..4 Vertex</span>
-    <span class="doccomment">/// - 4..8 Fragment</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// You would need to upload this in two set_push_constants calls. First for the `Vertex` range, second for the `Fragment` range.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ```text</span>
-    <span class="doccomment">/// For the given ranges:</span>
-    <span class="doccomment">/// - 0..8  Vertex</span>
-    <span class="doccomment">/// - 4..12 Fragment</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// You would need to upload this in three set_push_constants calls. First for the `Vertex` only range 0..4, second</span>
-    <span class="doccomment">/// for the `Vertex | Fragment` range 4..8, third for the `Fragment` range 8..12.</span>
-    <span class="kw">fn</span> <span class="ident">set_push_constants</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">stages</span>: <span class="ident">wgt::ShaderStages</span>, <span class="ident">offset</span>: <span class="ident">u32</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]);
+    <span class="doccomment">/// [`wgt::Features::PUSH_CONSTANTS`] must be enabled on the device in order to call this function.
+    ///
+    /// Set push constant data.
+    ///
+    /// Offset is measured in bytes, but must be a multiple of [`wgt::PUSH_CONSTANT_ALIGNMENT`].
+    ///
+    /// Data size must be a multiple of 4 and must be aligned to the 4s, so we take an array of u32.
+    /// For example, with an offset of 4 and an array of `[u32; 3]`, that will write to the range
+    /// of 4..16.
+    ///
+    /// For each byte in the range of push constant data written, the union of the stages of all push constant
+    /// ranges that covers that byte must be exactly `stages`. There&#39;s no good way of explaining this simply,
+    /// so here are some examples:
+    ///
+    /// ```text
+    /// For the given ranges:
+    /// - 0..4 Vertex
+    /// - 4..8 Fragment
+    /// ```
+    ///
+    /// You would need to upload this in two set_push_constants calls. First for the `Vertex` range, second for the `Fragment` range.
+    ///
+    /// ```text
+    /// For the given ranges:
+    /// - 0..8  Vertex
+    /// - 4..12 Fragment
+    /// ```
+    ///
+    /// You would need to upload this in three set_push_constants calls. First for the `Vertex` only range 0..4, second
+    /// for the `Vertex | Fragment` range 4..8, third for the `Fragment` range 8..12.
+    </span><span class="kw">fn </span>set_push_constants(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: wgt::ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]);
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; <span class="ident">RenderEncoder</span>&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for</span> <span class="ident">RenderPass</span>&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_bind_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">u32</span>, <span class="ident">bind_group</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BindGroup</span>, <span class="ident">offsets</span>: <span class="kw-2">&amp;</span>[<span class="ident">DynamicOffset</span>]) {
-        <span class="ident"><span class="self">Self</span>::set_bind_group</span>(<span class="self">self</span>, <span class="ident">index</span>, <span class="ident">bind_group</span>, <span class="ident">offsets</span>);
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; RenderEncoder&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>RenderPass&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>set_bind_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: u32, bind_group: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>BindGroup, offsets: <span class="kw-2">&amp;</span>[DynamicOffset]) {
+        <span class="self">Self</span>::set_bind_group(<span class="self">self</span>, index, bind_group, offsets);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_pipeline</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pipeline</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">RenderPipeline</span>) {
-        <span class="ident"><span class="self">Self</span>::set_pipeline</span>(<span class="self">self</span>, <span class="ident">pipeline</span>);
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>set_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>RenderPipeline) {
+        <span class="self">Self</span>::set_pipeline(<span class="self">self</span>, pipeline);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_index_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span>&lt;<span class="lifetime">&#39;a</span>&gt;, <span class="ident">index_format</span>: <span class="ident">IndexFormat</span>) {
-        <span class="ident"><span class="self">Self</span>::set_index_buffer</span>(<span class="self">self</span>, <span class="ident">buffer_slice</span>, <span class="ident">index_format</span>);
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>set_index_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer_slice: BufferSlice&lt;<span class="lifetime">&#39;a</span>&gt;, index_format: IndexFormat) {
+        <span class="self">Self</span>::set_index_buffer(<span class="self">self</span>, buffer_slice, index_format);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_vertex_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">slot</span>: <span class="ident">u32</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span>&lt;<span class="lifetime">&#39;a</span>&gt;) {
-        <span class="ident"><span class="self">Self</span>::set_vertex_buffer</span>(<span class="self">self</span>, <span class="ident">slot</span>, <span class="ident">buffer_slice</span>);
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>set_vertex_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: u32, buffer_slice: BufferSlice&lt;<span class="lifetime">&#39;a</span>&gt;) {
+        <span class="self">Self</span>::set_vertex_buffer(<span class="self">self</span>, slot, buffer_slice);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">draw</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vertices</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;, <span class="ident">instances</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;) {
-        <span class="ident"><span class="self">Self</span>::draw</span>(<span class="self">self</span>, <span class="ident">vertices</span>, <span class="ident">instances</span>);
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vertices: Range&lt;u32&gt;, instances: Range&lt;u32&gt;) {
+        <span class="self">Self</span>::draw(<span class="self">self</span>, vertices, instances);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">draw_indexed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">indices</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;, <span class="ident">base_vertex</span>: <span class="ident">i32</span>, <span class="ident">instances</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;) {
-        <span class="ident"><span class="self">Self</span>::draw_indexed</span>(<span class="self">self</span>, <span class="ident">indices</span>, <span class="ident">base_vertex</span>, <span class="ident">instances</span>);
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>draw_indexed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indices: Range&lt;u32&gt;, base_vertex: i32, instances: Range&lt;u32&gt;) {
+        <span class="self">Self</span>::draw_indexed(<span class="self">self</span>, indices, base_vertex, instances);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">draw_indirect</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">indirect_buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Buffer</span>, <span class="ident">indirect_offset</span>: <span class="ident">BufferAddress</span>) {
-        <span class="ident"><span class="self">Self</span>::draw_indirect</span>(<span class="self">self</span>, <span class="ident">indirect_buffer</span>, <span class="ident">indirect_offset</span>);
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Buffer, indirect_offset: BufferAddress) {
+        <span class="self">Self</span>::draw_indirect(<span class="self">self</span>, indirect_buffer, indirect_offset);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">draw_indexed_indirect</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">indirect_buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Buffer</span>,
-        <span class="ident">indirect_offset</span>: <span class="ident">BufferAddress</span>,
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>draw_indexed_indirect(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Buffer,
+        indirect_offset: BufferAddress,
     ) {
-        <span class="ident"><span class="self">Self</span>::draw_indexed_indirect</span>(<span class="self">self</span>, <span class="ident">indirect_buffer</span>, <span class="ident">indirect_offset</span>);
+        <span class="self">Self</span>::draw_indexed_indirect(<span class="self">self</span>, indirect_buffer, indirect_offset);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_push_constants</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">stages</span>: <span class="ident">wgt::ShaderStages</span>, <span class="ident">offset</span>: <span class="ident">u32</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
-        <span class="ident"><span class="self">Self</span>::set_push_constants</span>(<span class="self">self</span>, <span class="ident">stages</span>, <span class="ident">offset</span>, <span class="ident">data</span>);
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>set_push_constants(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: wgt::ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
+        <span class="self">Self</span>::set_push_constants(<span class="self">self</span>, stages, offset, data);
     }
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; <span class="ident">RenderEncoder</span>&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for</span> <span class="ident">RenderBundleEncoder</span>&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_bind_group</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">u32</span>, <span class="ident">bind_group</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BindGroup</span>, <span class="ident">offsets</span>: <span class="kw-2">&amp;</span>[<span class="ident">DynamicOffset</span>]) {
-        <span class="ident"><span class="self">Self</span>::set_bind_group</span>(<span class="self">self</span>, <span class="ident">index</span>, <span class="ident">bind_group</span>, <span class="ident">offsets</span>);
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; RenderEncoder&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>RenderBundleEncoder&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>set_bind_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: u32, bind_group: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>BindGroup, offsets: <span class="kw-2">&amp;</span>[DynamicOffset]) {
+        <span class="self">Self</span>::set_bind_group(<span class="self">self</span>, index, bind_group, offsets);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_pipeline</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">pipeline</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">RenderPipeline</span>) {
-        <span class="ident"><span class="self">Self</span>::set_pipeline</span>(<span class="self">self</span>, <span class="ident">pipeline</span>);
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>set_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>RenderPipeline) {
+        <span class="self">Self</span>::set_pipeline(<span class="self">self</span>, pipeline);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_index_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span>&lt;<span class="lifetime">&#39;a</span>&gt;, <span class="ident">index_format</span>: <span class="ident">IndexFormat</span>) {
-        <span class="ident"><span class="self">Self</span>::set_index_buffer</span>(<span class="self">self</span>, <span class="ident">buffer_slice</span>, <span class="ident">index_format</span>);
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>set_index_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer_slice: BufferSlice&lt;<span class="lifetime">&#39;a</span>&gt;, index_format: IndexFormat) {
+        <span class="self">Self</span>::set_index_buffer(<span class="self">self</span>, buffer_slice, index_format);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_vertex_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">slot</span>: <span class="ident">u32</span>, <span class="ident">buffer_slice</span>: <span class="ident">BufferSlice</span>&lt;<span class="lifetime">&#39;a</span>&gt;) {
-        <span class="ident"><span class="self">Self</span>::set_vertex_buffer</span>(<span class="self">self</span>, <span class="ident">slot</span>, <span class="ident">buffer_slice</span>);
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>set_vertex_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>, slot: u32, buffer_slice: BufferSlice&lt;<span class="lifetime">&#39;a</span>&gt;) {
+        <span class="self">Self</span>::set_vertex_buffer(<span class="self">self</span>, slot, buffer_slice);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">draw</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">vertices</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;, <span class="ident">instances</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;) {
-        <span class="ident"><span class="self">Self</span>::draw</span>(<span class="self">self</span>, <span class="ident">vertices</span>, <span class="ident">instances</span>);
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, vertices: Range&lt;u32&gt;, instances: Range&lt;u32&gt;) {
+        <span class="self">Self</span>::draw(<span class="self">self</span>, vertices, instances);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">draw_indexed</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">indices</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;, <span class="ident">base_vertex</span>: <span class="ident">i32</span>, <span class="ident">instances</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;) {
-        <span class="ident"><span class="self">Self</span>::draw_indexed</span>(<span class="self">self</span>, <span class="ident">indices</span>, <span class="ident">base_vertex</span>, <span class="ident">instances</span>);
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>draw_indexed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indices: Range&lt;u32&gt;, base_vertex: i32, instances: Range&lt;u32&gt;) {
+        <span class="self">Self</span>::draw_indexed(<span class="self">self</span>, indices, base_vertex, instances);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">draw_indirect</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">indirect_buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Buffer</span>, <span class="ident">indirect_offset</span>: <span class="ident">BufferAddress</span>) {
-        <span class="ident"><span class="self">Self</span>::draw_indirect</span>(<span class="self">self</span>, <span class="ident">indirect_buffer</span>, <span class="ident">indirect_offset</span>);
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Buffer, indirect_offset: BufferAddress) {
+        <span class="self">Self</span>::draw_indirect(<span class="self">self</span>, indirect_buffer, indirect_offset);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">draw_indexed_indirect</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">indirect_buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Buffer</span>,
-        <span class="ident">indirect_offset</span>: <span class="ident">BufferAddress</span>,
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>draw_indexed_indirect(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Buffer,
+        indirect_offset: BufferAddress,
     ) {
-        <span class="ident"><span class="self">Self</span>::draw_indexed_indirect</span>(<span class="self">self</span>, <span class="ident">indirect_buffer</span>, <span class="ident">indirect_offset</span>);
+        <span class="self">Self</span>::draw_indexed_indirect(<span class="self">self</span>, indirect_buffer, indirect_offset);
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">set_push_constants</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">stages</span>: <span class="ident">wgt::ShaderStages</span>, <span class="ident">offset</span>: <span class="ident">u32</span>, <span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
-        <span class="ident"><span class="self">Self</span>::set_push_constants</span>(<span class="self">self</span>, <span class="ident">stages</span>, <span class="ident">offset</span>, <span class="ident">data</span>);
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>set_push_constants(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stages: wgt::ShaderStages, offset: u32, data: <span class="kw-2">&amp;</span>[u8]) {
+        <span class="self">Self</span>::set_push_constants(<span class="self">self</span>, stages, offset, data);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (75b7e52e9 2022-08-13)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (e1b28cd2f 2022-08-19)" ></div></body></html>

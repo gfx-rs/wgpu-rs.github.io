@@ -183,188 +183,188 @@
 <span id="181">181</span>
 <span id="182">182</span>
 <span id="183">183</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">util::align_to</span>, <span class="ident">Buffer</span>, <span class="ident">BufferAddress</span>, <span class="ident">BufferDescriptor</span>, <span class="ident">BufferSize</span>, <span class="ident">BufferUsages</span>,
-    <span class="ident">BufferViewMut</span>, <span class="ident">CommandEncoder</span>, <span class="ident">Device</span>, <span class="ident">MapMode</span>,
+</pre><pre class="rust"><code><span class="kw">use crate</span>::{
+    util::align_to, Buffer, BufferAddress, BufferDescriptor, BufferSize, BufferUsages,
+    BufferViewMut, CommandEncoder, Device, MapMode,
 };
-<span class="kw">use</span> <span class="ident">std::fmt</span>;
-<span class="kw">use</span> <span class="ident">std::sync</span>::{<span class="ident">mpsc</span>, <span class="ident">Arc</span>};
+<span class="kw">use </span>std::fmt;
+<span class="kw">use </span>std::sync::{mpsc, Arc};
 
-<span class="kw">struct</span> <span class="ident">Chunk</span> {
-    <span class="ident">buffer</span>: <span class="ident">Arc</span>&lt;<span class="ident">Buffer</span>&gt;,
-    <span class="ident">size</span>: <span class="ident">BufferAddress</span>,
-    <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
+<span class="kw">struct </span>Chunk {
+    buffer: Arc&lt;Buffer&gt;,
+    size: BufferAddress,
+    offset: BufferAddress,
 }
 
-<span class="doccomment">/// Efficiently performs many buffer writes by sharing and reusing temporary buffers.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Internally it uses a ring-buffer of staging buffers that are sub-allocated.</span>
-<span class="doccomment">/// It has an advantage over [`Queue::write_buffer()`] in a way that it returns a mutable slice,</span>
-<span class="doccomment">/// which you can fill to avoid an extra data copy.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Using a staging belt is slightly complicated, and generally goes as follows:</span>
-<span class="doccomment">/// 1. Write to buffers that need writing to using [`StagingBelt::write_buffer()`].</span>
-<span class="doccomment">/// 2. Call [`StagingBelt::finish()`].</span>
-<span class="doccomment">/// 3. Submit all command encoders that were used in step 1.</span>
-<span class="doccomment">/// 4. Call [`StagingBelt::recall()`].</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// [`Queue::write_buffer()`]: crate::Queue::write_buffer</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StagingBelt</span> {
-    <span class="ident">chunk_size</span>: <span class="ident">BufferAddress</span>,
-    <span class="doccomment">/// Chunks into which we are accumulating data to be transferred.</span>
-    <span class="ident">active_chunks</span>: <span class="ident">Vec</span>&lt;<span class="ident">Chunk</span>&gt;,
-    <span class="doccomment">/// Chunks that have scheduled transfers already; they are unmapped and some</span>
-    <span class="doccomment">/// command encoder has one or more `copy_buffer_to_buffer` commands with them</span>
-    <span class="doccomment">/// as source.</span>
-    <span class="ident">closed_chunks</span>: <span class="ident">Vec</span>&lt;<span class="ident">Chunk</span>&gt;,
-    <span class="doccomment">/// Chunks that are back from the GPU and ready to be mapped for write and put</span>
-    <span class="doccomment">/// into `active_chunks`.</span>
-    <span class="ident">free_chunks</span>: <span class="ident">Vec</span>&lt;<span class="ident">Chunk</span>&gt;,
-    <span class="doccomment">/// When closed chunks are mapped again, the map callback sends them here.</span>
-    <span class="ident">sender</span>: <span class="ident">mpsc::Sender</span>&lt;<span class="ident">Chunk</span>&gt;,
-    <span class="doccomment">/// Free chunks are received here to be put on `self.free_chunks`.</span>
-    <span class="ident">receiver</span>: <span class="ident">mpsc::Receiver</span>&lt;<span class="ident">Chunk</span>&gt;,
+<span class="doccomment">/// Efficiently performs many buffer writes by sharing and reusing temporary buffers.
+///
+/// Internally it uses a ring-buffer of staging buffers that are sub-allocated.
+/// It has an advantage over [`Queue::write_buffer()`] in a way that it returns a mutable slice,
+/// which you can fill to avoid an extra data copy.
+///
+/// Using a staging belt is slightly complicated, and generally goes as follows:
+/// 1. Write to buffers that need writing to using [`StagingBelt::write_buffer()`].
+/// 2. Call [`StagingBelt::finish()`].
+/// 3. Submit all command encoders that were used in step 1.
+/// 4. Call [`StagingBelt::recall()`].
+///
+/// [`Queue::write_buffer()`]: crate::Queue::write_buffer
+</span><span class="kw">pub struct </span>StagingBelt {
+    chunk_size: BufferAddress,
+    <span class="doccomment">/// Chunks into which we are accumulating data to be transferred.
+    </span>active_chunks: Vec&lt;Chunk&gt;,
+    <span class="doccomment">/// Chunks that have scheduled transfers already; they are unmapped and some
+    /// command encoder has one or more `copy_buffer_to_buffer` commands with them
+    /// as source.
+    </span>closed_chunks: Vec&lt;Chunk&gt;,
+    <span class="doccomment">/// Chunks that are back from the GPU and ready to be mapped for write and put
+    /// into `active_chunks`.
+    </span>free_chunks: Vec&lt;Chunk&gt;,
+    <span class="doccomment">/// When closed chunks are mapped again, the map callback sends them here.
+    </span>sender: mpsc::Sender&lt;Chunk&gt;,
+    <span class="doccomment">/// Free chunks are received here to be put on `self.free_chunks`.
+    </span>receiver: mpsc::Receiver&lt;Chunk&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">StagingBelt</span> {
-    <span class="doccomment">/// Create a new staging belt.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The `chunk_size` is the unit of internal buffer allocation; writes will be</span>
-    <span class="doccomment">/// sub-allocated within each chunk. Therefore, for optimal use of memory, the</span>
-    <span class="doccomment">/// chunk size should be:</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// * larger than the largest single [`StagingBelt::write_buffer()`] operation;</span>
-    <span class="doccomment">/// * 1-4 times less than the total amount of data uploaded per submission</span>
-    <span class="doccomment">///   (per [`StagingBelt::finish()`]); and</span>
-    <span class="doccomment">/// * bigger is better, within these bounds.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">chunk_size</span>: <span class="ident">BufferAddress</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> (<span class="ident">sender</span>, <span class="ident">receiver</span>) = <span class="ident">mpsc::channel</span>();
-        <span class="ident">StagingBelt</span> {
-            <span class="ident">chunk_size</span>,
-            <span class="ident">active_chunks</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">closed_chunks</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">free_chunks</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">sender</span>,
-            <span class="ident">receiver</span>,
+<span class="kw">impl </span>StagingBelt {
+    <span class="doccomment">/// Create a new staging belt.
+    ///
+    /// The `chunk_size` is the unit of internal buffer allocation; writes will be
+    /// sub-allocated within each chunk. Therefore, for optimal use of memory, the
+    /// chunk size should be:
+    ///
+    /// * larger than the largest single [`StagingBelt::write_buffer()`] operation;
+    /// * 1-4 times less than the total amount of data uploaded per submission
+    ///   (per [`StagingBelt::finish()`]); and
+    /// * bigger is better, within these bounds.
+    </span><span class="kw">pub fn </span>new(chunk_size: BufferAddress) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>(sender, receiver) = mpsc::channel();
+        StagingBelt {
+            chunk_size,
+            active_chunks: Vec::new(),
+            closed_chunks: Vec::new(),
+            free_chunks: Vec::new(),
+            sender,
+            receiver,
         }
     }
 
-    <span class="doccomment">/// Allocate the staging belt slice of `size` to be uploaded into the `target` buffer</span>
-    <span class="doccomment">/// at the specified offset.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The upload will be placed into the provided command encoder. This encoder</span>
-    <span class="doccomment">/// must be submitted after [`StagingBelt::finish()`] is called and before</span>
-    <span class="doccomment">/// [`StagingBelt::recall()`] is called.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If the `size` is greater than the size of any free internal buffer, a new buffer</span>
-    <span class="doccomment">/// will be allocated for it. Therefore, the `chunk_size` passed to [`StagingBelt::new()`]</span>
-    <span class="doccomment">/// should ideally be larger than every such size.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_buffer</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">encoder</span>: <span class="kw-2">&amp;mut</span> <span class="ident">CommandEncoder</span>,
-        <span class="ident">target</span>: <span class="kw-2">&amp;</span><span class="ident">Buffer</span>,
-        <span class="ident">offset</span>: <span class="ident">BufferAddress</span>,
-        <span class="ident">size</span>: <span class="ident">BufferSize</span>,
-        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">Device</span>,
-    ) -&gt; <span class="ident">BufferViewMut</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">chunk</span> = <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>) = <span class="self">self</span>
-            .<span class="ident">active_chunks</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">position</span>(|<span class="ident">chunk</span>| <span class="ident">chunk</span>.<span class="ident">offset</span> + <span class="ident">size</span>.<span class="ident">get</span>() &lt;= <span class="ident">chunk</span>.<span class="ident">size</span>)
+    <span class="doccomment">/// Allocate the staging belt slice of `size` to be uploaded into the `target` buffer
+    /// at the specified offset.
+    ///
+    /// The upload will be placed into the provided command encoder. This encoder
+    /// must be submitted after [`StagingBelt::finish()`] is called and before
+    /// [`StagingBelt::recall()`] is called.
+    ///
+    /// If the `size` is greater than the size of any free internal buffer, a new buffer
+    /// will be allocated for it. Therefore, the `chunk_size` passed to [`StagingBelt::new()`]
+    /// should ideally be larger than every such size.
+    </span><span class="kw">pub fn </span>write_buffer(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        encoder: <span class="kw-2">&amp;mut </span>CommandEncoder,
+        target: <span class="kw-2">&amp;</span>Buffer,
+        offset: BufferAddress,
+        size: BufferSize,
+        device: <span class="kw-2">&amp;</span>Device,
+    ) -&gt; BufferViewMut {
+        <span class="kw">let </span><span class="kw-2">mut </span>chunk = <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = <span class="self">self
+            </span>.active_chunks
+            .iter()
+            .position(|chunk| chunk.offset + size.get() &lt;= chunk.size)
         {
-            <span class="self">self</span>.<span class="ident">active_chunks</span>.<span class="ident">swap_remove</span>(<span class="ident">index</span>)
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">receive_chunks</span>(); <span class="comment">// ensure self.free_chunks is up to date</span>
+            <span class="self">self</span>.active_chunks.swap_remove(index)
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.receive_chunks(); <span class="comment">// ensure self.free_chunks is up to date
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">index</span>) = <span class="self">self</span>
-                .<span class="ident">free_chunks</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">position</span>(|<span class="ident">chunk</span>| <span class="ident">size</span>.<span class="ident">get</span>() &lt;= <span class="ident">chunk</span>.<span class="ident">size</span>)
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(index) = <span class="self">self
+                </span>.free_chunks
+                .iter()
+                .position(|chunk| size.get() &lt;= chunk.size)
             {
-                <span class="self">self</span>.<span class="ident">free_chunks</span>.<span class="ident">swap_remove</span>(<span class="ident">index</span>)
-            } <span class="kw">else</span> {
-                <span class="kw">let</span> <span class="ident">size</span> = <span class="self">self</span>.<span class="ident">chunk_size</span>.<span class="ident">max</span>(<span class="ident">size</span>.<span class="ident">get</span>());
-                <span class="ident">Chunk</span> {
-                    <span class="ident">buffer</span>: <span class="ident">Arc::new</span>(<span class="ident">device</span>.<span class="ident">create_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">BufferDescriptor</span> {
-                        <span class="ident">label</span>: <span class="prelude-val">Some</span>(<span class="string">&quot;(wgpu internal) StagingBelt staging buffer&quot;</span>),
-                        <span class="ident">size</span>,
-                        <span class="ident">usage</span>: <span class="ident">BufferUsages::MAP_WRITE</span> | <span class="ident">BufferUsages::COPY_SRC</span>,
-                        <span class="ident">mapped_at_creation</span>: <span class="bool-val">true</span>,
+                <span class="self">self</span>.free_chunks.swap_remove(index)
+            } <span class="kw">else </span>{
+                <span class="kw">let </span>size = <span class="self">self</span>.chunk_size.max(size.get());
+                Chunk {
+                    buffer: Arc::new(device.create_buffer(<span class="kw-2">&amp;</span>BufferDescriptor {
+                        label: <span class="prelude-val">Some</span>(<span class="string">&quot;(wgpu internal) StagingBelt staging buffer&quot;</span>),
+                        size,
+                        usage: BufferUsages::MAP_WRITE | BufferUsages::COPY_SRC,
+                        mapped_at_creation: <span class="bool-val">true</span>,
                     })),
-                    <span class="ident">size</span>,
-                    <span class="ident">offset</span>: <span class="number">0</span>,
+                    size,
+                    offset: <span class="number">0</span>,
                 }
             }
         };
 
-        <span class="ident">encoder</span>.<span class="ident">copy_buffer_to_buffer</span>(<span class="kw-2">&amp;</span><span class="ident">chunk</span>.<span class="ident">buffer</span>, <span class="ident">chunk</span>.<span class="ident">offset</span>, <span class="ident">target</span>, <span class="ident">offset</span>, <span class="ident">size</span>.<span class="ident">get</span>());
-        <span class="kw">let</span> <span class="ident">old_offset</span> = <span class="ident">chunk</span>.<span class="ident">offset</span>;
-        <span class="ident">chunk</span>.<span class="ident">offset</span> = <span class="ident">align_to</span>(<span class="ident">chunk</span>.<span class="ident">offset</span> + <span class="ident">size</span>.<span class="ident">get</span>(), <span class="ident"><span class="kw">crate</span>::MAP_ALIGNMENT</span>);
+        encoder.copy_buffer_to_buffer(<span class="kw-2">&amp;</span>chunk.buffer, chunk.offset, target, offset, size.get());
+        <span class="kw">let </span>old_offset = chunk.offset;
+        chunk.offset = align_to(chunk.offset + size.get(), <span class="kw">crate</span>::MAP_ALIGNMENT);
 
-        <span class="self">self</span>.<span class="ident">active_chunks</span>.<span class="ident">push</span>(<span class="ident">chunk</span>);
-        <span class="self">self</span>.<span class="ident">active_chunks</span>
-            .<span class="ident">last</span>()
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">buffer</span>
-            .<span class="ident">slice</span>(<span class="ident">old_offset</span>..<span class="ident">old_offset</span> + <span class="ident">size</span>.<span class="ident">get</span>())
-            .<span class="ident">get_mapped_range_mut</span>()
+        <span class="self">self</span>.active_chunks.push(chunk);
+        <span class="self">self</span>.active_chunks
+            .last()
+            .unwrap()
+            .buffer
+            .slice(old_offset..old_offset + size.get())
+            .get_mapped_range_mut()
     }
 
-    <span class="doccomment">/// Prepare currently mapped buffers for use in a submission.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This must be called before the command encoder(s) provided to</span>
-    <span class="doccomment">/// [`StagingBelt::write_buffer()`] are submitted.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// At this point, all the partially used staging buffers are closed (cannot be used for</span>
-    <span class="doccomment">/// further writes) until after [`StagingBelt::recall()`] is called *and* the GPU is done</span>
-    <span class="doccomment">/// copying the data from them.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">finish</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">for</span> <span class="ident">chunk</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">active_chunks</span>.<span class="ident">drain</span>(..) {
-            <span class="ident">chunk</span>.<span class="ident">buffer</span>.<span class="ident">unmap</span>();
-            <span class="self">self</span>.<span class="ident">closed_chunks</span>.<span class="ident">push</span>(<span class="ident">chunk</span>);
+    <span class="doccomment">/// Prepare currently mapped buffers for use in a submission.
+    ///
+    /// This must be called before the command encoder(s) provided to
+    /// [`StagingBelt::write_buffer()`] are submitted.
+    ///
+    /// At this point, all the partially used staging buffers are closed (cannot be used for
+    /// further writes) until after [`StagingBelt::recall()`] is called *and* the GPU is done
+    /// copying the data from them.
+    </span><span class="kw">pub fn </span>finish(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>chunk <span class="kw">in </span><span class="self">self</span>.active_chunks.drain(..) {
+            chunk.buffer.unmap();
+            <span class="self">self</span>.closed_chunks.push(chunk);
         }
     }
 
-    <span class="doccomment">/// Recall all of the closed buffers back to be reused.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This must only be called after the command encoder(s) provided to</span>
-    <span class="doccomment">/// [`StagingBelt::write_buffer()`] are submitted. Additional calls are harmless.</span>
-    <span class="doccomment">/// Not calling this as soon as possible may result in increased buffer memory usage.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recall</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">receive_chunks</span>();
+    <span class="doccomment">/// Recall all of the closed buffers back to be reused.
+    ///
+    /// This must only be called after the command encoder(s) provided to
+    /// [`StagingBelt::write_buffer()`] are submitted. Additional calls are harmless.
+    /// Not calling this as soon as possible may result in increased buffer memory usage.
+    </span><span class="kw">pub fn </span>recall(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.receive_chunks();
 
-        <span class="kw">let</span> <span class="ident">sender</span> = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">sender</span>;
-        <span class="kw">for</span> <span class="ident">chunk</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">closed_chunks</span>.<span class="ident">drain</span>(..) {
-            <span class="kw">let</span> <span class="ident">sender</span> = <span class="ident">sender</span>.<span class="ident">clone</span>();
-            <span class="ident">chunk</span>
-                .<span class="ident">buffer</span>
-                .<span class="ident">clone</span>()
-                .<span class="ident">slice</span>(..)
-                .<span class="ident">map_async</span>(<span class="ident">MapMode::Write</span>, <span class="kw">move</span> |<span class="kw">_</span>| {
-                    <span class="kw">let</span> <span class="kw">_</span> = <span class="ident">sender</span>.<span class="ident">send</span>(<span class="ident">chunk</span>);
+        <span class="kw">let </span>sender = <span class="kw-2">&amp;</span><span class="self">self</span>.sender;
+        <span class="kw">for </span>chunk <span class="kw">in </span><span class="self">self</span>.closed_chunks.drain(..) {
+            <span class="kw">let </span>sender = sender.clone();
+            chunk
+                .buffer
+                .clone()
+                .slice(..)
+                .map_async(MapMode::Write, <span class="kw">move </span>|<span class="kw">_</span>| {
+                    <span class="kw">let _ </span>= sender.send(chunk);
                 });
         }
     }
 
-    <span class="doccomment">/// Move all chunks that the GPU is done with (and are now mapped again)</span>
-    <span class="doccomment">/// from `self.receiver` to `self.free_chunks`.</span>
-    <span class="kw">fn</span> <span class="ident">receive_chunks</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Ok</span>(<span class="kw-2">mut</span> <span class="ident">chunk</span>) = <span class="self">self</span>.<span class="ident">receiver</span>.<span class="ident">try_recv</span>() {
-            <span class="ident">chunk</span>.<span class="ident">offset</span> = <span class="number">0</span>;
-            <span class="self">self</span>.<span class="ident">free_chunks</span>.<span class="ident">push</span>(<span class="ident">chunk</span>);
+    <span class="doccomment">/// Move all chunks that the GPU is done with (and are now mapped again)
+    /// from `self.receiver` to `self.free_chunks`.
+    </span><span class="kw">fn </span>receive_chunks(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">while let </span><span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>chunk) = <span class="self">self</span>.receiver.try_recv() {
+            chunk.offset = <span class="number">0</span>;
+            <span class="self">self</span>.free_chunks.push(chunk);
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">StagingBelt</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;StagingBelt&quot;</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;chunk_size&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">chunk_size</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;active_chunks&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">active_chunks</span>.<span class="ident">len</span>())
-            .<span class="ident">field</span>(<span class="string">&quot;closed_chunks&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">closed_chunks</span>.<span class="ident">len</span>())
-            .<span class="ident">field</span>(<span class="string">&quot;free_chunks&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">free_chunks</span>.<span class="ident">len</span>())
-            .<span class="ident">finish_non_exhaustive</span>()
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>StagingBelt {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">&quot;StagingBelt&quot;</span>)
+            .field(<span class="string">&quot;chunk_size&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.chunk_size)
+            .field(<span class="string">&quot;active_chunks&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.active_chunks.len())
+            .field(<span class="string">&quot;closed_chunks&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.closed_chunks.len())
+            .field(<span class="string">&quot;free_chunks&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.free_chunks.len())
+            .finish_non_exhaustive()
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (75b7e52e9 2022-08-13)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (e1b28cd2f 2022-08-19)" ></div></body></html>

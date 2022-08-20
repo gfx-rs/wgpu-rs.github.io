@@ -711,668 +711,668 @@ then the actual views are excluded from the framebuffer key.
 If timeline semaphores are available, they are used 1:1 with wgpu-hal fences.
 Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 
-!*/</span>
+!*/
 
-<span class="kw">mod</span> <span class="ident">adapter</span>;
-<span class="kw">mod</span> <span class="ident">command</span>;
-<span class="kw">mod</span> <span class="ident">conv</span>;
-<span class="kw">mod</span> <span class="ident">device</span>;
-<span class="kw">mod</span> <span class="ident">instance</span>;
+</span><span class="kw">mod </span>adapter;
+<span class="kw">mod </span>command;
+<span class="kw">mod </span>conv;
+<span class="kw">mod </span>device;
+<span class="kw">mod </span>instance;
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">borrow::Borrow</span>, <span class="ident">ffi::CStr</span>, <span class="ident">num::NonZeroU32</span>, <span class="ident">sync::Arc</span>};
+<span class="kw">use </span>std::{borrow::Borrow, ffi::CStr, num::NonZeroU32, sync::Arc};
 
-<span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
-<span class="kw">use</span> <span class="ident">ash</span>::{
-    <span class="ident">extensions</span>::{<span class="ident">ext</span>, <span class="ident">khr</span>},
-    <span class="ident">vk</span>,
+<span class="kw">use </span>arrayvec::ArrayVec;
+<span class="kw">use </span>ash::{
+    extensions::{ext, khr},
+    vk,
 };
-<span class="kw">use</span> <span class="ident">parking_lot::Mutex</span>;
+<span class="kw">use </span>parking_lot::Mutex;
 
-<span class="kw">const</span> <span class="ident">MILLIS_TO_NANOS</span>: <span class="ident">u64</span> = <span class="number">1_000_000</span>;
-<span class="kw">const</span> <span class="ident">MAX_TOTAL_ATTACHMENTS</span>: <span class="ident">usize</span> = <span class="ident"><span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS</span> * <span class="number">2</span> + <span class="number">1</span>;
+<span class="kw">const </span>MILLIS_TO_NANOS: u64 = <span class="number">1_000_000</span>;
+<span class="kw">const </span>MAX_TOTAL_ATTACHMENTS: usize = <span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS * <span class="number">2 </span>+ <span class="number">1</span>;
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">DropGuard</span> = <span class="ident">Box</span>&lt;<span class="kw">dyn</span> <span class="ident">std::any::Any</span> + <span class="ident">Send</span> + <span class="ident">Sync</span>&gt;;
+<span class="kw">pub type </span>DropGuard = Box&lt;<span class="kw">dyn </span>std::any::Any + Send + Sync&gt;;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Api</span>;
+<span class="attribute">#[derive(Clone)]</span>
+<span class="kw">pub struct </span>Api;
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::Api</span> <span class="kw">for</span> <span class="ident">Api</span> {
-    <span class="kw">type</span> <span class="ident">Instance</span> = <span class="ident">Instance</span>;
-    <span class="kw">type</span> <span class="ident">Surface</span> = <span class="ident">Surface</span>;
-    <span class="kw">type</span> <span class="ident">Adapter</span> = <span class="ident">Adapter</span>;
-    <span class="kw">type</span> <span class="ident">Device</span> = <span class="ident">Device</span>;
+<span class="kw">impl </span><span class="kw">crate</span>::Api <span class="kw">for </span>Api {
+    <span class="kw">type </span>Instance = Instance;
+    <span class="kw">type </span>Surface = Surface;
+    <span class="kw">type </span>Adapter = Adapter;
+    <span class="kw">type </span>Device = Device;
 
-    <span class="kw">type</span> <span class="ident">Queue</span> = <span class="ident">Queue</span>;
-    <span class="kw">type</span> <span class="ident">CommandEncoder</span> = <span class="ident">CommandEncoder</span>;
-    <span class="kw">type</span> <span class="ident">CommandBuffer</span> = <span class="ident">CommandBuffer</span>;
+    <span class="kw">type </span>Queue = Queue;
+    <span class="kw">type </span>CommandEncoder = CommandEncoder;
+    <span class="kw">type </span>CommandBuffer = CommandBuffer;
 
-    <span class="kw">type</span> <span class="ident">Buffer</span> = <span class="ident">Buffer</span>;
-    <span class="kw">type</span> <span class="ident">Texture</span> = <span class="ident">Texture</span>;
-    <span class="kw">type</span> <span class="ident">SurfaceTexture</span> = <span class="ident">SurfaceTexture</span>;
-    <span class="kw">type</span> <span class="ident">TextureView</span> = <span class="ident">TextureView</span>;
-    <span class="kw">type</span> <span class="ident">Sampler</span> = <span class="ident">Sampler</span>;
-    <span class="kw">type</span> <span class="ident">QuerySet</span> = <span class="ident">QuerySet</span>;
-    <span class="kw">type</span> <span class="ident">Fence</span> = <span class="ident">Fence</span>;
+    <span class="kw">type </span>Buffer = Buffer;
+    <span class="kw">type </span>Texture = Texture;
+    <span class="kw">type </span>SurfaceTexture = SurfaceTexture;
+    <span class="kw">type </span>TextureView = TextureView;
+    <span class="kw">type </span>Sampler = Sampler;
+    <span class="kw">type </span>QuerySet = QuerySet;
+    <span class="kw">type </span>Fence = Fence;
 
-    <span class="kw">type</span> <span class="ident">BindGroupLayout</span> = <span class="ident">BindGroupLayout</span>;
-    <span class="kw">type</span> <span class="ident">BindGroup</span> = <span class="ident">BindGroup</span>;
-    <span class="kw">type</span> <span class="ident">PipelineLayout</span> = <span class="ident">PipelineLayout</span>;
-    <span class="kw">type</span> <span class="ident">ShaderModule</span> = <span class="ident">ShaderModule</span>;
-    <span class="kw">type</span> <span class="ident">RenderPipeline</span> = <span class="ident">RenderPipeline</span>;
-    <span class="kw">type</span> <span class="ident">ComputePipeline</span> = <span class="ident">ComputePipeline</span>;
+    <span class="kw">type </span>BindGroupLayout = BindGroupLayout;
+    <span class="kw">type </span>BindGroup = BindGroup;
+    <span class="kw">type </span>PipelineLayout = PipelineLayout;
+    <span class="kw">type </span>ShaderModule = ShaderModule;
+    <span class="kw">type </span>RenderPipeline = RenderPipeline;
+    <span class="kw">type </span>ComputePipeline = ComputePipeline;
 }
 
-<span class="kw">struct</span> <span class="ident">DebugUtils</span> {
-    <span class="ident">extension</span>: <span class="ident">ext::DebugUtils</span>,
-    <span class="ident">messenger</span>: <span class="ident">vk::DebugUtilsMessengerEXT</span>,
+<span class="kw">struct </span>DebugUtils {
+    extension: ext::DebugUtils,
+    messenger: vk::DebugUtilsMessengerEXT,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InstanceShared</span> {
-    <span class="ident">raw</span>: <span class="ident">ash::Instance</span>,
-    <span class="ident">extensions</span>: <span class="ident">Vec</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span>&gt;,
-    <span class="ident">drop_guard</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">DropGuard</span>&gt;,
-    <span class="ident">flags</span>: <span class="ident"><span class="kw">crate</span>::InstanceFlags</span>,
-    <span class="ident">debug_utils</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">DebugUtils</span>&gt;,
-    <span class="ident">get_physical_device_properties</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">khr::GetPhysicalDeviceProperties2</span>&gt;,
-    <span class="ident">entry</span>: <span class="ident">ash::Entry</span>,
-    <span class="ident">has_nv_optimus</span>: <span class="ident">bool</span>,
-    <span class="ident">android_sdk_version</span>: <span class="ident">u32</span>,
-    <span class="ident">driver_api_version</span>: <span class="ident">u32</span>,
+<span class="kw">pub struct </span>InstanceShared {
+    raw: ash::Instance,
+    extensions: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr&gt;,
+    drop_guard: <span class="prelude-ty">Option</span>&lt;DropGuard&gt;,
+    flags: <span class="kw">crate</span>::InstanceFlags,
+    debug_utils: <span class="prelude-ty">Option</span>&lt;DebugUtils&gt;,
+    get_physical_device_properties: <span class="prelude-ty">Option</span>&lt;khr::GetPhysicalDeviceProperties2&gt;,
+    entry: ash::Entry,
+    has_nv_optimus: bool,
+    android_sdk_version: u32,
+    driver_api_version: u32,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Instance</span> {
-    <span class="ident">shared</span>: <span class="ident">Arc</span>&lt;<span class="ident">InstanceShared</span>&gt;,
+<span class="kw">pub struct </span>Instance {
+    shared: Arc&lt;InstanceShared&gt;,
 }
 
-<span class="kw">struct</span> <span class="ident">Swapchain</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::SwapchainKHR</span>,
-    <span class="ident">functor</span>: <span class="ident">khr::Swapchain</span>,
-    <span class="ident">device</span>: <span class="ident">Arc</span>&lt;<span class="ident">DeviceShared</span>&gt;,
-    <span class="ident">fence</span>: <span class="ident">vk::Fence</span>,
-    <span class="ident">images</span>: <span class="ident">Vec</span>&lt;<span class="ident">vk::Image</span>&gt;,
-    <span class="ident">config</span>: <span class="ident"><span class="kw">crate</span>::SurfaceConfiguration</span>,
+<span class="kw">struct </span>Swapchain {
+    raw: vk::SwapchainKHR,
+    functor: khr::Swapchain,
+    device: Arc&lt;DeviceShared&gt;,
+    fence: vk::Fence,
+    images: Vec&lt;vk::Image&gt;,
+    config: <span class="kw">crate</span>::SurfaceConfiguration,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Surface</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::SurfaceKHR</span>,
-    <span class="ident">functor</span>: <span class="ident">khr::Surface</span>,
-    <span class="ident">instance</span>: <span class="ident">Arc</span>&lt;<span class="ident">InstanceShared</span>&gt;,
-    <span class="ident">swapchain</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">Swapchain</span>&gt;,
+<span class="kw">pub struct </span>Surface {
+    raw: vk::SurfaceKHR,
+    functor: khr::Surface,
+    instance: Arc&lt;InstanceShared&gt;,
+    swapchain: <span class="prelude-ty">Option</span>&lt;Swapchain&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SurfaceTexture</span> {
-    <span class="ident">index</span>: <span class="ident">u32</span>,
-    <span class="ident">texture</span>: <span class="ident">Texture</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>SurfaceTexture {
+    index: u32,
+    texture: Texture,
 }
 
-<span class="kw">impl</span> <span class="ident">Borrow</span>&lt;<span class="ident">Texture</span>&gt; <span class="kw">for</span> <span class="ident">SurfaceTexture</span> {
-    <span class="kw">fn</span> <span class="ident">borrow</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Texture</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">texture</span>
+<span class="kw">impl </span>Borrow&lt;Texture&gt; <span class="kw">for </span>SurfaceTexture {
+    <span class="kw">fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Texture {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.texture
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Adapter</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::PhysicalDevice</span>,
-    <span class="ident">instance</span>: <span class="ident">Arc</span>&lt;<span class="ident">InstanceShared</span>&gt;,
-    <span class="comment">//queue_families: Vec&lt;vk::QueueFamilyProperties&gt;,</span>
-    <span class="ident">known_memory_flags</span>: <span class="ident">vk::MemoryPropertyFlags</span>,
-    <span class="ident">phd_capabilities</span>: <span class="ident">adapter::PhysicalDeviceCapabilities</span>,
-    <span class="comment">//phd_features: adapter::PhysicalDeviceFeatures,</span>
-    <span class="ident">downlevel_flags</span>: <span class="ident">wgt::DownlevelFlags</span>,
-    <span class="ident">private_caps</span>: <span class="ident">PrivateCapabilities</span>,
-    <span class="ident">workarounds</span>: <span class="ident">Workarounds</span>,
+<span class="kw">pub struct </span>Adapter {
+    raw: vk::PhysicalDevice,
+    instance: Arc&lt;InstanceShared&gt;,
+    <span class="comment">//queue_families: Vec&lt;vk::QueueFamilyProperties&gt;,
+    </span>known_memory_flags: vk::MemoryPropertyFlags,
+    phd_capabilities: adapter::PhysicalDeviceCapabilities,
+    <span class="comment">//phd_features: adapter::PhysicalDeviceFeatures,
+    </span>downlevel_flags: wgt::DownlevelFlags,
+    private_caps: PrivateCapabilities,
+    workarounds: Workarounds,
 }
 
-<span class="comment">// TODO there&#39;s no reason why this can&#39;t be unified--the function pointers should all be the same--it&#39;s not clear how to do this with `ash`.</span>
-<span class="kw">enum</span> <span class="ident">ExtensionFn</span>&lt;<span class="ident">T</span>&gt; {
-    <span class="doccomment">/// The loaded function pointer struct for an extension.</span>
-    <span class="ident">Extension</span>(<span class="ident">T</span>),
-    <span class="doccomment">/// The extension was promoted to a core version of Vulkan and the functions on `ash`&#39;s `DeviceV1_x` traits should be used.</span>
-    <span class="ident">Promoted</span>,
+<span class="comment">// TODO there&#39;s no reason why this can&#39;t be unified--the function pointers should all be the same--it&#39;s not clear how to do this with `ash`.
+</span><span class="kw">enum </span>ExtensionFn&lt;T&gt; {
+    <span class="doccomment">/// The loaded function pointer struct for an extension.
+    </span>Extension(T),
+    <span class="doccomment">/// The extension was promoted to a core version of Vulkan and the functions on `ash`&#39;s `DeviceV1_x` traits should be used.
+    </span>Promoted,
 }
 
-<span class="kw">struct</span> <span class="ident">DeviceExtensionFunctions</span> {
-    <span class="ident">draw_indirect_count</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">ExtensionFn</span>&lt;<span class="ident">khr::DrawIndirectCount</span>&gt;&gt;,
-    <span class="ident">timeline_semaphore</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">ExtensionFn</span>&lt;<span class="ident">khr::TimelineSemaphore</span>&gt;&gt;,
+<span class="kw">struct </span>DeviceExtensionFunctions {
+    draw_indirect_count: <span class="prelude-ty">Option</span>&lt;ExtensionFn&lt;khr::DrawIndirectCount&gt;&gt;,
+    timeline_semaphore: <span class="prelude-ty">Option</span>&lt;ExtensionFn&lt;khr::TimelineSemaphore&gt;&gt;,
 }
 
-<span class="doccomment">/// Set of internal capabilities, which don&#39;t show up in the exposed</span>
-<span class="doccomment">/// device geometry, but affect the code paths taken internally.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">PrivateCapabilities</span> {
-    <span class="doccomment">/// Y-flipping is implemented with either `VK_AMD_negative_viewport_height` or `VK_KHR_maintenance1`/1.1+. The AMD extension for negative viewport height does not require a Y shift.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This flag is `true` if the device has `VK_KHR_maintenance1`/1.1+ and `false` otherwise (i.e. in the case of `VK_AMD_negative_viewport_height`).</span>
-    <span class="ident">flip_y_requires_shift</span>: <span class="ident">bool</span>,
-    <span class="ident">imageless_framebuffers</span>: <span class="ident">bool</span>,
-    <span class="ident">image_view_usage</span>: <span class="ident">bool</span>,
-    <span class="ident">timeline_semaphores</span>: <span class="ident">bool</span>,
-    <span class="ident">texture_d24</span>: <span class="ident">bool</span>,
-    <span class="ident">texture_d24_s8</span>: <span class="ident">bool</span>,
-    <span class="doccomment">/// Ability to present contents to any screen. Only needed to work around broken platform configurations.</span>
-    <span class="ident">can_present</span>: <span class="ident">bool</span>,
-    <span class="ident">non_coherent_map_mask</span>: <span class="ident">wgt::BufferAddress</span>,
-    <span class="ident">robust_buffer_access</span>: <span class="ident">bool</span>,
-    <span class="ident">robust_image_access</span>: <span class="ident">bool</span>,
+<span class="doccomment">/// Set of internal capabilities, which don&#39;t show up in the exposed
+/// device geometry, but affect the code paths taken internally.
+</span><span class="attribute">#[derive(Clone, Debug)]</span>
+<span class="kw">struct </span>PrivateCapabilities {
+    <span class="doccomment">/// Y-flipping is implemented with either `VK_AMD_negative_viewport_height` or `VK_KHR_maintenance1`/1.1+. The AMD extension for negative viewport height does not require a Y shift.
+    ///
+    /// This flag is `true` if the device has `VK_KHR_maintenance1`/1.1+ and `false` otherwise (i.e. in the case of `VK_AMD_negative_viewport_height`).
+    </span>flip_y_requires_shift: bool,
+    imageless_framebuffers: bool,
+    image_view_usage: bool,
+    timeline_semaphores: bool,
+    texture_d24: bool,
+    texture_d24_s8: bool,
+    <span class="doccomment">/// Ability to present contents to any screen. Only needed to work around broken platform configurations.
+    </span>can_present: bool,
+    non_coherent_map_mask: wgt::BufferAddress,
+    robust_buffer_access: bool,
+    robust_image_access: bool,
 }
 
 <span class="macro">bitflags::bitflags!</span>(
-    <span class="doccomment">/// Workaround flags.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Workarounds</span>: <span class="ident">u32</span> {
-        <span class="doccomment">/// Only generate SPIR-V for one entry point at a time.</span>
-        <span class="kw">const</span> <span class="ident">SEPARATE_ENTRY_POINTS</span> = <span class="number">0x1</span>;
-        <span class="doccomment">/// Qualcomm OOMs when there are zero color attachments but a non-null pointer</span>
-        <span class="doccomment">/// to a subpass resolve attachment array. This nulls out that pointer in that case.</span>
-        <span class="kw">const</span> <span class="ident">EMPTY_RESOLVE_ATTACHMENT_LISTS</span> = <span class="number">0x2</span>;
+    <span class="doccomment">/// Workaround flags.
+    </span><span class="kw">pub struct </span>Workarounds: u32 {
+        <span class="doccomment">/// Only generate SPIR-V for one entry point at a time.
+        </span><span class="kw">const </span>SEPARATE_ENTRY_POINTS = <span class="number">0x1</span>;
+        <span class="doccomment">/// Qualcomm OOMs when there are zero color attachments but a non-null pointer
+        /// to a subpass resolve attachment array. This nulls out that pointer in that case.
+        </span><span class="kw">const </span>EMPTY_RESOLVE_ATTACHMENT_LISTS = <span class="number">0x2</span>;
     }
 );
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">AttachmentKey</span> {
-    <span class="ident">format</span>: <span class="ident">vk::Format</span>,
-    <span class="ident">layout</span>: <span class="ident">vk::ImageLayout</span>,
-    <span class="ident">ops</span>: <span class="ident"><span class="kw">crate</span>::AttachmentOps</span>,
+<span class="attribute">#[derive(Clone, Debug, Eq, Hash, PartialEq)]</span>
+<span class="kw">struct </span>AttachmentKey {
+    format: vk::Format,
+    layout: vk::ImageLayout,
+    ops: <span class="kw">crate</span>::AttachmentOps,
 }
 
-<span class="kw">impl</span> <span class="ident">AttachmentKey</span> {
-    <span class="doccomment">/// Returns an attachment key for a compatible attachment.</span>
-    <span class="kw">fn</span> <span class="ident">compatible</span>(<span class="ident">format</span>: <span class="ident">vk::Format</span>, <span class="ident">layout</span>: <span class="ident">vk::ImageLayout</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">format</span>,
-            <span class="ident">layout</span>,
-            <span class="ident">ops</span>: <span class="ident"><span class="kw">crate</span>::AttachmentOps::all</span>(),
+<span class="kw">impl </span>AttachmentKey {
+    <span class="doccomment">/// Returns an attachment key for a compatible attachment.
+    </span><span class="kw">fn </span>compatible(format: vk::Format, layout: vk::ImageLayout) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            format,
+            layout,
+            ops: <span class="kw">crate</span>::AttachmentOps::all(),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">ColorAttachmentKey</span> {
-    <span class="ident">base</span>: <span class="ident">AttachmentKey</span>,
-    <span class="ident">resolve</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">AttachmentKey</span>&gt;,
+<span class="attribute">#[derive(Clone, Eq, Hash, PartialEq)]</span>
+<span class="kw">struct </span>ColorAttachmentKey {
+    base: AttachmentKey,
+    resolve: <span class="prelude-ty">Option</span>&lt;AttachmentKey&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">DepthStencilAttachmentKey</span> {
-    <span class="ident">base</span>: <span class="ident">AttachmentKey</span>,
-    <span class="ident">stencil_ops</span>: <span class="ident"><span class="kw">crate</span>::AttachmentOps</span>,
+<span class="attribute">#[derive(Clone, Eq, Hash, PartialEq)]</span>
+<span class="kw">struct </span>DepthStencilAttachmentKey {
+    base: AttachmentKey,
+    stencil_ops: <span class="kw">crate</span>::AttachmentOps,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">Default</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">RenderPassKey</span> {
-    <span class="ident">colors</span>: <span class="ident">ArrayVec</span>&lt;<span class="prelude-ty">Option</span>&lt;<span class="ident">ColorAttachmentKey</span>&gt;, { <span class="ident"><span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS</span> }&gt;,
-    <span class="ident">depth_stencil</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">DepthStencilAttachmentKey</span>&gt;,
-    <span class="ident">sample_count</span>: <span class="ident">u32</span>,
-    <span class="ident">multiview</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">NonZeroU32</span>&gt;,
+<span class="attribute">#[derive(Clone, Eq, Default, Hash, PartialEq)]</span>
+<span class="kw">struct </span>RenderPassKey {
+    colors: ArrayVec&lt;<span class="prelude-ty">Option</span>&lt;ColorAttachmentKey&gt;, { <span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS }&gt;,
+    depth_stencil: <span class="prelude-ty">Option</span>&lt;DepthStencilAttachmentKey&gt;,
+    sample_count: u32,
+    multiview: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">FramebufferAttachment</span> {
-    <span class="doccomment">/// Can be NULL if the framebuffer is image-less</span>
-    <span class="ident">raw</span>: <span class="ident">vk::ImageView</span>,
-    <span class="ident">raw_image_flags</span>: <span class="ident">vk::ImageCreateFlags</span>,
-    <span class="ident">view_usage</span>: <span class="ident"><span class="kw">crate</span>::TextureUses</span>,
-    <span class="ident">view_format</span>: <span class="ident">wgt::TextureFormat</span>,
+<span class="attribute">#[derive(Clone, Debug, Eq, Hash, PartialEq)]</span>
+<span class="kw">struct </span>FramebufferAttachment {
+    <span class="doccomment">/// Can be NULL if the framebuffer is image-less
+    </span>raw: vk::ImageView,
+    raw_image_flags: vk::ImageCreateFlags,
+    view_usage: <span class="kw">crate</span>::TextureUses,
+    view_format: wgt::TextureFormat,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">FramebufferKey</span> {
-    <span class="ident">attachments</span>: <span class="ident">ArrayVec</span>&lt;<span class="ident">FramebufferAttachment</span>, { <span class="ident">MAX_TOTAL_ATTACHMENTS</span> }&gt;,
-    <span class="ident">extent</span>: <span class="ident">wgt::Extent3d</span>,
-    <span class="ident">sample_count</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Clone, Eq, Hash, PartialEq)]</span>
+<span class="kw">struct </span>FramebufferKey {
+    attachments: ArrayVec&lt;FramebufferAttachment, { MAX_TOTAL_ATTACHMENTS }&gt;,
+    extent: wgt::Extent3d,
+    sample_count: u32,
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UpdateAfterBindTypes</span>: <span class="ident">u8</span> {
-        <span class="kw">const</span> <span class="ident">UNIFORM_BUFFER</span> = <span class="number">0x1</span>;
-        <span class="kw">const</span> <span class="ident">STORAGE_BUFFER</span> = <span class="number">0x2</span>;
-        <span class="kw">const</span> <span class="ident">SAMPLED_TEXTURE</span> = <span class="number">0x4</span>;
-        <span class="kw">const</span> <span class="ident">STORAGE_TEXTURE</span> = <span class="number">0x8</span>;
+    <span class="kw">pub struct </span>UpdateAfterBindTypes: u8 {
+        <span class="kw">const </span>UNIFORM_BUFFER = <span class="number">0x1</span>;
+        <span class="kw">const </span>STORAGE_BUFFER = <span class="number">0x2</span>;
+        <span class="kw">const </span>SAMPLED_TEXTURE = <span class="number">0x4</span>;
+        <span class="kw">const </span>STORAGE_TEXTURE = <span class="number">0x8</span>;
     }
 }
 
-<span class="kw">impl</span> <span class="ident">UpdateAfterBindTypes</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_limits</span>(<span class="ident">limits</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::Limits</span>, <span class="ident">phd_limits</span>: <span class="kw-2">&amp;</span><span class="ident">vk::PhysicalDeviceLimits</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">uab_types</span> = <span class="ident">UpdateAfterBindTypes::empty</span>();
-        <span class="ident">uab_types</span>.<span class="ident">set</span>(
-            <span class="ident">UpdateAfterBindTypes::UNIFORM_BUFFER</span>,
-            <span class="ident">limits</span>.<span class="ident">max_uniform_buffers_per_shader_stage</span>
-                &gt; <span class="ident">phd_limits</span>.<span class="ident">max_per_stage_descriptor_uniform_buffers</span>,
+<span class="kw">impl </span>UpdateAfterBindTypes {
+    <span class="kw">pub fn </span>from_limits(limits: <span class="kw-2">&amp;</span>wgt::Limits, phd_limits: <span class="kw-2">&amp;</span>vk::PhysicalDeviceLimits) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>uab_types = UpdateAfterBindTypes::empty();
+        uab_types.set(
+            UpdateAfterBindTypes::UNIFORM_BUFFER,
+            limits.max_uniform_buffers_per_shader_stage
+                &gt; phd_limits.max_per_stage_descriptor_uniform_buffers,
         );
-        <span class="ident">uab_types</span>.<span class="ident">set</span>(
-            <span class="ident">UpdateAfterBindTypes::STORAGE_BUFFER</span>,
-            <span class="ident">limits</span>.<span class="ident">max_storage_buffers_per_shader_stage</span>
-                &gt; <span class="ident">phd_limits</span>.<span class="ident">max_per_stage_descriptor_storage_buffers</span>,
+        uab_types.set(
+            UpdateAfterBindTypes::STORAGE_BUFFER,
+            limits.max_storage_buffers_per_shader_stage
+                &gt; phd_limits.max_per_stage_descriptor_storage_buffers,
         );
-        <span class="ident">uab_types</span>.<span class="ident">set</span>(
-            <span class="ident">UpdateAfterBindTypes::SAMPLED_TEXTURE</span>,
-            <span class="ident">limits</span>.<span class="ident">max_sampled_textures_per_shader_stage</span>
-                &gt; <span class="ident">phd_limits</span>.<span class="ident">max_per_stage_descriptor_sampled_images</span>,
+        uab_types.set(
+            UpdateAfterBindTypes::SAMPLED_TEXTURE,
+            limits.max_sampled_textures_per_shader_stage
+                &gt; phd_limits.max_per_stage_descriptor_sampled_images,
         );
-        <span class="ident">uab_types</span>.<span class="ident">set</span>(
-            <span class="ident">UpdateAfterBindTypes::STORAGE_TEXTURE</span>,
-            <span class="ident">limits</span>.<span class="ident">max_storage_textures_per_shader_stage</span>
-                &gt; <span class="ident">phd_limits</span>.<span class="ident">max_per_stage_descriptor_storage_images</span>,
+        uab_types.set(
+            UpdateAfterBindTypes::STORAGE_TEXTURE,
+            limits.max_storage_textures_per_shader_stage
+                &gt; phd_limits.max_per_stage_descriptor_storage_images,
         );
-        <span class="ident">uab_types</span>
+        uab_types
     }
 
-    <span class="kw">fn</span> <span class="ident">from_features</span>(<span class="ident">features</span>: <span class="kw-2">&amp;</span><span class="ident">adapter::PhysicalDeviceFeatures</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">uab_types</span> = <span class="ident">UpdateAfterBindTypes::empty</span>();
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">vk_12</span>) = <span class="ident">features</span>.<span class="ident">vulkan_1_2</span> {
-            <span class="ident">uab_types</span>.<span class="ident">set</span>(
-                <span class="ident">UpdateAfterBindTypes::UNIFORM_BUFFER</span>,
-                <span class="ident">vk_12</span>.<span class="ident">descriptor_binding_uniform_buffer_update_after_bind</span> != <span class="number">0</span>,
+    <span class="kw">fn </span>from_features(features: <span class="kw-2">&amp;</span>adapter::PhysicalDeviceFeatures) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>uab_types = UpdateAfterBindTypes::empty();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(vk_12) = features.vulkan_1_2 {
+            uab_types.set(
+                UpdateAfterBindTypes::UNIFORM_BUFFER,
+                vk_12.descriptor_binding_uniform_buffer_update_after_bind != <span class="number">0</span>,
             );
-            <span class="ident">uab_types</span>.<span class="ident">set</span>(
-                <span class="ident">UpdateAfterBindTypes::STORAGE_BUFFER</span>,
-                <span class="ident">vk_12</span>.<span class="ident">descriptor_binding_storage_buffer_update_after_bind</span> != <span class="number">0</span>,
+            uab_types.set(
+                UpdateAfterBindTypes::STORAGE_BUFFER,
+                vk_12.descriptor_binding_storage_buffer_update_after_bind != <span class="number">0</span>,
             );
-            <span class="ident">uab_types</span>.<span class="ident">set</span>(
-                <span class="ident">UpdateAfterBindTypes::SAMPLED_TEXTURE</span>,
-                <span class="ident">vk_12</span>.<span class="ident">descriptor_binding_sampled_image_update_after_bind</span> != <span class="number">0</span>,
+            uab_types.set(
+                UpdateAfterBindTypes::SAMPLED_TEXTURE,
+                vk_12.descriptor_binding_sampled_image_update_after_bind != <span class="number">0</span>,
             );
-            <span class="ident">uab_types</span>.<span class="ident">set</span>(
-                <span class="ident">UpdateAfterBindTypes::STORAGE_TEXTURE</span>,
-                <span class="ident">vk_12</span>.<span class="ident">descriptor_binding_storage_image_update_after_bind</span> != <span class="number">0</span>,
+            uab_types.set(
+                UpdateAfterBindTypes::STORAGE_TEXTURE,
+                vk_12.descriptor_binding_storage_image_update_after_bind != <span class="number">0</span>,
             );
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">di</span>) = <span class="ident">features</span>.<span class="ident">descriptor_indexing</span> {
-            <span class="ident">uab_types</span>.<span class="ident">set</span>(
-                <span class="ident">UpdateAfterBindTypes::UNIFORM_BUFFER</span>,
-                <span class="ident">di</span>.<span class="ident">descriptor_binding_uniform_buffer_update_after_bind</span> != <span class="number">0</span>,
+        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(di) = features.descriptor_indexing {
+            uab_types.set(
+                UpdateAfterBindTypes::UNIFORM_BUFFER,
+                di.descriptor_binding_uniform_buffer_update_after_bind != <span class="number">0</span>,
             );
-            <span class="ident">uab_types</span>.<span class="ident">set</span>(
-                <span class="ident">UpdateAfterBindTypes::STORAGE_BUFFER</span>,
-                <span class="ident">di</span>.<span class="ident">descriptor_binding_storage_buffer_update_after_bind</span> != <span class="number">0</span>,
+            uab_types.set(
+                UpdateAfterBindTypes::STORAGE_BUFFER,
+                di.descriptor_binding_storage_buffer_update_after_bind != <span class="number">0</span>,
             );
-            <span class="ident">uab_types</span>.<span class="ident">set</span>(
-                <span class="ident">UpdateAfterBindTypes::SAMPLED_TEXTURE</span>,
-                <span class="ident">di</span>.<span class="ident">descriptor_binding_sampled_image_update_after_bind</span> != <span class="number">0</span>,
+            uab_types.set(
+                UpdateAfterBindTypes::SAMPLED_TEXTURE,
+                di.descriptor_binding_sampled_image_update_after_bind != <span class="number">0</span>,
             );
-            <span class="ident">uab_types</span>.<span class="ident">set</span>(
-                <span class="ident">UpdateAfterBindTypes::STORAGE_TEXTURE</span>,
-                <span class="ident">di</span>.<span class="ident">descriptor_binding_storage_image_update_after_bind</span> != <span class="number">0</span>,
+            uab_types.set(
+                UpdateAfterBindTypes::STORAGE_TEXTURE,
+                di.descriptor_binding_storage_image_update_after_bind != <span class="number">0</span>,
             );
         }
-        <span class="ident">uab_types</span>
+        uab_types
     }
 }
 
-<span class="kw">struct</span> <span class="ident">DeviceShared</span> {
-    <span class="ident">raw</span>: <span class="ident">ash::Device</span>,
-    <span class="ident">family_index</span>: <span class="ident">u32</span>,
-    <span class="ident">handle_is_owned</span>: <span class="ident">bool</span>,
-    <span class="ident">instance</span>: <span class="ident">Arc</span>&lt;<span class="ident">InstanceShared</span>&gt;,
-    <span class="ident">physical_device</span>: <span class="ident">ash::vk::PhysicalDevice</span>,
-    <span class="ident">enabled_extensions</span>: <span class="ident">Vec</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">CStr</span>&gt;,
-    <span class="ident">extension_fns</span>: <span class="ident">DeviceExtensionFunctions</span>,
-    <span class="ident">vendor_id</span>: <span class="ident">u32</span>,
-    <span class="ident">timestamp_period</span>: <span class="ident">f32</span>,
-    <span class="ident">uab_types</span>: <span class="ident">UpdateAfterBindTypes</span>,
-    <span class="ident">downlevel_flags</span>: <span class="ident">wgt::DownlevelFlags</span>,
-    <span class="ident">private_caps</span>: <span class="ident">PrivateCapabilities</span>,
-    <span class="ident">workarounds</span>: <span class="ident">Workarounds</span>,
-    <span class="ident">render_passes</span>: <span class="ident">Mutex</span>&lt;<span class="ident">fxhash::FxHashMap</span>&lt;<span class="ident">RenderPassKey</span>, <span class="ident">vk::RenderPass</span>&gt;&gt;,
-    <span class="ident">framebuffers</span>: <span class="ident">Mutex</span>&lt;<span class="ident">fxhash::FxHashMap</span>&lt;<span class="ident">FramebufferKey</span>, <span class="ident">vk::Framebuffer</span>&gt;&gt;,
+<span class="kw">struct </span>DeviceShared {
+    raw: ash::Device,
+    family_index: u32,
+    handle_is_owned: bool,
+    instance: Arc&lt;InstanceShared&gt;,
+    physical_device: ash::vk::PhysicalDevice,
+    enabled_extensions: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr&gt;,
+    extension_fns: DeviceExtensionFunctions,
+    vendor_id: u32,
+    timestamp_period: f32,
+    uab_types: UpdateAfterBindTypes,
+    downlevel_flags: wgt::DownlevelFlags,
+    private_caps: PrivateCapabilities,
+    workarounds: Workarounds,
+    render_passes: Mutex&lt;fxhash::FxHashMap&lt;RenderPassKey, vk::RenderPass&gt;&gt;,
+    framebuffers: Mutex&lt;fxhash::FxHashMap&lt;FramebufferKey, vk::Framebuffer&gt;&gt;,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Device</span> {
-    <span class="ident">shared</span>: <span class="ident">Arc</span>&lt;<span class="ident">DeviceShared</span>&gt;,
-    <span class="ident">mem_allocator</span>: <span class="ident">Mutex</span>&lt;<span class="ident">gpu_alloc::GpuAllocator</span>&lt;<span class="ident">vk::DeviceMemory</span>&gt;&gt;,
-    <span class="ident">desc_allocator</span>:
-        <span class="ident">Mutex</span>&lt;<span class="ident">gpu_descriptor::DescriptorAllocator</span>&lt;<span class="ident">vk::DescriptorPool</span>, <span class="ident">vk::DescriptorSet</span>&gt;&gt;,
-    <span class="ident">valid_ash_memory_types</span>: <span class="ident">u32</span>,
-    <span class="ident">naga_options</span>: <span class="ident">naga::back::spv::Options</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> = <span class="string">&quot;renderdoc&quot;</span>)]</span>
-    <span class="ident">render_doc</span>: <span class="ident"><span class="kw">crate</span>::auxil::renderdoc::RenderDoc</span>,
+<span class="kw">pub struct </span>Device {
+    shared: Arc&lt;DeviceShared&gt;,
+    mem_allocator: Mutex&lt;gpu_alloc::GpuAllocator&lt;vk::DeviceMemory&gt;&gt;,
+    desc_allocator:
+        Mutex&lt;gpu_descriptor::DescriptorAllocator&lt;vk::DescriptorPool, vk::DescriptorSet&gt;&gt;,
+    valid_ash_memory_types: u32,
+    naga_options: naga::back::spv::Options,
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;renderdoc&quot;</span>)]</span>
+    render_doc: <span class="kw">crate</span>::auxil::renderdoc::RenderDoc,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Queue</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::Queue</span>,
-    <span class="ident">swapchain_fn</span>: <span class="ident">khr::Swapchain</span>,
-    <span class="ident">device</span>: <span class="ident">Arc</span>&lt;<span class="ident">DeviceShared</span>&gt;,
-    <span class="ident">family_index</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// We use a redundant chain of semaphores to pass on the signal</span>
-    <span class="doccomment">/// from submissions to the last present, since it&#39;s required by the</span>
-    <span class="doccomment">/// specification.</span>
-    <span class="doccomment">/// It would be correct to use a single semaphore there, but</span>
-    <span class="doccomment">/// [Intel hangs in `anv_queue_finish`](https://gitlab.freedesktop.org/mesa/mesa/-/issues/5508).</span>
-    <span class="ident">relay_semaphores</span>: [<span class="ident">vk::Semaphore</span>; <span class="number">2</span>],
-    <span class="ident">relay_index</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">usize</span>&gt;,
+<span class="kw">pub struct </span>Queue {
+    raw: vk::Queue,
+    swapchain_fn: khr::Swapchain,
+    device: Arc&lt;DeviceShared&gt;,
+    family_index: u32,
+    <span class="doccomment">/// We use a redundant chain of semaphores to pass on the signal
+    /// from submissions to the last present, since it&#39;s required by the
+    /// specification.
+    /// It would be correct to use a single semaphore there, but
+    /// [Intel hangs in `anv_queue_finish`](https://gitlab.freedesktop.org/mesa/mesa/-/issues/5508).
+    </span>relay_semaphores: [vk::Semaphore; <span class="number">2</span>],
+    relay_index: <span class="prelude-ty">Option</span>&lt;usize&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Buffer</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::Buffer</span>,
-    <span class="ident">block</span>: <span class="ident">Mutex</span>&lt;<span class="ident">gpu_alloc::MemoryBlock</span>&lt;<span class="ident">vk::DeviceMemory</span>&gt;&gt;,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>Buffer {
+    raw: vk::Buffer,
+    block: Mutex&lt;gpu_alloc::MemoryBlock&lt;vk::DeviceMemory&gt;&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Texture</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::Image</span>,
-    <span class="ident">drop_guard</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">DropGuard</span>&gt;,
-    <span class="ident">block</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">gpu_alloc::MemoryBlock</span>&lt;<span class="ident">vk::DeviceMemory</span>&gt;&gt;,
-    <span class="ident">usage</span>: <span class="ident"><span class="kw">crate</span>::TextureUses</span>,
-    <span class="ident">aspects</span>: <span class="ident"><span class="kw">crate</span>::FormatAspects</span>,
-    <span class="ident">format_info</span>: <span class="ident">wgt::TextureFormatInfo</span>,
-    <span class="ident">raw_flags</span>: <span class="ident">vk::ImageCreateFlags</span>,
-    <span class="ident">copy_size</span>: <span class="ident"><span class="kw">crate</span>::CopyExtent</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>Texture {
+    raw: vk::Image,
+    drop_guard: <span class="prelude-ty">Option</span>&lt;DropGuard&gt;,
+    block: <span class="prelude-ty">Option</span>&lt;gpu_alloc::MemoryBlock&lt;vk::DeviceMemory&gt;&gt;,
+    usage: <span class="kw">crate</span>::TextureUses,
+    aspects: <span class="kw">crate</span>::FormatAspects,
+    format_info: wgt::TextureFormatInfo,
+    raw_flags: vk::ImageCreateFlags,
+    copy_size: <span class="kw">crate</span>::CopyExtent,
 }
 
-<span class="kw">impl</span> <span class="ident">Texture</span> {
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// - The image handle must not be manually destroyed</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">raw_handle</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">vk::Image</span> {
-        <span class="self">self</span>.<span class="ident">raw</span>
+<span class="kw">impl </span>Texture {
+    <span class="doccomment">/// # Safety
+    ///
+    /// - The image handle must not be manually destroyed
+    </span><span class="kw">pub unsafe fn </span>raw_handle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; vk::Image {
+        <span class="self">self</span>.raw
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureView</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::ImageView</span>,
-    <span class="ident">layers</span>: <span class="ident">NonZeroU32</span>,
-    <span class="ident">attachment</span>: <span class="ident">FramebufferAttachment</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>TextureView {
+    raw: vk::ImageView,
+    layers: NonZeroU32,
+    attachment: FramebufferAttachment,
 }
 
-<span class="kw">impl</span> <span class="ident">TextureView</span> {
-    <span class="kw">fn</span> <span class="ident">aspects</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident"><span class="kw">crate</span>::FormatAspects</span> {
-        <span class="self">self</span>.<span class="ident">attachment</span>.<span class="ident">view_format</span>.<span class="ident">into</span>()
+<span class="kw">impl </span>TextureView {
+    <span class="kw">fn </span>aspects(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::FormatAspects {
+        <span class="self">self</span>.attachment.view_format.into()
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Sampler</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::Sampler</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>Sampler {
+    raw: vk::Sampler,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroupLayout</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::DescriptorSetLayout</span>,
-    <span class="ident">desc_count</span>: <span class="ident">gpu_descriptor::DescriptorTotalCount</span>,
-    <span class="ident">types</span>: <span class="ident">Box</span>&lt;[(<span class="ident">vk::DescriptorType</span>, <span class="ident">u32</span>)]&gt;,
-    <span class="doccomment">/// Map of binding index to size,</span>
-    <span class="ident">binding_arrays</span>: <span class="ident">Vec</span>&lt;(<span class="ident">u32</span>, <span class="ident">NonZeroU32</span>)&gt;,
-    <span class="ident">requires_update_after_bind</span>: <span class="ident">bool</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>BindGroupLayout {
+    raw: vk::DescriptorSetLayout,
+    desc_count: gpu_descriptor::DescriptorTotalCount,
+    types: Box&lt;[(vk::DescriptorType, u32)]&gt;,
+    <span class="doccomment">/// Map of binding index to size,
+    </span>binding_arrays: Vec&lt;(u32, NonZeroU32)&gt;,
+    requires_update_after_bind: bool,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PipelineLayout</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::PipelineLayout</span>,
-    <span class="ident">binding_arrays</span>: <span class="ident">naga::back::spv::BindingMap</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>PipelineLayout {
+    raw: vk::PipelineLayout,
+    binding_arrays: naga::back::spv::BindingMap,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroup</span> {
-    <span class="ident">set</span>: <span class="ident">gpu_descriptor::DescriptorSet</span>&lt;<span class="ident">vk::DescriptorSet</span>&gt;,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>BindGroup {
+    set: gpu_descriptor::DescriptorSet&lt;vk::DescriptorSet&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">Temp</span> {
-    <span class="ident">marker</span>: <span class="ident">Vec</span>&lt;<span class="ident">u8</span>&gt;,
-    <span class="ident">buffer_barriers</span>: <span class="ident">Vec</span>&lt;<span class="ident">vk::BufferMemoryBarrier</span>&gt;,
-    <span class="ident">image_barriers</span>: <span class="ident">Vec</span>&lt;<span class="ident">vk::ImageMemoryBarrier</span>&gt;,
+<span class="attribute">#[derive(Default)]</span>
+<span class="kw">struct </span>Temp {
+    marker: Vec&lt;u8&gt;,
+    buffer_barriers: Vec&lt;vk::BufferMemoryBarrier&gt;,
+    image_barriers: Vec&lt;vk::ImageMemoryBarrier&gt;,
 }
 
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">Temp</span> {}
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">Temp</span> {}
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>Temp {}
+<span class="kw">unsafe impl </span>Sync <span class="kw">for </span>Temp {}
 
-<span class="kw">impl</span> <span class="ident">Temp</span> {
-    <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">marker</span>.<span class="ident">clear</span>();
-        <span class="self">self</span>.<span class="ident">buffer_barriers</span>.<span class="ident">clear</span>();
-        <span class="self">self</span>.<span class="ident">image_barriers</span>.<span class="ident">clear</span>();
-        <span class="comment">//see also - https://github.com/NotIntMan/inplace_it/issues/8</span>
+<span class="kw">impl </span>Temp {
+    <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.marker.clear();
+        <span class="self">self</span>.buffer_barriers.clear();
+        <span class="self">self</span>.image_barriers.clear();
+        <span class="comment">//see also - https://github.com/NotIntMan/inplace_it/issues/8
+    </span>}
+
+    <span class="kw">fn </span>make_c_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw-2">&amp;</span>CStr {
+        <span class="self">self</span>.marker.clear();
+        <span class="self">self</span>.marker.extend_from_slice(name.as_bytes());
+        <span class="self">self</span>.marker.push(<span class="number">0</span>);
+        <span class="kw">unsafe </span>{ CStr::from_bytes_with_nul_unchecked(<span class="kw-2">&amp;</span><span class="self">self</span>.marker) }
     }
-
-    <span class="kw">fn</span> <span class="ident">make_c_str</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">CStr</span> {
-        <span class="self">self</span>.<span class="ident">marker</span>.<span class="ident">clear</span>();
-        <span class="self">self</span>.<span class="ident">marker</span>.<span class="ident">extend_from_slice</span>(<span class="ident">name</span>.<span class="ident">as_bytes</span>());
-        <span class="self">self</span>.<span class="ident">marker</span>.<span class="ident">push</span>(<span class="number">0</span>);
-        <span class="kw">unsafe</span> { <span class="ident">CStr::from_bytes_with_nul_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">marker</span>) }
-    }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CommandEncoder</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::CommandPool</span>,
-    <span class="ident">device</span>: <span class="ident">Arc</span>&lt;<span class="ident">DeviceShared</span>&gt;,
-    <span class="ident">active</span>: <span class="ident">vk::CommandBuffer</span>,
-    <span class="ident">bind_point</span>: <span class="ident">vk::PipelineBindPoint</span>,
-    <span class="ident">temp</span>: <span class="ident">Temp</span>,
-    <span class="ident">free</span>: <span class="ident">Vec</span>&lt;<span class="ident">vk::CommandBuffer</span>&gt;,
-    <span class="ident">discarded</span>: <span class="ident">Vec</span>&lt;<span class="ident">vk::CommandBuffer</span>&gt;,
-    <span class="doccomment">/// If this is true, the active renderpass enabled a debug span,</span>
-    <span class="doccomment">/// and needs to be disabled on renderpass close.</span>
-    <span class="ident">rpass_debug_marker_active</span>: <span class="ident">bool</span>,
+<span class="kw">pub struct </span>CommandEncoder {
+    raw: vk::CommandPool,
+    device: Arc&lt;DeviceShared&gt;,
+    active: vk::CommandBuffer,
+    bind_point: vk::PipelineBindPoint,
+    temp: Temp,
+    free: Vec&lt;vk::CommandBuffer&gt;,
+    discarded: Vec&lt;vk::CommandBuffer&gt;,
+    <span class="doccomment">/// If this is true, the active renderpass enabled a debug span,
+    /// and needs to be disabled on renderpass close.
+    </span>rpass_debug_marker_active: bool,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CommandBuffer</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::CommandBuffer</span>,
+<span class="kw">pub struct </span>CommandBuffer {
+    raw: vk::CommandBuffer,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::large_enum_variant</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ShaderModule</span> {
-    <span class="ident">Raw</span>(<span class="ident">vk::ShaderModule</span>),
-    <span class="ident">Intermediate</span> {
-        <span class="ident">naga_shader</span>: <span class="ident"><span class="kw">crate</span>::NagaShader</span>,
-        <span class="ident">runtime_checks</span>: <span class="ident">bool</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="attribute">#[allow(clippy::large_enum_variant)]</span>
+<span class="kw">pub enum </span>ShaderModule {
+    Raw(vk::ShaderModule),
+    Intermediate {
+        naga_shader: <span class="kw">crate</span>::NagaShader,
+        runtime_checks: bool,
     },
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderPipeline</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::Pipeline</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>RenderPipeline {
+    raw: vk::Pipeline,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ComputePipeline</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::Pipeline</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>ComputePipeline {
+    raw: vk::Pipeline,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QuerySet</span> {
-    <span class="ident">raw</span>: <span class="ident">vk::QueryPool</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>QuerySet {
+    raw: vk::QueryPool,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Fence</span> {
-    <span class="ident">TimelineSemaphore</span>(<span class="ident">vk::Semaphore</span>),
-    <span class="ident">FencePool</span> {
-        <span class="ident">last_completed</span>: <span class="ident"><span class="kw">crate</span>::FenceValue</span>,
-        <span class="doccomment">/// The pending fence values have to be ascending.</span>
-        <span class="ident">active</span>: <span class="ident">Vec</span>&lt;(<span class="ident"><span class="kw">crate</span>::FenceValue</span>, <span class="ident">vk::Fence</span>)&gt;,
-        <span class="ident">free</span>: <span class="ident">Vec</span>&lt;<span class="ident">vk::Fence</span>&gt;,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub enum </span>Fence {
+    TimelineSemaphore(vk::Semaphore),
+    FencePool {
+        last_completed: <span class="kw">crate</span>::FenceValue,
+        <span class="doccomment">/// The pending fence values have to be ascending.
+        </span>active: Vec&lt;(<span class="kw">crate</span>::FenceValue, vk::Fence)&gt;,
+        free: Vec&lt;vk::Fence&gt;,
     },
 }
 
-<span class="kw">impl</span> <span class="ident">Fence</span> {
-    <span class="kw">fn</span> <span class="ident">check_active</span>(
-        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">ash::Device</span>,
-        <span class="kw-2">mut</span> <span class="ident">max_value</span>: <span class="ident"><span class="kw">crate</span>::FenceValue</span>,
-        <span class="ident">active</span>: <span class="kw-2">&amp;</span>[(<span class="ident"><span class="kw">crate</span>::FenceValue</span>, <span class="ident">vk::Fence</span>)],
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="ident"><span class="kw">crate</span>::FenceValue</span>, <span class="ident"><span class="kw">crate</span>::DeviceError</span>&gt; {
-        <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="ident">value</span>, <span class="ident">raw</span>) <span class="kw">in</span> <span class="ident">active</span>.<span class="ident">iter</span>() {
-            <span class="kw">unsafe</span> {
-                <span class="kw">if</span> <span class="ident">value</span> &gt; <span class="ident">max_value</span> &amp;&amp; <span class="ident">device</span>.<span class="ident">get_fence_status</span>(<span class="ident">raw</span>)<span class="question-mark">?</span> {
-                    <span class="ident">max_value</span> = <span class="ident">value</span>;
+<span class="kw">impl </span>Fence {
+    <span class="kw">fn </span>check_active(
+        device: <span class="kw-2">&amp;</span>ash::Device,
+        <span class="kw-2">mut </span>max_value: <span class="kw">crate</span>::FenceValue,
+        active: <span class="kw-2">&amp;</span>[(<span class="kw">crate</span>::FenceValue, vk::Fence)],
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::FenceValue, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="kw">for </span><span class="kw-2">&amp;</span>(value, raw) <span class="kw">in </span>active.iter() {
+            <span class="kw">unsafe </span>{
+                <span class="kw">if </span>value &gt; max_value &amp;&amp; device.get_fence_status(raw)<span class="question-mark">? </span>{
+                    max_value = value;
                 }
             }
         }
-        <span class="prelude-val">Ok</span>(<span class="ident">max_value</span>)
+        <span class="prelude-val">Ok</span>(max_value)
     }
 
-    <span class="kw">fn</span> <span class="ident">get_latest</span>(
+    <span class="kw">fn </span>get_latest(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">ash::Device</span>,
-        <span class="ident">extension</span>: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="ident">ExtensionFn</span>&lt;<span class="ident">khr::TimelineSemaphore</span>&gt;&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="ident"><span class="kw">crate</span>::FenceValue</span>, <span class="ident"><span class="kw">crate</span>::DeviceError</span>&gt; {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::TimelineSemaphore</span>(<span class="ident">raw</span>) =&gt; <span class="kw">unsafe</span> {
-                <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="kw-2">*</span><span class="ident">extension</span>.<span class="ident">unwrap</span>() {
-                    <span class="ident">ExtensionFn::Extension</span>(<span class="kw-2">ref</span> <span class="ident">ext</span>) =&gt; <span class="ident">ext</span>.<span class="ident">get_semaphore_counter_value</span>(<span class="ident">raw</span>)<span class="question-mark">?</span>,
-                    <span class="ident">ExtensionFn::Promoted</span> =&gt; <span class="ident">device</span>.<span class="ident">get_semaphore_counter_value</span>(<span class="ident">raw</span>)<span class="question-mark">?</span>,
+        device: <span class="kw-2">&amp;</span>ash::Device,
+        extension: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>ExtensionFn&lt;khr::TimelineSemaphore&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::FenceValue, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            <span class="self">Self</span>::TimelineSemaphore(raw) =&gt; <span class="kw">unsafe </span>{
+                <span class="prelude-val">Ok</span>(<span class="kw">match </span><span class="kw-2">*</span>extension.unwrap() {
+                    ExtensionFn::Extension(<span class="kw-2">ref </span>ext) =&gt; ext.get_semaphore_counter_value(raw)<span class="question-mark">?</span>,
+                    ExtensionFn::Promoted =&gt; device.get_semaphore_counter_value(raw)<span class="question-mark">?</span>,
                 })
             },
-            <span class="ident"><span class="self">Self</span>::FencePool</span> {
-                <span class="ident">last_completed</span>,
-                <span class="kw-2">ref</span> <span class="ident">active</span>,
-                <span class="ident">free</span>: <span class="kw">_</span>,
-            } =&gt; <span class="ident"><span class="self">Self</span>::check_active</span>(<span class="ident">device</span>, <span class="ident">last_completed</span>, <span class="ident">active</span>),
+            <span class="self">Self</span>::FencePool {
+                last_completed,
+                <span class="kw-2">ref </span>active,
+                free: <span class="kw">_</span>,
+            } =&gt; <span class="self">Self</span>::check_active(device, last_completed, active),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">maintain</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">device</span>: <span class="kw-2">&amp;</span><span class="ident">ash::Device</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="ident"><span class="kw">crate</span>::DeviceError</span>&gt; {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::TimelineSemaphore</span>(<span class="kw">_</span>) =&gt; {}
-            <span class="ident"><span class="self">Self</span>::FencePool</span> {
-                <span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">last_completed</span>,
-                <span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">active</span>,
-                <span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">free</span>,
+    <span class="kw">fn </span>maintain(<span class="kw-2">&amp;mut </span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ash::Device) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            <span class="self">Self</span>::TimelineSemaphore(<span class="kw">_</span>) =&gt; {}
+            <span class="self">Self</span>::FencePool {
+                <span class="kw-2">ref mut </span>last_completed,
+                <span class="kw-2">ref mut </span>active,
+                <span class="kw-2">ref mut </span>free,
             } =&gt; {
-                <span class="kw">let</span> <span class="ident">latest</span> = <span class="ident"><span class="self">Self</span>::check_active</span>(<span class="ident">device</span>, <span class="kw-2">*</span><span class="ident">last_completed</span>, <span class="ident">active</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="ident">base_free</span> = <span class="ident">free</span>.<span class="ident">len</span>();
-                <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="ident">value</span>, <span class="ident">raw</span>) <span class="kw">in</span> <span class="ident">active</span>.<span class="ident">iter</span>() {
-                    <span class="kw">if</span> <span class="ident">value</span> &lt;= <span class="ident">latest</span> {
-                        <span class="ident">free</span>.<span class="ident">push</span>(<span class="ident">raw</span>);
+                <span class="kw">let </span>latest = <span class="self">Self</span>::check_active(device, <span class="kw-2">*</span>last_completed, active)<span class="question-mark">?</span>;
+                <span class="kw">let </span>base_free = free.len();
+                <span class="kw">for </span><span class="kw-2">&amp;</span>(value, raw) <span class="kw">in </span>active.iter() {
+                    <span class="kw">if </span>value &lt;= latest {
+                        free.push(raw);
                     }
                 }
-                <span class="kw">if</span> <span class="ident">free</span>.<span class="ident">len</span>() != <span class="ident">base_free</span> {
-                    <span class="ident">active</span>.<span class="ident">retain</span>(|<span class="kw-2">&amp;</span>(<span class="ident">value</span>, <span class="kw">_</span>)| <span class="ident">value</span> &gt; <span class="ident">latest</span>);
-                    <span class="kw">unsafe</span> {
-                        <span class="ident">device</span>.<span class="ident">reset_fences</span>(<span class="kw-2">&amp;</span><span class="ident">free</span>[<span class="ident">base_free</span>..])<span class="question-mark">?</span>;
+                <span class="kw">if </span>free.len() != base_free {
+                    active.retain(|<span class="kw-2">&amp;</span>(value, <span class="kw">_</span>)| value &gt; latest);
+                    <span class="kw">unsafe </span>{
+                        device.reset_fences(<span class="kw-2">&amp;</span>free[base_free..])<span class="question-mark">?</span>;
                     }
                 }
-                <span class="kw-2">*</span><span class="ident">last_completed</span> = <span class="ident">latest</span>;
+                <span class="kw-2">*</span>last_completed = latest;
             }
         }
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::Queue</span>&lt;<span class="ident">Api</span>&gt; <span class="kw">for</span> <span class="ident">Queue</span> {
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">submit</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">command_buffers</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">CommandBuffer</span>],
-        <span class="ident">signal_fence</span>: <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;mut</span> <span class="ident">Fence</span>, <span class="ident"><span class="kw">crate</span>::FenceValue</span>)&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="ident"><span class="kw">crate</span>::DeviceError</span>&gt; {
-        <span class="kw">let</span> <span class="ident">vk_cmd_buffers</span> = <span class="ident">command_buffers</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">map</span>(|<span class="ident">cmd</span>| <span class="ident">cmd</span>.<span class="ident">raw</span>)
-            .<span class="ident">collect</span>::&lt;<span class="ident">Vec</span>&lt;<span class="kw">_</span>&gt;&gt;();
+<span class="kw">impl </span><span class="kw">crate</span>::Queue&lt;Api&gt; <span class="kw">for </span>Queue {
+    <span class="kw">unsafe fn </span>submit(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        command_buffers: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>CommandBuffer],
+        signal_fence: <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;mut </span>Fence, <span class="kw">crate</span>::FenceValue)&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="kw">let </span>vk_cmd_buffers = command_buffers
+            .iter()
+            .map(|cmd| cmd.raw)
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_info</span> = <span class="ident">vk::SubmitInfo::builder</span>().<span class="ident">command_buffers</span>(<span class="kw-2">&amp;</span><span class="ident">vk_cmd_buffers</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::SubmitInfo::builder().command_buffers(<span class="kw-2">&amp;</span>vk_cmd_buffers);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fence_raw</span> = <span class="ident">vk::Fence::null</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_timeline_info</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">signal_semaphores</span> = [<span class="ident">vk::Semaphore::null</span>(), <span class="ident">vk::Semaphore::null</span>()];
-        <span class="kw">let</span> <span class="ident">signal_values</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>fence_raw = vk::Fence::null();
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_timeline_info;
+        <span class="kw">let </span><span class="kw-2">mut </span>signal_semaphores = [vk::Semaphore::null(), vk::Semaphore::null()];
+        <span class="kw">let </span>signal_values;
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>((<span class="ident">fence</span>, <span class="ident">value</span>)) = <span class="ident">signal_fence</span> {
-            <span class="ident">fence</span>.<span class="ident">maintain</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">device</span>.<span class="ident">raw</span>)<span class="question-mark">?</span>;
-            <span class="kw">match</span> <span class="kw-2">*</span><span class="ident">fence</span> {
-                <span class="ident">Fence::TimelineSemaphore</span>(<span class="ident">raw</span>) =&gt; {
-                    <span class="ident">signal_values</span> = [!<span class="number">0</span>, <span class="ident">value</span>];
-                    <span class="ident">signal_semaphores</span>[<span class="number">1</span>] = <span class="ident">raw</span>;
-                    <span class="ident">vk_timeline_info</span> = <span class="ident">vk::TimelineSemaphoreSubmitInfo::builder</span>()
-                        .<span class="ident">signal_semaphore_values</span>(<span class="kw-2">&amp;</span><span class="ident">signal_values</span>);
-                    <span class="ident">vk_info</span> = <span class="ident">vk_info</span>.<span class="ident">push_next</span>(<span class="kw-2">&amp;mut</span> <span class="ident">vk_timeline_info</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((fence, value)) = signal_fence {
+            fence.maintain(<span class="kw-2">&amp;</span><span class="self">self</span>.device.raw)<span class="question-mark">?</span>;
+            <span class="kw">match </span><span class="kw-2">*</span>fence {
+                Fence::TimelineSemaphore(raw) =&gt; {
+                    signal_values = [!<span class="number">0</span>, value];
+                    signal_semaphores[<span class="number">1</span>] = raw;
+                    vk_timeline_info = vk::TimelineSemaphoreSubmitInfo::builder()
+                        .signal_semaphore_values(<span class="kw-2">&amp;</span>signal_values);
+                    vk_info = vk_info.push_next(<span class="kw-2">&amp;mut </span>vk_timeline_info);
                 }
-                <span class="ident">Fence::FencePool</span> {
-                    <span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">active</span>,
-                    <span class="kw-2">ref</span> <span class="kw-2">mut</span> <span class="ident">free</span>,
+                Fence::FencePool {
+                    <span class="kw-2">ref mut </span>active,
+                    <span class="kw-2">ref mut </span>free,
                     ..
                 } =&gt; {
-                    <span class="ident">fence_raw</span> = <span class="kw">match</span> <span class="ident">free</span>.<span class="ident">pop</span>() {
-                        <span class="prelude-val">Some</span>(<span class="ident">raw</span>) =&gt; <span class="ident">raw</span>,
-                        <span class="prelude-val">None</span> =&gt; <span class="self">self</span>
-                            .<span class="ident">device</span>
-                            .<span class="ident">raw</span>
-                            .<span class="ident">create_fence</span>(<span class="kw-2">&amp;</span><span class="ident">vk::FenceCreateInfo::builder</span>(), <span class="prelude-val">None</span>)<span class="question-mark">?</span>,
+                    fence_raw = <span class="kw">match </span>free.pop() {
+                        <span class="prelude-val">Some</span>(raw) =&gt; raw,
+                        <span class="prelude-val">None </span>=&gt; <span class="self">self
+                            </span>.device
+                            .raw
+                            .create_fence(<span class="kw-2">&amp;</span>vk::FenceCreateInfo::builder(), <span class="prelude-val">None</span>)<span class="question-mark">?</span>,
                     };
-                    <span class="ident">active</span>.<span class="ident">push</span>((<span class="ident">value</span>, <span class="ident">fence_raw</span>));
+                    active.push((value, fence_raw));
                 }
             }
         }
 
-        <span class="kw">let</span> <span class="ident">wait_stage_mask</span> = [<span class="ident">vk::PipelineStageFlags::TOP_OF_PIPE</span>];
-        <span class="kw">let</span> <span class="ident">sem_index</span> = <span class="kw">match</span> <span class="self">self</span>.<span class="ident">relay_index</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">old_index</span>) =&gt; {
-                <span class="ident">vk_info</span> = <span class="ident">vk_info</span>
-                    .<span class="ident">wait_semaphores</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">relay_semaphores</span>[<span class="ident">old_index</span>..<span class="ident">old_index</span> + <span class="number">1</span>])
-                    .<span class="ident">wait_dst_stage_mask</span>(<span class="kw-2">&amp;</span><span class="ident">wait_stage_mask</span>);
-                (<span class="ident">old_index</span> + <span class="number">1</span>) % <span class="self">self</span>.<span class="ident">relay_semaphores</span>.<span class="ident">len</span>()
+        <span class="kw">let </span>wait_stage_mask = [vk::PipelineStageFlags::TOP_OF_PIPE];
+        <span class="kw">let </span>sem_index = <span class="kw">match </span><span class="self">self</span>.relay_index {
+            <span class="prelude-val">Some</span>(old_index) =&gt; {
+                vk_info = vk_info
+                    .wait_semaphores(<span class="kw-2">&amp;</span><span class="self">self</span>.relay_semaphores[old_index..old_index + <span class="number">1</span>])
+                    .wait_dst_stage_mask(<span class="kw-2">&amp;</span>wait_stage_mask);
+                (old_index + <span class="number">1</span>) % <span class="self">self</span>.relay_semaphores.len()
             }
-            <span class="prelude-val">None</span> =&gt; <span class="number">0</span>,
+            <span class="prelude-val">None </span>=&gt; <span class="number">0</span>,
         };
-        <span class="self">self</span>.<span class="ident">relay_index</span> = <span class="prelude-val">Some</span>(<span class="ident">sem_index</span>);
-        <span class="ident">signal_semaphores</span>[<span class="number">0</span>] = <span class="self">self</span>.<span class="ident">relay_semaphores</span>[<span class="ident">sem_index</span>];
+        <span class="self">self</span>.relay_index = <span class="prelude-val">Some</span>(sem_index);
+        signal_semaphores[<span class="number">0</span>] = <span class="self">self</span>.relay_semaphores[sem_index];
 
-        <span class="kw">let</span> <span class="ident">signal_count</span> = <span class="kw">if</span> <span class="ident">signal_semaphores</span>[<span class="number">1</span>] == <span class="ident">vk::Semaphore::null</span>() {
-            <span class="number">1</span>
-        } <span class="kw">else</span> {
-            <span class="number">2</span>
-        };
-        <span class="ident">vk_info</span> = <span class="ident">vk_info</span>.<span class="ident">signal_semaphores</span>(<span class="kw-2">&amp;</span><span class="ident">signal_semaphores</span>[..<span class="ident">signal_count</span>]);
+        <span class="kw">let </span>signal_count = <span class="kw">if </span>signal_semaphores[<span class="number">1</span>] == vk::Semaphore::null() {
+            <span class="number">1
+        </span>} <span class="kw">else </span>{
+            <span class="number">2
+        </span>};
+        vk_info = vk_info.signal_semaphores(<span class="kw-2">&amp;</span>signal_semaphores[..signal_count]);
 
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkQueueSubmit&quot;</span>);
-        <span class="self">self</span>.<span class="ident">device</span>
-            .<span class="ident">raw</span>
-            .<span class="ident">queue_submit</span>(<span class="self">self</span>.<span class="ident">raw</span>, <span class="kw-2">&amp;</span>[<span class="ident">vk_info</span>.<span class="ident">build</span>()], <span class="ident">fence_raw</span>)<span class="question-mark">?</span>;
+        <span class="self">self</span>.device
+            .raw
+            .queue_submit(<span class="self">self</span>.raw, <span class="kw-2">&amp;</span>[vk_info.build()], fence_raw)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">present</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">surface</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Surface</span>,
-        <span class="ident">texture</span>: <span class="ident">SurfaceTexture</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="ident"><span class="kw">crate</span>::SurfaceError</span>&gt; {
-        <span class="kw">let</span> <span class="ident">ssc</span> = <span class="ident">surface</span>.<span class="ident">swapchain</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>();
+    <span class="kw">unsafe fn </span>present(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        surface: <span class="kw-2">&amp;mut </span>Surface,
+        texture: SurfaceTexture,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::SurfaceError&gt; {
+        <span class="kw">let </span>ssc = surface.swapchain.as_ref().unwrap();
 
-        <span class="kw">let</span> <span class="ident">swapchains</span> = [<span class="ident">ssc</span>.<span class="ident">raw</span>];
-        <span class="kw">let</span> <span class="ident">image_indices</span> = [<span class="ident">texture</span>.<span class="ident">index</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vk_info</span> = <span class="ident">vk::PresentInfoKHR::builder</span>()
-            .<span class="ident">swapchains</span>(<span class="kw-2">&amp;</span><span class="ident">swapchains</span>)
-            .<span class="ident">image_indices</span>(<span class="kw-2">&amp;</span><span class="ident">image_indices</span>);
+        <span class="kw">let </span>swapchains = [ssc.raw];
+        <span class="kw">let </span>image_indices = [texture.index];
+        <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::PresentInfoKHR::builder()
+            .swapchains(<span class="kw-2">&amp;</span>swapchains)
+            .image_indices(<span class="kw-2">&amp;</span>image_indices);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">old_index</span>) = <span class="self">self</span>.<span class="ident">relay_index</span>.<span class="ident">take</span>() {
-            <span class="ident">vk_info</span> = <span class="ident">vk_info</span>.<span class="ident">wait_semaphores</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">relay_semaphores</span>[<span class="ident">old_index</span>..<span class="ident">old_index</span> + <span class="number">1</span>]);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(old_index) = <span class="self">self</span>.relay_index.take() {
+            vk_info = vk_info.wait_semaphores(<span class="kw-2">&amp;</span><span class="self">self</span>.relay_semaphores[old_index..old_index + <span class="number">1</span>]);
         }
 
-        <span class="kw">let</span> <span class="ident">suboptimal</span> = {
+        <span class="kw">let </span>suboptimal = {
             <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkQueuePresentKHR&quot;</span>);
-            <span class="self">self</span>.<span class="ident">swapchain_fn</span>
-                .<span class="ident">queue_present</span>(<span class="self">self</span>.<span class="ident">raw</span>, <span class="kw-2">&amp;</span><span class="ident">vk_info</span>)
-                .<span class="ident">map_err</span>(|<span class="ident">error</span>| <span class="kw">match</span> <span class="ident">error</span> {
-                    <span class="ident">vk::Result::ERROR_OUT_OF_DATE_KHR</span> =&gt; <span class="ident"><span class="kw">crate</span>::SurfaceError::Outdated</span>,
-                    <span class="ident">vk::Result::ERROR_SURFACE_LOST_KHR</span> =&gt; <span class="ident"><span class="kw">crate</span>::SurfaceError::Lost</span>,
-                    <span class="kw">_</span> =&gt; <span class="ident"><span class="kw">crate</span>::DeviceError::from</span>(<span class="ident">error</span>).<span class="ident">into</span>(),
-                })<span class="question-mark">?</span>
-        };
-        <span class="kw">if</span> <span class="ident">suboptimal</span> {
-            <span class="macro">log::warn!</span>(<span class="string">&quot;Suboptimal present of frame {}&quot;</span>, <span class="ident">texture</span>.<span class="ident">index</span>);
+            <span class="self">self</span>.swapchain_fn
+                .queue_present(<span class="self">self</span>.raw, <span class="kw-2">&amp;</span>vk_info)
+                .map_err(|error| <span class="kw">match </span>error {
+                    vk::Result::ERROR_OUT_OF_DATE_KHR =&gt; <span class="kw">crate</span>::SurfaceError::Outdated,
+                    vk::Result::ERROR_SURFACE_LOST_KHR =&gt; <span class="kw">crate</span>::SurfaceError::Lost,
+                    <span class="kw">_ </span>=&gt; <span class="kw">crate</span>::DeviceError::from(error).into(),
+                })<span class="question-mark">?
+        </span>};
+        <span class="kw">if </span>suboptimal {
+            <span class="macro">log::warn!</span>(<span class="string">&quot;Suboptimal present of frame {}&quot;</span>, texture.index);
         }
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_timestamp_period</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">f32</span> {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">timestamp_period</span>
+    <span class="kw">unsafe fn </span>get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32 {
+        <span class="self">self</span>.device.timestamp_period
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span>&lt;<span class="ident">vk::Result</span>&gt; <span class="kw">for</span> <span class="ident"><span class="kw">crate</span>::DeviceError</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">result</span>: <span class="ident">vk::Result</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">result</span> {
-            <span class="ident">vk::Result::ERROR_OUT_OF_HOST_MEMORY</span> | <span class="ident">vk::Result::ERROR_OUT_OF_DEVICE_MEMORY</span> =&gt; {
-                <span class="ident"><span class="self">Self</span>::OutOfMemory</span>
+<span class="kw">impl </span>From&lt;vk::Result&gt; <span class="kw">for </span><span class="kw">crate</span>::DeviceError {
+    <span class="kw">fn </span>from(result: vk::Result) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>result {
+            vk::Result::ERROR_OUT_OF_HOST_MEMORY | vk::Result::ERROR_OUT_OF_DEVICE_MEMORY =&gt; {
+                <span class="self">Self</span>::OutOfMemory
             }
-            <span class="ident">vk::Result::ERROR_DEVICE_LOST</span> =&gt; <span class="ident"><span class="self">Self</span>::Lost</span>,
-            <span class="kw">_</span> =&gt; {
-                <span class="macro">log::warn!</span>(<span class="string">&quot;Unrecognized device error {:?}&quot;</span>, <span class="ident">result</span>);
-                <span class="ident"><span class="self">Self</span>::Lost</span>
+            vk::Result::ERROR_DEVICE_LOST =&gt; <span class="self">Self</span>::Lost,
+            <span class="kw">_ </span>=&gt; {
+                <span class="macro">log::warn!</span>(<span class="string">&quot;Unrecognized device error {:?}&quot;</span>, result);
+                <span class="self">Self</span>::Lost
             }
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (75b7e52e9 2022-08-13)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (e1b28cd2f 2022-08-19)" ></div></body></html>

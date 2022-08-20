@@ -823,718 +823,718 @@ To address this, we invalidate the vertex buffers based on:
   - whether or not `start_instance` is used
   - stride has changed
 
-*/</span>
+*/
 
-<span class="doccomment">///cbindgen:ignore</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>), <span class="ident">feature</span> = <span class="string">&quot;emscripten&quot;</span>))]</span>
-<span class="kw">mod</span> <span class="ident">egl</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>, <span class="ident">not</span>(<span class="ident">feature</span> = <span class="string">&quot;emscripten&quot;</span>)))]</span>
-<span class="kw">mod</span> <span class="ident">web</span>;
+///cbindgen:ignore
+</span><span class="attribute">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;emscripten&quot;</span>))]</span>
+<span class="kw">mod </span>egl;
+<span class="attribute">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(feature = <span class="string">&quot;emscripten&quot;</span>)))]</span>
+<span class="kw">mod </span>web;
 
-<span class="kw">mod</span> <span class="ident">adapter</span>;
-<span class="kw">mod</span> <span class="ident">command</span>;
-<span class="kw">mod</span> <span class="ident">conv</span>;
-<span class="kw">mod</span> <span class="ident">device</span>;
-<span class="kw">mod</span> <span class="ident">queue</span>;
+<span class="kw">mod </span>adapter;
+<span class="kw">mod </span>command;
+<span class="kw">mod </span>conv;
+<span class="kw">mod </span>device;
+<span class="kw">mod </span>queue;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>), <span class="ident">feature</span> = <span class="string">&quot;emscripten&quot;</span>))]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::egl</span>::{<span class="ident">AdapterContext</span>, <span class="ident">AdapterContextLock</span>};
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>), <span class="ident">feature</span> = <span class="string">&quot;emscripten&quot;</span>))]</span>
-<span class="kw">use</span> <span class="ident"><span class="self">self</span>::egl</span>::{<span class="ident">Instance</span>, <span class="ident">Surface</span>};
+<span class="attribute">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;emscripten&quot;</span>))]</span>
+<span class="kw">pub use </span><span class="self">self</span>::egl::{AdapterContext, AdapterContextLock};
+<span class="attribute">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;emscripten&quot;</span>))]</span>
+<span class="kw">use </span><span class="self">self</span>::egl::{Instance, Surface};
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>, <span class="ident">not</span>(<span class="ident">feature</span> = <span class="string">&quot;emscripten&quot;</span>)))]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::web::AdapterContext</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>, <span class="ident">not</span>(<span class="ident">feature</span> = <span class="string">&quot;emscripten&quot;</span>)))]</span>
-<span class="kw">use</span> <span class="ident"><span class="self">self</span>::web</span>::{<span class="ident">Instance</span>, <span class="ident">Surface</span>};
+<span class="attribute">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(feature = <span class="string">&quot;emscripten&quot;</span>)))]</span>
+<span class="kw">pub use </span><span class="self">self</span>::web::AdapterContext;
+<span class="attribute">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(feature = <span class="string">&quot;emscripten&quot;</span>)))]</span>
+<span class="kw">use </span><span class="self">self</span>::web::{Instance, Surface};
 
-<span class="kw">use</span> <span class="ident">arrayvec::ArrayVec</span>;
+<span class="kw">use </span>arrayvec::ArrayVec;
 
-<span class="kw">use</span> <span class="ident">glow::HasContext</span>;
+<span class="kw">use </span>glow::HasContext;
 
-<span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">ops::Range</span>, <span class="ident">sync::Arc</span>};
+<span class="kw">use </span>std::{ops::Range, sync::Arc};
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Api</span>;
+<span class="attribute">#[derive(Clone)]</span>
+<span class="kw">pub struct </span>Api;
 
-<span class="comment">//Note: we can support more samplers if not every one of them is used at a time,</span>
-<span class="comment">// but it probably doesn&#39;t worth it.</span>
-<span class="kw">const</span> <span class="ident">MAX_TEXTURE_SLOTS</span>: <span class="ident">usize</span> = <span class="number">16</span>;
-<span class="kw">const</span> <span class="ident">MAX_SAMPLERS</span>: <span class="ident">usize</span> = <span class="number">16</span>;
-<span class="kw">const</span> <span class="ident">MAX_VERTEX_ATTRIBUTES</span>: <span class="ident">usize</span> = <span class="number">16</span>;
-<span class="kw">const</span> <span class="ident">ZERO_BUFFER_SIZE</span>: <span class="ident">usize</span> = <span class="number">256</span> &lt;&lt; <span class="number">10</span>;
-<span class="kw">const</span> <span class="ident">MAX_PUSH_CONSTANTS</span>: <span class="ident">usize</span> = <span class="number">16</span>;
+<span class="comment">//Note: we can support more samplers if not every one of them is used at a time,
+// but it probably doesn&#39;t worth it.
+</span><span class="kw">const </span>MAX_TEXTURE_SLOTS: usize = <span class="number">16</span>;
+<span class="kw">const </span>MAX_SAMPLERS: usize = <span class="number">16</span>;
+<span class="kw">const </span>MAX_VERTEX_ATTRIBUTES: usize = <span class="number">16</span>;
+<span class="kw">const </span>ZERO_BUFFER_SIZE: usize = <span class="number">256 </span>&lt;&lt; <span class="number">10</span>;
+<span class="kw">const </span>MAX_PUSH_CONSTANTS: usize = <span class="number">16</span>;
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::Api</span> <span class="kw">for</span> <span class="ident">Api</span> {
-    <span class="kw">type</span> <span class="ident">Instance</span> = <span class="ident">Instance</span>;
-    <span class="kw">type</span> <span class="ident">Surface</span> = <span class="ident">Surface</span>;
-    <span class="kw">type</span> <span class="ident">Adapter</span> = <span class="ident">Adapter</span>;
-    <span class="kw">type</span> <span class="ident">Device</span> = <span class="ident">Device</span>;
+<span class="kw">impl </span><span class="kw">crate</span>::Api <span class="kw">for </span>Api {
+    <span class="kw">type </span>Instance = Instance;
+    <span class="kw">type </span>Surface = Surface;
+    <span class="kw">type </span>Adapter = Adapter;
+    <span class="kw">type </span>Device = Device;
 
-    <span class="kw">type</span> <span class="ident">Queue</span> = <span class="ident">Queue</span>;
-    <span class="kw">type</span> <span class="ident">CommandEncoder</span> = <span class="ident">CommandEncoder</span>;
-    <span class="kw">type</span> <span class="ident">CommandBuffer</span> = <span class="ident">CommandBuffer</span>;
+    <span class="kw">type </span>Queue = Queue;
+    <span class="kw">type </span>CommandEncoder = CommandEncoder;
+    <span class="kw">type </span>CommandBuffer = CommandBuffer;
 
-    <span class="kw">type</span> <span class="ident">Buffer</span> = <span class="ident">Buffer</span>;
-    <span class="kw">type</span> <span class="ident">Texture</span> = <span class="ident">Texture</span>;
-    <span class="kw">type</span> <span class="ident">SurfaceTexture</span> = <span class="ident">Texture</span>;
-    <span class="kw">type</span> <span class="ident">TextureView</span> = <span class="ident">TextureView</span>;
-    <span class="kw">type</span> <span class="ident">Sampler</span> = <span class="ident">Sampler</span>;
-    <span class="kw">type</span> <span class="ident">QuerySet</span> = <span class="ident">QuerySet</span>;
-    <span class="kw">type</span> <span class="ident">Fence</span> = <span class="ident">Fence</span>;
+    <span class="kw">type </span>Buffer = Buffer;
+    <span class="kw">type </span>Texture = Texture;
+    <span class="kw">type </span>SurfaceTexture = Texture;
+    <span class="kw">type </span>TextureView = TextureView;
+    <span class="kw">type </span>Sampler = Sampler;
+    <span class="kw">type </span>QuerySet = QuerySet;
+    <span class="kw">type </span>Fence = Fence;
 
-    <span class="kw">type</span> <span class="ident">BindGroupLayout</span> = <span class="ident">BindGroupLayout</span>;
-    <span class="kw">type</span> <span class="ident">BindGroup</span> = <span class="ident">BindGroup</span>;
-    <span class="kw">type</span> <span class="ident">PipelineLayout</span> = <span class="ident">PipelineLayout</span>;
-    <span class="kw">type</span> <span class="ident">ShaderModule</span> = <span class="ident">ShaderModule</span>;
-    <span class="kw">type</span> <span class="ident">RenderPipeline</span> = <span class="ident">RenderPipeline</span>;
-    <span class="kw">type</span> <span class="ident">ComputePipeline</span> = <span class="ident">ComputePipeline</span>;
+    <span class="kw">type </span>BindGroupLayout = BindGroupLayout;
+    <span class="kw">type </span>BindGroup = BindGroup;
+    <span class="kw">type </span>PipelineLayout = PipelineLayout;
+    <span class="kw">type </span>ShaderModule = ShaderModule;
+    <span class="kw">type </span>RenderPipeline = RenderPipeline;
+    <span class="kw">type </span>ComputePipeline = ComputePipeline;
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="doccomment">/// Flags that affect internal code paths but do not</span>
-    <span class="doccomment">/// change the exposed feature set.</span>
-    <span class="kw">struct</span> <span class="ident">PrivateCapabilities</span>: <span class="ident">u32</span> {
-        <span class="doccomment">/// Indicates support for `glBufferStorage` allocation.</span>
-        <span class="kw">const</span> <span class="ident">BUFFER_ALLOCATION</span> = <span class="number">1</span> &lt;&lt; <span class="number">0</span>;
-        <span class="doccomment">/// Support explicit layouts in shader.</span>
-        <span class="kw">const</span> <span class="ident">SHADER_BINDING_LAYOUT</span> = <span class="number">1</span> &lt;&lt; <span class="number">1</span>;
-        <span class="doccomment">/// Support extended shadow sampling instructions.</span>
-        <span class="kw">const</span> <span class="ident">SHADER_TEXTURE_SHADOW_LOD</span> = <span class="number">1</span> &lt;&lt; <span class="number">2</span>;
-        <span class="doccomment">/// Support memory barriers.</span>
-        <span class="kw">const</span> <span class="ident">MEMORY_BARRIERS</span> = <span class="number">1</span> &lt;&lt; <span class="number">3</span>;
-        <span class="doccomment">/// Vertex buffer layouts separate from the data.</span>
-        <span class="kw">const</span> <span class="ident">VERTEX_BUFFER_LAYOUT</span> = <span class="number">1</span> &lt;&lt; <span class="number">4</span>;
-        <span class="doccomment">/// Indicates that buffers used as `GL_ELEMENT_ARRAY_BUFFER` may be created / initialized / used</span>
-        <span class="doccomment">/// as other targets, if not present they must not be mixed with other targets.</span>
-        <span class="kw">const</span> <span class="ident">INDEX_BUFFER_ROLE_CHANGE</span> = <span class="number">1</span> &lt;&lt; <span class="number">5</span>;
-        <span class="doccomment">/// Indicates that the device supports disabling draw buffers</span>
-        <span class="kw">const</span> <span class="ident">CAN_DISABLE_DRAW_BUFFER</span> = <span class="number">1</span> &lt;&lt; <span class="number">6</span>;
-        <span class="doccomment">/// Supports `glGetBufferSubData`</span>
-        <span class="kw">const</span> <span class="ident">GET_BUFFER_SUB_DATA</span> = <span class="number">1</span> &lt;&lt; <span class="number">7</span>;
-        <span class="doccomment">/// Supports `f16` color buffers</span>
-        <span class="kw">const</span> <span class="ident">COLOR_BUFFER_HALF_FLOAT</span> = <span class="number">1</span> &lt;&lt; <span class="number">8</span>;
-        <span class="doccomment">/// Supports `f11/f10` and `f32` color buffers</span>
-        <span class="kw">const</span> <span class="ident">COLOR_BUFFER_FLOAT</span> = <span class="number">1</span> &lt;&lt; <span class="number">9</span>;
+    <span class="doccomment">/// Flags that affect internal code paths but do not
+    /// change the exposed feature set.
+    </span><span class="kw">struct </span>PrivateCapabilities: u32 {
+        <span class="doccomment">/// Indicates support for `glBufferStorage` allocation.
+        </span><span class="kw">const </span>BUFFER_ALLOCATION = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
+        <span class="doccomment">/// Support explicit layouts in shader.
+        </span><span class="kw">const </span>SHADER_BINDING_LAYOUT = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
+        <span class="doccomment">/// Support extended shadow sampling instructions.
+        </span><span class="kw">const </span>SHADER_TEXTURE_SHADOW_LOD = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
+        <span class="doccomment">/// Support memory barriers.
+        </span><span class="kw">const </span>MEMORY_BARRIERS = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
+        <span class="doccomment">/// Vertex buffer layouts separate from the data.
+        </span><span class="kw">const </span>VERTEX_BUFFER_LAYOUT = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
+        <span class="doccomment">/// Indicates that buffers used as `GL_ELEMENT_ARRAY_BUFFER` may be created / initialized / used
+        /// as other targets, if not present they must not be mixed with other targets.
+        </span><span class="kw">const </span>INDEX_BUFFER_ROLE_CHANGE = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
+        <span class="doccomment">/// Indicates that the device supports disabling draw buffers
+        </span><span class="kw">const </span>CAN_DISABLE_DRAW_BUFFER = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
+        <span class="doccomment">/// Supports `glGetBufferSubData`
+        </span><span class="kw">const </span>GET_BUFFER_SUB_DATA = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
+        <span class="doccomment">/// Supports `f16` color buffers
+        </span><span class="kw">const </span>COLOR_BUFFER_HALF_FLOAT = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
+        <span class="doccomment">/// Supports `f11/f10` and `f32` color buffers
+        </span><span class="kw">const </span>COLOR_BUFFER_FLOAT = <span class="number">1 </span>&lt;&lt; <span class="number">9</span>;
     }
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="doccomment">/// Flags that indicate necessary workarounds for specific devices or driver bugs</span>
-    <span class="kw">struct</span> <span class="ident">Workarounds</span>: <span class="ident">u32</span> {
-        <span class="comment">// Needs workaround for Intel Mesa bug:</span>
-        <span class="comment">// https://gitlab.freedesktop.org/mesa/mesa/-/issues/2565.</span>
-        <span class="comment">//</span>
-        <span class="comment">// This comment</span>
-        <span class="comment">// (https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/4972/diffs?diff_id=75888#22f5d1004713c9bbf857988c7efb81631ab88f99_323_327)</span>
-        <span class="comment">// seems to indicate all skylake models are effected.</span>
-        <span class="kw">const</span> <span class="ident">MESA_I915_SRGB_SHADER_CLEAR</span> = <span class="number">1</span> &lt;&lt; <span class="number">0</span>;
-        <span class="doccomment">/// Buffer map must emulated becuase it is not supported natively</span>
-        <span class="kw">const</span> <span class="ident">EMULATE_BUFFER_MAP</span> = <span class="number">1</span> &lt;&lt; <span class="number">1</span>;
+    <span class="doccomment">/// Flags that indicate necessary workarounds for specific devices or driver bugs
+    </span><span class="kw">struct </span>Workarounds: u32 {
+        <span class="comment">// Needs workaround for Intel Mesa bug:
+        // https://gitlab.freedesktop.org/mesa/mesa/-/issues/2565.
+        //
+        // This comment
+        // (https://gitlab.freedesktop.org/mesa/mesa/-/merge_requests/4972/diffs?diff_id=75888#22f5d1004713c9bbf857988c7efb81631ab88f99_323_327)
+        // seems to indicate all skylake models are effected.
+        </span><span class="kw">const </span>MESA_I915_SRGB_SHADER_CLEAR = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
+        <span class="doccomment">/// Buffer map must emulated becuase it is not supported natively
+        </span><span class="kw">const </span>EMULATE_BUFFER_MAP = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
     }
 }
 
-<span class="kw">type</span> <span class="ident">BindTarget</span> = <span class="ident">u32</span>;
+<span class="kw">type </span>BindTarget = u32;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="kw">enum</span> <span class="ident">VertexAttribKind</span> {
-    <span class="ident">Float</span>, <span class="comment">// glVertexAttribPointer</span>
-    <span class="ident">Integer</span>, <span class="comment">// glVertexAttribIPointer</span>
-           <span class="comment">//Double,  // glVertexAttribLPointer</span>
-}
+<span class="attribute">#[derive(Debug, Clone, Copy)]</span>
+<span class="kw">enum </span>VertexAttribKind {
+    Float, <span class="comment">// glVertexAttribPointer
+    </span>Integer, <span class="comment">// glVertexAttribIPointer
+           //Double,  // glVertexAttribLPointer
+</span>}
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">VertexAttribKind</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::Float</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>VertexAttribKind {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Float
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">TextureFormatDesc</span> {
-    <span class="ident">internal</span>: <span class="ident">u32</span>,
-    <span class="ident">external</span>: <span class="ident">u32</span>,
-    <span class="ident">data_type</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Clone, Debug)]</span>
+<span class="kw">struct </span>TextureFormatDesc {
+    internal: u32,
+    external: u32,
+    data_type: u32,
 }
 
-<span class="kw">struct</span> <span class="ident">AdapterShared</span> {
-    <span class="ident">context</span>: <span class="ident">AdapterContext</span>,
-    <span class="ident">private_caps</span>: <span class="ident">PrivateCapabilities</span>,
-    <span class="ident">features</span>: <span class="ident">wgt::Features</span>,
-    <span class="ident">workarounds</span>: <span class="ident">Workarounds</span>,
-    <span class="ident">shading_language_version</span>: <span class="ident">naga::back::glsl::Version</span>,
-    <span class="ident">max_texture_size</span>: <span class="ident">u32</span>,
+<span class="kw">struct </span>AdapterShared {
+    context: AdapterContext,
+    private_caps: PrivateCapabilities,
+    features: wgt::Features,
+    workarounds: Workarounds,
+    shading_language_version: naga::back::glsl::Version,
+    max_texture_size: u32,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Adapter</span> {
-    <span class="ident">shared</span>: <span class="ident">Arc</span>&lt;<span class="ident">AdapterShared</span>&gt;,
+<span class="kw">pub struct </span>Adapter {
+    shared: Arc&lt;AdapterShared&gt;,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Device</span> {
-    <span class="ident">shared</span>: <span class="ident">Arc</span>&lt;<span class="ident">AdapterShared</span>&gt;,
-    <span class="ident">main_vao</span>: <span class="ident">glow::VertexArray</span>,
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> = <span class="string">&quot;renderdoc&quot;</span>)]</span>
-    <span class="ident">render_doc</span>: <span class="ident"><span class="kw">crate</span>::auxil::renderdoc::RenderDoc</span>,
+<span class="kw">pub struct </span>Device {
+    shared: Arc&lt;AdapterShared&gt;,
+    main_vao: glow::VertexArray,
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;renderdoc&quot;</span>)]</span>
+    render_doc: <span class="kw">crate</span>::auxil::renderdoc::RenderDoc,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Queue</span> {
-    <span class="ident">shared</span>: <span class="ident">Arc</span>&lt;<span class="ident">AdapterShared</span>&gt;,
-    <span class="ident">features</span>: <span class="ident">wgt::Features</span>,
-    <span class="ident">draw_fbo</span>: <span class="ident">glow::Framebuffer</span>,
-    <span class="ident">copy_fbo</span>: <span class="ident">glow::Framebuffer</span>,
-    <span class="doccomment">/// Shader program used to clear the screen for [`Workarounds::MESA_I915_SRGB_SHADER_CLEAR`]</span>
-    <span class="doccomment">/// devices.</span>
-    <span class="ident">shader_clear_program</span>: <span class="ident">glow::Program</span>,
-    <span class="doccomment">/// The uniform location of the color uniform in the shader clear program</span>
-    <span class="ident">shader_clear_program_color_uniform_location</span>: <span class="ident">glow::UniformLocation</span>,
-    <span class="doccomment">/// Keep a reasonably large buffer filled with zeroes, so that we can implement `ClearBuffer` of</span>
-    <span class="doccomment">/// zeroes by copying from it.</span>
-    <span class="ident">zero_buffer</span>: <span class="ident">glow::Buffer</span>,
-    <span class="ident">temp_query_results</span>: <span class="ident">Vec</span>&lt;<span class="ident">u64</span>&gt;,
-    <span class="ident">draw_buffer_count</span>: <span class="ident">u8</span>,
-    <span class="ident">current_index_buffer</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">glow::Buffer</span>&gt;,
+<span class="kw">pub struct </span>Queue {
+    shared: Arc&lt;AdapterShared&gt;,
+    features: wgt::Features,
+    draw_fbo: glow::Framebuffer,
+    copy_fbo: glow::Framebuffer,
+    <span class="doccomment">/// Shader program used to clear the screen for [`Workarounds::MESA_I915_SRGB_SHADER_CLEAR`]
+    /// devices.
+    </span>shader_clear_program: glow::Program,
+    <span class="doccomment">/// The uniform location of the color uniform in the shader clear program
+    </span>shader_clear_program_color_uniform_location: glow::UniformLocation,
+    <span class="doccomment">/// Keep a reasonably large buffer filled with zeroes, so that we can implement `ClearBuffer` of
+    /// zeroes by copying from it.
+    </span>zero_buffer: glow::Buffer,
+    temp_query_results: Vec&lt;u64&gt;,
+    draw_buffer_count: u8,
+    current_index_buffer: <span class="prelude-ty">Option</span>&lt;glow::Buffer&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Buffer</span> {
-    <span class="ident">raw</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">glow::Buffer</span>&gt;,
-    <span class="ident">target</span>: <span class="ident">BindTarget</span>,
-    <span class="ident">size</span>: <span class="ident">wgt::BufferAddress</span>,
-    <span class="ident">map_flags</span>: <span class="ident">u32</span>,
-    <span class="ident">data</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">Arc</span>&lt;<span class="ident">std::sync::Mutex</span>&lt;<span class="ident">Vec</span>&lt;<span class="ident">u8</span>&gt;&gt;&gt;&gt;,
+<span class="attribute">#[derive(Clone, Debug)]</span>
+<span class="kw">pub struct </span>Buffer {
+    raw: <span class="prelude-ty">Option</span>&lt;glow::Buffer&gt;,
+    target: BindTarget,
+    size: wgt::BufferAddress,
+    map_flags: u32,
+    data: <span class="prelude-ty">Option</span>&lt;Arc&lt;std::sync::Mutex&lt;Vec&lt;u8&gt;&gt;&gt;&gt;,
 }
 
-<span class="comment">// Safe: WASM doesn&#39;t have threads</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">Buffer</span> {}
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">Buffer</span> {}
+<span class="comment">// Safe: WASM doesn&#39;t have threads
+</span><span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]</span>
+<span class="kw">unsafe impl </span>Sync <span class="kw">for </span>Buffer {}
+<span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]</span>
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>Buffer {}
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">TextureInner</span> {
-    <span class="ident">Renderbuffer</span> {
-        <span class="ident">raw</span>: <span class="ident">glow::Renderbuffer</span>,
+<span class="attribute">#[derive(Clone, Debug)]</span>
+<span class="kw">enum </span>TextureInner {
+    Renderbuffer {
+        raw: glow::Renderbuffer,
     },
-    <span class="ident">DefaultRenderbuffer</span>,
-    <span class="ident">Texture</span> {
-        <span class="ident">raw</span>: <span class="ident">glow::Texture</span>,
-        <span class="ident">target</span>: <span class="ident">BindTarget</span>,
+    DefaultRenderbuffer,
+    Texture {
+        raw: glow::Texture,
+        target: BindTarget,
     },
 }
 
-<span class="kw">impl</span> <span class="ident">TextureInner</span> {
-    <span class="kw">fn</span> <span class="ident">as_native</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">glow::Texture</span>, <span class="ident">BindTarget</span>) {
-        <span class="kw">match</span> <span class="kw-2">*</span><span class="self">self</span> {
-            <span class="ident"><span class="self">Self</span>::Renderbuffer</span> { .. } | <span class="ident"><span class="self">Self</span>::DefaultRenderbuffer</span> =&gt; {
+<span class="kw">impl </span>TextureInner {
+    <span class="kw">fn </span>as_native(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (glow::Texture, BindTarget) {
+        <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
+            <span class="self">Self</span>::Renderbuffer { .. } | <span class="self">Self</span>::DefaultRenderbuffer =&gt; {
                 <span class="macro">panic!</span>(<span class="string">&quot;Unexpected renderbuffer&quot;</span>);
             }
-            <span class="ident"><span class="self">Self</span>::Texture</span> { <span class="ident">raw</span>, <span class="ident">target</span> } =&gt; (<span class="ident">raw</span>, <span class="ident">target</span>),
+            <span class="self">Self</span>::Texture { raw, target } =&gt; (raw, target),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Texture</span> {
-    <span class="ident">inner</span>: <span class="ident">TextureInner</span>,
-    <span class="ident">mip_level_count</span>: <span class="ident">u32</span>,
-    <span class="ident">array_layer_count</span>: <span class="ident">u32</span>,
-    <span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>,
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
-    <span class="ident">format_desc</span>: <span class="ident">TextureFormatDesc</span>,
-    <span class="ident">copy_size</span>: <span class="ident"><span class="kw">crate</span>::CopyExtent</span>,
-    <span class="ident">is_cubemap</span>: <span class="ident">bool</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>Texture {
+    inner: TextureInner,
+    mip_level_count: u32,
+    array_layer_count: u32,
+    format: wgt::TextureFormat,
+    <span class="attribute">#[allow(unused)]</span>
+    format_desc: TextureFormatDesc,
+    copy_size: <span class="kw">crate</span>::CopyExtent,
+    is_cubemap: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">Texture</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">default_framebuffer</span>(<span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">inner</span>: <span class="ident">TextureInner::DefaultRenderbuffer</span>,
-            <span class="ident">mip_level_count</span>: <span class="number">1</span>,
-            <span class="ident">array_layer_count</span>: <span class="number">1</span>,
-            <span class="ident">format</span>,
-            <span class="ident">format_desc</span>: <span class="ident">TextureFormatDesc</span> {
-                <span class="ident">internal</span>: <span class="number">0</span>,
-                <span class="ident">external</span>: <span class="number">0</span>,
-                <span class="ident">data_type</span>: <span class="number">0</span>,
+<span class="kw">impl </span>Texture {
+    <span class="kw">pub fn </span>default_framebuffer(format: wgt::TextureFormat) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            inner: TextureInner::DefaultRenderbuffer,
+            mip_level_count: <span class="number">1</span>,
+            array_layer_count: <span class="number">1</span>,
+            format,
+            format_desc: TextureFormatDesc {
+                internal: <span class="number">0</span>,
+                external: <span class="number">0</span>,
+                data_type: <span class="number">0</span>,
             },
-            <span class="ident">copy_size</span>: <span class="ident"><span class="kw">crate</span>::CopyExtent</span> {
-                <span class="ident">width</span>: <span class="number">0</span>,
-                <span class="ident">height</span>: <span class="number">0</span>,
-                <span class="ident">depth</span>: <span class="number">0</span>,
+            copy_size: <span class="kw">crate</span>::CopyExtent {
+                width: <span class="number">0</span>,
+                height: <span class="number">0</span>,
+                depth: <span class="number">0</span>,
             },
-            <span class="ident">is_cubemap</span>: <span class="bool-val">false</span>,
+            is_cubemap: <span class="bool-val">false</span>,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TextureView</span> {
-    <span class="ident">inner</span>: <span class="ident">TextureInner</span>,
-    <span class="ident">sample_type</span>: <span class="ident">wgt::TextureSampleType</span>,
-    <span class="ident">aspects</span>: <span class="ident"><span class="kw">crate</span>::FormatAspects</span>,
-    <span class="ident">mip_levels</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;,
-    <span class="ident">array_layers</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;,
-    <span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>,
+<span class="attribute">#[derive(Clone, Debug)]</span>
+<span class="kw">pub struct </span>TextureView {
+    inner: TextureInner,
+    sample_type: wgt::TextureSampleType,
+    aspects: <span class="kw">crate</span>::FormatAspects,
+    mip_levels: Range&lt;u32&gt;,
+    array_layers: Range&lt;u32&gt;,
+    format: wgt::TextureFormat,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Sampler</span> {
-    <span class="ident">raw</span>: <span class="ident">glow::Sampler</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>Sampler {
+    raw: glow::Sampler,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroupLayout</span> {
-    <span class="ident">entries</span>: <span class="ident">Arc</span>&lt;[<span class="ident">wgt::BindGroupLayoutEntry</span>]&gt;,
+<span class="kw">pub struct </span>BindGroupLayout {
+    entries: Arc&lt;[wgt::BindGroupLayoutEntry]&gt;,
 }
 
-<span class="kw">struct</span> <span class="ident">BindGroupLayoutInfo</span> {
-    <span class="ident">entries</span>: <span class="ident">Arc</span>&lt;[<span class="ident">wgt::BindGroupLayoutEntry</span>]&gt;,
-    <span class="doccomment">/// Mapping of resources, indexed by `binding`, into the whole layout space.</span>
-    <span class="doccomment">/// For texture resources, the value is the texture slot index.</span>
-    <span class="doccomment">/// For sampler resources, the value is the index of the sampler in the whole layout.</span>
-    <span class="doccomment">/// For buffers, the value is the uniform or storage slot index.</span>
-    <span class="doccomment">/// For unused bindings, the value is `!0`</span>
-    <span class="ident">binding_to_slot</span>: <span class="ident">Box</span>&lt;[<span class="ident">u8</span>]&gt;,
+<span class="kw">struct </span>BindGroupLayoutInfo {
+    entries: Arc&lt;[wgt::BindGroupLayoutEntry]&gt;,
+    <span class="doccomment">/// Mapping of resources, indexed by `binding`, into the whole layout space.
+    /// For texture resources, the value is the texture slot index.
+    /// For sampler resources, the value is the index of the sampler in the whole layout.
+    /// For buffers, the value is the uniform or storage slot index.
+    /// For unused bindings, the value is `!0`
+    </span>binding_to_slot: Box&lt;[u8]&gt;,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PipelineLayout</span> {
-    <span class="ident">group_infos</span>: <span class="ident">Box</span>&lt;[<span class="ident">BindGroupLayoutInfo</span>]&gt;,
-    <span class="ident">naga_options</span>: <span class="ident">naga::back::glsl::Options</span>,
+<span class="kw">pub struct </span>PipelineLayout {
+    group_infos: Box&lt;[BindGroupLayoutInfo]&gt;,
+    naga_options: naga::back::glsl::Options,
 }
 
-<span class="kw">impl</span> <span class="ident">PipelineLayout</span> {
-    <span class="kw">fn</span> <span class="ident">get_slot</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">br</span>: <span class="kw-2">&amp;</span><span class="ident">naga::ResourceBinding</span>) -&gt; <span class="ident">u8</span> {
-        <span class="kw">let</span> <span class="ident">group_info</span> = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">group_infos</span>[<span class="ident">br</span>.<span class="ident">group</span> <span class="kw">as</span> <span class="ident">usize</span>];
-        <span class="ident">group_info</span>.<span class="ident">binding_to_slot</span>[<span class="ident">br</span>.<span class="ident">binding</span> <span class="kw">as</span> <span class="ident">usize</span>]
+<span class="kw">impl </span>PipelineLayout {
+    <span class="kw">fn </span>get_slot(<span class="kw-2">&amp;</span><span class="self">self</span>, br: <span class="kw-2">&amp;</span>naga::ResourceBinding) -&gt; u8 {
+        <span class="kw">let </span>group_info = <span class="kw-2">&amp;</span><span class="self">self</span>.group_infos[br.group <span class="kw">as </span>usize];
+        group_info.binding_to_slot[br.binding <span class="kw">as </span>usize]
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">BindingRegister</span> {
-    <span class="ident">UniformBuffers</span>,
-    <span class="ident">StorageBuffers</span>,
-    <span class="ident">Textures</span>,
-    <span class="ident">Images</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">enum </span>BindingRegister {
+    UniformBuffers,
+    StorageBuffers,
+    Textures,
+    Images,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">RawBinding</span> {
-    <span class="ident">Buffer</span> {
-        <span class="ident">raw</span>: <span class="ident">glow::Buffer</span>,
-        <span class="ident">offset</span>: <span class="ident">i32</span>,
-        <span class="ident">size</span>: <span class="ident">i32</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">enum </span>RawBinding {
+    Buffer {
+        raw: glow::Buffer,
+        offset: i32,
+        size: i32,
     },
-    <span class="ident">Texture</span> {
-        <span class="ident">raw</span>: <span class="ident">glow::Texture</span>,
-        <span class="ident">target</span>: <span class="ident">BindTarget</span>,
-        <span class="comment">//TODO: mip levels, array layers</span>
-    },
-    <span class="ident">Image</span>(<span class="ident">ImageBinding</span>),
-    <span class="ident">Sampler</span>(<span class="ident">glow::Sampler</span>),
+    Texture {
+        raw: glow::Texture,
+        target: BindTarget,
+        <span class="comment">//TODO: mip levels, array layers
+    </span>},
+    Image(ImageBinding),
+    Sampler(glow::Sampler),
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BindGroup</span> {
-    <span class="ident">contents</span>: <span class="ident">Box</span>&lt;[<span class="ident">RawBinding</span>]&gt;,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>BindGroup {
+    contents: Box&lt;[RawBinding]&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ShaderModule</span> {
-    <span class="ident">naga</span>: <span class="ident"><span class="kw">crate</span>::NagaShader</span>,
-    <span class="ident">label</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">String</span>&gt;,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>ShaderModule {
+    naga: <span class="kw">crate</span>::NagaShader,
+    label: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">VertexFormatDesc</span> {
-    <span class="ident">element_count</span>: <span class="ident">i32</span>,
-    <span class="ident">element_format</span>: <span class="ident">u32</span>,
-    <span class="ident">attrib_kind</span>: <span class="ident">VertexAttribKind</span>,
+<span class="attribute">#[derive(Clone, Debug, Default)]</span>
+<span class="kw">struct </span>VertexFormatDesc {
+    element_count: i32,
+    element_format: u32,
+    attrib_kind: VertexAttribKind,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">AttributeDesc</span> {
-    <span class="ident">location</span>: <span class="ident">u32</span>,
-    <span class="ident">offset</span>: <span class="ident">u32</span>,
-    <span class="ident">buffer_index</span>: <span class="ident">u32</span>,
-    <span class="ident">format_desc</span>: <span class="ident">VertexFormatDesc</span>,
+<span class="attribute">#[derive(Clone, Debug, Default)]</span>
+<span class="kw">struct </span>AttributeDesc {
+    location: u32,
+    offset: u32,
+    buffer_index: u32,
+    format_desc: VertexFormatDesc,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">BufferBinding</span> {
-    <span class="ident">raw</span>: <span class="ident">glow::Buffer</span>,
-    <span class="ident">offset</span>: <span class="ident">wgt::BufferAddress</span>,
+<span class="attribute">#[derive(Clone, Debug)]</span>
+<span class="kw">struct </span>BufferBinding {
+    raw: glow::Buffer,
+    offset: wgt::BufferAddress,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">ImageBinding</span> {
-    <span class="ident">raw</span>: <span class="ident">glow::Texture</span>,
-    <span class="ident">mip_level</span>: <span class="ident">u32</span>,
-    <span class="ident">array_layer</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">u32</span>&gt;,
-    <span class="ident">access</span>: <span class="ident">u32</span>,
-    <span class="ident">format</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Clone, Debug)]</span>
+<span class="kw">struct </span>ImageBinding {
+    raw: glow::Texture,
+    mip_level: u32,
+    array_layer: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+    access: u32,
+    format: u32,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">VertexBufferDesc</span> {
-    <span class="ident">step</span>: <span class="ident">wgt::VertexStepMode</span>,
-    <span class="ident">stride</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Clone, Debug, Default, PartialEq)]</span>
+<span class="kw">struct </span>VertexBufferDesc {
+    step: wgt::VertexStepMode,
+    stride: u32,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">UniformDesc</span> {
-    <span class="ident">location</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">glow::UniformLocation</span>&gt;,
-    <span class="ident">size</span>: <span class="ident">u32</span>,
-    <span class="ident">utype</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Clone, Debug, Default)]</span>
+<span class="kw">struct </span>UniformDesc {
+    location: <span class="prelude-ty">Option</span>&lt;glow::UniformLocation&gt;,
+    size: u32,
+    utype: u32,
 }
 
-<span class="comment">// Safe: WASM doesn&#39;t have threads</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">UniformDesc</span> {}
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">UniformDesc</span> {}
+<span class="comment">// Safe: WASM doesn&#39;t have threads
+</span><span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]</span>
+<span class="kw">unsafe impl </span>Sync <span class="kw">for </span>UniformDesc {}
+<span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]</span>
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>UniformDesc {}
 
-<span class="doccomment">/// For each texture in the pipeline layout, store the index of the only</span>
-<span class="doccomment">/// sampler (in this layout) that the texture is used with.</span>
-<span class="kw">type</span> <span class="ident">SamplerBindMap</span> = [<span class="prelude-ty">Option</span>&lt;<span class="ident">u8</span>&gt;; <span class="ident">MAX_TEXTURE_SLOTS</span>];
+<span class="doccomment">/// For each texture in the pipeline layout, store the index of the only
+/// sampler (in this layout) that the texture is used with.
+</span><span class="kw">type </span>SamplerBindMap = [<span class="prelude-ty">Option</span>&lt;u8&gt;; MAX_TEXTURE_SLOTS];
 
-<span class="kw">struct</span> <span class="ident">PipelineInner</span> {
-    <span class="ident">program</span>: <span class="ident">glow::Program</span>,
-    <span class="ident">sampler_map</span>: <span class="ident">SamplerBindMap</span>,
-    <span class="ident">uniforms</span>: [<span class="ident">UniformDesc</span>; <span class="ident">MAX_PUSH_CONSTANTS</span>],
+<span class="kw">struct </span>PipelineInner {
+    program: glow::Program,
+    sampler_map: SamplerBindMap,
+    uniforms: [UniformDesc; MAX_PUSH_CONSTANTS],
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">DepthState</span> {
-    <span class="ident">function</span>: <span class="ident">u32</span>,
-    <span class="ident">mask</span>: <span class="ident">bool</span>,
+<span class="attribute">#[derive(Clone, Debug)]</span>
+<span class="kw">struct </span>DepthState {
+    function: u32,
+    mask: bool,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">BlendComponent</span> {
-    <span class="ident">src</span>: <span class="ident">u32</span>,
-    <span class="ident">dst</span>: <span class="ident">u32</span>,
-    <span class="ident">equation</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Clone, Debug, PartialEq)]</span>
+<span class="kw">struct </span>BlendComponent {
+    src: u32,
+    dst: u32,
+    equation: u32,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">BlendDesc</span> {
-    <span class="ident">alpha</span>: <span class="ident">BlendComponent</span>,
-    <span class="ident">color</span>: <span class="ident">BlendComponent</span>,
+<span class="attribute">#[derive(Clone, Debug, PartialEq)]</span>
+<span class="kw">struct </span>BlendDesc {
+    alpha: BlendComponent,
+    color: BlendComponent,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">ColorTargetDesc</span> {
-    <span class="ident">mask</span>: <span class="ident">wgt::ColorWrites</span>,
-    <span class="ident">blend</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">BlendDesc</span>&gt;,
+<span class="attribute">#[derive(Clone, Debug, Default, PartialEq)]</span>
+<span class="kw">struct </span>ColorTargetDesc {
+    mask: wgt::ColorWrites,
+    blend: <span class="prelude-ty">Option</span>&lt;BlendDesc&gt;,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RenderPipeline</span> {
-    <span class="ident">inner</span>: <span class="ident">PipelineInner</span>,
-    <span class="ident">primitive</span>: <span class="ident">wgt::PrimitiveState</span>,
-    <span class="ident">vertex_buffers</span>: <span class="ident">Box</span>&lt;[<span class="ident">VertexBufferDesc</span>]&gt;,
-    <span class="ident">vertex_attributes</span>: <span class="ident">Box</span>&lt;[<span class="ident">AttributeDesc</span>]&gt;,
-    <span class="ident">color_targets</span>: <span class="ident">Box</span>&lt;[<span class="ident">ColorTargetDesc</span>]&gt;,
-    <span class="ident">depth</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">DepthState</span>&gt;,
-    <span class="ident">depth_bias</span>: <span class="ident">wgt::DepthBiasState</span>,
-    <span class="ident">stencil</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">StencilState</span>&gt;,
+<span class="kw">pub struct </span>RenderPipeline {
+    inner: PipelineInner,
+    primitive: wgt::PrimitiveState,
+    vertex_buffers: Box&lt;[VertexBufferDesc]&gt;,
+    vertex_attributes: Box&lt;[AttributeDesc]&gt;,
+    color_targets: Box&lt;[ColorTargetDesc]&gt;,
+    depth: <span class="prelude-ty">Option</span>&lt;DepthState&gt;,
+    depth_bias: wgt::DepthBiasState,
+    stencil: <span class="prelude-ty">Option</span>&lt;StencilState&gt;,
 }
 
-<span class="comment">// SAFE: WASM doesn&#39;t have threads</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">RenderPipeline</span> {}
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">RenderPipeline</span> {}
+<span class="comment">// SAFE: WASM doesn&#39;t have threads
+</span><span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]</span>
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>RenderPipeline {}
+<span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]</span>
+<span class="kw">unsafe impl </span>Sync <span class="kw">for </span>RenderPipeline {}
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ComputePipeline</span> {
-    <span class="ident">inner</span>: <span class="ident">PipelineInner</span>,
+<span class="kw">pub struct </span>ComputePipeline {
+    inner: PipelineInner,
 }
 
-<span class="comment">// SAFE: WASM doesn&#39;t have threads</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">ComputePipeline</span> {}
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">ComputePipeline</span> {}
+<span class="comment">// SAFE: WASM doesn&#39;t have threads
+</span><span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]</span>
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>ComputePipeline {}
+<span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]</span>
+<span class="kw">unsafe impl </span>Sync <span class="kw">for </span>ComputePipeline {}
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">QuerySet</span> {
-    <span class="ident">queries</span>: <span class="ident">Box</span>&lt;[<span class="ident">glow::Query</span>]&gt;,
-    <span class="ident">target</span>: <span class="ident">BindTarget</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>QuerySet {
+    queries: Box&lt;[glow::Query]&gt;,
+    target: BindTarget,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Fence</span> {
-    <span class="ident">last_completed</span>: <span class="ident"><span class="kw">crate</span>::FenceValue</span>,
-    <span class="ident">pending</span>: <span class="ident">Vec</span>&lt;(<span class="ident"><span class="kw">crate</span>::FenceValue</span>, <span class="ident">glow::Fence</span>)&gt;,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>Fence {
+    last_completed: <span class="kw">crate</span>::FenceValue,
+    pending: Vec&lt;(<span class="kw">crate</span>::FenceValue, glow::Fence)&gt;,
 }
 
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">Fence</span> {}
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">Fence</span> {}
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>Fence {}
+<span class="kw">unsafe impl </span>Sync <span class="kw">for </span>Fence {}
 
-<span class="kw">impl</span> <span class="ident">Fence</span> {
-    <span class="kw">fn</span> <span class="ident">get_latest</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">glow::Context</span>) -&gt; <span class="ident"><span class="kw">crate</span>::FenceValue</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">max_value</span> = <span class="self">self</span>.<span class="ident">last_completed</span>;
-        <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="ident">value</span>, <span class="ident">sync</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">pending</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> <span class="ident">status</span> = <span class="kw">unsafe</span> { <span class="ident">gl</span>.<span class="ident">get_sync_status</span>(<span class="ident">sync</span>) };
-            <span class="kw">if</span> <span class="ident">status</span> == <span class="ident">glow::SIGNALED</span> {
-                <span class="ident">max_value</span> = <span class="ident">value</span>;
+<span class="kw">impl </span>Fence {
+    <span class="kw">fn </span>get_latest(<span class="kw-2">&amp;</span><span class="self">self</span>, gl: <span class="kw-2">&amp;</span>glow::Context) -&gt; <span class="kw">crate</span>::FenceValue {
+        <span class="kw">let </span><span class="kw-2">mut </span>max_value = <span class="self">self</span>.last_completed;
+        <span class="kw">for </span><span class="kw-2">&amp;</span>(value, sync) <span class="kw">in </span><span class="self">self</span>.pending.iter() {
+            <span class="kw">let </span>status = <span class="kw">unsafe </span>{ gl.get_sync_status(sync) };
+            <span class="kw">if </span>status == glow::SIGNALED {
+                max_value = value;
             }
         }
-        <span class="ident">max_value</span>
+        max_value
     }
 
-    <span class="kw">fn</span> <span class="ident">maintain</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">glow::Context</span>) {
-        <span class="kw">let</span> <span class="ident">latest</span> = <span class="self">self</span>.<span class="ident">get_latest</span>(<span class="ident">gl</span>);
-        <span class="kw">for</span> <span class="kw-2">&amp;</span>(<span class="ident">value</span>, <span class="ident">sync</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">pending</span>.<span class="ident">iter</span>() {
-            <span class="kw">if</span> <span class="ident">value</span> &lt;= <span class="ident">latest</span> {
-                <span class="kw">unsafe</span> {
-                    <span class="ident">gl</span>.<span class="ident">delete_sync</span>(<span class="ident">sync</span>);
+    <span class="kw">fn </span>maintain(<span class="kw-2">&amp;mut </span><span class="self">self</span>, gl: <span class="kw-2">&amp;</span>glow::Context) {
+        <span class="kw">let </span>latest = <span class="self">self</span>.get_latest(gl);
+        <span class="kw">for </span><span class="kw-2">&amp;</span>(value, sync) <span class="kw">in </span><span class="self">self</span>.pending.iter() {
+            <span class="kw">if </span>value &lt;= latest {
+                <span class="kw">unsafe </span>{
+                    gl.delete_sync(sync);
                 }
             }
         }
-        <span class="self">self</span>.<span class="ident">pending</span>.<span class="ident">retain</span>(|<span class="kw-2">&amp;</span>(<span class="ident">value</span>, <span class="kw">_</span>)| <span class="ident">value</span> &gt; <span class="ident">latest</span>);
-        <span class="self">self</span>.<span class="ident">last_completed</span> = <span class="ident">latest</span>;
+        <span class="self">self</span>.pending.retain(|<span class="kw-2">&amp;</span>(value, <span class="kw">_</span>)| value &gt; latest);
+        <span class="self">self</span>.last_completed = latest;
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">StencilOps</span> {
-    <span class="ident">pass</span>: <span class="ident">u32</span>,
-    <span class="ident">fail</span>: <span class="ident">u32</span>,
-    <span class="ident">depth_fail</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Clone, Debug, PartialEq)]</span>
+<span class="kw">struct </span>StencilOps {
+    pass: u32,
+    fail: u32,
+    depth_fail: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">StencilOps</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">pass</span>: <span class="ident">glow::KEEP</span>,
-            <span class="ident">fail</span>: <span class="ident">glow::KEEP</span>,
-            <span class="ident">depth_fail</span>: <span class="ident">glow::KEEP</span>,
+<span class="kw">impl </span>Default <span class="kw">for </span>StencilOps {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            pass: glow::KEEP,
+            fail: glow::KEEP,
+            depth_fail: glow::KEEP,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">StencilSide</span> {
-    <span class="ident">function</span>: <span class="ident">u32</span>,
-    <span class="ident">mask_read</span>: <span class="ident">u32</span>,
-    <span class="ident">mask_write</span>: <span class="ident">u32</span>,
-    <span class="ident">reference</span>: <span class="ident">u32</span>,
-    <span class="ident">ops</span>: <span class="ident">StencilOps</span>,
+<span class="attribute">#[derive(Clone, Debug, PartialEq)]</span>
+<span class="kw">struct </span>StencilSide {
+    function: u32,
+    mask_read: u32,
+    mask_write: u32,
+    reference: u32,
+    ops: StencilOps,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">StencilSide</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">function</span>: <span class="ident">glow::ALWAYS</span>,
-            <span class="ident">mask_read</span>: <span class="number">0xFF</span>,
-            <span class="ident">mask_write</span>: <span class="number">0xFF</span>,
-            <span class="ident">reference</span>: <span class="number">0</span>,
-            <span class="ident">ops</span>: <span class="ident">StencilOps::default</span>(),
+<span class="kw">impl </span>Default <span class="kw">for </span>StencilSide {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            function: glow::ALWAYS,
+            mask_read: <span class="number">0xFF</span>,
+            mask_write: <span class="number">0xFF</span>,
+            reference: <span class="number">0</span>,
+            ops: StencilOps::default(),
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">StencilState</span> {
-    <span class="ident">front</span>: <span class="ident">StencilSide</span>,
-    <span class="ident">back</span>: <span class="ident">StencilSide</span>,
+<span class="attribute">#[derive(Clone, Default)]</span>
+<span class="kw">struct </span>StencilState {
+    front: StencilSide,
+    back: StencilSide,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">PrimitiveState</span> {
-    <span class="ident">front_face</span>: <span class="ident">u32</span>,
-    <span class="ident">cull_face</span>: <span class="ident">u32</span>,
-    <span class="ident">unclipped_depth</span>: <span class="ident">bool</span>,
+<span class="attribute">#[derive(Clone, Debug, Default, PartialEq)]</span>
+<span class="kw">struct </span>PrimitiveState {
+    front_face: u32,
+    cull_face: u32,
+    unclipped_depth: bool,
 }
 
-<span class="kw">type</span> <span class="ident">InvalidatedAttachments</span> = <span class="ident">ArrayVec</span>&lt;<span class="ident">u32</span>, { <span class="ident"><span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS</span> + <span class="number">2</span> }&gt;;
+<span class="kw">type </span>InvalidatedAttachments = ArrayVec&lt;u32, { <span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS + <span class="number">2 </span>}&gt;;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">enum</span> <span class="ident">Command</span> {
-    <span class="ident">Draw</span> {
-        <span class="ident">topology</span>: <span class="ident">u32</span>,
-        <span class="ident">start_vertex</span>: <span class="ident">u32</span>,
-        <span class="ident">vertex_count</span>: <span class="ident">u32</span>,
-        <span class="ident">instance_count</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">enum </span>Command {
+    Draw {
+        topology: u32,
+        start_vertex: u32,
+        vertex_count: u32,
+        instance_count: u32,
     },
-    <span class="ident">DrawIndexed</span> {
-        <span class="ident">topology</span>: <span class="ident">u32</span>,
-        <span class="ident">index_type</span>: <span class="ident">u32</span>,
-        <span class="ident">index_count</span>: <span class="ident">u32</span>,
-        <span class="ident">index_offset</span>: <span class="ident">wgt::BufferAddress</span>,
-        <span class="ident">base_vertex</span>: <span class="ident">i32</span>,
-        <span class="ident">instance_count</span>: <span class="ident">u32</span>,
+    DrawIndexed {
+        topology: u32,
+        index_type: u32,
+        index_count: u32,
+        index_offset: wgt::BufferAddress,
+        base_vertex: i32,
+        instance_count: u32,
     },
-    <span class="ident">DrawIndirect</span> {
-        <span class="ident">topology</span>: <span class="ident">u32</span>,
-        <span class="ident">indirect_buf</span>: <span class="ident">glow::Buffer</span>,
-        <span class="ident">indirect_offset</span>: <span class="ident">wgt::BufferAddress</span>,
+    DrawIndirect {
+        topology: u32,
+        indirect_buf: glow::Buffer,
+        indirect_offset: wgt::BufferAddress,
     },
-    <span class="ident">DrawIndexedIndirect</span> {
-        <span class="ident">topology</span>: <span class="ident">u32</span>,
-        <span class="ident">index_type</span>: <span class="ident">u32</span>,
-        <span class="ident">indirect_buf</span>: <span class="ident">glow::Buffer</span>,
-        <span class="ident">indirect_offset</span>: <span class="ident">wgt::BufferAddress</span>,
+    DrawIndexedIndirect {
+        topology: u32,
+        index_type: u32,
+        indirect_buf: glow::Buffer,
+        indirect_offset: wgt::BufferAddress,
     },
-    <span class="ident">Dispatch</span>([<span class="ident">u32</span>; <span class="number">3</span>]),
-    <span class="ident">DispatchIndirect</span> {
-        <span class="ident">indirect_buf</span>: <span class="ident">glow::Buffer</span>,
-        <span class="ident">indirect_offset</span>: <span class="ident">wgt::BufferAddress</span>,
+    Dispatch([u32; <span class="number">3</span>]),
+    DispatchIndirect {
+        indirect_buf: glow::Buffer,
+        indirect_offset: wgt::BufferAddress,
     },
-    <span class="ident">ClearBuffer</span> {
-        <span class="ident">dst</span>: <span class="ident">Buffer</span>,
-        <span class="ident">dst_target</span>: <span class="ident">BindTarget</span>,
-        <span class="ident">range</span>: <span class="ident"><span class="kw">crate</span>::MemoryRange</span>,
+    ClearBuffer {
+        dst: Buffer,
+        dst_target: BindTarget,
+        range: <span class="kw">crate</span>::MemoryRange,
     },
-    <span class="ident">CopyBufferToBuffer</span> {
-        <span class="ident">src</span>: <span class="ident">Buffer</span>,
-        <span class="ident">src_target</span>: <span class="ident">BindTarget</span>,
-        <span class="ident">dst</span>: <span class="ident">Buffer</span>,
-        <span class="ident">dst_target</span>: <span class="ident">BindTarget</span>,
-        <span class="ident">copy</span>: <span class="ident"><span class="kw">crate</span>::BufferCopy</span>,
+    CopyBufferToBuffer {
+        src: Buffer,
+        src_target: BindTarget,
+        dst: Buffer,
+        dst_target: BindTarget,
+        copy: <span class="kw">crate</span>::BufferCopy,
     },
-    <span class="ident">CopyTextureToTexture</span> {
-        <span class="ident">src</span>: <span class="ident">glow::Texture</span>,
-        <span class="ident">src_target</span>: <span class="ident">BindTarget</span>,
-        <span class="ident">dst</span>: <span class="ident">glow::Texture</span>,
-        <span class="ident">dst_target</span>: <span class="ident">BindTarget</span>,
-        <span class="ident">copy</span>: <span class="ident"><span class="kw">crate</span>::TextureCopy</span>,
-        <span class="ident">dst_is_cubemap</span>: <span class="ident">bool</span>,
+    CopyTextureToTexture {
+        src: glow::Texture,
+        src_target: BindTarget,
+        dst: glow::Texture,
+        dst_target: BindTarget,
+        copy: <span class="kw">crate</span>::TextureCopy,
+        dst_is_cubemap: bool,
     },
-    <span class="ident">CopyBufferToTexture</span> {
-        <span class="ident">src</span>: <span class="ident">Buffer</span>,
-        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
-        <span class="ident">src_target</span>: <span class="ident">BindTarget</span>,
-        <span class="ident">dst</span>: <span class="ident">glow::Texture</span>,
-        <span class="ident">dst_target</span>: <span class="ident">BindTarget</span>,
-        <span class="ident">dst_format</span>: <span class="ident">wgt::TextureFormat</span>,
-        <span class="ident">copy</span>: <span class="ident"><span class="kw">crate</span>::BufferTextureCopy</span>,
+    CopyBufferToTexture {
+        src: Buffer,
+        <span class="attribute">#[allow(unused)]</span>
+        src_target: BindTarget,
+        dst: glow::Texture,
+        dst_target: BindTarget,
+        dst_format: wgt::TextureFormat,
+        copy: <span class="kw">crate</span>::BufferTextureCopy,
     },
-    <span class="ident">CopyTextureToBuffer</span> {
-        <span class="ident">src</span>: <span class="ident">glow::Texture</span>,
-        <span class="ident">src_target</span>: <span class="ident">BindTarget</span>,
-        <span class="ident">src_format</span>: <span class="ident">wgt::TextureFormat</span>,
-        <span class="ident">dst</span>: <span class="ident">Buffer</span>,
-        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused</span>)]</span>
-        <span class="ident">dst_target</span>: <span class="ident">BindTarget</span>,
-        <span class="ident">copy</span>: <span class="ident"><span class="kw">crate</span>::BufferTextureCopy</span>,
+    CopyTextureToBuffer {
+        src: glow::Texture,
+        src_target: BindTarget,
+        src_format: wgt::TextureFormat,
+        dst: Buffer,
+        <span class="attribute">#[allow(unused)]</span>
+        dst_target: BindTarget,
+        copy: <span class="kw">crate</span>::BufferTextureCopy,
     },
-    <span class="ident">SetIndexBuffer</span>(<span class="ident">glow::Buffer</span>),
-    <span class="ident">BeginQuery</span>(<span class="ident">glow::Query</span>, <span class="ident">BindTarget</span>),
-    <span class="ident">EndQuery</span>(<span class="ident">BindTarget</span>),
-    <span class="ident">CopyQueryResults</span> {
-        <span class="ident">query_range</span>: <span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;,
-        <span class="ident">dst</span>: <span class="ident">Buffer</span>,
-        <span class="ident">dst_target</span>: <span class="ident">BindTarget</span>,
-        <span class="ident">dst_offset</span>: <span class="ident">wgt::BufferAddress</span>,
+    SetIndexBuffer(glow::Buffer),
+    BeginQuery(glow::Query, BindTarget),
+    EndQuery(BindTarget),
+    CopyQueryResults {
+        query_range: Range&lt;u32&gt;,
+        dst: Buffer,
+        dst_target: BindTarget,
+        dst_offset: wgt::BufferAddress,
     },
-    <span class="ident">ResetFramebuffer</span> {
-        <span class="ident">is_default</span>: <span class="ident">bool</span>,
+    ResetFramebuffer {
+        is_default: bool,
     },
-    <span class="ident">BindAttachment</span> {
-        <span class="ident">attachment</span>: <span class="ident">u32</span>,
-        <span class="ident">view</span>: <span class="ident">TextureView</span>,
+    BindAttachment {
+        attachment: u32,
+        view: TextureView,
     },
-    <span class="ident">ResolveAttachment</span> {
-        <span class="ident">attachment</span>: <span class="ident">u32</span>,
-        <span class="ident">dst</span>: <span class="ident">TextureView</span>,
-        <span class="ident">size</span>: <span class="ident">wgt::Extent3d</span>,
+    ResolveAttachment {
+        attachment: u32,
+        dst: TextureView,
+        size: wgt::Extent3d,
     },
-    <span class="ident">InvalidateAttachments</span>(<span class="ident">InvalidatedAttachments</span>),
-    <span class="ident">SetDrawColorBuffers</span>(<span class="ident">u8</span>),
-    <span class="ident">ClearColorF</span> {
-        <span class="ident">draw_buffer</span>: <span class="ident">u32</span>,
-        <span class="ident">color</span>: [<span class="ident">f32</span>; <span class="number">4</span>],
-        <span class="ident">is_srgb</span>: <span class="ident">bool</span>,
+    InvalidateAttachments(InvalidatedAttachments),
+    SetDrawColorBuffers(u8),
+    ClearColorF {
+        draw_buffer: u32,
+        color: [f32; <span class="number">4</span>],
+        is_srgb: bool,
     },
-    <span class="ident">ClearColorU</span>(<span class="ident">u32</span>, [<span class="ident">u32</span>; <span class="number">4</span>]),
-    <span class="ident">ClearColorI</span>(<span class="ident">u32</span>, [<span class="ident">i32</span>; <span class="number">4</span>]),
-    <span class="ident">ClearDepth</span>(<span class="ident">f32</span>),
-    <span class="ident">ClearStencil</span>(<span class="ident">u32</span>),
-    <span class="comment">// Clearing both the depth and stencil buffer individually appears to</span>
-    <span class="comment">// result in the stencil buffer failing to clear, atleast in WebGL.</span>
-    <span class="comment">// It is also more efficient to emit a single command instead of two for</span>
-    <span class="comment">// this.</span>
-    <span class="ident">ClearDepthAndStencil</span>(<span class="ident">f32</span>, <span class="ident">u32</span>),
-    <span class="ident">BufferBarrier</span>(<span class="ident">glow::Buffer</span>, <span class="ident"><span class="kw">crate</span>::BufferUses</span>),
-    <span class="ident">TextureBarrier</span>(<span class="ident"><span class="kw">crate</span>::TextureUses</span>),
-    <span class="ident">SetViewport</span> {
-        <span class="ident">rect</span>: <span class="ident"><span class="kw">crate</span>::Rect</span>&lt;<span class="ident">i32</span>&gt;,
-        <span class="ident">depth</span>: <span class="ident">Range</span>&lt;<span class="ident">f32</span>&gt;,
+    ClearColorU(u32, [u32; <span class="number">4</span>]),
+    ClearColorI(u32, [i32; <span class="number">4</span>]),
+    ClearDepth(f32),
+    ClearStencil(u32),
+    <span class="comment">// Clearing both the depth and stencil buffer individually appears to
+    // result in the stencil buffer failing to clear, atleast in WebGL.
+    // It is also more efficient to emit a single command instead of two for
+    // this.
+    </span>ClearDepthAndStencil(f32, u32),
+    BufferBarrier(glow::Buffer, <span class="kw">crate</span>::BufferUses),
+    TextureBarrier(<span class="kw">crate</span>::TextureUses),
+    SetViewport {
+        rect: <span class="kw">crate</span>::Rect&lt;i32&gt;,
+        depth: Range&lt;f32&gt;,
     },
-    <span class="ident">SetScissor</span>(<span class="ident"><span class="kw">crate</span>::Rect</span>&lt;<span class="ident">i32</span>&gt;),
-    <span class="ident">SetStencilFunc</span> {
-        <span class="ident">face</span>: <span class="ident">u32</span>,
-        <span class="ident">function</span>: <span class="ident">u32</span>,
-        <span class="ident">reference</span>: <span class="ident">u32</span>,
-        <span class="ident">read_mask</span>: <span class="ident">u32</span>,
+    SetScissor(<span class="kw">crate</span>::Rect&lt;i32&gt;),
+    SetStencilFunc {
+        face: u32,
+        function: u32,
+        reference: u32,
+        read_mask: u32,
     },
-    <span class="ident">SetStencilOps</span> {
-        <span class="ident">face</span>: <span class="ident">u32</span>,
-        <span class="ident">write_mask</span>: <span class="ident">u32</span>,
-        <span class="ident">ops</span>: <span class="ident">StencilOps</span>,
+    SetStencilOps {
+        face: u32,
+        write_mask: u32,
+        ops: StencilOps,
     },
-    <span class="ident">SetDepth</span>(<span class="ident">DepthState</span>),
-    <span class="ident">SetDepthBias</span>(<span class="ident">wgt::DepthBiasState</span>),
-    <span class="ident">ConfigureDepthStencil</span>(<span class="ident"><span class="kw">crate</span>::FormatAspects</span>),
-    <span class="ident">SetVertexAttribute</span> {
-        <span class="ident">buffer</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">glow::Buffer</span>&gt;,
-        <span class="ident">buffer_desc</span>: <span class="ident">VertexBufferDesc</span>,
-        <span class="ident">attribute_desc</span>: <span class="ident">AttributeDesc</span>,
+    SetDepth(DepthState),
+    SetDepthBias(wgt::DepthBiasState),
+    ConfigureDepthStencil(<span class="kw">crate</span>::FormatAspects),
+    SetVertexAttribute {
+        buffer: <span class="prelude-ty">Option</span>&lt;glow::Buffer&gt;,
+        buffer_desc: VertexBufferDesc,
+        attribute_desc: AttributeDesc,
     },
-    <span class="ident">UnsetVertexAttribute</span>(<span class="ident">u32</span>),
-    <span class="ident">SetVertexBuffer</span> {
-        <span class="ident">index</span>: <span class="ident">u32</span>,
-        <span class="ident">buffer</span>: <span class="ident">BufferBinding</span>,
-        <span class="ident">buffer_desc</span>: <span class="ident">VertexBufferDesc</span>,
+    UnsetVertexAttribute(u32),
+    SetVertexBuffer {
+        index: u32,
+        buffer: BufferBinding,
+        buffer_desc: VertexBufferDesc,
     },
-    <span class="ident">SetProgram</span>(<span class="ident">glow::Program</span>),
-    <span class="ident">SetPrimitive</span>(<span class="ident">PrimitiveState</span>),
-    <span class="ident">SetBlendConstant</span>([<span class="ident">f32</span>; <span class="number">4</span>]),
-    <span class="ident">SetColorTarget</span> {
-        <span class="ident">draw_buffer_index</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">u32</span>&gt;,
-        <span class="ident">desc</span>: <span class="ident">ColorTargetDesc</span>,
+    SetProgram(glow::Program),
+    SetPrimitive(PrimitiveState),
+    SetBlendConstant([f32; <span class="number">4</span>]),
+    SetColorTarget {
+        draw_buffer_index: <span class="prelude-ty">Option</span>&lt;u32&gt;,
+        desc: ColorTargetDesc,
     },
-    <span class="ident">BindBuffer</span> {
-        <span class="ident">target</span>: <span class="ident">BindTarget</span>,
-        <span class="ident">slot</span>: <span class="ident">u32</span>,
-        <span class="ident">buffer</span>: <span class="ident">glow::Buffer</span>,
-        <span class="ident">offset</span>: <span class="ident">i32</span>,
-        <span class="ident">size</span>: <span class="ident">i32</span>,
+    BindBuffer {
+        target: BindTarget,
+        slot: u32,
+        buffer: glow::Buffer,
+        offset: i32,
+        size: i32,
     },
-    <span class="ident">BindSampler</span>(<span class="ident">u32</span>, <span class="prelude-ty">Option</span>&lt;<span class="ident">glow::Sampler</span>&gt;),
-    <span class="ident">BindTexture</span> {
-        <span class="ident">slot</span>: <span class="ident">u32</span>,
-        <span class="ident">texture</span>: <span class="ident">glow::Texture</span>,
-        <span class="ident">target</span>: <span class="ident">BindTarget</span>,
+    BindSampler(u32, <span class="prelude-ty">Option</span>&lt;glow::Sampler&gt;),
+    BindTexture {
+        slot: u32,
+        texture: glow::Texture,
+        target: BindTarget,
     },
-    <span class="ident">BindImage</span> {
-        <span class="ident">slot</span>: <span class="ident">u32</span>,
-        <span class="ident">binding</span>: <span class="ident">ImageBinding</span>,
+    BindImage {
+        slot: u32,
+        binding: ImageBinding,
     },
-    <span class="ident">InsertDebugMarker</span>(<span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;),
-    <span class="ident">PushDebugGroup</span>(<span class="ident">Range</span>&lt;<span class="ident">u32</span>&gt;),
-    <span class="ident">PopDebugGroup</span>,
-    <span class="ident">SetPushConstants</span> {
-        <span class="ident">uniform</span>: <span class="ident">UniformDesc</span>,
-        <span class="doccomment">/// Offset from the start of the `data_bytes`</span>
-        <span class="ident">offset</span>: <span class="ident">u32</span>,
+    InsertDebugMarker(Range&lt;u32&gt;),
+    PushDebugGroup(Range&lt;u32&gt;),
+    PopDebugGroup,
+    SetPushConstants {
+        uniform: UniformDesc,
+        <span class="doccomment">/// Offset from the start of the `data_bytes`
+        </span>offset: u32,
     },
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CommandBuffer</span> {
-    <span class="ident">label</span>: <span class="prelude-ty">Option</span>&lt;<span class="ident">String</span>&gt;,
-    <span class="ident">commands</span>: <span class="ident">Vec</span>&lt;<span class="ident">Command</span>&gt;,
-    <span class="ident">data_bytes</span>: <span class="ident">Vec</span>&lt;<span class="ident">u8</span>&gt;,
-    <span class="ident">queries</span>: <span class="ident">Vec</span>&lt;<span class="ident">glow::Query</span>&gt;,
+<span class="attribute">#[derive(Default)]</span>
+<span class="kw">pub struct </span>CommandBuffer {
+    label: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    commands: Vec&lt;Command&gt;,
+    data_bytes: Vec&lt;u8&gt;,
+    queries: Vec&lt;glow::Query&gt;,
 }
 
-<span class="comment">//TODO: we would have something like `Arc&lt;typed_arena::Arena&gt;`</span>
-<span class="comment">// here and in the command buffers. So that everything grows</span>
-<span class="comment">// inside the encoder and stays there until `reset_all`.</span>
+<span class="comment">//TODO: we would have something like `Arc&lt;typed_arena::Arena&gt;`
+// here and in the command buffers. So that everything grows
+// inside the encoder and stays there until `reset_all`.
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CommandEncoder</span> {
-    <span class="ident">cmd_buffer</span>: <span class="ident">CommandBuffer</span>,
-    <span class="ident">state</span>: <span class="ident">command::State</span>,
-    <span class="ident">private_caps</span>: <span class="ident">PrivateCapabilities</span>,
+</span><span class="kw">pub struct </span>CommandEncoder {
+    cmd_buffer: CommandBuffer,
+    state: command::State,
+    private_caps: PrivateCapabilities,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (75b7e52e9 2022-08-13)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (e1b28cd2f 2022-08-19)" ></div></body></html>

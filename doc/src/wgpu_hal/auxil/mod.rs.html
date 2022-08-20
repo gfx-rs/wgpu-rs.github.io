@@ -93,100 +93,100 @@
 <span id="93">93</span>
 <span id="94">94</span>
 <span id="95">95</span>
-</pre><pre class="rust"><code><span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(<span class="ident">feature</span> = <span class="string">&quot;dx11&quot;</span>, <span class="ident">feature</span> = <span class="string">&quot;dx12&quot;</span>))]</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">mod</span> <span class="ident">dxgi</span>;
+</pre><pre class="rust"><code><span class="attribute">#[cfg(any(feature = <span class="string">&quot;dx11&quot;</span>, feature = <span class="string">&quot;dx12&quot;</span>))]</span>
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">mod </span>dxgi;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> = <span class="string">&quot;renderdoc&quot;</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">mod</span> <span class="ident">renderdoc</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;renderdoc&quot;</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">mod </span>renderdoc;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">db</span> {
-    <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">intel</span> {
-        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VENDOR</span>: <span class="ident">u32</span> = <span class="number">0x8086</span>;
-        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_KABY_LAKE_MASK</span>: <span class="ident">u32</span> = <span class="number">0x5900</span>;
-        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEVICE_SKY_LAKE_MASK</span>: <span class="ident">u32</span> = <span class="number">0x1900</span>;
+<span class="kw">pub mod </span>db {
+    <span class="kw">pub mod </span>intel {
+        <span class="kw">pub const </span>VENDOR: u32 = <span class="number">0x8086</span>;
+        <span class="kw">pub const </span>DEVICE_KABY_LAKE_MASK: u32 = <span class="number">0x5900</span>;
+        <span class="kw">pub const </span>DEVICE_SKY_LAKE_MASK: u32 = <span class="number">0x1900</span>;
     }
-    <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">nvidia</span> {
-        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VENDOR</span>: <span class="ident">u32</span> = <span class="number">0x10DE</span>;
+    <span class="kw">pub mod </span>nvidia {
+        <span class="kw">pub const </span>VENDOR: u32 = <span class="number">0x10DE</span>;
     }
-    <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">qualcomm</span> {
-        <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">VENDOR</span>: <span class="ident">u32</span> = <span class="number">0x5143</span>;
-    }
-}
-
-<span class="doccomment">/// Maximum binding size for the shaders that only support `i32` indexing.</span>
-<span class="doccomment">/// Interestingly, the index itself can&#39;t reach that high, because the minimum</span>
-<span class="doccomment">/// element size is 4 bytes, but the compiler toolchain still computes the</span>
-<span class="doccomment">/// offset at some intermediate point, internally, as i32.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">MAX_I32_BINDING_SIZE</span>: <span class="ident">u32</span> = <span class="number">1</span> &lt;&lt; <span class="number">31</span>;
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_naga_stage</span>(<span class="ident">stage</span>: <span class="ident">naga::ShaderStage</span>) -&gt; <span class="ident">wgt::ShaderStages</span> {
-    <span class="kw">match</span> <span class="ident">stage</span> {
-        <span class="ident">naga::ShaderStage::Vertex</span> =&gt; <span class="ident">wgt::ShaderStages::VERTEX</span>,
-        <span class="ident">naga::ShaderStage::Fragment</span> =&gt; <span class="ident">wgt::ShaderStages::FRAGMENT</span>,
-        <span class="ident">naga::ShaderStage::Compute</span> =&gt; <span class="ident">wgt::ShaderStages::COMPUTE</span>,
+    <span class="kw">pub mod </span>qualcomm {
+        <span class="kw">pub const </span>VENDOR: u32 = <span class="number">0x5143</span>;
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">align_to</span>(<span class="ident">value</span>: <span class="ident">u32</span>, <span class="ident">alignment</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
-    <span class="kw">if</span> <span class="ident">alignment</span>.<span class="ident">is_power_of_two</span>() {
-        (<span class="ident">value</span> + <span class="ident">alignment</span> - <span class="number">1</span>) &amp; !(<span class="ident">alignment</span> - <span class="number">1</span>)
-    } <span class="kw">else</span> {
-        <span class="kw">match</span> <span class="ident">value</span> % <span class="ident">alignment</span> {
-            <span class="number">0</span> =&gt; <span class="ident">value</span>,
-            <span class="ident">other</span> =&gt; <span class="ident">value</span> - <span class="ident">other</span> + <span class="ident">alignment</span>,
+<span class="doccomment">/// Maximum binding size for the shaders that only support `i32` indexing.
+/// Interestingly, the index itself can&#39;t reach that high, because the minimum
+/// element size is 4 bytes, but the compiler toolchain still computes the
+/// offset at some intermediate point, internally, as i32.
+</span><span class="kw">pub const </span>MAX_I32_BINDING_SIZE: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">31</span>;
+
+<span class="kw">pub fn </span>map_naga_stage(stage: naga::ShaderStage) -&gt; wgt::ShaderStages {
+    <span class="kw">match </span>stage {
+        naga::ShaderStage::Vertex =&gt; wgt::ShaderStages::VERTEX,
+        naga::ShaderStage::Fragment =&gt; wgt::ShaderStages::FRAGMENT,
+        naga::ShaderStage::Compute =&gt; wgt::ShaderStages::COMPUTE,
+    }
+}
+
+<span class="kw">pub fn </span>align_to(value: u32, alignment: u32) -&gt; u32 {
+    <span class="kw">if </span>alignment.is_power_of_two() {
+        (value + alignment - <span class="number">1</span>) &amp; !(alignment - <span class="number">1</span>)
+    } <span class="kw">else </span>{
+        <span class="kw">match </span>value % alignment {
+            <span class="number">0 </span>=&gt; value,
+            other =&gt; value - other + alignment,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::CopyExtent</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">min</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">width</span>: <span class="self">self</span>.<span class="ident">width</span>.<span class="ident">min</span>(<span class="ident">other</span>.<span class="ident">width</span>),
-            <span class="ident">height</span>: <span class="self">self</span>.<span class="ident">height</span>.<span class="ident">min</span>(<span class="ident">other</span>.<span class="ident">height</span>),
-            <span class="ident">depth</span>: <span class="self">self</span>.<span class="ident">depth</span>.<span class="ident">min</span>(<span class="ident">other</span>.<span class="ident">depth</span>),
+<span class="kw">impl </span><span class="kw">crate</span>::CopyExtent {
+    <span class="kw">pub fn </span>min(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            width: <span class="self">self</span>.width.min(other.width),
+            height: <span class="self">self</span>.height.min(other.height),
+            depth: <span class="self">self</span>.depth.min(other.depth),
         }
     }
 
-    <span class="comment">// Get the copy size at a specific mipmap level. This doesn&#39;t make most sense,</span>
-    <span class="comment">// since the copy extents are provided *for* a mipmap level to start with.</span>
-    <span class="comment">// But backends use `CopyExtent` more sparingly, and this piece is shared.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">at_mip_level</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">level</span>: <span class="ident">u32</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">width</span>: (<span class="self">self</span>.<span class="ident">width</span> &gt;&gt; <span class="ident">level</span>).<span class="ident">max</span>(<span class="number">1</span>),
-            <span class="ident">height</span>: (<span class="self">self</span>.<span class="ident">height</span> &gt;&gt; <span class="ident">level</span>).<span class="ident">max</span>(<span class="number">1</span>),
-            <span class="ident">depth</span>: (<span class="self">self</span>.<span class="ident">depth</span> &gt;&gt; <span class="ident">level</span>).<span class="ident">max</span>(<span class="number">1</span>),
-        }
-    }
-}
-
-<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::TextureCopyBase</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">max_copy_size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">full_size</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::CopyExtent</span>) -&gt; <span class="ident"><span class="kw">crate</span>::CopyExtent</span> {
-        <span class="kw">let</span> <span class="ident">mip</span> = <span class="ident">full_size</span>.<span class="ident">at_mip_level</span>(<span class="self">self</span>.<span class="ident">mip_level</span>);
-        <span class="ident"><span class="kw">crate</span>::CopyExtent</span> {
-            <span class="ident">width</span>: <span class="ident">mip</span>.<span class="ident">width</span> - <span class="self">self</span>.<span class="ident">origin</span>.<span class="ident">x</span>,
-            <span class="ident">height</span>: <span class="ident">mip</span>.<span class="ident">height</span> - <span class="self">self</span>.<span class="ident">origin</span>.<span class="ident">y</span>,
-            <span class="ident">depth</span>: <span class="ident">mip</span>.<span class="ident">depth</span> - <span class="self">self</span>.<span class="ident">origin</span>.<span class="ident">z</span>,
+    <span class="comment">// Get the copy size at a specific mipmap level. This doesn&#39;t make most sense,
+    // since the copy extents are provided *for* a mipmap level to start with.
+    // But backends use `CopyExtent` more sparingly, and this piece is shared.
+    </span><span class="kw">pub fn </span>at_mip_level(<span class="kw-2">&amp;</span><span class="self">self</span>, level: u32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            width: (<span class="self">self</span>.width &gt;&gt; level).max(<span class="number">1</span>),
+            height: (<span class="self">self</span>.height &gt;&gt; level).max(<span class="number">1</span>),
+            depth: (<span class="self">self</span>.depth &gt;&gt; level).max(<span class="number">1</span>),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::BufferTextureCopy</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clamp_size_to_virtual</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">full_size</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::CopyExtent</span>) {
-        <span class="kw">let</span> <span class="ident">max_size</span> = <span class="self">self</span>.<span class="ident">texture_base</span>.<span class="ident">max_copy_size</span>(<span class="ident">full_size</span>);
-        <span class="self">self</span>.<span class="ident">size</span> = <span class="self">self</span>.<span class="ident">size</span>.<span class="ident">min</span>(<span class="kw-2">&amp;</span><span class="ident">max_size</span>);
+<span class="kw">impl </span><span class="kw">crate</span>::TextureCopyBase {
+    <span class="kw">pub fn </span>max_copy_size(<span class="kw-2">&amp;</span><span class="self">self</span>, full_size: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CopyExtent) -&gt; <span class="kw">crate</span>::CopyExtent {
+        <span class="kw">let </span>mip = full_size.at_mip_level(<span class="self">self</span>.mip_level);
+        <span class="kw">crate</span>::CopyExtent {
+            width: mip.width - <span class="self">self</span>.origin.x,
+            height: mip.height - <span class="self">self</span>.origin.y,
+            depth: mip.depth - <span class="self">self</span>.origin.z,
+        }
     }
 }
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::TextureCopy</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clamp_size_to_virtual</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">full_src_size</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::CopyExtent</span>,
-        <span class="ident">full_dst_size</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">crate</span>::CopyExtent</span>,
+<span class="kw">impl </span><span class="kw">crate</span>::BufferTextureCopy {
+    <span class="kw">pub fn </span>clamp_size_to_virtual(<span class="kw-2">&amp;mut </span><span class="self">self</span>, full_size: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CopyExtent) {
+        <span class="kw">let </span>max_size = <span class="self">self</span>.texture_base.max_copy_size(full_size);
+        <span class="self">self</span>.size = <span class="self">self</span>.size.min(<span class="kw-2">&amp;</span>max_size);
+    }
+}
+
+<span class="kw">impl </span><span class="kw">crate</span>::TextureCopy {
+    <span class="kw">pub fn </span>clamp_size_to_virtual(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        full_src_size: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CopyExtent,
+        full_dst_size: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CopyExtent,
     ) {
-        <span class="kw">let</span> <span class="ident">max_src_size</span> = <span class="self">self</span>.<span class="ident">src_base</span>.<span class="ident">max_copy_size</span>(<span class="ident">full_src_size</span>);
-        <span class="kw">let</span> <span class="ident">max_dst_size</span> = <span class="self">self</span>.<span class="ident">dst_base</span>.<span class="ident">max_copy_size</span>(<span class="ident">full_dst_size</span>);
-        <span class="self">self</span>.<span class="ident">size</span> = <span class="self">self</span>.<span class="ident">size</span>.<span class="ident">min</span>(<span class="kw-2">&amp;</span><span class="ident">max_src_size</span>).<span class="ident">min</span>(<span class="kw-2">&amp;</span><span class="ident">max_dst_size</span>);
+        <span class="kw">let </span>max_src_size = <span class="self">self</span>.src_base.max_copy_size(full_src_size);
+        <span class="kw">let </span>max_dst_size = <span class="self">self</span>.dst_base.max_copy_size(full_dst_size);
+        <span class="self">self</span>.size = <span class="self">self</span>.size.min(<span class="kw-2">&amp;</span>max_src_size).min(<span class="kw-2">&amp;</span>max_dst_size);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (75b7e52e9 2022-08-13)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (e1b28cd2f 2022-08-19)" ></div></body></html>

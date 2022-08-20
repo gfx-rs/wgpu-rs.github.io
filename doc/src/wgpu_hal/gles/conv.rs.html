@@ -442,449 +442,449 @@
 <span id="442">442</span>
 <span id="443">443</span>
 <span id="444">444</span>
-</pre><pre class="rust"><code><span class="kw">impl</span> <span class="ident"><span class="kw">super</span>::AdapterShared</span> {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">describe_texture_format</span>(
+</pre><pre class="rust"><code><span class="kw">impl </span><span class="kw">super</span>::AdapterShared {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>describe_texture_format(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">texture_format</span>: <span class="ident">wgt::TextureFormat</span>,
-    ) -&gt; <span class="ident"><span class="kw">super</span>::TextureFormatDesc</span> {
-        <span class="kw">use</span> <span class="ident">wgt::TextureFormat</span> <span class="kw">as</span> <span class="ident">Tf</span>;
-        <span class="kw">use</span> <span class="ident">wgt</span>::{<span class="ident">AstcBlock</span>, <span class="ident">AstcChannel</span>};
+        texture_format: wgt::TextureFormat,
+    ) -&gt; <span class="kw">super</span>::TextureFormatDesc {
+        <span class="kw">use </span>wgt::TextureFormat <span class="kw">as </span>Tf;
+        <span class="kw">use </span>wgt::{AstcBlock, AstcChannel};
 
-        <span class="kw">let</span> (<span class="ident">internal</span>, <span class="ident">external</span>, <span class="ident">data_type</span>) = <span class="kw">match</span> <span class="ident">texture_format</span> {
-            <span class="ident">Tf::R8Unorm</span> =&gt; (<span class="ident">glow::R8</span>, <span class="ident">glow::RED</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
-            <span class="ident">Tf::R8Snorm</span> =&gt; (<span class="ident">glow::R8_SNORM</span>, <span class="ident">glow::RED</span>, <span class="ident">glow::BYTE</span>),
-            <span class="ident">Tf::R8Uint</span> =&gt; (<span class="ident">glow::R8UI</span>, <span class="ident">glow::RED_INTEGER</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
-            <span class="ident">Tf::R8Sint</span> =&gt; (<span class="ident">glow::R8I</span>, <span class="ident">glow::RED_INTEGER</span>, <span class="ident">glow::BYTE</span>),
-            <span class="ident">Tf::R16Uint</span> =&gt; (<span class="ident">glow::R16UI</span>, <span class="ident">glow::RED_INTEGER</span>, <span class="ident">glow::UNSIGNED_SHORT</span>),
-            <span class="ident">Tf::R16Sint</span> =&gt; (<span class="ident">glow::R16I</span>, <span class="ident">glow::RED_INTEGER</span>, <span class="ident">glow::SHORT</span>),
-            <span class="ident">Tf::R16Unorm</span> =&gt; (<span class="ident">glow::R16</span>, <span class="ident">glow::RED</span>, <span class="ident">glow::UNSIGNED_SHORT</span>),
-            <span class="ident">Tf::R16Snorm</span> =&gt; (<span class="ident">glow::R16_SNORM</span>, <span class="ident">glow::RED</span>, <span class="ident">glow::SHORT</span>),
-            <span class="ident">Tf::R16Float</span> =&gt; (<span class="ident">glow::R16F</span>, <span class="ident">glow::RED</span>, <span class="ident">glow::HALF_FLOAT</span>),
-            <span class="ident">Tf::Rg8Unorm</span> =&gt; (<span class="ident">glow::RG8</span>, <span class="ident">glow::RG</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
-            <span class="ident">Tf::Rg8Snorm</span> =&gt; (<span class="ident">glow::RG8_SNORM</span>, <span class="ident">glow::RG</span>, <span class="ident">glow::BYTE</span>),
-            <span class="ident">Tf::Rg8Uint</span> =&gt; (<span class="ident">glow::RG8UI</span>, <span class="ident">glow::RG_INTEGER</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
-            <span class="ident">Tf::Rg8Sint</span> =&gt; (<span class="ident">glow::RG8I</span>, <span class="ident">glow::RG_INTEGER</span>, <span class="ident">glow::BYTE</span>),
-            <span class="ident">Tf::R32Uint</span> =&gt; (<span class="ident">glow::R32UI</span>, <span class="ident">glow::RED_INTEGER</span>, <span class="ident">glow::UNSIGNED_INT</span>),
-            <span class="ident">Tf::R32Sint</span> =&gt; (<span class="ident">glow::R32I</span>, <span class="ident">glow::RED_INTEGER</span>, <span class="ident">glow::INT</span>),
-            <span class="ident">Tf::R32Float</span> =&gt; (<span class="ident">glow::R32F</span>, <span class="ident">glow::RED</span>, <span class="ident">glow::FLOAT</span>),
-            <span class="ident">Tf::Rg16Uint</span> =&gt; (<span class="ident">glow::RG16UI</span>, <span class="ident">glow::RG_INTEGER</span>, <span class="ident">glow::UNSIGNED_SHORT</span>),
-            <span class="ident">Tf::Rg16Sint</span> =&gt; (<span class="ident">glow::RG16I</span>, <span class="ident">glow::RG_INTEGER</span>, <span class="ident">glow::SHORT</span>),
-            <span class="ident">Tf::Rg16Unorm</span> =&gt; (<span class="ident">glow::RG16</span>, <span class="ident">glow::RG</span>, <span class="ident">glow::UNSIGNED_SHORT</span>),
-            <span class="ident">Tf::Rg16Snorm</span> =&gt; (<span class="ident">glow::RG16_SNORM</span>, <span class="ident">glow::RG</span>, <span class="ident">glow::SHORT</span>),
-            <span class="ident">Tf::Rg16Float</span> =&gt; (<span class="ident">glow::RG16F</span>, <span class="ident">glow::RG</span>, <span class="ident">glow::HALF_FLOAT</span>),
-            <span class="ident">Tf::Rgba8Unorm</span> =&gt; (<span class="ident">glow::RGBA8</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
-            <span class="ident">Tf::Rgba8UnormSrgb</span> =&gt; (<span class="ident">glow::SRGB8_ALPHA8</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
-            <span class="ident">Tf::Bgra8UnormSrgb</span> =&gt; (<span class="ident">glow::SRGB8_ALPHA8</span>, <span class="ident">glow::BGRA</span>, <span class="ident">glow::UNSIGNED_BYTE</span>), <span class="comment">//TODO?</span>
-            <span class="ident">Tf::Rgba8Snorm</span> =&gt; (<span class="ident">glow::RGBA8_SNORM</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::BYTE</span>),
-            <span class="ident">Tf::Bgra8Unorm</span> =&gt; (<span class="ident">glow::RGBA8</span>, <span class="ident">glow::BGRA</span>, <span class="ident">glow::UNSIGNED_BYTE</span>), <span class="comment">//TODO?</span>
-            <span class="ident">Tf::Rgba8Uint</span> =&gt; (<span class="ident">glow::RGBA8UI</span>, <span class="ident">glow::RGBA_INTEGER</span>, <span class="ident">glow::UNSIGNED_BYTE</span>),
-            <span class="ident">Tf::Rgba8Sint</span> =&gt; (<span class="ident">glow::RGBA8I</span>, <span class="ident">glow::RGBA_INTEGER</span>, <span class="ident">glow::BYTE</span>),
-            <span class="ident">Tf::Rgb10a2Unorm</span> =&gt; (
-                <span class="ident">glow::RGB10_A2</span>,
-                <span class="ident">glow::RGBA</span>,
-                <span class="ident">glow::UNSIGNED_INT_2_10_10_10_REV</span>,
+        <span class="kw">let </span>(internal, external, data_type) = <span class="kw">match </span>texture_format {
+            Tf::R8Unorm =&gt; (glow::R8, glow::RED, glow::UNSIGNED_BYTE),
+            Tf::R8Snorm =&gt; (glow::R8_SNORM, glow::RED, glow::BYTE),
+            Tf::R8Uint =&gt; (glow::R8UI, glow::RED_INTEGER, glow::UNSIGNED_BYTE),
+            Tf::R8Sint =&gt; (glow::R8I, glow::RED_INTEGER, glow::BYTE),
+            Tf::R16Uint =&gt; (glow::R16UI, glow::RED_INTEGER, glow::UNSIGNED_SHORT),
+            Tf::R16Sint =&gt; (glow::R16I, glow::RED_INTEGER, glow::SHORT),
+            Tf::R16Unorm =&gt; (glow::R16, glow::RED, glow::UNSIGNED_SHORT),
+            Tf::R16Snorm =&gt; (glow::R16_SNORM, glow::RED, glow::SHORT),
+            Tf::R16Float =&gt; (glow::R16F, glow::RED, glow::HALF_FLOAT),
+            Tf::Rg8Unorm =&gt; (glow::RG8, glow::RG, glow::UNSIGNED_BYTE),
+            Tf::Rg8Snorm =&gt; (glow::RG8_SNORM, glow::RG, glow::BYTE),
+            Tf::Rg8Uint =&gt; (glow::RG8UI, glow::RG_INTEGER, glow::UNSIGNED_BYTE),
+            Tf::Rg8Sint =&gt; (glow::RG8I, glow::RG_INTEGER, glow::BYTE),
+            Tf::R32Uint =&gt; (glow::R32UI, glow::RED_INTEGER, glow::UNSIGNED_INT),
+            Tf::R32Sint =&gt; (glow::R32I, glow::RED_INTEGER, glow::INT),
+            Tf::R32Float =&gt; (glow::R32F, glow::RED, glow::FLOAT),
+            Tf::Rg16Uint =&gt; (glow::RG16UI, glow::RG_INTEGER, glow::UNSIGNED_SHORT),
+            Tf::Rg16Sint =&gt; (glow::RG16I, glow::RG_INTEGER, glow::SHORT),
+            Tf::Rg16Unorm =&gt; (glow::RG16, glow::RG, glow::UNSIGNED_SHORT),
+            Tf::Rg16Snorm =&gt; (glow::RG16_SNORM, glow::RG, glow::SHORT),
+            Tf::Rg16Float =&gt; (glow::RG16F, glow::RG, glow::HALF_FLOAT),
+            Tf::Rgba8Unorm =&gt; (glow::RGBA8, glow::RGBA, glow::UNSIGNED_BYTE),
+            Tf::Rgba8UnormSrgb =&gt; (glow::SRGB8_ALPHA8, glow::RGBA, glow::UNSIGNED_BYTE),
+            Tf::Bgra8UnormSrgb =&gt; (glow::SRGB8_ALPHA8, glow::BGRA, glow::UNSIGNED_BYTE), <span class="comment">//TODO?
+            </span>Tf::Rgba8Snorm =&gt; (glow::RGBA8_SNORM, glow::RGBA, glow::BYTE),
+            Tf::Bgra8Unorm =&gt; (glow::RGBA8, glow::BGRA, glow::UNSIGNED_BYTE), <span class="comment">//TODO?
+            </span>Tf::Rgba8Uint =&gt; (glow::RGBA8UI, glow::RGBA_INTEGER, glow::UNSIGNED_BYTE),
+            Tf::Rgba8Sint =&gt; (glow::RGBA8I, glow::RGBA_INTEGER, glow::BYTE),
+            Tf::Rgb10a2Unorm =&gt; (
+                glow::RGB10_A2,
+                glow::RGBA,
+                glow::UNSIGNED_INT_2_10_10_10_REV,
             ),
-            <span class="ident">Tf::Rg11b10Float</span> =&gt; (
-                <span class="ident">glow::R11F_G11F_B10F</span>,
-                <span class="ident">glow::RGB</span>,
-                <span class="ident">glow::UNSIGNED_INT_10F_11F_11F_REV</span>,
+            Tf::Rg11b10Float =&gt; (
+                glow::R11F_G11F_B10F,
+                glow::RGB,
+                glow::UNSIGNED_INT_10F_11F_11F_REV,
             ),
-            <span class="ident">Tf::Rg32Uint</span> =&gt; (<span class="ident">glow::RG32UI</span>, <span class="ident">glow::RG_INTEGER</span>, <span class="ident">glow::UNSIGNED_INT</span>),
-            <span class="ident">Tf::Rg32Sint</span> =&gt; (<span class="ident">glow::RG32I</span>, <span class="ident">glow::RG_INTEGER</span>, <span class="ident">glow::INT</span>),
-            <span class="ident">Tf::Rg32Float</span> =&gt; (<span class="ident">glow::RG32F</span>, <span class="ident">glow::RG</span>, <span class="ident">glow::FLOAT</span>),
-            <span class="ident">Tf::Rgba16Uint</span> =&gt; (<span class="ident">glow::RGBA16UI</span>, <span class="ident">glow::RGBA_INTEGER</span>, <span class="ident">glow::UNSIGNED_SHORT</span>),
-            <span class="ident">Tf::Rgba16Sint</span> =&gt; (<span class="ident">glow::RGBA16I</span>, <span class="ident">glow::RGBA_INTEGER</span>, <span class="ident">glow::SHORT</span>),
-            <span class="ident">Tf::Rgba16Unorm</span> =&gt; (<span class="ident">glow::RGBA16</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::UNSIGNED_SHORT</span>),
-            <span class="ident">Tf::Rgba16Snorm</span> =&gt; (<span class="ident">glow::RGBA16_SNORM</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::SHORT</span>),
-            <span class="ident">Tf::Rgba16Float</span> =&gt; (<span class="ident">glow::RGBA16F</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::HALF_FLOAT</span>),
-            <span class="ident">Tf::Rgba32Uint</span> =&gt; (<span class="ident">glow::RGBA32UI</span>, <span class="ident">glow::RGBA_INTEGER</span>, <span class="ident">glow::UNSIGNED_INT</span>),
-            <span class="ident">Tf::Rgba32Sint</span> =&gt; (<span class="ident">glow::RGBA32I</span>, <span class="ident">glow::RGBA_INTEGER</span>, <span class="ident">glow::INT</span>),
-            <span class="ident">Tf::Rgba32Float</span> =&gt; (<span class="ident">glow::RGBA32F</span>, <span class="ident">glow::RGBA</span>, <span class="ident">glow::FLOAT</span>),
-            <span class="ident">Tf::Depth32Float</span> =&gt; (<span class="ident">glow::DEPTH_COMPONENT32F</span>, <span class="ident">glow::DEPTH_COMPONENT</span>, <span class="ident">glow::FLOAT</span>),
-            <span class="ident">Tf::Depth32FloatStencil8</span> =&gt; {
-                (<span class="ident">glow::DEPTH32F_STENCIL8</span>, <span class="ident">glow::DEPTH_COMPONENT</span>, <span class="ident">glow::FLOAT</span>)
+            Tf::Rg32Uint =&gt; (glow::RG32UI, glow::RG_INTEGER, glow::UNSIGNED_INT),
+            Tf::Rg32Sint =&gt; (glow::RG32I, glow::RG_INTEGER, glow::INT),
+            Tf::Rg32Float =&gt; (glow::RG32F, glow::RG, glow::FLOAT),
+            Tf::Rgba16Uint =&gt; (glow::RGBA16UI, glow::RGBA_INTEGER, glow::UNSIGNED_SHORT),
+            Tf::Rgba16Sint =&gt; (glow::RGBA16I, glow::RGBA_INTEGER, glow::SHORT),
+            Tf::Rgba16Unorm =&gt; (glow::RGBA16, glow::RGBA, glow::UNSIGNED_SHORT),
+            Tf::Rgba16Snorm =&gt; (glow::RGBA16_SNORM, glow::RGBA, glow::SHORT),
+            Tf::Rgba16Float =&gt; (glow::RGBA16F, glow::RGBA, glow::HALF_FLOAT),
+            Tf::Rgba32Uint =&gt; (glow::RGBA32UI, glow::RGBA_INTEGER, glow::UNSIGNED_INT),
+            Tf::Rgba32Sint =&gt; (glow::RGBA32I, glow::RGBA_INTEGER, glow::INT),
+            Tf::Rgba32Float =&gt; (glow::RGBA32F, glow::RGBA, glow::FLOAT),
+            Tf::Depth32Float =&gt; (glow::DEPTH_COMPONENT32F, glow::DEPTH_COMPONENT, glow::FLOAT),
+            Tf::Depth32FloatStencil8 =&gt; {
+                (glow::DEPTH32F_STENCIL8, glow::DEPTH_COMPONENT, glow::FLOAT)
             }
-            <span class="ident">Tf::Depth24Plus</span> =&gt; (
-                <span class="ident">glow::DEPTH_COMPONENT24</span>,
-                <span class="ident">glow::DEPTH_COMPONENT</span>,
-                <span class="ident">glow::UNSIGNED_NORMALIZED</span>,
+            Tf::Depth24Plus =&gt; (
+                glow::DEPTH_COMPONENT24,
+                glow::DEPTH_COMPONENT,
+                glow::UNSIGNED_NORMALIZED,
             ),
-            <span class="ident">Tf::Depth24PlusStencil8</span> | <span class="ident">Tf::Depth24UnormStencil8</span> =&gt; (
-                <span class="ident">glow::DEPTH24_STENCIL8</span>,
-                <span class="ident">glow::DEPTH_COMPONENT</span>,
-                <span class="ident">glow::UNSIGNED_INT</span>,
+            Tf::Depth24PlusStencil8 | Tf::Depth24UnormStencil8 =&gt; (
+                glow::DEPTH24_STENCIL8,
+                glow::DEPTH_COMPONENT,
+                glow::UNSIGNED_INT,
             ),
-            <span class="ident">Tf::Rgb9e5Ufloat</span> =&gt; (<span class="ident">glow::RGB9_E5</span>, <span class="ident">glow::RGB</span>, <span class="ident">glow::UNSIGNED_INT_5_9_9_9_REV</span>),
-            <span class="ident">Tf::Bc1RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_S3TC_DXT1_EXT</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Bc1RgbaUnormSrgb</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Bc2RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_S3TC_DXT3_EXT</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Bc2RgbaUnormSrgb</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Bc3RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_S3TC_DXT5_EXT</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Bc3RgbaUnormSrgb</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Bc4RUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RED_RGTC1</span>, <span class="ident">glow::RED</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Bc4RSnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_SIGNED_RED_RGTC1</span>, <span class="ident">glow::RED</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Bc5RgUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RG_RGTC2</span>, <span class="ident">glow::RG</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Bc5RgSnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_SIGNED_RG_RGTC2</span>, <span class="ident">glow::RG</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Bc6hRgbUfloat</span> =&gt; (<span class="ident">glow::COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT</span>, <span class="ident">glow::RGB</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Bc6hRgbSfloat</span> =&gt; (<span class="ident">glow::COMPRESSED_RGB_BPTC_SIGNED_FLOAT</span>, <span class="ident">glow::RGB</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Bc7RgbaUnorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_BPTC_UNORM</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Bc7RgbaUnormSrgb</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB_ALPHA_BPTC_UNORM</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Etc2Rgb8Unorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RGB8_ETC2</span>, <span class="ident">glow::RGB</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Etc2Rgb8UnormSrgb</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ETC2</span>, <span class="ident">glow::RGB</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Etc2Rgb8A1Unorm</span> =&gt; (
-                <span class="ident">glow::COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2</span>,
-                <span class="ident">glow::RGBA</span>,
+            Tf::Rgb9e5Ufloat =&gt; (glow::RGB9_E5, glow::RGB, glow::UNSIGNED_INT_5_9_9_9_REV),
+            Tf::Bc1RgbaUnorm =&gt; (glow::COMPRESSED_RGBA_S3TC_DXT1_EXT, glow::RGBA, <span class="number">0</span>),
+            Tf::Bc1RgbaUnormSrgb =&gt; (glow::COMPRESSED_SRGB_ALPHA_S3TC_DXT1_EXT, glow::RGBA, <span class="number">0</span>),
+            Tf::Bc2RgbaUnorm =&gt; (glow::COMPRESSED_RGBA_S3TC_DXT3_EXT, glow::RGBA, <span class="number">0</span>),
+            Tf::Bc2RgbaUnormSrgb =&gt; (glow::COMPRESSED_SRGB_ALPHA_S3TC_DXT3_EXT, glow::RGBA, <span class="number">0</span>),
+            Tf::Bc3RgbaUnorm =&gt; (glow::COMPRESSED_RGBA_S3TC_DXT5_EXT, glow::RGBA, <span class="number">0</span>),
+            Tf::Bc3RgbaUnormSrgb =&gt; (glow::COMPRESSED_SRGB_ALPHA_S3TC_DXT5_EXT, glow::RGBA, <span class="number">0</span>),
+            Tf::Bc4RUnorm =&gt; (glow::COMPRESSED_RED_RGTC1, glow::RED, <span class="number">0</span>),
+            Tf::Bc4RSnorm =&gt; (glow::COMPRESSED_SIGNED_RED_RGTC1, glow::RED, <span class="number">0</span>),
+            Tf::Bc5RgUnorm =&gt; (glow::COMPRESSED_RG_RGTC2, glow::RG, <span class="number">0</span>),
+            Tf::Bc5RgSnorm =&gt; (glow::COMPRESSED_SIGNED_RG_RGTC2, glow::RG, <span class="number">0</span>),
+            Tf::Bc6hRgbUfloat =&gt; (glow::COMPRESSED_RGB_BPTC_UNSIGNED_FLOAT, glow::RGB, <span class="number">0</span>),
+            Tf::Bc6hRgbSfloat =&gt; (glow::COMPRESSED_RGB_BPTC_SIGNED_FLOAT, glow::RGB, <span class="number">0</span>),
+            Tf::Bc7RgbaUnorm =&gt; (glow::COMPRESSED_RGBA_BPTC_UNORM, glow::RGBA, <span class="number">0</span>),
+            Tf::Bc7RgbaUnormSrgb =&gt; (glow::COMPRESSED_SRGB_ALPHA_BPTC_UNORM, glow::RGBA, <span class="number">0</span>),
+            Tf::Etc2Rgb8Unorm =&gt; (glow::COMPRESSED_RGB8_ETC2, glow::RGB, <span class="number">0</span>),
+            Tf::Etc2Rgb8UnormSrgb =&gt; (glow::COMPRESSED_SRGB8_ETC2, glow::RGB, <span class="number">0</span>),
+            Tf::Etc2Rgb8A1Unorm =&gt; (
+                glow::COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2,
+                glow::RGBA,
                 <span class="number">0</span>,
             ),
-            <span class="ident">Tf::Etc2Rgb8A1UnormSrgb</span> =&gt; (
-                <span class="ident">glow::COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2</span>,
-                <span class="ident">glow::RGBA</span>,
+            Tf::Etc2Rgb8A1UnormSrgb =&gt; (
+                glow::COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2,
+                glow::RGBA,
                 <span class="number">0</span>,
             ),
-            <span class="ident">Tf::Etc2Rgba8Unorm</span> =&gt; (
-                <span class="comment">//TODO: this is a lie, it&#39;s not sRGB</span>
-                <span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ETC2_EAC</span>,
-                <span class="ident">glow::RGBA</span>,
+            Tf::Etc2Rgba8Unorm =&gt; (
+                <span class="comment">//TODO: this is a lie, it&#39;s not sRGB
+                </span>glow::COMPRESSED_SRGB8_ALPHA8_ETC2_EAC,
+                glow::RGBA,
                 <span class="number">0</span>,
             ),
-            <span class="ident">Tf::Etc2Rgba8UnormSrgb</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ETC2_EAC</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-            <span class="ident">Tf::EacR11Unorm</span> =&gt; (<span class="ident">glow::COMPRESSED_R11_EAC</span>, <span class="ident">glow::RED</span>, <span class="number">0</span>),
-            <span class="ident">Tf::EacR11Snorm</span> =&gt; (<span class="ident">glow::COMPRESSED_SIGNED_R11_EAC</span>, <span class="ident">glow::RED</span>, <span class="number">0</span>),
-            <span class="ident">Tf::EacRg11Unorm</span> =&gt; (<span class="ident">glow::COMPRESSED_RG11_EAC</span>, <span class="ident">glow::RG</span>, <span class="number">0</span>),
-            <span class="ident">Tf::EacRg11Snorm</span> =&gt; (<span class="ident">glow::COMPRESSED_SIGNED_RG11_EAC</span>, <span class="ident">glow::RG</span>, <span class="number">0</span>),
-            <span class="ident">Tf::Astc</span> { <span class="ident">block</span>, <span class="ident">channel</span> } =&gt; <span class="kw">match</span> <span class="ident">channel</span> {
-                <span class="ident">AstcChannel::Unorm</span> =&gt; <span class="kw">match</span> <span class="ident">block</span> {
-                    <span class="ident">AstcBlock::B4x4</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_4x4_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B5x4</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_5x4_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B5x5</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_5x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B6x5</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_6x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B6x6</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_6x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B8x5</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_8x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B8x6</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_8x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B8x8</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_8x8_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B10x5</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_10x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B10x6</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_10x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B10x8</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_10x8_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B10x10</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_10x10_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B12x10</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_12x10_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B12x12</span> =&gt; (<span class="ident">glow::COMPRESSED_RGBA_ASTC_12x12_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
+            Tf::Etc2Rgba8UnormSrgb =&gt; (glow::COMPRESSED_SRGB8_ALPHA8_ETC2_EAC, glow::RGBA, <span class="number">0</span>),
+            Tf::EacR11Unorm =&gt; (glow::COMPRESSED_R11_EAC, glow::RED, <span class="number">0</span>),
+            Tf::EacR11Snorm =&gt; (glow::COMPRESSED_SIGNED_R11_EAC, glow::RED, <span class="number">0</span>),
+            Tf::EacRg11Unorm =&gt; (glow::COMPRESSED_RG11_EAC, glow::RG, <span class="number">0</span>),
+            Tf::EacRg11Snorm =&gt; (glow::COMPRESSED_SIGNED_RG11_EAC, glow::RG, <span class="number">0</span>),
+            Tf::Astc { block, channel } =&gt; <span class="kw">match </span>channel {
+                AstcChannel::Unorm =&gt; <span class="kw">match </span>block {
+                    AstcBlock::B4x4 =&gt; (glow::COMPRESSED_RGBA_ASTC_4x4_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B5x4 =&gt; (glow::COMPRESSED_RGBA_ASTC_5x4_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B5x5 =&gt; (glow::COMPRESSED_RGBA_ASTC_5x5_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B6x5 =&gt; (glow::COMPRESSED_RGBA_ASTC_6x5_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B6x6 =&gt; (glow::COMPRESSED_RGBA_ASTC_6x6_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B8x5 =&gt; (glow::COMPRESSED_RGBA_ASTC_8x5_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B8x6 =&gt; (glow::COMPRESSED_RGBA_ASTC_8x6_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B8x8 =&gt; (glow::COMPRESSED_RGBA_ASTC_8x8_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B10x5 =&gt; (glow::COMPRESSED_RGBA_ASTC_10x5_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B10x6 =&gt; (glow::COMPRESSED_RGBA_ASTC_10x6_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B10x8 =&gt; (glow::COMPRESSED_RGBA_ASTC_10x8_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B10x10 =&gt; (glow::COMPRESSED_RGBA_ASTC_10x10_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B12x10 =&gt; (glow::COMPRESSED_RGBA_ASTC_12x10_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B12x12 =&gt; (glow::COMPRESSED_RGBA_ASTC_12x12_KHR, glow::RGBA, <span class="number">0</span>),
                 },
-                <span class="ident">AstcChannel::UnormSrgb</span> =&gt; <span class="kw">match</span> <span class="ident">block</span> {
-                    <span class="ident">AstcBlock::B4x4</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B5x4</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B5x5</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B6x5</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B6x6</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B8x5</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B8x6</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B8x8</span> =&gt; (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>),
-                    <span class="ident">AstcBlock::B10x5</span> =&gt; {
-                        (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
+                AstcChannel::UnormSrgb =&gt; <span class="kw">match </span>block {
+                    AstcBlock::B4x4 =&gt; (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_4x4_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B5x4 =&gt; (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_5x4_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B5x5 =&gt; (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_5x5_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B6x5 =&gt; (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_6x5_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B6x6 =&gt; (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_6x6_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B8x5 =&gt; (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x5_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B8x6 =&gt; (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x6_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B8x8 =&gt; (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_8x8_KHR, glow::RGBA, <span class="number">0</span>),
+                    AstcBlock::B10x5 =&gt; {
+                        (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x5_KHR, glow::RGBA, <span class="number">0</span>)
                     }
-                    <span class="ident">AstcBlock::B10x6</span> =&gt; {
-                        (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
+                    AstcBlock::B10x6 =&gt; {
+                        (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x6_KHR, glow::RGBA, <span class="number">0</span>)
                     }
-                    <span class="ident">AstcBlock::B10x8</span> =&gt; {
-                        (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
+                    AstcBlock::B10x8 =&gt; {
+                        (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x8_KHR, glow::RGBA, <span class="number">0</span>)
                     }
-                    <span class="ident">AstcBlock::B10x10</span> =&gt; {
-                        (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
+                    AstcBlock::B10x10 =&gt; {
+                        (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_10x10_KHR, glow::RGBA, <span class="number">0</span>)
                     }
-                    <span class="ident">AstcBlock::B12x10</span> =&gt; {
-                        (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
+                    AstcBlock::B12x10 =&gt; {
+                        (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_12x10_KHR, glow::RGBA, <span class="number">0</span>)
                     }
-                    <span class="ident">AstcBlock::B12x12</span> =&gt; {
-                        (<span class="ident">glow::COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR</span>, <span class="ident">glow::RGBA</span>, <span class="number">0</span>)
+                    AstcBlock::B12x12 =&gt; {
+                        (glow::COMPRESSED_SRGB8_ALPHA8_ASTC_12x12_KHR, glow::RGBA, <span class="number">0</span>)
                     }
                 },
-                <span class="ident">AstcChannel::Hdr</span> =&gt; <span class="macro">unimplemented!</span>(),
+                AstcChannel::Hdr =&gt; <span class="macro">unimplemented!</span>(),
             },
         };
 
-        <span class="ident"><span class="kw">super</span>::TextureFormatDesc</span> {
-            <span class="ident">internal</span>,
-            <span class="ident">external</span>,
-            <span class="ident">data_type</span>,
+        <span class="kw">super</span>::TextureFormatDesc {
+            internal,
+            external,
+            data_type,
         }
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">describe_vertex_format</span>(<span class="ident">vertex_format</span>: <span class="ident">wgt::VertexFormat</span>) -&gt; <span class="ident"><span class="kw">super</span>::VertexFormatDesc</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::VertexAttribKind</span> <span class="kw">as</span> <span class="ident">Vak</span>;
-    <span class="kw">use</span> <span class="ident">wgt::VertexFormat</span> <span class="kw">as</span> <span class="ident">Vf</span>;
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>describe_vertex_format(vertex_format: wgt::VertexFormat) -&gt; <span class="kw">super</span>::VertexFormatDesc {
+    <span class="kw">use </span><span class="kw">super</span>::VertexAttribKind <span class="kw">as </span>Vak;
+    <span class="kw">use </span>wgt::VertexFormat <span class="kw">as </span>Vf;
 
-    <span class="kw">let</span> (<span class="ident">element_count</span>, <span class="ident">element_format</span>, <span class="ident">attrib_kind</span>) = <span class="kw">match</span> <span class="ident">vertex_format</span> {
-        <span class="ident">Vf::Unorm8x2</span> =&gt; (<span class="number">2</span>, <span class="ident">glow::UNSIGNED_BYTE</span>, <span class="ident">Vak::Float</span>),
-        <span class="ident">Vf::Snorm8x2</span> =&gt; (<span class="number">2</span>, <span class="ident">glow::BYTE</span>, <span class="ident">Vak::Float</span>),
-        <span class="ident">Vf::Uint8x2</span> =&gt; (<span class="number">2</span>, <span class="ident">glow::UNSIGNED_BYTE</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Sint8x2</span> =&gt; (<span class="number">2</span>, <span class="ident">glow::BYTE</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Unorm8x4</span> =&gt; (<span class="number">4</span>, <span class="ident">glow::UNSIGNED_BYTE</span>, <span class="ident">Vak::Float</span>),
-        <span class="ident">Vf::Snorm8x4</span> =&gt; (<span class="number">4</span>, <span class="ident">glow::BYTE</span>, <span class="ident">Vak::Float</span>),
-        <span class="ident">Vf::Uint8x4</span> =&gt; (<span class="number">4</span>, <span class="ident">glow::UNSIGNED_BYTE</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Sint8x4</span> =&gt; (<span class="number">4</span>, <span class="ident">glow::BYTE</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Unorm16x2</span> =&gt; (<span class="number">2</span>, <span class="ident">glow::UNSIGNED_SHORT</span>, <span class="ident">Vak::Float</span>),
-        <span class="ident">Vf::Snorm16x2</span> =&gt; (<span class="number">2</span>, <span class="ident">glow::SHORT</span>, <span class="ident">Vak::Float</span>),
-        <span class="ident">Vf::Uint16x2</span> =&gt; (<span class="number">2</span>, <span class="ident">glow::UNSIGNED_SHORT</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Sint16x2</span> =&gt; (<span class="number">2</span>, <span class="ident">glow::SHORT</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Float16x2</span> =&gt; (<span class="number">2</span>, <span class="ident">glow::HALF_FLOAT</span>, <span class="ident">Vak::Float</span>),
-        <span class="ident">Vf::Unorm16x4</span> =&gt; (<span class="number">4</span>, <span class="ident">glow::UNSIGNED_SHORT</span>, <span class="ident">Vak::Float</span>),
-        <span class="ident">Vf::Snorm16x4</span> =&gt; (<span class="number">4</span>, <span class="ident">glow::SHORT</span>, <span class="ident">Vak::Float</span>),
-        <span class="ident">Vf::Uint16x4</span> =&gt; (<span class="number">4</span>, <span class="ident">glow::UNSIGNED_SHORT</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Sint16x4</span> =&gt; (<span class="number">4</span>, <span class="ident">glow::SHORT</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Float16x4</span> =&gt; (<span class="number">4</span>, <span class="ident">glow::HALF_FLOAT</span>, <span class="ident">Vak::Float</span>),
-        <span class="ident">Vf::Uint32</span> =&gt; (<span class="number">1</span>, <span class="ident">glow::UNSIGNED_INT</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Sint32</span> =&gt; (<span class="number">1</span>, <span class="ident">glow::INT</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Float32</span> =&gt; (<span class="number">1</span>, <span class="ident">glow::FLOAT</span>, <span class="ident">Vak::Float</span>),
-        <span class="ident">Vf::Uint32x2</span> =&gt; (<span class="number">2</span>, <span class="ident">glow::UNSIGNED_INT</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Sint32x2</span> =&gt; (<span class="number">2</span>, <span class="ident">glow::INT</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Float32x2</span> =&gt; (<span class="number">2</span>, <span class="ident">glow::FLOAT</span>, <span class="ident">Vak::Float</span>),
-        <span class="ident">Vf::Uint32x3</span> =&gt; (<span class="number">3</span>, <span class="ident">glow::UNSIGNED_INT</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Sint32x3</span> =&gt; (<span class="number">3</span>, <span class="ident">glow::INT</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Float32x3</span> =&gt; (<span class="number">3</span>, <span class="ident">glow::FLOAT</span>, <span class="ident">Vak::Float</span>),
-        <span class="ident">Vf::Uint32x4</span> =&gt; (<span class="number">4</span>, <span class="ident">glow::UNSIGNED_INT</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Sint32x4</span> =&gt; (<span class="number">4</span>, <span class="ident">glow::INT</span>, <span class="ident">Vak::Integer</span>),
-        <span class="ident">Vf::Float32x4</span> =&gt; (<span class="number">4</span>, <span class="ident">glow::FLOAT</span>, <span class="ident">Vak::Float</span>),
-        <span class="ident">Vf::Float64</span> | <span class="ident">Vf::Float64x2</span> | <span class="ident">Vf::Float64x3</span> | <span class="ident">Vf::Float64x4</span> =&gt; <span class="macro">unimplemented!</span>(),
+    <span class="kw">let </span>(element_count, element_format, attrib_kind) = <span class="kw">match </span>vertex_format {
+        Vf::Unorm8x2 =&gt; (<span class="number">2</span>, glow::UNSIGNED_BYTE, Vak::Float),
+        Vf::Snorm8x2 =&gt; (<span class="number">2</span>, glow::BYTE, Vak::Float),
+        Vf::Uint8x2 =&gt; (<span class="number">2</span>, glow::UNSIGNED_BYTE, Vak::Integer),
+        Vf::Sint8x2 =&gt; (<span class="number">2</span>, glow::BYTE, Vak::Integer),
+        Vf::Unorm8x4 =&gt; (<span class="number">4</span>, glow::UNSIGNED_BYTE, Vak::Float),
+        Vf::Snorm8x4 =&gt; (<span class="number">4</span>, glow::BYTE, Vak::Float),
+        Vf::Uint8x4 =&gt; (<span class="number">4</span>, glow::UNSIGNED_BYTE, Vak::Integer),
+        Vf::Sint8x4 =&gt; (<span class="number">4</span>, glow::BYTE, Vak::Integer),
+        Vf::Unorm16x2 =&gt; (<span class="number">2</span>, glow::UNSIGNED_SHORT, Vak::Float),
+        Vf::Snorm16x2 =&gt; (<span class="number">2</span>, glow::SHORT, Vak::Float),
+        Vf::Uint16x2 =&gt; (<span class="number">2</span>, glow::UNSIGNED_SHORT, Vak::Integer),
+        Vf::Sint16x2 =&gt; (<span class="number">2</span>, glow::SHORT, Vak::Integer),
+        Vf::Float16x2 =&gt; (<span class="number">2</span>, glow::HALF_FLOAT, Vak::Float),
+        Vf::Unorm16x4 =&gt; (<span class="number">4</span>, glow::UNSIGNED_SHORT, Vak::Float),
+        Vf::Snorm16x4 =&gt; (<span class="number">4</span>, glow::SHORT, Vak::Float),
+        Vf::Uint16x4 =&gt; (<span class="number">4</span>, glow::UNSIGNED_SHORT, Vak::Integer),
+        Vf::Sint16x4 =&gt; (<span class="number">4</span>, glow::SHORT, Vak::Integer),
+        Vf::Float16x4 =&gt; (<span class="number">4</span>, glow::HALF_FLOAT, Vak::Float),
+        Vf::Uint32 =&gt; (<span class="number">1</span>, glow::UNSIGNED_INT, Vak::Integer),
+        Vf::Sint32 =&gt; (<span class="number">1</span>, glow::INT, Vak::Integer),
+        Vf::Float32 =&gt; (<span class="number">1</span>, glow::FLOAT, Vak::Float),
+        Vf::Uint32x2 =&gt; (<span class="number">2</span>, glow::UNSIGNED_INT, Vak::Integer),
+        Vf::Sint32x2 =&gt; (<span class="number">2</span>, glow::INT, Vak::Integer),
+        Vf::Float32x2 =&gt; (<span class="number">2</span>, glow::FLOAT, Vak::Float),
+        Vf::Uint32x3 =&gt; (<span class="number">3</span>, glow::UNSIGNED_INT, Vak::Integer),
+        Vf::Sint32x3 =&gt; (<span class="number">3</span>, glow::INT, Vak::Integer),
+        Vf::Float32x3 =&gt; (<span class="number">3</span>, glow::FLOAT, Vak::Float),
+        Vf::Uint32x4 =&gt; (<span class="number">4</span>, glow::UNSIGNED_INT, Vak::Integer),
+        Vf::Sint32x4 =&gt; (<span class="number">4</span>, glow::INT, Vak::Integer),
+        Vf::Float32x4 =&gt; (<span class="number">4</span>, glow::FLOAT, Vak::Float),
+        Vf::Float64 | Vf::Float64x2 | Vf::Float64x3 | Vf::Float64x4 =&gt; <span class="macro">unimplemented!</span>(),
     };
 
-    <span class="ident"><span class="kw">super</span>::VertexFormatDesc</span> {
-        <span class="ident">element_count</span>,
-        <span class="ident">element_format</span>,
-        <span class="ident">attrib_kind</span>,
+    <span class="kw">super</span>::VertexFormatDesc {
+        element_count,
+        element_format,
+        attrib_kind,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_filter_modes</span>(
-    <span class="ident">min</span>: <span class="ident">wgt::FilterMode</span>,
-    <span class="ident">mag</span>: <span class="ident">wgt::FilterMode</span>,
-    <span class="ident">mip</span>: <span class="ident">wgt::FilterMode</span>,
-) -&gt; (<span class="ident">u32</span>, <span class="ident">u32</span>) {
-    <span class="kw">use</span> <span class="ident">wgt::FilterMode</span> <span class="kw">as</span> <span class="ident">Fm</span>;
+<span class="kw">pub fn </span>map_filter_modes(
+    min: wgt::FilterMode,
+    mag: wgt::FilterMode,
+    mip: wgt::FilterMode,
+) -&gt; (u32, u32) {
+    <span class="kw">use </span>wgt::FilterMode <span class="kw">as </span>Fm;
 
-    <span class="kw">let</span> <span class="ident">mag_filter</span> = <span class="kw">match</span> <span class="ident">mag</span> {
-        <span class="ident">Fm::Nearest</span> =&gt; <span class="ident">glow::NEAREST</span>,
-        <span class="ident">Fm::Linear</span> =&gt; <span class="ident">glow::LINEAR</span>,
+    <span class="kw">let </span>mag_filter = <span class="kw">match </span>mag {
+        Fm::Nearest =&gt; glow::NEAREST,
+        Fm::Linear =&gt; glow::LINEAR,
     };
 
-    <span class="kw">let</span> <span class="ident">min_filter</span> = <span class="kw">match</span> (<span class="ident">min</span>, <span class="ident">mip</span>) {
-        (<span class="ident">Fm::Nearest</span>, <span class="ident">Fm::Nearest</span>) =&gt; <span class="ident">glow::NEAREST_MIPMAP_NEAREST</span>,
-        (<span class="ident">Fm::Nearest</span>, <span class="ident">Fm::Linear</span>) =&gt; <span class="ident">glow::NEAREST_MIPMAP_LINEAR</span>,
-        (<span class="ident">Fm::Linear</span>, <span class="ident">Fm::Nearest</span>) =&gt; <span class="ident">glow::LINEAR_MIPMAP_NEAREST</span>,
-        (<span class="ident">Fm::Linear</span>, <span class="ident">Fm::Linear</span>) =&gt; <span class="ident">glow::LINEAR_MIPMAP_LINEAR</span>,
+    <span class="kw">let </span>min_filter = <span class="kw">match </span>(min, mip) {
+        (Fm::Nearest, Fm::Nearest) =&gt; glow::NEAREST_MIPMAP_NEAREST,
+        (Fm::Nearest, Fm::Linear) =&gt; glow::NEAREST_MIPMAP_LINEAR,
+        (Fm::Linear, Fm::Nearest) =&gt; glow::LINEAR_MIPMAP_NEAREST,
+        (Fm::Linear, Fm::Linear) =&gt; glow::LINEAR_MIPMAP_LINEAR,
     };
 
-    (<span class="ident">min_filter</span>, <span class="ident">mag_filter</span>)
+    (min_filter, mag_filter)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_address_mode</span>(<span class="ident">mode</span>: <span class="ident">wgt::AddressMode</span>) -&gt; <span class="ident">u32</span> {
-    <span class="kw">match</span> <span class="ident">mode</span> {
-        <span class="ident">wgt::AddressMode::Repeat</span> =&gt; <span class="ident">glow::REPEAT</span>,
-        <span class="ident">wgt::AddressMode::MirrorRepeat</span> =&gt; <span class="ident">glow::MIRRORED_REPEAT</span>,
-        <span class="ident">wgt::AddressMode::ClampToEdge</span> =&gt; <span class="ident">glow::CLAMP_TO_EDGE</span>,
-        <span class="ident">wgt::AddressMode::ClampToBorder</span> =&gt; <span class="ident">glow::CLAMP_TO_BORDER</span>,
-        <span class="comment">//wgt::AddressMode::MirrorClamp =&gt; glow::MIRROR_CLAMP_TO_EDGE,</span>
+<span class="kw">pub fn </span>map_address_mode(mode: wgt::AddressMode) -&gt; u32 {
+    <span class="kw">match </span>mode {
+        wgt::AddressMode::Repeat =&gt; glow::REPEAT,
+        wgt::AddressMode::MirrorRepeat =&gt; glow::MIRRORED_REPEAT,
+        wgt::AddressMode::ClampToEdge =&gt; glow::CLAMP_TO_EDGE,
+        wgt::AddressMode::ClampToBorder =&gt; glow::CLAMP_TO_BORDER,
+        <span class="comment">//wgt::AddressMode::MirrorClamp =&gt; glow::MIRROR_CLAMP_TO_EDGE,
+    </span>}
+}
+
+<span class="kw">pub fn </span>map_compare_func(fun: wgt::CompareFunction) -&gt; u32 {
+    <span class="kw">use </span>wgt::CompareFunction <span class="kw">as </span>Cf;
+    <span class="kw">match </span>fun {
+        Cf::Never =&gt; glow::NEVER,
+        Cf::Less =&gt; glow::LESS,
+        Cf::LessEqual =&gt; glow::LEQUAL,
+        Cf::Equal =&gt; glow::EQUAL,
+        Cf::GreaterEqual =&gt; glow::GEQUAL,
+        Cf::Greater =&gt; glow::GREATER,
+        Cf::NotEqual =&gt; glow::NOTEQUAL,
+        Cf::Always =&gt; glow::ALWAYS,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_compare_func</span>(<span class="ident">fun</span>: <span class="ident">wgt::CompareFunction</span>) -&gt; <span class="ident">u32</span> {
-    <span class="kw">use</span> <span class="ident">wgt::CompareFunction</span> <span class="kw">as</span> <span class="ident">Cf</span>;
-    <span class="kw">match</span> <span class="ident">fun</span> {
-        <span class="ident">Cf::Never</span> =&gt; <span class="ident">glow::NEVER</span>,
-        <span class="ident">Cf::Less</span> =&gt; <span class="ident">glow::LESS</span>,
-        <span class="ident">Cf::LessEqual</span> =&gt; <span class="ident">glow::LEQUAL</span>,
-        <span class="ident">Cf::Equal</span> =&gt; <span class="ident">glow::EQUAL</span>,
-        <span class="ident">Cf::GreaterEqual</span> =&gt; <span class="ident">glow::GEQUAL</span>,
-        <span class="ident">Cf::Greater</span> =&gt; <span class="ident">glow::GREATER</span>,
-        <span class="ident">Cf::NotEqual</span> =&gt; <span class="ident">glow::NOTEQUAL</span>,
-        <span class="ident">Cf::Always</span> =&gt; <span class="ident">glow::ALWAYS</span>,
+<span class="kw">pub fn </span>map_primitive_topology(topology: wgt::PrimitiveTopology) -&gt; u32 {
+    <span class="kw">use </span>wgt::PrimitiveTopology <span class="kw">as </span>Pt;
+    <span class="kw">match </span>topology {
+        Pt::PointList =&gt; glow::POINTS,
+        Pt::LineList =&gt; glow::LINES,
+        Pt::LineStrip =&gt; glow::LINE_STRIP,
+        Pt::TriangleList =&gt; glow::TRIANGLES,
+        Pt::TriangleStrip =&gt; glow::TRIANGLE_STRIP,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">map_primitive_topology</span>(<span class="ident">topology</span>: <span class="ident">wgt::PrimitiveTopology</span>) -&gt; <span class="ident">u32</span> {
-    <span class="kw">use</span> <span class="ident">wgt::PrimitiveTopology</span> <span class="kw">as</span> <span class="ident">Pt</span>;
-    <span class="kw">match</span> <span class="ident">topology</span> {
-        <span class="ident">Pt::PointList</span> =&gt; <span class="ident">glow::POINTS</span>,
-        <span class="ident">Pt::LineList</span> =&gt; <span class="ident">glow::LINES</span>,
-        <span class="ident">Pt::LineStrip</span> =&gt; <span class="ident">glow::LINE_STRIP</span>,
-        <span class="ident">Pt::TriangleList</span> =&gt; <span class="ident">glow::TRIANGLES</span>,
-        <span class="ident">Pt::TriangleStrip</span> =&gt; <span class="ident">glow::TRIANGLE_STRIP</span>,
-    }
-}
-
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">map_primitive_state</span>(<span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::PrimitiveState</span>) -&gt; <span class="ident"><span class="kw">super</span>::PrimitiveState</span> {
-    <span class="comment">//Note: state.polygon_mode is not supported, see `Features::POLYGON_MODE_LINE` and</span>
-    <span class="comment">//`Features::POLYGON_MODE_POINT`</span>
-    <span class="ident"><span class="kw">super</span>::PrimitiveState</span> {
-        <span class="comment">//Note: we are flipping the front face, so that</span>
-        <span class="comment">// the Y-flip in the generated GLSL keeps the same visibility.</span>
-        <span class="comment">// See `naga::back::glsl::WriterFlags::ADJUST_COORDINATE_SPACE`.</span>
-        <span class="ident">front_face</span>: <span class="kw">match</span> <span class="ident">state</span>.<span class="ident">front_face</span> {
-            <span class="ident">wgt::FrontFace::Cw</span> =&gt; <span class="ident">glow::CCW</span>,
-            <span class="ident">wgt::FrontFace::Ccw</span> =&gt; <span class="ident">glow::CW</span>,
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>map_primitive_state(state: <span class="kw-2">&amp;</span>wgt::PrimitiveState) -&gt; <span class="kw">super</span>::PrimitiveState {
+    <span class="comment">//Note: state.polygon_mode is not supported, see `Features::POLYGON_MODE_LINE` and
+    //`Features::POLYGON_MODE_POINT`
+    </span><span class="kw">super</span>::PrimitiveState {
+        <span class="comment">//Note: we are flipping the front face, so that
+        // the Y-flip in the generated GLSL keeps the same visibility.
+        // See `naga::back::glsl::WriterFlags::ADJUST_COORDINATE_SPACE`.
+        </span>front_face: <span class="kw">match </span>state.front_face {
+            wgt::FrontFace::Cw =&gt; glow::CCW,
+            wgt::FrontFace::Ccw =&gt; glow::CW,
         },
-        <span class="ident">cull_face</span>: <span class="kw">match</span> <span class="ident">state</span>.<span class="ident">cull_mode</span> {
-            <span class="prelude-val">Some</span>(<span class="ident">wgt::Face::Front</span>) =&gt; <span class="ident">glow::FRONT</span>,
-            <span class="prelude-val">Some</span>(<span class="ident">wgt::Face::Back</span>) =&gt; <span class="ident">glow::BACK</span>,
-            <span class="prelude-val">None</span> =&gt; <span class="number">0</span>,
+        cull_face: <span class="kw">match </span>state.cull_mode {
+            <span class="prelude-val">Some</span>(wgt::Face::Front) =&gt; glow::FRONT,
+            <span class="prelude-val">Some</span>(wgt::Face::Back) =&gt; glow::BACK,
+            <span class="prelude-val">None </span>=&gt; <span class="number">0</span>,
         },
-        <span class="ident">unclipped_depth</span>: <span class="ident">state</span>.<span class="ident">unclipped_depth</span>,
+        unclipped_depth: state.unclipped_depth,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">_map_view_dimension</span>(<span class="ident">dim</span>: <span class="ident">wgt::TextureViewDimension</span>) -&gt; <span class="ident">u32</span> {
-    <span class="kw">use</span> <span class="ident">wgt::TextureViewDimension</span> <span class="kw">as</span> <span class="ident">Tvd</span>;
-    <span class="kw">match</span> <span class="ident">dim</span> {
-        <span class="ident">Tvd::D1</span> | <span class="ident">Tvd::D2</span> =&gt; <span class="ident">glow::TEXTURE_2D</span>,
-        <span class="ident">Tvd::D2Array</span> =&gt; <span class="ident">glow::TEXTURE_2D_ARRAY</span>,
-        <span class="ident">Tvd::Cube</span> =&gt; <span class="ident">glow::TEXTURE_CUBE_MAP</span>,
-        <span class="ident">Tvd::CubeArray</span> =&gt; <span class="ident">glow::TEXTURE_CUBE_MAP_ARRAY</span>,
-        <span class="ident">Tvd::D3</span> =&gt; <span class="ident">glow::TEXTURE_3D</span>,
+<span class="kw">pub fn </span>_map_view_dimension(dim: wgt::TextureViewDimension) -&gt; u32 {
+    <span class="kw">use </span>wgt::TextureViewDimension <span class="kw">as </span>Tvd;
+    <span class="kw">match </span>dim {
+        Tvd::D1 | Tvd::D2 =&gt; glow::TEXTURE_2D,
+        Tvd::D2Array =&gt; glow::TEXTURE_2D_ARRAY,
+        Tvd::Cube =&gt; glow::TEXTURE_CUBE_MAP,
+        Tvd::CubeArray =&gt; glow::TEXTURE_CUBE_MAP_ARRAY,
+        Tvd::D3 =&gt; glow::TEXTURE_3D,
     }
 }
 
-<span class="kw">fn</span> <span class="ident">map_stencil_op</span>(<span class="ident">operation</span>: <span class="ident">wgt::StencilOperation</span>) -&gt; <span class="ident">u32</span> {
-    <span class="kw">use</span> <span class="ident">wgt::StencilOperation</span> <span class="kw">as</span> <span class="ident">So</span>;
-    <span class="kw">match</span> <span class="ident">operation</span> {
-        <span class="ident">So::Keep</span> =&gt; <span class="ident">glow::KEEP</span>,
-        <span class="ident">So::Zero</span> =&gt; <span class="ident">glow::ZERO</span>,
-        <span class="ident">So::Replace</span> =&gt; <span class="ident">glow::REPLACE</span>,
-        <span class="ident">So::Invert</span> =&gt; <span class="ident">glow::INVERT</span>,
-        <span class="ident">So::IncrementClamp</span> =&gt; <span class="ident">glow::INCR</span>,
-        <span class="ident">So::DecrementClamp</span> =&gt; <span class="ident">glow::DECR</span>,
-        <span class="ident">So::IncrementWrap</span> =&gt; <span class="ident">glow::INCR_WRAP</span>,
-        <span class="ident">So::DecrementWrap</span> =&gt; <span class="ident">glow::DECR_WRAP</span>,
+<span class="kw">fn </span>map_stencil_op(operation: wgt::StencilOperation) -&gt; u32 {
+    <span class="kw">use </span>wgt::StencilOperation <span class="kw">as </span>So;
+    <span class="kw">match </span>operation {
+        So::Keep =&gt; glow::KEEP,
+        So::Zero =&gt; glow::ZERO,
+        So::Replace =&gt; glow::REPLACE,
+        So::Invert =&gt; glow::INVERT,
+        So::IncrementClamp =&gt; glow::INCR,
+        So::DecrementClamp =&gt; glow::DECR,
+        So::IncrementWrap =&gt; glow::INCR_WRAP,
+        So::DecrementWrap =&gt; glow::DECR_WRAP,
     }
 }
 
-<span class="kw">fn</span> <span class="ident">map_stencil_ops</span>(<span class="ident">face</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::StencilFaceState</span>) -&gt; <span class="ident"><span class="kw">super</span>::StencilOps</span> {
-    <span class="ident"><span class="kw">super</span>::StencilOps</span> {
-        <span class="ident">pass</span>: <span class="ident">map_stencil_op</span>(<span class="ident">face</span>.<span class="ident">pass_op</span>),
-        <span class="ident">fail</span>: <span class="ident">map_stencil_op</span>(<span class="ident">face</span>.<span class="ident">fail_op</span>),
-        <span class="ident">depth_fail</span>: <span class="ident">map_stencil_op</span>(<span class="ident">face</span>.<span class="ident">depth_fail_op</span>),
+<span class="kw">fn </span>map_stencil_ops(face: <span class="kw-2">&amp;</span>wgt::StencilFaceState) -&gt; <span class="kw">super</span>::StencilOps {
+    <span class="kw">super</span>::StencilOps {
+        pass: map_stencil_op(face.pass_op),
+        fail: map_stencil_op(face.fail_op),
+        depth_fail: map_stencil_op(face.depth_fail_op),
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">map_stencil</span>(<span class="ident">state</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::StencilState</span>) -&gt; <span class="ident"><span class="kw">super</span>::StencilState</span> {
-    <span class="ident"><span class="kw">super</span>::StencilState</span> {
-        <span class="ident">front</span>: <span class="ident"><span class="kw">super</span>::StencilSide</span> {
-            <span class="ident">function</span>: <span class="ident">map_compare_func</span>(<span class="ident">state</span>.<span class="ident">front</span>.<span class="ident">compare</span>),
-            <span class="ident">mask_read</span>: <span class="ident">state</span>.<span class="ident">read_mask</span>,
-            <span class="ident">mask_write</span>: <span class="ident">state</span>.<span class="ident">write_mask</span>,
-            <span class="ident">reference</span>: <span class="number">0</span>,
-            <span class="ident">ops</span>: <span class="ident">map_stencil_ops</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">front</span>),
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>map_stencil(state: <span class="kw-2">&amp;</span>wgt::StencilState) -&gt; <span class="kw">super</span>::StencilState {
+    <span class="kw">super</span>::StencilState {
+        front: <span class="kw">super</span>::StencilSide {
+            function: map_compare_func(state.front.compare),
+            mask_read: state.read_mask,
+            mask_write: state.write_mask,
+            reference: <span class="number">0</span>,
+            ops: map_stencil_ops(<span class="kw-2">&amp;</span>state.front),
         },
-        <span class="ident">back</span>: <span class="ident"><span class="kw">super</span>::StencilSide</span> {
-            <span class="ident">function</span>: <span class="ident">map_compare_func</span>(<span class="ident">state</span>.<span class="ident">back</span>.<span class="ident">compare</span>),
-            <span class="ident">mask_read</span>: <span class="ident">state</span>.<span class="ident">read_mask</span>,
-            <span class="ident">mask_write</span>: <span class="ident">state</span>.<span class="ident">write_mask</span>,
-            <span class="ident">reference</span>: <span class="number">0</span>,
-            <span class="ident">ops</span>: <span class="ident">map_stencil_ops</span>(<span class="kw-2">&amp;</span><span class="ident">state</span>.<span class="ident">back</span>),
-        },
-    }
-}
-
-<span class="kw">fn</span> <span class="ident">map_blend_factor</span>(<span class="ident">factor</span>: <span class="ident">wgt::BlendFactor</span>) -&gt; <span class="ident">u32</span> {
-    <span class="kw">use</span> <span class="ident">wgt::BlendFactor</span> <span class="kw">as</span> <span class="ident">Bf</span>;
-    <span class="kw">match</span> <span class="ident">factor</span> {
-        <span class="ident">Bf::Zero</span> =&gt; <span class="ident">glow::ZERO</span>,
-        <span class="ident">Bf::One</span> =&gt; <span class="ident">glow::ONE</span>,
-        <span class="ident">Bf::Src</span> =&gt; <span class="ident">glow::SRC_COLOR</span>,
-        <span class="ident">Bf::OneMinusSrc</span> =&gt; <span class="ident">glow::ONE_MINUS_SRC_COLOR</span>,
-        <span class="ident">Bf::Dst</span> =&gt; <span class="ident">glow::DST_COLOR</span>,
-        <span class="ident">Bf::OneMinusDst</span> =&gt; <span class="ident">glow::ONE_MINUS_DST_COLOR</span>,
-        <span class="ident">Bf::SrcAlpha</span> =&gt; <span class="ident">glow::SRC_ALPHA</span>,
-        <span class="ident">Bf::OneMinusSrcAlpha</span> =&gt; <span class="ident">glow::ONE_MINUS_SRC_ALPHA</span>,
-        <span class="ident">Bf::DstAlpha</span> =&gt; <span class="ident">glow::DST_ALPHA</span>,
-        <span class="ident">Bf::OneMinusDstAlpha</span> =&gt; <span class="ident">glow::ONE_MINUS_DST_ALPHA</span>,
-        <span class="ident">Bf::Constant</span> =&gt; <span class="ident">glow::CONSTANT_COLOR</span>,
-        <span class="ident">Bf::OneMinusConstant</span> =&gt; <span class="ident">glow::ONE_MINUS_CONSTANT_COLOR</span>,
-        <span class="ident">Bf::SrcAlphaSaturated</span> =&gt; <span class="ident">glow::SRC_ALPHA_SATURATE</span>,
-    }
-}
-
-<span class="kw">fn</span> <span class="ident">map_blend_component</span>(<span class="ident">component</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::BlendComponent</span>) -&gt; <span class="ident"><span class="kw">super</span>::BlendComponent</span> {
-    <span class="ident"><span class="kw">super</span>::BlendComponent</span> {
-        <span class="ident">src</span>: <span class="ident">map_blend_factor</span>(<span class="ident">component</span>.<span class="ident">src_factor</span>),
-        <span class="ident">dst</span>: <span class="ident">map_blend_factor</span>(<span class="ident">component</span>.<span class="ident">dst_factor</span>),
-        <span class="ident">equation</span>: <span class="kw">match</span> <span class="ident">component</span>.<span class="ident">operation</span> {
-            <span class="ident">wgt::BlendOperation::Add</span> =&gt; <span class="ident">glow::FUNC_ADD</span>,
-            <span class="ident">wgt::BlendOperation::Subtract</span> =&gt; <span class="ident">glow::FUNC_SUBTRACT</span>,
-            <span class="ident">wgt::BlendOperation::ReverseSubtract</span> =&gt; <span class="ident">glow::FUNC_REVERSE_SUBTRACT</span>,
-            <span class="ident">wgt::BlendOperation::Min</span> =&gt; <span class="ident">glow::MIN</span>,
-            <span class="ident">wgt::BlendOperation::Max</span> =&gt; <span class="ident">glow::MAX</span>,
+        back: <span class="kw">super</span>::StencilSide {
+            function: map_compare_func(state.back.compare),
+            mask_read: state.read_mask,
+            mask_write: state.write_mask,
+            reference: <span class="number">0</span>,
+            ops: map_stencil_ops(<span class="kw-2">&amp;</span>state.back),
         },
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">map_blend</span>(<span class="ident">blend</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::BlendState</span>) -&gt; <span class="ident"><span class="kw">super</span>::BlendDesc</span> {
-    <span class="ident"><span class="kw">super</span>::BlendDesc</span> {
-        <span class="ident">color</span>: <span class="ident">map_blend_component</span>(<span class="kw-2">&amp;</span><span class="ident">blend</span>.<span class="ident">color</span>),
-        <span class="ident">alpha</span>: <span class="ident">map_blend_component</span>(<span class="kw-2">&amp;</span><span class="ident">blend</span>.<span class="ident">alpha</span>),
+<span class="kw">fn </span>map_blend_factor(factor: wgt::BlendFactor) -&gt; u32 {
+    <span class="kw">use </span>wgt::BlendFactor <span class="kw">as </span>Bf;
+    <span class="kw">match </span>factor {
+        Bf::Zero =&gt; glow::ZERO,
+        Bf::One =&gt; glow::ONE,
+        Bf::Src =&gt; glow::SRC_COLOR,
+        Bf::OneMinusSrc =&gt; glow::ONE_MINUS_SRC_COLOR,
+        Bf::Dst =&gt; glow::DST_COLOR,
+        Bf::OneMinusDst =&gt; glow::ONE_MINUS_DST_COLOR,
+        Bf::SrcAlpha =&gt; glow::SRC_ALPHA,
+        Bf::OneMinusSrcAlpha =&gt; glow::ONE_MINUS_SRC_ALPHA,
+        Bf::DstAlpha =&gt; glow::DST_ALPHA,
+        Bf::OneMinusDstAlpha =&gt; glow::ONE_MINUS_DST_ALPHA,
+        Bf::Constant =&gt; glow::CONSTANT_COLOR,
+        Bf::OneMinusConstant =&gt; glow::ONE_MINUS_CONSTANT_COLOR,
+        Bf::SrcAlphaSaturated =&gt; glow::SRC_ALPHA_SATURATE,
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">map_storage_access</span>(<span class="ident">access</span>: <span class="ident">wgt::StorageTextureAccess</span>) -&gt; <span class="ident">u32</span> {
-    <span class="kw">match</span> <span class="ident">access</span> {
-        <span class="ident">wgt::StorageTextureAccess::ReadOnly</span> =&gt; <span class="ident">glow::READ_ONLY</span>,
-        <span class="ident">wgt::StorageTextureAccess::WriteOnly</span> =&gt; <span class="ident">glow::WRITE_ONLY</span>,
-        <span class="ident">wgt::StorageTextureAccess::ReadWrite</span> =&gt; <span class="ident">glow::READ_WRITE</span>,
+<span class="kw">fn </span>map_blend_component(component: <span class="kw-2">&amp;</span>wgt::BlendComponent) -&gt; <span class="kw">super</span>::BlendComponent {
+    <span class="kw">super</span>::BlendComponent {
+        src: map_blend_factor(component.src_factor),
+        dst: map_blend_factor(component.dst_factor),
+        equation: <span class="kw">match </span>component.operation {
+            wgt::BlendOperation::Add =&gt; glow::FUNC_ADD,
+            wgt::BlendOperation::Subtract =&gt; glow::FUNC_SUBTRACT,
+            wgt::BlendOperation::ReverseSubtract =&gt; glow::FUNC_REVERSE_SUBTRACT,
+            wgt::BlendOperation::Min =&gt; glow::MIN,
+            wgt::BlendOperation::Max =&gt; glow::MAX,
+        },
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">is_sampler</span>(<span class="ident">glsl_uniform_type</span>: <span class="ident">u32</span>) -&gt; <span class="ident">bool</span> {
-    <span class="kw">match</span> <span class="ident">glsl_uniform_type</span> {
-        <span class="ident">glow::INT_SAMPLER_1D</span>
-        | <span class="ident">glow::INT_SAMPLER_1D_ARRAY</span>
-        | <span class="ident">glow::INT_SAMPLER_2D</span>
-        | <span class="ident">glow::INT_SAMPLER_2D_ARRAY</span>
-        | <span class="ident">glow::INT_SAMPLER_2D_MULTISAMPLE</span>
-        | <span class="ident">glow::INT_SAMPLER_2D_MULTISAMPLE_ARRAY</span>
-        | <span class="ident">glow::INT_SAMPLER_2D_RECT</span>
-        | <span class="ident">glow::INT_SAMPLER_3D</span>
-        | <span class="ident">glow::INT_SAMPLER_CUBE</span>
-        | <span class="ident">glow::INT_SAMPLER_CUBE_MAP_ARRAY</span>
-        | <span class="ident">glow::UNSIGNED_INT_SAMPLER_1D</span>
-        | <span class="ident">glow::UNSIGNED_INT_SAMPLER_1D_ARRAY</span>
-        | <span class="ident">glow::UNSIGNED_INT_SAMPLER_2D</span>
-        | <span class="ident">glow::UNSIGNED_INT_SAMPLER_2D_ARRAY</span>
-        | <span class="ident">glow::UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE</span>
-        | <span class="ident">glow::UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY</span>
-        | <span class="ident">glow::UNSIGNED_INT_SAMPLER_2D_RECT</span>
-        | <span class="ident">glow::UNSIGNED_INT_SAMPLER_3D</span>
-        | <span class="ident">glow::UNSIGNED_INT_SAMPLER_CUBE</span>
-        | <span class="ident">glow::UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY</span>
-        | <span class="ident">glow::SAMPLER_1D</span>
-        | <span class="ident">glow::SAMPLER_1D_SHADOW</span>
-        | <span class="ident">glow::SAMPLER_1D_ARRAY</span>
-        | <span class="ident">glow::SAMPLER_1D_ARRAY_SHADOW</span>
-        | <span class="ident">glow::SAMPLER_2D</span>
-        | <span class="ident">glow::SAMPLER_2D_SHADOW</span>
-        | <span class="ident">glow::SAMPLER_2D_ARRAY</span>
-        | <span class="ident">glow::SAMPLER_2D_ARRAY_SHADOW</span>
-        | <span class="ident">glow::SAMPLER_2D_MULTISAMPLE</span>
-        | <span class="ident">glow::SAMPLER_2D_MULTISAMPLE_ARRAY</span>
-        | <span class="ident">glow::SAMPLER_2D_RECT</span>
-        | <span class="ident">glow::SAMPLER_2D_RECT_SHADOW</span>
-        | <span class="ident">glow::SAMPLER_3D</span>
-        | <span class="ident">glow::SAMPLER_CUBE</span>
-        | <span class="ident">glow::SAMPLER_CUBE_MAP_ARRAY</span>
-        | <span class="ident">glow::SAMPLER_CUBE_MAP_ARRAY_SHADOW</span>
-        | <span class="ident">glow::SAMPLER_CUBE_SHADOW</span> =&gt; <span class="bool-val">true</span>,
-        <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>map_blend(blend: <span class="kw-2">&amp;</span>wgt::BlendState) -&gt; <span class="kw">super</span>::BlendDesc {
+    <span class="kw">super</span>::BlendDesc {
+        color: map_blend_component(<span class="kw-2">&amp;</span>blend.color),
+        alpha: map_blend_component(<span class="kw-2">&amp;</span>blend.alpha),
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">uniform_byte_size</span>(<span class="ident">glsl_uniform_type</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u32</span> {
-    <span class="kw">match</span> <span class="ident">glsl_uniform_type</span> {
-        <span class="ident">glow::FLOAT</span> | <span class="ident">glow::INT</span> =&gt; <span class="number">4</span>,
-        <span class="ident">glow::FLOAT_VEC2</span> | <span class="ident">glow::INT_VEC2</span> =&gt; <span class="number">8</span>,
-        <span class="ident">glow::FLOAT_VEC3</span> | <span class="ident">glow::INT_VEC3</span> =&gt; <span class="number">12</span>,
-        <span class="ident">glow::FLOAT_VEC4</span> | <span class="ident">glow::INT_VEC4</span> =&gt; <span class="number">16</span>,
-        <span class="ident">glow::FLOAT_MAT2</span> =&gt; <span class="number">16</span>,
-        <span class="ident">glow::FLOAT_MAT3</span> =&gt; <span class="number">36</span>,
-        <span class="ident">glow::FLOAT_MAT4</span> =&gt; <span class="number">64</span>,
-        <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Unsupported uniform datatype!&quot;</span>),
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>map_storage_access(access: wgt::StorageTextureAccess) -&gt; u32 {
+    <span class="kw">match </span>access {
+        wgt::StorageTextureAccess::ReadOnly =&gt; glow::READ_ONLY,
+        wgt::StorageTextureAccess::WriteOnly =&gt; glow::WRITE_ONLY,
+        wgt::StorageTextureAccess::ReadWrite =&gt; glow::READ_WRITE,
+    }
+}
+
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>is_sampler(glsl_uniform_type: u32) -&gt; bool {
+    <span class="kw">match </span>glsl_uniform_type {
+        glow::INT_SAMPLER_1D
+        | glow::INT_SAMPLER_1D_ARRAY
+        | glow::INT_SAMPLER_2D
+        | glow::INT_SAMPLER_2D_ARRAY
+        | glow::INT_SAMPLER_2D_MULTISAMPLE
+        | glow::INT_SAMPLER_2D_MULTISAMPLE_ARRAY
+        | glow::INT_SAMPLER_2D_RECT
+        | glow::INT_SAMPLER_3D
+        | glow::INT_SAMPLER_CUBE
+        | glow::INT_SAMPLER_CUBE_MAP_ARRAY
+        | glow::UNSIGNED_INT_SAMPLER_1D
+        | glow::UNSIGNED_INT_SAMPLER_1D_ARRAY
+        | glow::UNSIGNED_INT_SAMPLER_2D
+        | glow::UNSIGNED_INT_SAMPLER_2D_ARRAY
+        | glow::UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE
+        | glow::UNSIGNED_INT_SAMPLER_2D_MULTISAMPLE_ARRAY
+        | glow::UNSIGNED_INT_SAMPLER_2D_RECT
+        | glow::UNSIGNED_INT_SAMPLER_3D
+        | glow::UNSIGNED_INT_SAMPLER_CUBE
+        | glow::UNSIGNED_INT_SAMPLER_CUBE_MAP_ARRAY
+        | glow::SAMPLER_1D
+        | glow::SAMPLER_1D_SHADOW
+        | glow::SAMPLER_1D_ARRAY
+        | glow::SAMPLER_1D_ARRAY_SHADOW
+        | glow::SAMPLER_2D
+        | glow::SAMPLER_2D_SHADOW
+        | glow::SAMPLER_2D_ARRAY
+        | glow::SAMPLER_2D_ARRAY_SHADOW
+        | glow::SAMPLER_2D_MULTISAMPLE
+        | glow::SAMPLER_2D_MULTISAMPLE_ARRAY
+        | glow::SAMPLER_2D_RECT
+        | glow::SAMPLER_2D_RECT_SHADOW
+        | glow::SAMPLER_3D
+        | glow::SAMPLER_CUBE
+        | glow::SAMPLER_CUBE_MAP_ARRAY
+        | glow::SAMPLER_CUBE_MAP_ARRAY_SHADOW
+        | glow::SAMPLER_CUBE_SHADOW =&gt; <span class="bool-val">true</span>,
+        <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+    }
+}
+
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>uniform_byte_size(glsl_uniform_type: u32) -&gt; u32 {
+    <span class="kw">match </span>glsl_uniform_type {
+        glow::FLOAT | glow::INT =&gt; <span class="number">4</span>,
+        glow::FLOAT_VEC2 | glow::INT_VEC2 =&gt; <span class="number">8</span>,
+        glow::FLOAT_VEC3 | glow::INT_VEC3 =&gt; <span class="number">12</span>,
+        glow::FLOAT_VEC4 | glow::INT_VEC4 =&gt; <span class="number">16</span>,
+        glow::FLOAT_MAT2 =&gt; <span class="number">16</span>,
+        glow::FLOAT_MAT3 =&gt; <span class="number">36</span>,
+        glow::FLOAT_MAT4 =&gt; <span class="number">64</span>,
+        <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;Unsupported uniform datatype!&quot;</span>),
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (75b7e52e9 2022-08-13)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (e1b28cd2f 2022-08-19)" ></div></body></html>

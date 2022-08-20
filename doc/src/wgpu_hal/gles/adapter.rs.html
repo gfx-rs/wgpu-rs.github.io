@@ -862,107 +862,107 @@
 <span id="862">862</span>
 <span id="863">863</span>
 <span id="864">864</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">glow::HasContext</span>;
-<span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
-<span class="kw">use</span> <span class="ident">wgt::AstcChannel</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
+<span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span>wgt::AstcChannel;
 
-<span class="comment">// https://webgl2fundamentals.org/webgl/lessons/webgl-data-textures.html</span>
+<span class="comment">// https://webgl2fundamentals.org/webgl/lessons/webgl-data-textures.html
 
-<span class="kw">const</span> <span class="ident">GL_UNMASKED_VENDOR_WEBGL</span>: <span class="ident">u32</span> = <span class="number">0x9245</span>;
-<span class="kw">const</span> <span class="ident">GL_UNMASKED_RENDERER_WEBGL</span>: <span class="ident">u32</span> = <span class="number">0x9246</span>;
+</span><span class="kw">const </span>GL_UNMASKED_VENDOR_WEBGL: u32 = <span class="number">0x9245</span>;
+<span class="kw">const </span>GL_UNMASKED_RENDERER_WEBGL: u32 = <span class="number">0x9246</span>;
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">super</span>::Adapter</span> {
-    <span class="doccomment">/// According to the OpenGL specification, the version information is</span>
-    <span class="doccomment">/// expected to follow the following syntax:</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ~~~bnf</span>
-    <span class="doccomment">/// &lt;major&gt;       ::= &lt;number&gt;</span>
-    <span class="doccomment">/// &lt;minor&gt;       ::= &lt;number&gt;</span>
-    <span class="doccomment">/// &lt;revision&gt;    ::= &lt;number&gt;</span>
-    <span class="doccomment">/// &lt;vendor-info&gt; ::= &lt;string&gt;</span>
-    <span class="doccomment">/// &lt;release&gt;     ::= &lt;major&gt; &quot;.&quot; &lt;minor&gt; [&quot;.&quot; &lt;release&gt;]</span>
-    <span class="doccomment">/// &lt;version&gt;     ::= &lt;release&gt; [&quot; &quot; &lt;vendor-info&gt;]</span>
-    <span class="doccomment">/// ~~~</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Note that this function is intentionally lenient in regards to parsing,</span>
-    <span class="doccomment">/// and will try to recover at least the first two version numbers without</span>
-    <span class="doccomment">/// resulting in an `Err`.</span>
-    <span class="doccomment">/// # Notes</span>
-    <span class="doccomment">/// `WebGL 2` version returned as `OpenGL ES 3.0`</span>
-    <span class="kw">fn</span> <span class="ident">parse_version</span>(<span class="kw-2">mut</span> <span class="ident">src</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="ident">u8</span>, <span class="ident">u8</span>), <span class="ident"><span class="kw">crate</span>::InstanceError</span>&gt; {
-        <span class="kw">let</span> <span class="ident">webgl_sig</span> = <span class="string">&quot;WebGL &quot;</span>;
-        <span class="comment">// According to the WebGL specification</span>
-        <span class="comment">// VERSION  WebGL&lt;space&gt;1.0&lt;space&gt;&lt;vendor-specific information&gt;</span>
-        <span class="comment">// SHADING_LANGUAGE_VERSION WebGL&lt;space&gt;GLSL&lt;space&gt;ES&lt;space&gt;1.0&lt;space&gt;&lt;vendor-specific information&gt;</span>
-        <span class="kw">let</span> <span class="ident">is_webgl</span> = <span class="ident">src</span>.<span class="ident">starts_with</span>(<span class="ident">webgl_sig</span>);
-        <span class="kw">if</span> <span class="ident">is_webgl</span> {
-            <span class="kw">let</span> <span class="ident">pos</span> = <span class="ident">src</span>.<span class="ident">rfind</span>(<span class="ident">webgl_sig</span>).<span class="ident">unwrap_or</span>(<span class="number">0</span>);
-            <span class="ident">src</span> = <span class="kw-2">&amp;</span><span class="ident">src</span>[<span class="ident">pos</span> + <span class="ident">webgl_sig</span>.<span class="ident">len</span>()..];
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">es_sig</span> = <span class="string">&quot; ES &quot;</span>;
-            <span class="kw">match</span> <span class="ident">src</span>.<span class="ident">rfind</span>(<span class="ident">es_sig</span>) {
-                <span class="prelude-val">Some</span>(<span class="ident">pos</span>) =&gt; {
-                    <span class="ident">src</span> = <span class="kw-2">&amp;</span><span class="ident">src</span>[<span class="ident">pos</span> + <span class="ident">es_sig</span>.<span class="ident">len</span>()..];
+<span class="kw">impl </span><span class="kw">super</span>::Adapter {
+    <span class="doccomment">/// According to the OpenGL specification, the version information is
+    /// expected to follow the following syntax:
+    ///
+    /// ~~~bnf
+    /// &lt;major&gt;       ::= &lt;number&gt;
+    /// &lt;minor&gt;       ::= &lt;number&gt;
+    /// &lt;revision&gt;    ::= &lt;number&gt;
+    /// &lt;vendor-info&gt; ::= &lt;string&gt;
+    /// &lt;release&gt;     ::= &lt;major&gt; &quot;.&quot; &lt;minor&gt; [&quot;.&quot; &lt;release&gt;]
+    /// &lt;version&gt;     ::= &lt;release&gt; [&quot; &quot; &lt;vendor-info&gt;]
+    /// ~~~
+    ///
+    /// Note that this function is intentionally lenient in regards to parsing,
+    /// and will try to recover at least the first two version numbers without
+    /// resulting in an `Err`.
+    /// # Notes
+    /// `WebGL 2` version returned as `OpenGL ES 3.0`
+    </span><span class="kw">fn </span>parse_version(<span class="kw-2">mut </span>src: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(u8, u8), <span class="kw">crate</span>::InstanceError&gt; {
+        <span class="kw">let </span>webgl_sig = <span class="string">&quot;WebGL &quot;</span>;
+        <span class="comment">// According to the WebGL specification
+        // VERSION  WebGL&lt;space&gt;1.0&lt;space&gt;&lt;vendor-specific information&gt;
+        // SHADING_LANGUAGE_VERSION WebGL&lt;space&gt;GLSL&lt;space&gt;ES&lt;space&gt;1.0&lt;space&gt;&lt;vendor-specific information&gt;
+        </span><span class="kw">let </span>is_webgl = src.starts_with(webgl_sig);
+        <span class="kw">if </span>is_webgl {
+            <span class="kw">let </span>pos = src.rfind(webgl_sig).unwrap_or(<span class="number">0</span>);
+            src = <span class="kw-2">&amp;</span>src[pos + webgl_sig.len()..];
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>es_sig = <span class="string">&quot; ES &quot;</span>;
+            <span class="kw">match </span>src.rfind(es_sig) {
+                <span class="prelude-val">Some</span>(pos) =&gt; {
+                    src = <span class="kw-2">&amp;</span>src[pos + es_sig.len()..];
                 }
-                <span class="prelude-val">None</span> =&gt; {
-                    <span class="macro">log::warn!</span>(<span class="string">&quot;ES not found in &#39;{}&#39;&quot;</span>, <span class="ident">src</span>);
-                    <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::InstanceError</span>);
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="macro">log::warn!</span>(<span class="string">&quot;ES not found in &#39;{}&#39;&quot;</span>, src);
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
                 }
             }
         };
 
-        <span class="kw">let</span> <span class="ident">glsl_es_sig</span> = <span class="string">&quot;GLSL ES &quot;</span>;
-        <span class="kw">let</span> <span class="ident">is_glsl</span> = <span class="kw">match</span> <span class="ident">src</span>.<span class="ident">find</span>(<span class="ident">glsl_es_sig</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">pos</span>) =&gt; {
-                <span class="ident">src</span> = <span class="kw-2">&amp;</span><span class="ident">src</span>[<span class="ident">pos</span> + <span class="ident">glsl_es_sig</span>.<span class="ident">len</span>()..];
-                <span class="bool-val">true</span>
-            }
-            <span class="prelude-val">None</span> =&gt; <span class="bool-val">false</span>,
+        <span class="kw">let </span>glsl_es_sig = <span class="string">&quot;GLSL ES &quot;</span>;
+        <span class="kw">let </span>is_glsl = <span class="kw">match </span>src.find(glsl_es_sig) {
+            <span class="prelude-val">Some</span>(pos) =&gt; {
+                src = <span class="kw-2">&amp;</span>src[pos + glsl_es_sig.len()..];
+                <span class="bool-val">true
+            </span>}
+            <span class="prelude-val">None </span>=&gt; <span class="bool-val">false</span>,
         };
 
-        <span class="kw">let</span> (<span class="ident">version</span>, <span class="ident">_vendor_info</span>) = <span class="kw">match</span> <span class="ident">src</span>.<span class="ident">find</span>(<span class="string">&#39; &#39;</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">i</span>) =&gt; (<span class="kw-2">&amp;</span><span class="ident">src</span>[..<span class="ident">i</span>], <span class="ident">src</span>[<span class="ident">i</span> + <span class="number">1</span>..].<span class="ident">to_string</span>()),
-            <span class="prelude-val">None</span> =&gt; (<span class="ident">src</span>, <span class="ident">String::new</span>()),
+        <span class="kw">let </span>(version, _vendor_info) = <span class="kw">match </span>src.find(<span class="string">&#39; &#39;</span>) {
+            <span class="prelude-val">Some</span>(i) =&gt; (<span class="kw-2">&amp;</span>src[..i], src[i + <span class="number">1</span>..].to_string()),
+            <span class="prelude-val">None </span>=&gt; (src, String::new()),
         };
 
-        <span class="comment">// TODO: make this even more lenient so that we can also accept</span>
-        <span class="comment">// `&lt;major&gt; &quot;.&quot; &lt;minor&gt; [&lt;???&gt;]`</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">it</span> = <span class="ident">version</span>.<span class="ident">split</span>(<span class="string">&#39;.&#39;</span>);
-        <span class="kw">let</span> <span class="ident">major</span> = <span class="ident">it</span>.<span class="ident">next</span>().<span class="ident">and_then</span>(|<span class="ident">s</span>| <span class="ident">s</span>.<span class="ident">parse</span>().<span class="ident">ok</span>());
-        <span class="kw">let</span> <span class="ident">minor</span> = <span class="ident">it</span>.<span class="ident">next</span>().<span class="ident">and_then</span>(|<span class="ident">s</span>| {
-            <span class="kw">let</span> <span class="ident">trimmed</span> = <span class="kw">if</span> <span class="ident">s</span>.<span class="ident">starts_with</span>(<span class="string">&#39;0&#39;</span>) {
-                <span class="string">&quot;0&quot;</span>
-            } <span class="kw">else</span> {
-                <span class="ident">s</span>.<span class="ident">trim_end_matches</span>(<span class="string">&#39;0&#39;</span>)
+        <span class="comment">// TODO: make this even more lenient so that we can also accept
+        // `&lt;major&gt; &quot;.&quot; &lt;minor&gt; [&lt;???&gt;]`
+        </span><span class="kw">let </span><span class="kw-2">mut </span>it = version.split(<span class="string">&#39;.&#39;</span>);
+        <span class="kw">let </span>major = it.next().and_then(|s| s.parse().ok());
+        <span class="kw">let </span>minor = it.next().and_then(|s| {
+            <span class="kw">let </span>trimmed = <span class="kw">if </span>s.starts_with(<span class="string">&#39;0&#39;</span>) {
+                <span class="string">&quot;0&quot;
+            </span>} <span class="kw">else </span>{
+                s.trim_end_matches(<span class="string">&#39;0&#39;</span>)
             };
-            <span class="ident">trimmed</span>.<span class="ident">parse</span>().<span class="ident">ok</span>()
+            trimmed.parse().ok()
         });
 
-        <span class="kw">match</span> (<span class="ident">major</span>, <span class="ident">minor</span>) {
-            (<span class="prelude-val">Some</span>(<span class="ident">major</span>), <span class="prelude-val">Some</span>(<span class="ident">minor</span>)) =&gt; <span class="prelude-val">Ok</span>((
-                <span class="comment">// Return WebGL 2.0 version as OpenGL ES 3.0</span>
-                <span class="kw">if</span> <span class="ident">is_webgl</span> &amp;&amp; !<span class="ident">is_glsl</span> {
-                    <span class="ident">major</span> + <span class="number">1</span>
-                } <span class="kw">else</span> {
-                    <span class="ident">major</span>
+        <span class="kw">match </span>(major, minor) {
+            (<span class="prelude-val">Some</span>(major), <span class="prelude-val">Some</span>(minor)) =&gt; <span class="prelude-val">Ok</span>((
+                <span class="comment">// Return WebGL 2.0 version as OpenGL ES 3.0
+                </span><span class="kw">if </span>is_webgl &amp;&amp; !is_glsl {
+                    major + <span class="number">1
+                </span>} <span class="kw">else </span>{
+                    major
                 },
-                <span class="ident">minor</span>,
+                minor,
             )),
-            <span class="kw">_</span> =&gt; {
-                <span class="macro">log::warn!</span>(<span class="string">&quot;Unable to extract the version from &#39;{}&#39;&quot;</span>, <span class="ident">version</span>);
-                <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::InstanceError</span>)
+            <span class="kw">_ </span>=&gt; {
+                <span class="macro">log::warn!</span>(<span class="string">&quot;Unable to extract the version from &#39;{}&#39;&quot;</span>, version);
+                <span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError)
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">make_info</span>(<span class="ident">vendor_orig</span>: <span class="ident">String</span>, <span class="ident">renderer_orig</span>: <span class="ident">String</span>) -&gt; <span class="ident">wgt::AdapterInfo</span> {
-        <span class="kw">let</span> <span class="ident">vendor</span> = <span class="ident">vendor_orig</span>.<span class="ident">to_lowercase</span>();
-        <span class="kw">let</span> <span class="ident">renderer</span> = <span class="ident">renderer_orig</span>.<span class="ident">to_lowercase</span>();
+    <span class="kw">fn </span>make_info(vendor_orig: String, renderer_orig: String) -&gt; wgt::AdapterInfo {
+        <span class="kw">let </span>vendor = vendor_orig.to_lowercase();
+        <span class="kw">let </span>renderer = renderer_orig.to_lowercase();
 
-        <span class="comment">// opengl has no way to discern device_type, so we can try to infer it from the renderer string</span>
-        <span class="kw">let</span> <span class="ident">strings_that_imply_integrated</span> = [
-            <span class="string">&quot; xpress&quot;</span>, <span class="comment">// space here is on purpose so we don&#39;t match express</span>
-            <span class="string">&quot;amd renoir&quot;</span>,
+        <span class="comment">// opengl has no way to discern device_type, so we can try to infer it from the renderer string
+        </span><span class="kw">let </span>strings_that_imply_integrated = [
+            <span class="string">&quot; xpress&quot;</span>, <span class="comment">// space here is on purpose so we don&#39;t match express
+            </span><span class="string">&quot;amd renoir&quot;</span>,
             <span class="string">&quot;radeon hd 4200&quot;</span>,
             <span class="string">&quot;radeon hd 4250&quot;</span>,
             <span class="string">&quot;radeon hd 4290&quot;</span>,
@@ -977,754 +977,754 @@
             <span class="string">&quot;radeon(tm) r6 graphics&quot;</span>,
             <span class="string">&quot;radeon(tm) r7 graphics&quot;</span>,
             <span class="string">&quot;radeon r7 graphics&quot;</span>,
-            <span class="string">&quot;nforce&quot;</span>, <span class="comment">// all nvidia nforce are integrated</span>
-            <span class="string">&quot;tegra&quot;</span>,  <span class="comment">// all nvidia tegra are integrated</span>
-            <span class="string">&quot;shield&quot;</span>, <span class="comment">// all nvidia shield are integrated</span>
-            <span class="string">&quot;igp&quot;</span>,
+            <span class="string">&quot;nforce&quot;</span>, <span class="comment">// all nvidia nforce are integrated
+            </span><span class="string">&quot;tegra&quot;</span>,  <span class="comment">// all nvidia tegra are integrated
+            </span><span class="string">&quot;shield&quot;</span>, <span class="comment">// all nvidia shield are integrated
+            </span><span class="string">&quot;igp&quot;</span>,
             <span class="string">&quot;mali&quot;</span>,
             <span class="string">&quot;intel&quot;</span>,
             <span class="string">&quot;v3d&quot;</span>,
             <span class="string">&quot;apple m1&quot;</span>,
         ];
-        <span class="kw">let</span> <span class="ident">strings_that_imply_cpu</span> = [<span class="string">&quot;mesa offscreen&quot;</span>, <span class="string">&quot;swiftshader&quot;</span>, <span class="string">&quot;llvmpipe&quot;</span>];
+        <span class="kw">let </span>strings_that_imply_cpu = [<span class="string">&quot;mesa offscreen&quot;</span>, <span class="string">&quot;swiftshader&quot;</span>, <span class="string">&quot;llvmpipe&quot;</span>];
 
-        <span class="comment">//TODO: handle Intel Iris XE as discreet</span>
-        <span class="kw">let</span> <span class="ident">inferred_device_type</span> = <span class="kw">if</span> <span class="ident">vendor</span>.<span class="ident">contains</span>(<span class="string">&quot;qualcomm&quot;</span>)
-            || <span class="ident">vendor</span>.<span class="ident">contains</span>(<span class="string">&quot;intel&quot;</span>)
-            || <span class="ident">strings_that_imply_integrated</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">any</span>(|<span class="kw-2">&amp;</span><span class="ident">s</span>| <span class="ident">renderer</span>.<span class="ident">contains</span>(<span class="ident">s</span>))
+        <span class="comment">//TODO: handle Intel Iris XE as discreet
+        </span><span class="kw">let </span>inferred_device_type = <span class="kw">if </span>vendor.contains(<span class="string">&quot;qualcomm&quot;</span>)
+            || vendor.contains(<span class="string">&quot;intel&quot;</span>)
+            || strings_that_imply_integrated
+                .iter()
+                .any(|<span class="kw-2">&amp;</span>s| renderer.contains(s))
         {
-            <span class="ident">wgt::DeviceType::IntegratedGpu</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">strings_that_imply_cpu</span>.<span class="ident">iter</span>().<span class="ident">any</span>(|<span class="kw-2">&amp;</span><span class="ident">s</span>| <span class="ident">renderer</span>.<span class="ident">contains</span>(<span class="ident">s</span>)) {
-            <span class="ident">wgt::DeviceType::Cpu</span>
-        } <span class="kw">else</span> {
-            <span class="comment">// At this point the Device type is Unknown.</span>
-            <span class="comment">// It&#39;s most likely DiscreteGpu, but we do not know for sure.</span>
-            <span class="comment">// Use &quot;Other&quot; to avoid possibly making incorrect assumptions.</span>
-            <span class="comment">// Note that if this same device is available under some other API (ex: Vulkan),</span>
-            <span class="comment">// It will mostly likely get a different device type (probably DiscreteGpu).</span>
-            <span class="ident">wgt::DeviceType::Other</span>
+            wgt::DeviceType::IntegratedGpu
+        } <span class="kw">else if </span>strings_that_imply_cpu.iter().any(|<span class="kw-2">&amp;</span>s| renderer.contains(s)) {
+            wgt::DeviceType::Cpu
+        } <span class="kw">else </span>{
+            <span class="comment">// At this point the Device type is Unknown.
+            // It&#39;s most likely DiscreteGpu, but we do not know for sure.
+            // Use &quot;Other&quot; to avoid possibly making incorrect assumptions.
+            // Note that if this same device is available under some other API (ex: Vulkan),
+            // It will mostly likely get a different device type (probably DiscreteGpu).
+            </span>wgt::DeviceType::Other
         };
 
-        <span class="comment">// source: Sascha Willems at Vulkan</span>
-        <span class="kw">let</span> <span class="ident">vendor_id</span> = <span class="kw">if</span> <span class="ident">vendor</span>.<span class="ident">contains</span>(<span class="string">&quot;amd&quot;</span>) {
-            <span class="number">0x1002</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">vendor</span>.<span class="ident">contains</span>(<span class="string">&quot;imgtec&quot;</span>) {
-            <span class="number">0x1010</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">vendor</span>.<span class="ident">contains</span>(<span class="string">&quot;nvidia&quot;</span>) {
-            <span class="number">0x10DE</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">vendor</span>.<span class="ident">contains</span>(<span class="string">&quot;arm&quot;</span>) {
-            <span class="number">0x13B5</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">vendor</span>.<span class="ident">contains</span>(<span class="string">&quot;qualcomm&quot;</span>) {
-            <span class="number">0x5143</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">vendor</span>.<span class="ident">contains</span>(<span class="string">&quot;intel&quot;</span>) {
-            <span class="number">0x8086</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">vendor</span>.<span class="ident">contains</span>(<span class="string">&quot;broadcom&quot;</span>) {
-            <span class="number">0x14e4</span>
-        } <span class="kw">else</span> {
-            <span class="number">0</span>
-        };
+        <span class="comment">// source: Sascha Willems at Vulkan
+        </span><span class="kw">let </span>vendor_id = <span class="kw">if </span>vendor.contains(<span class="string">&quot;amd&quot;</span>) {
+            <span class="number">0x1002
+        </span>} <span class="kw">else if </span>vendor.contains(<span class="string">&quot;imgtec&quot;</span>) {
+            <span class="number">0x1010
+        </span>} <span class="kw">else if </span>vendor.contains(<span class="string">&quot;nvidia&quot;</span>) {
+            <span class="number">0x10DE
+        </span>} <span class="kw">else if </span>vendor.contains(<span class="string">&quot;arm&quot;</span>) {
+            <span class="number">0x13B5
+        </span>} <span class="kw">else if </span>vendor.contains(<span class="string">&quot;qualcomm&quot;</span>) {
+            <span class="number">0x5143
+        </span>} <span class="kw">else if </span>vendor.contains(<span class="string">&quot;intel&quot;</span>) {
+            <span class="number">0x8086
+        </span>} <span class="kw">else if </span>vendor.contains(<span class="string">&quot;broadcom&quot;</span>) {
+            <span class="number">0x14e4
+        </span>} <span class="kw">else </span>{
+            <span class="number">0
+        </span>};
 
-        <span class="ident">wgt::AdapterInfo</span> {
-            <span class="ident">name</span>: <span class="ident">renderer_orig</span>,
-            <span class="ident">vendor</span>: <span class="ident">vendor_id</span>,
-            <span class="ident">device</span>: <span class="number">0</span>,
-            <span class="ident">device_type</span>: <span class="ident">inferred_device_type</span>,
-            <span class="ident">backend</span>: <span class="ident">wgt::Backend::Gl</span>,
+        wgt::AdapterInfo {
+            name: renderer_orig,
+            vendor: vendor_id,
+            device: <span class="number">0</span>,
+            device_type: inferred_device_type,
+            backend: wgt::Backend::Gl,
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">expose</span>(
-        <span class="ident">context</span>: <span class="ident"><span class="kw">super</span>::AdapterContext</span>,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="ident"><span class="kw">crate</span>::ExposedAdapter</span>&lt;<span class="ident"><span class="kw">super</span>::Api</span>&gt;&gt; {
-        <span class="kw">let</span> <span class="ident">gl</span> = <span class="ident">context</span>.<span class="ident">lock</span>();
-        <span class="kw">let</span> <span class="ident">extensions</span> = <span class="ident">gl</span>.<span class="ident">supported_extensions</span>();
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>expose(
+        context: <span class="kw">super</span>::AdapterContext,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::ExposedAdapter&lt;<span class="kw">super</span>::Api&gt;&gt; {
+        <span class="kw">let </span>gl = context.lock();
+        <span class="kw">let </span>extensions = gl.supported_extensions();
 
-        <span class="kw">let</span> (<span class="ident">vendor_const</span>, <span class="ident">renderer_const</span>) = <span class="kw">if</span> <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;WEBGL_debug_renderer_info&quot;</span>) {
-            (<span class="ident">GL_UNMASKED_VENDOR_WEBGL</span>, <span class="ident">GL_UNMASKED_RENDERER_WEBGL</span>)
-        } <span class="kw">else</span> {
-            (<span class="ident">glow::VENDOR</span>, <span class="ident">glow::RENDERER</span>)
+        <span class="kw">let </span>(vendor_const, renderer_const) = <span class="kw">if </span>extensions.contains(<span class="string">&quot;WEBGL_debug_renderer_info&quot;</span>) {
+            (GL_UNMASKED_VENDOR_WEBGL, GL_UNMASKED_RENDERER_WEBGL)
+        } <span class="kw">else </span>{
+            (glow::VENDOR, glow::RENDERER)
         };
-        <span class="kw">let</span> (<span class="ident">vendor</span>, <span class="ident">renderer</span>) = {
-            <span class="kw">let</span> <span class="ident">vendor</span> = <span class="ident">gl</span>.<span class="ident">get_parameter_string</span>(<span class="ident">vendor_const</span>);
-            <span class="kw">let</span> <span class="ident">renderer</span> = <span class="ident">gl</span>.<span class="ident">get_parameter_string</span>(<span class="ident">renderer_const</span>);
+        <span class="kw">let </span>(vendor, renderer) = {
+            <span class="kw">let </span>vendor = gl.get_parameter_string(vendor_const);
+            <span class="kw">let </span>renderer = gl.get_parameter_string(renderer_const);
 
-            (<span class="ident">vendor</span>, <span class="ident">renderer</span>)
+            (vendor, renderer)
         };
-        <span class="kw">let</span> <span class="ident">version</span> = <span class="ident">gl</span>.<span class="ident">get_parameter_string</span>(<span class="ident">glow::VERSION</span>);
+        <span class="kw">let </span>version = gl.get_parameter_string(glow::VERSION);
 
-        <span class="macro">log::info!</span>(<span class="string">&quot;Vendor: {}&quot;</span>, <span class="ident">vendor</span>);
-        <span class="macro">log::info!</span>(<span class="string">&quot;Renderer: {}&quot;</span>, <span class="ident">renderer</span>);
-        <span class="macro">log::info!</span>(<span class="string">&quot;Version: {}&quot;</span>, <span class="ident">version</span>);
+        <span class="macro">log::info!</span>(<span class="string">&quot;Vendor: {}&quot;</span>, vendor);
+        <span class="macro">log::info!</span>(<span class="string">&quot;Renderer: {}&quot;</span>, renderer);
+        <span class="macro">log::info!</span>(<span class="string">&quot;Version: {}&quot;</span>, version);
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Extensions: {:#?}&quot;</span>, <span class="ident">extensions</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;Extensions: {:#?}&quot;</span>, extensions);
 
-        <span class="kw">let</span> <span class="ident">ver</span> = <span class="ident"><span class="self">Self</span>::parse_version</span>(<span class="kw-2">&amp;</span><span class="ident">version</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
-        <span class="kw">if</span> <span class="ident">ver</span> &lt; (<span class="number">3</span>, <span class="number">0</span>) {
+        <span class="kw">let </span>ver = <span class="self">Self</span>::parse_version(<span class="kw-2">&amp;</span>version).ok()<span class="question-mark">?</span>;
+        <span class="kw">if </span>ver &lt; (<span class="number">3</span>, <span class="number">0</span>) {
             <span class="macro">log::warn!</span>(
                 <span class="string">&quot;Returned GLES context is {}.{}, when 3.0+ was requested&quot;</span>,
-                <span class="ident">ver</span>.<span class="number">0</span>,
-                <span class="ident">ver</span>.<span class="number">1</span>
-            );
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+                ver.<span class="number">0</span>,
+                ver.<span class="number">1
+            </span>);
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">supports_storage</span> = <span class="ident">ver</span> &gt;= (<span class="number">3</span>, <span class="number">1</span>);
-        <span class="kw">let</span> <span class="ident">supports_work_group_params</span> = <span class="ident">ver</span> &gt;= (<span class="number">3</span>, <span class="number">1</span>);
+        <span class="kw">let </span>supports_storage = ver &gt;= (<span class="number">3</span>, <span class="number">1</span>);
+        <span class="kw">let </span>supports_work_group_params = ver &gt;= (<span class="number">3</span>, <span class="number">1</span>);
 
-        <span class="kw">let</span> <span class="ident">shading_language_version</span> = {
-            <span class="kw">let</span> <span class="ident">sl_version</span> = <span class="ident">gl</span>.<span class="ident">get_parameter_string</span>(<span class="ident">glow::SHADING_LANGUAGE_VERSION</span>);
-            <span class="macro">log::info!</span>(<span class="string">&quot;SL version: {}&quot;</span>, <span class="kw-2">&amp;</span><span class="ident">sl_version</span>);
-            <span class="kw">let</span> (<span class="ident">sl_major</span>, <span class="ident">sl_minor</span>) = <span class="ident"><span class="self">Self</span>::parse_version</span>(<span class="kw-2">&amp;</span><span class="ident">sl_version</span>).<span class="ident">ok</span>()<span class="question-mark">?</span>;
-            <span class="kw">let</span> <span class="ident">value</span> = <span class="ident">sl_major</span> <span class="kw">as</span> <span class="ident">u16</span> * <span class="number">100</span> + <span class="ident">sl_minor</span> <span class="kw">as</span> <span class="ident">u16</span> * <span class="number">10</span>;
-            <span class="ident">naga::back::glsl::Version::Embedded</span> {
-                <span class="ident">version</span>: <span class="ident">value</span>,
-                <span class="ident">is_webgl</span>: <span class="macro">cfg!</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>),
+        <span class="kw">let </span>shading_language_version = {
+            <span class="kw">let </span>sl_version = gl.get_parameter_string(glow::SHADING_LANGUAGE_VERSION);
+            <span class="macro">log::info!</span>(<span class="string">&quot;SL version: {}&quot;</span>, <span class="kw-2">&amp;</span>sl_version);
+            <span class="kw">let </span>(sl_major, sl_minor) = <span class="self">Self</span>::parse_version(<span class="kw-2">&amp;</span>sl_version).ok()<span class="question-mark">?</span>;
+            <span class="kw">let </span>value = sl_major <span class="kw">as </span>u16 * <span class="number">100 </span>+ sl_minor <span class="kw">as </span>u16 * <span class="number">10</span>;
+            naga::back::glsl::Version::Embedded {
+                version: value,
+                is_webgl: <span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>),
             }
         };
 
-        <span class="comment">// ANGLE provides renderer strings like: &quot;ANGLE (Apple, Apple M1 Pro, OpenGL 4.1)&quot;</span>
-        <span class="kw">let</span> <span class="ident">is_angle</span> = <span class="ident">renderer</span>.<span class="ident">contains</span>(<span class="string">&quot;ANGLE&quot;</span>);
+        <span class="comment">// ANGLE provides renderer strings like: &quot;ANGLE (Apple, Apple M1 Pro, OpenGL 4.1)&quot;
+        </span><span class="kw">let </span>is_angle = renderer.contains(<span class="string">&quot;ANGLE&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">vertex_shader_storage_blocks</span> = <span class="kw">if</span> <span class="ident">supports_storage</span> {
-            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_SHADER_STORAGE_BLOCKS</span>) <span class="kw">as</span> <span class="ident">u32</span>
-        } <span class="kw">else</span> {
-            <span class="number">0</span>
-        };
-        <span class="kw">let</span> <span class="ident">fragment_shader_storage_blocks</span> = <span class="kw">if</span> <span class="ident">supports_storage</span> {
-            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_FRAGMENT_SHADER_STORAGE_BLOCKS</span>) <span class="kw">as</span> <span class="ident">u32</span>
-        } <span class="kw">else</span> {
-            <span class="number">0</span>
-        };
-        <span class="kw">let</span> <span class="ident">vertex_shader_storage_textures</span> = <span class="kw">if</span> <span class="ident">supports_storage</span> {
-            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_IMAGE_UNIFORMS</span>) <span class="kw">as</span> <span class="ident">u32</span>
-        } <span class="kw">else</span> {
-            <span class="number">0</span>
-        };
-        <span class="kw">let</span> <span class="ident">fragment_shader_storage_textures</span> = <span class="kw">if</span> <span class="ident">supports_storage</span> {
-            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_FRAGMENT_IMAGE_UNIFORMS</span>) <span class="kw">as</span> <span class="ident">u32</span>
-        } <span class="kw">else</span> {
-            <span class="number">0</span>
-        };
-        <span class="kw">let</span> <span class="ident">max_storage_block_size</span> = <span class="kw">if</span> <span class="ident">supports_storage</span> {
-            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_SHADER_STORAGE_BLOCK_SIZE</span>) <span class="kw">as</span> <span class="ident">u32</span>
-        } <span class="kw">else</span> {
-            <span class="number">0</span>
-        };
+        <span class="kw">let </span>vertex_shader_storage_blocks = <span class="kw">if </span>supports_storage {
+            gl.get_parameter_i32(glow::MAX_VERTEX_SHADER_STORAGE_BLOCKS) <span class="kw">as </span>u32
+        } <span class="kw">else </span>{
+            <span class="number">0
+        </span>};
+        <span class="kw">let </span>fragment_shader_storage_blocks = <span class="kw">if </span>supports_storage {
+            gl.get_parameter_i32(glow::MAX_FRAGMENT_SHADER_STORAGE_BLOCKS) <span class="kw">as </span>u32
+        } <span class="kw">else </span>{
+            <span class="number">0
+        </span>};
+        <span class="kw">let </span>vertex_shader_storage_textures = <span class="kw">if </span>supports_storage {
+            gl.get_parameter_i32(glow::MAX_VERTEX_IMAGE_UNIFORMS) <span class="kw">as </span>u32
+        } <span class="kw">else </span>{
+            <span class="number">0
+        </span>};
+        <span class="kw">let </span>fragment_shader_storage_textures = <span class="kw">if </span>supports_storage {
+            gl.get_parameter_i32(glow::MAX_FRAGMENT_IMAGE_UNIFORMS) <span class="kw">as </span>u32
+        } <span class="kw">else </span>{
+            <span class="number">0
+        </span>};
+        <span class="kw">let </span>max_storage_block_size = <span class="kw">if </span>supports_storage {
+            gl.get_parameter_i32(glow::MAX_SHADER_STORAGE_BLOCK_SIZE) <span class="kw">as </span>u32
+        } <span class="kw">else </span>{
+            <span class="number">0
+        </span>};
 
-        <span class="comment">// WORKAROUND: In order to work around an issue with GL on RPI4 and similar, we ignore a</span>
-        <span class="comment">// zero vertex ssbo count if there are vertex sstos. (more info:</span>
-        <span class="comment">// https://github.com/gfx-rs/wgpu/pull/1607#issuecomment-874938961) The hardware does not</span>
-        <span class="comment">// want us to write to these SSBOs, but GLES cannot express that. We detect this case and</span>
-        <span class="comment">// disable writing to SSBOs.</span>
-        <span class="kw">let</span> <span class="ident">vertex_ssbo_false_zero</span> =
-            <span class="ident">vertex_shader_storage_blocks</span> == <span class="number">0</span> &amp;&amp; <span class="ident">vertex_shader_storage_textures</span> != <span class="number">0</span>;
-        <span class="kw">if</span> <span class="ident">vertex_ssbo_false_zero</span> {
-            <span class="comment">// We only care about fragment here as the 0 is a lie.</span>
-            <span class="macro">log::warn!</span>(<span class="string">&quot;Max vertex shader SSBO == 0 and SSTO != 0. Interpreting as false zero.&quot;</span>);
+        <span class="comment">// WORKAROUND: In order to work around an issue with GL on RPI4 and similar, we ignore a
+        // zero vertex ssbo count if there are vertex sstos. (more info:
+        // https://github.com/gfx-rs/wgpu/pull/1607#issuecomment-874938961) The hardware does not
+        // want us to write to these SSBOs, but GLES cannot express that. We detect this case and
+        // disable writing to SSBOs.
+        </span><span class="kw">let </span>vertex_ssbo_false_zero =
+            vertex_shader_storage_blocks == <span class="number">0 </span>&amp;&amp; vertex_shader_storage_textures != <span class="number">0</span>;
+        <span class="kw">if </span>vertex_ssbo_false_zero {
+            <span class="comment">// We only care about fragment here as the 0 is a lie.
+            </span><span class="macro">log::warn!</span>(<span class="string">&quot;Max vertex shader SSBO == 0 and SSTO != 0. Interpreting as false zero.&quot;</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">max_storage_buffers_per_shader_stage</span> = <span class="kw">if</span> <span class="ident">vertex_shader_storage_blocks</span> == <span class="number">0</span> {
-            <span class="ident">fragment_shader_storage_blocks</span>
-        } <span class="kw">else</span> {
-            <span class="ident">vertex_shader_storage_blocks</span>.<span class="ident">min</span>(<span class="ident">fragment_shader_storage_blocks</span>)
+        <span class="kw">let </span>max_storage_buffers_per_shader_stage = <span class="kw">if </span>vertex_shader_storage_blocks == <span class="number">0 </span>{
+            fragment_shader_storage_blocks
+        } <span class="kw">else </span>{
+            vertex_shader_storage_blocks.min(fragment_shader_storage_blocks)
         };
-        <span class="kw">let</span> <span class="ident">max_storage_textures_per_shader_stage</span> = <span class="kw">if</span> <span class="ident">vertex_shader_storage_textures</span> == <span class="number">0</span> {
-            <span class="ident">fragment_shader_storage_textures</span>
-        } <span class="kw">else</span> {
-            <span class="ident">vertex_shader_storage_textures</span>.<span class="ident">min</span>(<span class="ident">fragment_shader_storage_textures</span>)
+        <span class="kw">let </span>max_storage_textures_per_shader_stage = <span class="kw">if </span>vertex_shader_storage_textures == <span class="number">0 </span>{
+            fragment_shader_storage_textures
+        } <span class="kw">else </span>{
+            vertex_shader_storage_textures.min(fragment_shader_storage_textures)
         };
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">downlevel_flags</span> = <span class="ident">wgt::DownlevelFlags::empty</span>()
-            | <span class="ident">wgt::DownlevelFlags::NON_POWER_OF_TWO_MIPMAPPED_TEXTURES</span>
-            | <span class="ident">wgt::DownlevelFlags::CUBE_ARRAY_TEXTURES</span>
-            | <span class="ident">wgt::DownlevelFlags::COMPARISON_SAMPLERS</span>;
-        <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(<span class="ident">wgt::DownlevelFlags::COMPUTE_SHADERS</span>, <span class="ident">ver</span> &gt;= (<span class="number">3</span>, <span class="number">1</span>));
-        <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::DownlevelFlags::FRAGMENT_WRITABLE_STORAGE</span>,
-            <span class="ident">max_storage_block_size</span> != <span class="number">0</span>,
+        <span class="kw">let </span><span class="kw-2">mut </span>downlevel_flags = wgt::DownlevelFlags::empty()
+            | wgt::DownlevelFlags::NON_POWER_OF_TWO_MIPMAPPED_TEXTURES
+            | wgt::DownlevelFlags::CUBE_ARRAY_TEXTURES
+            | wgt::DownlevelFlags::COMPARISON_SAMPLERS;
+        downlevel_flags.set(wgt::DownlevelFlags::COMPUTE_SHADERS, ver &gt;= (<span class="number">3</span>, <span class="number">1</span>));
+        downlevel_flags.set(
+            wgt::DownlevelFlags::FRAGMENT_WRITABLE_STORAGE,
+            max_storage_block_size != <span class="number">0</span>,
         );
-        <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(<span class="ident">wgt::DownlevelFlags::INDIRECT_EXECUTION</span>, <span class="ident">ver</span> &gt;= (<span class="number">3</span>, <span class="number">1</span>));
-        <span class="comment">//TODO: we can actually support positive `base_vertex` in the same way</span>
-        <span class="comment">// as we emulate the `start_instance`. But we can&#39;t deal with negatives...</span>
-        <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(<span class="ident">wgt::DownlevelFlags::BASE_VERTEX</span>, <span class="ident">ver</span> &gt;= (<span class="number">3</span>, <span class="number">2</span>));
-        <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::DownlevelFlags::INDEPENDENT_BLEND</span>,
-            <span class="ident">ver</span> &gt;= (<span class="number">3</span>, <span class="number">2</span>) || <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_draw_buffers_indexed&quot;</span>),
+        downlevel_flags.set(wgt::DownlevelFlags::INDIRECT_EXECUTION, ver &gt;= (<span class="number">3</span>, <span class="number">1</span>));
+        <span class="comment">//TODO: we can actually support positive `base_vertex` in the same way
+        // as we emulate the `start_instance`. But we can&#39;t deal with negatives...
+        </span>downlevel_flags.set(wgt::DownlevelFlags::BASE_VERTEX, ver &gt;= (<span class="number">3</span>, <span class="number">2</span>));
+        downlevel_flags.set(
+            wgt::DownlevelFlags::INDEPENDENT_BLEND,
+            ver &gt;= (<span class="number">3</span>, <span class="number">2</span>) || extensions.contains(<span class="string">&quot;GL_EXT_draw_buffers_indexed&quot;</span>),
         );
-        <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::DownlevelFlags::VERTEX_STORAGE</span>,
-            <span class="ident">max_storage_block_size</span> != <span class="number">0</span>
-                &amp;&amp; <span class="ident">max_storage_buffers_per_shader_stage</span> != <span class="number">0</span>
-                &amp;&amp; (<span class="ident">vertex_shader_storage_blocks</span> != <span class="number">0</span> || <span class="ident">vertex_ssbo_false_zero</span>),
+        downlevel_flags.set(
+            wgt::DownlevelFlags::VERTEX_STORAGE,
+            max_storage_block_size != <span class="number">0
+                </span>&amp;&amp; max_storage_buffers_per_shader_stage != <span class="number">0
+                </span>&amp;&amp; (vertex_shader_storage_blocks != <span class="number">0 </span>|| vertex_ssbo_false_zero),
         );
-        <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(<span class="ident">wgt::DownlevelFlags::FRAGMENT_STORAGE</span>, <span class="ident">supports_storage</span>);
-        <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::DownlevelFlags::ANISOTROPIC_FILTERING</span>,
-            <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;EXT_texture_filter_anisotropic&quot;</span>),
+        downlevel_flags.set(wgt::DownlevelFlags::FRAGMENT_STORAGE, supports_storage);
+        downlevel_flags.set(
+            wgt::DownlevelFlags::ANISOTROPIC_FILTERING,
+            extensions.contains(<span class="string">&quot;EXT_texture_filter_anisotropic&quot;</span>),
         );
-        <span class="ident">downlevel_flags</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::DownlevelFlags::BUFFER_BINDINGS_NOT_16_BYTE_ALIGNED</span>,
-            !(<span class="macro">cfg!</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>) || <span class="ident">is_angle</span>),
+        downlevel_flags.set(
+            wgt::DownlevelFlags::BUFFER_BINDINGS_NOT_16_BYTE_ALIGNED,
+            !(<span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>) || is_angle),
         );
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">features</span> = <span class="ident">wgt::Features::empty</span>()
-            | <span class="ident">wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES</span>
-            | <span class="ident">wgt::Features::CLEAR_TEXTURE</span>
-            | <span class="ident">wgt::Features::PUSH_CONSTANTS</span>;
-        <span class="ident">features</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::Features::ADDRESS_MODE_CLAMP_TO_BORDER</span> | <span class="ident">wgt::Features::ADDRESS_MODE_CLAMP_TO_ZERO</span>,
-            <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_texture_border_clamp&quot;</span>),
+        <span class="kw">let </span><span class="kw-2">mut </span>features = wgt::Features::empty()
+            | wgt::Features::TEXTURE_ADAPTER_SPECIFIC_FORMAT_FEATURES
+            | wgt::Features::CLEAR_TEXTURE
+            | wgt::Features::PUSH_CONSTANTS;
+        features.set(
+            wgt::Features::ADDRESS_MODE_CLAMP_TO_BORDER | wgt::Features::ADDRESS_MODE_CLAMP_TO_ZERO,
+            extensions.contains(<span class="string">&quot;GL_EXT_texture_border_clamp&quot;</span>),
         );
-        <span class="ident">features</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::Features::DEPTH_CLIP_CONTROL</span>,
-            <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_depth_clamp&quot;</span>),
+        features.set(
+            wgt::Features::DEPTH_CLIP_CONTROL,
+            extensions.contains(<span class="string">&quot;GL_EXT_depth_clamp&quot;</span>),
         );
-        <span class="ident">features</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::Features::VERTEX_WRITABLE_STORAGE</span>,
-            <span class="ident">downlevel_flags</span>.<span class="ident">contains</span>(<span class="ident">wgt::DownlevelFlags::VERTEX_STORAGE</span>)
-                &amp;&amp; <span class="ident">vertex_shader_storage_textures</span> != <span class="number">0</span>,
+        features.set(
+            wgt::Features::VERTEX_WRITABLE_STORAGE,
+            downlevel_flags.contains(wgt::DownlevelFlags::VERTEX_STORAGE)
+                &amp;&amp; vertex_shader_storage_textures != <span class="number">0</span>,
         );
-        <span class="kw">let</span> <span class="ident">gles_bcn_exts</span> = [
+        <span class="kw">let </span>gles_bcn_exts = [
             <span class="string">&quot;GL_EXT_texture_compression_s3tc_srgb&quot;</span>,
             <span class="string">&quot;GL_EXT_texture_compression_rgtc&quot;</span>,
             <span class="string">&quot;GL_EXT_texture_compression_bptc&quot;</span>,
         ];
-        <span class="kw">let</span> <span class="ident">webgl_bcn_exts</span> = [
+        <span class="kw">let </span>webgl_bcn_exts = [
             <span class="string">&quot;WEBGL_compressed_texture_s3tc&quot;</span>,
             <span class="string">&quot;WEBGL_compressed_texture_s3tc_srgb&quot;</span>,
             <span class="string">&quot;EXT_texture_compression_rgtc&quot;</span>,
             <span class="string">&quot;EXT_texture_compression_bptc&quot;</span>,
         ];
-        <span class="kw">let</span> <span class="ident">bcn_exts</span> = <span class="kw">if</span> <span class="macro">cfg!</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>) {
-            <span class="kw-2">&amp;</span><span class="ident">webgl_bcn_exts</span>[..]
-        } <span class="kw">else</span> {
-            <span class="kw-2">&amp;</span><span class="ident">gles_bcn_exts</span>[..]
+        <span class="kw">let </span>bcn_exts = <span class="kw">if </span><span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>) {
+            <span class="kw-2">&amp;</span>webgl_bcn_exts[..]
+        } <span class="kw">else </span>{
+            <span class="kw-2">&amp;</span>gles_bcn_exts[..]
         };
-        <span class="ident">features</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::Features::TEXTURE_COMPRESSION_BC</span>,
-            <span class="ident">bcn_exts</span>.<span class="ident">iter</span>().<span class="ident">all</span>(|<span class="kw-2">&amp;</span><span class="ident">ext</span>| <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="ident">ext</span>)),
+        features.set(
+            wgt::Features::TEXTURE_COMPRESSION_BC,
+            bcn_exts.iter().all(|<span class="kw-2">&amp;</span>ext| extensions.contains(ext)),
         );
-        <span class="ident">features</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::Features::TEXTURE_COMPRESSION_ETC2</span>,
-            <span class="comment">// This is a part of GLES-3 but not WebGL2 core</span>
-            !<span class="macro">cfg!</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>) || <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;WEBGL_compressed_texture_etc&quot;</span>),
+        features.set(
+            wgt::Features::TEXTURE_COMPRESSION_ETC2,
+            <span class="comment">// This is a part of GLES-3 but not WebGL2 core
+            </span>!<span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>) || extensions.contains(<span class="string">&quot;WEBGL_compressed_texture_etc&quot;</span>),
         );
-        <span class="ident">features</span>.<span class="ident">set</span>(
-            <span class="ident">wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR</span>,
-            <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_KHR_texture_compression_astc_ldr&quot;</span>)
-                || <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;WEBGL_compressed_texture_astc&quot;</span>),
-        );
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">private_caps</span> = <span class="ident"><span class="kw">super</span>::PrivateCapabilities::empty</span>();
-        <span class="ident">private_caps</span>.<span class="ident">set</span>(
-            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::BUFFER_ALLOCATION</span>,
-            <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_buffer_storage&quot;</span>),
-        );
-        <span class="ident">private_caps</span>.<span class="ident">set</span>(
-            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::SHADER_BINDING_LAYOUT</span>,
-            <span class="ident">ver</span> &gt;= (<span class="number">3</span>, <span class="number">1</span>),
-        );
-        <span class="ident">private_caps</span>.<span class="ident">set</span>(
-            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::SHADER_TEXTURE_SHADOW_LOD</span>,
-            <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_texture_shadow_lod&quot;</span>),
-        );
-        <span class="ident">private_caps</span>.<span class="ident">set</span>(<span class="ident"><span class="kw">super</span>::PrivateCapabilities::MEMORY_BARRIERS</span>, <span class="ident">ver</span> &gt;= (<span class="number">3</span>, <span class="number">1</span>));
-        <span class="ident">private_caps</span>.<span class="ident">set</span>(
-            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::VERTEX_BUFFER_LAYOUT</span>,
-            <span class="ident">ver</span> &gt;= (<span class="number">3</span>, <span class="number">1</span>),
-        );
-        <span class="ident">private_caps</span>.<span class="ident">set</span>(
-            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::INDEX_BUFFER_ROLE_CHANGE</span>,
-            !<span class="macro">cfg!</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>),
-        );
-        <span class="ident">private_caps</span>.<span class="ident">set</span>(
-            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::CAN_DISABLE_DRAW_BUFFER</span>,
-            !<span class="macro">cfg!</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>),
-        );
-        <span class="ident">private_caps</span>.<span class="ident">set</span>(
-            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::GET_BUFFER_SUB_DATA</span>,
-            <span class="macro">cfg!</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>),
-        );
-        <span class="kw">let</span> <span class="ident">color_buffer_float</span> = <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_color_buffer_float&quot;</span>)
-            || <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;EXT_color_buffer_float&quot;</span>);
-        <span class="kw">let</span> <span class="ident">color_buffer_half_float</span> = <span class="ident">extensions</span>.<span class="ident">contains</span>(<span class="string">&quot;GL_EXT_color_buffer_half_float&quot;</span>);
-        <span class="ident">private_caps</span>.<span class="ident">set</span>(
-            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_HALF_FLOAT</span>,
-            <span class="ident">color_buffer_half_float</span> || <span class="ident">color_buffer_float</span>,
-        );
-        <span class="ident">private_caps</span>.<span class="ident">set</span>(
-            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_FLOAT</span>,
-            <span class="ident">color_buffer_float</span>,
+        features.set(
+            wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR,
+            extensions.contains(<span class="string">&quot;GL_KHR_texture_compression_astc_ldr&quot;</span>)
+                || extensions.contains(<span class="string">&quot;WEBGL_compressed_texture_astc&quot;</span>),
         );
 
-        <span class="kw">let</span> <span class="ident">max_texture_size</span> = <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_TEXTURE_SIZE</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="kw">let</span> <span class="ident">max_texture_3d_size</span> = <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_3D_TEXTURE_SIZE</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>private_caps = <span class="kw">super</span>::PrivateCapabilities::empty();
+        private_caps.set(
+            <span class="kw">super</span>::PrivateCapabilities::BUFFER_ALLOCATION,
+            extensions.contains(<span class="string">&quot;GL_EXT_buffer_storage&quot;</span>),
+        );
+        private_caps.set(
+            <span class="kw">super</span>::PrivateCapabilities::SHADER_BINDING_LAYOUT,
+            ver &gt;= (<span class="number">3</span>, <span class="number">1</span>),
+        );
+        private_caps.set(
+            <span class="kw">super</span>::PrivateCapabilities::SHADER_TEXTURE_SHADOW_LOD,
+            extensions.contains(<span class="string">&quot;GL_EXT_texture_shadow_lod&quot;</span>),
+        );
+        private_caps.set(<span class="kw">super</span>::PrivateCapabilities::MEMORY_BARRIERS, ver &gt;= (<span class="number">3</span>, <span class="number">1</span>));
+        private_caps.set(
+            <span class="kw">super</span>::PrivateCapabilities::VERTEX_BUFFER_LAYOUT,
+            ver &gt;= (<span class="number">3</span>, <span class="number">1</span>),
+        );
+        private_caps.set(
+            <span class="kw">super</span>::PrivateCapabilities::INDEX_BUFFER_ROLE_CHANGE,
+            !<span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+        );
+        private_caps.set(
+            <span class="kw">super</span>::PrivateCapabilities::CAN_DISABLE_DRAW_BUFFER,
+            !<span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+        );
+        private_caps.set(
+            <span class="kw">super</span>::PrivateCapabilities::GET_BUFFER_SUB_DATA,
+            <span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+        );
+        <span class="kw">let </span>color_buffer_float = extensions.contains(<span class="string">&quot;GL_EXT_color_buffer_float&quot;</span>)
+            || extensions.contains(<span class="string">&quot;EXT_color_buffer_float&quot;</span>);
+        <span class="kw">let </span>color_buffer_half_float = extensions.contains(<span class="string">&quot;GL_EXT_color_buffer_half_float&quot;</span>);
+        private_caps.set(
+            <span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_HALF_FLOAT,
+            color_buffer_half_float || color_buffer_float,
+        );
+        private_caps.set(
+            <span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_FLOAT,
+            color_buffer_float,
+        );
 
-        <span class="kw">let</span> <span class="ident">min_uniform_buffer_offset_alignment</span> =
-            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::UNIFORM_BUFFER_OFFSET_ALIGNMENT</span>) <span class="kw">as</span> <span class="ident">u32</span>;
-        <span class="kw">let</span> <span class="ident">min_storage_buffer_offset_alignment</span> = <span class="kw">if</span> <span class="ident">ver</span> &gt;= (<span class="number">3</span>, <span class="number">1</span>) {
-            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT</span>) <span class="kw">as</span> <span class="ident">u32</span>
-        } <span class="kw">else</span> {
-            <span class="number">256</span>
-        };
-        <span class="kw">let</span> <span class="ident">max_uniform_buffers_per_shader_stage</span> =
-            <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_UNIFORM_BLOCKS</span>)
-                .<span class="ident">min</span>(<span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_FRAGMENT_UNIFORM_BLOCKS</span>)) <span class="kw">as</span> <span class="ident">u32</span>;
+        <span class="kw">let </span>max_texture_size = gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) <span class="kw">as </span>u32;
+        <span class="kw">let </span>max_texture_3d_size = gl.get_parameter_i32(glow::MAX_3D_TEXTURE_SIZE) <span class="kw">as </span>u32;
 
-        <span class="kw">let</span> <span class="ident">max_compute_workgroups_per_dimension</span> = <span class="kw">if</span> <span class="ident">supports_work_group_params</span> {
-            <span class="ident">gl</span>.<span class="ident">get_parameter_indexed_i32</span>(<span class="ident">glow::MAX_COMPUTE_WORK_GROUP_COUNT</span>, <span class="number">0</span>)
-                .<span class="ident">min</span>(<span class="ident">gl</span>.<span class="ident">get_parameter_indexed_i32</span>(<span class="ident">glow::MAX_COMPUTE_WORK_GROUP_COUNT</span>, <span class="number">1</span>))
-                .<span class="ident">min</span>(<span class="ident">gl</span>.<span class="ident">get_parameter_indexed_i32</span>(<span class="ident">glow::MAX_COMPUTE_WORK_GROUP_COUNT</span>, <span class="number">2</span>))
-                <span class="kw">as</span> <span class="ident">u32</span>
-        } <span class="kw">else</span> {
-            <span class="number">0</span>
-        };
+        <span class="kw">let </span>min_uniform_buffer_offset_alignment =
+            gl.get_parameter_i32(glow::UNIFORM_BUFFER_OFFSET_ALIGNMENT) <span class="kw">as </span>u32;
+        <span class="kw">let </span>min_storage_buffer_offset_alignment = <span class="kw">if </span>ver &gt;= (<span class="number">3</span>, <span class="number">1</span>) {
+            gl.get_parameter_i32(glow::SHADER_STORAGE_BUFFER_OFFSET_ALIGNMENT) <span class="kw">as </span>u32
+        } <span class="kw">else </span>{
+            <span class="number">256
+        </span>};
+        <span class="kw">let </span>max_uniform_buffers_per_shader_stage =
+            gl.get_parameter_i32(glow::MAX_VERTEX_UNIFORM_BLOCKS)
+                .min(gl.get_parameter_i32(glow::MAX_FRAGMENT_UNIFORM_BLOCKS)) <span class="kw">as </span>u32;
 
-        <span class="kw">let</span> <span class="ident">limits</span> = <span class="ident">wgt::Limits</span> {
-            <span class="ident">max_texture_dimension_1d</span>: <span class="ident">max_texture_size</span>,
-            <span class="ident">max_texture_dimension_2d</span>: <span class="ident">max_texture_size</span>,
-            <span class="ident">max_texture_dimension_3d</span>: <span class="ident">max_texture_3d_size</span>,
-            <span class="ident">max_texture_array_layers</span>: <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_ARRAY_TEXTURE_LAYERS</span>) <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">max_bind_groups</span>: <span class="ident"><span class="kw">crate</span>::MAX_BIND_GROUPS</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">max_dynamic_uniform_buffers_per_pipeline_layout</span>: <span class="ident">max_uniform_buffers_per_shader_stage</span>,
-            <span class="ident">max_dynamic_storage_buffers_per_pipeline_layout</span>: <span class="ident">max_storage_buffers_per_shader_stage</span>,
-            <span class="ident">max_sampled_textures_per_shader_stage</span>: <span class="ident"><span class="kw">super</span>::MAX_TEXTURE_SLOTS</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">max_samplers_per_shader_stage</span>: <span class="ident"><span class="kw">super</span>::MAX_SAMPLERS</span> <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">max_storage_buffers_per_shader_stage</span>,
-            <span class="ident">max_storage_textures_per_shader_stage</span>,
-            <span class="ident">max_uniform_buffers_per_shader_stage</span>,
-            <span class="ident">max_uniform_buffer_binding_size</span>: <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_UNIFORM_BLOCK_SIZE</span>)
-                <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">max_storage_buffer_binding_size</span>: <span class="kw">if</span> <span class="ident">ver</span> &gt;= (<span class="number">3</span>, <span class="number">1</span>) {
-                <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_SHADER_STORAGE_BLOCK_SIZE</span>)
-            } <span class="kw">else</span> {
-                <span class="number">0</span>
-            } <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">max_vertex_buffers</span>: <span class="kw">if</span> <span class="ident">private_caps</span>
-                .<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::PrivateCapabilities::VERTEX_BUFFER_LAYOUT</span>)
+        <span class="kw">let </span>max_compute_workgroups_per_dimension = <span class="kw">if </span>supports_work_group_params {
+            gl.get_parameter_indexed_i32(glow::MAX_COMPUTE_WORK_GROUP_COUNT, <span class="number">0</span>)
+                .min(gl.get_parameter_indexed_i32(glow::MAX_COMPUTE_WORK_GROUP_COUNT, <span class="number">1</span>))
+                .min(gl.get_parameter_indexed_i32(glow::MAX_COMPUTE_WORK_GROUP_COUNT, <span class="number">2</span>))
+                <span class="kw">as </span>u32
+        } <span class="kw">else </span>{
+            <span class="number">0
+        </span>};
+
+        <span class="kw">let </span>limits = wgt::Limits {
+            max_texture_dimension_1d: max_texture_size,
+            max_texture_dimension_2d: max_texture_size,
+            max_texture_dimension_3d: max_texture_3d_size,
+            max_texture_array_layers: gl.get_parameter_i32(glow::MAX_ARRAY_TEXTURE_LAYERS) <span class="kw">as </span>u32,
+            max_bind_groups: <span class="kw">crate</span>::MAX_BIND_GROUPS <span class="kw">as </span>u32,
+            max_dynamic_uniform_buffers_per_pipeline_layout: max_uniform_buffers_per_shader_stage,
+            max_dynamic_storage_buffers_per_pipeline_layout: max_storage_buffers_per_shader_stage,
+            max_sampled_textures_per_shader_stage: <span class="kw">super</span>::MAX_TEXTURE_SLOTS <span class="kw">as </span>u32,
+            max_samplers_per_shader_stage: <span class="kw">super</span>::MAX_SAMPLERS <span class="kw">as </span>u32,
+            max_storage_buffers_per_shader_stage,
+            max_storage_textures_per_shader_stage,
+            max_uniform_buffers_per_shader_stage,
+            max_uniform_buffer_binding_size: gl.get_parameter_i32(glow::MAX_UNIFORM_BLOCK_SIZE)
+                <span class="kw">as </span>u32,
+            max_storage_buffer_binding_size: <span class="kw">if </span>ver &gt;= (<span class="number">3</span>, <span class="number">1</span>) {
+                gl.get_parameter_i32(glow::MAX_SHADER_STORAGE_BLOCK_SIZE)
+            } <span class="kw">else </span>{
+                <span class="number">0
+            </span>} <span class="kw">as </span>u32,
+            max_vertex_buffers: <span class="kw">if </span>private_caps
+                .contains(<span class="kw">super</span>::PrivateCapabilities::VERTEX_BUFFER_LAYOUT)
             {
-                <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_ATTRIB_BINDINGS</span>) <span class="kw">as</span> <span class="ident">u32</span>
-            } <span class="kw">else</span> {
-                <span class="number">16</span> <span class="comment">// should this be different?</span>
-            },
-            <span class="ident">max_vertex_attributes</span>: (<span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_ATTRIBS</span>) <span class="kw">as</span> <span class="ident">u32</span>)
-                .<span class="ident">min</span>(<span class="ident"><span class="kw">super</span>::MAX_VERTEX_ATTRIBUTES</span> <span class="kw">as</span> <span class="ident">u32</span>),
-            <span class="ident">max_vertex_buffer_array_stride</span>: <span class="kw">if</span> <span class="ident">private_caps</span>
-                .<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::PrivateCapabilities::VERTEX_BUFFER_LAYOUT</span>)
+                gl.get_parameter_i32(glow::MAX_VERTEX_ATTRIB_BINDINGS) <span class="kw">as </span>u32
+            } <span class="kw">else </span>{
+                <span class="number">16 </span><span class="comment">// should this be different?
+            </span>},
+            max_vertex_attributes: (gl.get_parameter_i32(glow::MAX_VERTEX_ATTRIBS) <span class="kw">as </span>u32)
+                .min(<span class="kw">super</span>::MAX_VERTEX_ATTRIBUTES <span class="kw">as </span>u32),
+            max_vertex_buffer_array_stride: <span class="kw">if </span>private_caps
+                .contains(<span class="kw">super</span>::PrivateCapabilities::VERTEX_BUFFER_LAYOUT)
             {
-                <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VERTEX_ATTRIB_STRIDE</span>) <span class="kw">as</span> <span class="ident">u32</span>
-            } <span class="kw">else</span> {
-                !<span class="number">0</span>
-            },
-            <span class="ident">max_push_constant_size</span>: <span class="ident"><span class="kw">super</span>::MAX_PUSH_CONSTANTS</span> <span class="kw">as</span> <span class="ident">u32</span> * <span class="number">4</span>,
-            <span class="ident">min_uniform_buffer_offset_alignment</span>,
-            <span class="ident">min_storage_buffer_offset_alignment</span>,
-            <span class="ident">max_inter_stage_shader_components</span>: <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_VARYING_COMPONENTS</span>)
-                <span class="kw">as</span> <span class="ident">u32</span>,
-            <span class="ident">max_compute_workgroup_storage_size</span>: <span class="kw">if</span> <span class="ident">supports_work_group_params</span> {
-                <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_COMPUTE_SHARED_MEMORY_SIZE</span>) <span class="kw">as</span> <span class="ident">u32</span>
-            } <span class="kw">else</span> {
-                <span class="number">0</span>
-            },
-            <span class="ident">max_compute_invocations_per_workgroup</span>: <span class="kw">if</span> <span class="ident">supports_work_group_params</span> {
-                <span class="ident">gl</span>.<span class="ident">get_parameter_i32</span>(<span class="ident">glow::MAX_COMPUTE_WORK_GROUP_INVOCATIONS</span>) <span class="kw">as</span> <span class="ident">u32</span>
-            } <span class="kw">else</span> {
-                <span class="number">0</span>
-            },
-            <span class="ident">max_compute_workgroup_size_x</span>: <span class="kw">if</span> <span class="ident">supports_work_group_params</span> {
-                <span class="ident">gl</span>.<span class="ident">get_parameter_indexed_i32</span>(<span class="ident">glow::MAX_COMPUTE_WORK_GROUP_SIZE</span>, <span class="number">0</span>) <span class="kw">as</span> <span class="ident">u32</span>
-            } <span class="kw">else</span> {
-                <span class="number">0</span>
-            },
-            <span class="ident">max_compute_workgroup_size_y</span>: <span class="kw">if</span> <span class="ident">supports_work_group_params</span> {
-                <span class="ident">gl</span>.<span class="ident">get_parameter_indexed_i32</span>(<span class="ident">glow::MAX_COMPUTE_WORK_GROUP_SIZE</span>, <span class="number">1</span>) <span class="kw">as</span> <span class="ident">u32</span>
-            } <span class="kw">else</span> {
-                <span class="number">0</span>
-            },
-            <span class="ident">max_compute_workgroup_size_z</span>: <span class="kw">if</span> <span class="ident">supports_work_group_params</span> {
-                <span class="ident">gl</span>.<span class="ident">get_parameter_indexed_i32</span>(<span class="ident">glow::MAX_COMPUTE_WORK_GROUP_SIZE</span>, <span class="number">2</span>) <span class="kw">as</span> <span class="ident">u32</span>
-            } <span class="kw">else</span> {
-                <span class="number">0</span>
-            },
-            <span class="ident">max_compute_workgroups_per_dimension</span>,
-            <span class="ident">max_buffer_size</span>: <span class="ident">i32::MAX</span> <span class="kw">as</span> <span class="ident">u64</span>,
+                gl.get_parameter_i32(glow::MAX_VERTEX_ATTRIB_STRIDE) <span class="kw">as </span>u32
+            } <span class="kw">else </span>{
+                !<span class="number">0
+            </span>},
+            max_push_constant_size: <span class="kw">super</span>::MAX_PUSH_CONSTANTS <span class="kw">as </span>u32 * <span class="number">4</span>,
+            min_uniform_buffer_offset_alignment,
+            min_storage_buffer_offset_alignment,
+            max_inter_stage_shader_components: gl.get_parameter_i32(glow::MAX_VARYING_COMPONENTS)
+                <span class="kw">as </span>u32,
+            max_compute_workgroup_storage_size: <span class="kw">if </span>supports_work_group_params {
+                gl.get_parameter_i32(glow::MAX_COMPUTE_SHARED_MEMORY_SIZE) <span class="kw">as </span>u32
+            } <span class="kw">else </span>{
+                <span class="number">0
+            </span>},
+            max_compute_invocations_per_workgroup: <span class="kw">if </span>supports_work_group_params {
+                gl.get_parameter_i32(glow::MAX_COMPUTE_WORK_GROUP_INVOCATIONS) <span class="kw">as </span>u32
+            } <span class="kw">else </span>{
+                <span class="number">0
+            </span>},
+            max_compute_workgroup_size_x: <span class="kw">if </span>supports_work_group_params {
+                gl.get_parameter_indexed_i32(glow::MAX_COMPUTE_WORK_GROUP_SIZE, <span class="number">0</span>) <span class="kw">as </span>u32
+            } <span class="kw">else </span>{
+                <span class="number">0
+            </span>},
+            max_compute_workgroup_size_y: <span class="kw">if </span>supports_work_group_params {
+                gl.get_parameter_indexed_i32(glow::MAX_COMPUTE_WORK_GROUP_SIZE, <span class="number">1</span>) <span class="kw">as </span>u32
+            } <span class="kw">else </span>{
+                <span class="number">0
+            </span>},
+            max_compute_workgroup_size_z: <span class="kw">if </span>supports_work_group_params {
+                gl.get_parameter_indexed_i32(glow::MAX_COMPUTE_WORK_GROUP_SIZE, <span class="number">2</span>) <span class="kw">as </span>u32
+            } <span class="kw">else </span>{
+                <span class="number">0
+            </span>},
+            max_compute_workgroups_per_dimension,
+            max_buffer_size: i32::MAX <span class="kw">as </span>u64,
         };
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">workarounds</span> = <span class="ident"><span class="kw">super</span>::Workarounds::empty</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>workarounds = <span class="kw">super</span>::Workarounds::empty();
 
-        <span class="ident">workarounds</span>.<span class="ident">set</span>(
-            <span class="ident"><span class="kw">super</span>::Workarounds::EMULATE_BUFFER_MAP</span>,
-            <span class="macro">cfg!</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>),
+        workarounds.set(
+            <span class="kw">super</span>::Workarounds::EMULATE_BUFFER_MAP,
+            <span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>),
         );
 
-        <span class="kw">let</span> <span class="ident">r</span> = <span class="ident">renderer</span>.<span class="ident">to_lowercase</span>();
-        <span class="comment">// Check for Mesa sRGB clear bug. See</span>
-        <span class="comment">// [`super::PrivateCapabilities::MESA_I915_SRGB_SHADER_CLEAR`].</span>
-        <span class="kw">if</span> <span class="ident">context</span>.<span class="ident">is_owned</span>()
-            &amp;&amp; <span class="ident">r</span>.<span class="ident">contains</span>(<span class="string">&quot;mesa&quot;</span>)
-            &amp;&amp; <span class="ident">r</span>.<span class="ident">contains</span>(<span class="string">&quot;intel&quot;</span>)
-            &amp;&amp; <span class="ident">r</span>.<span class="ident">split</span>(<span class="kw-2">&amp;</span>[<span class="string">&#39; &#39;</span>, <span class="string">&#39;(&#39;</span>, <span class="string">&#39;)&#39;</span>][..])
-                .<span class="ident">any</span>(|<span class="ident">substr</span>| <span class="ident">substr</span>.<span class="ident">len</span>() == <span class="number">3</span> &amp;&amp; <span class="ident">substr</span>.<span class="ident">chars</span>().<span class="ident">nth</span>(<span class="number">2</span>) == <span class="prelude-val">Some</span>(<span class="string">&#39;l&#39;</span>))
+        <span class="kw">let </span>r = renderer.to_lowercase();
+        <span class="comment">// Check for Mesa sRGB clear bug. See
+        // [`super::PrivateCapabilities::MESA_I915_SRGB_SHADER_CLEAR`].
+        </span><span class="kw">if </span>context.is_owned()
+            &amp;&amp; r.contains(<span class="string">&quot;mesa&quot;</span>)
+            &amp;&amp; r.contains(<span class="string">&quot;intel&quot;</span>)
+            &amp;&amp; r.split(<span class="kw-2">&amp;</span>[<span class="string">&#39; &#39;</span>, <span class="string">&#39;(&#39;</span>, <span class="string">&#39;)&#39;</span>][..])
+                .any(|substr| substr.len() == <span class="number">3 </span>&amp;&amp; substr.chars().nth(<span class="number">2</span>) == <span class="prelude-val">Some</span>(<span class="string">&#39;l&#39;</span>))
         {
             <span class="macro">log::warn!</span>(
                 <span class="string">&quot;Detected skylake derivative running on mesa i915. Clears to srgb textures will \
-                use manual shader clears.&quot;</span>
-            );
-            <span class="ident">workarounds</span>.<span class="ident">set</span>(<span class="ident"><span class="kw">super</span>::Workarounds::MESA_I915_SRGB_SHADER_CLEAR</span>, <span class="bool-val">true</span>);
+                use manual shader clears.&quot;
+            </span>);
+            workarounds.set(<span class="kw">super</span>::Workarounds::MESA_I915_SRGB_SHADER_CLEAR, <span class="bool-val">true</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">downlevel_defaults</span> = <span class="ident">wgt::DownlevelLimits</span> {};
+        <span class="kw">let </span>downlevel_defaults = wgt::DownlevelLimits {};
 
-        <span class="comment">// Drop the GL guard so we can move the context into AdapterShared</span>
-        <span class="comment">// ( on WASM the gl handle is just a ref so we tell clippy to allow</span>
-        <span class="comment">// dropping the ref )</span>
-        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::drop_ref</span>)]</span>
-        <span class="ident">drop</span>(<span class="ident">gl</span>);
+        <span class="comment">// Drop the GL guard so we can move the context into AdapterShared
+        // ( on WASM the gl handle is just a ref so we tell clippy to allow
+        // dropping the ref )
+        </span><span class="attribute">#[allow(clippy::drop_ref)]</span>
+        drop(gl);
 
-        <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::ExposedAdapter</span> {
-            <span class="ident">adapter</span>: <span class="ident"><span class="kw">super</span>::Adapter</span> {
-                <span class="ident">shared</span>: <span class="ident">Arc::new</span>(<span class="ident"><span class="kw">super</span>::AdapterShared</span> {
-                    <span class="ident">context</span>,
-                    <span class="ident">private_caps</span>,
-                    <span class="ident">workarounds</span>,
-                    <span class="ident">features</span>,
-                    <span class="ident">shading_language_version</span>,
-                    <span class="ident">max_texture_size</span>,
+        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::ExposedAdapter {
+            adapter: <span class="kw">super</span>::Adapter {
+                shared: Arc::new(<span class="kw">super</span>::AdapterShared {
+                    context,
+                    private_caps,
+                    workarounds,
+                    features,
+                    shading_language_version,
+                    max_texture_size,
                 }),
             },
-            <span class="ident">info</span>: <span class="ident"><span class="self">Self</span>::make_info</span>(<span class="ident">vendor</span>, <span class="ident">renderer</span>),
-            <span class="ident">features</span>,
-            <span class="ident">capabilities</span>: <span class="ident"><span class="kw">crate</span>::Capabilities</span> {
-                <span class="ident">limits</span>,
-                <span class="ident">downlevel</span>: <span class="ident">wgt::DownlevelCapabilities</span> {
-                    <span class="ident">flags</span>: <span class="ident">downlevel_flags</span>,
-                    <span class="ident">limits</span>: <span class="ident">downlevel_defaults</span>,
-                    <span class="ident">shader_model</span>: <span class="ident">wgt::ShaderModel::Sm5</span>,
+            info: <span class="self">Self</span>::make_info(vendor, renderer),
+            features,
+            capabilities: <span class="kw">crate</span>::Capabilities {
+                limits,
+                downlevel: wgt::DownlevelCapabilities {
+                    flags: downlevel_flags,
+                    limits: downlevel_defaults,
+                    shader_model: wgt::ShaderModel::Sm5,
                 },
-                <span class="ident">alignments</span>: <span class="ident"><span class="kw">crate</span>::Alignments</span> {
-                    <span class="ident">buffer_copy_offset</span>: <span class="ident">wgt::BufferSize::new</span>(<span class="number">4</span>).<span class="ident">unwrap</span>(),
-                    <span class="ident">buffer_copy_pitch</span>: <span class="ident">wgt::BufferSize::new</span>(<span class="number">4</span>).<span class="ident">unwrap</span>(),
+                alignments: <span class="kw">crate</span>::Alignments {
+                    buffer_copy_offset: wgt::BufferSize::new(<span class="number">4</span>).unwrap(),
+                    buffer_copy_pitch: wgt::BufferSize::new(<span class="number">4</span>).unwrap(),
                 },
             },
         })
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">create_shader_clear_program</span>(
-        <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">glow::Context</span>,
-    ) -&gt; (<span class="ident">glow::Program</span>, <span class="ident">glow::UniformLocation</span>) {
-        <span class="kw">let</span> <span class="ident">program</span> = <span class="ident">gl</span>
-            .<span class="ident">create_program</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;Could not create shader program&quot;</span>);
-        <span class="kw">let</span> <span class="ident">vertex</span> = <span class="ident">gl</span>
-            .<span class="ident">create_shader</span>(<span class="ident">glow::VERTEX_SHADER</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Could not create shader&quot;</span>);
-        <span class="ident">gl</span>.<span class="ident">shader_source</span>(<span class="ident">vertex</span>, <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/clear.vert&quot;</span>));
-        <span class="ident">gl</span>.<span class="ident">compile_shader</span>(<span class="ident">vertex</span>);
-        <span class="kw">let</span> <span class="ident">fragment</span> = <span class="ident">gl</span>
-            .<span class="ident">create_shader</span>(<span class="ident">glow::FRAGMENT_SHADER</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Could not create shader&quot;</span>);
-        <span class="ident">gl</span>.<span class="ident">shader_source</span>(<span class="ident">fragment</span>, <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/clear.frag&quot;</span>));
-        <span class="ident">gl</span>.<span class="ident">compile_shader</span>(<span class="ident">fragment</span>);
-        <span class="ident">gl</span>.<span class="ident">attach_shader</span>(<span class="ident">program</span>, <span class="ident">vertex</span>);
-        <span class="ident">gl</span>.<span class="ident">attach_shader</span>(<span class="ident">program</span>, <span class="ident">fragment</span>);
-        <span class="ident">gl</span>.<span class="ident">link_program</span>(<span class="ident">program</span>);
-        <span class="kw">let</span> <span class="ident">color_uniform_location</span> = <span class="ident">gl</span>
-            .<span class="ident">get_uniform_location</span>(<span class="ident">program</span>, <span class="string">&quot;color&quot;</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;Could not find color uniform in shader clear shader&quot;</span>);
-        <span class="ident">gl</span>.<span class="ident">delete_shader</span>(<span class="ident">vertex</span>);
-        <span class="ident">gl</span>.<span class="ident">delete_shader</span>(<span class="ident">fragment</span>);
+    <span class="kw">unsafe fn </span>create_shader_clear_program(
+        gl: <span class="kw-2">&amp;</span>glow::Context,
+    ) -&gt; (glow::Program, glow::UniformLocation) {
+        <span class="kw">let </span>program = gl
+            .create_program()
+            .expect(<span class="string">&quot;Could not create shader program&quot;</span>);
+        <span class="kw">let </span>vertex = gl
+            .create_shader(glow::VERTEX_SHADER)
+            .expect(<span class="string">&quot;Could not create shader&quot;</span>);
+        gl.shader_source(vertex, <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/clear.vert&quot;</span>));
+        gl.compile_shader(vertex);
+        <span class="kw">let </span>fragment = gl
+            .create_shader(glow::FRAGMENT_SHADER)
+            .expect(<span class="string">&quot;Could not create shader&quot;</span>);
+        gl.shader_source(fragment, <span class="macro">include_str!</span>(<span class="string">&quot;./shaders/clear.frag&quot;</span>));
+        gl.compile_shader(fragment);
+        gl.attach_shader(program, vertex);
+        gl.attach_shader(program, fragment);
+        gl.link_program(program);
+        <span class="kw">let </span>color_uniform_location = gl
+            .get_uniform_location(program, <span class="string">&quot;color&quot;</span>)
+            .expect(<span class="string">&quot;Could not find color uniform in shader clear shader&quot;</span>);
+        gl.delete_shader(vertex);
+        gl.delete_shader(fragment);
 
-        (<span class="ident">program</span>, <span class="ident">color_uniform_location</span>)
+        (program, color_uniform_location)
     }
 }
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">crate</span>::Adapter</span>&lt;<span class="ident"><span class="kw">super</span>::Api</span>&gt; <span class="kw">for</span> <span class="ident"><span class="kw">super</span>::Adapter</span> {
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">open</span>(
+<span class="kw">impl </span><span class="kw">crate</span>::Adapter&lt;<span class="kw">super</span>::Api&gt; <span class="kw">for </span><span class="kw">super</span>::Adapter {
+    <span class="kw">unsafe fn </span>open(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">features</span>: <span class="ident">wgt::Features</span>,
-        <span class="ident">_limits</span>: <span class="kw-2">&amp;</span><span class="ident">wgt::Limits</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="ident"><span class="kw">crate</span>::OpenDevice</span>&lt;<span class="ident"><span class="kw">super</span>::Api</span>&gt;, <span class="ident"><span class="kw">crate</span>::DeviceError</span>&gt; {
-        <span class="kw">let</span> <span class="ident">gl</span> = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">context</span>.<span class="ident">lock</span>();
-        <span class="ident">gl</span>.<span class="ident">pixel_store_i32</span>(<span class="ident">glow::UNPACK_ALIGNMENT</span>, <span class="number">1</span>);
-        <span class="ident">gl</span>.<span class="ident">pixel_store_i32</span>(<span class="ident">glow::PACK_ALIGNMENT</span>, <span class="number">1</span>);
-        <span class="kw">let</span> <span class="ident">main_vao</span> = <span class="ident">gl</span>
-            .<span class="ident">create_vertex_array</span>()
-            .<span class="ident">map_err</span>(|<span class="kw">_</span>| <span class="ident"><span class="kw">crate</span>::DeviceError::OutOfMemory</span>)<span class="question-mark">?</span>;
-        <span class="ident">gl</span>.<span class="ident">bind_vertex_array</span>(<span class="prelude-val">Some</span>(<span class="ident">main_vao</span>));
+        features: wgt::Features,
+        _limits: <span class="kw-2">&amp;</span>wgt::Limits,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">crate</span>::OpenDevice&lt;<span class="kw">super</span>::Api&gt;, <span class="kw">crate</span>::DeviceError&gt; {
+        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
+        gl.pixel_store_i32(glow::UNPACK_ALIGNMENT, <span class="number">1</span>);
+        gl.pixel_store_i32(glow::PACK_ALIGNMENT, <span class="number">1</span>);
+        <span class="kw">let </span>main_vao = gl
+            .create_vertex_array()
+            .map_err(|<span class="kw">_</span>| <span class="kw">crate</span>::DeviceError::OutOfMemory)<span class="question-mark">?</span>;
+        gl.bind_vertex_array(<span class="prelude-val">Some</span>(main_vao));
 
-        <span class="kw">let</span> <span class="ident">zero_buffer</span> = <span class="ident">gl</span>
-            .<span class="ident">create_buffer</span>()
-            .<span class="ident">map_err</span>(|<span class="kw">_</span>| <span class="ident"><span class="kw">crate</span>::DeviceError::OutOfMemory</span>)<span class="question-mark">?</span>;
-        <span class="ident">gl</span>.<span class="ident">bind_buffer</span>(<span class="ident">glow::COPY_READ_BUFFER</span>, <span class="prelude-val">Some</span>(<span class="ident">zero_buffer</span>));
-        <span class="kw">let</span> <span class="ident">zeroes</span> = <span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="ident"><span class="kw">super</span>::ZERO_BUFFER_SIZE</span>];
-        <span class="ident">gl</span>.<span class="ident">buffer_data_u8_slice</span>(<span class="ident">glow::COPY_READ_BUFFER</span>, <span class="kw-2">&amp;</span><span class="ident">zeroes</span>, <span class="ident">glow::STATIC_DRAW</span>);
+        <span class="kw">let </span>zero_buffer = gl
+            .create_buffer()
+            .map_err(|<span class="kw">_</span>| <span class="kw">crate</span>::DeviceError::OutOfMemory)<span class="question-mark">?</span>;
+        gl.bind_buffer(glow::COPY_READ_BUFFER, <span class="prelude-val">Some</span>(zero_buffer));
+        <span class="kw">let </span>zeroes = <span class="macro">vec!</span>[<span class="number">0u8</span>; <span class="kw">super</span>::ZERO_BUFFER_SIZE];
+        gl.buffer_data_u8_slice(glow::COPY_READ_BUFFER, <span class="kw-2">&amp;</span>zeroes, glow::STATIC_DRAW);
 
-        <span class="comment">// Compile the shader program we use for doing manual clears to work around Mesa fastclear</span>
-        <span class="comment">// bug.</span>
-        <span class="kw">let</span> (<span class="ident">shader_clear_program</span>, <span class="ident">shader_clear_program_color_uniform_location</span>) =
-            <span class="ident"><span class="self">Self</span>::create_shader_clear_program</span>(<span class="ident">gl</span>);
+        <span class="comment">// Compile the shader program we use for doing manual clears to work around Mesa fastclear
+        // bug.
+        </span><span class="kw">let </span>(shader_clear_program, shader_clear_program_color_uniform_location) =
+            <span class="self">Self</span>::create_shader_clear_program(gl);
 
-        <span class="prelude-val">Ok</span>(<span class="ident"><span class="kw">crate</span>::OpenDevice</span> {
-            <span class="ident">device</span>: <span class="ident"><span class="kw">super</span>::Device</span> {
-                <span class="ident">shared</span>: <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>),
-                <span class="ident">main_vao</span>,
-                <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> = <span class="string">&quot;renderdoc&quot;</span>)]</span>
-                <span class="ident">render_doc</span>: <span class="ident">Default::default</span>(),
+        <span class="prelude-val">Ok</span>(<span class="kw">crate</span>::OpenDevice {
+            device: <span class="kw">super</span>::Device {
+                shared: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.shared),
+                main_vao,
+                <span class="attribute">#[cfg(feature = <span class="string">&quot;renderdoc&quot;</span>)]</span>
+                render_doc: Default::default(),
             },
-            <span class="ident">queue</span>: <span class="ident"><span class="kw">super</span>::Queue</span> {
-                <span class="ident">shared</span>: <span class="ident">Arc::clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">shared</span>),
-                <span class="ident">features</span>,
-                <span class="ident">draw_fbo</span>: <span class="ident">gl</span>
-                    .<span class="ident">create_framebuffer</span>()
-                    .<span class="ident">map_err</span>(|<span class="kw">_</span>| <span class="ident"><span class="kw">crate</span>::DeviceError::OutOfMemory</span>)<span class="question-mark">?</span>,
-                <span class="ident">copy_fbo</span>: <span class="ident">gl</span>
-                    .<span class="ident">create_framebuffer</span>()
-                    .<span class="ident">map_err</span>(|<span class="kw">_</span>| <span class="ident"><span class="kw">crate</span>::DeviceError::OutOfMemory</span>)<span class="question-mark">?</span>,
-                <span class="ident">shader_clear_program</span>,
-                <span class="ident">shader_clear_program_color_uniform_location</span>,
-                <span class="ident">zero_buffer</span>,
-                <span class="ident">temp_query_results</span>: <span class="ident">Vec::new</span>(),
-                <span class="ident">draw_buffer_count</span>: <span class="number">1</span>,
-                <span class="ident">current_index_buffer</span>: <span class="prelude-val">None</span>,
+            queue: <span class="kw">super</span>::Queue {
+                shared: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.shared),
+                features,
+                draw_fbo: gl
+                    .create_framebuffer()
+                    .map_err(|<span class="kw">_</span>| <span class="kw">crate</span>::DeviceError::OutOfMemory)<span class="question-mark">?</span>,
+                copy_fbo: gl
+                    .create_framebuffer()
+                    .map_err(|<span class="kw">_</span>| <span class="kw">crate</span>::DeviceError::OutOfMemory)<span class="question-mark">?</span>,
+                shader_clear_program,
+                shader_clear_program_color_uniform_location,
+                zero_buffer,
+                temp_query_results: Vec::new(),
+                draw_buffer_count: <span class="number">1</span>,
+                current_index_buffer: <span class="prelude-val">None</span>,
             },
         })
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">texture_format_capabilities</span>(
+    <span class="kw">unsafe fn </span>texture_format_capabilities(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">format</span>: <span class="ident">wgt::TextureFormat</span>,
-    ) -&gt; <span class="ident"><span class="kw">crate</span>::TextureFormatCapabilities</span> {
-        <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::TextureFormatCapabilities</span> <span class="kw">as</span> <span class="ident">Tfc</span>;
-        <span class="kw">use</span> <span class="ident">wgt::TextureFormat</span> <span class="kw">as</span> <span class="ident">Tf</span>;
+        format: wgt::TextureFormat,
+    ) -&gt; <span class="kw">crate</span>::TextureFormatCapabilities {
+        <span class="kw">use </span><span class="kw">crate</span>::TextureFormatCapabilities <span class="kw">as </span>Tfc;
+        <span class="kw">use </span>wgt::TextureFormat <span class="kw">as </span>Tf;
 
-        <span class="comment">// Base types are pulled from the table in the OpenGLES 3.0 spec in section 3.8.</span>
-        <span class="comment">//</span>
-        <span class="comment">// The storage types are based on table 8.26, in section</span>
-        <span class="comment">// &quot;TEXTURE IMAGE LOADS AND STORES&quot; of OpenGLES-3.2 spec.</span>
-        <span class="kw">let</span> <span class="ident">empty</span> = <span class="ident">Tfc::empty</span>();
-        <span class="kw">let</span> <span class="ident">base</span> = <span class="ident">Tfc::COPY_SRC</span> | <span class="ident">Tfc::COPY_DST</span>;
-        <span class="kw">let</span> <span class="ident">unfilterable</span> = <span class="ident">base</span> | <span class="ident">Tfc::SAMPLED</span>;
-        <span class="kw">let</span> <span class="ident">depth</span> = <span class="ident">base</span> | <span class="ident">Tfc::SAMPLED</span> | <span class="ident">Tfc::MULTISAMPLE</span> | <span class="ident">Tfc::DEPTH_STENCIL_ATTACHMENT</span>;
-        <span class="kw">let</span> <span class="ident">filterable</span> = <span class="ident">unfilterable</span> | <span class="ident">Tfc::SAMPLED_LINEAR</span>;
-        <span class="kw">let</span> <span class="ident">renderable</span> =
-            <span class="ident">unfilterable</span> | <span class="ident">Tfc::COLOR_ATTACHMENT</span> | <span class="ident">Tfc::MULTISAMPLE</span> | <span class="ident">Tfc::MULTISAMPLE_RESOLVE</span>;
-        <span class="kw">let</span> <span class="ident">filterable_renderable</span> = <span class="ident">filterable</span> | <span class="ident">renderable</span> | <span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>;
-        <span class="kw">let</span> <span class="ident">storage</span> = <span class="ident">base</span> | <span class="ident">Tfc::STORAGE</span> | <span class="ident">Tfc::STORAGE_READ_WRITE</span>;
+        <span class="comment">// Base types are pulled from the table in the OpenGLES 3.0 spec in section 3.8.
+        //
+        // The storage types are based on table 8.26, in section
+        // &quot;TEXTURE IMAGE LOADS AND STORES&quot; of OpenGLES-3.2 spec.
+        </span><span class="kw">let </span>empty = Tfc::empty();
+        <span class="kw">let </span>base = Tfc::COPY_SRC | Tfc::COPY_DST;
+        <span class="kw">let </span>unfilterable = base | Tfc::SAMPLED;
+        <span class="kw">let </span>depth = base | Tfc::SAMPLED | Tfc::MULTISAMPLE | Tfc::DEPTH_STENCIL_ATTACHMENT;
+        <span class="kw">let </span>filterable = unfilterable | Tfc::SAMPLED_LINEAR;
+        <span class="kw">let </span>renderable =
+            unfilterable | Tfc::COLOR_ATTACHMENT | Tfc::MULTISAMPLE | Tfc::MULTISAMPLE_RESOLVE;
+        <span class="kw">let </span>filterable_renderable = filterable | renderable | Tfc::COLOR_ATTACHMENT_BLEND;
+        <span class="kw">let </span>storage = base | Tfc::STORAGE | Tfc::STORAGE_READ_WRITE;
 
-        <span class="kw">let</span> <span class="ident">feature_fn</span> = |<span class="ident">f</span>, <span class="ident">caps</span>| {
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">features</span>.<span class="ident">contains</span>(<span class="ident">f</span>) {
-                <span class="ident">caps</span>
-            } <span class="kw">else</span> {
-                <span class="ident">empty</span>
+        <span class="kw">let </span>feature_fn = |f, caps| {
+            <span class="kw">if </span><span class="self">self</span>.shared.features.contains(f) {
+                caps
+            } <span class="kw">else </span>{
+                empty
             }
         };
 
-        <span class="kw">let</span> <span class="ident">bcn_features</span> = <span class="ident">feature_fn</span>(<span class="ident">wgt::Features::TEXTURE_COMPRESSION_BC</span>, <span class="ident">filterable</span>);
-        <span class="kw">let</span> <span class="ident">etc2_features</span> = <span class="ident">feature_fn</span>(<span class="ident">wgt::Features::TEXTURE_COMPRESSION_ETC2</span>, <span class="ident">filterable</span>);
-        <span class="kw">let</span> <span class="ident">astc_features</span> = <span class="ident">feature_fn</span>(<span class="ident">wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR</span>, <span class="ident">filterable</span>);
+        <span class="kw">let </span>bcn_features = feature_fn(wgt::Features::TEXTURE_COMPRESSION_BC, filterable);
+        <span class="kw">let </span>etc2_features = feature_fn(wgt::Features::TEXTURE_COMPRESSION_ETC2, filterable);
+        <span class="kw">let </span>astc_features = feature_fn(wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR, filterable);
 
-        <span class="kw">let</span> <span class="ident">private_caps_fn</span> = |<span class="ident">f</span>, <span class="ident">caps</span>| {
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">private_caps</span>.<span class="ident">contains</span>(<span class="ident">f</span>) {
-                <span class="ident">caps</span>
-            } <span class="kw">else</span> {
-                <span class="ident">empty</span>
+        <span class="kw">let </span>private_caps_fn = |f, caps| {
+            <span class="kw">if </span><span class="self">self</span>.shared.private_caps.contains(f) {
+                caps
+            } <span class="kw">else </span>{
+                empty
             }
         };
 
-        <span class="kw">let</span> <span class="ident">half_float_renderable</span> = <span class="ident">private_caps_fn</span>(
-            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_HALF_FLOAT</span>,
-            <span class="ident">Tfc::COLOR_ATTACHMENT</span> | <span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>,
+        <span class="kw">let </span>half_float_renderable = private_caps_fn(
+            <span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_HALF_FLOAT,
+            Tfc::COLOR_ATTACHMENT | Tfc::COLOR_ATTACHMENT_BLEND,
         );
 
-        <span class="kw">let</span> <span class="ident">float_renderable</span> = <span class="ident">private_caps_fn</span>(
-            <span class="ident"><span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_FLOAT</span>,
-            <span class="ident">Tfc::COLOR_ATTACHMENT</span> | <span class="ident">Tfc::COLOR_ATTACHMENT_BLEND</span>,
+        <span class="kw">let </span>float_renderable = private_caps_fn(
+            <span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_FLOAT,
+            Tfc::COLOR_ATTACHMENT | Tfc::COLOR_ATTACHMENT_BLEND,
         );
 
-        <span class="kw">match</span> <span class="ident">format</span> {
-            <span class="ident">Tf::R8Unorm</span> =&gt; <span class="ident">filterable_renderable</span>,
-            <span class="ident">Tf::R8Snorm</span> =&gt; <span class="ident">filterable</span>,
-            <span class="ident">Tf::R8Uint</span> =&gt; <span class="ident">renderable</span>,
-            <span class="ident">Tf::R8Sint</span> =&gt; <span class="ident">renderable</span>,
-            <span class="ident">Tf::R16Uint</span> =&gt; <span class="ident">renderable</span>,
-            <span class="ident">Tf::R16Sint</span> =&gt; <span class="ident">renderable</span>,
-            <span class="ident">Tf::R16Unorm</span> =&gt; <span class="ident">empty</span>,
-            <span class="ident">Tf::R16Snorm</span> =&gt; <span class="ident">empty</span>,
-            <span class="ident">Tf::R16Float</span> =&gt; <span class="ident">filterable</span> | <span class="ident">half_float_renderable</span>,
-            <span class="ident">Tf::Rg8Unorm</span> =&gt; <span class="ident">filterable_renderable</span>,
-            <span class="ident">Tf::Rg8Snorm</span> =&gt; <span class="ident">filterable</span>,
-            <span class="ident">Tf::Rg8Uint</span> =&gt; <span class="ident">renderable</span>,
-            <span class="ident">Tf::Rg8Sint</span> =&gt; <span class="ident">renderable</span>,
-            <span class="ident">Tf::R32Uint</span> =&gt; <span class="ident">renderable</span> | <span class="ident">storage</span>,
-            <span class="ident">Tf::R32Sint</span> =&gt; <span class="ident">renderable</span> | <span class="ident">storage</span>,
-            <span class="ident">Tf::R32Float</span> =&gt; <span class="ident">unfilterable</span> | <span class="ident">storage</span> | <span class="ident">float_renderable</span>,
-            <span class="ident">Tf::Rg16Uint</span> =&gt; <span class="ident">renderable</span>,
-            <span class="ident">Tf::Rg16Sint</span> =&gt; <span class="ident">renderable</span>,
-            <span class="ident">Tf::Rg16Unorm</span> =&gt; <span class="ident">empty</span>,
-            <span class="ident">Tf::Rg16Snorm</span> =&gt; <span class="ident">empty</span>,
-            <span class="ident">Tf::Rg16Float</span> =&gt; <span class="ident">filterable</span> | <span class="ident">half_float_renderable</span>,
-            <span class="ident">Tf::Rgba8Unorm</span> | <span class="ident">Tf::Rgba8UnormSrgb</span> =&gt; <span class="ident">filterable_renderable</span> | <span class="ident">storage</span>,
-            <span class="ident">Tf::Bgra8Unorm</span> | <span class="ident">Tf::Bgra8UnormSrgb</span> =&gt; <span class="ident">filterable_renderable</span>,
-            <span class="ident">Tf::Rgba8Snorm</span> =&gt; <span class="ident">filterable</span>,
-            <span class="ident">Tf::Rgba8Uint</span> =&gt; <span class="ident">renderable</span> | <span class="ident">storage</span>,
-            <span class="ident">Tf::Rgba8Sint</span> =&gt; <span class="ident">renderable</span> | <span class="ident">storage</span>,
-            <span class="ident">Tf::Rgb10a2Unorm</span> =&gt; <span class="ident">filterable_renderable</span>,
-            <span class="ident">Tf::Rg11b10Float</span> =&gt; <span class="ident">filterable</span> | <span class="ident">float_renderable</span>,
-            <span class="ident">Tf::Rg32Uint</span> =&gt; <span class="ident">renderable</span>,
-            <span class="ident">Tf::Rg32Sint</span> =&gt; <span class="ident">renderable</span>,
-            <span class="ident">Tf::Rg32Float</span> =&gt; <span class="ident">unfilterable</span> | <span class="ident">float_renderable</span>,
-            <span class="ident">Tf::Rgba16Uint</span> =&gt; <span class="ident">renderable</span> | <span class="ident">storage</span>,
-            <span class="ident">Tf::Rgba16Sint</span> =&gt; <span class="ident">renderable</span> | <span class="ident">storage</span>,
-            <span class="ident">Tf::Rgba16Unorm</span> =&gt; <span class="ident">empty</span>,
-            <span class="ident">Tf::Rgba16Snorm</span> =&gt; <span class="ident">empty</span>,
-            <span class="ident">Tf::Rgba16Float</span> =&gt; <span class="ident">filterable</span> | <span class="ident">storage</span> | <span class="ident">half_float_renderable</span>,
-            <span class="ident">Tf::Rgba32Uint</span> =&gt; <span class="ident">renderable</span> | <span class="ident">storage</span>,
-            <span class="ident">Tf::Rgba32Sint</span> =&gt; <span class="ident">renderable</span> | <span class="ident">storage</span>,
-            <span class="ident">Tf::Rgba32Float</span> =&gt; <span class="ident">unfilterable</span> | <span class="ident">storage</span> | <span class="ident">float_renderable</span>,
-            <span class="ident">Tf::Depth32Float</span>
-            | <span class="ident">Tf::Depth32FloatStencil8</span>
-            | <span class="ident">Tf::Depth24Plus</span>
-            | <span class="ident">Tf::Depth24PlusStencil8</span>
-            | <span class="ident">Tf::Depth24UnormStencil8</span> =&gt; <span class="ident">depth</span>,
-            <span class="ident">Tf::Rgb9e5Ufloat</span> =&gt; <span class="ident">filterable</span>,
-            <span class="ident">Tf::Bc1RgbaUnorm</span>
-            | <span class="ident">Tf::Bc1RgbaUnormSrgb</span>
-            | <span class="ident">Tf::Bc2RgbaUnorm</span>
-            | <span class="ident">Tf::Bc2RgbaUnormSrgb</span>
-            | <span class="ident">Tf::Bc3RgbaUnorm</span>
-            | <span class="ident">Tf::Bc3RgbaUnormSrgb</span>
-            | <span class="ident">Tf::Bc4RUnorm</span>
-            | <span class="ident">Tf::Bc4RSnorm</span>
-            | <span class="ident">Tf::Bc5RgUnorm</span>
-            | <span class="ident">Tf::Bc5RgSnorm</span>
-            | <span class="ident">Tf::Bc6hRgbSfloat</span>
-            | <span class="ident">Tf::Bc6hRgbUfloat</span>
-            | <span class="ident">Tf::Bc7RgbaUnorm</span>
-            | <span class="ident">Tf::Bc7RgbaUnormSrgb</span> =&gt; <span class="ident">bcn_features</span>,
-            <span class="ident">Tf::Etc2Rgb8Unorm</span>
-            | <span class="ident">Tf::Etc2Rgb8UnormSrgb</span>
-            | <span class="ident">Tf::Etc2Rgb8A1Unorm</span>
-            | <span class="ident">Tf::Etc2Rgb8A1UnormSrgb</span>
-            | <span class="ident">Tf::Etc2Rgba8Unorm</span>
-            | <span class="ident">Tf::Etc2Rgba8UnormSrgb</span>
-            | <span class="ident">Tf::EacR11Unorm</span>
-            | <span class="ident">Tf::EacR11Snorm</span>
-            | <span class="ident">Tf::EacRg11Unorm</span>
-            | <span class="ident">Tf::EacRg11Snorm</span> =&gt; <span class="ident">etc2_features</span>,
-            <span class="ident">Tf::Astc</span> {
-                <span class="ident">block</span>: <span class="kw">_</span>,
-                <span class="ident">channel</span>: <span class="ident">AstcChannel::Unorm</span> | <span class="ident">AstcChannel::UnormSrgb</span>,
-            } =&gt; <span class="ident">astc_features</span>,
-            <span class="ident">Tf::Astc</span> {
-                <span class="ident">block</span>: <span class="kw">_</span>,
-                <span class="ident">channel</span>: <span class="ident">AstcChannel::Hdr</span>,
-            } =&gt; <span class="ident">Tfc::empty</span>(),
+        <span class="kw">match </span>format {
+            Tf::R8Unorm =&gt; filterable_renderable,
+            Tf::R8Snorm =&gt; filterable,
+            Tf::R8Uint =&gt; renderable,
+            Tf::R8Sint =&gt; renderable,
+            Tf::R16Uint =&gt; renderable,
+            Tf::R16Sint =&gt; renderable,
+            Tf::R16Unorm =&gt; empty,
+            Tf::R16Snorm =&gt; empty,
+            Tf::R16Float =&gt; filterable | half_float_renderable,
+            Tf::Rg8Unorm =&gt; filterable_renderable,
+            Tf::Rg8Snorm =&gt; filterable,
+            Tf::Rg8Uint =&gt; renderable,
+            Tf::Rg8Sint =&gt; renderable,
+            Tf::R32Uint =&gt; renderable | storage,
+            Tf::R32Sint =&gt; renderable | storage,
+            Tf::R32Float =&gt; unfilterable | storage | float_renderable,
+            Tf::Rg16Uint =&gt; renderable,
+            Tf::Rg16Sint =&gt; renderable,
+            Tf::Rg16Unorm =&gt; empty,
+            Tf::Rg16Snorm =&gt; empty,
+            Tf::Rg16Float =&gt; filterable | half_float_renderable,
+            Tf::Rgba8Unorm | Tf::Rgba8UnormSrgb =&gt; filterable_renderable | storage,
+            Tf::Bgra8Unorm | Tf::Bgra8UnormSrgb =&gt; filterable_renderable,
+            Tf::Rgba8Snorm =&gt; filterable,
+            Tf::Rgba8Uint =&gt; renderable | storage,
+            Tf::Rgba8Sint =&gt; renderable | storage,
+            Tf::Rgb10a2Unorm =&gt; filterable_renderable,
+            Tf::Rg11b10Float =&gt; filterable | float_renderable,
+            Tf::Rg32Uint =&gt; renderable,
+            Tf::Rg32Sint =&gt; renderable,
+            Tf::Rg32Float =&gt; unfilterable | float_renderable,
+            Tf::Rgba16Uint =&gt; renderable | storage,
+            Tf::Rgba16Sint =&gt; renderable | storage,
+            Tf::Rgba16Unorm =&gt; empty,
+            Tf::Rgba16Snorm =&gt; empty,
+            Tf::Rgba16Float =&gt; filterable | storage | half_float_renderable,
+            Tf::Rgba32Uint =&gt; renderable | storage,
+            Tf::Rgba32Sint =&gt; renderable | storage,
+            Tf::Rgba32Float =&gt; unfilterable | storage | float_renderable,
+            Tf::Depth32Float
+            | Tf::Depth32FloatStencil8
+            | Tf::Depth24Plus
+            | Tf::Depth24PlusStencil8
+            | Tf::Depth24UnormStencil8 =&gt; depth,
+            Tf::Rgb9e5Ufloat =&gt; filterable,
+            Tf::Bc1RgbaUnorm
+            | Tf::Bc1RgbaUnormSrgb
+            | Tf::Bc2RgbaUnorm
+            | Tf::Bc2RgbaUnormSrgb
+            | Tf::Bc3RgbaUnorm
+            | Tf::Bc3RgbaUnormSrgb
+            | Tf::Bc4RUnorm
+            | Tf::Bc4RSnorm
+            | Tf::Bc5RgUnorm
+            | Tf::Bc5RgSnorm
+            | Tf::Bc6hRgbSfloat
+            | Tf::Bc6hRgbUfloat
+            | Tf::Bc7RgbaUnorm
+            | Tf::Bc7RgbaUnormSrgb =&gt; bcn_features,
+            Tf::Etc2Rgb8Unorm
+            | Tf::Etc2Rgb8UnormSrgb
+            | Tf::Etc2Rgb8A1Unorm
+            | Tf::Etc2Rgb8A1UnormSrgb
+            | Tf::Etc2Rgba8Unorm
+            | Tf::Etc2Rgba8UnormSrgb
+            | Tf::EacR11Unorm
+            | Tf::EacR11Snorm
+            | Tf::EacRg11Unorm
+            | Tf::EacRg11Snorm =&gt; etc2_features,
+            Tf::Astc {
+                block: <span class="kw">_</span>,
+                channel: AstcChannel::Unorm | AstcChannel::UnormSrgb,
+            } =&gt; astc_features,
+            Tf::Astc {
+                block: <span class="kw">_</span>,
+                channel: AstcChannel::Hdr,
+            } =&gt; Tfc::empty(),
         }
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">surface_capabilities</span>(
+    <span class="kw">unsafe fn </span>surface_capabilities(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">surface</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::Surface</span>,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="ident"><span class="kw">crate</span>::SurfaceCapabilities</span>&gt; {
-        <span class="kw">if</span> <span class="ident">surface</span>.<span class="ident">presentable</span> {
-            <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::SurfaceCapabilities</span> {
-                <span class="ident">formats</span>: <span class="kw">if</span> <span class="ident">surface</span>.<span class="ident">supports_srgb</span>() {
+        surface: <span class="kw-2">&amp;</span><span class="kw">super</span>::Surface,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::SurfaceCapabilities&gt; {
+        <span class="kw">if </span>surface.presentable {
+            <span class="prelude-val">Some</span>(<span class="kw">crate</span>::SurfaceCapabilities {
+                formats: <span class="kw">if </span>surface.supports_srgb() {
                     <span class="macro">vec!</span>[
-                        <span class="ident">wgt::TextureFormat::Rgba8UnormSrgb</span>,
-                        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>))]</span>
-                        <span class="ident">wgt::TextureFormat::Bgra8UnormSrgb</span>,
+                        wgt::TextureFormat::Rgba8UnormSrgb,
+                        <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]</span>
+                        wgt::TextureFormat::Bgra8UnormSrgb,
                     ]
-                } <span class="kw">else</span> {
+                } <span class="kw">else </span>{
                     <span class="macro">vec!</span>[
-                        <span class="ident">wgt::TextureFormat::Rgba8Unorm</span>,
-                        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>))]</span>
-                        <span class="ident">wgt::TextureFormat::Bgra8Unorm</span>,
+                        wgt::TextureFormat::Rgba8Unorm,
+                        <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]</span>
+                        wgt::TextureFormat::Bgra8Unorm,
                     ]
                 },
-                <span class="ident">present_modes</span>: <span class="macro">vec!</span>[<span class="ident">wgt::PresentMode::Fifo</span>], <span class="comment">//TODO</span>
-                <span class="ident">composite_alpha_modes</span>: <span class="macro">vec!</span>[<span class="ident"><span class="kw">crate</span>::CompositeAlphaMode::Opaque</span>], <span class="comment">//TODO</span>
-                <span class="ident">swap_chain_sizes</span>: <span class="number">2</span>..=<span class="number">2</span>,
-                <span class="ident">current_extent</span>: <span class="prelude-val">None</span>,
-                <span class="ident">extents</span>: <span class="ident">wgt::Extent3d</span> {
-                    <span class="ident">width</span>: <span class="number">4</span>,
-                    <span class="ident">height</span>: <span class="number">4</span>,
-                    <span class="ident">depth_or_array_layers</span>: <span class="number">1</span>,
-                }..=<span class="ident">wgt::Extent3d</span> {
-                    <span class="ident">width</span>: <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">max_texture_size</span>,
-                    <span class="ident">height</span>: <span class="self">self</span>.<span class="ident">shared</span>.<span class="ident">max_texture_size</span>,
-                    <span class="ident">depth_or_array_layers</span>: <span class="number">1</span>,
+                present_modes: <span class="macro">vec!</span>[wgt::PresentMode::Fifo], <span class="comment">//TODO
+                </span>composite_alpha_modes: <span class="macro">vec!</span>[<span class="kw">crate</span>::CompositeAlphaMode::Opaque], <span class="comment">//TODO
+                </span>swap_chain_sizes: <span class="number">2</span>..=<span class="number">2</span>,
+                current_extent: <span class="prelude-val">None</span>,
+                extents: wgt::Extent3d {
+                    width: <span class="number">4</span>,
+                    height: <span class="number">4</span>,
+                    depth_or_array_layers: <span class="number">1</span>,
+                }..=wgt::Extent3d {
+                    width: <span class="self">self</span>.shared.max_texture_size,
+                    height: <span class="self">self</span>.shared.max_texture_size,
+                    depth_or_array_layers: <span class="number">1</span>,
                 },
-                <span class="ident">usage</span>: <span class="ident"><span class="kw">crate</span>::TextureUses::COLOR_TARGET</span>,
+                usage: <span class="kw">crate</span>::TextureUses::COLOR_TARGET,
             })
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
     }
 }
 
-<span class="kw">impl</span> <span class="ident"><span class="kw">super</span>::AdapterShared</span> {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_buffer_sub_data</span>(
+<span class="kw">impl </span><span class="kw">super</span>::AdapterShared {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>get_buffer_sub_data(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">gl</span>: <span class="kw-2">&amp;</span><span class="ident">glow::Context</span>,
-        <span class="ident">target</span>: <span class="ident">u32</span>,
-        <span class="ident">offset</span>: <span class="ident">i32</span>,
-        <span class="ident">dst_data</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>],
+        gl: <span class="kw-2">&amp;</span>glow::Context,
+        target: u32,
+        offset: i32,
+        dst_data: <span class="kw-2">&amp;mut </span>[u8],
     ) {
-        <span class="kw">if</span> <span class="self">self</span>
-            .<span class="ident">private_caps</span>
-            .<span class="ident">contains</span>(<span class="ident"><span class="kw">super</span>::PrivateCapabilities::GET_BUFFER_SUB_DATA</span>)
+        <span class="kw">if </span><span class="self">self
+            </span>.private_caps
+            .contains(<span class="kw">super</span>::PrivateCapabilities::GET_BUFFER_SUB_DATA)
         {
-            <span class="ident">gl</span>.<span class="ident">get_buffer_sub_data</span>(<span class="ident">target</span>, <span class="ident">offset</span>, <span class="ident">dst_data</span>);
-        } <span class="kw">else</span> {
+            gl.get_buffer_sub_data(target, offset, dst_data);
+        } <span class="kw">else </span>{
             <span class="macro">log::error!</span>(<span class="string">&quot;Fake map&quot;</span>);
-            <span class="kw">let</span> <span class="ident">length</span> = <span class="ident">dst_data</span>.<span class="ident">len</span>();
-            <span class="kw">let</span> <span class="ident">buffer_mapping</span> =
-                <span class="ident">gl</span>.<span class="ident">map_buffer_range</span>(<span class="ident">target</span>, <span class="ident">offset</span>, <span class="ident">length</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">glow::MAP_READ_BIT</span>);
+            <span class="kw">let </span>length = dst_data.len();
+            <span class="kw">let </span>buffer_mapping =
+                gl.map_buffer_range(target, offset, length <span class="kw">as _</span>, glow::MAP_READ_BIT);
 
-            <span class="ident">std::ptr::copy_nonoverlapping</span>(<span class="ident">buffer_mapping</span>, <span class="ident">dst_data</span>.<span class="ident">as_mut_ptr</span>(), <span class="ident">length</span>);
+            std::ptr::copy_nonoverlapping(buffer_mapping, dst_data.as_mut_ptr(), length);
 
-            <span class="ident">gl</span>.<span class="ident">unmap_buffer</span>(<span class="ident">target</span>);
+            gl.unmap_buffer(target);
         }
     }
 }
 
-<span class="comment">// SAFE: WASM doesn&#39;t have threads</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident"><span class="kw">super</span>::Adapter</span> {}
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">target_arch</span> = <span class="string">&quot;wasm32&quot;</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident"><span class="kw">super</span>::Adapter</span> {}
+<span class="comment">// SAFE: WASM doesn&#39;t have threads
+</span><span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]</span>
+<span class="kw">unsafe impl </span>Sync <span class="kw">for </span><span class="kw">super</span>::Adapter {}
+<span class="attribute">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]</span>
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span><span class="kw">super</span>::Adapter {}
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span>::Adapter</span>;
+<span class="attribute">#[cfg(test)]</span>
+<span class="kw">mod </span>tests {
+    <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::Adapter;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_version_parse</span>() {
-        <span class="kw">let</span> <span class="ident">error</span> = <span class="prelude-val">Err</span>(<span class="ident"><span class="kw">crate</span>::InstanceError</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">Adapter::parse_version</span>(<span class="string">&quot;1&quot;</span>), <span class="ident">error</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">Adapter::parse_version</span>(<span class="string">&quot;1.&quot;</span>), <span class="ident">error</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">Adapter::parse_version</span>(<span class="string">&quot;1 h3l1o. W0rld&quot;</span>), <span class="ident">error</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">Adapter::parse_version</span>(<span class="string">&quot;1. h3l1o. W0rld&quot;</span>), <span class="ident">error</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">Adapter::parse_version</span>(<span class="string">&quot;1.2.3&quot;</span>), <span class="ident">error</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">Adapter::parse_version</span>(<span class="string">&quot;OpenGL ES 3.1&quot;</span>), <span class="prelude-val">Ok</span>((<span class="number">3</span>, <span class="number">1</span>)));
+    <span class="attribute">#[test]</span>
+    <span class="kw">fn </span>test_version_parse() {
+        <span class="kw">let </span>error = <span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
+        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">&quot;1&quot;</span>), error);
+        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">&quot;1.&quot;</span>), error);
+        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">&quot;1 h3l1o. W0rld&quot;</span>), error);
+        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">&quot;1. h3l1o. W0rld&quot;</span>), error);
+        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">&quot;1.2.3&quot;</span>), error);
+        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">&quot;OpenGL ES 3.1&quot;</span>), <span class="prelude-val">Ok</span>((<span class="number">3</span>, <span class="number">1</span>)));
         <span class="macro">assert_eq!</span>(
-            <span class="ident">Adapter::parse_version</span>(<span class="string">&quot;OpenGL ES 2.0 Google Nexus&quot;</span>),
+            Adapter::parse_version(<span class="string">&quot;OpenGL ES 2.0 Google Nexus&quot;</span>),
             <span class="prelude-val">Ok</span>((<span class="number">2</span>, <span class="number">0</span>))
         );
-        <span class="macro">assert_eq!</span>(<span class="ident">Adapter::parse_version</span>(<span class="string">&quot;GLSL ES 1.1&quot;</span>), <span class="prelude-val">Ok</span>((<span class="number">1</span>, <span class="number">1</span>)));
-        <span class="macro">assert_eq!</span>(<span class="ident">Adapter::parse_version</span>(<span class="string">&quot;OpenGL ES GLSL ES 3.20&quot;</span>), <span class="prelude-val">Ok</span>((<span class="number">3</span>, <span class="number">2</span>)));
+        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">&quot;GLSL ES 1.1&quot;</span>), <span class="prelude-val">Ok</span>((<span class="number">1</span>, <span class="number">1</span>)));
+        <span class="macro">assert_eq!</span>(Adapter::parse_version(<span class="string">&quot;OpenGL ES GLSL ES 3.20&quot;</span>), <span class="prelude-val">Ok</span>((<span class="number">3</span>, <span class="number">2</span>)));
         <span class="macro">assert_eq!</span>(
-            <span class="comment">// WebGL 2.0 should parse as OpenGL ES 3.0</span>
-            <span class="ident">Adapter::parse_version</span>(<span class="string">&quot;WebGL 2.0 (OpenGL ES 3.0 Chromium)&quot;</span>),
+            <span class="comment">// WebGL 2.0 should parse as OpenGL ES 3.0
+            </span>Adapter::parse_version(<span class="string">&quot;WebGL 2.0 (OpenGL ES 3.0 Chromium)&quot;</span>),
             <span class="prelude-val">Ok</span>((<span class="number">3</span>, <span class="number">0</span>))
         );
         <span class="macro">assert_eq!</span>(
-            <span class="ident">Adapter::parse_version</span>(<span class="string">&quot;WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)&quot;</span>),
+            Adapter::parse_version(<span class="string">&quot;WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)&quot;</span>),
             <span class="prelude-val">Ok</span>((<span class="number">3</span>, <span class="number">0</span>))
         );
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (75b7e52e9 2022-08-13)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (e1b28cd2f 2022-08-19)" ></div></body></html>
