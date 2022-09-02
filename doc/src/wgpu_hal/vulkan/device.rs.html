@@ -1919,11 +1919,18 @@
 <span id="1919">1919</span>
 <span id="1920">1920</span>
 <span id="1921">1921</span>
+<span id="1922">1922</span>
+<span id="1923">1923</span>
+<span id="1924">1924</span>
+<span id="1925">1925</span>
+<span id="1926">1926</span>
+<span id="1927">1927</span>
+<span id="1928">1928</span>
+<span id="1929">1929</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{extensions::khr, vk};
-<span class="kw">use </span>inplace_it::inplace_or_alloc_from_iter;
 <span class="kw">use </span>parking_lot::Mutex;
 
 <span class="kw">use </span>std::{
@@ -2383,13 +2390,16 @@
         layouts: <span class="kw">impl </span>ExactSizeIterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>vk::DescriptorSetLayout&gt;,
         sets: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Extend&lt;vk::DescriptorSet&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), gpu_descriptor::DeviceAllocationError&gt; {
-        <span class="kw">let </span>result = inplace_or_alloc_from_iter(layouts.cloned(), |layouts_slice| {
-            <span class="kw">let </span>vk_info = vk::DescriptorSetAllocateInfo::builder()
+        <span class="kw">let </span>result = <span class="self">self</span>.raw.allocate_descriptor_sets(
+            <span class="kw-2">&amp;</span>vk::DescriptorSetAllocateInfo::builder()
                 .descriptor_pool(<span class="kw-2">*</span>pool)
-                .set_layouts(layouts_slice)
-                .build();
-            <span class="self">self</span>.raw.allocate_descriptor_sets(<span class="kw-2">&amp;</span>vk_info)
-        });
+                .set_layouts(
+                    <span class="kw-2">&amp;</span>smallvec::SmallVec::&lt;[vk::DescriptorSetLayout; <span class="number">32</span>]&gt;::from_iter(
+                        layouts.cloned(),
+                    ),
+                )
+                .build(),
+        );
 
         <span class="kw">match </span>result {
             <span class="prelude-val">Ok</span>(vk_sets) =&gt; {
@@ -2418,9 +2428,10 @@
         pool: <span class="kw-2">&amp;mut </span>vk::DescriptorPool,
         sets: <span class="kw">impl </span>Iterator&lt;Item = vk::DescriptorSet&gt;,
     ) {
-        <span class="kw">let </span>result = inplace_or_alloc_from_iter(sets, |sets_slice| {
-            <span class="self">self</span>.raw.free_descriptor_sets(<span class="kw-2">*</span>pool, sets_slice)
-        });
+        <span class="kw">let </span>result = <span class="self">self</span>.raw.free_descriptor_sets(
+            <span class="kw-2">*</span>pool,
+            <span class="kw-2">&amp;</span>smallvec::SmallVec::&lt;[vk::DescriptorSet; <span class="number">32</span>]&gt;::from_iter(sets),
+        );
         <span class="kw">match </span>result {
             <span class="prelude-val">Ok</span>(()) =&gt; {}
             <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">log::error!</span>(<span class="string">&quot;free_descriptor_sets: {:?}&quot;</span>, err),
@@ -2748,21 +2759,26 @@
         </span>I: Iterator&lt;Item = <span class="kw">crate</span>::MemoryRange&gt;,
     {
         <span class="kw">let </span>vk_ranges = <span class="self">self</span>.shared.make_memory_ranges(buffer, ranges);
-        inplace_or_alloc_from_iter(vk_ranges, |array| {
-            <span class="self">self</span>.shared.raw.flush_mapped_memory_ranges(array).unwrap()
-        });
+
+        <span class="self">self</span>.shared
+            .raw
+            .flush_mapped_memory_ranges(
+                <span class="kw-2">&amp;</span>smallvec::SmallVec::&lt;[vk::MappedMemoryRange; <span class="number">32</span>]&gt;::from_iter(vk_ranges),
+            )
+            .unwrap();
     }
     <span class="kw">unsafe fn </span>invalidate_mapped_ranges&lt;I&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span><span class="kw">super</span>::Buffer, ranges: I)
     <span class="kw">where
         </span>I: Iterator&lt;Item = <span class="kw">crate</span>::MemoryRange&gt;,
     {
         <span class="kw">let </span>vk_ranges = <span class="self">self</span>.shared.make_memory_ranges(buffer, ranges);
-        inplace_or_alloc_from_iter(vk_ranges, |array| {
-            <span class="self">self</span>.shared
-                .raw
-                .invalidate_mapped_memory_ranges(array)
-                .unwrap()
-        });
+
+        <span class="self">self</span>.shared
+            .raw
+            .invalidate_mapped_memory_ranges(
+                <span class="kw-2">&amp;</span>smallvec::SmallVec::&lt;[vk::MappedMemoryRange; <span class="number">32</span>]&gt;::from_iter(vk_ranges),
+            )
+            .unwrap();
     }
 
     <span class="kw">unsafe fn </span>create_texture(
@@ -3044,7 +3060,7 @@
             }
         }
 
-        <span class="comment">//Note: not bothering with inplace_or_alloc_from_iter her as it&#39;s low frequency
+        <span class="comment">//Note: not bothering with on stack array here as it&#39;s low frequency
         </span><span class="kw">let </span>vk_bindings = desc
             .entries
             .iter()
@@ -3156,7 +3172,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::PipelineLayoutDescriptor&lt;<span class="kw">super</span>::Api&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::PipelineLayout, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="comment">//Note: not bothering with inplace_or_alloc_from_iter her as it&#39;s low frequency
+        <span class="comment">//Note: not bothering with on stack array here as it&#39;s low frequency
         </span><span class="kw">let </span>vk_set_layouts = desc
             .bind_group_layouts
             .iter()

@@ -781,17 +781,10 @@
 <span id="781">781</span>
 <span id="782">782</span>
 <span id="783">783</span>
-<span id="784">784</span>
-<span id="785">785</span>
-<span id="786">786</span>
-<span id="787">787</span>
-<span id="788">788</span>
-<span id="789">789</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{extensions::ext, vk};
-<span class="kw">use </span>inplace_it::inplace_or_alloc_from_iter;
 
 <span class="kw">use </span>std::{mem, ops::Range, slice};
 
@@ -997,11 +990,12 @@
             size: r.size.get(),
         });
 
-        inplace_or_alloc_from_iter(vk_regions_iter, |vk_regions| {
-            <span class="self">self</span>.device
-                .raw
-                .cmd_copy_buffer(<span class="self">self</span>.active, src.raw, dst.raw, vk_regions)
-        })
+        <span class="self">self</span>.device.raw.cmd_copy_buffer(
+            <span class="self">self</span>.active,
+            src.raw,
+            dst.raw,
+            <span class="kw-2">&amp;</span>smallvec::SmallVec::&lt;[vk::BufferCopy; <span class="number">32</span>]&gt;::from_iter(vk_regions_iter),
+        );
     }
 
     <span class="kw">unsafe fn </span>copy_texture_to_texture&lt;T&gt;(
@@ -1033,16 +1027,14 @@
             }
         });
 
-        inplace_or_alloc_from_iter(vk_regions_iter, |vk_regions| {
-            <span class="self">self</span>.device.raw.cmd_copy_image(
-                <span class="self">self</span>.active,
-                src.raw,
-                src_layout,
-                dst.raw,
-                DST_IMAGE_LAYOUT,
-                vk_regions,
-            );
-        });
+        <span class="self">self</span>.device.raw.cmd_copy_image(
+            <span class="self">self</span>.active,
+            src.raw,
+            src_layout,
+            dst.raw,
+            DST_IMAGE_LAYOUT,
+            <span class="kw-2">&amp;</span>smallvec::SmallVec::&lt;[vk::ImageCopy; <span class="number">32</span>]&gt;::from_iter(vk_regions_iter),
+        );
     }
 
     <span class="kw">unsafe fn </span>copy_buffer_to_texture&lt;T&gt;(
@@ -1055,15 +1047,13 @@
     {
         <span class="kw">let </span>vk_regions_iter = dst.map_buffer_copies(regions);
 
-        inplace_or_alloc_from_iter(vk_regions_iter, |vk_regions| {
-            <span class="self">self</span>.device.raw.cmd_copy_buffer_to_image(
-                <span class="self">self</span>.active,
-                src.raw,
-                dst.raw,
-                DST_IMAGE_LAYOUT,
-                vk_regions,
-            );
-        });
+        <span class="self">self</span>.device.raw.cmd_copy_buffer_to_image(
+            <span class="self">self</span>.active,
+            src.raw,
+            dst.raw,
+            DST_IMAGE_LAYOUT,
+            <span class="kw-2">&amp;</span>smallvec::SmallVec::&lt;[vk::BufferImageCopy; <span class="number">32</span>]&gt;::from_iter(vk_regions_iter),
+        );
     }
 
     <span class="kw">unsafe fn </span>copy_texture_to_buffer&lt;T&gt;(
@@ -1078,15 +1068,13 @@
         <span class="kw">let </span>src_layout = conv::derive_image_layout(src_usage, src.aspects);
         <span class="kw">let </span>vk_regions_iter = src.map_buffer_copies(regions);
 
-        inplace_or_alloc_from_iter(vk_regions_iter, |vk_regions| {
-            <span class="self">self</span>.device.raw.cmd_copy_image_to_buffer(
-                <span class="self">self</span>.active,
-                src.raw,
-                src_layout,
-                dst.raw,
-                vk_regions,
-            );
-        });
+        <span class="self">self</span>.device.raw.cmd_copy_image_to_buffer(
+            <span class="self">self</span>.active,
+            src.raw,
+            src_layout,
+            dst.raw,
+            <span class="kw-2">&amp;</span>smallvec::SmallVec::&lt;[vk::BufferImageCopy; <span class="number">32</span>]&gt;::from_iter(vk_regions_iter),
+        );
     }
 
     <span class="kw">unsafe fn </span>begin_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span><span class="kw">super</span>::QuerySet, index: u32) {
