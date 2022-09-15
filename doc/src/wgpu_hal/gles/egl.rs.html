@@ -1259,11 +1259,8 @@
 <span id="1259">1259</span>
 <span id="1260">1260</span>
 <span id="1261">1261</span>
-<span id="1262">1262</span>
-<span id="1263">1263</span>
 </pre><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>parking_lot::{Mutex, MutexGuard};
-<span class="kw">use </span>raw_window_handle::{HasRawDisplayHandle, HasRawWindowHandle, RawWindowHandle};
 
 <span class="kw">use </span>std::{ffi, os::raw, ptr, sync::Arc, time::Duration};
 
@@ -2033,16 +2030,15 @@
     <span class="attribute">#[cfg_attr(target_os = <span class="string">&quot;macos&quot;</span>, allow(unused, unused_mut, unreachable_code))]
     </span><span class="kw">unsafe fn </span>create_surface(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        has_handle: <span class="kw-2">&amp;</span>(<span class="kw">impl </span>HasRawWindowHandle + HasRawDisplayHandle),
+        display_handle: raw_window_handle::RawDisplayHandle,
+        window_handle: raw_window_handle::RawWindowHandle,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">use </span>raw_window_handle::RawWindowHandle <span class="kw">as </span>Rwh;
-
-        <span class="kw">let </span>raw_window_handle = has_handle.raw_window_handle();
 
         <span class="attribute">#[cfg_attr(any(target_os = <span class="string">&quot;android&quot;</span>, feature = <span class="string">&quot;emscripten&quot;</span>), allow(unused_mut))]
         </span><span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="self">self</span>.inner.lock();
 
-        <span class="kw">match </span>(raw_window_handle, has_handle.raw_display_handle()) {
+        <span class="kw">match </span>(window_handle, display_handle) {
             (Rwh::Xlib(<span class="kw">_</span>), <span class="kw">_</span>) =&gt; {}
             (Rwh::Xcb(<span class="kw">_</span>), <span class="kw">_</span>) =&gt; {}
             (Rwh::Win32(<span class="kw">_</span>), <span class="kw">_</span>) =&gt; {}
@@ -2116,7 +2112,7 @@
             wsi: <span class="self">self</span>.wsi.clone(),
             config: inner.config,
             presentable: inner.supports_native_window,
-            raw_window_handle,
+            raw_window_handle: window_handle,
             swapchain: <span class="prelude-val">None</span>,
             srgb_kind: inner.srgb_kind,
         })
@@ -2208,7 +2204,7 @@
     wsi: WindowSystemInterface,
     config: egl::Config,
     <span class="kw">pub</span>(<span class="kw">super</span>) presentable: bool,
-    raw_window_handle: RawWindowHandle,
+    raw_window_handle: raw_window_handle::RawWindowHandle,
     swapchain: <span class="prelude-ty">Option</span>&lt;Swapchain&gt;,
     srgb_kind: SrgbFrameBufferKind,
 }
@@ -2525,4 +2521,4 @@
     <span class="kw">unsafe fn </span>discard_texture(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _texture: <span class="kw">super</span>::Texture) {}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (84f0c3f79 2022-09-03)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (750bd1a7f 2022-09-14)" ></div></body></html>
