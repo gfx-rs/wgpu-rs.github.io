@@ -3763,6 +3763,18 @@
 <span id="3761">3761</span>
 <span id="3762">3762</span>
 <span id="3763">3763</span>
+<span id="3764">3764</span>
+<span id="3765">3765</span>
+<span id="3766">3766</span>
+<span id="3767">3767</span>
+<span id="3768">3768</span>
+<span id="3769">3769</span>
+<span id="3770">3770</span>
+<span id="3771">3771</span>
+<span id="3772">3772</span>
+<span id="3773">3773</span>
+<span id="3774">3774</span>
+<span id="3775">3775</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -3794,18 +3806,18 @@
     AdapterInfo, AddressMode, AstcBlock, AstcChannel, Backend, Backends, BindGroupLayoutEntry,
     BindingType, BlendComponent, BlendFactor, BlendOperation, BlendState, BufferAddress,
     BufferBindingType, BufferSize, BufferUsages, Color, ColorTargetState, ColorWrites,
-    CommandBufferDescriptor, CompareFunction, DepthBiasState, DepthStencilState, DeviceType,
-    DownlevelCapabilities, DownlevelFlags, DynamicOffset, Extent3d, Face, Features, FilterMode,
-    FrontFace, ImageDataLayout, ImageSubresourceRange, IndexFormat, Limits, MultisampleState,
-    Origin3d, PipelineStatisticsTypes, PolygonMode, PowerPreference, PresentMode, PrimitiveState,
-    PrimitiveTopology, PushConstantRange, QueryType, RenderBundleDepthStencil, SamplerBindingType,
-    SamplerBorderColor, ShaderLocation, ShaderModel, ShaderStages, StencilFaceState,
-    StencilOperation, StencilState, StorageTextureAccess, SurfaceConfiguration, SurfaceStatus,
-    TextureAspect, TextureDimension, TextureFormat, TextureFormatFeatureFlags,
-    TextureFormatFeatures, TextureSampleType, TextureUsages, TextureViewDimension, VertexAttribute,
-    VertexFormat, VertexStepMode, COPY_BUFFER_ALIGNMENT, COPY_BYTES_PER_ROW_ALIGNMENT,
-    MAP_ALIGNMENT, PUSH_CONSTANT_ALIGNMENT, QUERY_RESOLVE_BUFFER_ALIGNMENT, QUERY_SET_MAX_QUERIES,
-    QUERY_SIZE, VERTEX_STRIDE_ALIGNMENT,
+    CommandBufferDescriptor, CompareFunction, CompositeAlphaMode, DepthBiasState,
+    DepthStencilState, DeviceType, DownlevelCapabilities, DownlevelFlags, DynamicOffset, Extent3d,
+    Face, Features, FilterMode, FrontFace, ImageDataLayout, ImageSubresourceRange, IndexFormat,
+    Limits, MultisampleState, Origin3d, PipelineStatisticsTypes, PolygonMode, PowerPreference,
+    PresentMode, PrimitiveState, PrimitiveTopology, PushConstantRange, QueryType,
+    RenderBundleDepthStencil, SamplerBindingType, SamplerBorderColor, ShaderLocation, ShaderModel,
+    ShaderStages, StencilFaceState, StencilOperation, StencilState, StorageTextureAccess,
+    SurfaceConfiguration, SurfaceStatus, TextureAspect, TextureDimension, TextureFormat,
+    TextureFormatFeatureFlags, TextureFormatFeatures, TextureSampleType, TextureUsages,
+    TextureViewDimension, VertexAttribute, VertexFormat, VertexStepMode, COPY_BUFFER_ALIGNMENT,
+    COPY_BYTES_PER_ROW_ALIGNMENT, MAP_ALIGNMENT, PUSH_CONSTANT_ALIGNMENT,
+    QUERY_RESOLVE_BUFFER_ALIGNMENT, QUERY_SET_MAX_QUERIES, QUERY_SIZE, VERTEX_STRIDE_ALIGNMENT,
 };
 
 <span class="kw">use </span>backend::{BufferMappedRange, Context <span class="kw">as </span>C, QueueWriteBuffer};
@@ -3997,11 +4009,16 @@
         surface: <span class="kw-2">&amp;</span><span class="self">Self</span>::SurfaceId,
         adapter: <span class="kw-2">&amp;</span><span class="self">Self</span>::AdapterId,
     ) -&gt; Vec&lt;TextureFormat&gt;;
-    <span class="kw">fn </span>surface_get_supported_modes(
+    <span class="kw">fn </span>surface_get_supported_present_modes(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         surface: <span class="kw-2">&amp;</span><span class="self">Self</span>::SurfaceId,
         adapter: <span class="kw-2">&amp;</span><span class="self">Self</span>::AdapterId,
     ) -&gt; Vec&lt;PresentMode&gt;;
+    <span class="kw">fn </span>surface_get_supported_alpha_modes(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        surface: <span class="kw-2">&amp;</span><span class="self">Self</span>::SurfaceId,
+        adapter: <span class="kw-2">&amp;</span><span class="self">Self</span>::AdapterId,
+    ) -&gt; Vec&lt;CompositeAlphaMode&gt;;
     <span class="kw">fn </span>surface_configure(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         surface: <span class="kw-2">&amp;</span><span class="self">Self</span>::SurfaceId,
@@ -7438,8 +7455,15 @@
     <span class="doccomment">/// Returns a vec of supported presentation modes to use for the [`Surface`] with this adapter.
     ///
     /// Returns an empty vector if the surface is incompatible with the adapter.
-    </span><span class="kw">pub fn </span>get_supported_modes(<span class="kw-2">&amp;</span><span class="self">self</span>, adapter: <span class="kw-2">&amp;</span>Adapter) -&gt; Vec&lt;PresentMode&gt; {
-        Context::surface_get_supported_modes(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="kw-2">&amp;</span>adapter.id)
+    </span><span class="kw">pub fn </span>get_supported_present_modes(<span class="kw-2">&amp;</span><span class="self">self</span>, adapter: <span class="kw-2">&amp;</span>Adapter) -&gt; Vec&lt;PresentMode&gt; {
+        Context::surface_get_supported_present_modes(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="kw-2">&amp;</span>adapter.id)
+    }
+
+    <span class="doccomment">/// Returns a vec of supported alpha modes to use for the [`Surface`] with this adapter.
+    ///
+    /// Will return at least one element, CompositeAlphaMode::Opaque or CompositeAlphaMode::Inherit.
+    </span><span class="kw">pub fn </span>get_supported_alpha_modes(<span class="kw-2">&amp;</span><span class="self">self</span>, adapter: <span class="kw-2">&amp;</span>Adapter) -&gt; Vec&lt;CompositeAlphaMode&gt; {
+        Context::surface_get_supported_alpha_modes(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="kw-2">&amp;</span>adapter.id)
     }
 
     <span class="doccomment">/// Initializes [`Surface`] for presentation.

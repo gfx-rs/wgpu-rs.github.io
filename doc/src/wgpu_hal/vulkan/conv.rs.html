@@ -823,6 +823,11 @@
 <span id="823">823</span>
 <span id="824">824</span>
 <span id="825">825</span>
+<span id="826">826</span>
+<span id="827">827</span>
+<span id="828">828</span>
+<span id="829">829</span>
+<span id="830">830</span>
 </pre><pre class="rust"><code><span class="kw">use </span>ash::vk;
 <span class="kw">use </span>std::num::NonZeroU32;
 
@@ -1271,24 +1276,29 @@
     </span>}
 }
 
-<span class="kw">pub fn </span>map_composite_alpha_mode(mode: <span class="kw">crate</span>::CompositeAlphaMode) -&gt; vk::CompositeAlphaFlagsKHR {
+<span class="kw">pub fn </span>map_composite_alpha_mode(mode: wgt::CompositeAlphaMode) -&gt; vk::CompositeAlphaFlagsKHR {
     <span class="kw">match </span>mode {
-        <span class="kw">crate</span>::CompositeAlphaMode::Opaque =&gt; vk::CompositeAlphaFlagsKHR::OPAQUE,
-        <span class="kw">crate</span>::CompositeAlphaMode::PostMultiplied =&gt; vk::CompositeAlphaFlagsKHR::POST_MULTIPLIED,
-        <span class="kw">crate</span>::CompositeAlphaMode::PreMultiplied =&gt; vk::CompositeAlphaFlagsKHR::PRE_MULTIPLIED,
+        wgt::CompositeAlphaMode::Opaque =&gt; vk::CompositeAlphaFlagsKHR::OPAQUE,
+        wgt::CompositeAlphaMode::PreMultiplied =&gt; vk::CompositeAlphaFlagsKHR::PRE_MULTIPLIED,
+        wgt::CompositeAlphaMode::PostMultiplied =&gt; vk::CompositeAlphaFlagsKHR::POST_MULTIPLIED,
+        wgt::CompositeAlphaMode::Inherit =&gt; vk::CompositeAlphaFlagsKHR::INHERIT,
+        wgt::CompositeAlphaMode::Auto =&gt; <span class="macro">unreachable!</span>(),
     }
 }
 
-<span class="kw">pub fn </span>map_vk_composite_alpha(flags: vk::CompositeAlphaFlagsKHR) -&gt; Vec&lt;<span class="kw">crate</span>::CompositeAlphaMode&gt; {
+<span class="kw">pub fn </span>map_vk_composite_alpha(flags: vk::CompositeAlphaFlagsKHR) -&gt; Vec&lt;wgt::CompositeAlphaMode&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>modes = Vec::new();
     <span class="kw">if </span>flags.contains(vk::CompositeAlphaFlagsKHR::OPAQUE) {
-        modes.push(<span class="kw">crate</span>::CompositeAlphaMode::Opaque);
-    }
-    <span class="kw">if </span>flags.contains(vk::CompositeAlphaFlagsKHR::POST_MULTIPLIED) {
-        modes.push(<span class="kw">crate</span>::CompositeAlphaMode::PostMultiplied);
+        modes.push(wgt::CompositeAlphaMode::Opaque);
     }
     <span class="kw">if </span>flags.contains(vk::CompositeAlphaFlagsKHR::PRE_MULTIPLIED) {
-        modes.push(<span class="kw">crate</span>::CompositeAlphaMode::PreMultiplied);
+        modes.push(wgt::CompositeAlphaMode::PreMultiplied);
+    }
+    <span class="kw">if </span>flags.contains(vk::CompositeAlphaFlagsKHR::POST_MULTIPLIED) {
+        modes.push(wgt::CompositeAlphaMode::PostMultiplied);
+    }
+    <span class="kw">if </span>flags.contains(vk::CompositeAlphaFlagsKHR::INHERIT) {
+        modes.push(wgt::CompositeAlphaMode::Inherit);
     }
     modes
 }
