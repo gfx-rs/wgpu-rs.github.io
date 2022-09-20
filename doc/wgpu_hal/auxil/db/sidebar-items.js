@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["amd",""],["arm",""],["broadcom",""],["imgtec",""],["intel",""],["nvidia",""],["qualcomm",""]]};
+window.SIDEBAR_ITEMS = {"mod":[["amd",""],["apple",""],["arm",""],["broadcom",""],["imgtec",""],["intel",""],["mesa",""],["nvidia",""],["qualcomm",""]]};
