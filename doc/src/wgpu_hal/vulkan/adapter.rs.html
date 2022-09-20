@@ -1538,6 +1538,24 @@
 <span id="1538">1538</span>
 <span id="1539">1539</span>
 <span id="1540">1540</span>
+<span id="1541">1541</span>
+<span id="1542">1542</span>
+<span id="1543">1543</span>
+<span id="1544">1544</span>
+<span id="1545">1545</span>
+<span id="1546">1546</span>
+<span id="1547">1547</span>
+<span id="1548">1548</span>
+<span id="1549">1549</span>
+<span id="1550">1550</span>
+<span id="1551">1551</span>
+<span id="1552">1552</span>
+<span id="1553">1553</span>
+<span id="1554">1554</span>
+<span id="1555">1555</span>
+<span id="1556">1556</span>
+<span id="1557">1557</span>
+<span id="1558">1558</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
@@ -1612,7 +1630,7 @@
     ///
     /// `requested_features` should be the same as what was used to generate `enabled_extensions`.
     </span><span class="kw">fn </span>from_extensions_and_requested_features(
-        api_version: u32,
+        effective_api_version: u32,
         enabled_extensions: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr],
         requested_features: wgt::Features,
         downlevel_flags: wgt::DownlevelFlags,
@@ -1747,7 +1765,7 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
-            imageless_framebuffer: <span class="kw">if </span>api_version &gt;= vk::API_VERSION_1_2
+            imageless_framebuffer: <span class="kw">if </span>effective_api_version &gt;= vk::API_VERSION_1_2
                 || enabled_extensions.contains(<span class="kw-2">&amp;</span>vk::KhrImagelessFramebufferFn::name())
             {
                 <span class="prelude-val">Some</span>(
@@ -1758,7 +1776,7 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
-            timeline_semaphore: <span class="kw">if </span>api_version &gt;= vk::API_VERSION_1_2
+            timeline_semaphore: <span class="kw">if </span>effective_api_version &gt;= vk::API_VERSION_1_2
                 || enabled_extensions.contains(<span class="kw-2">&amp;</span>vk::KhrTimelineSemaphoreFn::name())
             {
                 <span class="prelude-val">Some</span>(
@@ -1802,7 +1820,7 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
-            multiview: <span class="kw">if </span>api_version &gt;= vk::API_VERSION_1_1
+            multiview: <span class="kw">if </span>effective_api_version &gt;= vk::API_VERSION_1_1
                 || enabled_extensions.contains(<span class="kw-2">&amp;</span>vk::KhrMultiviewFn::name())
             {
                 <span class="prelude-val">Some</span>(
@@ -2051,6 +2069,20 @@
     supported_extensions: Vec&lt;vk::ExtensionProperties&gt;,
     properties: vk::PhysicalDeviceProperties,
     descriptor_indexing: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceDescriptorIndexingPropertiesEXT&gt;,
+    <span class="doccomment">/// The effective driver api version supported by the physical device.
+    ///
+    /// The Vulkan specification states the following in the documentation for VkPhysicalDeviceProperties:
+    /// &gt; The value of apiVersion may be different than the version returned by vkEnumerateInstanceVersion;
+    /// &gt; either higher or lower. In such cases, the application must not use functionality that exceeds
+    /// &gt; the version of Vulkan associated with a given object.
+    ///
+    /// For example, a Vulkan 1.1 instance cannot use functionality added in Vulkan 1.2 even if the physical
+    /// device supports Vulkan 1.2.
+    ///
+    /// This means that assuming that the apiVersion provided by VkPhysicalDeviceProperties is the actual
+    /// version we can use is incorrect. Instead the effective version is the lower of the instance version
+    /// and physical device version.
+    </span>effective_api_version: u32,
 }
 
 <span class="comment">// This is safe because the structs have `p_next: *mut c_void`, which we null out/never read.
@@ -2074,7 +2106,7 @@
 
         extensions.push(khr::Swapchain::name());
 
-        <span class="kw">if </span><span class="self">self</span>.properties.api_version &lt; vk::API_VERSION_1_1 {
+        <span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_1 {
             extensions.push(vk::KhrMaintenance1Fn::name());
             extensions.push(vk::KhrMaintenance2Fn::name());
 
@@ -2092,7 +2124,7 @@
             }
         }
 
-        <span class="kw">if </span><span class="self">self</span>.properties.api_version &lt; vk::API_VERSION_1_2 {
+        <span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_2 {
             <span class="kw">if </span><span class="self">self</span>.supports_extension(vk::KhrImagelessFramebufferFn::name()) {
                 extensions.push(vk::KhrImagelessFramebufferFn::name());
                 extensions.push(vk::KhrImageFormatListFn::name()); <span class="comment">// Required for `KhrImagelessFramebufferFn`
@@ -2104,7 +2136,7 @@
             <span class="kw">if </span>requested_features.intersects(indexing_features()) {
                 extensions.push(vk::ExtDescriptorIndexingFn::name());
 
-                <span class="kw">if </span><span class="self">self</span>.properties.api_version &lt; vk::API_VERSION_1_1 {
+                <span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_1 {
                     extensions.push(vk::KhrMaintenance3Fn::name());
                 }
             }
@@ -2295,6 +2327,10 @@
                 <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.get_physical_device_properties(phd) }
             };
 
+            <span class="comment">// Set the effective api version
+            </span>capabilities.effective_api_version = <span class="self">self
+                </span>.driver_api_version
+                .min(capabilities.properties.api_version);
             capabilities
         };
 
@@ -2305,7 +2341,7 @@
             <span class="kw">let </span><span class="kw-2">mut </span>builder = vk::PhysicalDeviceFeatures2KHR::builder().features(core);
 
             <span class="comment">// `VK_KHR_multiview` is promoted to 1.1
-            </span><span class="kw">if </span>capabilities.properties.api_version &gt;= vk::API_VERSION_1_1
+            </span><span class="kw">if </span>capabilities.effective_api_version &gt;= vk::API_VERSION_1_1
                 || capabilities.supports_extension(vk::KhrMultiviewFn::name())
             {
                 <span class="kw">let </span>next = features
@@ -2433,7 +2469,7 @@
             );
         };
 
-        <span class="kw">if </span>phd_capabilities.properties.api_version == vk::API_VERSION_1_0
+        <span class="kw">if </span>phd_capabilities.effective_api_version == vk::API_VERSION_1_0
             &amp;&amp; !phd_capabilities.supports_extension(vk::KhrStorageBufferStorageClassFn::name())
         {
             <span class="macro">log::warn!</span>(
@@ -2444,7 +2480,7 @@
         }
         <span class="kw">if </span>!phd_capabilities.supports_extension(vk::AmdNegativeViewportHeightFn::name())
             &amp;&amp; !phd_capabilities.supports_extension(vk::KhrMaintenance1Fn::name())
-            &amp;&amp; phd_capabilities.properties.api_version &lt; vk::API_VERSION_1_1
+            &amp;&amp; phd_capabilities.effective_api_version &lt; vk::API_VERSION_1_1
         {
             <span class="macro">log::warn!</span>(
                 <span class="string">&quot;viewport Y-flip is not supported, hiding adapter: {}&quot;</span>,
@@ -2465,7 +2501,7 @@
         }
 
         <span class="kw">let </span>private_caps = <span class="kw">super</span>::PrivateCapabilities {
-            flip_y_requires_shift: phd_capabilities.properties.api_version &gt;= vk::API_VERSION_1_1
+            flip_y_requires_shift: phd_capabilities.effective_api_version &gt;= vk::API_VERSION_1_1
                 || phd_capabilities.supports_extension(vk::KhrMaintenance1Fn::name()),
             imageless_framebuffers: <span class="kw">match </span>phd_features.imageless_framebuffer {
                 <span class="prelude-val">Some</span>(features) =&gt; features.imageless_framebuffer == vk::TRUE,
@@ -2473,7 +2509,7 @@
                     .imageless_framebuffer
                     .map_or(<span class="bool-val">false</span>, |ext| ext.imageless_framebuffer != <span class="number">0</span>),
             },
-            image_view_usage: phd_capabilities.properties.api_version &gt;= vk::API_VERSION_1_1
+            image_view_usage: phd_capabilities.effective_api_version &gt;= vk::API_VERSION_1_1
                 || phd_capabilities.supports_extension(vk::KhrMaintenance2Fn::name()),
             timeline_semaphores: <span class="kw">match </span>phd_features.timeline_semaphore {
                 <span class="prelude-val">Some</span>(features) =&gt; features.timeline_semaphore == vk::TRUE,
@@ -2579,7 +2615,7 @@
         uab_types: <span class="kw">super</span>::UpdateAfterBindTypes,
     ) -&gt; PhysicalDeviceFeatures {
         PhysicalDeviceFeatures::from_extensions_and_requested_features(
-            <span class="self">self</span>.phd_capabilities.properties.api_version,
+            <span class="self">self</span>.phd_capabilities.effective_api_version,
             enabled_extensions,
             features,
             <span class="self">self</span>.downlevel_flags,
@@ -2633,7 +2669,7 @@
                 <span class="kw-2">&amp;</span><span class="self">self</span>.instance.raw,
                 <span class="kw-2">&amp;</span>raw_device,
             )))
-        } <span class="kw">else if </span><span class="self">self</span>.phd_capabilities.properties.api_version &gt;= vk::API_VERSION_1_2 {
+        } <span class="kw">else if </span><span class="self">self</span>.phd_capabilities.effective_api_version &gt;= vk::API_VERSION_1_2 {
             <span class="prelude-val">Some</span>(<span class="kw">super</span>::ExtensionFn::Promoted)
         } <span class="kw">else </span>{
             <span class="prelude-val">None
