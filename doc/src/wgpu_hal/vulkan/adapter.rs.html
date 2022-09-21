@@ -1556,6 +1556,40 @@
 <span id="1556">1556</span>
 <span id="1557">1557</span>
 <span id="1558">1558</span>
+<span id="1559">1559</span>
+<span id="1560">1560</span>
+<span id="1561">1561</span>
+<span id="1562">1562</span>
+<span id="1563">1563</span>
+<span id="1564">1564</span>
+<span id="1565">1565</span>
+<span id="1566">1566</span>
+<span id="1567">1567</span>
+<span id="1568">1568</span>
+<span id="1569">1569</span>
+<span id="1570">1570</span>
+<span id="1571">1571</span>
+<span id="1572">1572</span>
+<span id="1573">1573</span>
+<span id="1574">1574</span>
+<span id="1575">1575</span>
+<span id="1576">1576</span>
+<span id="1577">1577</span>
+<span id="1578">1578</span>
+<span id="1579">1579</span>
+<span id="1580">1580</span>
+<span id="1581">1581</span>
+<span id="1582">1582</span>
+<span id="1583">1583</span>
+<span id="1584">1584</span>
+<span id="1585">1585</span>
+<span id="1586">1586</span>
+<span id="1587">1587</span>
+<span id="1588">1588</span>
+<span id="1589">1589</span>
+<span id="1590">1590</span>
+<span id="1591">1591</span>
+<span id="1592">1592</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
@@ -2069,6 +2103,7 @@
     supported_extensions: Vec&lt;vk::ExtensionProperties&gt;,
     properties: vk::PhysicalDeviceProperties,
     descriptor_indexing: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceDescriptorIndexingPropertiesEXT&gt;,
+    driver: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceDriverPropertiesKHR&gt;,
     <span class="doccomment">/// The effective driver api version supported by the physical device.
     ///
     /// The Vulkan specification states the following in the documentation for VkPhysicalDeviceProperties:
@@ -2129,6 +2164,11 @@
                 extensions.push(vk::KhrImagelessFramebufferFn::name());
                 extensions.push(vk::KhrImageFormatListFn::name()); <span class="comment">// Required for `KhrImagelessFramebufferFn`
             </span>}
+
+            <span class="comment">// This extension is core in Vulkan 1.2
+            </span><span class="kw">if </span><span class="self">self</span>.supports_extension(vk::KhrDriverPropertiesFn::name()) {
+                extensions.push(vk::KhrDriverPropertiesFn::name());
+            }
 
             extensions.push(vk::ExtSamplerFilterMinmaxFn::name());
             extensions.push(vk::KhrTimelineSemaphoreFn::name());
@@ -2305,9 +2345,12 @@
             capabilities.properties = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>get_device_properties) =
                 <span class="self">self</span>.get_physical_device_properties
             {
-                <span class="comment">// Get this now to avoid borrowing conflicts later
+                <span class="comment">// Get these now to avoid borrowing conflicts later
                 </span><span class="kw">let </span>supports_descriptor_indexing =
                     capabilities.supports_extension(vk::ExtDescriptorIndexingFn::name());
+                <span class="kw">let </span>supports_driver_properties = capabilities.properties.api_version
+                    &gt;= vk::API_VERSION_1_2
+                    || capabilities.supports_extension(vk::KhrDriverPropertiesFn::name());
 
                 <span class="kw">let </span><span class="kw-2">mut </span>builder = vk::PhysicalDeviceProperties2::builder();
 
@@ -2315,6 +2358,13 @@
                     <span class="kw">let </span>next = capabilities
                         .descriptor_indexing
                         .insert(vk::PhysicalDeviceDescriptorIndexingPropertiesEXT::default());
+                    builder = builder.push_next(next);
+                }
+
+                <span class="kw">if </span>supports_driver_properties {
+                    <span class="kw">let </span>next = capabilities
+                        .driver
+                        .insert(vk::PhysicalDeviceDriverPropertiesKHR::default());
                     builder = builder.push_next(next);
                 }
 
@@ -2446,6 +2496,24 @@
                 ash::vk::PhysicalDeviceType::VIRTUAL_GPU =&gt; wgt::DeviceType::VirtualGpu,
                 ash::vk::PhysicalDeviceType::CPU =&gt; wgt::DeviceType::Cpu,
                 <span class="kw">_ </span>=&gt; wgt::DeviceType::Other,
+            },
+            driver: <span class="kw">unsafe </span>{
+                <span class="kw">let </span>driver_name = <span class="kw">if let </span><span class="prelude-val">Some</span>(driver) = phd_capabilities.driver {
+                    CStr::from_ptr(driver.driver_name.as_ptr()).to_str().ok()
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>};
+
+                driver_name.unwrap_or(<span class="string">&quot;?&quot;</span>).to_owned()
+            },
+            driver_info: <span class="kw">unsafe </span>{
+                <span class="kw">let </span>driver_info = <span class="kw">if let </span><span class="prelude-val">Some</span>(driver) = phd_capabilities.driver {
+                    CStr::from_ptr(driver.driver_info.as_ptr()).to_str().ok()
+                } <span class="kw">else </span>{
+                    <span class="prelude-val">None
+                </span>};
+
+                driver_info.unwrap_or(<span class="string">&quot;?&quot;</span>).to_owned()
             },
             backend: wgt::Backend::Vulkan,
         };
@@ -3115,4 +3183,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (2019147c5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (432abd86f 2022-09-20)" ></div></body></html>
