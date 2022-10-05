@@ -786,6 +786,26 @@
 <span id="786">786</span>
 <span id="787">787</span>
 <span id="788">788</span>
+<span id="789">789</span>
+<span id="790">790</span>
+<span id="791">791</span>
+<span id="792">792</span>
+<span id="793">793</span>
+<span id="794">794</span>
+<span id="795">795</span>
+<span id="796">796</span>
+<span id="797">797</span>
+<span id="798">798</span>
+<span id="799">799</span>
+<span id="800">800</span>
+<span id="801">801</span>
+<span id="802">802</span>
+<span id="803">803</span>
+<span id="804">804</span>
+<span id="805">805</span>
+<span id="806">806</span>
+<span id="807">807</span>
+<span id="808">808</span>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::{c_void, CStr, CString},
     slice,
@@ -1091,9 +1111,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         dpy: <span class="kw-2">*mut </span>vk::Display,
         window: vk::Window,
-    ) -&gt; <span class="kw">super</span>::Surface {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::XlibSurface::name()) {
-            <span class="macro">panic!</span>(<span class="string">&quot;Vulkan driver does not support VK_KHR_XLIB_SURFACE&quot;</span>);
+            <span class="macro">log::warn!</span>(<span class="string">&quot;Vulkan driver does not support VK_KHR_xlib_surface&quot;</span>);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
         }
 
         <span class="kw">let </span>surface = {
@@ -1107,7 +1128,7 @@
                 .expect(<span class="string">&quot;XlibSurface::create_xlib_surface() failed&quot;</span>)
         };
 
-        <span class="self">self</span>.create_surface_from_vk_surface_khr(surface)
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_vk_surface_khr(surface))
     }
 
     <span class="attribute">#[allow(dead_code)]
@@ -1115,9 +1136,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         connection: <span class="kw-2">*mut </span>vk::xcb_connection_t,
         window: vk::xcb_window_t,
-    ) -&gt; <span class="kw">super</span>::Surface {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::XcbSurface::name()) {
-            <span class="macro">panic!</span>(<span class="string">&quot;Vulkan driver does not support VK_KHR_XCB_SURFACE&quot;</span>);
+            <span class="macro">log::warn!</span>(<span class="string">&quot;Vulkan driver does not support VK_KHR_xcb_surface&quot;</span>);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
         }
 
         <span class="kw">let </span>surface = {
@@ -1131,7 +1153,7 @@
                 .expect(<span class="string">&quot;XcbSurface::create_xcb_surface() failed&quot;</span>)
         };
 
-        <span class="self">self</span>.create_surface_from_vk_surface_khr(surface)
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_vk_surface_khr(surface))
     }
 
     <span class="attribute">#[allow(dead_code)]
@@ -1139,13 +1161,14 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         display: <span class="kw-2">*mut </span>c_void,
         surface: <span class="kw-2">*mut </span>c_void,
-    ) -&gt; <span class="kw">super</span>::Surface {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">if </span>!<span class="self">self
             </span>.shared
             .extensions
             .contains(<span class="kw-2">&amp;</span>khr::WaylandSurface::name())
         {
-            <span class="macro">panic!</span>(<span class="string">&quot;Vulkan driver does not support VK_KHR_WAYLAND_SURFACE&quot;</span>);
+            <span class="macro">log::debug!</span>(<span class="string">&quot;Vulkan driver does not support VK_KHR_wayland_surface&quot;</span>);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
         }
 
         <span class="kw">let </span>surface = {
@@ -1158,11 +1181,23 @@
             <span class="kw">unsafe </span>{ w_loader.create_wayland_surface(<span class="kw-2">&amp;</span>info, <span class="prelude-val">None</span>) }.expect(<span class="string">&quot;WaylandSurface failed&quot;</span>)
         };
 
-        <span class="self">self</span>.create_surface_from_vk_surface_khr(surface)
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_vk_surface_khr(surface))
     }
 
     <span class="attribute">#[allow(dead_code)]
-    </span><span class="kw">fn </span>create_surface_android(<span class="kw-2">&amp;</span><span class="self">self</span>, window: <span class="kw-2">*const </span>c_void) -&gt; <span class="kw">super</span>::Surface {
+    </span><span class="kw">fn </span>create_surface_android(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        window: <span class="kw-2">*const </span>c_void,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
+        <span class="kw">if </span>!<span class="self">self
+            </span>.shared
+            .extensions
+            .contains(<span class="kw-2">&amp;</span>khr::AndroidSurface::name())
+        {
+            <span class="macro">log::warn!</span>(<span class="string">&quot;Vulkan driver does not support VK_KHR_android_surface&quot;</span>);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
+        }
+
         <span class="kw">let </span>surface = {
             <span class="kw">let </span>a_loader = khr::AndroidSurface::new(<span class="kw-2">&amp;</span><span class="self">self</span>.shared.entry, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw);
             <span class="kw">let </span>info = vk::AndroidSurfaceCreateInfoKHR::builder()
@@ -1172,7 +1207,7 @@
             <span class="kw">unsafe </span>{ a_loader.create_android_surface(<span class="kw-2">&amp;</span>info, <span class="prelude-val">None</span>) }.expect(<span class="string">&quot;AndroidSurface failed&quot;</span>)
         };
 
-        <span class="self">self</span>.create_surface_from_vk_surface_khr(surface)
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_vk_surface_khr(surface))
     }
 
     <span class="attribute">#[allow(dead_code)]
@@ -1180,9 +1215,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hinstance: <span class="kw-2">*mut </span>c_void,
         hwnd: <span class="kw-2">*mut </span>c_void,
-    ) -&gt; <span class="kw">super</span>::Surface {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::Win32Surface::name()) {
-            <span class="macro">panic!</span>(<span class="string">&quot;Vulkan driver does not support VK_KHR_WIN32_SURFACE&quot;</span>);
+            <span class="macro">log::debug!</span>(<span class="string">&quot;Vulkan driver does not support VK_KHR_win32_surface&quot;</span>);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
         }
 
         <span class="kw">let </span>surface = {
@@ -1198,11 +1234,19 @@
             }
         };
 
-        <span class="self">self</span>.create_surface_from_vk_surface_khr(surface)
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_vk_surface_khr(surface))
     }
 
     <span class="attribute">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>))]
-    </span><span class="kw">fn </span>create_surface_from_view(<span class="kw-2">&amp;</span><span class="self">self</span>, view: <span class="kw-2">*mut </span>c_void) -&gt; <span class="kw">super</span>::Surface {
+    </span><span class="kw">fn </span>create_surface_from_view(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        view: <span class="kw-2">*mut </span>c_void,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
+        <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>ext::MetalSurface::name()) {
+            <span class="macro">log::warn!</span>(<span class="string">&quot;Vulkan driver does not support VK_EXT_metal_surface&quot;</span>);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
+        }
+
         <span class="kw">let </span>layer = <span class="kw">unsafe </span>{
             <span class="kw">crate</span>::metal::Surface::get_metal_layer(view <span class="kw">as </span><span class="kw-2">*mut </span>objc::runtime::Object, <span class="prelude-val">None</span>)
         };
@@ -1217,7 +1261,7 @@
             <span class="kw">unsafe </span>{ metal_loader.create_metal_surface(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>).unwrap() }
         };
 
-        <span class="self">self</span>.create_surface_from_vk_surface_khr(surface)
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_vk_surface_khr(surface))
     }
 
     <span class="kw">fn </span>create_surface_from_vk_surface_khr(<span class="kw-2">&amp;</span><span class="self">self</span>, surface: vk::SurfaceKHR) -&gt; <span class="kw">super</span>::Surface {
@@ -1386,37 +1430,33 @@
 
         <span class="kw">match </span>(window_handle, display_handle) {
             (Rwh::Wayland(handle), Rdh::Wayland(display)) =&gt; {
-                <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_wayland(display.display, handle.surface))
+                <span class="self">self</span>.create_surface_from_wayland(display.display, handle.surface)
             }
-            (Rwh::Xlib(handle), Rdh::Xlib(display))
-                <span class="kw">if </span><span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::XlibSurface::name()) =&gt;
-            {
-                <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_xlib(display.display <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>, handle.window))
+            (Rwh::Xlib(handle), Rdh::Xlib(display)) =&gt; {
+                <span class="self">self</span>.create_surface_from_xlib(display.display <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>, handle.window)
             }
-            (Rwh::Xcb(handle), Rdh::Xcb(display))
-                <span class="kw">if </span><span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::XcbSurface::name()) =&gt;
-            {
-                <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_xcb(display.connection, handle.window))
+            (Rwh::Xcb(handle), Rdh::Xcb(display)) =&gt; {
+                <span class="self">self</span>.create_surface_from_xcb(display.connection, handle.window)
             }
-            (Rwh::AndroidNdk(handle), <span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_android(handle.a_native_window)),
+            (Rwh::AndroidNdk(handle), <span class="kw">_</span>) =&gt; <span class="self">self</span>.create_surface_android(handle.a_native_window),
             <span class="attribute">#[cfg(windows)]
             </span>(Rwh::Win32(handle), <span class="kw">_</span>) =&gt; {
                 <span class="kw">use </span>winapi::um::libloaderapi::GetModuleHandleW;
 
                 <span class="kw">let </span>hinstance = GetModuleHandleW(std::ptr::null());
-                <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_hwnd(hinstance <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>, handle.hwnd))
+                <span class="self">self</span>.create_surface_from_hwnd(hinstance <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>, handle.hwnd)
             }
             <span class="attribute">#[cfg(target_os = <span class="string">&quot;macos&quot;</span>)]
             </span>(Rwh::AppKit(handle), <span class="kw">_</span>)
                 <span class="kw">if </span><span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>ext::MetalSurface::name()) =&gt;
             {
-                <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_view(handle.ns_view))
+                <span class="self">self</span>.create_surface_from_view(handle.ns_view)
             }
             <span class="attribute">#[cfg(target_os = <span class="string">&quot;ios&quot;</span>)]
             </span>(Rwh::UiKit(handle), <span class="kw">_</span>)
                 <span class="kw">if </span><span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>ext::MetalSurface::name()) =&gt;
             {
-                <span class="prelude-val">Ok</span>(<span class="self">self</span>.create_surface_from_view(handle.ui_view))
+                <span class="self">self</span>.create_surface_from_view(handle.ui_view)
             }
             (<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError),
         }
