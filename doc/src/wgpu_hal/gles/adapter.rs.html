@@ -883,6 +883,14 @@
 <span id="883">883</span>
 <span id="884">884</span>
 <span id="885">885</span>
+<span id="886">886</span>
+<span id="887">887</span>
+<span id="888">888</span>
+<span id="889">889</span>
+<span id="890">890</span>
+<span id="891">891</span>
+<span id="892">892</span>
+<span id="893">893</span>
 </pre><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>wgt::AstcChannel;
@@ -1670,21 +1678,29 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         surface: <span class="kw-2">&amp;</span><span class="kw">super</span>::Surface,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::SurfaceCapabilities&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>formats = <span class="kw">if </span>surface.supports_srgb() {
+            <span class="macro">vec!</span>[
+                wgt::TextureFormat::Rgba8UnormSrgb,
+                <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+                </span>wgt::TextureFormat::Bgra8UnormSrgb,
+            ]
+        } <span class="kw">else </span>{
+            <span class="macro">vec!</span>[
+                wgt::TextureFormat::Rgba8Unorm,
+                <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+                </span>wgt::TextureFormat::Bgra8Unorm,
+            ]
+        };
+        <span class="kw">if </span><span class="self">self
+            </span>.shared
+            .private_caps
+            .contains(<span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_HALF_FLOAT)
+        {
+            formats.push(wgt::TextureFormat::Rgba16Float)
+        }
         <span class="kw">if </span>surface.presentable {
             <span class="prelude-val">Some</span>(<span class="kw">crate</span>::SurfaceCapabilities {
-                formats: <span class="kw">if </span>surface.supports_srgb() {
-                    <span class="macro">vec!</span>[
-                        wgt::TextureFormat::Rgba8UnormSrgb,
-                        <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
-                        </span>wgt::TextureFormat::Bgra8UnormSrgb,
-                    ]
-                } <span class="kw">else </span>{
-                    <span class="macro">vec!</span>[
-                        wgt::TextureFormat::Rgba8Unorm,
-                        <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
-                        </span>wgt::TextureFormat::Bgra8Unorm,
-                    ]
-                },
+                formats,
                 present_modes: <span class="macro">vec!</span>[wgt::PresentMode::Fifo], <span class="comment">//TODO
                 </span>composite_alpha_modes: <span class="macro">vec!</span>[wgt::CompositeAlphaMode::Opaque], <span class="comment">//TODO
                 </span>swap_chain_sizes: <span class="number">2</span>..=<span class="number">2</span>,
