@@ -871,6 +871,18 @@
 <span id="871">871</span>
 <span id="872">872</span>
 <span id="873">873</span>
+<span id="874">874</span>
+<span id="875">875</span>
+<span id="876">876</span>
+<span id="877">877</span>
+<span id="878">878</span>
+<span id="879">879</span>
+<span id="880">880</span>
+<span id="881">881</span>
+<span id="882">882</span>
+<span id="883">883</span>
+<span id="884">884</span>
+<span id="885">885</span>
 </pre><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>wgt::AstcChannel;
@@ -1228,11 +1240,22 @@
             <span class="comment">// This is a part of GLES-3 but not WebGL2 core
             </span>!<span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>) || extensions.contains(<span class="string">&quot;WEBGL_compressed_texture_etc&quot;</span>),
         );
-        features.set(
-            wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR,
-            extensions.contains(<span class="string">&quot;GL_KHR_texture_compression_astc_ldr&quot;</span>)
-                || extensions.contains(<span class="string">&quot;WEBGL_compressed_texture_astc&quot;</span>),
-        );
+        <span class="comment">// `OES_texture_compression_astc` provides 2D + 3D, LDR + HDR support
+        </span><span class="kw">if </span>extensions.contains(<span class="string">&quot;WEBGL_compressed_texture_astc&quot;</span>)
+            || extensions.contains(<span class="string">&quot;GL_OES_texture_compression_astc&quot;</span>)
+        {
+            features.insert(wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR);
+            features.insert(wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR);
+        } <span class="kw">else </span>{
+            features.set(
+                wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR,
+                extensions.contains(<span class="string">&quot;GL_KHR_texture_compression_astc_ldr&quot;</span>),
+            );
+            features.set(
+                wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR,
+                extensions.contains(<span class="string">&quot;GL_KHR_texture_compression_astc_hdr&quot;</span>),
+            );
+        }
 
         <span class="kw">let </span><span class="kw-2">mut </span>private_caps = <span class="kw">super</span>::PrivateCapabilities::empty();
         private_caps.set(
@@ -1541,6 +1564,7 @@
         <span class="kw">let </span>bcn_features = feature_fn(wgt::Features::TEXTURE_COMPRESSION_BC, filterable);
         <span class="kw">let </span>etc2_features = feature_fn(wgt::Features::TEXTURE_COMPRESSION_ETC2, filterable);
         <span class="kw">let </span>astc_features = feature_fn(wgt::Features::TEXTURE_COMPRESSION_ASTC_LDR, filterable);
+        <span class="kw">let </span>astc_hdr_features = feature_fn(wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR, filterable);
 
         <span class="kw">let </span>private_caps_fn = |f, caps| {
             <span class="kw">if </span><span class="self">self</span>.shared.private_caps.contains(f) {
@@ -1638,7 +1662,7 @@
             Tf::Astc {
                 block: <span class="kw">_</span>,
                 channel: AstcChannel::Hdr,
-            } =&gt; Tfc::empty(),
+            } =&gt; astc_hdr_features,
         }
     }
 
