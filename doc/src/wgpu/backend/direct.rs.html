@@ -2451,6 +2451,17 @@
 <span id="2449">2449</span>
 <span id="2450">2450</span>
 <span id="2451">2451</span>
+<span id="2452">2452</span>
+<span id="2453">2453</span>
+<span id="2454">2454</span>
+<span id="2455">2455</span>
+<span id="2456">2456</span>
+<span id="2457">2457</span>
+<span id="2458">2458</span>
+<span id="2459">2459</span>
+<span id="2460">2460</span>
+<span id="2461">2461</span>
+<span id="2462">2462</span>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
     CommandEncoderDescriptor, ComputePassDescriptor, ComputePipelineDescriptor,
@@ -3547,7 +3558,16 @@
         }
     }
 
-    <span class="kw">fn </span>device_create_shader_module(
+    <span class="attribute">#[cfg_attr(
+        not(any(
+            feature = <span class="string">&quot;spirv&quot;</span>,
+            feature = <span class="string">&quot;glsl&quot;</span>,
+            feature = <span class="string">&quot;wgsl&quot;</span>,
+            feature = <span class="string">&quot;naga&quot;
+        </span>)),
+        allow(unreachable_code, unused_variables)
+    )]
+    </span><span class="kw">fn </span>device_create_shader_module(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId,
         desc: ShaderModuleDescriptor,
@@ -3587,9 +3607,11 @@
 
                 wgc::pipeline::ShaderModuleSource::Naga(std::borrow::Cow::Owned(module))
             }
-            ShaderSource::Wgsl(<span class="kw-2">ref </span>code) =&gt; wgc::pipeline::ShaderModuleSource::Wgsl(Borrowed(code)),
+            <span class="attribute">#[cfg(feature = <span class="string">&quot;wgsl&quot;</span>)]
+            </span>ShaderSource::Wgsl(<span class="kw-2">ref </span>code) =&gt; wgc::pipeline::ShaderModuleSource::Wgsl(Borrowed(code)),
             <span class="attribute">#[cfg(feature = <span class="string">&quot;naga&quot;</span>)]
             </span>ShaderSource::Naga(module) =&gt; wgc::pipeline::ShaderModuleSource::Naga(module),
+            ShaderSource::Dummy(<span class="kw">_</span>) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;found `ShaderSource::Dummy`&quot;</span>),
         };
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(
             device.id =&gt; global.device_create_shader_module(device.id, <span class="kw-2">&amp;</span>descriptor, source, ())
@@ -4903,4 +4925,4 @@
     </span>}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (0ca356586 2022-10-06)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (8b0c05d9a 2022-10-07)" ></div></body></html>
