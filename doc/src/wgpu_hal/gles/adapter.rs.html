@@ -1680,27 +1680,27 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         surface: <span class="kw-2">&amp;</span><span class="kw">super</span>::Surface,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::SurfaceCapabilities&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>formats = <span class="kw">if </span>surface.supports_srgb() {
-            <span class="macro">vec!</span>[
-                wgt::TextureFormat::Rgba8UnormSrgb,
-                <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
-                </span>wgt::TextureFormat::Bgra8UnormSrgb,
-            ]
-        } <span class="kw">else </span>{
-            <span class="macro">vec!</span>[
+        <span class="kw">if </span>surface.presentable {
+            <span class="kw">let </span><span class="kw-2">mut </span>formats = <span class="macro">vec!</span>[
                 wgt::TextureFormat::Rgba8Unorm,
                 <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
                 </span>wgt::TextureFormat::Bgra8Unorm,
-            ]
-        };
-        <span class="kw">if </span><span class="self">self
-            </span>.shared
-            .private_caps
-            .contains(<span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_HALF_FLOAT)
-        {
-            formats.push(wgt::TextureFormat::Rgba16Float)
-        }
-        <span class="kw">if </span>surface.presentable {
+            ];
+            <span class="kw">if </span>surface.supports_srgb() {
+                formats.extend(<span class="kw-2">&amp;</span>[
+                    wgt::TextureFormat::Rgba8UnormSrgb,
+                    <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+                    </span>wgt::TextureFormat::Bgra8UnormSrgb,
+                ])
+            }
+            <span class="kw">if </span><span class="self">self
+                </span>.shared
+                .private_caps
+                .contains(<span class="kw">super</span>::PrivateCapabilities::COLOR_BUFFER_HALF_FLOAT)
+            {
+                formats.push(wgt::TextureFormat::Rgba16Float)
+            }
+
             <span class="prelude-val">Some</span>(<span class="kw">crate</span>::SurfaceCapabilities {
                 formats,
                 present_modes: <span class="macro">vec!</span>[wgt::PresentMode::Fifo], <span class="comment">//TODO
