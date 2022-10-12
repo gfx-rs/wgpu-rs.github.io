@@ -1009,10 +1009,9 @@
 
         <span class="comment">// Only keep available extensions.
         </span>extensions.retain(|<span class="kw-2">&amp;</span>ext| {
-            <span class="kw">if </span>instance_extensions
-                .iter()
-                .any(|inst_ext| <span class="kw">unsafe </span>{ CStr::from_ptr(inst_ext.extension_name.as_ptr()) == ext })
-            {
+            <span class="kw">if </span>instance_extensions.iter().any(|inst_ext| {
+                <span class="kw">crate</span>::auxil::cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>inst_ext.extension_name) == <span class="prelude-val">Some</span>(ext)
+            }) {
                 <span class="bool-val">true
             </span>} <span class="kw">else </span>{
                 <span class="macro">log::info!</span>(<span class="string">&quot;Unable to find extension: {}&quot;</span>, ext.to_string_lossy());
@@ -1291,6 +1290,8 @@
 
 <span class="kw">impl </span><span class="kw">crate</span>::Instance&lt;<span class="kw">super</span>::Api&gt; <span class="kw">for </span><span class="kw">super</span>::Instance {
     <span class="kw">unsafe fn </span>init(desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::InstanceDescriptor) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="kw">crate</span>::InstanceError&gt; {
+        <span class="kw">use </span><span class="kw">crate</span>::auxil::cstr_from_bytes_until_nul;
+
         <span class="kw">let </span>entry = <span class="kw">match </span>ash::Entry::load() {
             <span class="prelude-val">Ok</span>(entry) =&gt; entry,
             <span class="prelude-val">Err</span>(err) =&gt; {
@@ -1339,9 +1340,9 @@
         })<span class="question-mark">?</span>;
 
         <span class="kw">let </span>nv_optimus_layer = CStr::from_bytes_with_nul(<span class="string">b&quot;VK_LAYER_NV_optimus\0&quot;</span>).unwrap();
-        <span class="kw">let </span>has_nv_optimus = instance_layers
-            .iter()
-            .any(|inst_layer| CStr::from_ptr(inst_layer.layer_name.as_ptr()) == nv_optimus_layer);
+        <span class="kw">let </span>has_nv_optimus = instance_layers.iter().any(|inst_layer| {
+            cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>inst_layer.layer_name) == <span class="prelude-val">Some</span>(nv_optimus_layer)
+        });
 
         <span class="comment">// Check requested layers against the available layers
         </span><span class="kw">let </span>layers = {
@@ -1352,10 +1353,9 @@
 
             <span class="comment">// Only keep available layers.
             </span>layers.retain(|<span class="kw-2">&amp;</span>layer| {
-                <span class="kw">if </span>instance_layers
-                    .iter()
-                    .any(|inst_layer| CStr::from_ptr(inst_layer.layer_name.as_ptr()) == layer)
-                {
+                <span class="kw">if </span>instance_layers.iter().any(|inst_layer| {
+                    cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>inst_layer.layer_name) == <span class="prelude-val">Some</span>(layer)
+                }) {
                     <span class="bool-val">true
                 </span>} <span class="kw">else </span>{
                     <span class="macro">log::warn!</span>(<span class="string">&quot;Unable to find layer: {}&quot;</span>, layer.to_string_lossy());

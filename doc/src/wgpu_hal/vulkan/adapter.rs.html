@@ -1591,6 +1591,8 @@
 <span id="1591">1591</span>
 <span id="1592">1592</span>
 <span id="1593">1593</span>
+<span id="1594">1594</span>
+<span id="1595">1595</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
@@ -2131,9 +2133,10 @@
     }
 
     <span class="kw">pub fn </span>supports_extension(<span class="kw-2">&amp;</span><span class="self">self</span>, extension: <span class="kw-2">&amp;</span>CStr) -&gt; bool {
+        <span class="kw">use </span><span class="kw">crate</span>::auxil::cstr_from_bytes_until_nul;
         <span class="self">self</span>.supported_extensions
             .iter()
-            .any(|ep| <span class="kw">unsafe </span>{ CStr::from_ptr(ep.extension_name.as_ptr()) } == extension)
+            .any(|ep| cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>ep.extension_name) == <span class="prelude-val">Some</span>(extension))
     }
 
     <span class="doccomment">/// Map `requested_features` to the list of Vulkan extension strings required to create the logical device.
@@ -2478,14 +2481,15 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         phd: vk::PhysicalDevice,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::ExposedAdapter&lt;<span class="kw">super</span>::Api&gt;&gt; {
+        <span class="kw">use </span><span class="kw">crate</span>::auxil::cstr_from_bytes_until_nul;
         <span class="kw">use </span><span class="kw">crate</span>::auxil::db;
 
         <span class="kw">let </span>(phd_capabilities, phd_features) = <span class="self">self</span>.shared.inspect(phd);
 
         <span class="kw">let </span>info = wgt::AdapterInfo {
-            name: <span class="kw">unsafe </span>{
-                CStr::from_ptr(phd_capabilities.properties.device_name.as_ptr())
-                    .to_str()
+            name: {
+                cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>phd_capabilities.properties.device_name)
+                    .and_then(|info| info.to_str().ok())
                     .unwrap_or(<span class="string">&quot;?&quot;</span>)
                     .to_owned()
             },
@@ -2499,23 +2503,23 @@
                 ash::vk::PhysicalDeviceType::CPU =&gt; wgt::DeviceType::Cpu,
                 <span class="kw">_ </span>=&gt; wgt::DeviceType::Other,
             },
-            driver: <span class="kw">unsafe </span>{
-                <span class="kw">let </span>driver_name = <span class="kw">if let </span><span class="prelude-val">Some</span>(driver) = phd_capabilities.driver {
-                    CStr::from_ptr(driver.driver_name.as_ptr()).to_str().ok()
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">None
-                </span>};
-
-                driver_name.unwrap_or(<span class="string">&quot;?&quot;</span>).to_owned()
+            driver: {
+                phd_capabilities
+                    .driver
+                    .as_ref()
+                    .and_then(|driver| cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>driver.driver_name))
+                    .and_then(|name| name.to_str().ok())
+                    .unwrap_or(<span class="string">&quot;?&quot;</span>)
+                    .to_owned()
             },
-            driver_info: <span class="kw">unsafe </span>{
-                <span class="kw">let </span>driver_info = <span class="kw">if let </span><span class="prelude-val">Some</span>(driver) = phd_capabilities.driver {
-                    CStr::from_ptr(driver.driver_info.as_ptr()).to_str().ok()
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">None
-                </span>};
-
-                driver_info.unwrap_or(<span class="string">&quot;?&quot;</span>).to_owned()
+            driver_info: {
+                phd_capabilities
+                    .driver
+                    .as_ref()
+                    .and_then(|driver| cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>driver.driver_info))
+                    .and_then(|name| name.to_str().ok())
+                    .unwrap_or(<span class="string">&quot;?&quot;</span>)
+                    .to_owned()
             },
             backend: wgt::Backend::Vulkan,
         };

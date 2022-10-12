@@ -115,6 +115,27 @@
 <span id="115">115</span>
 <span id="116">116</span>
 <span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
 </pre><pre class="rust"><code><span class="attribute">#[cfg(any(feature = <span class="string">&quot;dx11&quot;</span>, feature = <span class="string">&quot;dx12&quot;</span>))]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">mod </span>dxgi;
 
@@ -231,6 +252,27 @@
         <span class="kw">let </span>max_dst_size = <span class="self">self</span>.dst_base.max_copy_size(full_dst_size);
         <span class="self">self</span>.size = <span class="self">self</span>.size.min(<span class="kw-2">&amp;</span>max_src_size).min(<span class="kw-2">&amp;</span>max_dst_size);
     }
+}
+
+<span class="doccomment">/// Construct a `CStr` from a byte slice, up to the first zero byte.
+///
+/// Return a `CStr` extending from the start of `bytes` up to and
+/// including the first zero byte. If there is no zero byte in
+/// `bytes`, return `None`.
+///
+/// This can be removed when `CStr::from_bytes_until_nul` is stabilized.
+/// ([#95027](https://github.com/rust-lang/rust/issues/95027))
+</span><span class="attribute">#[allow(dead_code)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>cstr_from_bytes_until_nul(bytes: <span class="kw-2">&amp;</span>[std::os::raw::c_char]) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::ffi::CStr&gt; {
+    <span class="kw">if </span>bytes.contains(<span class="kw-2">&amp;</span><span class="number">0</span>) {
+        <span class="comment">// Safety for `CStr::from_ptr`:
+        // - We&#39;ve ensured that the slice does contain a null terminator.
+        // - The range is valid to read, because the slice covers it.
+        // - The memory won&#39;t be changed, because the slice borrows it.
+        </span><span class="kw">unsafe </span>{ <span class="prelude-val">Some</span>(std::ffi::CStr::from_ptr(bytes.as_ptr())) }
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
 }
 </code></pre></div>
 </section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="wgpu_hal" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (db0597f56 2022-10-11)" ></div></body></html>
