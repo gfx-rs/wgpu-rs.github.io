@@ -1168,6 +1168,60 @@
 <span id="1168">1168</span>
 <span id="1169">1169</span>
 <span id="1170">1170</span>
+<span id="1171">1171</span>
+<span id="1172">1172</span>
+<span id="1173">1173</span>
+<span id="1174">1174</span>
+<span id="1175">1175</span>
+<span id="1176">1176</span>
+<span id="1177">1177</span>
+<span id="1178">1178</span>
+<span id="1179">1179</span>
+<span id="1180">1180</span>
+<span id="1181">1181</span>
+<span id="1182">1182</span>
+<span id="1183">1183</span>
+<span id="1184">1184</span>
+<span id="1185">1185</span>
+<span id="1186">1186</span>
+<span id="1187">1187</span>
+<span id="1188">1188</span>
+<span id="1189">1189</span>
+<span id="1190">1190</span>
+<span id="1191">1191</span>
+<span id="1192">1192</span>
+<span id="1193">1193</span>
+<span id="1194">1194</span>
+<span id="1195">1195</span>
+<span id="1196">1196</span>
+<span id="1197">1197</span>
+<span id="1198">1198</span>
+<span id="1199">1199</span>
+<span id="1200">1200</span>
+<span id="1201">1201</span>
+<span id="1202">1202</span>
+<span id="1203">1203</span>
+<span id="1204">1204</span>
+<span id="1205">1205</span>
+<span id="1206">1206</span>
+<span id="1207">1207</span>
+<span id="1208">1208</span>
+<span id="1209">1209</span>
+<span id="1210">1210</span>
+<span id="1211">1211</span>
+<span id="1212">1212</span>
+<span id="1213">1213</span>
+<span id="1214">1214</span>
+<span id="1215">1215</span>
+<span id="1216">1216</span>
+<span id="1217">1217</span>
+<span id="1218">1218</span>
+<span id="1219">1219</span>
+<span id="1220">1220</span>
+<span id="1221">1221</span>
+<span id="1222">1222</span>
+<span id="1223">1223</span>
+<span id="1224">1224</span>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -1254,6 +1308,77 @@
 }
 
 <span class="kw">impl </span><span class="kw">super</span>::Device {
+    <span class="doccomment">/// # Safety
+    ///
+    /// - `name` must be created respecting `desc`
+    /// - `name` must be a texture
+    /// - If `drop_guard` is [`None`], wgpu-hal will take ownership of the texture. If `drop_guard` is
+    ///   [`Some`], the texture must be valid until the drop implementation
+    ///   of the drop guard is called.
+    </span><span class="attribute">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;emscripten&quot;</span>))]
+    </span><span class="kw">pub unsafe fn </span>texture_from_raw(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        name: std::num::NonZeroU32,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureDescriptor,
+        drop_guard: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropGuard&gt;,
+    ) -&gt; <span class="kw">super</span>::Texture {
+        <span class="kw">let </span><span class="kw-2">mut </span>copy_size = <span class="kw">crate</span>::CopyExtent::map_extent_to_copy_size(<span class="kw-2">&amp;</span>desc.size, desc.dimension);
+
+        <span class="kw">let </span>(target, <span class="kw">_</span>, is_cubemap) = <span class="kw">super</span>::Texture::get_info_from_desc(<span class="kw-2">&amp;mut </span>copy_size, desc);
+
+        <span class="kw">super</span>::Texture {
+            inner: <span class="kw">super</span>::TextureInner::Texture {
+                raw: glow::NativeTexture(name),
+                target,
+            },
+            drop_guard,
+            mip_level_count: desc.mip_level_count,
+            array_layer_count: <span class="kw">if </span>desc.dimension == wgt::TextureDimension::D2 {
+                desc.size.depth_or_array_layers
+            } <span class="kw">else </span>{
+                <span class="number">1
+            </span>},
+            format: desc.format,
+            format_desc: <span class="self">self</span>.shared.describe_texture_format(desc.format),
+            copy_size,
+            is_cubemap,
+        }
+    }
+
+    <span class="doccomment">/// # Safety
+    ///
+    /// - `name` must be created respecting `desc`
+    /// - `name` must be a renderbuffer
+    /// - If `drop_guard` is [`None`], wgpu-hal will take ownership of the renderbuffer. If `drop_guard` is
+    ///   [`Some`], the renderbuffer must be valid until the drop implementation
+    ///   of the drop guard is called.
+    </span><span class="attribute">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;emscripten&quot;</span>))]
+    </span><span class="kw">pub unsafe fn </span>texture_from_raw_renderbuffer(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        name: std::num::NonZeroU32,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureDescriptor,
+        drop_guard: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropGuard&gt;,
+    ) -&gt; <span class="kw">super</span>::Texture {
+        <span class="kw">let </span>copy_size = <span class="kw">crate</span>::CopyExtent::map_extent_to_copy_size(<span class="kw-2">&amp;</span>desc.size, desc.dimension);
+
+        <span class="kw">super</span>::Texture {
+            inner: <span class="kw">super</span>::TextureInner::Renderbuffer {
+                raw: glow::NativeRenderbuffer(name),
+            },
+            drop_guard,
+            mip_level_count: desc.mip_level_count,
+            array_layer_count: <span class="kw">if </span>desc.dimension == wgt::TextureDimension::D2 {
+                desc.size.depth_or_array_layers
+            } <span class="kw">else </span>{
+                <span class="number">1
+            </span>},
+            format: desc.format,
+            format_desc: <span class="self">self</span>.shared.describe_texture_format(desc.format),
+            copy_size,
+            is_cubemap: <span class="bool-val">false</span>,
+        }
+    }
+
     <span class="kw">unsafe fn </span>compile_shader(
         gl: <span class="kw-2">&amp;</span>glow::Context,
         shader: <span class="kw-2">&amp;</span>str,
@@ -1751,32 +1876,8 @@
             (<span class="kw">super</span>::TextureInner::Renderbuffer { raw }, <span class="bool-val">false</span>)
         } <span class="kw">else </span>{
             <span class="kw">let </span>raw = gl.create_texture().unwrap();
-            <span class="kw">let </span>(target, is_3d, is_cubemap) = <span class="kw">match </span>desc.dimension {
-                wgt::TextureDimension::D1 | wgt::TextureDimension::D2 =&gt; {
-                    <span class="kw">if </span>desc.size.depth_or_array_layers &gt; <span class="number">1 </span>{
-                        <span class="comment">//HACK: detect a cube map
-                        </span><span class="kw">let </span>cube_count = <span class="kw">if </span>desc.size.width == desc.size.height
-                            &amp;&amp; desc.size.depth_or_array_layers % <span class="number">6 </span>== <span class="number">0
-                            </span>&amp;&amp; desc.sample_count == <span class="number">1
-                        </span>{
-                            <span class="prelude-val">Some</span>(desc.size.depth_or_array_layers / <span class="number">6</span>)
-                        } <span class="kw">else </span>{
-                            <span class="prelude-val">None
-                        </span>};
-                        <span class="kw">match </span>cube_count {
-                            <span class="prelude-val">None </span>=&gt; (glow::TEXTURE_2D_ARRAY, <span class="bool-val">true</span>, <span class="bool-val">false</span>),
-                            <span class="prelude-val">Some</span>(<span class="number">1</span>) =&gt; (glow::TEXTURE_CUBE_MAP, <span class="bool-val">false</span>, <span class="bool-val">true</span>),
-                            <span class="prelude-val">Some</span>(<span class="kw">_</span>) =&gt; (glow::TEXTURE_CUBE_MAP_ARRAY, <span class="bool-val">true</span>, <span class="bool-val">true</span>),
-                        }
-                    } <span class="kw">else </span>{
-                        (glow::TEXTURE_2D, <span class="bool-val">false</span>, <span class="bool-val">false</span>)
-                    }
-                }
-                wgt::TextureDimension::D3 =&gt; {
-                    copy_size.depth = desc.size.depth_or_array_layers;
-                    (glow::TEXTURE_3D, <span class="bool-val">true</span>, <span class="bool-val">false</span>)
-                }
-            };
+            <span class="kw">let </span>(target, is_3d, is_cubemap) =
+                <span class="kw">super</span>::Texture::get_info_from_desc(<span class="kw-2">&amp;mut </span>copy_size, desc);
 
             gl.bind_texture(target, <span class="prelude-val">Some</span>(raw));
             <span class="comment">//Note: this has to be done before defining the storage!
@@ -1833,6 +1934,7 @@
 
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::Texture {
             inner,
+            drop_guard: <span class="prelude-val">None</span>,
             mip_level_count: desc.mip_level_count,
             array_layer_count: <span class="kw">if </span>desc.dimension == wgt::TextureDimension::D2 {
                 desc.size.depth_or_array_layers
@@ -1846,16 +1948,22 @@
         })
     }
     <span class="kw">unsafe fn </span>destroy_texture(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw">super</span>::Texture) {
-        <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
-        <span class="kw">match </span>texture.inner {
-            <span class="kw">super</span>::TextureInner::Renderbuffer { raw, .. } =&gt; {
-                gl.delete_renderbuffer(raw);
-            }
-            <span class="kw">super</span>::TextureInner::DefaultRenderbuffer =&gt; {}
-            <span class="kw">super</span>::TextureInner::Texture { raw, .. } =&gt; {
-                gl.delete_texture(raw);
+        <span class="kw">if </span>texture.drop_guard.is_none() {
+            <span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.lock();
+            <span class="kw">match </span>texture.inner {
+                <span class="kw">super</span>::TextureInner::Renderbuffer { raw, .. } =&gt; {
+                    gl.delete_renderbuffer(raw);
+                }
+                <span class="kw">super</span>::TextureInner::DefaultRenderbuffer =&gt; {}
+                <span class="kw">super</span>::TextureInner::Texture { raw, .. } =&gt; {
+                    gl.delete_texture(raw);
+                }
             }
         }
+
+        <span class="comment">// For clarity, we explicitly drop the drop guard. Although this has no real semantic effect as the
+        // end of the scope will drop the drop guard since this function takes ownership of the texture.
+        </span>drop(texture.drop_guard);
     }
 
     <span class="kw">unsafe fn </span>create_texture_view(
