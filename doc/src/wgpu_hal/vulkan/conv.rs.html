@@ -829,6 +829,12 @@
 <a href="#829" id="829">829</a>
 <a href="#830" id="830">830</a>
 <a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
 </pre><pre class="rust"><code><span class="kw">use </span>ash::vk;
 <span class="kw">use </span>std::num::NonZeroU32;
 
@@ -980,16 +986,22 @@
     <span class="kw">use </span>ash::vk::Format <span class="kw">as </span>F;
     <span class="kw">use </span>wgt::TextureFormat <span class="kw">as </span>Tf;
     <span class="comment">// List we care about pulled from https://vulkan.gpuinfo.org/listsurfaceformats.php
-    </span><span class="prelude-val">Some</span>(<span class="kw">match </span>sf.format {
-        F::B8G8R8A8_UNORM =&gt; Tf::Bgra8Unorm,
-        F::B8G8R8A8_SRGB =&gt; Tf::Bgra8UnormSrgb,
-        F::R8G8B8A8_SNORM =&gt; Tf::Rgba8Snorm,
-        F::R8G8B8A8_UNORM =&gt; Tf::Rgba8Unorm,
-        F::R8G8B8A8_SRGB =&gt; Tf::Rgba8UnormSrgb,
-        F::R16G16B16A16_SFLOAT =&gt; Tf::Rgba16Float,
-        F::R16G16B16A16_SNORM =&gt; Tf::Rgba16Snorm,
-        F::R16G16B16A16_UNORM =&gt; Tf::Rgba16Unorm,
-        F::A2B10G10R10_UNORM_PACK32 =&gt; Tf::Rgb10a2Unorm,
+    </span><span class="prelude-val">Some</span>(<span class="kw">match </span>sf.color_space {
+        vk::ColorSpaceKHR::SRGB_NONLINEAR =&gt; <span class="kw">match </span>sf.format {
+            F::B8G8R8A8_UNORM =&gt; Tf::Bgra8Unorm,
+            F::B8G8R8A8_SRGB =&gt; Tf::Bgra8UnormSrgb,
+            F::R8G8B8A8_SNORM =&gt; Tf::Rgba8Snorm,
+            F::R8G8B8A8_UNORM =&gt; Tf::Rgba8Unorm,
+            F::R8G8B8A8_SRGB =&gt; Tf::Rgba8UnormSrgb,
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+        },
+        vk::ColorSpaceKHR::EXTENDED_SRGB_LINEAR_EXT =&gt; <span class="kw">match </span>sf.format {
+            F::R16G16B16A16_SFLOAT =&gt; Tf::Rgba16Float,
+            F::R16G16B16A16_SNORM =&gt; Tf::Rgba16Snorm,
+            F::R16G16B16A16_UNORM =&gt; Tf::Rgba16Unorm,
+            F::A2B10G10R10_UNORM_PACK32 =&gt; Tf::Rgb10a2Unorm,
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
+        },
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
     })
 }
