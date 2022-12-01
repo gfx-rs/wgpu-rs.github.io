@@ -4056,6 +4056,46 @@
 <a href="#4055" id="4055">4055</a>
 <a href="#4056" id="4056">4056</a>
 <a href="#4057" id="4057">4057</a>
+<a href="#4058" id="4058">4058</a>
+<a href="#4059" id="4059">4059</a>
+<a href="#4060" id="4060">4060</a>
+<a href="#4061" id="4061">4061</a>
+<a href="#4062" id="4062">4062</a>
+<a href="#4063" id="4063">4063</a>
+<a href="#4064" id="4064">4064</a>
+<a href="#4065" id="4065">4065</a>
+<a href="#4066" id="4066">4066</a>
+<a href="#4067" id="4067">4067</a>
+<a href="#4068" id="4068">4068</a>
+<a href="#4069" id="4069">4069</a>
+<a href="#4070" id="4070">4070</a>
+<a href="#4071" id="4071">4071</a>
+<a href="#4072" id="4072">4072</a>
+<a href="#4073" id="4073">4073</a>
+<a href="#4074" id="4074">4074</a>
+<a href="#4075" id="4075">4075</a>
+<a href="#4076" id="4076">4076</a>
+<a href="#4077" id="4077">4077</a>
+<a href="#4078" id="4078">4078</a>
+<a href="#4079" id="4079">4079</a>
+<a href="#4080" id="4080">4080</a>
+<a href="#4081" id="4081">4081</a>
+<a href="#4082" id="4082">4082</a>
+<a href="#4083" id="4083">4083</a>
+<a href="#4084" id="4084">4084</a>
+<a href="#4085" id="4085">4085</a>
+<a href="#4086" id="4086">4086</a>
+<a href="#4087" id="4087">4087</a>
+<a href="#4088" id="4088">4088</a>
+<a href="#4089" id="4089">4089</a>
+<a href="#4090" id="4090">4090</a>
+<a href="#4091" id="4091">4091</a>
+<a href="#4092" id="4092">4092</a>
+<a href="#4093" id="4093">4093</a>
+<a href="#4094" id="4094">4094</a>
+<a href="#4095" id="4095">4095</a>
+<a href="#4096" id="4096">4096</a>
+<a href="#4097" id="4097">4097</a>
 </pre><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -4262,7 +4302,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         display_handle: raw_window_handle::RawDisplayHandle,
         window_handle: raw_window_handle::RawWindowHandle,
-    ) -&gt; <span class="self">Self</span>::SurfaceId;
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::SurfaceId, <span class="kw">crate</span>::CreateSurfaceError&gt;;
     <span class="kw">fn </span>instance_request_adapter(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         options: <span class="kw-2">&amp;</span>RequestAdapterOptions&lt;<span class="lifetime">&#39;_</span>&gt;,
@@ -5898,23 +5938,34 @@
     ///
     /// # Safety
     ///
-    /// - Raw Window Handle must be a valid object to create a surface upon and
-    ///   must remain valid for the lifetime of the returned surface.
-    /// - If not called on the main thread, metal backend will panic.
+    /// - `raw_window_handle` must be a valid object to create a surface upon.
+    /// - `raw_window_handle` must remain valid until after the returned [`Surface`] is
+    ///   dropped.
+    ///
+    /// # Errors
+    ///
+    /// - On WebGL2: Will return an error if the browser does not support WebGL2,
+    ///   or declines to provide GPU access (such as due to a resource shortage).
+    ///
+    /// # Panics
+    ///
+    /// - On macOS/Metal: will panic if not called on the main thread.
+    /// - On web: will panic if the `raw_window_handle` does not properly refer to a
+    ///   canvas element.
     </span><span class="kw">pub unsafe fn </span>create_surface&lt;
         W: raw_window_handle::HasRawWindowHandle + raw_window_handle::HasRawDisplayHandle,
     &gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         window: <span class="kw-2">&amp;</span>W,
-    ) -&gt; Surface {
-        Surface {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
+        <span class="prelude-val">Ok</span>(Surface {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
             id: Context::instance_create_surface(
                 <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
                 raw_window_handle::HasRawDisplayHandle::raw_display_handle(window),
                 raw_window_handle::HasRawWindowHandle::raw_window_handle(window),
-            ),
-        }
+            )<span class="question-mark">?</span>,
+        })
     }
 
     <span class="doccomment">/// Creates a surface from `CoreAnimationLayer`.
@@ -5944,29 +5995,42 @@
     ///
     /// The `canvas` argument must be a valid `&lt;canvas&gt;` element to
     /// create a surface upon.
+    ///
+    /// # Errors
+    ///
+    /// - On WebGL2: Will return an error if the browser does not support WebGL2,
+    ///   or declines to provide GPU access (such as due to a resource shortage).
     </span><span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(feature = <span class="string">&quot;emscripten&quot;</span>)))]
-    </span><span class="kw">pub fn </span>create_surface_from_canvas(<span class="kw-2">&amp;</span><span class="self">self</span>, canvas: <span class="kw-2">&amp;</span>web_sys::HtmlCanvasElement) -&gt; Surface {
-        Surface {
+    </span><span class="kw">pub fn </span>create_surface_from_canvas(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        canvas: <span class="kw-2">&amp;</span>web_sys::HtmlCanvasElement,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
+        <span class="prelude-val">Ok</span>(Surface {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
-            id: <span class="self">self</span>.context.instance_create_surface_from_canvas(canvas),
-        }
+            id: <span class="self">self</span>.context.instance_create_surface_from_canvas(canvas)<span class="question-mark">?</span>,
+        })
     }
 
     <span class="doccomment">/// Creates a surface from a `web_sys::OffscreenCanvas`.
     ///
     /// The `canvas` argument must be a valid `OffscreenCanvas` object
     /// to create a surface upon.
+    ///
+    /// # Errors
+    ///
+    /// - On WebGL2: Will return an error if the browser does not support WebGL2,
+    ///   or declines to provide GPU access (such as due to a resource shortage).
     </span><span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(feature = <span class="string">&quot;emscripten&quot;</span>)))]
     </span><span class="kw">pub fn </span>create_surface_from_offscreen_canvas(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         canvas: <span class="kw-2">&amp;</span>web_sys::OffscreenCanvas,
-    ) -&gt; Surface {
-        Surface {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
+        <span class="prelude-val">Ok</span>(Surface {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
             id: <span class="self">self
                 </span>.context
-                .instance_create_surface_from_offscreen_canvas(canvas),
-        }
+                .instance_create_surface_from_offscreen_canvas(canvas)<span class="question-mark">?</span>,
+        })
     }
 
     <span class="doccomment">/// Polls all devices.
@@ -6434,6 +6498,22 @@
 }
 
 <span class="kw">impl </span>error::Error <span class="kw">for </span>RequestDeviceError {}
+
+<span class="doccomment">/// [`Instance::create_surface()`] or a related function failed.
+</span><span class="attr">#[derive(Clone, PartialEq, Eq, Debug)]
+#[non_exhaustive]
+</span><span class="kw">pub struct </span>CreateSurfaceError {
+    <span class="comment">// TODO: Report diagnostic clues
+</span>}
+<span class="macro">static_assertions::assert_impl_all!</span>(CreateSurfaceError: Send, Sync);
+
+<span class="kw">impl </span>Display <span class="kw">for </span>CreateSurfaceError {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">&quot;Creating a surface failed&quot;</span>)
+    }
+}
+
+<span class="kw">impl </span>error::Error <span class="kw">for </span>CreateSurfaceError {}
 
 <span class="doccomment">/// Error occurred when trying to async map a buffer.
 </span><span class="attr">#[derive(Clone, PartialEq, Eq, Debug)]
