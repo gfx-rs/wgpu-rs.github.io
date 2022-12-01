@@ -4032,6 +4032,30 @@
 <a href="#4031" id="4031">4031</a>
 <a href="#4032" id="4032">4032</a>
 <a href="#4033" id="4033">4033</a>
+<a href="#4034" id="4034">4034</a>
+<a href="#4035" id="4035">4035</a>
+<a href="#4036" id="4036">4036</a>
+<a href="#4037" id="4037">4037</a>
+<a href="#4038" id="4038">4038</a>
+<a href="#4039" id="4039">4039</a>
+<a href="#4040" id="4040">4040</a>
+<a href="#4041" id="4041">4041</a>
+<a href="#4042" id="4042">4042</a>
+<a href="#4043" id="4043">4043</a>
+<a href="#4044" id="4044">4044</a>
+<a href="#4045" id="4045">4045</a>
+<a href="#4046" id="4046">4046</a>
+<a href="#4047" id="4047">4047</a>
+<a href="#4048" id="4048">4048</a>
+<a href="#4049" id="4049">4049</a>
+<a href="#4050" id="4050">4050</a>
+<a href="#4051" id="4051">4051</a>
+<a href="#4052" id="4052">4052</a>
+<a href="#4053" id="4053">4053</a>
+<a href="#4054" id="4054">4054</a>
+<a href="#4055" id="4055">4055</a>
+<a href="#4056" id="4056">4056</a>
+<a href="#4057" id="4057">4057</a>
 </pre><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -4624,6 +4648,9 @@
 <span class="doccomment">/// Identifier for a particular call to [`Queue::submit`]. Can be used
 /// as part of an argument to [`Device::poll`] to block for a particular
 /// submission to finish.
+///
+/// This type is unique to the Rust API of `wgpu`.
+/// There is no analogue in the WebGPU specification.
 </span><span class="attr">#[derive(Debug, Copy, Clone)]
 </span><span class="kw">pub struct </span>SubmissionIndex(&lt;C <span class="kw">as </span>Context&gt;::SubmissionIndex);
 <span class="macro">static_assertions::assert_impl_all!</span>(SubmissionIndex: Send, Sync);
@@ -4705,9 +4732,12 @@
 
 <span class="doccomment">/// Slice into a [`Buffer`].
 ///
-/// Created by calling [`Buffer::slice`]. To use the whole buffer, call with unbounded slice:
+/// It can be created with [`Buffer::slice`]. To use the whole buffer, call with unbounded slice:
 ///
 /// `buffer.slice(..)`
+///
+/// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
+/// an offset and size are specified as arguments to each call working with the [`Buffer`], instead.
 </span><span class="attr">#[derive(Copy, Clone, Debug)]
 </span><span class="kw">pub struct </span>BufferSlice&lt;<span class="lifetime">&#39;a</span>&gt; {
     buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Buffer,
@@ -4770,6 +4800,10 @@
 ///
 /// A `Surface` represents a platform-specific surface (e.g. a window) onto which rendered images may
 /// be presented. A `Surface` may be created with the unsafe function [`Instance::create_surface`].
+///
+/// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
+/// [`GPUCanvasContext`](https://gpuweb.github.io/gpuweb/#canvas-context)
+/// serves a similar role.
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Surface {
     context: Arc&lt;C&gt;,
@@ -4863,6 +4897,9 @@
 ///
 /// Any necessary shader translation (e.g. from WGSL to SPIR-V or vice versa)
 /// will be done internally by wgpu.
+///
+/// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
+/// only WGSL source code strings are accepted.
 </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;naga&quot;</span>, allow(clippy::large_enum_variant))]
 #[derive(Clone)]
 #[non_exhaustive]
@@ -4910,7 +4947,11 @@
 }
 <span class="macro">static_assertions::assert_impl_all!</span>(ShaderModuleDescriptor: Send, Sync);
 
-<span class="doccomment">/// Descriptor for a shader module given by SPIR-V binary.
+<span class="doccomment">/// Descriptor for a shader module given by SPIR-V binary, for use with
+/// [`Device::create_shader_module_spirv`].
+///
+/// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
+/// only WGSL source code strings are accepted.
 </span><span class="kw">pub struct </span>ShaderModuleDescriptorSpirV&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="doccomment">/// Debug label of the shader module. This will show up in graphics debuggers for easy identification.
     </span><span class="kw">pub </span>label: Label&lt;<span class="lifetime">&#39;a</span>&gt;,
@@ -5247,6 +5288,9 @@
 }
 
 <span class="doccomment">/// Pair of load and store operations for an attachment aspect.
+///
+/// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
+/// separate `loadOp` and `storeOp` fields are used instead.
 </span><span class="attr">#[derive(Copy, Clone, Debug, Hash, Eq, PartialEq)]
 #[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
 #[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
@@ -5698,6 +5742,10 @@
 
 <span class="doccomment">/// Surface texture that can be rendered to.
 /// Result of a successful call to [`Surface::get_current_texture`].
+///
+/// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
+/// the [`GPUCanvasContext`](https://gpuweb.github.io/gpuweb/#canvas-context) provides
+/// a texture without any additional information.
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>SurfaceTexture {
     <span class="doccomment">/// Accessible view of the frame.
