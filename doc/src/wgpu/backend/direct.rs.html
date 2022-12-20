@@ -3005,6 +3005,14 @@
 <a href="#3004" id="3004">3004</a>
 <a href="#3005" id="3005">3005</a>
 <a href="#3006" id="3006">3006</a>
+<a href="#3007" id="3007">3007</a>
+<a href="#3008" id="3008">3008</a>
+<a href="#3009" id="3009">3009</a>
+<a href="#3010" id="3010">3010</a>
+<a href="#3011" id="3011">3011</a>
+<a href="#3012" id="3012">3012</a>
+<a href="#3013" id="3013">3013</a>
+<a href="#3014" id="3014">3014</a>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -5079,7 +5087,7 @@
     <span class="kw">fn </span>queue_write_buffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueId,
-        _queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
+        queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
         buffer: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferId,
         _buffer_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferData,
         offset: wgt::BufferAddress,
@@ -5090,46 +5098,54 @@
             <span class="kw-2">*</span>queue =&gt; global.queue_write_buffer(<span class="kw-2">*</span>queue, <span class="kw-2">*</span>buffer, offset, data)
         ) {
             <span class="prelude-val">Ok</span>(()) =&gt; (),
-            <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self</span>.handle_error_fatal(err, <span class="string">&quot;Queue::write_buffer&quot;</span>),
+            <span class="prelude-val">Err</span>(err) =&gt; {
+                <span class="self">self</span>.handle_error_nolabel(<span class="kw-2">&amp;</span>queue_data.error_sink, err, <span class="string">&quot;Queue::write_buffer&quot;</span>)
+            }
         }
     }
 
     <span class="kw">fn </span>queue_validate_write_buffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueId,
-        _queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
+        queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
         buffer: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferId,
         _buffer_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferData,
         offset: wgt::BufferAddress,
         size: wgt::BufferSize,
-    ) {
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;()&gt; {
         <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">match </span><span class="macro">wgc::gfx_select!</span>(
             <span class="kw-2">*</span>queue =&gt; global.queue_validate_write_buffer(<span class="kw-2">*</span>queue, <span class="kw-2">*</span>buffer, offset, size.get())
         ) {
-            <span class="prelude-val">Ok</span>(()) =&gt; (),
-            <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self</span>.handle_error_fatal(err, <span class="string">&quot;Queue::write_buffer_with&quot;</span>),
+            <span class="prelude-val">Ok</span>(()) =&gt; <span class="prelude-val">Some</span>(()),
+            <span class="prelude-val">Err</span>(err) =&gt; {
+                <span class="self">self</span>.handle_error_nolabel(<span class="kw-2">&amp;</span>queue_data.error_sink, err, <span class="string">&quot;Queue::write_buffer_with&quot;</span>);
+                <span class="prelude-val">None
+            </span>}
         }
     }
 
     <span class="kw">fn </span>queue_create_staging_buffer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueId,
-        _queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
+        queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
         size: wgt::BufferSize,
-    ) -&gt; Box&lt;<span class="kw">dyn </span><span class="kw">crate</span>::context::QueueWriteBuffer&gt; {
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span><span class="kw">crate</span>::context::QueueWriteBuffer&gt;&gt; {
         <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">match </span><span class="macro">wgc::gfx_select!</span>(
             <span class="kw-2">*</span>queue =&gt; global.queue_create_staging_buffer(<span class="kw-2">*</span>queue, size, ())
         ) {
-            <span class="prelude-val">Ok</span>((buffer_id, ptr)) =&gt; Box::new(QueueWriteBuffer {
+            <span class="prelude-val">Ok</span>((buffer_id, ptr)) =&gt; <span class="prelude-val">Some</span>(Box::new(QueueWriteBuffer {
                 buffer_id,
                 mapping: BufferMappedRange {
                     ptr,
                     size: size.get() <span class="kw">as </span>usize,
                 },
-            }),
-            <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self</span>.handle_error_fatal(err, <span class="string">&quot;Queue::write_buffer_with&quot;</span>),
+            })),
+            <span class="prelude-val">Err</span>(err) =&gt; {
+                <span class="self">self</span>.handle_error_nolabel(<span class="kw-2">&amp;</span>queue_data.error_sink, err, <span class="string">&quot;Queue::write_buffer_with&quot;</span>);
+                <span class="prelude-val">None
+            </span>}
         }
     }
 

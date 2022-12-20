@@ -4296,7 +4296,7 @@
 <span class="kw">type </span>C = <span class="kw">dyn </span>DynContext;
 <span class="kw">type </span>Data = <span class="kw">dyn </span>Any + Send + Sync;
 
-<span class="doccomment">/// Context for all other wgpu objects. Instance of wgpu.
+<span class="doccomment">/// Context for all other wgpu objects. Instan ce of wgpu.
 ///
 /// This is the first thing you create when using wgpu.
 /// Its primary use is to create [`Adapter`]s and [`Surface`]s.
@@ -7971,7 +7971,7 @@
         buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Buffer,
         offset: BufferAddress,
         size: BufferSize,
-    ) -&gt; QueueWriteBufferView&lt;<span class="lifetime">&#39;a</span>&gt; {
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;QueueWriteBufferView&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
         DynContext::queue_validate_write_buffer(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;</span><span class="self">self</span>.id,
@@ -7980,19 +7980,19 @@
             buffer.data.as_ref(),
             offset,
             size,
-        );
+        )<span class="question-mark">?</span>;
         <span class="kw">let </span>staging_buffer = DynContext::queue_create_staging_buffer(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;</span><span class="self">self</span>.id,
             <span class="self">self</span>.data.as_ref(),
             size,
-        );
-        QueueWriteBufferView {
+        )<span class="question-mark">?</span>;
+        <span class="prelude-val">Some</span>(QueueWriteBufferView {
             queue: <span class="self">self</span>,
             buffer,
             offset,
             inner: staging_buffer,
-        }
+        })
     }
 
     <span class="doccomment">/// Schedule a write of some data into a texture.
