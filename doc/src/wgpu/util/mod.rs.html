@@ -156,6 +156,10 @@
 <a href="#155" id="155">155</a>
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Utility structures and functions that are built on top of the main `wgpu` API.
 //!
 //! Nothing in this module is a part of the WebGPU API specification;
@@ -232,7 +236,10 @@
 }
 
 <span class="doccomment">/// CPU accessible buffer used to download data back from the GPU.
-</span><span class="kw">pub struct </span>DownloadBuffer(Arc&lt;<span class="kw">super</span>::Buffer&gt;, <span class="kw">super</span>::BufferMappedRange);
+</span><span class="kw">pub struct </span>DownloadBuffer(
+    Arc&lt;<span class="kw">super</span>::Buffer&gt;,
+    Box&lt;<span class="kw">dyn </span><span class="kw">crate</span>::context::BufferMappedRange&gt;,
+);
 
 <span class="kw">impl </span>DownloadBuffer {
     <span class="doccomment">/// Asynchronously read the contents of a buffer.
@@ -269,9 +276,10 @@
                     <span class="kw">return</span>;
                 }
 
-                <span class="kw">let </span>mapped_range = <span class="kw">super</span>::Context::buffer_get_mapped_range(
+                <span class="kw">let </span>mapped_range = <span class="kw">super</span>::DynContext::buffer_get_mapped_range(
                     <span class="kw-2">&amp;*</span>download.context,
                     <span class="kw-2">&amp;</span>download.id,
+                    download.data.as_ref(),
                     <span class="number">0</span>..size,
                 );
                 callback(<span class="prelude-val">Ok</span>(<span class="self">Self</span>(download, mapped_range)));
@@ -282,7 +290,7 @@
 <span class="kw">impl </span>std::ops::Deref <span class="kw">for </span>DownloadBuffer {
     <span class="kw">type </span>Target = [u8];
     <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
-        <span class="kw">super</span>::BufferMappedRangeSlice::slice(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">1</span>)
+        <span class="self">self</span>.<span class="number">1</span>.slice()
     }
 }
 
