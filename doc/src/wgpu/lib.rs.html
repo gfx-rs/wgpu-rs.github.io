@@ -4235,6 +4235,32 @@
 <a href="#4234" id="4234">4234</a>
 <a href="#4235" id="4235">4235</a>
 <a href="#4236" id="4236">4236</a>
+<a href="#4237" id="4237">4237</a>
+<a href="#4238" id="4238">4238</a>
+<a href="#4239" id="4239">4239</a>
+<a href="#4240" id="4240">4240</a>
+<a href="#4241" id="4241">4241</a>
+<a href="#4242" id="4242">4242</a>
+<a href="#4243" id="4243">4243</a>
+<a href="#4244" id="4244">4244</a>
+<a href="#4245" id="4245">4245</a>
+<a href="#4246" id="4246">4246</a>
+<a href="#4247" id="4247">4247</a>
+<a href="#4248" id="4248">4248</a>
+<a href="#4249" id="4249">4249</a>
+<a href="#4250" id="4250">4250</a>
+<a href="#4251" id="4251">4251</a>
+<a href="#4252" id="4252">4252</a>
+<a href="#4253" id="4253">4253</a>
+<a href="#4254" id="4254">4254</a>
+<a href="#4255" id="4255">4255</a>
+<a href="#4256" id="4256">4256</a>
+<a href="#4257" id="4257">4257</a>
+<a href="#4258" id="4258">4258</a>
+<a href="#4259" id="4259">4259</a>
+<a href="#4260" id="4260">4260</a>
+<a href="#4261" id="4261">4261</a>
+<a href="#4262" id="4262">4262</a>
 </pre><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -4273,14 +4299,15 @@
     DepthStencilState, DeviceType, DownlevelCapabilities, DownlevelFlags, DynamicOffset, Extent3d,
     Face, Features, FilterMode, FrontFace, ImageDataLayout, ImageSubresourceRange, IndexFormat,
     Limits, MultisampleState, Origin3d, PipelineStatisticsTypes, PolygonMode, PowerPreference,
-    PresentMode, PrimitiveState, PrimitiveTopology, PushConstantRange, QueryType,
-    RenderBundleDepthStencil, SamplerBindingType, SamplerBorderColor, ShaderLocation, ShaderModel,
-    ShaderStages, StencilFaceState, StencilOperation, StencilState, StorageTextureAccess,
-    SurfaceCapabilities, SurfaceConfiguration, SurfaceStatus, TextureAspect, TextureDimension,
-    TextureFormat, TextureFormatFeatureFlags, TextureFormatFeatures, TextureSampleType,
-    TextureUsages, TextureViewDimension, VertexAttribute, VertexFormat, VertexStepMode,
-    COPY_BUFFER_ALIGNMENT, COPY_BYTES_PER_ROW_ALIGNMENT, MAP_ALIGNMENT, PUSH_CONSTANT_ALIGNMENT,
-    QUERY_RESOLVE_BUFFER_ALIGNMENT, QUERY_SET_MAX_QUERIES, QUERY_SIZE, VERTEX_STRIDE_ALIGNMENT,
+    PresentMode, PresentationTimestamp, PrimitiveState, PrimitiveTopology, PushConstantRange,
+    QueryType, RenderBundleDepthStencil, SamplerBindingType, SamplerBorderColor, ShaderLocation,
+    ShaderModel, ShaderStages, StencilFaceState, StencilOperation, StencilState,
+    StorageTextureAccess, SurfaceCapabilities, SurfaceConfiguration, SurfaceStatus, TextureAspect,
+    TextureDimension, TextureFormat, TextureFormatFeatureFlags, TextureFormatFeatures,
+    TextureSampleType, TextureUsages, TextureViewDimension, VertexAttribute, VertexFormat,
+    VertexStepMode, COPY_BUFFER_ALIGNMENT, COPY_BYTES_PER_ROW_ALIGNMENT, MAP_ALIGNMENT,
+    PUSH_CONSTANT_ALIGNMENT, QUERY_RESOLVE_BUFFER_ALIGNMENT, QUERY_SET_MAX_QUERIES, QUERY_SIZE,
+    VERTEX_STRIDE_ALIGNMENT,
 };
 
 <span class="doccomment">/// Filter for error scopes.
@@ -6006,6 +6033,31 @@
             <span class="self">self</span>.data.as_ref(),
             format,
         )
+    }
+
+    <span class="doccomment">/// Generates a timestamp using the clock used by the presentation engine.
+    ///
+    /// When comparing completely opaque timestamp systems, we need a way of generating timestamps that signal
+    /// the exact same time. You can do this by calling your own timestamp function immediately after a call to
+    /// this function. This should result in timestamps that are 0.5 to 5 microseconds apart. There are locks
+    /// that must be taken during the call, so don&#39;t call your function before.
+    ///
+    /// ```no_run
+    /// # let adapter: wgpu::Adapter = panic!();
+    /// # let some_code = || wgpu::PresentationTimestamp::INVALID_TIMESTAMP;
+    /// use std::time::{Duration, Instant};
+    /// let presentation = adapter.get_presentation_timestamp();
+    /// let instant = Instant::now();
+    ///
+    /// // We can now turn a new presentation timestamp into an Instant.
+    /// let some_pres_timestamp = some_code();
+    /// let duration = Duration::from_nanos((some_pres_timestamp.0 - presentation.0) as u64);
+    /// let new_instant: Instant = instant + duration;
+    /// ```
+    </span><span class="comment">//
+    </span><span class="doccomment">/// [Instant]: std::time::Instant
+    </span><span class="kw">pub fn </span>get_presentation_timestamp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; PresentationTimestamp {
+        DynContext::adapter_get_presentation_timestamp(<span class="kw-2">&amp;*</span><span class="self">self</span>.context, <span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.data.as_ref())
     }
 }
 
