@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["wgpu","wgpu_hal"];
+window.ALL_CRATES = ["wgpu","wgpu_hal","wgpu_types"];
