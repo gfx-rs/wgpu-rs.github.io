@@ -3834,9 +3834,23 @@
 <a href="#3833" id="3833">3833</a>
 <a href="#3834" id="3834">3834</a>
 <a href="#3835" id="3835">3835</a>
-</pre><pre class="rust"><code><span class="kw">use </span>std::{
-    any::Any, fmt::Debug, future::Future, num::NonZeroU128, ops::Range, pin::Pin, sync::Arc,
-};
+<a href="#3836" id="3836">3836</a>
+<a href="#3837" id="3837">3837</a>
+<a href="#3838" id="3838">3838</a>
+<a href="#3839" id="3839">3839</a>
+<a href="#3840" id="3840">3840</a>
+<a href="#3841" id="3841">3841</a>
+<a href="#3842" id="3842">3842</a>
+<a href="#3843" id="3843">3843</a>
+<a href="#3844" id="3844">3844</a>
+<a href="#3845" id="3845">3845</a>
+<a href="#3846" id="3846">3846</a>
+<a href="#3847" id="3847">3847</a>
+<a href="#3848" id="3848">3848</a>
+<a href="#3849" id="3849">3849</a>
+<a href="#3850" id="3850">3850</a>
+<a href="#3851" id="3851">3851</a>
+</pre><pre class="rust"><code><span class="kw">use </span>std::{any::Any, fmt::Debug, future::Future, num::NonZeroU64, ops::Range, pin::Pin, sync::Arc};
 
 <span class="kw">use </span>wgt::{
     strict_assert, strict_assert_eq, AdapterInfo, BufferAddress, BufferSize, Color,
@@ -4821,28 +4835,48 @@
 }
 
 <span class="doccomment">/// Object id.
-///
-/// An ObjectId is a 128-bit number internally, where the first 64-bits represent a backend internal id and
-/// the last 64-bits are a global id.
-</span><span class="attr">#[derive(Debug, Clone, Copy)]
-</span><span class="kw">pub struct </span>ObjectId(NonZeroU128);
+</span><span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>ObjectId {
+    <span class="doccomment">/// ID that is unique at any given time
+    </span>id: <span class="prelude-ty">Option</span>&lt;NonZeroU64&gt;,
+    <span class="attr">#[cfg(feature = <span class="string">&quot;expose-ids&quot;</span>)]
+    </span><span class="doccomment">/// ID that is unique at all times
+    </span>global_id: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Id&gt;,
+}
 
 <span class="kw">impl </span>ObjectId {
-    <span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
-        (<span class="self">self</span>.<span class="number">0</span>.get() &gt;&gt; <span class="number">64</span>) <span class="kw">as </span>u64
-    }
-}
+    <span class="kw">const </span>UNUSED: <span class="self">Self </span>= ObjectId {
+        id: <span class="prelude-val">None</span>,
+        <span class="attr">#[cfg(feature = <span class="string">&quot;expose-ids&quot;</span>)]
+        </span>global_id: <span class="prelude-val">None</span>,
+    };
 
-<span class="kw">impl </span>From&lt;NonZeroU128&gt; <span class="kw">for </span>ObjectId {
-    <span class="kw">fn </span>from(raw: NonZeroU128) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>(raw)
+    <span class="kw">pub fn </span>new(id: NonZeroU64, <span class="attr">#[cfg(feature = <span class="string">&quot;expose-ids&quot;</span>)] </span>global_id: <span class="kw">crate</span>::Id) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            id: <span class="prelude-val">Some</span>(id),
+            <span class="attr">#[cfg(feature = <span class="string">&quot;expose-ids&quot;</span>)]
+            </span>global_id: <span class="prelude-val">Some</span>(global_id),
+        }
     }
-}
 
-<span class="kw">impl </span>From&lt;ObjectId&gt; <span class="kw">for </span>NonZeroU128 {
-    <span class="kw">fn </span>from(id: ObjectId) -&gt; <span class="self">Self </span>{
-        id.<span class="number">0
-    </span>}
+    <span class="attr">#[allow(dead_code)]
+    </span><span class="kw">pub fn </span>from_global_id(global_id: NonZeroU64) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            id: <span class="prelude-val">Some</span>(global_id),
+            <span class="attr">#[cfg(feature = <span class="string">&quot;expose-ids&quot;</span>)]
+            </span>global_id: <span class="prelude-val">Some</span>(<span class="kw">crate</span>::Id(global_id)),
+        }
+    }
+
+    <span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; NonZeroU64 {
+        <span class="self">self</span>.id.unwrap()
+    }
+
+    <span class="attr">#[cfg(feature = <span class="string">&quot;expose-ids&quot;</span>)]
+    #[cfg_attr(docsrs, doc(cfg(feature = <span class="string">&quot;expose-ids&quot;</span>)))]
+    </span><span class="kw">pub fn </span>global_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::Id {
+        <span class="self">self</span>.global_id.unwrap()
+    }
 }
 
 <span class="macro">static_assertions::assert_impl_all!</span>(ObjectId: Send, Sync);
@@ -4865,18 +4899,16 @@
 </span><span class="attr">#[derive(Debug, Clone, Copy)]
 </span><span class="kw">pub struct </span>Unused;
 
-<span class="kw">const </span>UNUSED_SENTINEL: <span class="prelude-ty">Option</span>&lt;NonZeroU128&gt; = NonZeroU128::new(u128::MAX);
-
 <span class="kw">impl </span>From&lt;ObjectId&gt; <span class="kw">for </span>Unused {
     <span class="kw">fn </span>from(id: ObjectId) -&gt; <span class="self">Self </span>{
-        <span class="macro">strict_assert_eq!</span>(<span class="prelude-val">Some</span>(NonZeroU128::from(id)), UNUSED_SENTINEL);
+        <span class="macro">strict_assert_eq!</span>(id, ObjectId::UNUSED);
         <span class="self">Self
     </span>}
 }
 
 <span class="kw">impl </span>From&lt;Unused&gt; <span class="kw">for </span>ObjectId {
     <span class="kw">fn </span>from(<span class="kw">_</span>: Unused) -&gt; <span class="self">Self </span>{
-        ObjectId::from(UNUSED_SENTINEL.expect(<span class="string">&quot;This should never panic&quot;</span>))
+        ObjectId::UNUSED
     }
 }
 

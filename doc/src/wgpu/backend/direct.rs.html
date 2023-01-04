@@ -3012,7 +3012,6 @@
 <a href="#3011" id="3011">3011</a>
 <a href="#3012" id="3012">3012</a>
 <a href="#3013" id="3013">3013</a>
-<a href="#3014" id="3014">3014</a>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -5900,22 +5899,21 @@
 }
 
 <span class="kw">impl</span>&lt;T&gt; From&lt;ObjectId&gt; <span class="kw">for </span>wgc::id::Id&lt;T&gt; {
-    <span class="comment">// If the id32 feature is enabled, this conversion is not useless.
-    </span><span class="attr">#[allow(clippy::useless_conversion)]
-    </span><span class="kw">fn </span>from(id: ObjectId) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>raw = std::num::NonZeroU128::from(id);
-        <span class="comment">// If the id32 feature is enabled, this will truncate the id to a NonZeroU32.
-        </span><span class="kw">let </span>id = raw.try_into().expect(<span class="string">&quot;Id exceeded 32-bits&quot;</span>);
-        <span class="comment">// FIXME: This is not safe
+    <span class="kw">fn </span>from(id: ObjectId) -&gt; <span class="self">Self </span>{
+        <span class="comment">// If the id32 feature is enabled in wgpu-core, this will make sure that the id fits in a NonZeroU32.
+        </span><span class="attr">#[allow(clippy::useless_conversion)]
+        </span><span class="kw">let </span>id = id.id().try_into().expect(<span class="string">&quot;Id exceeded 32-bits&quot;</span>);
+        <span class="comment">// SAFETY: The id was created via the impl below
         </span><span class="kw">unsafe </span>{ <span class="self">Self</span>::from_raw(id) }
     }
 }
 
 <span class="kw">impl</span>&lt;T&gt; From&lt;wgc::id::Id&lt;T&gt;&gt; <span class="kw">for </span>ObjectId {
-    <span class="comment">// If the id32 feature is enabled, this conversion is not useless.
-    </span><span class="attr">#[allow(clippy::useless_conversion)]
-    </span><span class="kw">fn </span>from(id: wgc::id::Id&lt;T&gt;) -&gt; <span class="self">Self </span>{
-        ObjectId::from(std::num::NonZeroU128::from(id.as_raw()))
+    <span class="kw">fn </span>from(id: wgc::id::Id&lt;T&gt;) -&gt; <span class="self">Self </span>{
+        <span class="comment">// If the id32 feature is enabled in wgpu-core, the conversion is not useless
+        </span><span class="attr">#[allow(clippy::useless_conversion)]
+        </span><span class="kw">let </span>id = id.into_raw().into();
+        <span class="self">Self</span>::from_global_id(id)
     }
 }
 
