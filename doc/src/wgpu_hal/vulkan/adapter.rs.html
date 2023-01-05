@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/adapter.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>adapter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-94f503864730768f.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-4a084badb5778746.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu_hal/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/adapter.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>adapter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9e69e4c014d22d53.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-4743e13df3dfe8c4.css"><link rel="stylesheet" disabled href="../../../static.files/dark-0e1b889528bd466b.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-65289d5d067c7c66.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-4a084badb5778746.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu_hal/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1675,6 +1675,45 @@
 <a href="#1675" id="1675">1675</a>
 <a href="#1676" id="1676">1676</a>
 <a href="#1677" id="1677">1677</a>
+<a href="#1678" id="1678">1678</a>
+<a href="#1679" id="1679">1679</a>
+<a href="#1680" id="1680">1680</a>
+<a href="#1681" id="1681">1681</a>
+<a href="#1682" id="1682">1682</a>
+<a href="#1683" id="1683">1683</a>
+<a href="#1684" id="1684">1684</a>
+<a href="#1685" id="1685">1685</a>
+<a href="#1686" id="1686">1686</a>
+<a href="#1687" id="1687">1687</a>
+<a href="#1688" id="1688">1688</a>
+<a href="#1689" id="1689">1689</a>
+<a href="#1690" id="1690">1690</a>
+<a href="#1691" id="1691">1691</a>
+<a href="#1692" id="1692">1692</a>
+<a href="#1693" id="1693">1693</a>
+<a href="#1694" id="1694">1694</a>
+<a href="#1695" id="1695">1695</a>
+<a href="#1696" id="1696">1696</a>
+<a href="#1697" id="1697">1697</a>
+<a href="#1698" id="1698">1698</a>
+<a href="#1699" id="1699">1699</a>
+<a href="#1700" id="1700">1700</a>
+<a href="#1701" id="1701">1701</a>
+<a href="#1702" id="1702">1702</a>
+<a href="#1703" id="1703">1703</a>
+<a href="#1704" id="1704">1704</a>
+<a href="#1705" id="1705">1705</a>
+<a href="#1706" id="1706">1706</a>
+<a href="#1707" id="1707">1707</a>
+<a href="#1708" id="1708">1708</a>
+<a href="#1709" id="1709">1709</a>
+<a href="#1710" id="1710">1710</a>
+<a href="#1711" id="1711">1711</a>
+<a href="#1712" id="1712">1712</a>
+<a href="#1713" id="1713">1713</a>
+<a href="#1714" id="1714">1714</a>
+<a href="#1715" id="1715">1715</a>
+<a href="#1716" id="1716">1716</a>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
@@ -1849,9 +1888,7 @@
                 //.shader_resource_residency(requested_features.contains(wgt::Features::SHADER_RESOURCE_RESIDENCY))
                 </span>.geometry_shader(requested_features.contains(wgt::Features::SHADER_PRIMITIVE_INDEX))
                 .build(),
-            descriptor_indexing: <span class="kw">if </span>enabled_extensions
-                .contains(<span class="kw-2">&amp;</span>vk::ExtDescriptorIndexingFn::name())
-            {
+            descriptor_indexing: <span class="kw">if </span>requested_features.intersects(indexing_features()) {
                 <span class="prelude-val">Some</span>(
                     vk::PhysicalDeviceDescriptorIndexingFeaturesEXT::builder()
                         .shader_sampled_image_array_non_uniform_indexing(
@@ -1906,7 +1943,9 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
-            image_robustness: <span class="kw">if </span>enabled_extensions.contains(<span class="kw-2">&amp;</span>vk::ExtImageRobustnessFn::name()) {
+            image_robustness: <span class="kw">if </span>effective_api_version &gt;= vk::API_VERSION_1_3
+                || enabled_extensions.contains(<span class="kw-2">&amp;</span>vk::ExtImageRobustnessFn::name())
+            {
                 <span class="prelude-val">Some</span>(
                     vk::PhysicalDeviceImageRobustnessFeaturesEXT::builder()
                         .robust_image_access(private_caps.robust_image_access)
@@ -2089,7 +2128,7 @@
         //if caps.supports_extension(vk::ExtSamplerFilterMinmaxFn::name()) {
         </span>features.set(
             F::MULTI_DRAW_INDIRECT_COUNT,
-            caps.supports_extension(khr::DrawIndirectCount::name()),
+            caps.supports_extension(vk::KhrDrawIndirectCountFn::name()),
         );
         features.set(
             F::CONSERVATIVE_RASTERIZATION,
@@ -2231,45 +2270,73 @@
     </span><span class="kw">fn </span>get_required_extensions(<span class="kw-2">&amp;</span><span class="self">self</span>, requested_features: wgt::Features) -&gt; Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>extensions = Vec::new();
 
-        extensions.push(khr::Swapchain::name());
+        <span class="comment">// Note that quite a few extensions depend on the `VK_KHR_get_physical_device_properties2` instance extension.
+        // We enable `VK_KHR_get_physical_device_properties2` unconditionally (if available).
+
+        // Require `VK_KHR_swapchain`
+        </span>extensions.push(vk::KhrSwapchainFn::name());
 
         <span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_1 {
-            extensions.push(vk::KhrMaintenance1Fn::name());
-            extensions.push(vk::KhrMaintenance2Fn::name());
-
-            <span class="comment">// `VK_KHR_storage_buffer_storage_class` required for Naga on Vulkan 1.0 devices
-            </span>extensions.push(vk::KhrStorageBufferStorageClassFn::name());
-
-            <span class="comment">// Below Vulkan 1.1 we can get multiview from an extension
-            </span><span class="kw">if </span>requested_features.contains(wgt::Features::MULTIVIEW) {
-                extensions.push(vk::KhrMultiviewFn::name());
+            <span class="comment">// Require either `VK_KHR_maintenance1` or `VK_AMD_negative_viewport_height`
+            </span><span class="kw">if </span><span class="self">self</span>.supports_extension(vk::KhrMaintenance1Fn::name()) {
+                extensions.push(vk::KhrMaintenance1Fn::name());
+            } <span class="kw">else </span>{
+                <span class="comment">// `VK_AMD_negative_viewport_height` is obsoleted by `VK_KHR_maintenance1` and must not be enabled alongside it
+                </span>extensions.push(vk::AmdNegativeViewportHeightFn::name());
             }
 
-            <span class="comment">// `VK_AMD_negative_viewport_height` is obsoleted by `VK_KHR_maintenance1` and must not be enabled alongside `VK_KHR_maintenance1` or a 1.1+ device.
-            </span><span class="kw">if </span>!<span class="self">self</span>.supports_extension(vk::KhrMaintenance1Fn::name()) {
-                extensions.push(vk::AmdNegativeViewportHeightFn::name());
+            <span class="comment">// Optional `VK_KHR_maintenance2`
+            </span><span class="kw">if </span><span class="self">self</span>.supports_extension(vk::KhrMaintenance2Fn::name()) {
+                extensions.push(vk::KhrMaintenance2Fn::name());
+            }
+
+            <span class="comment">// Require `VK_KHR_storage_buffer_storage_class`
+            </span>extensions.push(vk::KhrStorageBufferStorageClassFn::name());
+
+            <span class="comment">// Require `VK_KHR_multiview` if the associated feature was requested
+            </span><span class="kw">if </span>requested_features.contains(wgt::Features::MULTIVIEW) {
+                extensions.push(vk::KhrMultiviewFn::name());
             }
         }
 
         <span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_2 {
-            <span class="kw">if </span><span class="self">self</span>.supports_extension(vk::KhrImagelessFramebufferFn::name()) {
+            <span class="comment">// Optional `VK_KHR_imageless_framebuffer`
+            </span><span class="kw">if </span><span class="self">self</span>.supports_extension(vk::KhrImagelessFramebufferFn::name()) {
                 extensions.push(vk::KhrImagelessFramebufferFn::name());
-                extensions.push(vk::KhrImageFormatListFn::name()); <span class="comment">// Required for `KhrImagelessFramebufferFn`
-            </span>}
+                <span class="comment">// Require `VK_KHR_image_format_list` due to it being a dependency
+                </span>extensions.push(vk::KhrImageFormatListFn::name());
+                <span class="comment">// Require `VK_KHR_maintenance2` due to it being a dependency
+                </span><span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_1 {
+                    extensions.push(vk::KhrMaintenance2Fn::name());
+                }
+            }
 
-            <span class="comment">// This extension is core in Vulkan 1.2
+            <span class="comment">// Optional `VK_KHR_driver_properties`
             </span><span class="kw">if </span><span class="self">self</span>.supports_extension(vk::KhrDriverPropertiesFn::name()) {
                 extensions.push(vk::KhrDriverPropertiesFn::name());
             }
 
-            extensions.push(vk::ExtSamplerFilterMinmaxFn::name());
-            extensions.push(vk::KhrTimelineSemaphoreFn::name());
+            <span class="comment">// Optional `VK_KHR_timeline_semaphore`
+            </span><span class="kw">if </span><span class="self">self</span>.supports_extension(vk::KhrTimelineSemaphoreFn::name()) {
+                extensions.push(vk::KhrTimelineSemaphoreFn::name());
+            }
 
-            <span class="kw">if </span>requested_features.intersects(indexing_features()) {
+            <span class="comment">// Require `VK_EXT_descriptor_indexing` if one of the associated features was requested
+            </span><span class="kw">if </span>requested_features.intersects(indexing_features()) {
                 extensions.push(vk::ExtDescriptorIndexingFn::name());
 
-                <span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_1 {
+                <span class="comment">// Require `VK_KHR_maintenance3` due to it being a dependency
+                </span><span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_1 {
                     extensions.push(vk::KhrMaintenance3Fn::name());
+                }
+            }
+
+            <span class="comment">// Require `VK_KHR_shader_float16_int8` and `VK_KHR_16bit_storage` if the associated feature was requested
+            </span><span class="kw">if </span>requested_features.contains(wgt::Features::SHADER_FLOAT16) {
+                extensions.push(vk::KhrShaderFloat16Int8Fn::name());
+                <span class="comment">// `VK_KHR_16bit_storage` requires `VK_KHR_storage_buffer_storage_class`, however we require that one already
+                </span><span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_1 {
+                    extensions.push(vk::Khr16bitStorageFn::name());
                 }
             }
 
@@ -2277,30 +2344,42 @@
             //extensions.push(vk::ExtSamplerFilterMinmaxFn::name());
         </span>}
 
-        <span class="comment">// Even though Vulkan 1.2 has promoted the extension to core, we must require the extension to avoid
+        <span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_3 {
+            <span class="comment">// Optional `VK_EXT_image_robustness`
+            </span><span class="kw">if </span><span class="self">self</span>.supports_extension(vk::ExtImageRobustnessFn::name()) {
+                extensions.push(vk::ExtImageRobustnessFn::name());
+            }
+        }
+
+        <span class="comment">// Optional `VK_EXT_robustness2`
+        </span><span class="kw">if </span><span class="self">self</span>.supports_extension(vk::ExtRobustness2Fn::name()) {
+            extensions.push(vk::ExtRobustness2Fn::name());
+        }
+
+        <span class="comment">// Require `VK_KHR_draw_indirect_count` if the associated feature was requested
+        // Even though Vulkan 1.2 has promoted the extension to core, we must require the extension to avoid
         // large amounts of spaghetti involved with using PhysicalDeviceVulkan12Features.
         </span><span class="kw">if </span>requested_features.contains(wgt::Features::MULTI_DRAW_INDIRECT_COUNT) {
             extensions.push(vk::KhrDrawIndirectCountFn::name());
         }
 
-        <span class="kw">if </span>requested_features.contains(wgt::Features::CONSERVATIVE_RASTERIZATION) {
+        <span class="comment">// Require `VK_EXT_conservative_rasterization` if the associated feature was requested
+        </span><span class="kw">if </span>requested_features.contains(wgt::Features::CONSERVATIVE_RASTERIZATION) {
             extensions.push(vk::ExtConservativeRasterizationFn::name());
         }
 
-        <span class="kw">if </span>requested_features.contains(wgt::Features::DEPTH_CLIP_CONTROL) {
+        <span class="comment">// Require `VK_EXT_depth_clip_enable` if the associated feature was requested
+        </span><span class="kw">if </span>requested_features.contains(wgt::Features::DEPTH_CLIP_CONTROL) {
             extensions.push(vk::ExtDepthClipEnableFn::name());
         }
 
-        <span class="attr">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>))]
+        <span class="comment">// Require `VK_KHR_portability_subset` on macOS/iOS
+        </span><span class="attr">#[cfg(any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>))]
         </span>extensions.push(vk::KhrPortabilitySubsetFn::name());
 
-        <span class="kw">if </span>requested_features.contains(wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR) {
+        <span class="comment">// Require `VK_EXT_texture_compression_astc_hdr` if the associated feature was requested
+        </span><span class="kw">if </span>requested_features.contains(wgt::Features::TEXTURE_COMPRESSION_ASTC_HDR) {
             extensions.push(vk::ExtTextureCompressionAstcHdrFn::name());
-        }
-
-        <span class="kw">if </span>requested_features.contains(wgt::Features::SHADER_FLOAT16) {
-            extensions.push(vk::KhrShaderFloat16Int8Fn::name());
-            extensions.push(vk::Khr16bitStorageFn::name());
         }
 
         extensions
@@ -2439,13 +2518,12 @@
                 <span class="self">self</span>.get_physical_device_properties
             {
                 <span class="comment">// Get these now to avoid borrowing conflicts later
-                </span><span class="kw">let </span>supports_descriptor_indexing =
-                    capabilities.supports_extension(vk::ExtDescriptorIndexingFn::name());
-                <span class="kw">let </span>supports_driver_properties = capabilities.properties.api_version
-                    &gt;= vk::API_VERSION_1_2
+                </span><span class="kw">let </span>supports_descriptor_indexing = <span class="self">self</span>.driver_api_version &gt;= vk::API_VERSION_1_2
+                    || capabilities.supports_extension(vk::ExtDescriptorIndexingFn::name());
+                <span class="kw">let </span>supports_driver_properties = <span class="self">self</span>.driver_api_version &gt;= vk::API_VERSION_1_2
                     || capabilities.supports_extension(vk::KhrDriverPropertiesFn::name());
 
-                <span class="kw">let </span><span class="kw-2">mut </span>builder = vk::PhysicalDeviceProperties2::builder();
+                <span class="kw">let </span><span class="kw-2">mut </span>builder = vk::PhysicalDeviceProperties2KHR::builder();
 
                 <span class="kw">if </span>supports_descriptor_indexing {
                     <span class="kw">let </span>next = capabilities
@@ -3088,11 +3166,11 @@
             Tfc::SAMPLED_LINEAR,
             features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_LINEAR),
         );
-        flags.set(
-            Tfc::SAMPLED_MINMAX,
-            features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_MINMAX),
-        );
-        flags.set(
+        <span class="comment">// flags.set(
+        //     Tfc::SAMPLED_MINMAX,
+        //     features.contains(vk::FormatFeatureFlags::SAMPLED_IMAGE_FILTER_MINMAX),
+        // );
+        </span>flags.set(
             Tfc::STORAGE | Tfc::STORAGE_READ_WRITE,
             features.contains(vk::FormatFeatureFlags::STORAGE_IMAGE),
         );
@@ -3353,4 +3431,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (c7572670a 2023-01-03)" data-search-js="search-181581080540673f.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-58836c674e2f7bd2.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (659e169d3 2023-01-04)" data-search-js="search-181581080540673f.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-58836c674e2f7bd2.css" ></div></body></html>
