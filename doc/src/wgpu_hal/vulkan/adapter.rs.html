@@ -1710,12 +1710,33 @@
 <a href="#1710" id="1710">1710</a>
 <a href="#1711" id="1711">1711</a>
 <a href="#1712" id="1712">1712</a>
+<a href="#1713" id="1713">1713</a>
+<a href="#1714" id="1714">1714</a>
+<a href="#1715" id="1715">1715</a>
+<a href="#1716" id="1716">1716</a>
+<a href="#1717" id="1717">1717</a>
+<a href="#1718" id="1718">1718</a>
+<a href="#1719" id="1719">1719</a>
+<a href="#1720" id="1720">1720</a>
+<a href="#1721" id="1721">1721</a>
+<a href="#1722" id="1722">1722</a>
+<a href="#1723" id="1723">1723</a>
+<a href="#1724" id="1724">1724</a>
+<a href="#1725" id="1725">1725</a>
+<a href="#1726" id="1726">1726</a>
+<a href="#1727" id="1727">1727</a>
+<a href="#1728" id="1728">1728</a>
+<a href="#1729" id="1729">1729</a>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
 <span class="kw">use </span>parking_lot::Mutex;
 
 <span class="kw">use </span>std::{collections::BTreeMap, ffi::CStr, sync::Arc};
+
+<span class="kw">fn </span>depth_stencil_required_flags() -&gt; vk::FormatFeatureFlags {
+    vk::FormatFeatureFlags::SAMPLED_IMAGE | vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT
+}
 
 <span class="comment">//TODO: const fn?
 </span><span class="kw">fn </span>indexing_features() -&gt; wgt::Features {
@@ -2037,7 +2058,6 @@
             | Df::VERTEX_STORAGE
             | Df::FRAGMENT_STORAGE
             | Df::DEPTH_TEXTURE_AND_BUFFER_COPIES
-            | Df::WEBGPU_TEXTURE_FORMAT_SUPPORT
             | Df::BUFFER_BINDINGS_NOT_16_BYTE_ALIGNED
             | Df::UNRESTRICTED_INDEX_BUFFER
             | Df::INDIRECT_EXECUTION;
@@ -2199,16 +2219,30 @@
             );
         }
 
-        features.set(
-            F::DEPTH32FLOAT_STENCIL8,
+        <span class="kw">let </span>supports_depth_format = |format| {
             supports_format(
                 instance,
                 phd,
-                vk::Format::D32_SFLOAT_S8_UINT,
+                format,
                 vk::ImageTiling::OPTIMAL,
-                vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT,
-            ),
+                depth_stencil_required_flags(),
+            )
+        };
+
+        <span class="kw">let </span>texture_s8 = supports_depth_format(vk::Format::S8_UINT);
+        <span class="kw">let </span>texture_d32 = supports_depth_format(vk::Format::D32_SFLOAT);
+        <span class="kw">let </span>texture_d24_s8 = supports_depth_format(vk::Format::D24_UNORM_S8_UINT);
+        <span class="kw">let </span>texture_d32_s8 = supports_depth_format(vk::Format::D32_SFLOAT_S8_UINT);
+
+        <span class="kw">let </span>stencil8 = texture_s8 || texture_d24_s8;
+        <span class="kw">let </span>depth24_plus_stencil8 = texture_d24_s8 || texture_d32_s8;
+
+        dl_flags.set(
+            Df::WEBGPU_TEXTURE_FORMAT_SUPPORT,
+            stencil8 &amp;&amp; depth24_plus_stencil8 &amp;&amp; texture_d32,
         );
+
+        features.set(F::DEPTH32FLOAT_STENCIL8, texture_d32_s8);
 
         (features, dl_flags)
     }
@@ -2753,27 +2787,27 @@
                     .timeline_semaphore
                     .map_or(<span class="bool-val">false</span>, |ext| ext.timeline_semaphore != <span class="number">0</span>),
             },
-            texture_d24: <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .raw
-                    .get_physical_device_format_properties(phd, vk::Format::X8_D24_UNORM_PACK32)
-                    .optimal_tiling_features
-                    .contains(vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT)
-            },
-            texture_d24_s8: <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .raw
-                    .get_physical_device_format_properties(phd, vk::Format::D24_UNORM_S8_UINT)
-                    .optimal_tiling_features
-                    .contains(vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT)
-            },
-            texture_s8: <span class="kw">unsafe </span>{
-                <span class="self">self</span>.shared
-                    .raw
-                    .get_physical_device_format_properties(phd, vk::Format::S8_UINT)
-                    .optimal_tiling_features
-                    .contains(vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT)
-            },
+            texture_d24: supports_format(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw,
+                phd,
+                vk::Format::X8_D24_UNORM_PACK32,
+                vk::ImageTiling::OPTIMAL,
+                depth_stencil_required_flags(),
+            ),
+            texture_d24_s8: supports_format(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw,
+                phd,
+                vk::Format::D24_UNORM_S8_UINT,
+                vk::ImageTiling::OPTIMAL,
+                depth_stencil_required_flags(),
+            ),
+            texture_s8: supports_format(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.shared.raw,
+                phd,
+                vk::Format::S8_UINT,
+                vk::ImageTiling::OPTIMAL,
+                depth_stencil_required_flags(),
+            ),
             non_coherent_map_mask: phd_capabilities.properties.limits.non_coherent_atom_size - <span class="number">1</span>,
             can_present: <span class="bool-val">true</span>,
             <span class="comment">//TODO: make configurable
