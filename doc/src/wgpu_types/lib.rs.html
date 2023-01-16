@@ -5305,6 +5305,9 @@
 <a href="#5305" id="5305">5305</a>
 <a href="#5306" id="5306">5306</a>
 <a href="#5307" id="5307">5307</a>
+<a href="#5308" id="5308">5308</a>
+<a href="#5309" id="5309">5309</a>
+<a href="#5310" id="5310">5310</a>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -6033,17 +6036,20 @@
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(Serialize))]
 #[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(Deserialize))]
-#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, serde(rename_all = <span class="string">&quot;camelCase&quot;</span>))]
+#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, serde(rename_all = <span class="string">&quot;camelCase&quot;</span>, default))]
 </span><span class="kw">pub struct </span>Limits {
     <span class="doccomment">/// Maximum allowed value for the `size.width` of a texture created with `TextureDimension::D1`.
     /// Defaults to 8192. Higher is &quot;better&quot;.
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, serde(rename = <span class="string">&quot;maxTextureDimension1D&quot;</span>))]
     </span><span class="kw">pub </span>max_texture_dimension_1d: u32,
     <span class="doccomment">/// Maximum allowed value for the `size.width` and `size.height` of a texture created with `TextureDimension::D2`.
     /// Defaults to 8192. Higher is &quot;better&quot;.
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, serde(rename = <span class="string">&quot;maxTextureDimension2D&quot;</span>))]
     </span><span class="kw">pub </span>max_texture_dimension_2d: u32,
     <span class="doccomment">/// Maximum allowed value for the `size.width`, `size.height`, and `size.depth_or_array_layers`
     /// of a texture created with `TextureDimension::D3`.
     /// Defaults to 2048. Higher is &quot;better&quot;.
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, serde(rename = <span class="string">&quot;maxTextureDimension3D&quot;</span>))]
     </span><span class="kw">pub </span>max_texture_dimension_3d: u32,
     <span class="doccomment">/// Maximum allowed value for the `size.depth_or_array_layers` of a texture created with
     /// `TextureDimension::D1` or `TextureDimension::D2`.
@@ -6074,6 +6080,11 @@
     <span class="doccomment">/// Maximum length of `VertexState::buffers` when creating a `RenderPipeline`.
     /// Defaults to 8. Higher is &quot;better&quot;.
     </span><span class="kw">pub </span>max_vertex_buffers: u32,
+    <span class="doccomment">/// A limit above which buffer allocations are guaranteed to fail.
+    ///
+    /// Buffer allocations below the maximum buffer size may not succeed depending on available memory,
+    /// fragmentation and other factors.
+    </span><span class="kw">pub </span>max_buffer_size: u64,
     <span class="doccomment">/// Maximum length of `VertexBufferLayout::attributes`, summed over all `VertexState::buffers`,
     /// when creating a `RenderPipeline`.
     /// Defaults to 16. Higher is &quot;better&quot;.
@@ -6081,16 +6092,6 @@
     <span class="doccomment">/// Maximum value for `VertexBufferLayout::array_stride` when creating a `RenderPipeline`.
     /// Defaults to 2048. Higher is &quot;better&quot;.
     </span><span class="kw">pub </span>max_vertex_buffer_array_stride: u32,
-    <span class="doccomment">/// Amount of storage available for push constants in bytes. Defaults to 0. Higher is &quot;better&quot;.
-    /// Requesting more than 0 during device creation requires [`Features::PUSH_CONSTANTS`] to be enabled.
-    ///
-    /// Expect the size to be:
-    /// - Vulkan: 128-256 bytes
-    /// - DX12: 256 bytes
-    /// - Metal: 4096 bytes
-    /// - DX11 &amp; OpenGL don&#39;t natively support push constants, and are emulated with uniforms,
-    ///   so this number is less useful but likely 256.
-    </span><span class="kw">pub </span>max_push_constant_size: u32,
     <span class="doccomment">/// Required `BufferBindingType::Uniform` alignment for `BufferBinding::offset`
     /// when creating a `BindGroup`, or for `set_bind_group` `dynamicOffsets`.
     /// Defaults to 256. Lower is &quot;better&quot;.
@@ -6120,11 +6121,16 @@
     <span class="doccomment">/// The maximum value for each dimension of a `ComputePass::dispatch(x, y, z)` operation.
     /// Defaults to 65535.
     </span><span class="kw">pub </span>max_compute_workgroups_per_dimension: u32,
-    <span class="doccomment">/// A limit above which buffer allocations are guaranteed to fail.
+    <span class="doccomment">/// Amount of storage available for push constants in bytes. Defaults to 0. Higher is &quot;better&quot;.
+    /// Requesting more than 0 during device creation requires [`Features::PUSH_CONSTANTS`] to be enabled.
     ///
-    /// Buffer allocations below the maximum buffer size may not succeed depending on available memory,
-    /// fragmentation and other factors.
-    </span><span class="kw">pub </span>max_buffer_size: u64,
+    /// Expect the size to be:
+    /// - Vulkan: 128-256 bytes
+    /// - DX12: 256 bytes
+    /// - Metal: 4096 bytes
+    /// - DX11 &amp; OpenGL don&#39;t natively support push constants, and are emulated with uniforms,
+    ///   so this number is less useful but likely 256.
+    </span><span class="kw">pub </span>max_push_constant_size: u32,
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>Limits {
@@ -6141,24 +6147,24 @@
             max_sampled_textures_per_shader_stage: <span class="number">16</span>,
             max_samplers_per_shader_stage: <span class="number">16</span>,
             max_storage_buffers_per_shader_stage: <span class="number">8</span>,
-            max_storage_textures_per_shader_stage: <span class="number">8</span>,
+            max_storage_textures_per_shader_stage: <span class="number">4</span>,
             max_uniform_buffers_per_shader_stage: <span class="number">12</span>,
             max_uniform_buffer_binding_size: <span class="number">64 </span>&lt;&lt; <span class="number">10</span>,
             max_storage_buffer_binding_size: <span class="number">128 </span>&lt;&lt; <span class="number">20</span>,
             max_vertex_buffers: <span class="number">8</span>,
+            max_buffer_size: <span class="number">1 </span>&lt;&lt; <span class="number">28</span>,
             max_vertex_attributes: <span class="number">16</span>,
             max_vertex_buffer_array_stride: <span class="number">2048</span>,
-            max_push_constant_size: <span class="number">0</span>,
             min_uniform_buffer_offset_alignment: <span class="number">256</span>,
             min_storage_buffer_offset_alignment: <span class="number">256</span>,
             max_inter_stage_shader_components: <span class="number">60</span>,
-            max_compute_workgroup_storage_size: <span class="number">16352</span>,
+            max_compute_workgroup_storage_size: <span class="number">16384</span>,
             max_compute_invocations_per_workgroup: <span class="number">256</span>,
             max_compute_workgroup_size_x: <span class="number">256</span>,
             max_compute_workgroup_size_y: <span class="number">256</span>,
             max_compute_workgroup_size_z: <span class="number">64</span>,
             max_compute_workgroups_per_dimension: <span class="number">65535</span>,
-            max_buffer_size: <span class="number">1 </span>&lt;&lt; <span class="number">28</span>,
+            max_push_constant_size: <span class="number">0</span>,
         }
     }
 }
