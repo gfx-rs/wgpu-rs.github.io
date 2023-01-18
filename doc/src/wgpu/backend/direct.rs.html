@@ -3008,10 +3008,6 @@
 <a href="#3007" id="3007">3007</a>
 <a href="#3008" id="3008">3008</a>
 <a href="#3009" id="3009">3009</a>
-<a href="#3010" id="3010">3010</a>
-<a href="#3011" id="3011">3011</a>
-<a href="#3012" id="3012">3012</a>
-<a href="#3013" id="3013">3013</a>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -3149,15 +3145,10 @@
         device: <span class="kw-2">&amp;</span>Device,
         desc: <span class="kw-2">&amp;</span>TextureDescriptor,
     ) -&gt; Texture {
+        <span class="kw">let </span>descriptor = desc.map_label_and_view_formats(|l| l.map(Borrowed), |v| v.to_vec());
         <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-        <span class="kw">let </span>(id, error) = <span class="kw">unsafe </span>{
-            global.create_texture_from_hal::&lt;A&gt;(
-                hal_texture,
-                device.id,
-                <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
-                (),
-            )
-        };
+        <span class="kw">let </span>(id, error) =
+            <span class="kw">unsafe </span>{ global.create_texture_from_hal::&lt;A&gt;(hal_texture, device.id, <span class="kw-2">&amp;</span>descriptor, ()) };
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
             <span class="self">self</span>.handle_error(
                 <span class="kw-2">&amp;</span>device.error_sink,
@@ -4263,10 +4254,11 @@
         device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData,
         desc: <span class="kw-2">&amp;</span>TextureDescriptor,
     ) -&gt; (<span class="self">Self</span>::TextureId, <span class="self">Self</span>::TextureData) {
+        <span class="kw">let </span>wgt_desc = desc.map_label_and_view_formats(|l| l.map(Borrowed), |v| v.to_vec());
         <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_create_texture(
             <span class="kw-2">*</span>device,
-            <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
+            <span class="kw-2">&amp;</span>wgt_desc,
             ()
         ));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
