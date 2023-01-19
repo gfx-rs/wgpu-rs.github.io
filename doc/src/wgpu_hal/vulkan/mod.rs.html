@@ -621,67 +621,6 @@
 <a href="#621" id="621">621</a>
 <a href="#622" id="622">622</a>
 <a href="#623" id="623">623</a>
-<a href="#624" id="624">624</a>
-<a href="#625" id="625">625</a>
-<a href="#626" id="626">626</a>
-<a href="#627" id="627">627</a>
-<a href="#628" id="628">628</a>
-<a href="#629" id="629">629</a>
-<a href="#630" id="630">630</a>
-<a href="#631" id="631">631</a>
-<a href="#632" id="632">632</a>
-<a href="#633" id="633">633</a>
-<a href="#634" id="634">634</a>
-<a href="#635" id="635">635</a>
-<a href="#636" id="636">636</a>
-<a href="#637" id="637">637</a>
-<a href="#638" id="638">638</a>
-<a href="#639" id="639">639</a>
-<a href="#640" id="640">640</a>
-<a href="#641" id="641">641</a>
-<a href="#642" id="642">642</a>
-<a href="#643" id="643">643</a>
-<a href="#644" id="644">644</a>
-<a href="#645" id="645">645</a>
-<a href="#646" id="646">646</a>
-<a href="#647" id="647">647</a>
-<a href="#648" id="648">648</a>
-<a href="#649" id="649">649</a>
-<a href="#650" id="650">650</a>
-<a href="#651" id="651">651</a>
-<a href="#652" id="652">652</a>
-<a href="#653" id="653">653</a>
-<a href="#654" id="654">654</a>
-<a href="#655" id="655">655</a>
-<a href="#656" id="656">656</a>
-<a href="#657" id="657">657</a>
-<a href="#658" id="658">658</a>
-<a href="#659" id="659">659</a>
-<a href="#660" id="660">660</a>
-<a href="#661" id="661">661</a>
-<a href="#662" id="662">662</a>
-<a href="#663" id="663">663</a>
-<a href="#664" id="664">664</a>
-<a href="#665" id="665">665</a>
-<a href="#666" id="666">666</a>
-<a href="#667" id="667">667</a>
-<a href="#668" id="668">668</a>
-<a href="#669" id="669">669</a>
-<a href="#670" id="670">670</a>
-<a href="#671" id="671">671</a>
-<a href="#672" id="672">672</a>
-<a href="#673" id="673">673</a>
-<a href="#674" id="674">674</a>
-<a href="#675" id="675">675</a>
-<a href="#676" id="676">676</a>
-<a href="#677" id="677">677</a>
-<a href="#678" id="678">678</a>
-<a href="#679" id="679">679</a>
-<a href="#680" id="680">680</a>
-<a href="#681" id="681">681</a>
-<a href="#682" id="682">682</a>
-<a href="#683" id="683">683</a>
-<a href="#684" id="684">684</a>
 </pre><pre class="rust"><code><span class="doccomment">/*!
 # Vulkan API internals.
 
@@ -917,65 +856,6 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     sample_count: u32,
 }
 
-<span class="macro">bitflags::bitflags! </span>{
-    <span class="kw">pub struct </span>UpdateAfterBindTypes: u8 {
-        <span class="kw">const </span>UNIFORM_BUFFER = <span class="number">0x1</span>;
-        <span class="kw">const </span>STORAGE_BUFFER = <span class="number">0x2</span>;
-        <span class="kw">const </span>SAMPLED_TEXTURE = <span class="number">0x4</span>;
-        <span class="kw">const </span>STORAGE_TEXTURE = <span class="number">0x8</span>;
-    }
-}
-
-<span class="kw">impl </span>UpdateAfterBindTypes {
-    <span class="kw">pub fn </span>from_limits(limits: <span class="kw-2">&amp;</span>wgt::Limits, phd_limits: <span class="kw-2">&amp;</span>vk::PhysicalDeviceLimits) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>uab_types = UpdateAfterBindTypes::empty();
-        uab_types.set(
-            UpdateAfterBindTypes::UNIFORM_BUFFER,
-            limits.max_uniform_buffers_per_shader_stage
-                &gt; phd_limits.max_per_stage_descriptor_uniform_buffers,
-        );
-        uab_types.set(
-            UpdateAfterBindTypes::STORAGE_BUFFER,
-            limits.max_storage_buffers_per_shader_stage
-                &gt; phd_limits.max_per_stage_descriptor_storage_buffers,
-        );
-        uab_types.set(
-            UpdateAfterBindTypes::SAMPLED_TEXTURE,
-            limits.max_sampled_textures_per_shader_stage
-                &gt; phd_limits.max_per_stage_descriptor_sampled_images,
-        );
-        uab_types.set(
-            UpdateAfterBindTypes::STORAGE_TEXTURE,
-            limits.max_storage_textures_per_shader_stage
-                &gt; phd_limits.max_per_stage_descriptor_storage_images,
-        );
-        uab_types
-    }
-
-    <span class="kw">fn </span>from_features(features: <span class="kw-2">&amp;</span>adapter::PhysicalDeviceFeatures) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>uab_types = UpdateAfterBindTypes::empty();
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(di) = features.descriptor_indexing {
-            uab_types.set(
-                UpdateAfterBindTypes::UNIFORM_BUFFER,
-                di.descriptor_binding_uniform_buffer_update_after_bind != <span class="number">0</span>,
-            );
-            uab_types.set(
-                UpdateAfterBindTypes::STORAGE_BUFFER,
-                di.descriptor_binding_storage_buffer_update_after_bind != <span class="number">0</span>,
-            );
-            uab_types.set(
-                UpdateAfterBindTypes::SAMPLED_TEXTURE,
-                di.descriptor_binding_sampled_image_update_after_bind != <span class="number">0</span>,
-            );
-            uab_types.set(
-                UpdateAfterBindTypes::STORAGE_TEXTURE,
-                di.descriptor_binding_storage_image_update_after_bind != <span class="number">0</span>,
-            );
-        }
-        uab_types
-    }
-}
-
 <span class="kw">struct </span>DeviceShared {
     raw: ash::Device,
     family_index: u32,
@@ -988,7 +868,6 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     extension_fns: DeviceExtensionFunctions,
     vendor_id: u32,
     timestamp_period: f32,
-    uab_types: UpdateAfterBindTypes,
     downlevel_flags: wgt::DownlevelFlags,
     private_caps: PrivateCapabilities,
     workarounds: Workarounds,
@@ -1073,7 +952,6 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     types: Box&lt;[(vk::DescriptorType, u32)]&gt;,
     <span class="doccomment">/// Map of binding index to size,
     </span>binding_arrays: Vec&lt;(u32, NonZeroU32)&gt;,
-    requires_update_after_bind: bool,
 }
 
 <span class="attr">#[derive(Debug)]
