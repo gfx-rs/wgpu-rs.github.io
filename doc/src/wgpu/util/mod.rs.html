@@ -160,6 +160,16 @@
 <a href="#159" id="159">159</a>
 <a href="#160" id="160">160</a>
 <a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Utility structures and functions that are built on top of the main `wgpu` API.
 //!
 //! Nothing in this module is a part of the WebGPU API specification;
@@ -193,6 +203,7 @@
 ///
 /// - Input length isn&#39;t multiple of 4
 /// - Input is longer than [`usize::max_value`]
+/// - Input is empty
 /// - SPIR-V magic number is missing from beginning of stream
 </span><span class="attr">#[cfg(feature = <span class="string">&quot;spirv&quot;</span>)]
 </span><span class="kw">pub fn </span>make_spirv(data: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="kw">super</span>::ShaderSource {
@@ -210,10 +221,11 @@
         <span class="number">0</span>,
         <span class="string">&quot;data size is not a multiple of 4&quot;
     </span>);
+    <span class="macro">assert_ne!</span>(data.len(), <span class="number">0</span>, <span class="string">&quot;data size must be larger than zero&quot;</span>);
 
     <span class="comment">//If the data happens to be aligned, directly use the byte array,
     // otherwise copy the byte array in an owned vector and use that instead.
-    </span><span class="kw">let </span>words = <span class="kw">if </span>data.as_ptr().align_offset(align_of::&lt;u32&gt;()) == <span class="number">0 </span>{
+    </span><span class="kw">let </span><span class="kw-2">mut </span>words = <span class="kw">if </span>data.as_ptr().align_offset(align_of::&lt;u32&gt;()) == <span class="number">0 </span>{
         <span class="kw">let </span>(pre, words, post) = <span class="kw">unsafe </span>{ data.align_to::&lt;u32&gt;() };
         <span class="macro">debug_assert!</span>(pre.is_empty());
         <span class="macro">debug_assert!</span>(post.is_empty());
@@ -225,6 +237,14 @@
         }
         Cow::from(words)
     };
+
+    <span class="comment">// Before checking if the data starts with the magic, check if it starts
+    // with the magic in non-native endianness, own &amp; swap the data if so.
+    </span><span class="kw">if </span>words[<span class="number">0</span>] == MAGIC_NUMBER.swap_bytes() {
+        <span class="kw">for </span>word <span class="kw">in </span>Cow::to_mut(<span class="kw-2">&amp;mut </span>words) {
+            <span class="kw-2">*</span>word = word.swap_bytes();
+        }
+    }
 
     <span class="macro">assert_eq!</span>(
         words[<span class="number">0</span>], MAGIC_NUMBER,
@@ -322,4 +342,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (4c83bd03a 2023-01-19)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-ab1d4ae2ec52020e.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (5ce39f42b 2023-01-20)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-c3c521c753752a1a.js" data-settings-css="settings-ab1d4ae2ec52020e.css" ></div></body></html>
