@@ -1035,6 +1035,22 @@
 <a href="#1035" id="1035">1035</a>
 <a href="#1036" id="1036">1036</a>
 <a href="#1037" id="1037">1037</a>
+<a href="#1038" id="1038">1038</a>
+<a href="#1039" id="1039">1039</a>
+<a href="#1040" id="1040">1040</a>
+<a href="#1041" id="1041">1041</a>
+<a href="#1042" id="1042">1042</a>
+<a href="#1043" id="1043">1043</a>
+<a href="#1044" id="1044">1044</a>
+<a href="#1045" id="1045">1045</a>
+<a href="#1046" id="1046">1046</a>
+<a href="#1047" id="1047">1047</a>
+<a href="#1048" id="1048">1048</a>
+<a href="#1049" id="1049">1049</a>
+<a href="#1050" id="1050">1050</a>
+<a href="#1051" id="1051">1051</a>
+<a href="#1052" id="1052">1052</a>
+<a href="#1053" id="1053">1053</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::{conv, Command <span class="kw">as </span>C};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>std::{mem, ops::Range};
@@ -1489,6 +1505,20 @@
             <span class="self">self</span>.state.has_pass_label = <span class="bool-val">true</span>;
         }
 
+        <span class="kw">let </span>rendering_to_external_framebuffer = desc
+            .color_attachments
+            .iter()
+            .filter_map(|at| at.as_ref())
+            .any(|at| <span class="kw">match </span>at.target.view.inner {
+                <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(target_os = <span class="string">&quot;emscripten&quot;</span>)))]
+                </span><span class="kw">super</span>::TextureInner::ExternalFramebuffer { .. } =&gt; <span class="bool-val">true</span>,
+                <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+            });
+
+        <span class="kw">if </span>rendering_to_external_framebuffer &amp;&amp; desc.color_attachments.len() != <span class="number">1 </span>{
+            <span class="macro">panic!</span>(<span class="string">&quot;Multiple render attachments with external framebuffers are not supported.&quot;</span>);
+        }
+
         <span class="kw">match </span>desc
             .color_attachments
             .first()
@@ -1551,10 +1581,12 @@
                     }
                 }
 
-                <span class="comment">// set the draw buffers and states
-                </span><span class="self">self</span>.cmd_buffer
-                    .commands
-                    .push(C::SetDrawColorBuffers(desc.color_attachments.len() <span class="kw">as </span>u8));
+                <span class="kw">if </span>!rendering_to_external_framebuffer {
+                    <span class="comment">// set the draw buffers and states
+                    </span><span class="self">self</span>.cmd_buffer
+                        .commands
+                        .push(C::SetDrawColorBuffers(desc.color_attachments.len() <span class="kw">as </span>u8));
+                }
             }
         }
 

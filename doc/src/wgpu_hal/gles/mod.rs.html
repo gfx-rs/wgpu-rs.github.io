@@ -858,6 +858,18 @@
 <a href="#858" id="858">858</a>
 <a href="#859" id="859">859</a>
 <a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
+<a href="#868" id="868">868</a>
+<a href="#869" id="869">869</a>
+<a href="#870" id="870">870</a>
+<a href="#871" id="871">871</a>
+<a href="#872" id="872">872</a>
 </pre><pre class="rust"><code><span class="doccomment">/*!
 # OpenGL ES3 API (aka GLES3).
 
@@ -1047,10 +1059,10 @@ To address this, we invalidate the vertex buffers based on:
 }
 
 <span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">struct </span>TextureFormatDesc {
-    internal: u32,
-    external: u32,
-    data_type: u32,
+</span><span class="kw">pub struct </span>TextureFormatDesc {
+    <span class="kw">pub </span>internal: u32,
+    <span class="kw">pub </span>external: u32,
+    <span class="kw">pub </span>data_type: u32,
 }
 
 <span class="kw">struct </span>AdapterShared {
@@ -1109,7 +1121,7 @@ To address this, we invalidate the vertex buffers based on:
 </span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>Buffer {}
 
 <span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">enum </span>TextureInner {
+</span><span class="kw">pub enum </span>TextureInner {
     Renderbuffer {
         raw: glow::Renderbuffer,
     },
@@ -1118,7 +1130,17 @@ To address this, we invalidate the vertex buffers based on:
         raw: glow::Texture,
         target: BindTarget,
     },
+    <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(target_os = <span class="string">&quot;emscripten&quot;</span>)))]
+    </span>ExternalFramebuffer {
+        inner: web_sys::WebGlFramebuffer,
+    },
 }
+
+<span class="comment">// SAFE: WASM doesn&#39;t have threads
+</span><span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
+</span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>TextureInner {}
+<span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
+</span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>TextureInner {}
 
 <span class="kw">impl </span>TextureInner {
     <span class="kw">fn </span>as_native(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (glow::Texture, BindTarget) {
@@ -1127,21 +1149,23 @@ To address this, we invalidate the vertex buffers based on:
                 <span class="macro">panic!</span>(<span class="string">&quot;Unexpected renderbuffer&quot;</span>);
             }
             <span class="self">Self</span>::Texture { raw, target } =&gt; (raw, target),
+            <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(target_os = <span class="string">&quot;emscripten&quot;</span>)))]
+            </span><span class="self">Self</span>::ExternalFramebuffer { .. } =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Unexpected external framebuffer&quot;</span>),
         }
     }
 }
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Texture {
-    inner: TextureInner,
-    drop_guard: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropGuard&gt;,
-    mip_level_count: u32,
-    array_layer_count: u32,
-    format: wgt::TextureFormat,
+    <span class="kw">pub </span>inner: TextureInner,
+    <span class="kw">pub </span>drop_guard: <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::DropGuard&gt;,
+    <span class="kw">pub </span>mip_level_count: u32,
+    <span class="kw">pub </span>array_layer_count: u32,
+    <span class="kw">pub </span>format: wgt::TextureFormat,
     <span class="attr">#[allow(unused)]
-    </span>format_desc: TextureFormatDesc,
-    copy_size: CopyExtent,
-    is_cubemap: bool,
+    </span><span class="kw">pub </span>format_desc: TextureFormatDesc,
+    <span class="kw">pub </span>copy_size: CopyExtent,
+    <span class="kw">pub </span>is_cubemap: bool,
 }
 
 <span class="kw">impl </span>Texture {
