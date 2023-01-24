@@ -5410,6 +5410,21 @@
 <a href="#5410" id="5410">5410</a>
 <a href="#5411" id="5411">5411</a>
 <a href="#5412" id="5412">5412</a>
+<a href="#5413" id="5413">5413</a>
+<a href="#5414" id="5414">5414</a>
+<a href="#5415" id="5415">5415</a>
+<a href="#5416" id="5416">5416</a>
+<a href="#5417" id="5417">5417</a>
+<a href="#5418" id="5418">5418</a>
+<a href="#5419" id="5419">5419</a>
+<a href="#5420" id="5420">5420</a>
+<a href="#5421" id="5421">5421</a>
+<a href="#5422" id="5422">5422</a>
+<a href="#5423" id="5423">5423</a>
+<a href="#5424" id="5424">5424</a>
+<a href="#5425" id="5425">5425</a>
+<a href="#5426" id="5426">5426</a>
+<a href="#5427" id="5427">5427</a>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -9642,13 +9657,18 @@
 
     <span class="doccomment">/// Calculates the extent at a given mip level.
     /// Does *not* account for memory size being a multiple of block size.
-    </span><span class="kw">pub fn </span>mip_level_size(<span class="kw-2">&amp;</span><span class="self">self</span>, level: u32, is_3d_texture: bool) -&gt; Extent3d {
-        Extent3d {
+    ///
+    /// https://gpuweb.github.io/gpuweb/#logical-miplevel-specific-texture-extent
+    </span><span class="kw">pub fn </span>mip_level_size(<span class="kw-2">&amp;</span><span class="self">self</span>, level: u32, dim: TextureDimension) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
             width: u32::max(<span class="number">1</span>, <span class="self">self</span>.width &gt;&gt; level),
-            height: u32::max(<span class="number">1</span>, <span class="self">self</span>.height &gt;&gt; level),
-            depth_or_array_layers: <span class="kw">match </span>is_3d_texture {
-                <span class="bool-val">false </span>=&gt; <span class="self">self</span>.depth_or_array_layers,
-                <span class="bool-val">true </span>=&gt; u32::max(<span class="number">1</span>, <span class="self">self</span>.depth_or_array_layers &gt;&gt; level),
+            height: <span class="kw">match </span>dim {
+                TextureDimension::D1 =&gt; <span class="number">1</span>,
+                <span class="kw">_ </span>=&gt; u32::max(<span class="number">1</span>, <span class="self">self</span>.height &gt;&gt; level),
+            },
+            depth_or_array_layers: <span class="kw">match </span>dim {
+                TextureDimension::D3 =&gt; u32::max(<span class="number">1</span>, <span class="self">self</span>.depth_or_array_layers &gt;&gt; level),
+                <span class="kw">_ </span>=&gt; <span class="self">self</span>.depth_or_array_layers,
             },
         }
     }
@@ -9856,13 +9876,23 @@
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
-        <span class="prelude-val">Some</span>(
-            <span class="self">self</span>.size
-                .mip_level_size(level, <span class="self">self</span>.dimension == TextureDimension::D3),
-        )
+        <span class="prelude-val">Some</span>(<span class="self">self</span>.size.mip_level_size(level, <span class="self">self</span>.dimension))
+    }
+
+    <span class="doccomment">/// Computes the render extent of this texture.
+    ///
+    /// https://gpuweb.github.io/gpuweb/#abstract-opdef-compute-render-extent
+    </span><span class="kw">pub fn </span>compute_render_extent(<span class="kw-2">&amp;</span><span class="self">self</span>, mip_level: u32) -&gt; Extent3d {
+        Extent3d {
+            width: u32::max(<span class="number">1</span>, <span class="self">self</span>.size.width &gt;&gt; mip_level),
+            height: u32::max(<span class="number">1</span>, <span class="self">self</span>.size.height &gt;&gt; mip_level),
+            depth_or_array_layers: <span class="number">1</span>,
+        }
     }
 
     <span class="doccomment">/// Returns the number of array layers.
+    ///
+    /// https://gpuweb.github.io/gpuweb/#abstract-opdef-array-layer-count
     </span><span class="kw">pub fn </span>array_layer_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
         <span class="kw">match </span><span class="self">self</span>.dimension {
             TextureDimension::D1 | TextureDimension::D3 =&gt; <span class="number">1</span>,
@@ -10478,7 +10508,7 @@
 
 <span class="doccomment">/// Subresource range within an image
 </span><span class="attr">#[repr(C)]
-#[derive(Clone, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 #[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(serde::Serialize))]
 #[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(serde::Deserialize))]
 </span><span class="kw">pub struct </span>ImageSubresourceRange {
