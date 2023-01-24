@@ -3850,6 +3850,38 @@
 <a href="#3849" id="3849">3849</a>
 <a href="#3850" id="3850">3850</a>
 <a href="#3851" id="3851">3851</a>
+<a href="#3852" id="3852">3852</a>
+<a href="#3853" id="3853">3853</a>
+<a href="#3854" id="3854">3854</a>
+<a href="#3855" id="3855">3855</a>
+<a href="#3856" id="3856">3856</a>
+<a href="#3857" id="3857">3857</a>
+<a href="#3858" id="3858">3858</a>
+<a href="#3859" id="3859">3859</a>
+<a href="#3860" id="3860">3860</a>
+<a href="#3861" id="3861">3861</a>
+<a href="#3862" id="3862">3862</a>
+<a href="#3863" id="3863">3863</a>
+<a href="#3864" id="3864">3864</a>
+<a href="#3865" id="3865">3865</a>
+<a href="#3866" id="3866">3866</a>
+<a href="#3867" id="3867">3867</a>
+<a href="#3868" id="3868">3868</a>
+<a href="#3869" id="3869">3869</a>
+<a href="#3870" id="3870">3870</a>
+<a href="#3871" id="3871">3871</a>
+<a href="#3872" id="3872">3872</a>
+<a href="#3873" id="3873">3873</a>
+<a href="#3874" id="3874">3874</a>
+<a href="#3875" id="3875">3875</a>
+<a href="#3876" id="3876">3876</a>
+<a href="#3877" id="3877">3877</a>
+<a href="#3878" id="3878">3878</a>
+<a href="#3879" id="3879">3879</a>
+<a href="#3880" id="3880">3880</a>
+<a href="#3881" id="3881">3881</a>
+<a href="#3882" id="3882">3882</a>
+<a href="#3883" id="3883">3883</a>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{any::Any, fmt::Debug, future::Future, num::NonZeroU64, ops::Range, pin::Pin, sync::Arc};
 
 <span class="kw">use </span>wgt::{
@@ -4412,6 +4444,15 @@
         data: <span class="kw-2">&amp;</span>[u8],
         data_layout: ImageDataLayout,
         size: Extent3d,
+    );
+    <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(feature = <span class="string">&quot;emscripten&quot;</span>)))]
+    </span><span class="kw">fn </span>queue_copy_external_image_to_texture(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        queue: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueId,
+        queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
+        source: <span class="kw-2">&amp;</span>wgt::ImageCopyExternalImage,
+        dest: <span class="kw">crate</span>::ImageCopyTextureTagged,
+        size: wgt::Extent3d,
     );
     <span class="kw">fn </span>queue_submit&lt;I: Iterator&lt;Item = <span class="self">Self</span>::CommandBufferId&gt;&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -5330,6 +5371,15 @@
         data: <span class="kw-2">&amp;</span>[u8],
         data_layout: ImageDataLayout,
         size: Extent3d,
+    );
+    <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(feature = <span class="string">&quot;emscripten&quot;</span>)))]
+    </span><span class="kw">fn </span>queue_copy_external_image_to_texture(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        queue: <span class="kw-2">&amp;</span>ObjectId,
+        queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
+        source: <span class="kw-2">&amp;</span>wgt::ImageCopyExternalImage,
+        dest: <span class="kw">crate</span>::ImageCopyTextureTagged,
+        size: wgt::Extent3d,
     );
     <span class="kw">fn </span>queue_submit&lt;<span class="lifetime">&#39;a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -6716,6 +6766,20 @@
         <span class="kw">let </span>queue = &lt;T::QueueId&gt;::from(<span class="kw-2">*</span>queue);
         <span class="kw">let </span>queue_data = downcast_ref(queue_data);
         Context::queue_write_texture(<span class="self">self</span>, <span class="kw-2">&amp;</span>queue, queue_data, texture, data, data_layout, size)
+    }
+
+    <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(feature = <span class="string">&quot;emscripten&quot;</span>)))]
+    </span><span class="kw">fn </span>queue_copy_external_image_to_texture(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        queue: <span class="kw-2">&amp;</span>ObjectId,
+        queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
+        source: <span class="kw-2">&amp;</span>wgt::ImageCopyExternalImage,
+        dest: <span class="kw">crate</span>::ImageCopyTextureTagged,
+        size: wgt::Extent3d,
+    ) {
+        <span class="kw">let </span>queue = &lt;T::QueueId&gt;::from(<span class="kw-2">*</span>queue);
+        <span class="kw">let </span>queue_data = downcast_ref(queue_data);
+        Context::queue_copy_external_image_to_texture(<span class="self">self</span>, <span class="kw-2">&amp;</span>queue, queue_data, source, dest, size)
     }
 
     <span class="kw">fn </span>queue_submit&lt;<span class="lifetime">&#39;a</span>&gt;(

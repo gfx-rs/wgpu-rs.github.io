@@ -1253,6 +1253,20 @@
 <a href="#1253" id="1253">1253</a>
 <a href="#1254" id="1254">1254</a>
 <a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
+<a href="#1260" id="1260">1260</a>
+<a href="#1261" id="1261">1261</a>
+<a href="#1262" id="1262">1262</a>
+<a href="#1263" id="1263">1263</a>
+<a href="#1264" id="1264">1264</a>
+<a href="#1265" id="1265">1265</a>
+<a href="#1266" id="1266">1266</a>
+<a href="#1267" id="1267">1267</a>
+<a href="#1268" id="1268">1268</a>
+<a href="#1269" id="1269">1269</a>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library describes the internal unsafe graphics abstraction API.
  *  It follows WebGPU for the most part, re-using wgpu-types,
  *  with the following deviations:
@@ -1649,6 +1663,20 @@
     <span class="kw">unsafe fn </span>copy_buffer_to_buffer&lt;T&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, src: <span class="kw-2">&amp;</span>A::Buffer, dst: <span class="kw-2">&amp;</span>A::Buffer, regions: T)
     <span class="kw">where
         </span>T: Iterator&lt;Item = BufferCopy&gt;;
+
+    <span class="doccomment">/// Copy from an external image to an internal texture.
+    /// Works with a single array layer.
+    /// Note: `dst` current usage has to be `TextureUses::COPY_DST`.
+    /// Note: the copy extent is in physical size (rounded to the block size)
+    </span><span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(feature = <span class="string">&quot;emscripten&quot;</span>)))]
+    </span><span class="kw">unsafe fn </span>copy_external_image_to_texture&lt;T&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        src: <span class="kw-2">&amp;</span>wgt::ImageCopyExternalImage,
+        dst: <span class="kw-2">&amp;</span>A::Texture,
+        dst_premultiplication: bool,
+        regions: T,
+    ) <span class="kw">where
+        </span>T: Iterator&lt;Item = TextureCopy&gt;;
 
     <span class="doccomment">/// Copy from one texture to another.
     /// Works with a single array layer.

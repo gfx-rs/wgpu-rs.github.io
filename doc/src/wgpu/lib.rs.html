@@ -4414,6 +4414,26 @@
 <a href="#4413" id="4413">4413</a>
 <a href="#4414" id="4414">4414</a>
 <a href="#4415" id="4415">4415</a>
+<a href="#4416" id="4416">4416</a>
+<a href="#4417" id="4417">4417</a>
+<a href="#4418" id="4418">4418</a>
+<a href="#4419" id="4419">4419</a>
+<a href="#4420" id="4420">4420</a>
+<a href="#4421" id="4421">4421</a>
+<a href="#4422" id="4422">4422</a>
+<a href="#4423" id="4423">4423</a>
+<a href="#4424" id="4424">4424</a>
+<a href="#4425" id="4425">4425</a>
+<a href="#4426" id="4426">4426</a>
+<a href="#4427" id="4427">4427</a>
+<a href="#4428" id="4428">4428</a>
+<a href="#4429" id="4429">4429</a>
+<a href="#4430" id="4430">4430</a>
+<a href="#4431" id="4431">4431</a>
+<a href="#4432" id="4432">4432</a>
+<a href="#4433" id="4433">4433</a>
+<a href="#4434" id="4434">4434</a>
+<a href="#4435" id="4435">4435</a>
 </pre><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -4451,17 +4471,25 @@
     CommandBufferDescriptor, CompareFunction, CompositeAlphaMode, DepthBiasState,
     DepthStencilState, DeviceType, DownlevelCapabilities, DownlevelFlags, Dx12Compiler,
     DynamicOffset, Extent3d, Face, Features, FilterMode, FrontFace, ImageDataLayout,
-    ImageSubresourceRange, IndexFormat, InstanceDescriptor, Limits, MultisampleState, Origin3d,
-    PipelineStatisticsTypes, PolygonMode, PowerPreference, PresentMode, PresentationTimestamp,
-    PrimitiveState, PrimitiveTopology, PushConstantRange, QueryType, RenderBundleDepthStencil,
-    SamplerBindingType, SamplerBorderColor, ShaderLocation, ShaderModel, ShaderStages,
-    StencilFaceState, StencilOperation, StencilState, StorageTextureAccess, SurfaceCapabilities,
-    SurfaceConfiguration, SurfaceStatus, TextureAspect, TextureDimension, TextureFormat,
-    TextureFormatFeatureFlags, TextureFormatFeatures, TextureSampleType, TextureUsages,
-    TextureViewDimension, VertexAttribute, VertexFormat, VertexStepMode, COPY_BUFFER_ALIGNMENT,
-    COPY_BYTES_PER_ROW_ALIGNMENT, MAP_ALIGNMENT, PUSH_CONSTANT_ALIGNMENT,
-    QUERY_RESOLVE_BUFFER_ALIGNMENT, QUERY_SET_MAX_QUERIES, QUERY_SIZE, VERTEX_STRIDE_ALIGNMENT,
+    ImageSubresourceRange, IndexFormat, InstanceDescriptor, Limits, MultisampleState, Origin2d,
+    Origin3d, PipelineStatisticsTypes, PolygonMode, PowerPreference, PredefinedColorSpace,
+    PresentMode, PresentationTimestamp, PrimitiveState, PrimitiveTopology, PushConstantRange,
+    QueryType, RenderBundleDepthStencil, SamplerBindingType, SamplerBorderColor, ShaderLocation,
+    ShaderModel, ShaderStages, StencilFaceState, StencilOperation, StencilState,
+    StorageTextureAccess, SurfaceCapabilities, SurfaceConfiguration, SurfaceStatus, TextureAspect,
+    TextureDimension, TextureFormat, TextureFormatFeatureFlags, TextureFormatFeatures,
+    TextureSampleType, TextureUsages, TextureViewDimension, VertexAttribute, VertexFormat,
+    VertexStepMode, COPY_BUFFER_ALIGNMENT, COPY_BYTES_PER_ROW_ALIGNMENT, MAP_ALIGNMENT,
+    PUSH_CONSTANT_ALIGNMENT, QUERY_RESOLVE_BUFFER_ALIGNMENT, QUERY_SET_MAX_QUERIES, QUERY_SIZE,
+    VERTEX_STRIDE_ALIGNMENT,
 };
+
+<span class="comment">// wasm-only types, we try to keep as many types non-platform
+// specific, but these need to depend on web-sys.
+</span><span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(feature = <span class="string">&quot;emscripten&quot;</span>)))]
+</span><span class="kw">pub use </span>wgt::{ExternalImageSource, ImageCopyExternalImage};
+<span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(feature = <span class="string">&quot;emscripten&quot;</span>)))]
+</span><span class="macro">static_assertions::assert_impl_all!</span>(ExternalImageSource: Send, Sync);
 
 <span class="doccomment">/// Filter for error scopes.
 </span><span class="attr">#[derive(Clone, Copy, Debug, Eq, PartialEq, PartialOrd)]
@@ -4476,7 +4504,7 @@
 <span class="kw">type </span>C = <span class="kw">dyn </span>DynContext;
 <span class="kw">type </span>Data = <span class="kw">dyn </span>Any + Send + Sync;
 
-<span class="doccomment">/// Context for all other wgpu objects. Instan ce of wgpu.
+<span class="doccomment">/// Context for all other wgpu objects. Instance of wgpu.
 ///
 /// This is the first thing you create when using wgpu.
 /// Its primary use is to create [`Adapter`]s and [`Surface`]s.
@@ -5615,6 +5643,15 @@
 /// Corresponds to [WebGPU `GPUImageCopyTexture`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gpuimagecopytexture).
 </span><span class="kw">pub type </span>ImageCopyTexture&lt;<span class="lifetime">&#39;a</span>&gt; = ImageCopyTextureBase&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Texture&gt;;
+<span class="macro">static_assertions::assert_impl_all!</span>(ImageCopyTexture: Send, Sync);
+
+<span class="kw">pub use </span>wgt::ImageCopyTextureTagged <span class="kw">as </span>ImageCopyTextureTaggedBase;
+<span class="doccomment">/// View of a texture which can be used to copy to a texture, including
+/// color space and alpha premultiplication information.
+///
+/// Corresponds to [WebGPU `GPUImageCopyTextureTagged`](
+/// https://gpuweb.github.io/gpuweb/#dictdef-gpuimagecopytexturetagged).
+</span><span class="kw">pub type </span>ImageCopyTextureTagged&lt;<span class="lifetime">&#39;a</span>&gt; = ImageCopyTextureTaggedBase&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Texture&gt;;
 <span class="macro">static_assertions::assert_impl_all!</span>(ImageCopyTexture: Send, Sync);
 
 <span class="doccomment">/// Describes a [`BindGroupLayout`].
@@ -8365,18 +8402,21 @@
     }
 
     <span class="doccomment">/// Schedule a copy of data from `image` into `texture`.
-    </span><span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(feature = <span class="string">&quot;webgl&quot;</span>)))]
+    </span><span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(feature = <span class="string">&quot;emscripten&quot;</span>)))]
     </span><span class="kw">pub fn </span>copy_external_image_to_texture(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        image: <span class="kw-2">&amp;</span>web_sys::ImageBitmap,
-        texture: ImageCopyTexture,
+        source: <span class="kw-2">&amp;</span>wgt::ImageCopyExternalImage,
+        dest: ImageCopyTextureTagged,
         size: Extent3d,
     ) {
-        <span class="self">self</span>.context
-            .as_any()
-            .downcast_ref::&lt;<span class="kw">crate</span>::backend::Context&gt;()
-            .unwrap()
-            .queue_copy_external_image_to_texture(<span class="kw-2">&amp;</span><span class="self">self</span>.id.into(), image, texture, size)
+        DynContext::queue_copy_external_image_to_texture(
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.id,
+            <span class="self">self</span>.data.as_ref(),
+            source,
+            dest,
+            size,
+        )
     }
 
     <span class="doccomment">/// Submits a series of finished command buffers for execution.
