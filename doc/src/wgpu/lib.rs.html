@@ -4729,7 +4729,7 @@
 ///
 /// Corresponds to [WebGPU `GPUCanvasConfiguration`](
 /// https://gpuweb.github.io/gpuweb/#canvas-configuration).
-</span><span class="kw">pub type </span>SurfaceConfiguration&lt;<span class="lifetime">&#39;a</span>&gt; = wgt::SurfaceConfiguration&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[TextureFormat]&gt;;
+</span><span class="kw">pub type </span>SurfaceConfiguration = wgt::SurfaceConfiguration&lt;Vec&lt;TextureFormat&gt;&gt;;
 <span class="macro">static_assertions::assert_impl_all!</span>(SurfaceConfiguration: Send, Sync);
 
 <span class="doccomment">/// Handle to a presentable surface.
@@ -4751,7 +4751,7 @@
     // Because the `Surface::configure` method operates on an immutable reference this type has to
     // be wrapped in a mutex and since the configuration is only supplied after the surface has
     // been created is is additionally wrapped in an option.
-    </span>config: Mutex&lt;<span class="prelude-ty">Option</span>&lt;SurfaceConfiguration&lt;<span class="lifetime">&#39;static</span>&gt;&gt;&gt;,
+    </span>config: Mutex&lt;<span class="prelude-ty">Option</span>&lt;SurfaceConfiguration&gt;&gt;,
 }
 <span class="macro">static_assertions::assert_impl_all!</span>(Surface: Send, Sync);
 
@@ -8535,7 +8535,7 @@
         adapter: <span class="kw-2">&amp;</span>Adapter,
         width: u32,
         height: u32,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;SurfaceConfiguration&lt;<span class="lifetime">&#39;static</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;SurfaceConfiguration&gt; {
         <span class="kw">let </span>caps = <span class="self">self</span>.get_capabilities(adapter);
         <span class="prelude-val">Some</span>(SurfaceConfiguration {
             usage: wgt::TextureUsages::RENDER_ATTACHMENT,
@@ -8544,7 +8544,7 @@
             height,
             present_mode: <span class="kw-2">*</span>caps.present_modes.get(<span class="number">0</span>)<span class="question-mark">?</span>,
             alpha_mode: wgt::CompositeAlphaMode::Auto,
-            view_formats: <span class="kw-2">&amp;</span>[],
+            view_formats: <span class="macro">vec!</span>[],
         })
     }
 
@@ -8554,7 +8554,7 @@
     ///
     /// - A old [`SurfaceTexture`] is still alive referencing an old surface.
     /// - Texture format requested is unsupported on the surface.
-    </span><span class="kw">pub fn </span>configure(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Device, config: <span class="kw-2">&amp;</span>SurfaceConfiguration&lt;<span class="lifetime">&#39;static</span>&gt;) {
+    </span><span class="kw">pub fn </span>configure(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Device, config: <span class="kw-2">&amp;</span>SurfaceConfiguration) {
         DynContext::surface_configure(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;</span><span class="self">self</span>.id,
