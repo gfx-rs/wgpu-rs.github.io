@@ -3065,6 +3065,15 @@
 <a href="#3064" id="3064">3064</a>
 <a href="#3065" id="3065">3065</a>
 <a href="#3066" id="3066">3066</a>
+<a href="#3067" id="3067">3067</a>
+<a href="#3068" id="3068">3068</a>
+<a href="#3069" id="3069">3069</a>
+<a href="#3070" id="3070">3070</a>
+<a href="#3071" id="3071">3071</a>
+<a href="#3072" id="3072">3072</a>
+<a href="#3073" id="3073">3073</a>
+<a href="#3074" id="3074">3074</a>
+<a href="#3075" id="3075">3075</a>
 </pre><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -4927,6 +4936,15 @@
         _encoder_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::CommandEncoderData,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPassDescriptor&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>&gt;,
     ) -&gt; (<span class="self">Self</span>::RenderPassId, <span class="self">Self</span>::RenderPassData) {
+        <span class="kw">if </span>desc.color_attachments.len() &gt; wgc::MAX_COLOR_ATTACHMENTS {
+            <span class="self">self</span>.handle_error_fatal(
+                wgc::command::ColorAttachmentError::TooMany {
+                    given: desc.color_attachments.len(),
+                    limit: wgc::MAX_COLOR_ATTACHMENTS,
+                },
+                <span class="string">&quot;CommandEncoder::begin_render_pass&quot;</span>,
+            );
+        }
         <span class="kw">let </span>colors = desc
             .color_attachments
             .iter()
