@@ -5652,6 +5652,32 @@
 <a href="#5652" id="5652">5652</a>
 <a href="#5653" id="5653">5653</a>
 <a href="#5654" id="5654">5654</a>
+<a href="#5655" id="5655">5655</a>
+<a href="#5656" id="5656">5656</a>
+<a href="#5657" id="5657">5657</a>
+<a href="#5658" id="5658">5658</a>
+<a href="#5659" id="5659">5659</a>
+<a href="#5660" id="5660">5660</a>
+<a href="#5661" id="5661">5661</a>
+<a href="#5662" id="5662">5662</a>
+<a href="#5663" id="5663">5663</a>
+<a href="#5664" id="5664">5664</a>
+<a href="#5665" id="5665">5665</a>
+<a href="#5666" id="5666">5666</a>
+<a href="#5667" id="5667">5667</a>
+<a href="#5668" id="5668">5668</a>
+<a href="#5669" id="5669">5669</a>
+<a href="#5670" id="5670">5670</a>
+<a href="#5671" id="5671">5671</a>
+<a href="#5672" id="5672">5672</a>
+<a href="#5673" id="5673">5673</a>
+<a href="#5674" id="5674">5674</a>
+<a href="#5675" id="5675">5675</a>
+<a href="#5676" id="5676">5676</a>
+<a href="#5677" id="5677">5677</a>
+<a href="#5678" id="5678">5678</a>
+<a href="#5679" id="5679">5679</a>
+<a href="#5680" id="5680">5680</a>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -6813,6 +6839,11 @@
         ///
         /// WebGL doesn&#39;t support this. WebGPU does.
         </span><span class="kw">const </span>UNRESTRICTED_EXTERNAL_TEXTURE_COPIES = <span class="number">1 </span>&lt;&lt; <span class="number">20</span>;
+
+        <span class="doccomment">/// Supports specifying which view formats are allowed when calling create_view on the texture returned by get_current_texture.
+        ///
+        /// The GLES/WebGL and Vulkan on Android doesn&#39;t support this.
+        </span><span class="kw">const </span>SURFACE_VIEW_FORMATS = <span class="number">1 </span>&lt;&lt; <span class="number">21</span>;
     }
 }
 
@@ -9661,7 +9692,7 @@
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = <span class="string">&quot;trace&quot;</span>, derive(Serialize))]
 #[cfg_attr(feature = <span class="string">&quot;replay&quot;</span>, derive(Deserialize))]
-</span><span class="kw">pub struct </span>SurfaceConfiguration {
+</span><span class="kw">pub struct </span>SurfaceConfiguration&lt;V&gt; {
     <span class="doccomment">/// The usage of the swap chain. The only supported usage is `RENDER_ATTACHMENT`.
     </span><span class="kw">pub </span>usage: TextureUsages,
     <span class="doccomment">/// The texture format of the swap chain. The only formats that are guaranteed are
@@ -9678,6 +9709,27 @@
     </span><span class="kw">pub </span>present_mode: PresentMode,
     <span class="doccomment">/// Specifies how the alpha channel of the textures should be handled during compositing.
     </span><span class="kw">pub </span>alpha_mode: CompositeAlphaMode,
+    <span class="doccomment">/// Specifies what view formats will be allowed when calling create_view() on texture returned by get_current_texture().
+    ///
+    /// View formats of the same format as the texture are always allowed.
+    ///
+    /// Note: currently, only the srgb-ness is allowed to change. (ex: Rgba8Unorm texture + Rgba8UnormSrgb view)
+    </span><span class="kw">pub </span>view_formats: V,
+}
+
+<span class="kw">impl</span>&lt;V: Clone&gt; SurfaceConfiguration&lt;V&gt; {
+    <span class="doccomment">/// Map view_formats of the texture descriptor into another.
+    </span><span class="kw">pub fn </span>map_view_formats&lt;M&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, fun: <span class="kw">impl </span>FnOnce(V) -&gt; M) -&gt; SurfaceConfiguration&lt;M&gt; {
+        SurfaceConfiguration {
+            usage: <span class="self">self</span>.usage,
+            format: <span class="self">self</span>.format,
+            width: <span class="self">self</span>.width,
+            height: <span class="self">self</span>.height,
+            present_mode: <span class="self">self</span>.present_mode,
+            alpha_mode: <span class="self">self</span>.alpha_mode,
+            view_formats: fun(<span class="self">self</span>.view_formats.clone()),
+        }
+    }
 }
 
 <span class="doccomment">/// Status of the recieved surface image.

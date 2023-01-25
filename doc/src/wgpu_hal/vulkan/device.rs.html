@@ -1984,6 +1984,26 @@
 <a href="#1984" id="1984">1984</a>
 <a href="#1985" id="1985">1985</a>
 <a href="#1986" id="1986">1986</a>
+<a href="#1987" id="1987">1987</a>
+<a href="#1988" id="1988">1988</a>
+<a href="#1989" id="1989">1989</a>
+<a href="#1990" id="1990">1990</a>
+<a href="#1991" id="1991">1991</a>
+<a href="#1992" id="1992">1992</a>
+<a href="#1993" id="1993">1993</a>
+<a href="#1994" id="1994">1994</a>
+<a href="#1995" id="1995">1995</a>
+<a href="#1996" id="1996">1996</a>
+<a href="#1997" id="1997">1997</a>
+<a href="#1998" id="1998">1998</a>
+<a href="#1999" id="1999">1999</a>
+<a href="#2000" id="2000">2000</a>
+<a href="#2001" id="2001">2001</a>
+<a href="#2002" id="2002">2002</a>
+<a href="#2003" id="2003">2003</a>
+<a href="#2004" id="2004">2004</a>
+<a href="#2005" id="2005">2005</a>
+<a href="#2006" id="2006">2006</a>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -2532,11 +2552,25 @@
         } <span class="kw">else </span>{
             vk::ColorSpaceKHR::SRGB_NONLINEAR
         };
-        <span class="kw">let </span>info = vk::SwapchainCreateInfoKHR::builder()
-            .flags(vk::SwapchainCreateFlagsKHR::empty())
+
+        <span class="kw">let </span>original_format = <span class="self">self</span>.shared.private_caps.map_texture_format(config.format);
+        <span class="kw">let </span><span class="kw-2">mut </span>raw_flags = vk::SwapchainCreateFlagsKHR::empty();
+        <span class="kw">let </span><span class="kw-2">mut </span>raw_view_formats: Vec&lt;vk::Format&gt; = <span class="macro">vec!</span>[];
+        <span class="kw">if </span>!config.view_formats.is_empty() {
+            raw_flags |= vk::SwapchainCreateFlagsKHR::MUTABLE_FORMAT;
+            raw_view_formats = config
+                .view_formats
+                .iter()
+                .map(|f| <span class="self">self</span>.shared.private_caps.map_texture_format(<span class="kw-2">*</span>f))
+                .collect();
+            raw_view_formats.push(original_format);
+        }
+
+        <span class="kw">let </span><span class="kw-2">mut </span>info = vk::SwapchainCreateInfoKHR::builder()
+            .flags(raw_flags)
             .surface(surface.raw)
             .min_image_count(config.swap_chain_size)
-            .image_format(<span class="self">self</span>.shared.private_caps.map_texture_format(config.format))
+            .image_format(original_format)
             .image_color_space(color_space)
             .image_extent(vk::Extent2D {
                 width: config.extent.width,
@@ -2550,6 +2584,12 @@
             .present_mode(conv::map_present_mode(config.present_mode))
             .clipped(<span class="bool-val">true</span>)
             .old_swapchain(old_swapchain);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>format_list_info = vk::ImageFormatListCreateInfo::builder();
+        <span class="kw">if </span>!raw_view_formats.is_empty() {
+            format_list_info = format_list_info.view_formats(<span class="kw-2">&amp;</span>raw_view_formats);
+            info = info.push_next(<span class="kw-2">&amp;mut </span>format_list_info);
+        }
 
         <span class="kw">let </span>result = {
             <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkCreateSwapchainKHR&quot;</span>);

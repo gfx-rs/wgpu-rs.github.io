@@ -4434,6 +4434,15 @@
 <a href="#4433" id="4433">4433</a>
 <a href="#4434" id="4434">4434</a>
 <a href="#4435" id="4435">4435</a>
+<a href="#4436" id="4436">4436</a>
+<a href="#4437" id="4437">4437</a>
+<a href="#4438" id="4438">4438</a>
+<a href="#4439" id="4439">4439</a>
+<a href="#4440" id="4440">4440</a>
+<a href="#4441" id="4441">4441</a>
+<a href="#4442" id="4442">4442</a>
+<a href="#4443" id="4443">4443</a>
+<a href="#4444" id="4444">4444</a>
 </pre><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -4476,12 +4485,11 @@
     PresentMode, PresentationTimestamp, PrimitiveState, PrimitiveTopology, PushConstantRange,
     QueryType, RenderBundleDepthStencil, SamplerBindingType, SamplerBorderColor, ShaderLocation,
     ShaderModel, ShaderStages, StencilFaceState, StencilOperation, StencilState,
-    StorageTextureAccess, SurfaceCapabilities, SurfaceConfiguration, SurfaceStatus, TextureAspect,
-    TextureDimension, TextureFormat, TextureFormatFeatureFlags, TextureFormatFeatures,
-    TextureSampleType, TextureUsages, TextureViewDimension, VertexAttribute, VertexFormat,
-    VertexStepMode, COPY_BUFFER_ALIGNMENT, COPY_BYTES_PER_ROW_ALIGNMENT, MAP_ALIGNMENT,
-    PUSH_CONSTANT_ALIGNMENT, QUERY_RESOLVE_BUFFER_ALIGNMENT, QUERY_SET_MAX_QUERIES, QUERY_SIZE,
-    VERTEX_STRIDE_ALIGNMENT,
+    StorageTextureAccess, SurfaceCapabilities, SurfaceStatus, TextureAspect, TextureDimension,
+    TextureFormat, TextureFormatFeatureFlags, TextureFormatFeatures, TextureSampleType,
+    TextureUsages, TextureViewDimension, VertexAttribute, VertexFormat, VertexStepMode,
+    COPY_BUFFER_ALIGNMENT, COPY_BYTES_PER_ROW_ALIGNMENT, MAP_ALIGNMENT, PUSH_CONSTANT_ALIGNMENT,
+    QUERY_RESOLVE_BUFFER_ALIGNMENT, QUERY_SET_MAX_QUERIES, QUERY_SIZE, VERTEX_STRIDE_ALIGNMENT,
 };
 
 <span class="comment">// wasm-only types, we try to keep as many types non-platform
@@ -4715,6 +4723,15 @@
     }
 }
 
+<span class="doccomment">/// Describes a [`Surface`].
+///
+/// For use with [`Surface::configure`].
+///
+/// Corresponds to [WebGPU `GPUCanvasConfiguration`](
+/// https://gpuweb.github.io/gpuweb/#canvas-configuration).
+</span><span class="kw">pub type </span>SurfaceConfiguration&lt;<span class="lifetime">&#39;a</span>&gt; = wgt::SurfaceConfiguration&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[TextureFormat]&gt;;
+<span class="macro">static_assertions::assert_impl_all!</span>(SurfaceConfiguration: Send, Sync);
+
 <span class="doccomment">/// Handle to a presentable surface.
 ///
 /// A `Surface` represents a platform-specific surface (e.g. a window) onto which rendered images may
@@ -4734,7 +4751,7 @@
     // Because the `Surface::configure` method operates on an immutable reference this type has to
     // be wrapped in a mutex and since the configuration is only supplied after the surface has
     // been created is is additionally wrapped in an option.
-    </span>config: Mutex&lt;<span class="prelude-ty">Option</span>&lt;SurfaceConfiguration&gt;&gt;,
+    </span>config: Mutex&lt;<span class="prelude-ty">Option</span>&lt;SurfaceConfiguration&lt;<span class="lifetime">&#39;static</span>&gt;&gt;&gt;,
 }
 <span class="macro">static_assertions::assert_impl_all!</span>(Surface: Send, Sync);
 
@@ -8518,15 +8535,16 @@
         adapter: <span class="kw-2">&amp;</span>Adapter,
         width: u32,
         height: u32,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;wgt::SurfaceConfiguration&gt; {
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;SurfaceConfiguration&lt;<span class="lifetime">&#39;static</span>&gt;&gt; {
         <span class="kw">let </span>caps = <span class="self">self</span>.get_capabilities(adapter);
-        <span class="prelude-val">Some</span>(wgt::SurfaceConfiguration {
+        <span class="prelude-val">Some</span>(SurfaceConfiguration {
             usage: wgt::TextureUsages::RENDER_ATTACHMENT,
             format: <span class="kw-2">*</span>caps.formats.get(<span class="number">0</span>)<span class="question-mark">?</span>,
             width,
             height,
             present_mode: <span class="kw-2">*</span>caps.present_modes.get(<span class="number">0</span>)<span class="question-mark">?</span>,
             alpha_mode: wgt::CompositeAlphaMode::Auto,
+            view_formats: <span class="kw-2">&amp;</span>[],
         })
     }
 
@@ -8536,7 +8554,7 @@
     ///
     /// - A old [`SurfaceTexture`] is still alive referencing an old surface.
     /// - Texture format requested is unsupported on the surface.
-    </span><span class="kw">pub fn </span>configure(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Device, config: <span class="kw-2">&amp;</span>SurfaceConfiguration) {
+    </span><span class="kw">pub fn </span>configure(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>Device, config: <span class="kw-2">&amp;</span>SurfaceConfiguration&lt;<span class="lifetime">&#39;static</span>&gt;) {
         DynContext::surface_configure(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
             <span class="kw-2">&amp;</span><span class="self">self</span>.id,
