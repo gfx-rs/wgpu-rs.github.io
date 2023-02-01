@@ -3389,7 +3389,7 @@
         cause: <span class="kw">impl </span>Error + Send + Sync + <span class="lifetime">&#39;static</span>,
         string: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
     ) -&gt; ! {
-        <span class="macro">panic!</span>(<span class="string">&quot;Error in {}: {}&quot;</span>, string, cause);
+        <span class="macro">panic!</span>(<span class="string">&quot;Error in {string}: {cause}&quot;</span>);
     }
 
     <span class="kw">fn </span>format_error(<span class="kw-2">&amp;</span><span class="self">self</span>, err: <span class="kw-2">&amp;</span>(<span class="kw">impl </span>Error + <span class="lifetime">&#39;static</span>)) -&gt; String {
@@ -4477,7 +4477,7 @@
         };
         <span class="kw">match </span>wgc::command::RenderBundleEncoder::new(<span class="kw-2">&amp;</span>descriptor, <span class="kw-2">*</span>device, <span class="prelude-val">None</span>) {
             <span class="prelude-val">Ok</span>(encoder) =&gt; (Unused, encoder),
-            <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Error in Device::create_render_bundle_encoder: {}&quot;</span>, e),
+            <span class="prelude-val">Err</span>(e) =&gt; <span class="macro">panic!</span>(<span class="string">&quot;Error in Device::create_render_bundle_encoder: {e}&quot;</span>),
         }
     }
     <span class="attr">#[cfg_attr(target_arch = <span class="string">&quot;wasm32&quot;</span>, allow(unused))]
@@ -4774,7 +4774,7 @@
         <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(<span class="kw-2">*</span>pipeline =&gt; global.compute_pipeline_get_bind_group_layout(<span class="kw-2">*</span>pipeline, index, ()));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = error {
-            <span class="macro">panic!</span>(<span class="string">&quot;Error reflecting bind group {}: {}&quot;</span>, index, err);
+            <span class="macro">panic!</span>(<span class="string">&quot;Error reflecting bind group {index}: {err}&quot;</span>);
         }
         (id, ())
     }
@@ -4788,7 +4788,7 @@
         <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">let </span>(id, error) = <span class="macro">wgc::gfx_select!</span>(<span class="kw-2">*</span>pipeline =&gt; global.render_pipeline_get_bind_group_layout(<span class="kw-2">*</span>pipeline, index, ()));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = error {
-            <span class="macro">panic!</span>(<span class="string">&quot;Error reflecting bind group {}: {}&quot;</span>, index, err);
+            <span class="macro">panic!</span>(<span class="string">&quot;Error reflecting bind group {index}: {err}&quot;</span>);
         }
         (id, ())
     }
@@ -4930,11 +4930,11 @@
         }
     }
 
-    <span class="kw">fn </span>command_encoder_begin_render_pass&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>command_encoder_begin_render_pass(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         encoder: <span class="kw-2">&amp;</span><span class="self">Self</span>::CommandEncoderId,
         _encoder_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::CommandEncoderData,
-        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPassDescriptor&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;_</span>&gt;,
+        desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPassDescriptor&lt;<span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
     ) -&gt; (<span class="self">Self</span>::RenderPassId, <span class="self">Self</span>::RenderPassData) {
         <span class="kw">if </span>desc.color_attachments.len() &gt; wgc::MAX_COLOR_ATTACHMENTS {
             <span class="self">self</span>.handle_error_fatal(
@@ -6097,7 +6097,7 @@
 
 <span class="kw">fn </span>default_error_handler(err: <span class="kw">crate</span>::Error) {
     <span class="macro">log::error!</span>(<span class="string">&quot;Handling wgpu errors as fatal by default&quot;</span>);
-    <span class="macro">panic!</span>(<span class="string">&quot;wgpu error: {}\n&quot;</span>, err);
+    <span class="macro">panic!</span>(<span class="string">&quot;wgpu error: {err}\n&quot;</span>);
 }
 
 <span class="attr">#[derive(Debug)]
