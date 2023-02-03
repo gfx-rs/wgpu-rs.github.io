@@ -825,25 +825,7 @@
 <a href="#825" id="825">825</a>
 <a href="#826" id="826">826</a>
 <a href="#827" id="827">827</a>
-<a href="#828" id="828">828</a>
-<a href="#829" id="829">829</a>
-<a href="#830" id="830">830</a>
-<a href="#831" id="831">831</a>
-<a href="#832" id="832">832</a>
-<a href="#833" id="833">833</a>
-<a href="#834" id="834">834</a>
-<a href="#835" id="835">835</a>
-<a href="#836" id="836">836</a>
-<a href="#837" id="837">837</a>
-<a href="#838" id="838">838</a>
-<a href="#839" id="839">839</a>
-<a href="#840" id="840">840</a>
-<a href="#841" id="841">841</a>
-<a href="#842" id="842">842</a>
-<a href="#843" id="843">843</a>
-<a href="#844" id="844">844</a>
 </pre><pre class="rust"><code><span class="kw">use </span>ash::vk;
-<span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">impl </span><span class="kw">super</span>::PrivateCapabilities {
     <span class="kw">pub fn </span>map_texture_format(<span class="kw-2">&amp;</span><span class="self">self</span>, format: wgt::TextureFormat) -&gt; vk::Format {
@@ -1429,20 +1411,6 @@
     }
 }
 
-<span class="kw">pub fn </span>map_extent_to_copy_size(
-    extent: <span class="kw-2">&amp;</span>wgt::Extent3d,
-    dim: wgt::TextureDimension,
-) -&gt; <span class="kw">crate</span>::CopyExtent {
-    <span class="kw">crate</span>::CopyExtent {
-        width: extent.width,
-        height: extent.height,
-        depth: <span class="kw">match </span>dim {
-            wgt::TextureDimension::D1 | wgt::TextureDimension::D2 =&gt; <span class="number">1</span>,
-            wgt::TextureDimension::D3 =&gt; extent.depth_or_array_layers,
-        },
-    }
-}
-
 <span class="kw">pub fn </span>map_subresource_range(
     range: <span class="kw-2">&amp;</span>wgt::ImageSubresourceRange,
     texture_aspect: <span class="kw">crate</span>::FormatAspects,
@@ -1450,13 +1418,11 @@
     vk::ImageSubresourceRange {
         aspect_mask: map_aspects(<span class="kw">crate</span>::FormatAspects::from(range.aspect) &amp; texture_aspect),
         base_mip_level: range.base_mip_level,
-        level_count: range
-            .mip_level_count
-            .map_or(vk::REMAINING_MIP_LEVELS, NonZeroU32::get),
+        level_count: range.mip_level_count.unwrap_or(vk::REMAINING_MIP_LEVELS),
         base_array_layer: range.base_array_layer,
         layer_count: range
             .array_layer_count
-            .map_or(vk::REMAINING_ARRAY_LAYERS, NonZeroU32::get),
+            .unwrap_or(vk::REMAINING_ARRAY_LAYERS),
     }
 }
 

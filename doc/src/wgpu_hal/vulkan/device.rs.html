@@ -1992,18 +1992,6 @@
 <a href="#1992" id="1992">1992</a>
 <a href="#1993" id="1993">1993</a>
 <a href="#1994" id="1994">1994</a>
-<a href="#1995" id="1995">1995</a>
-<a href="#1996" id="1996">1996</a>
-<a href="#1997" id="1997">1997</a>
-<a href="#1998" id="1998">1998</a>
-<a href="#1999" id="1999">1999</a>
-<a href="#2000" id="2000">2000</a>
-<a href="#2001" id="2001">2001</a>
-<a href="#2002" id="2002">2002</a>
-<a href="#2003" id="2003">2003</a>
-<a href="#2004" id="2004">2004</a>
-<a href="#2005" id="2005">2005</a>
-<a href="#2006" id="2006">2006</a>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -2649,7 +2637,7 @@
             aspects: <span class="kw">crate</span>::FormatAspects::from(desc.format),
             format_info: desc.format.describe(),
             raw_flags: vk::ImageCreateFlags::empty(),
-            copy_size: <span class="kw">crate</span>::CopyExtent::map_extent_to_copy_size(<span class="kw-2">&amp;</span>desc.size, desc.dimension),
+            copy_size: desc.copy_extent(),
         }
     }
 
@@ -2906,18 +2894,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Texture, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="kw">let </span>array_layer_count = <span class="kw">match </span>desc.dimension {
-            wgt::TextureDimension::D3 =&gt; <span class="number">1</span>,
-            <span class="kw">_ </span>=&gt; desc.size.depth_or_array_layers,
-        };
-        <span class="kw">let </span>copy_size = conv::map_extent_to_copy_size(<span class="kw-2">&amp;</span>desc.size, desc.dimension);
+        <span class="kw">let </span>copy_size = desc.copy_extent();
 
         <span class="kw">let </span><span class="kw-2">mut </span>raw_flags = vk::ImageCreateFlags::empty();
-        <span class="kw">if </span>desc.dimension == wgt::TextureDimension::D2
-            &amp;&amp; desc.size.depth_or_array_layers % <span class="number">6 </span>== <span class="number">0
-            </span>&amp;&amp; desc.sample_count == <span class="number">1
-            </span>&amp;&amp; desc.size.width == desc.size.height
-        {
+        <span class="kw">if </span>desc.is_cube_compatible() {
             raw_flags |= vk::ImageCreateFlags::CUBE_COMPATIBLE;
         }
 
@@ -2943,13 +2923,9 @@
             .flags(raw_flags)
             .image_type(conv::map_texture_dimension(desc.dimension))
             .format(original_format)
-            .extent(vk::Extent3D {
-                width: copy_size.width,
-                height: copy_size.height,
-                depth: copy_size.depth,
-            })
+            .extent(conv::map_copy_extent(<span class="kw-2">&amp;</span>copy_size))
             .mip_levels(desc.mip_level_count)
-            .array_layers(array_layer_count)
+            .array_layers(desc.array_layer_count())
             .samples(vk::SampleCountFlags::from_raw(desc.sample_count))
             .tiling(vk::ImageTiling::OPTIMAL)
             .usage(conv::map_texture_usage(desc.usage))

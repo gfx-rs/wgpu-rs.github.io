@@ -5702,7 +5702,6 @@
 <a href="#5702" id="5702">5702</a>
 <a href="#5703" id="5703">5703</a>
 <a href="#5704" id="5704">5704</a>
-<a href="#5705" id="5705">5705</a>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -6454,8 +6453,7 @@
     /// Defaults to 2048. Higher is &quot;better&quot;.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, serde(rename = <span class="string">&quot;maxTextureDimension3D&quot;</span>))]
     </span><span class="kw">pub </span>max_texture_dimension_3d: u32,
-    <span class="doccomment">/// Maximum allowed value for the `size.depth_or_array_layers` of a texture created with
-    /// `TextureDimension::D1` or `TextureDimension::D2`.
+    <span class="doccomment">/// Maximum allowed value for the `size.depth_or_array_layers` of a texture created with `TextureDimension::D2`.
     /// Defaults to 256. Higher is &quot;better&quot;.
     </span><span class="kw">pub </span>max_texture_array_layers: u32,
     <span class="doccomment">/// Amount of bind groups that can be attached to a pipeline at the same time. Defaults to 4. Higher is &quot;better&quot;.
@@ -10068,8 +10066,9 @@
                 <span class="kw">_ </span>=&gt; u32::max(<span class="number">1</span>, <span class="self">self</span>.height &gt;&gt; level),
             },
             depth_or_array_layers: <span class="kw">match </span>dim {
+                TextureDimension::D1 =&gt; <span class="number">1</span>,
+                TextureDimension::D2 =&gt; <span class="self">self</span>.depth_or_array_layers,
                 TextureDimension::D3 =&gt; u32::max(<span class="number">1</span>, <span class="self">self</span>.depth_or_array_layers &gt;&gt; level),
-                <span class="kw">_ </span>=&gt; <span class="self">self</span>.depth_or_array_layers,
             },
         }
     }
@@ -10209,9 +10208,12 @@
     </span><span class="kw">pub </span>view_formats: V,
 }
 
-<span class="kw">impl</span>&lt;L, V: Clone&gt; TextureDescriptor&lt;L, V&gt; {
+<span class="kw">impl</span>&lt;L, V&gt; TextureDescriptor&lt;L, V&gt; {
     <span class="doccomment">/// Takes a closure and maps the label of the texture descriptor into another.
-    </span><span class="kw">pub fn </span>map_label&lt;K&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>L) -&gt; K) -&gt; TextureDescriptor&lt;K, V&gt; {
+    </span><span class="kw">pub fn </span>map_label&lt;K&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>L) -&gt; K) -&gt; TextureDescriptor&lt;K, V&gt;
+    <span class="kw">where
+        </span>V: Clone,
+    {
         TextureDescriptor {
             label: fun(<span class="kw-2">&amp;</span><span class="self">self</span>.label),
             size: <span class="self">self</span>.size,
@@ -10229,7 +10231,10 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         l_fun: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span>L) -&gt; K,
         v_fun: <span class="kw">impl </span>FnOnce(V) -&gt; M,
-    ) -&gt; TextureDescriptor&lt;K, M&gt; {
+    ) -&gt; TextureDescriptor&lt;K, M&gt;
+    <span class="kw">where
+        </span>V: Clone,
+    {
         TextureDescriptor {
             label: l_fun(<span class="kw-2">&amp;</span><span class="self">self</span>.label),
             size: <span class="self">self</span>.size,
@@ -11077,13 +11082,13 @@
     <span class="doccomment">/// Mip level count.
     /// If `Some(count)`, `base_mip_level + count` must be less or equal to underlying texture mip count.
     /// If `None`, considered to include the rest of the mipmap levels, but at least 1 in total.
-    </span><span class="kw">pub </span>mip_level_count: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
+    </span><span class="kw">pub </span>mip_level_count: <span class="prelude-ty">Option</span>&lt;u32&gt;,
     <span class="doccomment">/// Base array layer.
     </span><span class="kw">pub </span>base_array_layer: u32,
     <span class="doccomment">/// Layer count.
     /// If `Some(count)`, `base_array_layer + count` must be less or equal to the underlying array count.
     /// If `None`, considered to include the rest of the array layers, but at least 1 in total.
-    </span><span class="kw">pub </span>array_layer_count: <span class="prelude-ty">Option</span>&lt;NonZeroU32&gt;,
+    </span><span class="kw">pub </span>array_layer_count: <span class="prelude-ty">Option</span>&lt;u32&gt;,
 }
 
 <span class="kw">impl </span>ImageSubresourceRange {
@@ -11092,7 +11097,6 @@
     ///
     /// ```rust
     /// # use wgpu_types as wgpu;
-    /// use std::num::NonZeroU32;
     ///
     /// let range_none = wgpu::ImageSubresourceRange {
     ///     aspect: wgpu::TextureAspect::All,
@@ -11106,9 +11110,9 @@
     /// let range_some = wgpu::ImageSubresourceRange {
     ///     aspect: wgpu::TextureAspect::All,
     ///     base_mip_level: 0,
-    ///     mip_level_count: NonZeroU32::new(5),
+    ///     mip_level_count: Some(5),
     ///     base_array_layer: 0,
-    ///     array_layer_count: NonZeroU32::new(10),
+    ///     array_layer_count: Some(10),
     /// };
     /// assert_eq!(range_some.is_full_resource(5, 10), true);
     ///
@@ -11116,7 +11120,7 @@
     ///     aspect: wgpu::TextureAspect::All,
     ///     base_mip_level: 0,
     ///     // Only partial resource
-    ///     mip_level_count: NonZeroU32::new(3),
+    ///     mip_level_count: Some(3),
     ///     base_array_layer: 0,
     ///     array_layer_count: None,
     /// };
@@ -11124,8 +11128,8 @@
     /// ```
     </span><span class="kw">pub fn </span>is_full_resource(<span class="kw-2">&amp;</span><span class="self">self</span>, mip_levels: u32, array_layers: u32) -&gt; bool {
         <span class="comment">// Mip level count and array layer count need to deal with both the None and Some(count) case.
-        </span><span class="kw">let </span>mip_level_count = <span class="self">self</span>.mip_level_count.map_or(mip_levels, NonZeroU32::get);
-        <span class="kw">let </span>array_layer_count = <span class="self">self</span>.array_layer_count.map_or(array_layers, NonZeroU32::get);
+        </span><span class="kw">let </span>mip_level_count = <span class="self">self</span>.mip_level_count.unwrap_or(mip_levels);
+        <span class="kw">let </span>array_layer_count = <span class="self">self</span>.array_layer_count.unwrap_or(array_layers);
 
         <span class="kw">let </span>aspect_eq = <span class="self">self</span>.aspect == TextureAspect::All;
 
@@ -11143,24 +11147,18 @@
     }
 
     <span class="doccomment">/// Returns the mip level range of a subresource range describes for a specific texture.
-    </span><span class="kw">pub fn </span>mip_range&lt;L, V&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, texture_desc: <span class="kw-2">&amp;</span>TextureDescriptor&lt;L, V&gt;) -&gt; Range&lt;u32&gt; {
+    </span><span class="kw">pub fn </span>mip_range(<span class="kw-2">&amp;</span><span class="self">self</span>, mip_level_count: u32) -&gt; Range&lt;u32&gt; {
         <span class="self">self</span>.base_mip_level..<span class="kw">match </span><span class="self">self</span>.mip_level_count {
-            <span class="prelude-val">Some</span>(mip_level_count) =&gt; <span class="self">self</span>.base_mip_level + mip_level_count.get(),
-            <span class="prelude-val">None </span>=&gt; texture_desc.mip_level_count,
+            <span class="prelude-val">Some</span>(mip_level_count) =&gt; <span class="self">self</span>.base_mip_level + mip_level_count,
+            <span class="prelude-val">None </span>=&gt; mip_level_count,
         }
     }
 
     <span class="doccomment">/// Returns the layer range of a subresource range describes for a specific texture.
-    </span><span class="kw">pub fn </span>layer_range&lt;L, V&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, texture_desc: <span class="kw-2">&amp;</span>TextureDescriptor&lt;L, V&gt;) -&gt; Range&lt;u32&gt; {
+    </span><span class="kw">pub fn </span>layer_range(<span class="kw-2">&amp;</span><span class="self">self</span>, array_layer_count: u32) -&gt; Range&lt;u32&gt; {
         <span class="self">self</span>.base_array_layer..<span class="kw">match </span><span class="self">self</span>.array_layer_count {
-            <span class="prelude-val">Some</span>(array_layer_count) =&gt; <span class="self">self</span>.base_array_layer + array_layer_count.get(),
-            <span class="prelude-val">None </span>=&gt; {
-                <span class="kw">if </span>texture_desc.dimension == TextureDimension::D3 {
-                    <span class="self">self</span>.base_array_layer + <span class="number">1
-                </span>} <span class="kw">else </span>{
-                    texture_desc.size.depth_or_array_layers
-                }
-            }
+            <span class="prelude-val">Some</span>(array_layer_count) =&gt; <span class="self">self</span>.base_array_layer + array_layer_count,
+            <span class="prelude-val">None </span>=&gt; array_layer_count,
         }
     }
 }

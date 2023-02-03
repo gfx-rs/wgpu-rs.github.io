@@ -1278,6 +1278,26 @@
 <a href="#1278" id="1278">1278</a>
 <a href="#1279" id="1279">1279</a>
 <a href="#1280" id="1280">1280</a>
+<a href="#1281" id="1281">1281</a>
+<a href="#1282" id="1282">1282</a>
+<a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
+<a href="#1297" id="1297">1297</a>
+<a href="#1298" id="1298">1298</a>
+<a href="#1299" id="1299">1299</a>
+<a href="#1300" id="1300">1300</a>
 </pre><pre class="rust"><code><span class="doccomment">/*! This library describes the internal unsafe graphics abstraction API.
  *  It follows WebGPU for the most part, re-using wgpu-types,
  *  with the following deviations:
@@ -2150,6 +2170,26 @@
     <span class="doccomment">/// Allows views of this texture to have a different format
     /// than the texture does.
     </span><span class="kw">pub </span>view_formats: Vec&lt;wgt::TextureFormat&gt;,
+}
+
+<span class="kw">impl </span>TextureDescriptor&lt;<span class="lifetime">&#39;_</span>&gt; {
+    <span class="kw">pub fn </span>copy_extent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; CopyExtent {
+        CopyExtent::map_extent_to_copy_size(<span class="kw-2">&amp;</span><span class="self">self</span>.size, <span class="self">self</span>.dimension)
+    }
+
+    <span class="kw">pub fn </span>is_cube_compatible(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.dimension == wgt::TextureDimension::D2
+            &amp;&amp; <span class="self">self</span>.size.depth_or_array_layers % <span class="number">6 </span>== <span class="number">0
+            </span>&amp;&amp; <span class="self">self</span>.sample_count == <span class="number">1
+            </span>&amp;&amp; <span class="self">self</span>.size.width == <span class="self">self</span>.size.height
+    }
+
+    <span class="kw">pub fn </span>array_layer_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+        <span class="kw">match </span><span class="self">self</span>.dimension {
+            wgt::TextureDimension::D1 | wgt::TextureDimension::D3 =&gt; <span class="number">1</span>,
+            wgt::TextureDimension::D2 =&gt; <span class="self">self</span>.size.depth_or_array_layers,
+        }
+    }
 }
 
 <span class="doccomment">/// TextureView descriptor.

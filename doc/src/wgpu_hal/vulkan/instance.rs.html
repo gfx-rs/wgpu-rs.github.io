@@ -807,7 +807,6 @@
 <a href="#807" id="807">807</a>
 <a href="#808" id="808">808</a>
 <a href="#809" id="809">809</a>
-<a href="#810" id="810">810</a>
 </pre><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::{c_void, CStr, CString},
     slice,
@@ -819,8 +818,6 @@
     extensions::{ext, khr},
     vk,
 };
-
-<span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">unsafe extern </span><span class="string">&quot;system&quot; </span><span class="kw">fn </span>debug_utils_messenger_callback(
     message_severity: vk::DebugUtilsMessageSeverityFlagsEXT,
@@ -1604,10 +1601,11 @@
                 aspects: <span class="kw">crate</span>::FormatAspects::COLOR,
                 format_info: sc.config.format.describe(),
                 raw_flags: vk::ImageCreateFlags::empty(),
-                copy_size: conv::map_extent_to_copy_size(
-                    <span class="kw-2">&amp;</span>sc.config.extent,
-                    wgt::TextureDimension::D2,
-                ),
+                copy_size: <span class="kw">crate</span>::CopyExtent {
+                    width: sc.config.extent.width,
+                    height: sc.config.extent.height,
+                    depth: <span class="number">1</span>,
+                },
             },
         };
         <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="kw">crate</span>::AcquiredSurfaceTexture {
