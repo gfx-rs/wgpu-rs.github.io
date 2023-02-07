@@ -1909,7 +1909,7 @@ function initSync(module) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('cube_bg.wasm', import.meta.url);
+        input = new URL('cube-c32e24c1a64cef3f_bg.wasm', import.meta.url);
     }
     const imports = getImports();
 
