@@ -88,7 +88,7 @@ function initSync(module) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('framework_bg.wasm', import.meta.url);
+        input = new URL('framework-bb79060b72742053_bg.wasm', import.meta.url);
     }
     const imports = getImports();
 
