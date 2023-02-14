@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["VENDOR",""]]};
+window.SIDEBAR_ITEMS = {"constant":["VENDOR"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"trait":[["StrictAssertUnwrapExt","Unwrapping using strict_asserts"]]};
+window.SIDEBAR_ITEMS = {"trait":["StrictAssertUnwrapExt"]};
