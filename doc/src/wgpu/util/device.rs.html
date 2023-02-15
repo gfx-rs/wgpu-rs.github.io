@@ -146,6 +146,10 @@
 <a href="#145" id="145">145</a>
 <a href="#146" id="146">146</a>
 <a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
 </pre><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="doccomment">/// Describes a [Buffer](crate::Buffer) when allocating.
@@ -235,7 +239,11 @@
         desc.usage |= <span class="kw">crate</span>::TextureUsages::COPY_DST;
         <span class="kw">let </span>texture = <span class="self">self</span>.create_texture(<span class="kw-2">&amp;</span>desc);
 
-        <span class="kw">let </span>format_info = desc.format.describe();
+        <span class="comment">// Will return None only if it&#39;s a combined depth-stencil format
+        // If so, default to 4, validation will fail later anyway since the depth or stencil
+        // aspect needs to be written to individually
+        </span><span class="kw">let </span>block_size = desc.format.block_size(<span class="prelude-val">None</span>).unwrap_or(<span class="number">4</span>);
+        <span class="kw">let </span>(block_width, block_height) = desc.format.block_dimensions();
         <span class="kw">let </span>layer_iterations = desc.array_layer_count();
 
         <span class="kw">let </span><span class="kw-2">mut </span>binary_offset = <span class="number">0</span>;
@@ -254,10 +262,10 @@
 
                 <span class="comment">// All these calculations are performed on the physical size as that&#39;s the
                 // data that exists in the buffer.
-                </span><span class="kw">let </span>width_blocks = mip_physical.width / format_info.block_dimensions.<span class="number">0 </span><span class="kw">as </span>u32;
-                <span class="kw">let </span>height_blocks = mip_physical.height / format_info.block_dimensions.<span class="number">1 </span><span class="kw">as </span>u32;
+                </span><span class="kw">let </span>width_blocks = mip_physical.width / block_width;
+                <span class="kw">let </span>height_blocks = mip_physical.height / block_height;
 
-                <span class="kw">let </span>bytes_per_row = width_blocks * format_info.block_size <span class="kw">as </span>u32;
+                <span class="kw">let </span>bytes_per_row = width_blocks * block_size;
                 <span class="kw">let </span>data_size = bytes_per_row * height_blocks * mip_size.depth_or_array_layers;
 
                 <span class="kw">let </span>end_offset = binary_offset + data_size <span class="kw">as </span>usize;

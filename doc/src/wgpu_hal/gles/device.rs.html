@@ -1320,6 +1320,9 @@
 <a href="#1320" id="1320">1320</a>
 <a href="#1321" id="1321">1321</a>
 <a href="#1322" id="1322">1322</a>
+<a href="#1323" id="1323">1323</a>
+<a href="#1324" id="1324">1324</a>
+<a href="#1325" id="1325">1325</a>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -2028,10 +2031,12 @@
 
             <span class="kw">unsafe </span>{ gl.bind_texture(target, <span class="prelude-val">Some</span>(raw)) };
             <span class="comment">//Note: this has to be done before defining the storage!
-            </span><span class="kw">match </span>desc.format.describe().sample_type {
-                wgt::TextureSampleType::Float { filterable: <span class="bool-val">false </span>}
-                | wgt::TextureSampleType::Uint
-                | wgt::TextureSampleType::Sint =&gt; {
+            </span><span class="kw">match </span>desc.format.sample_type(<span class="prelude-val">None</span>) {
+                <span class="prelude-val">Some</span>(
+                    wgt::TextureSampleType::Float { filterable: <span class="bool-val">false </span>}
+                    | wgt::TextureSampleType::Uint
+                    | wgt::TextureSampleType::Sint,
+                ) =&gt; {
                     <span class="comment">// reset default filtering mode
                     </span><span class="kw">unsafe </span>{
                         gl.tex_parameter_i32(target, glow::TEXTURE_MIN_FILTER, glow::NEAREST <span class="kw">as </span>i32)
@@ -2040,8 +2045,7 @@
                         gl.tex_parameter_i32(target, glow::TEXTURE_MAG_FILTER, glow::NEAREST <span class="kw">as </span>i32)
                     };
                 }
-                wgt::TextureSampleType::Float { filterable: <span class="bool-val">true </span>}
-                | wgt::TextureSampleType::Depth =&gt; {}
+                <span class="kw">_ </span>=&gt; {}
             }
 
             <span class="kw">if </span>is_3d {
@@ -2130,9 +2134,7 @@
         <span class="prelude-val">Ok</span>(<span class="kw">super</span>::TextureView {
             <span class="comment">//TODO: use `conv::map_view_dimension(desc.dimension)`?
             </span>inner: texture.inner.clone(),
-            sample_type: texture.format.describe().sample_type,
-            aspects: <span class="kw">crate</span>::FormatAspects::from(texture.format)
-                &amp; <span class="kw">crate</span>::FormatAspects::from(desc.range.aspect),
+            aspects: <span class="kw">crate</span>::FormatAspects::new(texture.format, desc.range.aspect),
             mip_levels: desc.range.mip_range(texture.mip_level_count),
             array_layers: desc.range.layer_range(texture.array_layer_count),
             format: texture.format,
@@ -2362,7 +2364,11 @@
                             <span class="string">&quot;This is an implementation problem of wgpu-hal/gles backend.&quot;</span>)
                     }
                     <span class="kw">let </span>(raw, target) = view.inner.as_native();
-                    <span class="kw">super</span>::RawBinding::Texture { raw, target }
+                    <span class="kw">super</span>::RawBinding::Texture {
+                        raw,
+                        target,
+                        aspects: view.aspects,
+                    }
                 }
                 wgt::BindingType::StorageTexture {
                     access,

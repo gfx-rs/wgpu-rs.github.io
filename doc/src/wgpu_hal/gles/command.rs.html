@@ -1056,6 +1056,11 @@
 <a href="#1056" id="1056">1056</a>
 <a href="#1057" id="1057">1057</a>
 <a href="#1058" id="1058">1058</a>
+<a href="#1059" id="1059">1059</a>
+<a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
 </pre><pre class="rust"><code><span class="kw">use super</span>::{conv, Command <span class="kw">as </span>C};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>std::{mem, ops::Range};
@@ -1616,15 +1621,13 @@
         {
             <span class="kw">if </span>!cat.ops.contains(<span class="kw">crate</span>::AttachmentOps::LOAD) {
                 <span class="kw">let </span>c = <span class="kw-2">&amp;</span>cat.clear_value;
-                <span class="self">self</span>.cmd_buffer
-                    .commands
-                    .push(<span class="kw">match </span>cat.target.view.sample_type {
+                <span class="self">self</span>.cmd_buffer.commands.push(
+                    <span class="kw">match </span>cat.target.view.format.sample_type(<span class="prelude-val">None</span>).unwrap() {
                         wgt::TextureSampleType::Float { .. } =&gt; C::ClearColorF {
                             draw_buffer: i <span class="kw">as </span>u32,
                             color: [c.r <span class="kw">as </span>f32, c.g <span class="kw">as </span>f32, c.b <span class="kw">as </span>f32, c.a <span class="kw">as </span>f32],
-                            is_srgb: cat.target.view.format.describe().srgb,
+                            is_srgb: cat.target.view.format.is_srgb(),
                         },
-                        wgt::TextureSampleType::Depth =&gt; <span class="macro">unreachable!</span>(),
                         wgt::TextureSampleType::Uint =&gt; C::ClearColorU(
                             i <span class="kw">as </span>u32,
                             [c.r <span class="kw">as </span>u32, c.g <span class="kw">as </span>u32, c.b <span class="kw">as </span>u32, c.a <span class="kw">as </span>u32],
@@ -1633,7 +1636,9 @@
                             i <span class="kw">as </span>u32,
                             [c.r <span class="kw">as </span>i32, c.g <span class="kw">as </span>i32, c.b <span class="kw">as </span>i32, c.a <span class="kw">as </span>i32],
                         ),
-                    });
+                        wgt::TextureSampleType::Depth =&gt; <span class="macro">unreachable!</span>(),
+                    },
+                );
             }
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>dsat) = desc.depth_stencil_attachment {
@@ -1739,13 +1744,18 @@
                     dirty_samplers |= <span class="number">1 </span>&lt;&lt; slot;
                     <span class="self">self</span>.state.samplers[slot <span class="kw">as </span>usize] = <span class="prelude-val">Some</span>(sampler);
                 }
-                <span class="kw">super</span>::RawBinding::Texture { raw, target } =&gt; {
+                <span class="kw">super</span>::RawBinding::Texture {
+                    raw,
+                    target,
+                    aspects,
+                } =&gt; {
                     dirty_textures |= <span class="number">1 </span>&lt;&lt; slot;
                     <span class="self">self</span>.state.texture_slots[slot <span class="kw">as </span>usize].tex_target = target;
                     <span class="self">self</span>.cmd_buffer.commands.push(C::BindTexture {
                         slot,
                         texture: raw,
                         target,
+                        aspects,
                     });
                 }
                 <span class="kw">super</span>::RawBinding::Image(<span class="kw-2">ref </span>binding) =&gt; {

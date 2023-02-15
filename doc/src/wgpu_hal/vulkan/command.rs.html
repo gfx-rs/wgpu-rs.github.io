@@ -839,22 +839,24 @@
     <span class="kw">where
         </span>T: Iterator&lt;Item = <span class="kw">crate</span>::BufferTextureCopy&gt;,
     {
-        <span class="kw">let </span>aspects = <span class="self">self</span>.aspects;
-        <span class="kw">let </span>fi = <span class="self">self</span>.format_info;
+        <span class="kw">let </span>(block_width, block_height) = <span class="self">self</span>.format.block_dimensions();
+        <span class="kw">let </span>format = <span class="self">self</span>.format;
         <span class="kw">let </span>copy_size = <span class="self">self</span>.copy_size;
         regions.map(<span class="kw">move </span>|r| {
             <span class="kw">let </span>extent = r.texture_base.max_copy_size(<span class="kw-2">&amp;</span>copy_size).min(<span class="kw-2">&amp;</span>r.size);
-            <span class="kw">let </span>(image_subresource, image_offset) =
-                conv::map_subresource_layers(<span class="kw-2">&amp;</span>r.texture_base, aspects);
+            <span class="kw">let </span>(image_subresource, image_offset) = conv::map_subresource_layers(<span class="kw-2">&amp;</span>r.texture_base);
             vk::BufferImageCopy {
                 buffer_offset: r.buffer_layout.offset,
                 buffer_row_length: r.buffer_layout.bytes_per_row.map_or(<span class="number">0</span>, |bpr| {
-                    fi.block_dimensions.<span class="number">0 </span><span class="kw">as </span>u32 * (bpr.get() / fi.block_size <span class="kw">as </span>u32)
+                    <span class="kw">let </span>block_size = format
+                        .block_size(<span class="prelude-val">Some</span>(r.texture_base.aspect.map()))
+                        .unwrap();
+                    block_width * (bpr.get() / block_size)
                 }),
                 buffer_image_height: r
                     .buffer_layout
                     .rows_per_image
-                    .map_or(<span class="number">0</span>, |rpi| rpi.get() * fi.block_dimensions.<span class="number">1 </span><span class="kw">as </span>u32),
+                    .map_or(<span class="number">0</span>, |rpi| rpi.get() * block_height),
                 image_subresource,
                 image_offset,
                 image_extent: conv::map_copy_extent(<span class="kw-2">&amp;</span>extent),
@@ -981,12 +983,12 @@
         vk_barriers.clear();
 
         <span class="kw">for </span>bar <span class="kw">in </span>barriers {
-            <span class="kw">let </span>range = conv::map_subresource_range(<span class="kw-2">&amp;</span>bar.range, bar.texture.aspects);
+            <span class="kw">let </span>range = conv::map_subresource_range(<span class="kw-2">&amp;</span>bar.range, bar.texture.format);
             <span class="kw">let </span>(src_stage, src_access) = conv::map_texture_usage_to_barrier(bar.usage.start);
-            <span class="kw">let </span>src_layout = conv::derive_image_layout(bar.usage.start, bar.texture.aspects);
+            <span class="kw">let </span>src_layout = conv::derive_image_layout(bar.usage.start, bar.texture.format);
             src_stages |= src_stage;
             <span class="kw">let </span>(dst_stage, dst_access) = conv::map_texture_usage_to_barrier(bar.usage.end);
-            <span class="kw">let </span>dst_layout = conv::derive_image_layout(bar.usage.end, bar.texture.aspects);
+            <span class="kw">let </span>dst_layout = conv::derive_image_layout(bar.usage.end, bar.texture.format);
             dst_stages |= dst_stage;
 
             vk_barriers.push(
@@ -1061,13 +1063,11 @@
     ) <span class="kw">where
         </span>T: Iterator&lt;Item = <span class="kw">crate</span>::TextureCopy&gt;,
     {
-        <span class="kw">let </span>src_layout = conv::derive_image_layout(src_usage, src.aspects);
+        <span class="kw">let </span>src_layout = conv::derive_image_layout(src_usage, src.format);
 
         <span class="kw">let </span>vk_regions_iter = regions.map(|r| {
-            <span class="kw">let </span>(src_subresource, src_offset) =
-                conv::map_subresource_layers(<span class="kw-2">&amp;</span>r.src_base, src.aspects);
-            <span class="kw">let </span>(dst_subresource, dst_offset) =
-                conv::map_subresource_layers(<span class="kw-2">&amp;</span>r.dst_base, dst.aspects);
+            <span class="kw">let </span>(src_subresource, src_offset) = conv::map_subresource_layers(<span class="kw-2">&amp;</span>r.src_base);
+            <span class="kw">let </span>(dst_subresource, dst_offset) = conv::map_subresource_layers(<span class="kw-2">&amp;</span>r.dst_base);
             <span class="kw">let </span>extent = r
                 .size
                 .min(<span class="kw-2">&amp;</span>r.src_base.max_copy_size(<span class="kw-2">&amp;</span>src.copy_size))
@@ -1123,7 +1123,7 @@
     ) <span class="kw">where
         </span>T: Iterator&lt;Item = <span class="kw">crate</span>::BufferTextureCopy&gt;,
     {
-        <span class="kw">let </span>src_layout = conv::derive_image_layout(src_usage, src.aspects);
+        <span class="kw">let </span>src_layout = conv::derive_image_layout(src_usage, src.format);
         <span class="kw">let </span>vk_regions_iter = src.map_buffer_copies(regions);
 
         <span class="kw">unsafe </span>{
@@ -1646,7 +1646,7 @@
 <span class="attr">#[test]
 </span><span class="kw">fn </span>check_dst_image_layout() {
     <span class="macro">assert_eq!</span>(
-        conv::derive_image_layout(<span class="kw">crate</span>::TextureUses::COPY_DST, <span class="kw">crate</span>::FormatAspects::empty()),
+        conv::derive_image_layout(<span class="kw">crate</span>::TextureUses::COPY_DST, wgt::TextureFormat::Rgba8Unorm),
         DST_IMAGE_LAYOUT
     );
 }

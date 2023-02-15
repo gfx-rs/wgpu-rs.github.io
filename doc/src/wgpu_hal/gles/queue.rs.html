@@ -1528,6 +1528,51 @@
 <a href="#1528" id="1528">1528</a>
 <a href="#1529" id="1529">1529</a>
 <a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a>
+<a href="#1540" id="1540">1540</a>
+<a href="#1541" id="1541">1541</a>
+<a href="#1542" id="1542">1542</a>
+<a href="#1543" id="1543">1543</a>
+<a href="#1544" id="1544">1544</a>
+<a href="#1545" id="1545">1545</a>
+<a href="#1546" id="1546">1546</a>
+<a href="#1547" id="1547">1547</a>
+<a href="#1548" id="1548">1548</a>
+<a href="#1549" id="1549">1549</a>
+<a href="#1550" id="1550">1550</a>
+<a href="#1551" id="1551">1551</a>
+<a href="#1552" id="1552">1552</a>
+<a href="#1553" id="1553">1553</a>
+<a href="#1554" id="1554">1554</a>
+<a href="#1555" id="1555">1555</a>
+<a href="#1556" id="1556">1556</a>
+<a href="#1557" id="1557">1557</a>
+<a href="#1558" id="1558">1558</a>
+<a href="#1559" id="1559">1559</a>
+<a href="#1560" id="1560">1560</a>
+<a href="#1561" id="1561">1561</a>
+<a href="#1562" id="1562">1562</a>
+<a href="#1563" id="1563">1563</a>
+<a href="#1564" id="1564">1564</a>
+<a href="#1565" id="1565">1565</a>
+<a href="#1566" id="1566">1566</a>
+<a href="#1567" id="1567">1567</a>
+<a href="#1568" id="1568">1568</a>
+<a href="#1569" id="1569">1569</a>
+<a href="#1570" id="1570">1570</a>
+<a href="#1571" id="1571">1571</a>
+<a href="#1572" id="1572">1572</a>
+<a href="#1573" id="1573">1573</a>
+<a href="#1574" id="1574">1574</a>
+<a href="#1575" id="1575">1575</a>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Command <span class="kw">as </span>C;
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glow::HasContext;
@@ -2121,22 +2166,23 @@
                 dst_format,
                 <span class="kw-2">ref </span>copy,
             } =&gt; {
-                <span class="kw">let </span>format_info = dst_format.describe();
+                <span class="kw">let </span>(block_width, block_height) = dst_format.block_dimensions();
+                <span class="kw">let </span>block_size = dst_format.block_size(<span class="prelude-val">None</span>).unwrap();
                 <span class="kw">let </span>format_desc = <span class="self">self</span>.shared.describe_texture_format(dst_format);
-                <span class="kw">let </span>row_texels = copy.buffer_layout.bytes_per_row.map_or(<span class="number">0</span>, |bpr| {
-                    format_info.block_dimensions.<span class="number">0 </span><span class="kw">as </span>u32 * bpr.get()
-                        / format_info.block_size <span class="kw">as </span>u32
-                });
+                <span class="kw">let </span>row_texels = copy
+                    .buffer_layout
+                    .bytes_per_row
+                    .map_or(<span class="number">0</span>, |bpr| block_width * bpr.get() / block_size);
                 <span class="kw">let </span>column_texels = copy
                     .buffer_layout
                     .rows_per_image
-                    .map_or(<span class="number">0</span>, |rpi| format_info.block_dimensions.<span class="number">1 </span><span class="kw">as </span>u32 * rpi.get());
+                    .map_or(<span class="number">0</span>, |rpi| block_height * rpi.get());
 
                 <span class="kw">unsafe </span>{ gl.bind_texture(dst_target, <span class="prelude-val">Some</span>(dst)) };
                 <span class="kw">unsafe </span>{ gl.pixel_store_i32(glow::UNPACK_ROW_LENGTH, row_texels <span class="kw">as </span>i32) };
                 <span class="kw">unsafe </span>{ gl.pixel_store_i32(glow::UNPACK_IMAGE_HEIGHT, column_texels <span class="kw">as </span>i32) };
                 <span class="kw">let </span><span class="kw-2">mut </span>unbind_unpack_buffer = <span class="bool-val">false</span>;
-                <span class="kw">if </span>!format_info.is_compressed() {
+                <span class="kw">if </span>!dst_format.is_compressed() {
                     <span class="kw">let </span>buffer_data;
                     <span class="kw">let </span>unpack_data = <span class="kw">match </span>src.raw {
                         <span class="prelude-val">Some</span>(buffer) =&gt; {
@@ -2240,12 +2286,9 @@
                     <span class="kw">let </span>bytes_per_row = copy
                         .buffer_layout
                         .bytes_per_row
-                        .map_or(copy.size.width * format_info.block_size <span class="kw">as </span>u32, |bpr| {
-                            bpr.get()
-                        });
-                    <span class="kw">let </span>block_height = format_info.block_dimensions.<span class="number">1 </span><span class="kw">as </span>u32;
-                    <span class="kw">let </span>minimum_rows_per_image = (copy.size.height + block_height - <span class="number">1</span>)
-                        / format_info.block_dimensions.<span class="number">1 </span><span class="kw">as </span>u32;
+                        .map_or(copy.size.width * block_size, |bpr| bpr.get());
+                    <span class="kw">let </span>minimum_rows_per_image =
+                        (copy.size.height + block_height - <span class="number">1</span>) / block_height;
                     <span class="kw">let </span>rows_per_image = copy
                         .buffer_layout
                         .rows_per_image
@@ -2336,8 +2379,8 @@
                 dst_target: <span class="kw">_</span>,
                 <span class="kw-2">ref </span>copy,
             } =&gt; {
-                <span class="kw">let </span>format_info = src_format.describe();
-                <span class="kw">if </span>format_info.is_compressed() {
+                <span class="kw">let </span>block_size = src_format.block_size(<span class="prelude-val">None</span>).unwrap();
+                <span class="kw">if </span>src_format.is_compressed() {
                     <span class="macro">log::error!</span>(<span class="string">&quot;Not implemented yet: compressed texture copy to buffer&quot;</span>);
                     <span class="kw">return</span>;
                 }
@@ -2351,59 +2394,85 @@
                 <span class="kw">let </span>row_texels = copy
                     .buffer_layout
                     .bytes_per_row
-                    .map_or(copy.size.width, |bpr| {
-                        bpr.get() / format_info.block_size <span class="kw">as </span>u32
-                    });
+                    .map_or(copy.size.width, |bpr| bpr.get() / block_size);
+                <span class="kw">let </span>column_texels = copy
+                    .buffer_layout
+                    .rows_per_image
+                    .map_or(copy.size.height, |bpr| bpr.get());
 
                 <span class="kw">unsafe </span>{ gl.bind_framebuffer(glow::READ_FRAMEBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.copy_fbo)) };
-                <span class="comment">//TODO: handle cubemap copies
-                </span><span class="kw">if </span>is_layered_target(src_target) {
-                    <span class="comment">//TODO: handle GLES without framebuffer_texture_3d
-                    </span><span class="kw">unsafe </span>{
-                        gl.framebuffer_texture_layer(
-                            glow::READ_FRAMEBUFFER,
-                            glow::COLOR_ATTACHMENT0,
-                            <span class="prelude-val">Some</span>(src),
-                            copy.texture_base.mip_level <span class="kw">as </span>i32,
-                            copy.texture_base.array_layer <span class="kw">as </span>i32,
-                        )
+
+                <span class="kw">let </span>read_pixels = |offset| {
+                    <span class="kw">let </span><span class="kw-2">mut </span>buffer_data;
+                    <span class="kw">let </span>unpack_data = <span class="kw">match </span>dst.raw {
+                        <span class="prelude-val">Some</span>(buffer) =&gt; {
+                            <span class="kw">unsafe </span>{ gl.pixel_store_i32(glow::PACK_ROW_LENGTH, row_texels <span class="kw">as </span>i32) };
+                            <span class="kw">unsafe </span>{ gl.bind_buffer(glow::PIXEL_PACK_BUFFER, <span class="prelude-val">Some</span>(buffer)) };
+                            glow::PixelPackData::BufferOffset(offset <span class="kw">as </span>u32)
+                        }
+                        <span class="prelude-val">None </span>=&gt; {
+                            buffer_data = dst.data.as_ref().unwrap().lock().unwrap();
+                            <span class="kw">let </span>dst_data = <span class="kw-2">&amp;mut </span>buffer_data.as_mut_slice()[offset <span class="kw">as </span>usize..];
+                            glow::PixelPackData::Slice(dst_data)
+                        }
                     };
-                } <span class="kw">else </span>{
                     <span class="kw">unsafe </span>{
-                        gl.framebuffer_texture_2d(
-                            glow::READ_FRAMEBUFFER,
-                            glow::COLOR_ATTACHMENT0,
-                            src_target,
-                            <span class="prelude-val">Some</span>(src),
-                            copy.texture_base.mip_level <span class="kw">as </span>i32,
+                        gl.read_pixels(
+                            copy.texture_base.origin.x <span class="kw">as </span>i32,
+                            copy.texture_base.origin.y <span class="kw">as </span>i32,
+                            copy.size.width <span class="kw">as </span>i32,
+                            copy.size.height <span class="kw">as </span>i32,
+                            format_desc.external,
+                            format_desc.data_type,
+                            unpack_data,
                         )
                     };
+                };
+
+                <span class="kw">match </span>src_target {
+                    glow::TEXTURE_2D =&gt; {
+                        <span class="kw">unsafe </span>{
+                            gl.framebuffer_texture_2d(
+                                glow::READ_FRAMEBUFFER,
+                                glow::COLOR_ATTACHMENT0,
+                                src_target,
+                                <span class="prelude-val">Some</span>(src),
+                                copy.texture_base.mip_level <span class="kw">as </span>i32,
+                            )
+                        };
+                        read_pixels(copy.buffer_layout.offset);
+                    }
+                    glow::TEXTURE_2D_ARRAY =&gt; {
+                        <span class="kw">unsafe </span>{
+                            gl.framebuffer_texture_layer(
+                                glow::READ_FRAMEBUFFER,
+                                glow::COLOR_ATTACHMENT0,
+                                <span class="prelude-val">Some</span>(src),
+                                copy.texture_base.mip_level <span class="kw">as </span>i32,
+                                copy.texture_base.array_layer <span class="kw">as </span>i32,
+                            )
+                        };
+                        read_pixels(copy.buffer_layout.offset);
+                    }
+                    glow::TEXTURE_3D =&gt; {
+                        <span class="kw">for </span>z <span class="kw">in </span>copy.texture_base.origin.z..copy.size.depth {
+                            <span class="kw">unsafe </span>{
+                                gl.framebuffer_texture_layer(
+                                    glow::READ_FRAMEBUFFER,
+                                    glow::COLOR_ATTACHMENT0,
+                                    <span class="prelude-val">Some</span>(src),
+                                    copy.texture_base.mip_level <span class="kw">as </span>i32,
+                                    z <span class="kw">as </span>i32,
+                                )
+                            };
+                            <span class="kw">let </span>offset = copy.buffer_layout.offset
+                                + (z * block_size * row_texels * column_texels) <span class="kw">as </span>u64;
+                            read_pixels(offset);
+                        }
+                    }
+                    glow::TEXTURE_CUBE_MAP | glow::TEXTURE_CUBE_MAP_ARRAY =&gt; <span class="macro">unimplemented!</span>(),
+                    <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 }
-                <span class="kw">let </span><span class="kw-2">mut </span>buffer_data;
-                <span class="kw">let </span>unpack_data = <span class="kw">match </span>dst.raw {
-                    <span class="prelude-val">Some</span>(buffer) =&gt; {
-                        <span class="kw">unsafe </span>{ gl.pixel_store_i32(glow::PACK_ROW_LENGTH, row_texels <span class="kw">as </span>i32) };
-                        <span class="kw">unsafe </span>{ gl.bind_buffer(glow::PIXEL_PACK_BUFFER, <span class="prelude-val">Some</span>(buffer)) };
-                        glow::PixelPackData::BufferOffset(copy.buffer_layout.offset <span class="kw">as </span>u32)
-                    }
-                    <span class="prelude-val">None </span>=&gt; {
-                        buffer_data = dst.data.as_ref().unwrap().lock().unwrap();
-                        <span class="kw">let </span>dst_data =
-                            <span class="kw-2">&amp;mut </span>buffer_data.as_mut_slice()[copy.buffer_layout.offset <span class="kw">as </span>usize..];
-                        glow::PixelPackData::Slice(dst_data)
-                    }
-                };
-                <span class="kw">unsafe </span>{
-                    gl.read_pixels(
-                        copy.texture_base.origin.x <span class="kw">as </span>i32,
-                        copy.texture_base.origin.y <span class="kw">as </span>i32,
-                        copy.size.width <span class="kw">as </span>i32,
-                        copy.size.height <span class="kw">as </span>i32,
-                        format_desc.external,
-                        format_desc.data_type,
-                        unpack_data,
-                    )
-                };
             }
             C::SetIndexBuffer(buffer) =&gt; {
                 <span class="kw">unsafe </span>{ gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, <span class="prelude-val">Some</span>(buffer)) };
@@ -2884,9 +2953,30 @@
                 slot,
                 texture,
                 target,
+                aspects,
             } =&gt; {
                 <span class="kw">unsafe </span>{ gl.active_texture(glow::TEXTURE0 + slot) };
                 <span class="kw">unsafe </span>{ gl.bind_texture(target, <span class="prelude-val">Some</span>(texture)) };
+
+                <span class="kw">let </span>version = gl.version();
+                <span class="kw">let </span>is_min_es_3_1 = version.is_embedded &amp;&amp; (version.major, version.minor) &gt;= (<span class="number">3</span>, <span class="number">1</span>);
+                <span class="kw">let </span>is_min_4_3 = !version.is_embedded &amp;&amp; (version.major, version.minor) &gt;= (<span class="number">4</span>, <span class="number">3</span>);
+                <span class="kw">if </span>is_min_es_3_1 || is_min_4_3 {
+                    <span class="kw">let </span>mode = <span class="kw">match </span>aspects {
+                        <span class="kw">crate</span>::FormatAspects::DEPTH =&gt; <span class="prelude-val">Some</span>(glow::DEPTH_COMPONENT),
+                        <span class="kw">crate</span>::FormatAspects::STENCIL =&gt; <span class="prelude-val">Some</span>(glow::STENCIL_INDEX),
+                        <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
+                    };
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(mode) = mode {
+                        <span class="kw">unsafe </span>{
+                            gl.tex_parameter_i32(
+                                target,
+                                glow::DEPTH_STENCIL_TEXTURE_MODE,
+                                mode <span class="kw">as _</span>,
+                            )
+                        };
+                    }
+                }
             }
             C::BindImage { slot, <span class="kw-2">ref </span>binding } =&gt; {
                 <span class="kw">unsafe </span>{

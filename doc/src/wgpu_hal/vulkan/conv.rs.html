@@ -823,8 +823,6 @@
 <a href="#823" id="823">823</a>
 <a href="#824" id="824">824</a>
 <a href="#825" id="825">825</a>
-<a href="#826" id="826">826</a>
-<a href="#827" id="827">827</a>
 </pre><pre class="rust"><code><span class="kw">use </span>ash::vk;
 
 <span class="kw">impl </span><span class="kw">super</span>::PrivateCapabilities {
@@ -1009,10 +1007,9 @@
         ops: <span class="kw">crate</span>::AttachmentOps,
         caps: <span class="kw-2">&amp;</span><span class="kw">super</span>::PrivateCapabilities,
     ) -&gt; <span class="kw">super</span>::AttachmentKey {
-        <span class="kw">let </span>aspects = <span class="self">self</span>.view.aspects();
         <span class="kw">super</span>::AttachmentKey {
             format: caps.map_texture_format(<span class="self">self</span>.view.attachment.view_format),
-            layout: derive_image_layout(<span class="self">self</span>.usage, aspects),
+            layout: derive_image_layout(<span class="self">self</span>.usage, <span class="self">self</span>.view.attachment.view_format),
             ops,
         }
     }
@@ -1026,8 +1023,8 @@
             .view
             .attachment
             .view_format
-            .describe()
-            .sample_type
+            .sample_type(<span class="prelude-val">None</span>)
+            .unwrap()
         {
             wgt::TextureSampleType::Float { .. } =&gt; vk::ClearColorValue {
                 float32: [cv.r <span class="kw">as </span>f32, cv.g <span class="kw">as </span>f32, cv.b <span class="kw">as </span>f32, cv.a <span class="kw">as </span>f32],
@@ -1045,10 +1042,10 @@
 
 <span class="kw">pub fn </span>derive_image_layout(
     usage: <span class="kw">crate</span>::TextureUses,
-    aspects: <span class="kw">crate</span>::FormatAspects,
+    format: wgt::TextureFormat,
 ) -&gt; vk::ImageLayout {
-    <span class="comment">//Note: depth textures are always sampled with RODS layout
-    </span><span class="kw">let </span>is_color = aspects.contains(<span class="kw">crate</span>::FormatAspects::COLOR);
+    <span class="comment">// Note: depth textures are always sampled with RODS layout
+    </span><span class="kw">let </span>is_color = <span class="kw">crate</span>::FormatAspects::from(format).contains(<span class="kw">crate</span>::FormatAspects::COLOR);
     <span class="kw">match </span>usage {
         <span class="kw">crate</span>::TextureUses::UNINITIALIZED =&gt; vk::ImageLayout::UNDEFINED,
         <span class="kw">crate</span>::TextureUses::COPY_SRC =&gt; vk::ImageLayout::TRANSFER_SRC_OPTIMAL,
@@ -1413,10 +1410,10 @@
 
 <span class="kw">pub fn </span>map_subresource_range(
     range: <span class="kw-2">&amp;</span>wgt::ImageSubresourceRange,
-    texture_aspect: <span class="kw">crate</span>::FormatAspects,
+    format: wgt::TextureFormat,
 ) -&gt; vk::ImageSubresourceRange {
     vk::ImageSubresourceRange {
-        aspect_mask: map_aspects(<span class="kw">crate</span>::FormatAspects::from(range.aspect) &amp; texture_aspect),
+        aspect_mask: map_aspects(<span class="kw">crate</span>::FormatAspects::new(format, range.aspect)),
         base_mip_level: range.base_mip_level,
         level_count: range.mip_level_count.unwrap_or(vk::REMAINING_MIP_LEVELS),
         base_array_layer: range.base_array_layer,
@@ -1428,7 +1425,6 @@
 
 <span class="kw">pub fn </span>map_subresource_layers(
     base: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureCopyBase,
-    texture_aspect: <span class="kw">crate</span>::FormatAspects,
 ) -&gt; (vk::ImageSubresourceLayers, vk::Offset3D) {
     <span class="kw">let </span>offset = vk::Offset3D {
         x: base.origin.x <span class="kw">as </span>i32,
@@ -1436,7 +1432,7 @@
         z: base.origin.z <span class="kw">as </span>i32,
     };
     <span class="kw">let </span>subresource = vk::ImageSubresourceLayers {
-        aspect_mask: map_aspects(base.aspect &amp; texture_aspect),
+        aspect_mask: map_aspects(base.aspect),
         mip_level: base.mip_level,
         base_array_layer: base.array_layer,
         layer_count: <span class="number">1</span>,
