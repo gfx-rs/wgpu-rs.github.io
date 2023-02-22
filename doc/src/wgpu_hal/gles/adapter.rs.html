@@ -958,6 +958,17 @@
 <a href="#958" id="958">958</a>
 <a href="#959" id="959">959</a>
 <a href="#960" id="960">960</a>
+<a href="#961" id="961">961</a>
+<a href="#962" id="962">962</a>
+<a href="#963" id="963">963</a>
+<a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
+<a href="#966" id="966">966</a>
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
+<a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
 </pre><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>wgt::AstcChannel;
@@ -1146,10 +1157,21 @@
         <span class="kw">let </span>extensions = gl.supported_extensions();
 
         <span class="kw">let </span>(vendor_const, renderer_const) = <span class="kw">if </span>extensions.contains(<span class="string">&quot;WEBGL_debug_renderer_info&quot;</span>) {
-            (GL_UNMASKED_VENDOR_WEBGL, GL_UNMASKED_RENDERER_WEBGL)
+            <span class="comment">// emscripten doesn&#39;t enable &quot;WEBGL_debug_renderer_info&quot; extension by default. so, we do it manually.
+            // See https://github.com/gfx-rs/wgpu/issues/3245 for context
+            </span><span class="attr">#[cfg(target_os = <span class="string">&quot;emscripten&quot;</span>)]
+            </span><span class="kw">if unsafe </span>{ <span class="kw">super</span>::emscripten::enable_extension(<span class="string">&quot;WEBGL_debug_renderer_info\0&quot;</span>) } {
+                (GL_UNMASKED_VENDOR_WEBGL, GL_UNMASKED_RENDERER_WEBGL)
+            } <span class="kw">else </span>{
+                (glow::VENDOR, glow::RENDERER)
+            }
+            <span class="comment">// glow already enables WEBGL_debug_renderer_info on wasm32-unknown-unknown target by default.
+            </span><span class="attr">#[cfg(not(target_os = <span class="string">&quot;emscripten&quot;</span>))]
+            </span>(GL_UNMASKED_VENDOR_WEBGL, GL_UNMASKED_RENDERER_WEBGL)
         } <span class="kw">else </span>{
             (glow::VENDOR, glow::RENDERER)
         };
+
         <span class="kw">let </span>(vendor, renderer) = {
             <span class="kw">let </span>vendor = <span class="kw">unsafe </span>{ gl.get_parameter_string(vendor_const) };
             <span class="kw">let </span>renderer = <span class="kw">unsafe </span>{ gl.get_parameter_string(renderer_const) };
@@ -1919,4 +1941,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (5243ea5c2 2023-02-20)" data-search-js="search-14421e1532aead08.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (246eae2fa 2023-02-21)" data-search-js="search-14421e1532aead08.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
