@@ -619,6 +619,11 @@
 <a href="#619" id="619">619</a>
 <a href="#620" id="620">620</a>
 <a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
 </pre><pre class="rust"><code><span class="doccomment">/*!
 # Vulkan API internals.
 
@@ -1216,7 +1221,12 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
             })<span class="question-mark">?
         </span>};
         <span class="kw">if </span>suboptimal {
-            <span class="macro">log::warn!</span>(<span class="string">&quot;Suboptimal present of frame {}&quot;</span>, texture.index);
+            <span class="comment">// We treat `VK_SUBOPTIMAL_KHR` as `VK_SUCCESS` on Android.
+            // On Android 10+, libvulkan&#39;s `vkQueuePresentKHR` implementation returns `VK_SUBOPTIMAL_KHR` if not doing pre-rotation
+            // (i.e `VkSwapchainCreateInfoKHR::preTransform` not being equal to the current device orientation).
+            // This is always the case when the device orientation is anything other than the identity one, as we unconditionally use `VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR`.
+            </span><span class="attr">#[cfg(not(target_os = <span class="string">&quot;android&quot;</span>))]
+            </span><span class="macro">log::warn!</span>(<span class="string">&quot;Suboptimal present of frame {}&quot;</span>, texture.index);
         }
         <span class="prelude-val">Ok</span>(())
     }
