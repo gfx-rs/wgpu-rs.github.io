@@ -2172,11 +2172,11 @@
                 <span class="kw">let </span>row_texels = copy
                     .buffer_layout
                     .bytes_per_row
-                    .map_or(<span class="number">0</span>, |bpr| block_width * bpr.get() / block_size);
+                    .map_or(<span class="number">0</span>, |bpr| block_width * bpr / block_size);
                 <span class="kw">let </span>column_texels = copy
                     .buffer_layout
                     .rows_per_image
-                    .map_or(<span class="number">0</span>, |rpi| block_height * rpi.get());
+                    .map_or(<span class="number">0</span>, |rpi| block_height * rpi);
 
                 <span class="kw">unsafe </span>{ gl.bind_texture(dst_target, <span class="prelude-val">Some</span>(dst)) };
                 <span class="kw">unsafe </span>{ gl.pixel_store_i32(glow::UNPACK_ROW_LENGTH, row_texels <span class="kw">as </span>i32) };
@@ -2286,13 +2286,13 @@
                     <span class="kw">let </span>bytes_per_row = copy
                         .buffer_layout
                         .bytes_per_row
-                        .map_or(copy.size.width * block_size, |bpr| bpr.get());
+                        .unwrap_or(copy.size.width * block_size);
                     <span class="kw">let </span>minimum_rows_per_image =
                         (copy.size.height + block_height - <span class="number">1</span>) / block_height;
                     <span class="kw">let </span>rows_per_image = copy
                         .buffer_layout
                         .rows_per_image
-                        .map_or(minimum_rows_per_image, |rpi| rpi.get());
+                        .unwrap_or(minimum_rows_per_image);
 
                     <span class="kw">let </span>bytes_per_image = bytes_per_row * rows_per_image;
                     <span class="kw">let </span>minimum_bytes_per_image = bytes_per_row * minimum_rows_per_image;
@@ -2394,11 +2394,11 @@
                 <span class="kw">let </span>row_texels = copy
                     .buffer_layout
                     .bytes_per_row
-                    .map_or(copy.size.width, |bpr| bpr.get() / block_size);
+                    .map_or(copy.size.width, |bpr| bpr / block_size);
                 <span class="kw">let </span>column_texels = copy
                     .buffer_layout
                     .rows_per_image
-                    .map_or(copy.size.height, |bpr| bpr.get());
+                    .unwrap_or(copy.size.height);
 
                 <span class="kw">unsafe </span>{ gl.bind_framebuffer(glow::READ_FRAMEBUFFER, <span class="prelude-val">Some</span>(<span class="self">self</span>.copy_fbo)) };
 
