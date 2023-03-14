@@ -1302,6 +1302,12 @@
 <a href="#1302" id="1302">1302</a>
 <a href="#1303" id="1303">1303</a>
 <a href="#1304" id="1304">1304</a>
+<a href="#1305" id="1305">1305</a>
+<a href="#1306" id="1306">1306</a>
+<a href="#1307" id="1307">1307</a>
+<a href="#1308" id="1308">1308</a>
+<a href="#1309" id="1309">1309</a>
+<a href="#1310" id="1310">1310</a>
 </pre><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>parking_lot::{Mutex, MutexGuard};
 
@@ -2526,7 +2532,10 @@
 
         <span class="kw">let </span>format_desc = device.shared.describe_texture_format(config.format);
         <span class="kw">let </span>gl = <span class="kw-2">&amp;</span>device.shared.context.lock();
-        <span class="kw">let </span>renderbuffer = <span class="kw">unsafe </span>{ gl.create_renderbuffer() }.unwrap();
+        <span class="kw">let </span>renderbuffer = <span class="kw">unsafe </span>{ gl.create_renderbuffer() }.map_err(|error| {
+            <span class="macro">log::error!</span>(<span class="string">&quot;Internal swapchain renderbuffer creation failed: {error}&quot;</span>);
+            <span class="kw">crate</span>::DeviceError::OutOfMemory
+        })<span class="question-mark">?</span>;
         <span class="kw">unsafe </span>{ gl.bind_renderbuffer(glow::RENDERBUFFER, <span class="prelude-val">Some</span>(renderbuffer)) };
         <span class="kw">unsafe </span>{
             gl.renderbuffer_storage(
@@ -2536,7 +2545,10 @@
                 config.extent.height <span class="kw">as _</span>,
             )
         };
-        <span class="kw">let </span>framebuffer = <span class="kw">unsafe </span>{ gl.create_framebuffer() }.unwrap();
+        <span class="kw">let </span>framebuffer = <span class="kw">unsafe </span>{ gl.create_framebuffer() }.map_err(|error| {
+            <span class="macro">log::error!</span>(<span class="string">&quot;Internal swapchain framebuffer creation failed: {error}&quot;</span>);
+            <span class="kw">crate</span>::DeviceError::OutOfMemory
+        })<span class="question-mark">?</span>;
         <span class="kw">unsafe </span>{ gl.bind_framebuffer(glow::READ_FRAMEBUFFER, <span class="prelude-val">Some</span>(framebuffer)) };
         <span class="kw">unsafe </span>{
             gl.framebuffer_renderbuffer(
