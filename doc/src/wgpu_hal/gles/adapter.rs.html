@@ -969,6 +969,7 @@
 <a href="#969" id="969">969</a>
 <a href="#970" id="970">970</a>
 <a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
 </pre><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>std::sync::Arc;
 <span class="kw">use </span>wgt::AstcChannel;
@@ -1286,10 +1287,11 @@
                 </span>&amp;&amp; (vertex_shader_storage_blocks != <span class="number">0 </span>|| vertex_ssbo_false_zero),
         );
         downlevel_flags.set(wgt::DownlevelFlags::FRAGMENT_STORAGE, supports_storage);
-        downlevel_flags.set(
-            wgt::DownlevelFlags::ANISOTROPIC_FILTERING,
-            extensions.contains(<span class="string">&quot;EXT_texture_filter_anisotropic&quot;</span>),
-        );
+        <span class="kw">if </span>extensions.contains(<span class="string">&quot;EXT_texture_filter_anisotropic&quot;</span>) {
+            <span class="kw">let </span>max_aniso =
+                <span class="kw">unsafe </span>{ gl.get_parameter_i32(glow::MAX_TEXTURE_MAX_ANISOTROPY_EXT) } <span class="kw">as </span>u32;
+            downlevel_flags.set(wgt::DownlevelFlags::ANISOTROPIC_FILTERING, max_aniso &gt;= <span class="number">16</span>);
+        }
         downlevel_flags.set(
             wgt::DownlevelFlags::BUFFER_BINDINGS_NOT_16_BYTE_ALIGNED,
             !(<span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>) || is_angle),

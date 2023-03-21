@@ -2030,12 +2030,6 @@
 <a href="#2030" id="2030">2030</a>
 <a href="#2031" id="2031">2031</a>
 <a href="#2032" id="2032">2032</a>
-<a href="#2033" id="2033">2033</a>
-<a href="#2034" id="2034">2034</a>
-<a href="#2035" id="2035">2035</a>
-<a href="#2036" id="2036">2036</a>
-<a href="#2037" id="2037">2037</a>
-<a href="#2038" id="2038">2038</a>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -3141,8 +3135,6 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::SamplerDescriptor,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Sampler, <span class="kw">crate</span>::DeviceError&gt; {
-        <span class="kw">let </span>lod_range = desc.lod_clamp.clone().unwrap_or(<span class="number">0.0</span>..<span class="number">16.0</span>);
-
         <span class="kw">let </span><span class="kw-2">mut </span>vk_info = vk::SamplerCreateInfo::builder()
             .flags(vk::SamplerCreateFlags::empty())
             .mag_filter(conv::map_filter_mode(desc.mag_filter))
@@ -3151,8 +3143,8 @@
             .address_mode_u(conv::map_address_mode(desc.address_modes[<span class="number">0</span>]))
             .address_mode_v(conv::map_address_mode(desc.address_modes[<span class="number">1</span>]))
             .address_mode_w(conv::map_address_mode(desc.address_modes[<span class="number">2</span>]))
-            .min_lod(lod_range.start)
-            .max_lod(lod_range.end);
+            .min_lod(desc.lod_clamp.start)
+            .max_lod(desc.lod_clamp.end);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(fun) = desc.compare {
             vk_info = vk_info
@@ -3160,16 +3152,12 @@
                 .compare_op(conv::map_comparison(fun));
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(aniso) = desc.anisotropy_clamp {
-            <span class="kw">if </span><span class="self">self
-                </span>.shared
-                .downlevel_flags
-                .contains(wgt::DownlevelFlags::ANISOTROPIC_FILTERING)
-            {
-                vk_info = vk_info
-                    .anisotropy_enable(<span class="bool-val">true</span>)
-                    .max_anisotropy(aniso.get() <span class="kw">as </span>f32);
-            }
+        <span class="kw">if </span>desc.anisotropy_clamp != <span class="number">1 </span>{
+            <span class="comment">// We only enable anisotropy if it is supported, and wgpu-hal interface guarentees
+            // the clamp is in the range [1, 16] which is always supported if anisotropy is.
+            </span>vk_info = vk_info
+                .anisotropy_enable(<span class="bool-val">true</span>)
+                .max_anisotropy(desc.anisotropy_clamp <span class="kw">as </span>f32);
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(color) = desc.border_color {

@@ -1323,6 +1323,9 @@
 <a href="#1323" id="1323">1323</a>
 <a href="#1324" id="1324">1324</a>
 <a href="#1325" id="1325">1325</a>
+<a href="#1326" id="1326">1326</a>
+<a href="#1327" id="1327">1327</a>
+<a href="#1328" id="1328">1328</a>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -2189,14 +2192,17 @@
             <span class="kw">unsafe </span>{ gl.sampler_parameter_f32_slice(raw, glow::TEXTURE_BORDER_COLOR, <span class="kw-2">&amp;</span>border) };
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>range) = desc.lod_clamp {
-            <span class="kw">unsafe </span>{ gl.sampler_parameter_f32(raw, glow::TEXTURE_MIN_LOD, range.start) };
-            <span class="kw">unsafe </span>{ gl.sampler_parameter_f32(raw, glow::TEXTURE_MAX_LOD, range.end) };
-        }
+        <span class="kw">unsafe </span>{ gl.sampler_parameter_f32(raw, glow::TEXTURE_MIN_LOD, desc.lod_clamp.start) };
+        <span class="kw">unsafe </span>{ gl.sampler_parameter_f32(raw, glow::TEXTURE_MAX_LOD, desc.lod_clamp.end) };
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(anisotropy) = desc.anisotropy_clamp {
+        <span class="comment">// If clamp is not 1, we know anisotropy is supported up to 16x
+        </span><span class="kw">if </span>desc.anisotropy_clamp != <span class="number">1 </span>{
             <span class="kw">unsafe </span>{
-                gl.sampler_parameter_i32(raw, glow::TEXTURE_MAX_ANISOTROPY, anisotropy.get() <span class="kw">as </span>i32)
+                gl.sampler_parameter_i32(
+                    raw,
+                    glow::TEXTURE_MAX_ANISOTROPY,
+                    desc.anisotropy_clamp <span class="kw">as </span>i32,
+                )
             };
         }
 
