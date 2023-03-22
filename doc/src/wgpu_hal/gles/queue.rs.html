@@ -1560,6 +1560,11 @@
 <a href="#1560" id="1560">1560</a>
 <a href="#1561" id="1561">1561</a>
 <a href="#1562" id="1562">1562</a>
+<a href="#1563" id="1563">1563</a>
+<a href="#1564" id="1564">1564</a>
+<a href="#1565" id="1565">1565</a>
+<a href="#1566" id="1566">1566</a>
+<a href="#1567" id="1567">1567</a>
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Command <span class="kw">as </span>C;
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glow::HasContext;
@@ -1632,6 +1637,7 @@
         <span class="kw">unsafe </span>{ gl.disable(glow::BLEND) };
         <span class="kw">unsafe </span>{ gl.disable(glow::CULL_FACE) };
         <span class="kw">unsafe </span>{ gl.disable(glow::POLYGON_OFFSET_FILL) };
+        <span class="kw">unsafe </span>{ gl.disable(glow::SAMPLE_ALPHA_TO_COVERAGE) };
         <span class="kw">if </span><span class="self">self</span>.features.contains(wgt::Features::DEPTH_CLIP_CONTROL) {
             <span class="kw">unsafe </span>{ gl.disable(glow::DEPTH_CLAMP) };
         }
@@ -3071,8 +3077,12 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
         <span class="kw">let </span>shared = Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.shared);
         <span class="kw">let </span>gl = <span class="kw-2">&amp;</span>shared.context.lock();
-        <span class="kw">unsafe </span>{ <span class="self">self</span>.reset_state(gl) };
         <span class="kw">for </span>cmd_buf <span class="kw">in </span>command_buffers.iter() {
+            <span class="comment">// The command encoder assumes a default state when encoding the command buffer.
+            // Always reset the state between command_buffers to reflect this assumption. Do
+            // this at the beginning of the loop in case something outside of wgpu modified
+            // this state prior to commit.
+            </span><span class="kw">unsafe </span>{ <span class="self">self</span>.reset_state(gl) };
             <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>label) = cmd_buf.label {
                 <span class="kw">unsafe </span>{ gl.push_debug_group(glow::DEBUG_SOURCE_APPLICATION, DEBUG_ID, label) };
