@@ -202,7 +202,7 @@ function initSync(module) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('hello-windows_bg.wasm', import.meta.url);
+        input = new URL('hello_windows-e2522282f9a3e737_bg.wasm', import.meta.url);
     }
     const imports = getImports();
 

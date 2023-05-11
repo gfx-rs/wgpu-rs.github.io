@@ -1576,7 +1576,7 @@ function initSync(module) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('conservative-raster_bg.wasm', import.meta.url);
+        input = new URL('conservative_raster-713900ef4c322ad8_bg.wasm', import.meta.url);
     }
     const imports = getImports();
 
