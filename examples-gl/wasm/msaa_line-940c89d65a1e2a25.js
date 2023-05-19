@@ -1908,7 +1908,7 @@ function initSync(module) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('msaa-line_bg.wasm', import.meta.url);
+        input = new URL('msaa_line-940c89d65a1e2a25_bg.wasm', import.meta.url);
     }
     const imports = getImports();
 
