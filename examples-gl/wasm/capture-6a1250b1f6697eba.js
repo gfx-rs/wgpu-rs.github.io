@@ -1288,8 +1288,8 @@ function getImports() {
         const ret = wasm.memory;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper376 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 66, __wbg_adapter_26);
+    imports.wbg.__wbindgen_closure_wrapper350 = function(arg0, arg1, arg2) {
+        const ret = makeMutClosure(arg0, arg1, 47, __wbg_adapter_26);
         return addHeapObject(ret);
     };
 
@@ -1329,7 +1329,7 @@ function initSync(module) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('hello-compute_bg.wasm', import.meta.url);
+        input = new URL('capture-6a1250b1f6697eba_bg.wasm', import.meta.url);
     }
     const imports = getImports();
 

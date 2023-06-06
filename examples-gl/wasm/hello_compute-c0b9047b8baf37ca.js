@@ -1329,7 +1329,7 @@ function initSync(module) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('hello-compute_bg.wasm', import.meta.url);
+        input = new URL('hello_compute-c0b9047b8baf37ca_bg.wasm', import.meta.url);
     }
     const imports = getImports();
 
