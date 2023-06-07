@@ -1509,7 +1509,7 @@ function initSync(module) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('halmark_bg.wasm', import.meta.url);
+        input = new URL('halmark-deccddfdea9f20c0_bg.wasm', import.meta.url);
     }
     const imports = getImports();
 
