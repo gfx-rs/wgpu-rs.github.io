@@ -1908,7 +1908,7 @@ function initSync(module) {
 
 async function init(input) {
     if (typeof input === 'undefined') {
-        input = new URL('stencil-triangles_bg.wasm', import.meta.url);
+        input = new URL('stencil_triangles-4783bb861ca1bc37_bg.wasm', import.meta.url);
     }
     const imports = getImports();
 
