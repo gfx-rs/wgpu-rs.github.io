@@ -928,11 +928,11 @@ function __wbg_get_imports() {
         const ret = wasm.memory;
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper502 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper501 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 241, __wbg_adapter_24);
         return addHeapObject(ret);
     };
-    imports.wbg.__wbindgen_closure_wrapper503 = function(arg0, arg1, arg2) {
+    imports.wbg.__wbindgen_closure_wrapper502 = function(arg0, arg1, arg2) {
         const ret = makeMutClosure(arg0, arg1, 241, __wbg_adapter_24);
         return addHeapObject(ret);
     };
