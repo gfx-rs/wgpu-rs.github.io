@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/instance.rs`."><title>instance.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fbd14db5c88ed452.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (700938c07 2023-04-04)" data-search-js="search-bc5a112813b5d712.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../../static.files/storage-d4a1a279bad1a0c0.js"></script><script defer src="../../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-8e6affb8c73a5ff1.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu_hal/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/instance.rs`."><title>instance.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (3223b0b5e 2023-09-20)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu_hal/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -822,7 +822,126 @@
 <a href="#822" id="822">822</a>
 <a href="#823" id="823">823</a>
 <a href="#824" id="824">824</a>
-</pre><pre class="rust"><code><span class="kw">use </span>std::{
+<a href="#825" id="825">825</a>
+<a href="#826" id="826">826</a>
+<a href="#827" id="827">827</a>
+<a href="#828" id="828">828</a>
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
+<a href="#868" id="868">868</a>
+<a href="#869" id="869">869</a>
+<a href="#870" id="870">870</a>
+<a href="#871" id="871">871</a>
+<a href="#872" id="872">872</a>
+<a href="#873" id="873">873</a>
+<a href="#874" id="874">874</a>
+<a href="#875" id="875">875</a>
+<a href="#876" id="876">876</a>
+<a href="#877" id="877">877</a>
+<a href="#878" id="878">878</a>
+<a href="#879" id="879">879</a>
+<a href="#880" id="880">880</a>
+<a href="#881" id="881">881</a>
+<a href="#882" id="882">882</a>
+<a href="#883" id="883">883</a>
+<a href="#884" id="884">884</a>
+<a href="#885" id="885">885</a>
+<a href="#886" id="886">886</a>
+<a href="#887" id="887">887</a>
+<a href="#888" id="888">888</a>
+<a href="#889" id="889">889</a>
+<a href="#890" id="890">890</a>
+<a href="#891" id="891">891</a>
+<a href="#892" id="892">892</a>
+<a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
+<a href="#901" id="901">901</a>
+<a href="#902" id="902">902</a>
+<a href="#903" id="903">903</a>
+<a href="#904" id="904">904</a>
+<a href="#905" id="905">905</a>
+<a href="#906" id="906">906</a>
+<a href="#907" id="907">907</a>
+<a href="#908" id="908">908</a>
+<a href="#909" id="909">909</a>
+<a href="#910" id="910">910</a>
+<a href="#911" id="911">911</a>
+<a href="#912" id="912">912</a>
+<a href="#913" id="913">913</a>
+<a href="#914" id="914">914</a>
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
+<a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
+<a href="#923" id="923">923</a>
+<a href="#924" id="924">924</a>
+<a href="#925" id="925">925</a>
+<a href="#926" id="926">926</a>
+<a href="#927" id="927">927</a>
+<a href="#928" id="928">928</a>
+<a href="#929" id="929">929</a>
+<a href="#930" id="930">930</a>
+<a href="#931" id="931">931</a>
+<a href="#932" id="932">932</a>
+<a href="#933" id="933">933</a>
+<a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
+<a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::{c_void, CStr, CString},
     slice,
     sync::Arc,
@@ -838,10 +957,49 @@
     message_severity: vk::DebugUtilsMessageSeverityFlagsEXT,
     message_type: vk::DebugUtilsMessageTypeFlagsEXT,
     callback_data_ptr: <span class="kw-2">*const </span>vk::DebugUtilsMessengerCallbackDataEXT,
-    _user_data: <span class="kw-2">*mut </span>c_void,
+    user_data: <span class="kw-2">*mut </span>c_void,
 ) -&gt; vk::Bool32 {
     <span class="kw">use </span>std::borrow::Cow;
+
     <span class="kw">if </span>thread::panicking() {
+        <span class="kw">return </span>vk::FALSE;
+    }
+
+    <span class="kw">let </span>cd = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>callback_data_ptr };
+    <span class="kw">let </span>user_data = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(user_data <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">super</span>::DebugUtilsMessengerUserData) };
+
+    <span class="kw">const </span>VUID_VKCMDENDDEBUGUTILSLABELEXT_COMMANDBUFFER_01912: i32 = <span class="number">0x56146426</span>;
+    <span class="kw">if </span>cd.message_id_number == VUID_VKCMDENDDEBUGUTILSLABELEXT_COMMANDBUFFER_01912 {
+        <span class="comment">// https://github.com/KhronosGroup/Vulkan-ValidationLayers/issues/5671
+        // Versions 1.3.240 through 1.3.250 return a spurious error here if
+        // the debug range start and end appear in different command buffers.
+        </span><span class="kw">let </span>khronos_validation_layer =
+            std::ffi::CStr::from_bytes_with_nul(<span class="string">b&quot;Khronos Validation Layer\0&quot;</span>).unwrap();
+        <span class="kw">if </span>user_data.validation_layer_description.as_ref() == khronos_validation_layer
+            &amp;&amp; user_data.validation_layer_spec_version &gt;= vk::make_api_version(<span class="number">0</span>, <span class="number">1</span>, <span class="number">3</span>, <span class="number">240</span>)
+            &amp;&amp; user_data.validation_layer_spec_version &lt;= vk::make_api_version(<span class="number">0</span>, <span class="number">1</span>, <span class="number">3</span>, <span class="number">250</span>)
+        {
+            <span class="kw">return </span>vk::FALSE;
+        }
+    }
+
+    <span class="comment">// Silence Vulkan Validation error &quot;VUID-VkSwapchainCreateInfoKHR-imageExtent-01274&quot;
+    // - it&#39;s a false positive due to the inherent racy-ness of surface resizing
+    </span><span class="kw">const </span>VUID_VKSWAPCHAINCREATEINFOKHR_IMAGEEXTENT_01274: i32 = <span class="number">0x7cd0911d</span>;
+    <span class="kw">if </span>cd.message_id_number == VUID_VKSWAPCHAINCREATEINFOKHR_IMAGEEXTENT_01274 {
+        <span class="kw">return </span>vk::FALSE;
+    }
+
+    <span class="comment">// Silence Vulkan Validation error &quot;VUID-VkRenderPassBeginInfo-framebuffer-04627&quot;
+    // if the OBS layer is enabled. This is a bug in the OBS layer. As the OBS layer
+    // does not have a version number they increment, there is no way to qualify the
+    // supression of the error to a specific version of the OBS layer.
+    //
+    // See https://github.com/obsproject/obs-studio/issues/9353
+    </span><span class="kw">const </span>VUID_VKRENDERPASSBEGININFO_FRAMEBUFFER_04627: i32 = <span class="number">0x45125641</span>;
+    <span class="kw">if </span>cd.message_id_number == VUID_VKRENDERPASSBEGININFO_FRAMEBUFFER_04627
+        &amp;&amp; user_data.has_obs_layer
+    {
         <span class="kw">return </span>vk::FALSE;
     }
 
@@ -852,8 +1010,6 @@
         vk::DebugUtilsMessageSeverityFlagsEXT::ERROR =&gt; log::Level::Error,
         <span class="kw">_ </span>=&gt; log::Level::Warn,
     };
-
-    <span class="kw">let </span>cd = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>callback_data_ptr };
 
     <span class="kw">let </span>message_id_name = <span class="kw">if </span>cd.p_message_id_name.is_null() {
         Cow::from(<span class="string">&quot;&quot;</span>)
@@ -939,12 +1095,11 @@
 }
 
 <span class="kw">impl </span><span class="kw">super</span>::Swapchain {
-    <span class="kw">unsafe fn </span>release_resources(<span class="self">self</span>, device: <span class="kw-2">&amp;</span>ash::Device) -&gt; <span class="self">Self </span>{
+    <span class="doccomment">/// # Safety
+    ///
+    /// - The device must have been made idle before calling this function.
+    </span><span class="kw">unsafe fn </span>release_resources(<span class="self">self</span>, device: <span class="kw-2">&amp;</span>ash::Device) -&gt; <span class="self">Self </span>{
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Swapchain::release_resources&quot;</span>);
-        {
-            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkDeviceWaitIdle&quot;</span>);
-            <span class="kw">let _ </span>= <span class="kw">unsafe </span>{ device.device_wait_idle() };
-        };
         <span class="kw">unsafe </span>{ device.destroy_fence(<span class="self">self</span>.fence, <span class="prelude-val">None</span>) };
         <span class="self">self
     </span>}
@@ -973,7 +1128,20 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>.shared
     }
 
-    <span class="kw">pub fn </span>required_extensions(
+    <span class="doccomment">/// Return the instance extension names wgpu would like to enable.
+    ///
+    /// Return a vector of the names of instance extensions actually available
+    /// on `entry` that wgpu would like to enable.
+    ///
+    /// The `driver_api_version` argument should be the instance&#39;s Vulkan API
+    /// version, as obtained from `vkEnumerateInstanceVersion`. This is the same
+    /// space of values as the `VK_API_VERSION` constants.
+    ///
+    /// Note that wgpu can function without many of these extensions (for
+    /// example, `VK_KHR_wayland_surface` is certainly not going to be available
+    /// everywhere), but if one of these extensions is available at all, wgpu
+    /// assumes that it has been enabled.
+    </span><span class="kw">pub fn </span>desired_extensions(
         entry: <span class="kw-2">&amp;</span>ash::Entry,
         _driver_api_version: u32,
         flags: <span class="kw">crate</span>::InstanceFlags,
@@ -981,8 +1149,10 @@
         <span class="kw">let </span>instance_extensions = entry
             .enumerate_instance_extension_properties(<span class="prelude-val">None</span>)
             .map_err(|e| {
-                <span class="macro">log::info!</span>(<span class="string">&quot;enumerate_instance_extension_properties: {:?}&quot;</span>, e);
-                <span class="kw">crate</span>::InstanceError
+                <span class="kw">crate</span>::InstanceError::with_source(
+                    String::from(<span class="string">&quot;enumerate_instance_extension_properties() failed&quot;</span>),
+                    e,
+                )
             })<span class="question-mark">?</span>;
 
         <span class="comment">// Check our extensions against the available extensions
@@ -1015,6 +1185,7 @@
         <span class="kw">if </span><span class="macro">cfg!</span>(target_os = <span class="string">&quot;macos&quot;</span>) {
             <span class="comment">// VK_EXT_metal_surface
             </span>extensions.push(ext::MetalSurface::name());
+            extensions.push(ash::vk::KhrPortabilityEnumerationFn::name());
         }
 
         <span class="kw">if </span>flags.contains(<span class="kw">crate</span>::InstanceFlags::DEBUG) {
@@ -1049,15 +1220,19 @@
     ///
     /// - `raw_instance` must be created from `entry`
     /// - `raw_instance` must be created respecting `driver_api_version`, `extensions` and `flags`
-    /// - `extensions` must be a superset of `required_extensions()` and must be created from the
+    /// - `extensions` must be a superset of `desired_extensions()` and must be created from the
     ///   same entry, driver_api_version and flags.
     /// - `android_sdk_version` is ignored and can be `0` for all platforms besides Android
+    ///
+    /// If `debug_utils_user_data` is `Some`, then the validation layer is
+    /// available, so create a [`vk::DebugUtilsMessengerEXT`].
     </span><span class="attr">#[allow(clippy::too_many_arguments)]
     </span><span class="kw">pub unsafe fn </span>from_raw(
         entry: ash::Entry,
         raw_instance: ash::Instance,
         driver_api_version: u32,
         android_sdk_version: u32,
+        debug_utils_user_data: <span class="prelude-ty">Option</span>&lt;<span class="kw">super</span>::DebugUtilsMessengerUserData&gt;,
         extensions: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr&gt;,
         flags: <span class="kw">crate</span>::InstanceFlags,
         has_nv_optimus: bool,
@@ -1065,36 +1240,52 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="macro">log::info!</span>(<span class="string">&quot;Instance version: 0x{:x}&quot;</span>, driver_api_version);
 
-        <span class="kw">let </span>debug_utils = <span class="kw">if </span>extensions.contains(<span class="kw-2">&amp;</span>ext::DebugUtils::name()) {
-            <span class="macro">log::info!</span>(<span class="string">&quot;Enabling debug utils&quot;</span>);
-            <span class="kw">let </span>extension = ext::DebugUtils::new(<span class="kw-2">&amp;</span>entry, <span class="kw-2">&amp;</span>raw_instance);
-            <span class="comment">// having ERROR unconditionally because Vk doesn&#39;t like empty flags
-            </span><span class="kw">let </span><span class="kw-2">mut </span>severity = vk::DebugUtilsMessageSeverityFlagsEXT::ERROR;
-            <span class="kw">if </span>log::max_level() &gt;= log::LevelFilter::Debug {
-                severity |= vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE;
-            }
-            <span class="kw">if </span>log::max_level() &gt;= log::LevelFilter::Info {
-                severity |= vk::DebugUtilsMessageSeverityFlagsEXT::INFO;
-            }
-            <span class="kw">if </span>log::max_level() &gt;= log::LevelFilter::Warn {
-                severity |= vk::DebugUtilsMessageSeverityFlagsEXT::WARNING;
-            }
-            <span class="kw">let </span>vk_info = vk::DebugUtilsMessengerCreateInfoEXT::builder()
-                .flags(vk::DebugUtilsMessengerCreateFlagsEXT::empty())
-                .message_severity(severity)
-                .message_type(
-                    vk::DebugUtilsMessageTypeFlagsEXT::GENERAL
-                        | vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION
-                        | vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE,
-                )
-                .pfn_user_callback(<span class="prelude-val">Some</span>(debug_utils_messenger_callback));
-            <span class="kw">let </span>messenger =
-                <span class="kw">unsafe </span>{ extension.create_debug_utils_messenger(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }.unwrap();
-            <span class="prelude-val">Some</span>(<span class="kw">super</span>::DebugUtils {
-                extension,
-                messenger,
-            })
+        <span class="kw">let </span>debug_utils = <span class="kw">if let </span><span class="prelude-val">Some</span>(debug_callback_user_data) = debug_utils_user_data {
+            <span class="kw">if </span>extensions.contains(<span class="kw-2">&amp;</span>ext::DebugUtils::name()) {
+                <span class="macro">log::info!</span>(<span class="string">&quot;Enabling debug utils&quot;</span>);
+                <span class="comment">// Move the callback data to the heap, to ensure it will never be
+                // moved.
+                </span><span class="kw">let </span>callback_data = Box::new(debug_callback_user_data);
+
+                <span class="kw">let </span>extension = ext::DebugUtils::new(<span class="kw-2">&amp;</span>entry, <span class="kw-2">&amp;</span>raw_instance);
+                <span class="comment">// having ERROR unconditionally because Vk doesn&#39;t like empty flags
+                </span><span class="kw">let </span><span class="kw-2">mut </span>severity = vk::DebugUtilsMessageSeverityFlagsEXT::ERROR;
+                <span class="kw">if </span>log::max_level() &gt;= log::LevelFilter::Debug {
+                    severity |= vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE;
+                }
+                <span class="kw">if </span>log::max_level() &gt;= log::LevelFilter::Info {
+                    severity |= vk::DebugUtilsMessageSeverityFlagsEXT::INFO;
+                }
+                <span class="kw">if </span>log::max_level() &gt;= log::LevelFilter::Warn {
+                    severity |= vk::DebugUtilsMessageSeverityFlagsEXT::WARNING;
+                }
+                <span class="kw">let </span>user_data_ptr: <span class="kw-2">*const </span><span class="kw">super</span>::DebugUtilsMessengerUserData = <span class="kw-2">&amp;*</span>callback_data;
+                <span class="kw">let </span>vk_info = vk::DebugUtilsMessengerCreateInfoEXT::builder()
+                    .flags(vk::DebugUtilsMessengerCreateFlagsEXT::empty())
+                    .message_severity(severity)
+                    .message_type(
+                        vk::DebugUtilsMessageTypeFlagsEXT::GENERAL
+                            | vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION
+                            | vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE,
+                    )
+                    .pfn_user_callback(<span class="prelude-val">Some</span>(debug_utils_messenger_callback))
+                    .user_data(user_data_ptr <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>);
+                <span class="kw">let </span>messenger =
+                    <span class="kw">unsafe </span>{ extension.create_debug_utils_messenger(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }.unwrap();
+                <span class="prelude-val">Some</span>(<span class="kw">super</span>::DebugUtils {
+                    extension,
+                    messenger,
+                    callback_data,
+                })
+            } <span class="kw">else </span>{
+                <span class="macro">log::info!</span>(<span class="string">&quot;Debug utils not enabled: extension not listed&quot;</span>);
+                <span class="prelude-val">None
+            </span>}
         } <span class="kw">else </span>{
+            <span class="macro">log::info!</span>(
+                <span class="string">&quot;Debug utils not enabled: \
+                        debug_utils_user_data not passed to Instance::from_raw&quot;
+            </span>);
             <span class="prelude-val">None
         </span>};
 
@@ -1132,8 +1323,9 @@
         window: vk::Window,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::XlibSurface::name()) {
-            <span class="macro">log::warn!</span>(<span class="string">&quot;Vulkan driver does not support VK_KHR_xlib_surface&quot;</span>);
-            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(String::from(
+                <span class="string">&quot;Vulkan driver does not support VK_KHR_xlib_surface&quot;</span>,
+            )));
         }
 
         <span class="kw">let </span>surface = {
@@ -1157,8 +1349,9 @@
         window: vk::xcb_window_t,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::XcbSurface::name()) {
-            <span class="macro">log::warn!</span>(<span class="string">&quot;Vulkan driver does not support VK_KHR_xcb_surface&quot;</span>);
-            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(String::from(
+                <span class="string">&quot;Vulkan driver does not support VK_KHR_xcb_surface&quot;</span>,
+            )));
         }
 
         <span class="kw">let </span>surface = {
@@ -1186,8 +1379,9 @@
             .extensions
             .contains(<span class="kw-2">&amp;</span>khr::WaylandSurface::name())
         {
-            <span class="macro">log::debug!</span>(<span class="string">&quot;Vulkan driver does not support VK_KHR_wayland_surface&quot;</span>);
-            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(String::from(
+                <span class="string">&quot;Vulkan driver does not support VK_KHR_wayland_surface&quot;</span>,
+            )));
         }
 
         <span class="kw">let </span>surface = {
@@ -1213,8 +1407,9 @@
             .extensions
             .contains(<span class="kw-2">&amp;</span>khr::AndroidSurface::name())
         {
-            <span class="macro">log::warn!</span>(<span class="string">&quot;Vulkan driver does not support VK_KHR_android_surface&quot;</span>);
-            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(String::from(
+                <span class="string">&quot;Vulkan driver does not support VK_KHR_android_surface&quot;</span>,
+            )));
         }
 
         <span class="kw">let </span>surface = {
@@ -1236,8 +1431,9 @@
         hwnd: <span class="kw-2">*mut </span>c_void,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>khr::Win32Surface::name()) {
-            <span class="macro">log::debug!</span>(<span class="string">&quot;Vulkan driver does not support VK_KHR_win32_surface&quot;</span>);
-            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(String::from(
+                <span class="string">&quot;Vulkan driver does not support VK_KHR_win32_surface&quot;</span>,
+            )));
         }
 
         <span class="kw">let </span>surface = {
@@ -1262,8 +1458,9 @@
         view: <span class="kw-2">*mut </span>c_void,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw">super</span>::Surface, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.shared.extensions.contains(<span class="kw-2">&amp;</span>ext::MetalSurface::name()) {
-            <span class="macro">log::warn!</span>(<span class="string">&quot;Vulkan driver does not support VK_EXT_metal_surface&quot;</span>);
-            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(String::from(
+                <span class="string">&quot;Vulkan driver does not support VK_EXT_metal_surface&quot;</span>,
+            )));
         }
 
         <span class="kw">let </span>layer = <span class="kw">unsafe </span>{
@@ -1312,20 +1509,18 @@
     <span class="kw">unsafe fn </span>init(desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::InstanceDescriptor) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::auxil::cstr_from_bytes_until_nul;
 
-        <span class="kw">let </span>entry = <span class="kw">match unsafe </span>{ ash::Entry::load() } {
-            <span class="prelude-val">Ok</span>(entry) =&gt; entry,
-            <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="macro">log::info!</span>(<span class="string">&quot;Missing Vulkan entry points: {:?}&quot;</span>, err);
-                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
-            }
-        };
+        <span class="kw">let </span>entry = <span class="kw">unsafe </span>{ ash::Entry::load() }.map_err(|err| {
+            <span class="kw">crate</span>::InstanceError::with_source(String::from(<span class="string">&quot;missing Vulkan entry points&quot;</span>), err)
+        })<span class="question-mark">?</span>;
         <span class="kw">let </span>driver_api_version = <span class="kw">match </span>entry.try_enumerate_instance_version() {
             <span class="comment">// Vulkan 1.1+
             </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(version)) =&gt; version,
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; vk::API_VERSION_1_0,
             <span class="prelude-val">Err</span>(err) =&gt; {
-                <span class="macro">log::warn!</span>(<span class="string">&quot;try_enumerate_instance_version: {:?}&quot;</span>, err);
-                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError);
+                <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::with_source(
+                    String::from(<span class="string">&quot;try_enumerate_instance_version() failed&quot;</span>),
+                    err,
+                ));
             }
         };
 
@@ -1352,38 +1547,56 @@
                 },
             );
 
-        <span class="kw">let </span>extensions = <span class="self">Self</span>::required_extensions(<span class="kw-2">&amp;</span>entry, driver_api_version, desc.flags)<span class="question-mark">?</span>;
+        <span class="kw">let </span>extensions = <span class="self">Self</span>::desired_extensions(<span class="kw-2">&amp;</span>entry, driver_api_version, desc.flags)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>instance_layers = entry.enumerate_instance_layer_properties().map_err(|e| {
             <span class="macro">log::info!</span>(<span class="string">&quot;enumerate_instance_layer_properties: {:?}&quot;</span>, e);
-            <span class="kw">crate</span>::InstanceError
+            <span class="kw">crate</span>::InstanceError::with_source(
+                String::from(<span class="string">&quot;enumerate_instance_layer_properties() failed&quot;</span>),
+                e,
+            )
         })<span class="question-mark">?</span>;
 
+        <span class="kw">fn </span>find_layer&lt;<span class="lifetime">&#39;layers</span>&gt;(
+            instance_layers: <span class="kw-2">&amp;</span><span class="lifetime">&#39;layers </span>[vk::LayerProperties],
+            name: <span class="kw-2">&amp;</span>CStr,
+        ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;layers </span>vk::LayerProperties&gt; {
+            instance_layers
+                .iter()
+                .find(|inst_layer| cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>inst_layer.layer_name) == <span class="prelude-val">Some</span>(name))
+        }
+
         <span class="kw">let </span>nv_optimus_layer = CStr::from_bytes_with_nul(<span class="string">b&quot;VK_LAYER_NV_optimus\0&quot;</span>).unwrap();
-        <span class="kw">let </span>has_nv_optimus = instance_layers.iter().any(|inst_layer| {
-            cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>inst_layer.layer_name) == <span class="prelude-val">Some</span>(nv_optimus_layer)
-        });
+        <span class="kw">let </span>has_nv_optimus = find_layer(<span class="kw-2">&amp;</span>instance_layers, nv_optimus_layer).is_some();
 
-        <span class="comment">// Check requested layers against the available layers
-        </span><span class="kw">let </span>layers = {
-            <span class="kw">let </span><span class="kw-2">mut </span>layers: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr&gt; = Vec::new();
-            <span class="kw">if </span>desc.flags.contains(<span class="kw">crate</span>::InstanceFlags::VALIDATION) {
-                layers.push(CStr::from_bytes_with_nul(<span class="string">b&quot;VK_LAYER_KHRONOS_validation\0&quot;</span>).unwrap());
+        <span class="kw">let </span>obs_layer = CStr::from_bytes_with_nul(<span class="string">b&quot;VK_LAYER_OBS_HOOK\0&quot;</span>).unwrap();
+        <span class="kw">let </span>has_obs_layer = find_layer(<span class="kw-2">&amp;</span>instance_layers, obs_layer).is_some();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>layers: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr&gt; = Vec::new();
+
+        <span class="comment">// Request validation layer if asked.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>debug_callback_user_data = <span class="prelude-val">None</span>;
+        <span class="kw">if </span>desc.flags.contains(<span class="kw">crate</span>::InstanceFlags::VALIDATION) {
+            <span class="kw">let </span>validation_layer_name =
+                CStr::from_bytes_with_nul(<span class="string">b&quot;VK_LAYER_KHRONOS_validation\0&quot;</span>).unwrap();
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(layer_properties) = find_layer(<span class="kw-2">&amp;</span>instance_layers, validation_layer_name) {
+                layers.push(validation_layer_name);
+                debug_callback_user_data = <span class="prelude-val">Some</span>(<span class="kw">super</span>::DebugUtilsMessengerUserData {
+                    validation_layer_description: cstr_from_bytes_until_nul(
+                        <span class="kw-2">&amp;</span>layer_properties.description,
+                    )
+                    .unwrap()
+                    .to_owned(),
+                    validation_layer_spec_version: layer_properties.spec_version,
+                    has_obs_layer,
+                });
+            } <span class="kw">else </span>{
+                <span class="macro">log::warn!</span>(
+                    <span class="string">&quot;InstanceFlags::VALIDATION requested, but unable to find layer: {}&quot;</span>,
+                    validation_layer_name.to_string_lossy()
+                );
             }
-
-            <span class="comment">// Only keep available layers.
-            </span>layers.retain(|<span class="kw-2">&amp;</span>layer| {
-                <span class="kw">if </span>instance_layers.iter().any(|inst_layer| {
-                    cstr_from_bytes_until_nul(<span class="kw-2">&amp;</span>inst_layer.layer_name) == <span class="prelude-val">Some</span>(layer)
-                }) {
-                    <span class="bool-val">true
-                </span>} <span class="kw">else </span>{
-                    <span class="macro">log::warn!</span>(<span class="string">&quot;Unable to find layer: {}&quot;</span>, layer.to_string_lossy());
-                    <span class="bool-val">false
-                </span>}
-            });
-            layers
-        };
+        }
 
         <span class="attr">#[cfg(target_os = <span class="string">&quot;android&quot;</span>)]
         </span><span class="kw">let </span>android_sdk_version = {
@@ -1407,6 +1620,15 @@
         <span class="attr">#[cfg(not(target_os = <span class="string">&quot;android&quot;</span>))]
         </span><span class="kw">let </span>android_sdk_version = <span class="number">0</span>;
 
+        <span class="kw">let </span><span class="kw-2">mut </span>flags = vk::InstanceCreateFlags::empty();
+
+        <span class="comment">// Avoid VUID-VkInstanceCreateInfo-flags-06559: Only ask the instance to
+        // enumerate incomplete Vulkan implementations (which we need on Mac) if
+        // we managed to find the extension that provides the flag.
+        </span><span class="kw">if </span>extensions.contains(<span class="kw-2">&amp;</span>ash::vk::KhrPortabilityEnumerationFn::name()) {
+            flags |= vk::InstanceCreateFlags::ENUMERATE_PORTABILITY_KHR;
+        }
+
         <span class="kw">let </span>vk_instance = {
             <span class="kw">let </span>str_pointers = layers
                 .iter()
@@ -1418,14 +1640,16 @@
                 .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
             <span class="kw">let </span>create_info = vk::InstanceCreateInfo::builder()
-                .flags(vk::InstanceCreateFlags::empty())
+                .flags(flags)
                 .application_info(<span class="kw-2">&amp;</span>app_info)
                 .enabled_layer_names(<span class="kw-2">&amp;</span>str_pointers[..layers.len()])
                 .enabled_extension_names(<span class="kw-2">&amp;</span>str_pointers[layers.len()..]);
 
             <span class="kw">unsafe </span>{ entry.create_instance(<span class="kw-2">&amp;</span>create_info, <span class="prelude-val">None</span>) }.map_err(|e| {
-                <span class="macro">log::warn!</span>(<span class="string">&quot;create_instance: {:?}&quot;</span>, e);
-                <span class="kw">crate</span>::InstanceError
+                <span class="kw">crate</span>::InstanceError::with_source(
+                    String::from(<span class="string">&quot;Entry::create_instance() failed&quot;</span>),
+                    e,
+                )
             })<span class="question-mark">?
         </span>};
 
@@ -1435,6 +1659,7 @@
                 vk_instance,
                 driver_api_version,
                 android_sdk_version,
+                debug_callback_user_data,
                 extensions,
                 desc.flags,
                 has_nv_optimus,
@@ -1480,7 +1705,9 @@
             {
                 <span class="self">self</span>.create_surface_from_view(handle.ui_view)
             }
-            (<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError),
+            (<span class="kw">_</span>, <span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="kw">crate</span>::InstanceError::new(<span class="macro">format!</span>(
+                <span class="string">&quot;window handle {window_handle:?} is not a Vulkan-compatible handle&quot;
+            </span>))),
         }
     }
 
@@ -1507,20 +1734,29 @@
         <span class="comment">// Detect if it&#39;s an Intel + NVidia configuration with Optimus
         </span><span class="kw">let </span>has_nvidia_dgpu = exposed_adapters.iter().any(|exposed| {
             exposed.info.device_type == wgt::DeviceType::DiscreteGpu
-                &amp;&amp; exposed.info.vendor == db::nvidia::VENDOR <span class="kw">as </span>usize
+                &amp;&amp; exposed.info.vendor == db::nvidia::VENDOR
         });
         <span class="kw">if </span><span class="macro">cfg!</span>(target_os = <span class="string">&quot;linux&quot;</span>) &amp;&amp; has_nvidia_dgpu &amp;&amp; <span class="self">self</span>.shared.has_nv_optimus {
             <span class="kw">for </span>exposed <span class="kw">in </span>exposed_adapters.iter_mut() {
                 <span class="kw">if </span>exposed.info.device_type == wgt::DeviceType::IntegratedGpu
-                    &amp;&amp; exposed.info.vendor == db::intel::VENDOR <span class="kw">as </span>usize
+                    &amp;&amp; exposed.info.vendor == db::intel::VENDOR
                 {
-                    <span class="comment">// See https://gitlab.freedesktop.org/mesa/mesa/-/issues/4688
-                    </span><span class="macro">log::warn!</span>(
-                        <span class="string">&quot;Disabling presentation on &#39;{}&#39; (id {:?}) because of NV Optimus (on Linux)&quot;</span>,
-                        exposed.info.name,
-                        exposed.adapter.raw
-                    );
-                    exposed.adapter.private_caps.can_present = <span class="bool-val">false</span>;
+                    <span class="comment">// Check if mesa driver and version less than 21.2
+                    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(version) = exposed.info.driver_info.split_once(<span class="string">&quot;Mesa &quot;</span>).map(|s| {
+                        s.<span class="number">1</span>.rsplit_once(<span class="string">&#39;.&#39;</span>)
+                            .map(|v| v.<span class="number">0</span>.parse::&lt;f32&gt;().unwrap_or_default())
+                            .unwrap_or_default()
+                    }) {
+                        <span class="kw">if </span>version &lt; <span class="number">21.2 </span>{
+                            <span class="comment">// See https://gitlab.freedesktop.org/mesa/mesa/-/issues/4688
+                            </span><span class="macro">log::warn!</span>(
+                                <span class="string">&quot;Disabling presentation on &#39;{}&#39; (id {:?}) due to NV Optimus and Intel Mesa &lt; v21.2&quot;</span>,
+                                exposed.info.name,
+                                exposed.adapter.raw
+                            );
+                            exposed.adapter.private_caps.can_present = <span class="bool-val">false</span>;
+                        }
+                    }
                 }
             }
         }
@@ -1535,7 +1771,8 @@
         device: <span class="kw-2">&amp;</span><span class="kw">super</span>::Device,
         config: <span class="kw-2">&amp;</span><span class="kw">crate</span>::SurfaceConfiguration,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::SurfaceError&gt; {
-        <span class="kw">let </span>old = <span class="self">self
+        <span class="comment">// Safety: `configure`&#39;s contract guarantees there are no resources derived from the swapchain in use.
+        </span><span class="kw">let </span>old = <span class="self">self
             </span>.swapchain
             .take()
             .map(|sc| <span class="kw">unsafe </span>{ sc.release_resources(<span class="kw-2">&amp;</span>device.shared.raw) });
@@ -1548,7 +1785,8 @@
 
     <span class="kw">unsafe fn </span>unconfigure(<span class="kw-2">&amp;mut </span><span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="kw">super</span>::Device) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(sc) = <span class="self">self</span>.swapchain.take() {
-            <span class="kw">let </span>swapchain = <span class="kw">unsafe </span>{ sc.release_resources(<span class="kw-2">&amp;</span>device.shared.raw) };
+            <span class="comment">// Safety: `unconfigure`&#39;s contract guarantees there are no resources derived from the swapchain in use.
+            </span><span class="kw">let </span>swapchain = <span class="kw">unsafe </span>{ sc.release_resources(<span class="kw-2">&amp;</span>device.shared.raw) };
             <span class="kw">unsafe </span>{ swapchain.functor.destroy_swapchain(swapchain.raw, <span class="prelude-val">None</span>) };
         }
     }

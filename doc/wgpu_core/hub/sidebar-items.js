@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["Root"],"struct":["Hub","HubReport","Hubs"],"trait":["Access"]};

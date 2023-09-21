@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/backend/direct.rs`."><title>direct.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fbd14db5c88ed452.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (700938c07 2023-04-04)" data-search-js="search-bc5a112813b5d712.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../../static.files/storage-d4a1a279bad1a0c0.js"></script><script defer src="../../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-8e6affb8c73a5ff1.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/master/logo.png" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/backend/direct.rs`."><title>direct.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (3223b0b5e 2023-09-20)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/master/logo.png" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3065,10 +3065,146 @@
 <a href="#3065" id="3065">3065</a>
 <a href="#3066" id="3066">3066</a>
 <a href="#3067" id="3067">3067</a>
-</pre><pre class="rust"><code><span class="kw">use crate</span>::{
+<a href="#3068" id="3068">3068</a>
+<a href="#3069" id="3069">3069</a>
+<a href="#3070" id="3070">3070</a>
+<a href="#3071" id="3071">3071</a>
+<a href="#3072" id="3072">3072</a>
+<a href="#3073" id="3073">3073</a>
+<a href="#3074" id="3074">3074</a>
+<a href="#3075" id="3075">3075</a>
+<a href="#3076" id="3076">3076</a>
+<a href="#3077" id="3077">3077</a>
+<a href="#3078" id="3078">3078</a>
+<a href="#3079" id="3079">3079</a>
+<a href="#3080" id="3080">3080</a>
+<a href="#3081" id="3081">3081</a>
+<a href="#3082" id="3082">3082</a>
+<a href="#3083" id="3083">3083</a>
+<a href="#3084" id="3084">3084</a>
+<a href="#3085" id="3085">3085</a>
+<a href="#3086" id="3086">3086</a>
+<a href="#3087" id="3087">3087</a>
+<a href="#3088" id="3088">3088</a>
+<a href="#3089" id="3089">3089</a>
+<a href="#3090" id="3090">3090</a>
+<a href="#3091" id="3091">3091</a>
+<a href="#3092" id="3092">3092</a>
+<a href="#3093" id="3093">3093</a>
+<a href="#3094" id="3094">3094</a>
+<a href="#3095" id="3095">3095</a>
+<a href="#3096" id="3096">3096</a>
+<a href="#3097" id="3097">3097</a>
+<a href="#3098" id="3098">3098</a>
+<a href="#3099" id="3099">3099</a>
+<a href="#3100" id="3100">3100</a>
+<a href="#3101" id="3101">3101</a>
+<a href="#3102" id="3102">3102</a>
+<a href="#3103" id="3103">3103</a>
+<a href="#3104" id="3104">3104</a>
+<a href="#3105" id="3105">3105</a>
+<a href="#3106" id="3106">3106</a>
+<a href="#3107" id="3107">3107</a>
+<a href="#3108" id="3108">3108</a>
+<a href="#3109" id="3109">3109</a>
+<a href="#3110" id="3110">3110</a>
+<a href="#3111" id="3111">3111</a>
+<a href="#3112" id="3112">3112</a>
+<a href="#3113" id="3113">3113</a>
+<a href="#3114" id="3114">3114</a>
+<a href="#3115" id="3115">3115</a>
+<a href="#3116" id="3116">3116</a>
+<a href="#3117" id="3117">3117</a>
+<a href="#3118" id="3118">3118</a>
+<a href="#3119" id="3119">3119</a>
+<a href="#3120" id="3120">3120</a>
+<a href="#3121" id="3121">3121</a>
+<a href="#3122" id="3122">3122</a>
+<a href="#3123" id="3123">3123</a>
+<a href="#3124" id="3124">3124</a>
+<a href="#3125" id="3125">3125</a>
+<a href="#3126" id="3126">3126</a>
+<a href="#3127" id="3127">3127</a>
+<a href="#3128" id="3128">3128</a>
+<a href="#3129" id="3129">3129</a>
+<a href="#3130" id="3130">3130</a>
+<a href="#3131" id="3131">3131</a>
+<a href="#3132" id="3132">3132</a>
+<a href="#3133" id="3133">3133</a>
+<a href="#3134" id="3134">3134</a>
+<a href="#3135" id="3135">3135</a>
+<a href="#3136" id="3136">3136</a>
+<a href="#3137" id="3137">3137</a>
+<a href="#3138" id="3138">3138</a>
+<a href="#3139" id="3139">3139</a>
+<a href="#3140" id="3140">3140</a>
+<a href="#3141" id="3141">3141</a>
+<a href="#3142" id="3142">3142</a>
+<a href="#3143" id="3143">3143</a>
+<a href="#3144" id="3144">3144</a>
+<a href="#3145" id="3145">3145</a>
+<a href="#3146" id="3146">3146</a>
+<a href="#3147" id="3147">3147</a>
+<a href="#3148" id="3148">3148</a>
+<a href="#3149" id="3149">3149</a>
+<a href="#3150" id="3150">3150</a>
+<a href="#3151" id="3151">3151</a>
+<a href="#3152" id="3152">3152</a>
+<a href="#3153" id="3153">3153</a>
+<a href="#3154" id="3154">3154</a>
+<a href="#3155" id="3155">3155</a>
+<a href="#3156" id="3156">3156</a>
+<a href="#3157" id="3157">3157</a>
+<a href="#3158" id="3158">3158</a>
+<a href="#3159" id="3159">3159</a>
+<a href="#3160" id="3160">3160</a>
+<a href="#3161" id="3161">3161</a>
+<a href="#3162" id="3162">3162</a>
+<a href="#3163" id="3163">3163</a>
+<a href="#3164" id="3164">3164</a>
+<a href="#3165" id="3165">3165</a>
+<a href="#3166" id="3166">3166</a>
+<a href="#3167" id="3167">3167</a>
+<a href="#3168" id="3168">3168</a>
+<a href="#3169" id="3169">3169</a>
+<a href="#3170" id="3170">3170</a>
+<a href="#3171" id="3171">3171</a>
+<a href="#3172" id="3172">3172</a>
+<a href="#3173" id="3173">3173</a>
+<a href="#3174" id="3174">3174</a>
+<a href="#3175" id="3175">3175</a>
+<a href="#3176" id="3176">3176</a>
+<a href="#3177" id="3177">3177</a>
+<a href="#3178" id="3178">3178</a>
+<a href="#3179" id="3179">3179</a>
+<a href="#3180" id="3180">3180</a>
+<a href="#3181" id="3181">3181</a>
+<a href="#3182" id="3182">3182</a>
+<a href="#3183" id="3183">3183</a>
+<a href="#3184" id="3184">3184</a>
+<a href="#3185" id="3185">3185</a>
+<a href="#3186" id="3186">3186</a>
+<a href="#3187" id="3187">3187</a>
+<a href="#3188" id="3188">3188</a>
+<a href="#3189" id="3189">3189</a>
+<a href="#3190" id="3190">3190</a>
+<a href="#3191" id="3191">3191</a>
+<a href="#3192" id="3192">3192</a>
+<a href="#3193" id="3193">3193</a>
+<a href="#3194" id="3194">3194</a>
+<a href="#3195" id="3195">3195</a>
+<a href="#3196" id="3196">3196</a>
+<a href="#3197" id="3197">3197</a>
+<a href="#3198" id="3198">3198</a>
+<a href="#3199" id="3199">3199</a>
+<a href="#3200" id="3200">3200</a>
+<a href="#3201" id="3201">3201</a>
+<a href="#3202" id="3202">3202</a>
+<a href="#3203" id="3203">3203</a>
+</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
-    CommandEncoderDescriptor, ComputePassDescriptor, ComputePipelineDescriptor,
+    BufferDescriptor, CommandEncoderDescriptor, ComputePassDescriptor, ComputePipelineDescriptor,
     DownlevelCapabilities, Features, Label, Limits, LoadOp, MapMode, Operations,
     PipelineLayoutDescriptor, RenderBundleEncoderDescriptor, RenderPipelineDescriptor,
     SamplerDescriptor, ShaderModuleDescriptor, ShaderModuleDescriptorSpirV, ShaderSource,
@@ -3090,10 +3226,11 @@
 };
 <span class="kw">use </span>wgc::command::{bundle_ffi::<span class="kw-2">*</span>, compute_ffi::<span class="kw-2">*</span>, render_ffi::<span class="kw-2">*</span>};
 <span class="kw">use </span>wgc::id::TypedId;
+<span class="kw">use </span>wgt::{WasmNotSend, WasmNotSync};
 
 <span class="kw">const </span>LABEL: <span class="kw-2">&amp;</span>str = <span class="string">&quot;label&quot;</span>;
 
-<span class="kw">pub struct </span>Context(wgc::hub::Global&lt;wgc::hub::IdentityManagerFactory&gt;);
+<span class="kw">pub struct </span>Context(wgc::global::Global&lt;wgc::identity::IdentityManagerFactory&gt;);
 
 <span class="kw">impl </span>Drop <span class="kw">for </span>Context {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
@@ -3108,11 +3245,11 @@
 }
 
 <span class="kw">impl </span>Context {
-    <span class="kw">pub unsafe fn </span>from_hal_instance&lt;A: wgc::hub::HalApi&gt;(hal_instance: A::Instance) -&gt; <span class="self">Self </span>{
+    <span class="kw">pub unsafe fn </span>from_hal_instance&lt;A: wgc::hal_api::HalApi&gt;(hal_instance: A::Instance) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(<span class="kw">unsafe </span>{
-            wgc::hub::Global::from_hal_instance::&lt;A&gt;(
+            wgc::global::Global::from_hal_instance::&lt;A&gt;(
                 <span class="string">&quot;wgpu&quot;</span>,
-                wgc::hub::IdentityManagerFactory,
+                wgc::identity::IdentityManagerFactory,
                 hal_instance,
             )
         })
@@ -3121,17 +3258,17 @@
     <span class="doccomment">/// # Safety
     ///
     /// - The raw instance handle returned must not be manually destroyed.
-    </span><span class="kw">pub unsafe fn </span>instance_as_hal&lt;A: wgc::hub::HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Instance&gt; {
+    </span><span class="kw">pub unsafe fn </span>instance_as_hal&lt;A: wgc::hal_api::HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Instance&gt; {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.instance_as_hal::&lt;A&gt;() }
     }
 
     <span class="kw">pub unsafe fn </span>from_core_instance(core_instance: wgc::instance::Instance) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(<span class="kw">unsafe </span>{
-            wgc::hub::Global::from_instance(wgc::hub::IdentityManagerFactory, core_instance)
+            wgc::global::Global::from_instance(wgc::identity::IdentityManagerFactory, core_instance)
         })
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>global(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgc::hub::Global&lt;wgc::hub::IdentityManagerFactory&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>global(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>wgc::global::Global&lt;wgc::identity::IdentityManagerFactory&gt; {
         <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0
     </span>}
 
@@ -3140,14 +3277,18 @@
             </span>.enumerate_adapters(wgc::instance::AdapterInputs::Mask(backends, |<span class="kw">_</span>| ()))
     }
 
-    <span class="kw">pub unsafe fn </span>create_adapter_from_hal&lt;A: wgc::hub::HalApi&gt;(
+    <span class="kw">pub unsafe fn </span>create_adapter_from_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_adapter: hal::ExposedAdapter&lt;A&gt;,
     ) -&gt; wgc::id::AdapterId {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.<span class="number">0</span>.create_adapter_from_hal(hal_adapter, ()) }
     }
 
-    <span class="kw">pub unsafe fn </span>adapter_as_hal&lt;A: wgc::hub::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Adapter&gt;) -&gt; R, R&gt;(
+    <span class="kw">pub unsafe fn </span>adapter_as_hal&lt;
+        A: wgc::hal_api::HalApi,
+        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Adapter&gt;) -&gt; R,
+        R,
+    &gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         adapter: wgc::id::AdapterId,
         hal_adapter_callback: F,
@@ -3158,7 +3299,15 @@
         }
     }
 
-    <span class="kw">pub unsafe fn </span>create_device_from_hal&lt;A: wgc::hub::HalApi&gt;(
+    <span class="kw">pub fn </span>texture_format_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        adapter: wgc::id::AdapterId,
+        texture_format: wgt::TextureFormat,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;A::TextureFormat&gt; {
+        <span class="self">self</span>.<span class="number">0</span>.texture_format_as_hal::&lt;A&gt;(adapter, texture_format)
+    }
+
+    <span class="kw">pub unsafe fn </span>create_device_from_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         adapter: <span class="kw-2">&amp;</span>wgc::id::AdapterId,
         hal_device: hal::OpenDevice&lt;A&gt;,
@@ -3191,7 +3340,7 @@
         <span class="prelude-val">Ok</span>((device, queue))
     }
 
-    <span class="kw">pub unsafe fn </span>create_texture_from_hal&lt;A: wgc::hub::HalApi&gt;(
+    <span class="kw">pub unsafe fn </span>create_texture_from_hal&lt;A: wgc::hal_api::HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         hal_texture: A::Texture,
         device: <span class="kw-2">&amp;</span>Device,
@@ -3216,7 +3365,39 @@
         }
     }
 
-    <span class="kw">pub unsafe fn </span>device_as_hal&lt;A: wgc::hub::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Device&gt;) -&gt; R, R&gt;(
+    <span class="kw">pub unsafe fn </span>create_buffer_from_hal&lt;A: wgc::hal_api::HalApi&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        hal_buffer: A::Buffer,
+        device: <span class="kw-2">&amp;</span>Device,
+        desc: <span class="kw-2">&amp;</span>BufferDescriptor,
+    ) -&gt; (wgc::id::BufferId, Buffer) {
+        <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="kw">let </span>(id, error) = <span class="kw">unsafe </span>{
+            global.create_buffer_from_hal::&lt;A&gt;(
+                hal_buffer,
+                device.id,
+                <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
+                (),
+            )
+        };
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(cause) = error {
+            <span class="self">self</span>.handle_error(
+                <span class="kw-2">&amp;</span>device.error_sink,
+                cause,
+                LABEL,
+                desc.label,
+                <span class="string">&quot;Device::create_buffer_from_hal&quot;</span>,
+            );
+        }
+        (
+            id,
+            Buffer {
+                error_sink: Arc::clone(<span class="kw-2">&amp;</span>device.error_sink),
+            },
+        )
+    }
+
+    <span class="kw">pub unsafe fn </span>device_as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Device&gt;) -&gt; R, R&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span>Device,
         hal_device_callback: F,
@@ -3228,7 +3409,7 @@
     }
 
     <span class="kw">pub unsafe fn </span>surface_as_hal_mut&lt;
-        A: wgc::hub::HalApi,
+        A: wgc::hal_api::HalApi,
         F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>A::Surface&gt;) -&gt; R,
         R,
     &gt;(
@@ -3242,18 +3423,59 @@
         }
     }
 
-    <span class="kw">pub unsafe fn </span>texture_as_hal&lt;A: wgc::hub::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Texture&gt;)&gt;(
+    <span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;emscripten&quot;</span>))]
+    </span><span class="kw">pub unsafe fn </span>command_encoder_as_hal_mut&lt;
+        A: wgc::hal_api::HalApi,
+        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>A::CommandEncoder&gt;) -&gt; R,
+        R,
+    &gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        texture: <span class="kw-2">&amp;</span>Texture,
-        hal_texture_callback: F,
-    ) {
+        command_encoder: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CommandEncoder,
+        hal_command_encoder_callback: F,
+    ) -&gt; R {
         <span class="kw">unsafe </span>{
-            <span class="self">self</span>.<span class="number">0
-                </span>.texture_as_hal::&lt;A, F&gt;(texture.id, hal_texture_callback)
+            <span class="self">self</span>.<span class="number">0</span>.command_encoder_as_hal_mut::&lt;A, F, R&gt;(
+                &lt;&lt;<span class="self">Self </span><span class="kw">as </span><span class="kw">crate</span>::Context&gt;::CommandEncoderId&gt;::from(command_encoder.id.unwrap()),
+                hal_command_encoder_callback,
+            )
         }
     }
 
-    <span class="kw">pub fn </span>generate_report(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgc::hub::GlobalReport {
+    <span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;emscripten&quot;</span>))]
+    </span><span class="kw">pub unsafe fn </span>texture_as_hal&lt;
+        A: wgc::hal_api::HalApi,
+        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Texture&gt;) -&gt; R,
+        R,
+    &gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        texture: <span class="kw-2">&amp;</span>Texture,
+        hal_texture_callback: F,
+    ) -&gt; R {
+        <span class="kw">unsafe </span>{
+            <span class="self">self</span>.<span class="number">0
+                </span>.texture_as_hal::&lt;A, F, R&gt;(texture.id, hal_texture_callback)
+        }
+    }
+
+    <span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;emscripten&quot;</span>))]
+    </span><span class="kw">pub unsafe fn </span>texture_view_as_hal&lt;
+        A: wgc::hal_api::HalApi,
+        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::TextureView&gt;) -&gt; R,
+        R,
+    &gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        texture_view: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureView,
+        hal_texture_view_callback: F,
+    ) -&gt; R {
+        <span class="kw">unsafe </span>{
+            <span class="self">self</span>.<span class="number">0</span>.texture_view_as_hal::&lt;A, F, R&gt;(
+                wgc::id::TextureViewId::from(texture_view.id),
+                hal_texture_view_callback,
+            )
+        }
+    }
+
+    <span class="kw">pub fn </span>generate_report(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; wgc::global::GlobalReport {
         <span class="self">self</span>.<span class="number">0</span>.generate_report()
     }
 
@@ -3272,12 +3494,9 @@
     <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(target_os = <span class="string">&quot;emscripten&quot;</span>)))]
     </span><span class="kw">pub fn </span>instance_create_surface_from_canvas(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        canvas: <span class="kw-2">&amp;</span>web_sys::HtmlCanvasElement,
+        canvas: web_sys::HtmlCanvasElement,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, <span class="kw">crate</span>::CreateSurfaceError&gt; {
-        <span class="kw">let </span>id = <span class="self">self
-            </span>.<span class="number">0
-            </span>.create_surface_webgl_canvas(canvas, ())
-            .map_err(|hal::InstanceError| <span class="kw">crate</span>::CreateSurfaceError {})<span class="question-mark">?</span>;
+        <span class="kw">let </span>id = <span class="self">self</span>.<span class="number">0</span>.create_surface_webgl_canvas(canvas, ())<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(Surface {
             id,
             configured_device: Mutex::default(),
@@ -3287,12 +3506,9 @@
     <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(target_os = <span class="string">&quot;emscripten&quot;</span>)))]
     </span><span class="kw">pub fn </span>instance_create_surface_from_offscreen_canvas(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        canvas: <span class="kw-2">&amp;</span>web_sys::OffscreenCanvas,
+        canvas: web_sys::OffscreenCanvas,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, <span class="kw">crate</span>::CreateSurfaceError&gt; {
-        <span class="kw">let </span>id = <span class="self">self
-            </span>.<span class="number">0
-            </span>.create_surface_webgl_offscreen_canvas(canvas, ())
-            .map_err(|hal::InstanceError| <span class="kw">crate</span>::CreateSurfaceError {})<span class="question-mark">?</span>;
+        <span class="kw">let </span>id = <span class="self">self</span>.<span class="number">0</span>.create_surface_webgl_offscreen_canvas(canvas, ())<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(Surface {
             id,
             configured_device: Mutex::default(),
@@ -3326,7 +3542,7 @@
     <span class="kw">fn </span>handle_error(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sink_mutex: <span class="kw-2">&amp;</span>Mutex&lt;ErrorSinkRaw&gt;,
-        cause: <span class="kw">impl </span>Error + Send + Sync + <span class="lifetime">&#39;static</span>,
+        cause: <span class="kw">impl </span>Error + WasmNotSend + WasmNotSync + <span class="lifetime">&#39;static</span>,
         label_key: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
         label: Label,
         string: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
@@ -3360,7 +3576,7 @@
     <span class="kw">fn </span>handle_error_nolabel(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         sink_mutex: <span class="kw-2">&amp;</span>Mutex&lt;ErrorSinkRaw&gt;,
-        cause: <span class="kw">impl </span>Error + Send + Sync + <span class="lifetime">&#39;static</span>,
+        cause: <span class="kw">impl </span>Error + WasmNotSend + WasmNotSync + <span class="lifetime">&#39;static</span>,
         string: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
     ) {
         <span class="self">self</span>.handle_error(sink_mutex, cause, <span class="string">&quot;&quot;</span>, <span class="prelude-val">None</span>, string)
@@ -3369,7 +3585,7 @@
     <span class="attr">#[track_caller]
     </span><span class="kw">fn </span>handle_error_fatal(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        cause: <span class="kw">impl </span>Error + Send + Sync + <span class="lifetime">&#39;static</span>,
+        cause: <span class="kw">impl </span>Error + WasmNotSend + WasmNotSync + <span class="lifetime">&#39;static</span>,
         operation: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
     ) -&gt; ! {
         <span class="macro">panic!</span>(<span class="string">&quot;Error in {operation}: {f}&quot;</span>, f = <span class="self">self</span>.format_error(<span class="kw-2">&amp;</span>cause));
@@ -3603,9 +3819,9 @@
     <span class="kw">type </span>PopErrorScopeFuture = Ready&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Error&gt;&gt;;
 
     <span class="kw">fn </span>init(instance_desc: wgt::InstanceDescriptor) -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>(wgc::hub::Global::new(
+        <span class="self">Self</span>(wgc::global::Global::new(
             <span class="string">&quot;wgpu&quot;</span>,
-            wgc::hub::IdentityManagerFactory,
+            wgc::identity::IdentityManagerFactory,
             instance_desc,
         ))
     }
@@ -4530,7 +4746,7 @@
         buffer_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferData,
         mode: MapMode,
         range: Range&lt;wgt::BufferAddress&gt;,
-        callback: Box&lt;<span class="kw">dyn </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::BufferAsyncError&gt;) + Send + <span class="lifetime">&#39;static</span>&gt;,
+        callback: <span class="kw">crate</span>::context::BufferMapCallback,
     ) {
         <span class="kw">let </span>operation = wgc::resource::BufferMapOperation {
             host: <span class="kw">match </span>mode {
@@ -4616,10 +4832,9 @@
         (id, ())
     }
 
-    <span class="kw">fn </span>surface_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, _surface: <span class="kw-2">&amp;</span><span class="self">Self</span>::SurfaceId, _surface_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::SurfaceData) {
-        <span class="comment">//TODO: swapchain needs to hold the surface alive
-        //self.0.surface_drop(*surface)
-    </span>}
+    <span class="kw">fn </span>surface_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, surface: <span class="kw-2">&amp;</span><span class="self">Self</span>::SurfaceId, _surface_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::SurfaceData) {
+        <span class="self">self</span>.<span class="number">0</span>.surface_drop(<span class="kw-2">*</span>surface)
+    }
 
     <span class="kw">fn </span>adapter_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, adapter: <span class="kw-2">&amp;</span><span class="self">Self</span>::AdapterId, _adapter_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::AdapterData) {
         <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
@@ -4880,12 +5095,21 @@
         _encoder_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::CommandEncoderData,
         desc: <span class="kw-2">&amp;</span>ComputePassDescriptor,
     ) -&gt; (<span class="self">Self</span>::ComputePassId, <span class="self">Self</span>::ComputePassData) {
+        <span class="kw">let </span>timestamp_writes =
+            desc.timestamp_writes
+                .as_ref()
+                .map(|tw| wgc::command::ComputePassTimestampWrites {
+                    query_set: tw.query_set.id.into(),
+                    beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
+                    end_of_pass_write_index: tw.end_of_pass_write_index,
+                });
         (
             Unused,
             wgc::command::ComputePass::new(
                 <span class="kw-2">*</span>encoder,
                 <span class="kw-2">&amp;</span>wgc::command::ComputePassDescriptor {
                     label: desc.label.map(Borrowed),
+                    timestamp_writes: timestamp_writes.as_ref(),
                 },
             ),
         )
@@ -4949,6 +5173,15 @@
             }
         });
 
+        <span class="kw">let </span>timestamp_writes =
+            desc.timestamp_writes
+                .as_ref()
+                .map(|tw| wgc::command::RenderPassTimestampWrites {
+                    query_set: tw.query_set.id.into(),
+                    beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
+                    end_of_pass_write_index: tw.end_of_pass_write_index,
+                });
+
         (
             Unused,
             wgc::command::RenderPass::new(
@@ -4957,6 +5190,10 @@
                     label: desc.label.map(Borrowed),
                     color_attachments: Borrowed(<span class="kw-2">&amp;</span>colors),
                     depth_stencil_attachment: depth_stencil.as_ref(),
+                    timestamp_writes: timestamp_writes.as_ref(),
+                    occlusion_query_set: desc
+                        .occlusion_query_set
+                        .map(|query_set| query_set.id.into()),
                 },
             ),
         )
@@ -5303,13 +5540,15 @@
         }
     }
 
-    <span class="kw">fn </span>queue_submit&lt;I: Iterator&lt;Item = <span class="self">Self</span>::CommandBufferId&gt;&gt;(
+    <span class="kw">fn </span>queue_submit&lt;I: Iterator&lt;Item = (<span class="self">Self</span>::CommandBufferId, <span class="self">Self</span>::CommandBufferData)&gt;&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueId,
         _queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
         command_buffers: I,
     ) -&gt; (<span class="self">Self</span>::SubmissionIndex, <span class="self">Self</span>::SubmissionIndexData) {
-        <span class="kw">let </span>temp_command_buffers = command_buffers.collect::&lt;SmallVec&lt;[<span class="kw">_</span>; <span class="number">4</span>]&gt;&gt;();
+        <span class="kw">let </span>temp_command_buffers = command_buffers
+            .map(|(i, <span class="kw">_</span>)| i)
+            .collect::&lt;SmallVec&lt;[<span class="kw">_</span>; <span class="number">4</span>]&gt;&gt;();
 
         <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="kw">let </span>index = <span class="kw">match </span><span class="macro">wgc::gfx_select!</span>(<span class="kw-2">*</span>queue =&gt; global.queue_submit(<span class="kw-2">*</span>queue, <span class="kw-2">&amp;</span>temp_command_buffers))
@@ -5341,7 +5580,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueId,
         _queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
-        callback: Box&lt;<span class="kw">dyn </span>FnOnce() + Send + <span class="lifetime">&#39;static</span>&gt;,
+        callback: <span class="kw">crate</span>::context::SubmittedWorkDoneCallback,
     ) {
         <span class="kw">let </span>closure = wgc::device::queue::SubmittedWorkDoneClosure::from_rust(callback);
 
@@ -5969,6 +6208,23 @@
         wgpu_render_pass_write_timestamp(pass_data, <span class="kw-2">*</span>query_set, query_index)
     }
 
+    <span class="kw">fn </span>render_pass_begin_occlusion_query(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        _pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassId,
+        pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
+        query_index: u32,
+    ) {
+        wgpu_render_pass_begin_occlusion_query(pass_data, query_index)
+    }
+
+    <span class="kw">fn </span>render_pass_end_occlusion_query(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        _pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassId,
+        pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
+    ) {
+        wgpu_render_pass_end_occlusion_query(pass_data)
+    }
+
     <span class="kw">fn </span>render_pass_begin_pipeline_statistics_query(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         _pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassId,
@@ -5992,9 +6248,11 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         _pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
-        render_bundles: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = <span class="self">Self</span>::RenderBundleId&gt; + <span class="lifetime">&#39;a</span>&gt;,
+        render_bundles: Box&lt;
+            <span class="kw">dyn </span>Iterator&lt;Item = (<span class="self">Self</span>::RenderBundleId, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">Self</span>::RenderBundleData)&gt; + <span class="lifetime">&#39;a</span>,
+        &gt;,
     ) {
-        <span class="kw">let </span>temp_render_bundles = render_bundles.collect::&lt;SmallVec&lt;[<span class="kw">_</span>; <span class="number">4</span>]&gt;&gt;();
+        <span class="kw">let </span>temp_render_bundles = render_bundles.map(|(i, <span class="kw">_</span>)| i).collect::&lt;SmallVec&lt;[<span class="kw">_</span>; <span class="number">4</span>]&gt;&gt;();
         <span class="kw">unsafe </span>{
             wgpu_render_pass_execute_bundles(
                 pass_data,
@@ -6111,8 +6369,22 @@
     size: usize,
 }
 
-<span class="kw">unsafe impl </span>Send <span class="kw">for </span>BufferMappedRange {}
-<span class="kw">unsafe impl </span>Sync <span class="kw">for </span>BufferMappedRange {}
+<span class="attr">#[cfg(any(
+    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    all(
+        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
+        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    )
+))]
+</span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>BufferMappedRange {}
+<span class="attr">#[cfg(any(
+    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    all(
+        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
+        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    )
+))]
+</span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>BufferMappedRange {}
 
 <span class="kw">impl </span><span class="kw">crate</span>::context::BufferMappedRange <span class="kw">for </span>BufferMappedRange {
     <span class="attr">#[inline]

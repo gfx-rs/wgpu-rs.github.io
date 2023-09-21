@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/context.rs`."><title>context.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fbd14db5c88ed452.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (700938c07 2023-04-04)" data-search-js="search-bc5a112813b5d712.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../static.files/storage-d4a1a279bad1a0c0.js"></script><script defer src="../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-8e6affb8c73a5ff1.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/master/logo.png" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/context.rs`."><title>context.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (3223b0b5e 2023-09-20)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/master/logo.png" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3881,19 +3881,192 @@
 <a href="#3881" id="3881">3881</a>
 <a href="#3882" id="3882">3882</a>
 <a href="#3883" id="3883">3883</a>
-</pre><pre class="rust"><code><span class="kw">use </span>std::{any::Any, fmt::Debug, future::Future, num::NonZeroU64, ops::Range, pin::Pin, sync::Arc};
+<a href="#3884" id="3884">3884</a>
+<a href="#3885" id="3885">3885</a>
+<a href="#3886" id="3886">3886</a>
+<a href="#3887" id="3887">3887</a>
+<a href="#3888" id="3888">3888</a>
+<a href="#3889" id="3889">3889</a>
+<a href="#3890" id="3890">3890</a>
+<a href="#3891" id="3891">3891</a>
+<a href="#3892" id="3892">3892</a>
+<a href="#3893" id="3893">3893</a>
+<a href="#3894" id="3894">3894</a>
+<a href="#3895" id="3895">3895</a>
+<a href="#3896" id="3896">3896</a>
+<a href="#3897" id="3897">3897</a>
+<a href="#3898" id="3898">3898</a>
+<a href="#3899" id="3899">3899</a>
+<a href="#3900" id="3900">3900</a>
+<a href="#3901" id="3901">3901</a>
+<a href="#3902" id="3902">3902</a>
+<a href="#3903" id="3903">3903</a>
+<a href="#3904" id="3904">3904</a>
+<a href="#3905" id="3905">3905</a>
+<a href="#3906" id="3906">3906</a>
+<a href="#3907" id="3907">3907</a>
+<a href="#3908" id="3908">3908</a>
+<a href="#3909" id="3909">3909</a>
+<a href="#3910" id="3910">3910</a>
+<a href="#3911" id="3911">3911</a>
+<a href="#3912" id="3912">3912</a>
+<a href="#3913" id="3913">3913</a>
+<a href="#3914" id="3914">3914</a>
+<a href="#3915" id="3915">3915</a>
+<a href="#3916" id="3916">3916</a>
+<a href="#3917" id="3917">3917</a>
+<a href="#3918" id="3918">3918</a>
+<a href="#3919" id="3919">3919</a>
+<a href="#3920" id="3920">3920</a>
+<a href="#3921" id="3921">3921</a>
+<a href="#3922" id="3922">3922</a>
+<a href="#3923" id="3923">3923</a>
+<a href="#3924" id="3924">3924</a>
+<a href="#3925" id="3925">3925</a>
+<a href="#3926" id="3926">3926</a>
+<a href="#3927" id="3927">3927</a>
+<a href="#3928" id="3928">3928</a>
+<a href="#3929" id="3929">3929</a>
+<a href="#3930" id="3930">3930</a>
+<a href="#3931" id="3931">3931</a>
+<a href="#3932" id="3932">3932</a>
+<a href="#3933" id="3933">3933</a>
+<a href="#3934" id="3934">3934</a>
+<a href="#3935" id="3935">3935</a>
+<a href="#3936" id="3936">3936</a>
+<a href="#3937" id="3937">3937</a>
+<a href="#3938" id="3938">3938</a>
+<a href="#3939" id="3939">3939</a>
+<a href="#3940" id="3940">3940</a>
+<a href="#3941" id="3941">3941</a>
+<a href="#3942" id="3942">3942</a>
+<a href="#3943" id="3943">3943</a>
+<a href="#3944" id="3944">3944</a>
+<a href="#3945" id="3945">3945</a>
+<a href="#3946" id="3946">3946</a>
+<a href="#3947" id="3947">3947</a>
+<a href="#3948" id="3948">3948</a>
+<a href="#3949" id="3949">3949</a>
+<a href="#3950" id="3950">3950</a>
+<a href="#3951" id="3951">3951</a>
+<a href="#3952" id="3952">3952</a>
+<a href="#3953" id="3953">3953</a>
+<a href="#3954" id="3954">3954</a>
+<a href="#3955" id="3955">3955</a>
+<a href="#3956" id="3956">3956</a>
+<a href="#3957" id="3957">3957</a>
+<a href="#3958" id="3958">3958</a>
+<a href="#3959" id="3959">3959</a>
+<a href="#3960" id="3960">3960</a>
+<a href="#3961" id="3961">3961</a>
+<a href="#3962" id="3962">3962</a>
+<a href="#3963" id="3963">3963</a>
+<a href="#3964" id="3964">3964</a>
+<a href="#3965" id="3965">3965</a>
+<a href="#3966" id="3966">3966</a>
+<a href="#3967" id="3967">3967</a>
+<a href="#3968" id="3968">3968</a>
+<a href="#3969" id="3969">3969</a>
+<a href="#3970" id="3970">3970</a>
+<a href="#3971" id="3971">3971</a>
+<a href="#3972" id="3972">3972</a>
+<a href="#3973" id="3973">3973</a>
+<a href="#3974" id="3974">3974</a>
+<a href="#3975" id="3975">3975</a>
+<a href="#3976" id="3976">3976</a>
+<a href="#3977" id="3977">3977</a>
+<a href="#3978" id="3978">3978</a>
+<a href="#3979" id="3979">3979</a>
+<a href="#3980" id="3980">3980</a>
+<a href="#3981" id="3981">3981</a>
+<a href="#3982" id="3982">3982</a>
+<a href="#3983" id="3983">3983</a>
+<a href="#3984" id="3984">3984</a>
+<a href="#3985" id="3985">3985</a>
+<a href="#3986" id="3986">3986</a>
+<a href="#3987" id="3987">3987</a>
+<a href="#3988" id="3988">3988</a>
+<a href="#3989" id="3989">3989</a>
+<a href="#3990" id="3990">3990</a>
+<a href="#3991" id="3991">3991</a>
+<a href="#3992" id="3992">3992</a>
+<a href="#3993" id="3993">3993</a>
+<a href="#3994" id="3994">3994</a>
+<a href="#3995" id="3995">3995</a>
+<a href="#3996" id="3996">3996</a>
+<a href="#3997" id="3997">3997</a>
+<a href="#3998" id="3998">3998</a>
+<a href="#3999" id="3999">3999</a>
+<a href="#4000" id="4000">4000</a>
+<a href="#4001" id="4001">4001</a>
+<a href="#4002" id="4002">4002</a>
+<a href="#4003" id="4003">4003</a>
+<a href="#4004" id="4004">4004</a>
+<a href="#4005" id="4005">4005</a>
+<a href="#4006" id="4006">4006</a>
+<a href="#4007" id="4007">4007</a>
+<a href="#4008" id="4008">4008</a>
+<a href="#4009" id="4009">4009</a>
+<a href="#4010" id="4010">4010</a>
+<a href="#4011" id="4011">4011</a>
+<a href="#4012" id="4012">4012</a>
+<a href="#4013" id="4013">4013</a>
+<a href="#4014" id="4014">4014</a>
+<a href="#4015" id="4015">4015</a>
+<a href="#4016" id="4016">4016</a>
+<a href="#4017" id="4017">4017</a>
+<a href="#4018" id="4018">4018</a>
+<a href="#4019" id="4019">4019</a>
+<a href="#4020" id="4020">4020</a>
+<a href="#4021" id="4021">4021</a>
+<a href="#4022" id="4022">4022</a>
+<a href="#4023" id="4023">4023</a>
+<a href="#4024" id="4024">4024</a>
+<a href="#4025" id="4025">4025</a>
+<a href="#4026" id="4026">4026</a>
+<a href="#4027" id="4027">4027</a>
+<a href="#4028" id="4028">4028</a>
+<a href="#4029" id="4029">4029</a>
+<a href="#4030" id="4030">4030</a>
+<a href="#4031" id="4031">4031</a>
+<a href="#4032" id="4032">4032</a>
+<a href="#4033" id="4033">4033</a>
+<a href="#4034" id="4034">4034</a>
+<a href="#4035" id="4035">4035</a>
+<a href="#4036" id="4036">4036</a>
+<a href="#4037" id="4037">4037</a>
+<a href="#4038" id="4038">4038</a>
+<a href="#4039" id="4039">4039</a>
+<a href="#4040" id="4040">4040</a>
+<a href="#4041" id="4041">4041</a>
+<a href="#4042" id="4042">4042</a>
+<a href="#4043" id="4043">4043</a>
+<a href="#4044" id="4044">4044</a>
+<a href="#4045" id="4045">4045</a>
+<a href="#4046" id="4046">4046</a>
+<a href="#4047" id="4047">4047</a>
+<a href="#4048" id="4048">4048</a>
+<a href="#4049" id="4049">4049</a>
+<a href="#4050" id="4050">4050</a>
+<a href="#4051" id="4051">4051</a>
+<a href="#4052" id="4052">4052</a>
+<a href="#4053" id="4053">4053</a>
+<a href="#4054" id="4054">4054</a>
+<a href="#4055" id="4055">4055</a>
+<a href="#4056" id="4056">4056</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{any::Any, fmt::Debug, future::Future, num::NonZeroU64, ops::Range, pin::Pin, sync::Arc};
 
 <span class="kw">use </span>wgt::{
     strict_assert, strict_assert_eq, AdapterInfo, BufferAddress, BufferSize, Color,
     DownlevelCapabilities, DynamicOffset, Extent3d, Features, ImageDataLayout,
     ImageSubresourceRange, IndexFormat, Limits, ShaderStages, SurfaceStatus, TextureFormat,
-    TextureFormatFeatures,
+    TextureFormatFeatures, WasmNotSend, WasmNotSync,
 };
 
 <span class="kw">use crate</span>::{
-    BindGroupDescriptor, BindGroupLayoutDescriptor, Buffer, BufferAsyncError, BufferDescriptor,
-    CommandEncoderDescriptor, ComputePassDescriptor, ComputePipelineDescriptor, DeviceDescriptor,
-    Error, ErrorFilter, ImageCopyBuffer, ImageCopyTexture, Maintain, MapMode,
+    AnyWasmNotSendSync, BindGroupDescriptor, BindGroupLayoutDescriptor, Buffer, BufferAsyncError,
+    BufferDescriptor, CommandEncoderDescriptor, ComputePassDescriptor, ComputePipelineDescriptor,
+    DeviceDescriptor, Error, ErrorFilter, ImageCopyBuffer, ImageCopyTexture, Maintain, MapMode,
     PipelineLayoutDescriptor, QuerySetDescriptor, RenderBundleDescriptor,
     RenderBundleEncoderDescriptor, RenderPassDescriptor, RenderPipelineDescriptor,
     RequestAdapterOptions, RequestDeviceError, SamplerDescriptor, ShaderModuleDescriptor,
@@ -3910,59 +4083,59 @@
 <span class="doccomment">/// Meta trait for an data associated with an id tracked by a context.
 ///
 /// There is no need to manually implement this trait since there is a blanket implementation for this trait.
-</span><span class="kw">pub trait </span>ContextData: Debug + Send + Sync + <span class="lifetime">&#39;static </span>{}
-<span class="kw">impl</span>&lt;T: Debug + Send + Sync + <span class="lifetime">&#39;static</span>&gt; ContextData <span class="kw">for </span>T {}
+</span><span class="kw">pub trait </span>ContextData: Debug + WasmNotSend + WasmNotSync + <span class="lifetime">&#39;static </span>{}
+<span class="kw">impl</span>&lt;T: Debug + WasmNotSend + WasmNotSync + <span class="lifetime">&#39;static</span>&gt; ContextData <span class="kw">for </span>T {}
 
-<span class="kw">pub trait </span>Context: Debug + Send + Sized + Sync {
-    <span class="kw">type </span>AdapterId: ContextId + Send + Sync;
+<span class="kw">pub trait </span>Context: Debug + WasmNotSend + WasmNotSync + Sized {
+    <span class="kw">type </span>AdapterId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>AdapterData: ContextData;
-    <span class="kw">type </span>DeviceId: ContextId + Send + Sync;
+    <span class="kw">type </span>DeviceId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>DeviceData: ContextData;
-    <span class="kw">type </span>QueueId: ContextId + Send + Sync;
+    <span class="kw">type </span>QueueId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>QueueData: ContextData;
-    <span class="kw">type </span>ShaderModuleId: ContextId + Send + Sync;
+    <span class="kw">type </span>ShaderModuleId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>ShaderModuleData: ContextData;
-    <span class="kw">type </span>BindGroupLayoutId: ContextId + Send + Sync;
+    <span class="kw">type </span>BindGroupLayoutId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>BindGroupLayoutData: ContextData;
-    <span class="kw">type </span>BindGroupId: ContextId + Send + Sync;
+    <span class="kw">type </span>BindGroupId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>BindGroupData: ContextData;
-    <span class="kw">type </span>TextureViewId: ContextId + Send + Sync;
+    <span class="kw">type </span>TextureViewId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>TextureViewData: ContextData;
-    <span class="kw">type </span>SamplerId: ContextId + Send + Sync;
+    <span class="kw">type </span>SamplerId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>SamplerData: ContextData;
-    <span class="kw">type </span>BufferId: ContextId + Send + Sync;
+    <span class="kw">type </span>BufferId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>BufferData: ContextData;
-    <span class="kw">type </span>TextureId: ContextId + Send + Sync;
+    <span class="kw">type </span>TextureId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>TextureData: ContextData;
-    <span class="kw">type </span>QuerySetId: ContextId + Send + Sync;
+    <span class="kw">type </span>QuerySetId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>QuerySetData: ContextData;
-    <span class="kw">type </span>PipelineLayoutId: ContextId + Send + Sync;
+    <span class="kw">type </span>PipelineLayoutId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>PipelineLayoutData: ContextData;
-    <span class="kw">type </span>RenderPipelineId: ContextId + Send + Sync;
+    <span class="kw">type </span>RenderPipelineId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>RenderPipelineData: ContextData;
-    <span class="kw">type </span>ComputePipelineId: ContextId + Send + Sync;
+    <span class="kw">type </span>ComputePipelineId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>ComputePipelineData: ContextData;
-    <span class="kw">type </span>CommandEncoderId: ContextId + Send + Sync;
+    <span class="kw">type </span>CommandEncoderId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>CommandEncoderData: ContextData;
     <span class="kw">type </span>ComputePassId: ContextId;
     <span class="kw">type </span>ComputePassData: ContextData;
     <span class="kw">type </span>RenderPassId: ContextId;
     <span class="kw">type </span>RenderPassData: ContextData;
-    <span class="kw">type </span>CommandBufferId: ContextId + Send + Sync;
+    <span class="kw">type </span>CommandBufferId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>CommandBufferData: ContextData;
     <span class="kw">type </span>RenderBundleEncoderId: ContextId;
     <span class="kw">type </span>RenderBundleEncoderData: ContextData;
-    <span class="kw">type </span>RenderBundleId: ContextId + Send + Sync;
+    <span class="kw">type </span>RenderBundleId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>RenderBundleData: ContextData;
-    <span class="kw">type </span>SurfaceId: ContextId + Send + Sync;
+    <span class="kw">type </span>SurfaceId: ContextId + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>SurfaceData: ContextData;
 
-    <span class="kw">type </span>SurfaceOutputDetail: Send + Sync + <span class="lifetime">&#39;static</span>;
-    <span class="kw">type </span>SubmissionIndex: ContextId + Clone + Copy + Send + Sync;
+    <span class="kw">type </span>SurfaceOutputDetail: WasmNotSend + WasmNotSync + <span class="lifetime">&#39;static</span>;
+    <span class="kw">type </span>SubmissionIndex: ContextId + Clone + Copy + WasmNotSend + WasmNotSync;
     <span class="kw">type </span>SubmissionIndexData: ContextData + Copy;
 
     <span class="kw">type </span>RequestAdapterFuture: Future&lt;Output = <span class="prelude-ty">Option</span>&lt;(<span class="self">Self</span>::AdapterId, <span class="self">Self</span>::AdapterData)&gt;&gt;
-        + Send
+        + WasmNotSend
         + <span class="lifetime">&#39;static</span>;
     <span class="kw">type </span>RequestDeviceFuture: Future&lt;
             Output = <span class="prelude-ty">Result</span>&lt;
@@ -3974,9 +4147,9 @@
                 ),
                 RequestDeviceError,
             &gt;,
-        &gt; + Send
+        &gt; + WasmNotSend
         + <span class="lifetime">&#39;static</span>;
-    <span class="kw">type </span>PopErrorScopeFuture: Future&lt;Output = <span class="prelude-ty">Option</span>&lt;Error&gt;&gt; + Send + <span class="lifetime">&#39;static</span>;
+    <span class="kw">type </span>PopErrorScopeFuture: Future&lt;Output = <span class="prelude-ty">Option</span>&lt;Error&gt;&gt; + WasmNotSend + <span class="lifetime">&#39;static</span>;
 
     <span class="kw">fn </span>init(instance_desc: wgt::InstanceDescriptor) -&gt; <span class="self">Self</span>;
     <span class="kw">fn </span>instance_create_surface(
@@ -4182,7 +4355,7 @@
         buffer_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferData,
         mode: MapMode,
         range: Range&lt;BufferAddress&gt;,
-        callback: Box&lt;<span class="kw">dyn </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), BufferAsyncError&gt;) + Send + <span class="lifetime">&#39;static</span>&gt;,
+        callback: BufferMapCallback,
     );
     <span class="kw">fn </span>buffer_get_mapped_range(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -4190,6 +4363,16 @@
         buffer_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferData,
         sub_range: Range&lt;BufferAddress&gt;,
     ) -&gt; Box&lt;<span class="kw">dyn </span>BufferMappedRange&gt;;
+    <span class="attr">#[cfg(all(
+        target_arch = <span class="string">&quot;wasm32&quot;</span>,
+        not(any(target_os = <span class="string">&quot;emscripten&quot;</span>, feature = <span class="string">&quot;webgl&quot;</span>))
+    ))]
+    </span><span class="kw">fn </span>buffer_get_mapped_range_as_array_buffer(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        buffer: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferId,
+        buffer_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferData,
+        sub_range: Range&lt;BufferAddress&gt;,
+    ) -&gt; js_sys::ArrayBuffer;
     <span class="kw">fn </span>buffer_unmap(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferId, buffer_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::BufferData);
     <span class="kw">fn </span>texture_create_view(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -4453,7 +4636,7 @@
         dest: <span class="kw">crate</span>::ImageCopyTextureTagged,
         size: wgt::Extent3d,
     );
-    <span class="kw">fn </span>queue_submit&lt;I: Iterator&lt;Item = <span class="self">Self</span>::CommandBufferId&gt;&gt;(
+    <span class="kw">fn </span>queue_submit&lt;I: Iterator&lt;Item = (<span class="self">Self</span>::CommandBufferId, <span class="self">Self</span>::CommandBufferData)&gt;&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueId,
         queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
@@ -4468,7 +4651,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueId,
         queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData,
-        callback: Box&lt;<span class="kw">dyn </span>FnOnce() + Send + <span class="lifetime">&#39;static</span>&gt;,
+        callback: SubmittedWorkDoneCallback,
     );
 
     <span class="kw">fn </span>device_start_capture(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId, device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData);
@@ -4853,6 +5036,17 @@
         query_set_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QuerySetData,
         query_index: u32,
     );
+    <span class="kw">fn </span>render_pass_begin_occlusion_query(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassId,
+        pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
+        query_index: u32,
+    );
+    <span class="kw">fn </span>render_pass_end_occlusion_query(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassId,
+        pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
+    );
     <span class="kw">fn </span>render_pass_begin_pipeline_statistics_query(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassId,
@@ -4870,7 +5064,9 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="self">Self</span>::RenderPassData,
-        render_bundles: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = <span class="self">Self</span>::RenderBundleId&gt; + <span class="lifetime">&#39;a</span>&gt;,
+        render_bundles: Box&lt;
+            <span class="kw">dyn </span>Iterator&lt;Item = (<span class="self">Self</span>::RenderBundleId, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">Self</span>::RenderBundleData)&gt; + <span class="lifetime">&#39;a</span>,
+        &gt;,
     );
 }
 
@@ -4885,7 +5081,7 @@
 }
 
 <span class="kw">impl </span>ObjectId {
-    <span class="kw">const </span>UNUSED: <span class="self">Self </span>= ObjectId {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>UNUSED: <span class="self">Self </span>= ObjectId {
         id: <span class="prelude-val">None</span>,
         <span class="attr">#[cfg(feature = <span class="string">&quot;expose-ids&quot;</span>)]
         </span>global_id: <span class="prelude-val">None</span>,
@@ -4908,7 +5104,8 @@
         }
     }
 
-    <span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; NonZeroU64 {
+    <span class="attr">#[allow(dead_code)]
+    </span><span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; NonZeroU64 {
         <span class="self">self</span>.id.unwrap()
     }
 
@@ -4919,15 +5116,24 @@
     }
 }
 
-<span class="macro">static_assertions::assert_impl_all!</span>(ObjectId: Send, Sync);
+<span class="attr">#[cfg(any(
+    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    all(
+        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
+        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    )
+))]
+</span><span class="macro">static_assertions::assert_impl_all!</span>(ObjectId: Send, Sync);
 
-<span class="kw">fn </span>downcast_ref&lt;T: Debug + Send + Sync + <span class="lifetime">&#39;static</span>&gt;(data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) -&gt; <span class="kw-2">&amp;</span>T {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_ref&lt;T: Debug + WasmNotSend + WasmNotSync + <span class="lifetime">&#39;static</span>&gt;(
+    data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
+) -&gt; <span class="kw-2">&amp;</span>T {
     <span class="macro">strict_assert!</span>(data.is::&lt;T&gt;());
     <span class="comment">// Copied from std.
     </span><span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(data <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">dyn </span>Any <span class="kw">as </span><span class="kw-2">*const </span>T) }
 }
 
-<span class="kw">fn </span>downcast_mut&lt;T: Debug + Send + Sync + <span class="lifetime">&#39;static</span>&gt;(data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data) -&gt; <span class="kw-2">&amp;mut </span>T {
+<span class="kw">fn </span>downcast_mut&lt;T: Debug + WasmNotSend + WasmNotSync + <span class="lifetime">&#39;static</span>&gt;(data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data) -&gt; <span class="kw-2">&amp;mut </span>T {
     <span class="macro">strict_assert!</span>(data.is::&lt;T&gt;());
     <span class="comment">// Copied from std.
     </span><span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(data <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">dyn </span>Any <span class="kw">as </span><span class="kw-2">*mut </span>T) }
@@ -4959,8 +5165,97 @@
     <span class="kw">pub </span>queue_data: Box&lt;<span class="kw">crate</span>::Data&gt;,
 }
 
+<span class="attr">#[cfg(any(
+    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    all(
+        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
+        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    )
+))]
+</span><span class="kw">pub type </span>BufferMapCallback = Box&lt;<span class="kw">dyn </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), BufferAsyncError&gt;) + Send + <span class="lifetime">&#39;static</span>&gt;;
+<span class="attr">#[cfg(not(any(
+    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    all(
+        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
+        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    )
+)))]
+</span><span class="kw">pub type </span>BufferMapCallback = Box&lt;<span class="kw">dyn </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), BufferAsyncError&gt;) + <span class="lifetime">&#39;static</span>&gt;;
+
+<span class="attr">#[cfg(any(
+    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    all(
+        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
+        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    )
+))]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>AdapterRequestDeviceFuture =
+    Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;DeviceRequest, RequestDeviceError&gt;&gt; + Send&gt;;
+<span class="attr">#[cfg(not(any(
+    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    all(
+        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
+        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    )
+)))]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>AdapterRequestDeviceFuture =
+    Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;DeviceRequest, RequestDeviceError&gt;&gt;&gt;;
+
+<span class="attr">#[cfg(any(
+    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    all(
+        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
+        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    )
+))]
+</span><span class="kw">pub type </span>InstanceRequestAdapterFuture =
+    Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Option</span>&lt;(ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;)&gt;&gt; + Send&gt;;
+<span class="attr">#[cfg(not(any(
+    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    all(
+        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
+        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    )
+)))]
+</span><span class="kw">pub type </span>InstanceRequestAdapterFuture =
+    Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Option</span>&lt;(ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;)&gt;&gt;&gt;;
+
+<span class="attr">#[cfg(any(
+    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    all(
+        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
+        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    )
+))]
+</span><span class="kw">pub type </span>DevicePopErrorFuture = Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Option</span>&lt;Error&gt;&gt; + Send&gt;;
+<span class="attr">#[cfg(not(any(
+    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    all(
+        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
+        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    )
+)))]
+</span><span class="kw">pub type </span>DevicePopErrorFuture = Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Option</span>&lt;Error&gt;&gt;&gt;;
+
+<span class="attr">#[cfg(any(
+    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    all(
+        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
+        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    )
+))]
+</span><span class="kw">pub type </span>SubmittedWorkDoneCallback = Box&lt;<span class="kw">dyn </span>FnOnce() + Send + <span class="lifetime">&#39;static</span>&gt;;
+<span class="attr">#[cfg(not(any(
+    not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
+    all(
+        feature = <span class="string">&quot;fragile-send-sync-non-atomic-wasm&quot;</span>,
+        not(target_feature = <span class="string">&quot;atomics&quot;</span>)
+    )
+)))]
+</span><span class="kw">pub type </span>SubmittedWorkDoneCallback = Box&lt;<span class="kw">dyn </span>FnOnce() + <span class="lifetime">&#39;static</span>&gt;;
+
 <span class="doccomment">/// An object safe variant of [`Context`] implemented by all types that implement [`Context`].
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>DynContext: Debug + Send + Sync {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>DynContext: Debug + WasmNotSend + WasmNotSync {
     <span class="kw">fn </span>as_any(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Any;
 
     <span class="kw">fn </span>instance_create_surface(
@@ -4972,14 +5267,14 @@
     </span><span class="kw">fn </span>instance_request_adapter(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         options: <span class="kw-2">&amp;</span>RequestAdapterOptions&lt;<span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; Pin&lt;Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Option</span>&lt;(ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;)&gt;&gt; + Send&gt;&gt;;
+    ) -&gt; Pin&lt;InstanceRequestAdapterFuture&gt;;
     <span class="kw">fn </span>adapter_request_device(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         adapter: <span class="kw-2">&amp;</span>ObjectId,
         adapter_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
         trace_dir: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
-    ) -&gt; Pin&lt;Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;DeviceRequest, RequestDeviceError&gt;&gt; + Send&gt;&gt;;
+    ) -&gt; Pin&lt;AdapterRequestDeviceFuture&gt;;
 
     <span class="kw">fn </span>instance_poll_all_devices(<span class="kw-2">&amp;</span><span class="self">self</span>, force_wait: bool) -&gt; bool;
     <span class="kw">fn </span>adapter_is_surface_supported(
@@ -5032,10 +5327,10 @@
         <span class="prelude-ty">Option</span>&lt;ObjectId&gt;,
         <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">crate</span>::Data&gt;&gt;,
         SurfaceStatus,
-        Box&lt;<span class="kw">dyn </span>Any + Send + Sync&gt;,
+        Box&lt;<span class="kw">dyn </span>AnyWasmNotSendSync&gt;,
     );
-    <span class="kw">fn </span>surface_present(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>ObjectId, detail: <span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Any + Send + Sync));
-    <span class="kw">fn </span>surface_texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>ObjectId, detail: <span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Any + Send + Sync));
+    <span class="kw">fn </span>surface_present(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>ObjectId, detail: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AnyWasmNotSendSync);
+    <span class="kw">fn </span>surface_texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>ObjectId, detail: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AnyWasmNotSendSync);
 
     <span class="kw">fn </span>device_features(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) -&gt; Features;
     <span class="kw">fn </span>device_limits(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) -&gt; Limits;
@@ -5142,14 +5437,14 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span>ObjectId,
         device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
-    ) -&gt; Pin&lt;Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Option</span>&lt;Error&gt;&gt; + Send + <span class="lifetime">&#39;static</span>&gt;&gt;;
+    ) -&gt; Pin&lt;DevicePopErrorFuture&gt;;
     <span class="kw">fn </span>buffer_map_async(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         buffer: <span class="kw-2">&amp;</span>ObjectId,
         buffer_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
         mode: MapMode,
         range: Range&lt;BufferAddress&gt;,
-        callback: Box&lt;<span class="kw">dyn </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), BufferAsyncError&gt;) + Send + <span class="lifetime">&#39;static</span>&gt;,
+        callback: BufferMapCallback,
     );
     <span class="kw">fn </span>buffer_get_mapped_range(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -5157,6 +5452,16 @@
         buffer_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
         sub_range: Range&lt;BufferAddress&gt;,
     ) -&gt; Box&lt;<span class="kw">dyn </span>BufferMappedRange&gt;;
+    <span class="attr">#[cfg(all(
+        target_arch = <span class="string">&quot;wasm32&quot;</span>,
+        not(any(target_os = <span class="string">&quot;emscripten&quot;</span>, feature = <span class="string">&quot;webgl&quot;</span>))
+    ))]
+    </span><span class="kw">fn </span>buffer_get_mapped_range_as_array_buffer(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        buffer: <span class="kw-2">&amp;</span>ObjectId,
+        buffer_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
+        sub_range: Range&lt;BufferAddress&gt;,
+    ) -&gt; js_sys::ArrayBuffer;
     <span class="kw">fn </span>buffer_unmap(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>ObjectId, buffer_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data);
     <span class="kw">fn </span>texture_create_view(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -5384,14 +5689,14 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span>ObjectId,
         queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
-        command_buffers: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = ObjectId&gt; + <span class="lifetime">&#39;a</span>&gt;,
+        command_buffers: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = (ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;)&gt; + <span class="lifetime">&#39;a</span>&gt;,
     ) -&gt; (ObjectId, Arc&lt;<span class="kw">crate</span>::Data&gt;);
     <span class="kw">fn </span>queue_get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>ObjectId, queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) -&gt; f32;
     <span class="kw">fn </span>queue_on_submitted_work_done(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span>ObjectId,
         queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
-        callback: Box&lt;<span class="kw">dyn </span>FnOnce() + Send + <span class="lifetime">&#39;static</span>&gt;,
+        callback: SubmittedWorkDoneCallback,
     );
 
     <span class="kw">fn </span>device_start_capture(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data);
@@ -5768,6 +6073,13 @@
         query_set_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
         query_index: u32,
     );
+    <span class="kw">fn </span>render_pass_begin_occlusion_query(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        pass: <span class="kw-2">&amp;mut </span>ObjectId,
+        pass_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data,
+        query_index: u32,
+    );
+    <span class="kw">fn </span>render_pass_end_occlusion_query(<span class="kw-2">&amp;</span><span class="self">self</span>, pass: <span class="kw-2">&amp;mut </span>ObjectId, pass_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data);
     <span class="kw">fn </span>render_pass_begin_pipeline_statistics_query(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass: <span class="kw-2">&amp;mut </span>ObjectId,
@@ -5785,7 +6097,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass: <span class="kw-2">&amp;mut </span>ObjectId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data,
-        render_bundles: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ObjectId&gt; + <span class="lifetime">&#39;a</span>&gt;,
+        render_bundles: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ObjectId, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">crate</span>::Data)&gt; + <span class="lifetime">&#39;a</span>&gt;,
     );
 }
 
@@ -5811,7 +6123,7 @@
     <span class="kw">fn </span>instance_request_adapter(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         options: <span class="kw-2">&amp;</span>RequestAdapterOptions&lt;<span class="lifetime">&#39;_</span>&gt;,
-    ) -&gt; Pin&lt;Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Option</span>&lt;(ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;)&gt;&gt; + Send&gt;&gt; {
+    ) -&gt; Pin&lt;InstanceRequestAdapterFuture&gt; {
         <span class="kw">let </span>future: T::RequestAdapterFuture = Context::instance_request_adapter(<span class="self">self</span>, options);
         Box::pin(<span class="kw">async move </span>{
             <span class="kw">let </span>result: <span class="prelude-ty">Option</span>&lt;(T::AdapterId, T::AdapterData)&gt; = future.<span class="kw">await</span>;
@@ -5825,7 +6137,7 @@
         adapter_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
         trace_dir: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
-    ) -&gt; Pin&lt;Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Result</span>&lt;DeviceRequest, RequestDeviceError&gt;&gt; + Send&gt;&gt; {
+    ) -&gt; Pin&lt;AdapterRequestDeviceFuture&gt; {
         <span class="kw">let </span>adapter = &lt;T::AdapterId&gt;::from(<span class="kw-2">*</span>adapter);
         <span class="kw">let </span>adapter_data = downcast_ref(adapter_data);
         <span class="kw">let </span>future = Context::adapter_request_device(<span class="self">self</span>, <span class="kw-2">&amp;</span>adapter, adapter_data, desc, trace_dir);
@@ -5944,13 +6256,13 @@
         <span class="prelude-ty">Option</span>&lt;ObjectId&gt;,
         <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">crate</span>::Data&gt;&gt;,
         SurfaceStatus,
-        Box&lt;<span class="kw">dyn </span>Any + Send + Sync&gt;,
+        Box&lt;<span class="kw">dyn </span>AnyWasmNotSendSync&gt;,
     ) {
         <span class="kw">let </span>surface = &lt;T::SurfaceId&gt;::from(<span class="kw-2">*</span>surface);
         <span class="kw">let </span>surface_data = downcast_ref(surface_data);
         <span class="kw">let </span>(texture, texture_data, status, detail) =
             Context::surface_get_current_texture(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface, surface_data);
-        <span class="kw">let </span>detail = Box::new(detail) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>Any + Send + Sync&gt;;
+        <span class="kw">let </span>detail = Box::new(detail) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>AnyWasmNotSendSync&gt;;
         (
             texture.map(Into::into),
             texture_data.map(|b| Box::new(b) <span class="kw">as _</span>),
@@ -5959,12 +6271,12 @@
         )
     }
 
-    <span class="kw">fn </span>surface_present(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>ObjectId, detail: <span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Any + Send + Sync)) {
+    <span class="kw">fn </span>surface_present(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>ObjectId, detail: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AnyWasmNotSendSync) {
         <span class="kw">let </span>texture = &lt;T::TextureId&gt;::from(<span class="kw-2">*</span>texture);
         Context::surface_present(<span class="self">self</span>, <span class="kw-2">&amp;</span>texture, detail.downcast_ref().unwrap())
     }
 
-    <span class="kw">fn </span>surface_texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>ObjectId, detail: <span class="kw-2">&amp;</span>(<span class="kw">dyn </span>Any + Send + Sync)) {
+    <span class="kw">fn </span>surface_texture_discard(<span class="kw-2">&amp;</span><span class="self">self</span>, texture: <span class="kw-2">&amp;</span>ObjectId, detail: <span class="kw-2">&amp;</span><span class="kw">dyn </span>AnyWasmNotSendSync) {
         <span class="kw">let </span>texture = &lt;T::TextureId&gt;::from(<span class="kw-2">*</span>texture);
         Context::surface_texture_discard(<span class="self">self</span>, <span class="kw-2">&amp;</span>texture, detail.downcast_ref().unwrap())
     }
@@ -6205,7 +6517,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span>ObjectId,
         device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
-    ) -&gt; Pin&lt;Box&lt;<span class="kw">dyn </span>Future&lt;Output = <span class="prelude-ty">Option</span>&lt;Error&gt;&gt; + Send + <span class="lifetime">&#39;static</span>&gt;&gt; {
+    ) -&gt; Pin&lt;DevicePopErrorFuture&gt; {
         <span class="kw">let </span>device = &lt;T::DeviceId&gt;::from(<span class="kw-2">*</span>device);
         <span class="kw">let </span>device_data = downcast_ref(device_data);
         Box::pin(Context::device_pop_error_scope(<span class="self">self</span>, <span class="kw-2">&amp;</span>device, device_data))
@@ -6217,7 +6529,7 @@
         buffer_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
         mode: MapMode,
         range: Range&lt;BufferAddress&gt;,
-        callback: Box&lt;<span class="kw">dyn </span>FnOnce(<span class="prelude-ty">Result</span>&lt;(), BufferAsyncError&gt;) + Send + <span class="lifetime">&#39;static</span>&gt;,
+        callback: BufferMapCallback,
     ) {
         <span class="kw">let </span>buffer = &lt;T::BufferId&gt;::from(<span class="kw-2">*</span>buffer);
         <span class="kw">let </span>buffer_data = downcast_ref(buffer_data);
@@ -6233,6 +6545,21 @@
         <span class="kw">let </span>buffer = &lt;T::BufferId&gt;::from(<span class="kw-2">*</span>buffer);
         <span class="kw">let </span>buffer_data = downcast_ref(buffer_data);
         Context::buffer_get_mapped_range(<span class="self">self</span>, <span class="kw-2">&amp;</span>buffer, buffer_data, sub_range)
+    }
+
+    <span class="attr">#[cfg(all(
+        target_arch = <span class="string">&quot;wasm32&quot;</span>,
+        not(any(target_os = <span class="string">&quot;emscripten&quot;</span>, feature = <span class="string">&quot;webgl&quot;</span>))
+    ))]
+    </span><span class="kw">fn </span>buffer_get_mapped_range_as_array_buffer(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        buffer: <span class="kw-2">&amp;</span>ObjectId,
+        buffer_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
+        sub_range: Range&lt;BufferAddress&gt;,
+    ) -&gt; js_sys::ArrayBuffer {
+        <span class="kw">let </span>buffer = &lt;T::BufferId&gt;::from(<span class="kw-2">*</span>buffer);
+        <span class="kw">let </span>buffer_data = downcast_ref(buffer_data);
+        Context::buffer_get_mapped_range_as_array_buffer(<span class="self">self</span>, <span class="kw-2">&amp;</span>buffer, buffer_data, sub_range)
     }
 
     <span class="kw">fn </span>buffer_unmap(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>ObjectId, buffer_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) {
@@ -6785,11 +7112,14 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span>ObjectId,
         queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
-        command_buffers: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = ObjectId&gt; + <span class="lifetime">&#39;a</span>&gt;,
+        command_buffers: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = (ObjectId, Box&lt;<span class="kw">crate</span>::Data&gt;)&gt; + <span class="lifetime">&#39;a</span>&gt;,
     ) -&gt; (ObjectId, Arc&lt;<span class="kw">crate</span>::Data&gt;) {
         <span class="kw">let </span>queue = &lt;T::QueueId&gt;::from(<span class="kw-2">*</span>queue);
         <span class="kw">let </span>queue_data = downcast_ref(queue_data);
-        <span class="kw">let </span>command_buffers = command_buffers.into_iter().map(&lt;T::CommandBufferId&gt;::from);
+        <span class="kw">let </span>command_buffers = command_buffers.into_iter().map(|(id, data)| {
+            <span class="kw">let </span>command_buffer_data: &lt;T <span class="kw">as </span>Context&gt;::CommandBufferData = <span class="kw-2">*</span>data.downcast().unwrap();
+            (&lt;T::CommandBufferId&gt;::from(id), command_buffer_data)
+        });
         <span class="kw">let </span>(submission_index, data) =
             Context::queue_submit(<span class="self">self</span>, <span class="kw-2">&amp;</span>queue, queue_data, command_buffers);
         (submission_index.into(), Arc::new(data) <span class="kw">as _</span>)
@@ -6805,7 +7135,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         queue: <span class="kw-2">&amp;</span>ObjectId,
         queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
-        callback: Box&lt;<span class="kw">dyn </span>FnOnce() + Send + <span class="lifetime">&#39;static</span>&gt;,
+        callback: SubmittedWorkDoneCallback,
     ) {
         <span class="kw">let </span>queue = &lt;T::QueueId&gt;::from(<span class="kw-2">*</span>queue);
         <span class="kw">let </span>queue_data = downcast_ref(queue_data);
@@ -7690,6 +8020,23 @@
         )
     }
 
+    <span class="kw">fn </span>render_pass_begin_occlusion_query(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        pass: <span class="kw-2">&amp;mut </span>ObjectId,
+        pass_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data,
+        query_index: u32,
+    ) {
+        <span class="kw">let </span><span class="kw-2">mut </span>pass = &lt;T::RenderPassId&gt;::from(<span class="kw-2">*</span>pass);
+        <span class="kw">let </span>pass_data = downcast_mut::&lt;T::RenderPassData&gt;(pass_data);
+        Context::render_pass_begin_occlusion_query(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>pass, pass_data, query_index)
+    }
+
+    <span class="kw">fn </span>render_pass_end_occlusion_query(<span class="kw-2">&amp;</span><span class="self">self</span>, pass: <span class="kw-2">&amp;mut </span>ObjectId, pass_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data) {
+        <span class="kw">let </span><span class="kw-2">mut </span>pass = &lt;T::RenderPassId&gt;::from(<span class="kw-2">*</span>pass);
+        <span class="kw">let </span>pass_data = downcast_mut::&lt;T::RenderPassData&gt;(pass_data);
+        Context::render_pass_end_occlusion_query(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>pass, pass_data)
+    }
+
     <span class="kw">fn </span>render_pass_begin_pipeline_statistics_query(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass: <span class="kw-2">&amp;mut </span>ObjectId,
@@ -7726,20 +8073,19 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         pass: <span class="kw-2">&amp;mut </span>ObjectId,
         pass_data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data,
-        render_bundles: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ObjectId&gt; + <span class="lifetime">&#39;a</span>&gt;,
+        render_bundles: Box&lt;<span class="kw">dyn </span>Iterator&lt;Item = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ObjectId, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">crate</span>::Data)&gt; + <span class="lifetime">&#39;a</span>&gt;,
     ) {
         <span class="kw">let </span><span class="kw-2">mut </span>pass = &lt;T::RenderPassId&gt;::from(<span class="kw-2">*</span>pass);
         <span class="kw">let </span>pass_data = downcast_mut::&lt;T::RenderPassData&gt;(pass_data);
-        <span class="kw">let </span>render_bundles = Box::new(
-            render_bundles
-                .into_iter()
-                .map(|id| &lt;T::RenderBundleId&gt;::from(<span class="kw-2">*</span>id)),
-        );
+        <span class="kw">let </span>render_bundles = Box::new(render_bundles.into_iter().map(|(id, data)| {
+            <span class="kw">let </span>render_bundle_data: <span class="kw-2">&amp;</span>&lt;T <span class="kw">as </span>Context&gt;::RenderBundleData = downcast_ref(data);
+            (&lt;T::RenderBundleId&gt;::from(<span class="kw-2">*</span>id), render_bundle_data)
+        }));
         Context::render_pass_execute_bundles(<span class="self">self</span>, <span class="kw-2">&amp;mut </span>pass, pass_data, render_bundles)
     }
 }
 
-<span class="kw">pub trait </span>QueueWriteBuffer: Send + Sync {
+<span class="kw">pub trait </span>QueueWriteBuffer: WasmNotSend + WasmNotSync {
     <span class="kw">fn </span>slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8];
 
     <span class="kw">fn </span>slice_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8];

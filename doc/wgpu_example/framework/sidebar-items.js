@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ComparisonType","ShaderStage"],"fn":["cast_slice","run","test"],"struct":["FrameworkRefTest","Spawner"],"trait":["Example"]};

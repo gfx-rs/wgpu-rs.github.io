@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fbd14db5c88ed452.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (700938c07 2023-04-04)" data-search-js="search-bc5a112813b5d712.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" data-theme-light-css="light-db279b6232be9c13.css" data-theme-dark-css="dark-cf923f49f397b216.css" data-theme-ayu-css="ayu-be46fdc453a55015.css" ></div><script src="../../../static.files/storage-d4a1a279bad1a0c0.js"></script><script defer src="../../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-8e6affb8c73a5ff1.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu_hal/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (3223b0b5e 2023-09-20)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu_hal/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -623,7 +623,85 @@
 <a href="#623" id="623">623</a>
 <a href="#624" id="624">624</a>
 <a href="#625" id="625">625</a>
-</pre><pre class="rust"><code><span class="doccomment">/*!
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
+<a href="#635" id="635">635</a>
+<a href="#636" id="636">636</a>
+<a href="#637" id="637">637</a>
+<a href="#638" id="638">638</a>
+<a href="#639" id="639">639</a>
+<a href="#640" id="640">640</a>
+<a href="#641" id="641">641</a>
+<a href="#642" id="642">642</a>
+<a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
+<a href="#648" id="648">648</a>
+<a href="#649" id="649">649</a>
+<a href="#650" id="650">650</a>
+<a href="#651" id="651">651</a>
+<a href="#652" id="652">652</a>
+<a href="#653" id="653">653</a>
+<a href="#654" id="654">654</a>
+<a href="#655" id="655">655</a>
+<a href="#656" id="656">656</a>
+<a href="#657" id="657">657</a>
+<a href="#658" id="658">658</a>
+<a href="#659" id="659">659</a>
+<a href="#660" id="660">660</a>
+<a href="#661" id="661">661</a>
+<a href="#662" id="662">662</a>
+<a href="#663" id="663">663</a>
+<a href="#664" id="664">664</a>
+<a href="#665" id="665">665</a>
+<a href="#666" id="666">666</a>
+<a href="#667" id="667">667</a>
+<a href="#668" id="668">668</a>
+<a href="#669" id="669">669</a>
+<a href="#670" id="670">670</a>
+<a href="#671" id="671">671</a>
+<a href="#672" id="672">672</a>
+<a href="#673" id="673">673</a>
+<a href="#674" id="674">674</a>
+<a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
+<a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
+<a href="#683" id="683">683</a>
+<a href="#684" id="684">684</a>
+<a href="#685" id="685">685</a>
+<a href="#686" id="686">686</a>
+<a href="#687" id="687">687</a>
+<a href="#688" id="688">688</a>
+<a href="#689" id="689">689</a>
+<a href="#690" id="690">690</a>
+<a href="#691" id="691">691</a>
+<a href="#692" id="692">692</a>
+<a href="#693" id="693">693</a>
+<a href="#694" id="694">694</a>
+<a href="#695" id="695">695</a>
+<a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+</pre></div><pre class="rust"><code><span class="doccomment">/*!
 # Vulkan API internals.
 
 ## Stack memory
@@ -652,7 +730,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 
 </span><span class="kw">mod </span>adapter;
 <span class="kw">mod </span>command;
-<span class="kw">mod </span>conv;
+<span class="kw">pub mod </span>conv;
 <span class="kw">mod </span>device;
 <span class="kw">mod </span>instance;
 
@@ -695,11 +773,38 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     <span class="kw">type </span>ShaderModule = ShaderModule;
     <span class="kw">type </span>RenderPipeline = RenderPipeline;
     <span class="kw">type </span>ComputePipeline = ComputePipeline;
+
+    <span class="kw">type </span>TextureFormat = vk::Format;
 }
 
 <span class="kw">struct </span>DebugUtils {
     extension: ext::DebugUtils,
     messenger: vk::DebugUtilsMessengerEXT,
+
+    <span class="doccomment">/// Owning pointer to the debug messenger callback user data.
+    ///
+    /// `InstanceShared::drop` destroys the debug messenger before
+    /// dropping this, so the callback should never receive a dangling
+    /// user data pointer.
+    </span><span class="attr">#[allow(dead_code)]
+    </span>callback_data: Box&lt;DebugUtilsMessengerUserData&gt;,
+}
+
+<span class="doccomment">/// User data needed by `instance::debug_utils_messenger_callback`.
+///
+/// When we create the [`vk::DebugUtilsMessengerEXT`], the `pUserData`
+/// pointer refers to one of these values.
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>DebugUtilsMessengerUserData {
+    <span class="doccomment">/// Validation layer description, from `vk::LayerProperties`.
+    </span>validation_layer_description: std::ffi::CString,
+
+    <span class="doccomment">/// Validation layer specification version, from `vk::LayerProperties`.
+    </span>validation_layer_spec_version: u32,
+
+    <span class="doccomment">/// If the OBS layer is present. OBS never increments the version of their layer,
+    /// so there&#39;s no reason to have the version.
+    </span>has_obs_layer: bool,
 }
 
 <span class="kw">pub struct </span>InstanceShared {
@@ -793,17 +898,42 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     non_coherent_map_mask: wgt::BufferAddress,
     robust_buffer_access: bool,
     robust_image_access: bool,
+    robust_buffer_access2: bool,
+    robust_image_access2: bool,
     zero_initialize_workgroup_memory: bool,
 }
 
 <span class="macro">bitflags::bitflags!</span>(
     <span class="doccomment">/// Workaround flags.
+    </span><span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
     </span><span class="kw">pub struct </span>Workarounds: u32 {
         <span class="doccomment">/// Only generate SPIR-V for one entry point at a time.
         </span><span class="kw">const </span>SEPARATE_ENTRY_POINTS = <span class="number">0x1</span>;
         <span class="doccomment">/// Qualcomm OOMs when there are zero color attachments but a non-null pointer
         /// to a subpass resolve attachment array. This nulls out that pointer in that case.
         </span><span class="kw">const </span>EMPTY_RESOLVE_ATTACHMENT_LISTS = <span class="number">0x2</span>;
+        <span class="doccomment">/// If the following code returns false, then nvidia will end up filling the wrong range.
+        ///
+        /// ```skip
+        /// fn nvidia_succeeds() -&gt; bool {
+        ///   # let (copy_length, start_offset) = (0, 0);
+        ///     if copy_length &gt;= 4096 {
+        ///         if start_offset % 16 != 0 {
+        ///             if copy_length == 4096 {
+        ///                 return true;
+        ///             }
+        ///             if copy_length % 16 == 0 {
+        ///                 return false;
+        ///             }
+        ///         }
+        ///     }
+        ///     true
+        /// }
+        /// ```
+        ///
+        /// As such, we need to make sure all calls to vkCmdFillBuffer are aligned to 16 bytes
+        /// if they cover a range of 4096 bytes or more.
+        </span><span class="kw">const </span>FORCE_FILL_BUFFER_WITH_SIZE_GREATER_4096_ALIGNED_OFFSET_16 = <span class="number">0x4</span>;
     }
 );
 
@@ -886,7 +1016,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     desc_allocator:
         Mutex&lt;gpu_descriptor::DescriptorAllocator&lt;vk::DescriptorPool, vk::DescriptorSet&gt;&gt;,
     valid_ash_memory_types: u32,
-    naga_options: naga::back::spv::Options,
+    naga_options: naga::back::spv::Options&lt;<span class="lifetime">&#39;static</span>&gt;,
     <span class="attr">#[cfg(feature = <span class="string">&quot;renderdoc&quot;</span>)]
     </span>render_doc: <span class="kw">crate</span>::auxil::renderdoc::RenderDoc,
 }
@@ -908,7 +1038,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Buffer {
     raw: vk::Buffer,
-    block: Mutex&lt;gpu_alloc::MemoryBlock&lt;vk::DeviceMemory&gt;&gt;,
+    block: <span class="prelude-ty">Option</span>&lt;Mutex&lt;gpu_alloc::MemoryBlock&lt;vk::DeviceMemory&gt;&gt;&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
@@ -937,6 +1067,19 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     raw: vk::ImageView,
     layers: NonZeroU32,
     attachment: FramebufferAttachment,
+}
+
+<span class="kw">impl </span>TextureView {
+    <span class="doccomment">/// # Safety
+    ///
+    /// - The image view handle must not be manually destroyed
+    </span><span class="kw">pub unsafe fn </span>raw_handle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; vk::ImageView {
+        <span class="self">self</span>.raw
+    }
+
+    <span class="kw">pub fn </span>aspects(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::FormatAspects {
+        <span class="self">self</span>.attachment.view_format.into()
+    }
 }
 
 <span class="attr">#[derive(Debug)]
@@ -1001,6 +1144,19 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     <span class="doccomment">/// If this is true, the active renderpass enabled a debug span,
     /// and needs to be disabled on renderpass close.
     </span>rpass_debug_marker_active: bool,
+
+    <span class="doccomment">/// If set, the end of the next render/compute pass will write a timestamp at
+    /// the given pool &amp; location.
+    </span>end_of_pass_timer_query: <span class="prelude-ty">Option</span>&lt;(vk::QueryPool, u32)&gt;,
+}
+
+<span class="kw">impl </span>CommandEncoder {
+    <span class="doccomment">/// # Safety
+    ///
+    /// - The commmand buffer handle must not be manually destroyed
+    </span><span class="kw">pub unsafe fn </span>raw_handle(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; vk::CommandBuffer {
+        <span class="self">self</span>.active
+    }
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>CommandEncoder {
