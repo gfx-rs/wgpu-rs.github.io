@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/adapter.rs`."><title>adapter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (3223b0b5e 2023-09-20)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu_hal/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/adapter.rs`."><title>adapter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-deb46770fd761b69.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0-nightly (1c05d50c8 2023-10-21)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f34af1a0ee6bacd.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1742,6 +1742,42 @@
 <a href="#1742" id="1742">1742</a>
 <a href="#1743" id="1743">1743</a>
 <a href="#1744" id="1744">1744</a>
+<a href="#1745" id="1745">1745</a>
+<a href="#1746" id="1746">1746</a>
+<a href="#1747" id="1747">1747</a>
+<a href="#1748" id="1748">1748</a>
+<a href="#1749" id="1749">1749</a>
+<a href="#1750" id="1750">1750</a>
+<a href="#1751" id="1751">1751</a>
+<a href="#1752" id="1752">1752</a>
+<a href="#1753" id="1753">1753</a>
+<a href="#1754" id="1754">1754</a>
+<a href="#1755" id="1755">1755</a>
+<a href="#1756" id="1756">1756</a>
+<a href="#1757" id="1757">1757</a>
+<a href="#1758" id="1758">1758</a>
+<a href="#1759" id="1759">1759</a>
+<a href="#1760" id="1760">1760</a>
+<a href="#1761" id="1761">1761</a>
+<a href="#1762" id="1762">1762</a>
+<a href="#1763" id="1763">1763</a>
+<a href="#1764" id="1764">1764</a>
+<a href="#1765" id="1765">1765</a>
+<a href="#1766" id="1766">1766</a>
+<a href="#1767" id="1767">1767</a>
+<a href="#1768" id="1768">1768</a>
+<a href="#1769" id="1769">1769</a>
+<a href="#1770" id="1770">1770</a>
+<a href="#1771" id="1771">1771</a>
+<a href="#1772" id="1772">1772</a>
+<a href="#1773" id="1773">1773</a>
+<a href="#1774" id="1774">1774</a>
+<a href="#1775" id="1775">1775</a>
+<a href="#1776" id="1776">1776</a>
+<a href="#1777" id="1777">1777</a>
+<a href="#1778" id="1778">1778</a>
+<a href="#1779" id="1779">1779</a>
+<a href="#1780" id="1780">1780</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
@@ -1822,7 +1858,7 @@
     ///
     /// `requested_features` should be the same as what was used to generate `enabled_extensions`.
     </span><span class="kw">fn </span>from_extensions_and_requested_features(
-        effective_api_version: u32,
+        device_api_version: u32,
         enabled_extensions: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr],
         requested_features: wgt::Features,
         downlevel_flags: wgt::DownlevelFlags,
@@ -1921,6 +1957,7 @@
                 <span class="comment">//.shader_resource_residency(requested_features.contains(wgt::Features::SHADER_RESOURCE_RESIDENCY))
                 </span>.geometry_shader(requested_features.contains(wgt::Features::SHADER_PRIMITIVE_INDEX))
                 .depth_clamp(requested_features.contains(wgt::Features::DEPTH_CLIP_CONTROL))
+                .dual_src_blend(requested_features.contains(wgt::Features::DUAL_SOURCE_BLENDING))
                 .build(),
             descriptor_indexing: <span class="kw">if </span>requested_features.intersects(indexing_features()) {
                 <span class="prelude-val">Some</span>(
@@ -1943,7 +1980,7 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
-            imageless_framebuffer: <span class="kw">if </span>effective_api_version &gt;= vk::API_VERSION_1_2
+            imageless_framebuffer: <span class="kw">if </span>device_api_version &gt;= vk::API_VERSION_1_2
                 || enabled_extensions.contains(<span class="kw-2">&amp;</span>vk::KhrImagelessFramebufferFn::name())
             {
                 <span class="prelude-val">Some</span>(
@@ -1954,7 +1991,7 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
-            timeline_semaphore: <span class="kw">if </span>effective_api_version &gt;= vk::API_VERSION_1_2
+            timeline_semaphore: <span class="kw">if </span>device_api_version &gt;= vk::API_VERSION_1_2
                 || enabled_extensions.contains(<span class="kw-2">&amp;</span>vk::KhrTimelineSemaphoreFn::name())
             {
                 <span class="prelude-val">Some</span>(
@@ -1965,7 +2002,7 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
-            image_robustness: <span class="kw">if </span>effective_api_version &gt;= vk::API_VERSION_1_3
+            image_robustness: <span class="kw">if </span>device_api_version &gt;= vk::API_VERSION_1_3
                 || enabled_extensions.contains(<span class="kw-2">&amp;</span>vk::ExtImageRobustnessFn::name())
             {
                 <span class="prelude-val">Some</span>(
@@ -1989,7 +2026,7 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
-            multiview: <span class="kw">if </span>effective_api_version &gt;= vk::API_VERSION_1_1
+            multiview: <span class="kw">if </span>device_api_version &gt;= vk::API_VERSION_1_1
                 || enabled_extensions.contains(<span class="kw-2">&amp;</span>vk::KhrMultiviewFn::name())
             {
                 <span class="prelude-val">Some</span>(
@@ -2022,7 +2059,7 @@
             } <span class="kw">else </span>{
                 <span class="prelude-val">None
             </span>},
-            zero_initialize_workgroup_memory: <span class="kw">if </span>effective_api_version &gt;= vk::API_VERSION_1_3
+            zero_initialize_workgroup_memory: <span class="kw">if </span>device_api_version &gt;= vk::API_VERSION_1_3
                 || enabled_extensions.contains(<span class="kw-2">&amp;</span>vk::KhrZeroInitializeWorkgroupMemoryFn::name())
             {
                 <span class="prelude-val">Some</span>(
@@ -2069,7 +2106,8 @@
             | Df::UNRESTRICTED_INDEX_BUFFER
             | Df::INDIRECT_EXECUTION
             | Df::VIEW_FORMATS
-            | Df::UNRESTRICTED_EXTERNAL_TEXTURE_COPIES;
+            | Df::UNRESTRICTED_EXTERNAL_TEXTURE_COPIES
+            | Df::NONBLOCKING_QUERY_RESOLVE;
 
         dl_flags.set(
             Df::SURFACE_VIEW_FORMATS,
@@ -2204,6 +2242,7 @@
         }
 
         features.set(F::DEPTH_CLIP_CONTROL, <span class="self">self</span>.core.depth_clamp != <span class="number">0</span>);
+        features.set(F::DUAL_SOURCE_BLENDING, <span class="self">self</span>.core.dual_src_blend != <span class="number">0</span>);
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>multiview) = <span class="self">self</span>.multiview {
             features.set(F::MULTIVIEW, multiview.multiview != <span class="number">0</span>);
@@ -2264,6 +2303,12 @@
                 | vk::FormatFeatureFlags::COLOR_ATTACHMENT_BLEND,
         );
         features.set(F::RG11B10UFLOAT_RENDERABLE, rg11b10ufloat_renderable);
+        features.set(F::SHADER_UNUSED_VERTEX_OUTPUT, <span class="bool-val">true</span>);
+
+        features.set(
+            F::BGRA8UNORM_STORAGE,
+            supports_bgra8unorm_storage(instance, phd, caps.device_api_version),
+        );
 
         (features, dl_flags)
     }
@@ -2286,20 +2331,12 @@
     maintenance_3: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceMaintenance3Properties&gt;,
     descriptor_indexing: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceDescriptorIndexingPropertiesEXT&gt;,
     driver: <span class="prelude-ty">Option</span>&lt;vk::PhysicalDeviceDriverPropertiesKHR&gt;,
-    <span class="doccomment">/// The effective driver api version supported by the physical device.
+    <span class="doccomment">/// The device API version.
     ///
-    /// The Vulkan specification states the following in the documentation for VkPhysicalDeviceProperties:
-    /// &gt; The value of apiVersion may be different than the version returned by vkEnumerateInstanceVersion;
-    /// &gt; either higher or lower. In such cases, the application must not use functionality that exceeds
-    /// &gt; the version of Vulkan associated with a given object.
+    /// Which is the version of Vulkan supported for device-level functionality.
     ///
-    /// For example, a Vulkan 1.1 instance cannot use functionality added in Vulkan 1.2 even if the physical
-    /// device supports Vulkan 1.2.
-    ///
-    /// This means that assuming that the apiVersion provided by VkPhysicalDeviceProperties is the actual
-    /// version we can use is incorrect. Instead the effective version is the lower of the instance version
-    /// and physical device version.
-    </span>effective_api_version: u32,
+    /// It is associated with a `VkPhysicalDevice` and its children.
+    </span>device_api_version: u32,
 }
 
 <span class="comment">// This is safe because the structs have `p_next: *mut c_void`, which we null out/never read.
@@ -2328,7 +2365,7 @@
         // Require `VK_KHR_swapchain`
         </span>extensions.push(vk::KhrSwapchainFn::name());
 
-        <span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_1 {
+        <span class="kw">if </span><span class="self">self</span>.device_api_version &lt; vk::API_VERSION_1_1 {
             <span class="comment">// Require either `VK_KHR_maintenance1` or `VK_AMD_negative_viewport_height`
             </span><span class="kw">if </span><span class="self">self</span>.supports_extension(vk::KhrMaintenance1Fn::name()) {
                 extensions.push(vk::KhrMaintenance1Fn::name());
@@ -2356,7 +2393,7 @@
             }
         }
 
-        <span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_2 {
+        <span class="kw">if </span><span class="self">self</span>.device_api_version &lt; vk::API_VERSION_1_2 {
             <span class="comment">// Optional `VK_KHR_image_format_list`
             </span><span class="kw">if </span><span class="self">self</span>.supports_extension(vk::KhrImageFormatListFn::name()) {
                 extensions.push(vk::KhrImageFormatListFn::name());
@@ -2366,7 +2403,7 @@
             </span><span class="kw">if </span><span class="self">self</span>.supports_extension(vk::KhrImagelessFramebufferFn::name()) {
                 extensions.push(vk::KhrImagelessFramebufferFn::name());
                 <span class="comment">// Require `VK_KHR_maintenance2` due to it being a dependency
-                </span><span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_1 {
+                </span><span class="kw">if </span><span class="self">self</span>.device_api_version &lt; vk::API_VERSION_1_1 {
                     extensions.push(vk::KhrMaintenance2Fn::name());
                 }
             }
@@ -2390,7 +2427,7 @@
             </span><span class="kw">if </span>requested_features.contains(wgt::Features::SHADER_F16) {
                 extensions.push(vk::KhrShaderFloat16Int8Fn::name());
                 <span class="comment">// `VK_KHR_16bit_storage` requires `VK_KHR_storage_buffer_storage_class`, however we require that one already
-                </span><span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_1 {
+                </span><span class="kw">if </span><span class="self">self</span>.device_api_version &lt; vk::API_VERSION_1_1 {
                     extensions.push(vk::Khr16bitStorageFn::name());
                 }
             }
@@ -2399,7 +2436,7 @@
             //extensions.push(vk::ExtSamplerFilterMinmaxFn::name());
         </span>}
 
-        <span class="kw">if </span><span class="self">self</span>.effective_api_version &lt; vk::API_VERSION_1_3 {
+        <span class="kw">if </span><span class="self">self</span>.device_api_version &lt; vk::API_VERSION_1_3 {
             <span class="comment">// Optional `VK_EXT_image_robustness`
             </span><span class="kw">if </span><span class="self">self</span>.supports_extension(vk::ExtImageRobustnessFn::name()) {
                 extensions.push(vk::ExtImageRobustnessFn::name());
@@ -2524,19 +2561,22 @@
             <span class="kw">let </span><span class="kw-2">mut </span>capabilities = PhysicalDeviceCapabilities::default();
             capabilities.supported_extensions =
                 <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.enumerate_device_extension_properties(phd).unwrap() };
-            capabilities.properties = <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>get_device_properties) =
-                <span class="self">self</span>.get_physical_device_properties
-            {
+            capabilities.properties = <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.get_physical_device_properties(phd) };
+            capabilities.device_api_version = capabilities.properties.api_version;
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>get_device_properties) = <span class="self">self</span>.get_physical_device_properties {
                 <span class="comment">// Get these now to avoid borrowing conflicts later
-                </span><span class="kw">let </span>supports_descriptor_indexing = <span class="self">self</span>.driver_api_version &gt;= vk::API_VERSION_1_2
+                </span><span class="kw">let </span>supports_maintenance3 = capabilities.device_api_version &gt;= vk::API_VERSION_1_1
+                    || capabilities.supports_extension(vk::KhrMaintenance3Fn::name());
+                <span class="kw">let </span>supports_descriptor_indexing = capabilities.device_api_version
+                    &gt;= vk::API_VERSION_1_2
                     || capabilities.supports_extension(vk::ExtDescriptorIndexingFn::name());
-                <span class="kw">let </span>supports_driver_properties = <span class="self">self</span>.driver_api_version &gt;= vk::API_VERSION_1_2
+                <span class="kw">let </span>supports_driver_properties = capabilities.device_api_version
+                    &gt;= vk::API_VERSION_1_2
                     || capabilities.supports_extension(vk::KhrDriverPropertiesFn::name());
 
                 <span class="kw">let </span><span class="kw-2">mut </span>builder = vk::PhysicalDeviceProperties2KHR::builder();
-                <span class="kw">if </span><span class="self">self</span>.driver_api_version &gt;= vk::API_VERSION_1_1
-                    || capabilities.supports_extension(vk::KhrMaintenance3Fn::name())
-                {
+                <span class="kw">if </span>supports_maintenance3 {
                     capabilities.maintenance_3 =
                         <span class="prelude-val">Some</span>(vk::PhysicalDeviceMaintenance3Properties::default());
                     builder = builder.push_next(capabilities.maintenance_3.as_mut().unwrap());
@@ -2560,15 +2600,7 @@
                 <span class="kw">unsafe </span>{
                     get_device_properties.get_physical_device_properties2(phd, <span class="kw-2">&amp;mut </span>properties2);
                 }
-                properties2.properties
-            } <span class="kw">else </span>{
-                <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.get_physical_device_properties(phd) }
             };
-
-            <span class="comment">// Set the effective api version
-            </span>capabilities.effective_api_version = <span class="self">self
-                </span>.driver_api_version
-                .min(capabilities.properties.api_version);
             capabilities
         };
 
@@ -2579,7 +2611,7 @@
             <span class="kw">let </span><span class="kw-2">mut </span>builder = vk::PhysicalDeviceFeatures2KHR::builder().features(core);
 
             <span class="comment">// `VK_KHR_multiview` is promoted to 1.1
-            </span><span class="kw">if </span>capabilities.effective_api_version &gt;= vk::API_VERSION_1_1
+            </span><span class="kw">if </span>capabilities.device_api_version &gt;= vk::API_VERSION_1_1
                 || capabilities.supports_extension(vk::KhrMultiviewFn::name())
             {
                 <span class="kw">let </span>next = features
@@ -2641,7 +2673,7 @@
             }
 
             <span class="comment">// `VK_KHR_zero_initialize_workgroup_memory` is promoted to 1.3
-            </span><span class="kw">if </span>capabilities.effective_api_version &gt;= vk::API_VERSION_1_3
+            </span><span class="kw">if </span>capabilities.device_api_version &gt;= vk::API_VERSION_1_3
                 || capabilities.supports_extension(vk::KhrZeroInitializeWorkgroupMemoryFn::name())
             {
                 <span class="kw">let </span>next = features
@@ -2734,7 +2766,7 @@
             );
         };
 
-        <span class="kw">if </span>phd_capabilities.effective_api_version == vk::API_VERSION_1_0
+        <span class="kw">if </span>phd_capabilities.device_api_version == vk::API_VERSION_1_0
             &amp;&amp; !phd_capabilities.supports_extension(vk::KhrStorageBufferStorageClassFn::name())
         {
             <span class="macro">log::warn!</span>(
@@ -2745,7 +2777,7 @@
         }
         <span class="kw">if </span>!phd_capabilities.supports_extension(vk::AmdNegativeViewportHeightFn::name())
             &amp;&amp; !phd_capabilities.supports_extension(vk::KhrMaintenance1Fn::name())
-            &amp;&amp; phd_capabilities.effective_api_version &lt; vk::API_VERSION_1_1
+            &amp;&amp; phd_capabilities.device_api_version &lt; vk::API_VERSION_1_1
         {
             <span class="macro">log::warn!</span>(
                 <span class="string">&quot;viewport Y-flip is not supported, hiding adapter: {}&quot;</span>,
@@ -2766,7 +2798,7 @@
         }
 
         <span class="kw">let </span>private_caps = <span class="kw">super</span>::PrivateCapabilities {
-            flip_y_requires_shift: phd_capabilities.effective_api_version &gt;= vk::API_VERSION_1_1
+            flip_y_requires_shift: phd_capabilities.device_api_version &gt;= vk::API_VERSION_1_1
                 || phd_capabilities.supports_extension(vk::KhrMaintenance1Fn::name()),
             imageless_framebuffers: <span class="kw">match </span>phd_features.imageless_framebuffer {
                 <span class="prelude-val">Some</span>(features) =&gt; features.imageless_framebuffer == vk::TRUE,
@@ -2774,7 +2806,7 @@
                     .imageless_framebuffer
                     .map_or(<span class="bool-val">false</span>, |ext| ext.imageless_framebuffer != <span class="number">0</span>),
             },
-            image_view_usage: phd_capabilities.effective_api_version &gt;= vk::API_VERSION_1_1
+            image_view_usage: phd_capabilities.device_api_version &gt;= vk::API_VERSION_1_1
                 || phd_capabilities.supports_extension(vk::KhrMaintenance2Fn::name()),
             timeline_semaphores: <span class="kw">match </span>phd_features.timeline_semaphore {
                 <span class="prelude-val">Some</span>(features) =&gt; features.timeline_semaphore == vk::TRUE,
@@ -2828,6 +2860,8 @@
                 .map_or(<span class="bool-val">false</span>, |ext| {
                     ext.shader_zero_initialize_workgroup_memory == vk::TRUE
                 }),
+            image_format_list: phd_capabilities.device_api_version &gt;= vk::API_VERSION_1_2
+                || phd_capabilities.supports_extension(vk::KhrImageFormatListFn::name()),
         };
         <span class="kw">let </span>capabilities = <span class="kw">crate</span>::Capabilities {
             limits: phd_capabilities.to_wgpu_limits(),
@@ -2901,7 +2935,7 @@
         features: wgt::Features,
     ) -&gt; PhysicalDeviceFeatures {
         PhysicalDeviceFeatures::from_extensions_and_requested_features(
-            <span class="self">self</span>.phd_capabilities.effective_api_version,
+            <span class="self">self</span>.phd_capabilities.device_api_version,
             enabled_extensions,
             features,
             <span class="self">self</span>.downlevel_flags,
@@ -2955,7 +2989,7 @@
                 <span class="kw-2">&amp;</span><span class="self">self</span>.instance.raw,
                 <span class="kw-2">&amp;</span>raw_device,
             )))
-        } <span class="kw">else if </span><span class="self">self</span>.phd_capabilities.effective_api_version &gt;= vk::API_VERSION_1_2 {
+        } <span class="kw">else if </span><span class="self">self</span>.phd_capabilities.device_api_version &gt;= vk::API_VERSION_1_2 {
             <span class="prelude-val">Some</span>(<span class="kw">super</span>::ExtensionFn::Promoted)
         } <span class="kw">else </span>{
             <span class="prelude-val">None
@@ -2964,21 +2998,31 @@
         <span class="kw">let </span>naga_options = {
             <span class="kw">use </span>naga::back::spv;
 
-            <span class="kw">let </span><span class="kw-2">mut </span>capabilities = <span class="macro">vec!</span>[
+            <span class="comment">// The following capabilities are always available
+            // see https://registry.khronos.org/vulkan/specs/1.3-extensions/html/chap52.html#spirvenv-capabilities
+            </span><span class="kw">let </span><span class="kw-2">mut </span>capabilities = <span class="macro">vec!</span>[
                 spv::Capability::Shader,
                 spv::Capability::Matrix,
                 spv::Capability::Sampled1D,
                 spv::Capability::Image1D,
                 spv::Capability::ImageQuery,
                 spv::Capability::DerivativeControl,
-                spv::Capability::SampledCubeArray,
-                spv::Capability::SampleRateShading,
-                <span class="comment">//Note: this is requested always, no matter what the actual
-                // adapter supports. It&#39;s not the responsibility of SPV-out
-                // translation to handle the storage support for formats.
-                </span>spv::Capability::StorageImageExtendedFormats,
-                <span class="comment">//TODO: fill out the rest
-            </span>];
+                spv::Capability::StorageImageExtendedFormats,
+            ];
+
+            <span class="kw">if </span><span class="self">self
+                </span>.downlevel_flags
+                .contains(wgt::DownlevelFlags::CUBE_ARRAY_TEXTURES)
+            {
+                capabilities.push(spv::Capability::SampledCubeArray);
+            }
+
+            <span class="kw">if </span><span class="self">self
+                </span>.downlevel_flags
+                .contains(wgt::DownlevelFlags::MULTISAMPLED_SHADING)
+            {
+                capabilities.push(spv::Capability::SampleRateShading);
+            }
 
             <span class="kw">if </span>features.contains(wgt::Features::MULTIVIEW) {
                 capabilities.push(spv::Capability::MultiView);
@@ -2994,11 +3038,14 @@
             ) {
                 capabilities.push(spv::Capability::ShaderNonUniform);
             }
+            <span class="kw">if </span>features.contains(wgt::Features::BGRA8UNORM_STORAGE) {
+                capabilities.push(spv::Capability::StorageImageWriteWithoutFormat);
+            }
 
             <span class="kw">let </span><span class="kw-2">mut </span>flags = spv::WriterFlags::empty();
             flags.set(
                 spv::WriterFlags::DEBUG,
-                <span class="self">self</span>.instance.flags.contains(<span class="kw">crate</span>::InstanceFlags::DEBUG),
+                <span class="self">self</span>.instance.flags.contains(wgt::InstanceFlags::DEBUG),
             );
             flags.set(
                 spv::WriterFlags::LABEL_VARYINGS,
@@ -3435,13 +3482,6 @@
             wgt::PresentationTimestamp::INVALID_TIMESTAMP
         }
     }
-
-    <span class="kw">fn </span>texture_format_as_hal(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        texture_format: wgt::TextureFormat,
-    ) -&gt; &lt;<span class="kw">super</span>::Api <span class="kw">as </span><span class="kw">crate</span>::Api&gt;::TextureFormat {
-        <span class="self">self</span>.private_caps.map_texture_format(texture_format)
-    }
 }
 
 <span class="kw">fn </span>is_format_16bit_norm_supported(instance: <span class="kw-2">&amp;</span>ash::Instance, phd: vk::PhysicalDevice) -&gt; bool {
@@ -3484,6 +3524,38 @@
         vk::ImageTiling::LINEAR =&gt; properties.linear_tiling_features.contains(features),
         vk::ImageTiling::OPTIMAL =&gt; properties.optimal_tiling_features.contains(features),
         <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+    }
+}
+
+<span class="kw">fn </span>supports_bgra8unorm_storage(
+    instance: <span class="kw-2">&amp;</span>ash::Instance,
+    phd: vk::PhysicalDevice,
+    device_api_version: u32,
+) -&gt; bool {
+    <span class="comment">// See https://github.com/KhronosGroup/Vulkan-Docs/issues/2027#issuecomment-1380608011
+
+    // This check gates the function call and structures used below.
+    // TODO: check for (`VK_KHR_get_physical_device_properties2` or VK1.1) and (`VK_KHR_format_feature_flags2` or VK1.3).
+    // Right now we only check for VK1.3.
+    </span><span class="kw">if </span>device_api_version &lt; vk::API_VERSION_1_3 {
+        <span class="kw">return </span><span class="bool-val">false</span>;
+    }
+
+    <span class="kw">unsafe </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>properties3 = vk::FormatProperties3::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>properties2 = vk::FormatProperties2::builder().push_next(<span class="kw-2">&amp;mut </span>properties3);
+
+        instance.get_physical_device_format_properties2(
+            phd,
+            vk::Format::B8G8R8A8_UNORM,
+            <span class="kw-2">&amp;mut </span>properties2,
+        );
+
+        <span class="kw">let </span>features2 = properties2.format_properties.optimal_tiling_features;
+        <span class="kw">let </span>features3 = properties3.optimal_tiling_features;
+
+        features2.contains(vk::FormatFeatureFlags::STORAGE_IMAGE)
+            &amp;&amp; features3.contains(vk::FormatFeatureFlags2::STORAGE_WRITE_WITHOUT_FORMAT)
     }
 }
 </code></pre></div></section></main></body></html>

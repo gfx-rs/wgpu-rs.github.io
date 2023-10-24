@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/instance.rs`."><title>instance.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (3223b0b5e 2023-09-20)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../wgpu_core/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/instance.rs`."><title>instance.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-deb46770fd761b69.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0-nightly (1c05d50c8 2023-10-21)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f34af1a0ee6bacd.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1182,6 +1182,54 @@
 <a href="#1182" id="1182">1182</a>
 <a href="#1183" id="1183">1183</a>
 <a href="#1184" id="1184">1184</a>
+<a href="#1185" id="1185">1185</a>
+<a href="#1186" id="1186">1186</a>
+<a href="#1187" id="1187">1187</a>
+<a href="#1188" id="1188">1188</a>
+<a href="#1189" id="1189">1189</a>
+<a href="#1190" id="1190">1190</a>
+<a href="#1191" id="1191">1191</a>
+<a href="#1192" id="1192">1192</a>
+<a href="#1193" id="1193">1193</a>
+<a href="#1194" id="1194">1194</a>
+<a href="#1195" id="1195">1195</a>
+<a href="#1196" id="1196">1196</a>
+<a href="#1197" id="1197">1197</a>
+<a href="#1198" id="1198">1198</a>
+<a href="#1199" id="1199">1199</a>
+<a href="#1200" id="1200">1200</a>
+<a href="#1201" id="1201">1201</a>
+<a href="#1202" id="1202">1202</a>
+<a href="#1203" id="1203">1203</a>
+<a href="#1204" id="1204">1204</a>
+<a href="#1205" id="1205">1205</a>
+<a href="#1206" id="1206">1206</a>
+<a href="#1207" id="1207">1207</a>
+<a href="#1208" id="1208">1208</a>
+<a href="#1209" id="1209">1209</a>
+<a href="#1210" id="1210">1210</a>
+<a href="#1211" id="1211">1211</a>
+<a href="#1212" id="1212">1212</a>
+<a href="#1213" id="1213">1213</a>
+<a href="#1214" id="1214">1214</a>
+<a href="#1215" id="1215">1215</a>
+<a href="#1216" id="1216">1216</a>
+<a href="#1217" id="1217">1217</a>
+<a href="#1218" id="1218">1218</a>
+<a href="#1219" id="1219">1219</a>
+<a href="#1220" id="1220">1220</a>
+<a href="#1221" id="1221">1221</a>
+<a href="#1222" id="1222">1222</a>
+<a href="#1223" id="1223">1223</a>
+<a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
+<a href="#1226" id="1226">1226</a>
+<a href="#1227" id="1227">1227</a>
+<a href="#1228" id="1228">1228</a>
+<a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{Device, DeviceDescriptor},
     global::Global,
@@ -1251,20 +1299,16 @@
     </span><span class="kw">pub </span>dx11: <span class="prelude-ty">Option</span>&lt;HalInstance&lt;hal::api::Dx11&gt;&gt;,
     <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
     </span><span class="kw">pub </span>gl: <span class="prelude-ty">Option</span>&lt;HalInstance&lt;hal::api::Gles&gt;&gt;,
+    <span class="kw">pub </span>flags: wgt::InstanceFlags,
 }
 
 <span class="kw">impl </span>Instance {
     <span class="kw">pub fn </span>new(name: <span class="kw-2">&amp;</span>str, instance_desc: wgt::InstanceDescriptor) -&gt; <span class="self">Self </span>{
         <span class="kw">fn </span>init&lt;A: HalApi&gt;(<span class="kw">_</span>: A, instance_desc: <span class="kw-2">&amp;</span>wgt::InstanceDescriptor) -&gt; <span class="prelude-ty">Option</span>&lt;A::Instance&gt; {
             <span class="kw">if </span>instance_desc.backends.contains(A::VARIANT.into()) {
-                <span class="kw">let </span><span class="kw-2">mut </span>flags = hal::InstanceFlags::empty();
-                <span class="kw">if </span><span class="macro">cfg!</span>(debug_assertions) {
-                    flags |= hal::InstanceFlags::VALIDATION;
-                    flags |= hal::InstanceFlags::DEBUG;
-                }
                 <span class="kw">let </span>hal_desc = hal::InstanceDescriptor {
                     name: <span class="string">&quot;wgpu&quot;</span>,
-                    flags,
+                    flags: instance_desc.flags,
                     dx12_shader_compiler: instance_desc.dx12_shader_compiler.clone(),
                     gles_minor_version: instance_desc.gles_minor_version,
                 };
@@ -1300,6 +1344,7 @@
             </span>dx11: init(hal::api::Dx11, <span class="kw-2">&amp;</span>instance_desc),
             <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
             </span>gl: init(hal::api::Gles, <span class="kw-2">&amp;</span>instance_desc),
+            flags: instance_desc.flags,
         }
     }
 
@@ -1484,8 +1529,11 @@
         self_id: AdapterId,
         open: hal::OpenDevice&lt;A&gt;,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
+        instance_flags: wgt::InstanceFlags,
         trace_path: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Device&lt;A&gt;, RequestDeviceError&gt; {
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Adapter::create_device&quot;</span>);
+
         <span class="kw">let </span>caps = <span class="kw-2">&amp;</span><span class="self">self</span>.raw.capabilities;
         Device::new(
             open,
@@ -1497,6 +1545,7 @@
             caps.downlevel.clone(),
             desc,
             trace_path,
+            instance_flags,
         )
         .or(<span class="prelude-val">Err</span>(RequestDeviceError::OutOfMemory))
     }
@@ -1505,6 +1554,7 @@
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         self_id: AdapterId,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
+        instance_flags: wgt::InstanceFlags,
         trace_path: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Device&lt;A&gt;, RequestDeviceError&gt; {
         <span class="comment">// Verify all features were exposed by the adapter
@@ -1555,7 +1605,7 @@
             },
         )<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.create_device_from_hal(self_id, open, desc, trace_path)
+        <span class="self">self</span>.create_device_from_hal(self_id, open, desc, instance_flags, trace_path)
     }
 }
 
@@ -1797,10 +1847,12 @@
             presentation: <span class="prelude-val">None</span>,
             <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
             </span>vulkan: <span class="prelude-val">None</span>,
-            dx12: <span class="self">self</span>.instance.dx12.as_ref().map(|inst| HalSurface {
+            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
+            </span>dx12: <span class="self">self</span>.instance.dx12.as_ref().map(|inst| HalSurface {
                 raw: <span class="kw">unsafe </span>{ inst.create_surface_from_visual(visual <span class="kw">as _</span>) },
             }),
-            dx11: <span class="prelude-val">None</span>,
+            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
+            </span>dx11: <span class="prelude-val">None</span>,
             <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
             </span>gl: <span class="prelude-val">None</span>,
         };
@@ -1825,10 +1877,42 @@
             presentation: <span class="prelude-val">None</span>,
             <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
             </span>vulkan: <span class="prelude-val">None</span>,
-            dx12: <span class="self">self</span>.instance.dx12.as_ref().map(|inst| HalSurface {
+            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
+            </span>dx12: <span class="self">self</span>.instance.dx12.as_ref().map(|inst| HalSurface {
                 raw: <span class="kw">unsafe </span>{ inst.create_surface_from_surface_handle(surface_handle) },
             }),
-            dx11: <span class="prelude-val">None</span>,
+            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
+            </span>dx11: <span class="prelude-val">None</span>,
+            <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
+            </span>gl: <span class="prelude-val">None</span>,
+        };
+
+        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
+        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface, <span class="kw-2">&amp;mut </span>token);
+        id.<span class="number">0
+    </span>}
+
+    <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
+    </span><span class="doccomment">/// # Safety
+    ///
+    /// The swap_chain_panel must be valid and able to be used to make a swapchain with.
+    </span><span class="kw">pub unsafe fn </span>instance_create_surface_from_swap_chain_panel(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        swap_chain_panel: <span class="kw-2">*mut </span>std::ffi::c_void,
+        id_in: Input&lt;G, SurfaceId&gt;,
+    ) -&gt; SurfaceId {
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::instance_create_surface_from_swap_chain_panel&quot;</span>);
+
+        <span class="kw">let </span>surface = Surface {
+            presentation: <span class="prelude-val">None</span>,
+            <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
+            </span>vulkan: <span class="prelude-val">None</span>,
+            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
+            </span>dx12: <span class="self">self</span>.instance.dx12.as_ref().map(|inst| HalSurface {
+                raw: <span class="kw">unsafe </span>{ inst.create_surface_from_swap_chain_panel(swap_chain_panel <span class="kw">as _</span>) },
+            }),
+            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
+            </span>dx11: <span class="prelude-val">None</span>,
             <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
             </span>gl: <span class="prelude-val">None</span>,
         };
@@ -1840,6 +1924,8 @@
 
     <span class="kw">pub fn </span>surface_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, id: SurfaceId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Surface::drop&quot;</span>);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Surface::drop {id:?}&quot;</span>);
+
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
         <span class="kw">let </span>(surface, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.unregister(id, <span class="kw-2">&amp;mut </span>token);
         <span class="kw">let </span><span class="kw-2">mut </span>surface = surface.unwrap();
@@ -1906,6 +1992,7 @@
 
     <span class="kw">pub fn </span>enumerate_adapters(<span class="kw-2">&amp;</span><span class="self">self</span>, inputs: AdapterInputs&lt;Input&lt;G, AdapterId&gt;&gt;) -&gt; Vec&lt;AdapterId&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::enumerate_adapters&quot;</span>);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Instance::enumerate_adapters&quot;</span>);
 
         <span class="kw">let </span><span class="kw-2">mut </span>adapters = Vec::new();
 
@@ -1963,6 +2050,7 @@
         inputs: AdapterInputs&lt;Input&lt;G, AdapterId&gt;&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;AdapterId, RequestAdapterError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::pick_adapter&quot;</span>);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Instance::pick_adapter&quot;</span>);
 
         <span class="kw">fn </span>gather&lt;A: HalApi, I: Clone&gt;(
             <span class="kw">_</span>: A,
@@ -2244,6 +2332,7 @@
 
     <span class="kw">pub fn </span>adapter_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, adapter_id: AdapterId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Adapter::drop&quot;</span>);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Adapter::drop {adapter_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -2269,6 +2358,7 @@
         id_in: Input&lt;G, DeviceId&gt;,
     ) -&gt; (DeviceId, <span class="prelude-ty">Option</span>&lt;RequestDeviceError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Adapter::request_device&quot;</span>);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Adapter::request_device&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -2280,10 +2370,11 @@
                 <span class="prelude-val">Ok</span>(adapter) =&gt; adapter,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>RequestDeviceError::InvalidAdapter,
             };
-            <span class="kw">let </span>device = <span class="kw">match </span>adapter.create_device(adapter_id, desc, trace_path) {
-                <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
-            };
+            <span class="kw">let </span>device =
+                <span class="kw">match </span>adapter.create_device(adapter_id, desc, <span class="self">self</span>.instance.flags, trace_path) {
+                    <span class="prelude-val">Ok</span>(device) =&gt; device,
+                    <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                };
             <span class="kw">let </span>id = fid.assign(device, <span class="kw-2">&amp;mut </span>token);
             <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
         };
@@ -2316,11 +2407,16 @@
                 <span class="prelude-val">Ok</span>(adapter) =&gt; adapter,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>RequestDeviceError::InvalidAdapter,
             };
-            <span class="kw">let </span>device =
-                <span class="kw">match </span>adapter.create_device_from_hal(adapter_id, hal_device, desc, trace_path) {
-                    <span class="prelude-val">Ok</span>(device) =&gt; device,
-                    <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
-                };
+            <span class="kw">let </span>device = <span class="kw">match </span>adapter.create_device_from_hal(
+                adapter_id,
+                hal_device,
+                desc,
+                <span class="self">self</span>.instance.flags,
+                trace_path,
+            ) {
+                <span class="prelude-val">Ok</span>(device) =&gt; device,
+                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+            };
             <span class="kw">let </span>id = fid.assign(device, <span class="kw-2">&amp;mut </span>token);
             <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
         };

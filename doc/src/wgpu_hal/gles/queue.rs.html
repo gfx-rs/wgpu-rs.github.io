@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/queue.rs`."><title>queue.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (3223b0b5e 2023-09-20)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu_hal/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/queue.rs`."><title>queue.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-deb46770fd761b69.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0-nightly (1c05d50c8 2023-10-21)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f34af1a0ee6bacd.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1526,18 +1526,7 @@
 <a href="#1526" id="1526">1526</a>
 <a href="#1527" id="1527">1527</a>
 <a href="#1528" id="1528">1528</a>
-<a href="#1529" id="1529">1529</a>
-<a href="#1530" id="1530">1530</a>
-<a href="#1531" id="1531">1531</a>
-<a href="#1532" id="1532">1532</a>
-<a href="#1533" id="1533">1533</a>
-<a href="#1534" id="1534">1534</a>
-<a href="#1535" id="1535">1535</a>
-<a href="#1536" id="1536">1536</a>
-<a href="#1537" id="1537">1537</a>
-<a href="#1538" id="1538">1538</a>
-<a href="#1539" id="1539">1539</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Command <span class="kw">as </span>C;
+</pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv::is_layered_target, Command <span class="kw">as </span>C, PrivateCapabilities};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>std::{mem, slice, sync::Arc};
@@ -1545,24 +1534,33 @@
 <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
 </span><span class="kw">const </span>DEBUG_ID: u32 = <span class="number">0</span>;
 
-<span class="kw">const </span>CUBEMAP_FACES: [u32; <span class="number">6</span>] = [
-    glow::TEXTURE_CUBE_MAP_POSITIVE_X,
-    glow::TEXTURE_CUBE_MAP_NEGATIVE_X,
-    glow::TEXTURE_CUBE_MAP_POSITIVE_Y,
-    glow::TEXTURE_CUBE_MAP_NEGATIVE_Y,
-    glow::TEXTURE_CUBE_MAP_POSITIVE_Z,
-    glow::TEXTURE_CUBE_MAP_NEGATIVE_Z,
-];
-
 <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
 </span><span class="kw">fn </span>extract_marker&lt;<span class="lifetime">&#39;a</span>&gt;(data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8], range: <span class="kw-2">&amp;</span>std::ops::Range&lt;u32&gt;) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str {
     std::str::from_utf8(<span class="kw-2">&amp;</span>data[range.start <span class="kw">as </span>usize..range.end <span class="kw">as </span>usize]).unwrap()
 }
 
-<span class="kw">fn </span>is_layered_target(target: <span class="kw">super</span>::BindTarget) -&gt; bool {
+<span class="kw">fn </span>get_2d_target(target: u32, array_layer: u32) -&gt; u32 {
+    <span class="kw">const </span>CUBEMAP_FACES: [u32; <span class="number">6</span>] = [
+        glow::TEXTURE_CUBE_MAP_POSITIVE_X,
+        glow::TEXTURE_CUBE_MAP_NEGATIVE_X,
+        glow::TEXTURE_CUBE_MAP_POSITIVE_Y,
+        glow::TEXTURE_CUBE_MAP_NEGATIVE_Y,
+        glow::TEXTURE_CUBE_MAP_POSITIVE_Z,
+        glow::TEXTURE_CUBE_MAP_NEGATIVE_Z,
+    ];
+
     <span class="kw">match </span>target {
-        glow::TEXTURE_2D_ARRAY | glow::TEXTURE_3D | glow::TEXTURE_CUBE_MAP_ARRAY =&gt; <span class="bool-val">true</span>,
-        <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
+        glow::TEXTURE_2D =&gt; target,
+        glow::TEXTURE_CUBE_MAP =&gt; CUBEMAP_FACES[array_layer <span class="kw">as </span>usize],
+        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+    }
+}
+
+<span class="kw">fn </span>get_z_offset(target: u32, base: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureCopyBase) -&gt; u32 {
+    <span class="kw">match </span>target {
+        glow::TEXTURE_2D_ARRAY | glow::TEXTURE_CUBE_MAP_ARRAY =&gt; base.array_layer,
+        glow::TEXTURE_3D =&gt; base.origin.z,
+        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
     }
 }
 
@@ -1593,10 +1591,6 @@
                 .map(|i| glow::COLOR_ATTACHMENT0 + i)
                 .collect::&lt;ArrayVec&lt;<span class="kw">_</span>, { <span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS }&gt;&gt;();
             <span class="kw">unsafe </span>{ gl.draw_buffers(<span class="kw-2">&amp;</span>indices) };
-        }
-        <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
-        </span><span class="kw">for </span>draw_buffer <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.draw_buffer_count <span class="kw">as </span>u32 {
-            <span class="kw">unsafe </span>{ gl.disable_draw_buffer(glow::BLEND, draw_buffer) };
         }
     }
 
@@ -1661,22 +1655,12 @@
                             view.array_layers.start <span class="kw">as </span>i32,
                         )
                     };
-                } <span class="kw">else if </span>target == glow::TEXTURE_CUBE_MAP {
-                    <span class="kw">unsafe </span>{
-                        gl.framebuffer_texture_2d(
-                            fbo_target,
-                            attachment,
-                            CUBEMAP_FACES[view.array_layers.start <span class="kw">as </span>usize],
-                            <span class="prelude-val">Some</span>(raw),
-                            view.mip_levels.start <span class="kw">as </span>i32,
-                        )
-                    };
                 } <span class="kw">else </span>{
                     <span class="kw">unsafe </span>{
                         gl.framebuffer_texture_2d(
                             fbo_target,
                             attachment,
-                            target,
+                            get_2d_target(target, view.array_layers.start),
                             <span class="prelude-val">Some</span>(raw),
                             view.mip_levels.start <span class="kw">as </span>i32,
                         )
@@ -1932,12 +1916,7 @@
                 <span class="kw">unsafe </span>{ gl.bind_texture(dst_target, <span class="prelude-val">Some</span>(dst)) };
                 <span class="kw">let </span>format_desc = <span class="self">self</span>.shared.describe_texture_format(dst_format);
                 <span class="kw">if </span>is_layered_target(dst_target) {
-                    <span class="kw">let </span>z_offset =
-                        <span class="kw">if let </span>glow::TEXTURE_2D_ARRAY | glow::TEXTURE_CUBE_MAP_ARRAY = dst_target {
-                            copy.dst_base.array_layer <span class="kw">as </span>i32
-                        } <span class="kw">else </span>{
-                            copy.dst_base.origin.z <span class="kw">as </span>i32
-                        };
+                    <span class="kw">let </span>z_offset = get_z_offset(dst_target, <span class="kw-2">&amp;</span>copy.dst_base);
 
                     <span class="kw">match </span>src.source {
                         wgt::ExternalImageSource::ImageBitmap(<span class="kw-2">ref </span>b) =&gt; <span class="kw">unsafe </span>{
@@ -1946,7 +1925,7 @@
                                 copy.dst_base.mip_level <span class="kw">as </span>i32,
                                 copy.dst_base.origin.x <span class="kw">as </span>i32,
                                 copy.dst_base.origin.y <span class="kw">as </span>i32,
-                                z_offset,
+                                z_offset <span class="kw">as </span>i32,
                                 copy.size.width <span class="kw">as </span>i32,
                                 copy.size.height <span class="kw">as </span>i32,
                                 copy.size.depth <span class="kw">as </span>i32,
@@ -1961,7 +1940,7 @@
                                 copy.dst_base.mip_level <span class="kw">as </span>i32,
                                 copy.dst_base.origin.x <span class="kw">as </span>i32,
                                 copy.dst_base.origin.y <span class="kw">as </span>i32,
-                                z_offset,
+                                z_offset <span class="kw">as </span>i32,
                                 copy.size.width <span class="kw">as </span>i32,
                                 copy.size.height <span class="kw">as </span>i32,
                                 copy.size.depth <span class="kw">as </span>i32,
@@ -1976,7 +1955,7 @@
                                 copy.dst_base.mip_level <span class="kw">as </span>i32,
                                 copy.dst_base.origin.x <span class="kw">as </span>i32,
                                 copy.dst_base.origin.y <span class="kw">as </span>i32,
-                                z_offset,
+                                z_offset <span class="kw">as </span>i32,
                                 copy.size.width <span class="kw">as </span>i32,
                                 copy.size.height <span class="kw">as </span>i32,
                                 copy.size.depth <span class="kw">as </span>i32,
@@ -1988,11 +1967,7 @@
                         wgt::ExternalImageSource::OffscreenCanvas(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
                     }
                 } <span class="kw">else </span>{
-                    <span class="kw">let </span>dst_target = <span class="kw">if let </span>glow::TEXTURE_CUBE_MAP = dst_target {
-                        CUBEMAP_FACES[copy.dst_base.array_layer <span class="kw">as </span>usize]
-                    } <span class="kw">else </span>{
-                        dst_target
-                    };
+                    <span class="kw">let </span>dst_target = get_2d_target(dst_target, copy.dst_base.array_layer);
 
                     <span class="kw">match </span>src.source {
                         wgt::ExternalImageSource::ImageBitmap(<span class="kw-2">ref </span>b) =&gt; <span class="kw">unsafe </span>{
@@ -2052,7 +2027,6 @@
                 src_target,
                 dst,
                 dst_target,
-                dst_is_cubemap,
                 <span class="kw-2">ref </span>copy,
             } =&gt; {
                 <span class="comment">//TODO: handle 3D copies
@@ -2081,33 +2055,14 @@
                 }
 
                 <span class="kw">unsafe </span>{ gl.bind_texture(dst_target, <span class="prelude-val">Some</span>(dst)) };
-                <span class="kw">if </span>dst_is_cubemap {
-                    <span class="kw">unsafe </span>{
-                        gl.copy_tex_sub_image_2d(
-                            CUBEMAP_FACES[copy.dst_base.array_layer <span class="kw">as </span>usize],
-                            copy.dst_base.mip_level <span class="kw">as </span>i32,
-                            copy.dst_base.origin.x <span class="kw">as </span>i32,
-                            copy.dst_base.origin.y <span class="kw">as </span>i32,
-                            copy.src_base.origin.x <span class="kw">as </span>i32,
-                            copy.src_base.origin.y <span class="kw">as </span>i32,
-                            copy.size.width <span class="kw">as </span>i32,
-                            copy.size.height <span class="kw">as </span>i32,
-                        )
-                    };
-                } <span class="kw">else if </span>is_layered_target(dst_target) {
+                <span class="kw">if </span>is_layered_target(dst_target) {
                     <span class="kw">unsafe </span>{
                         gl.copy_tex_sub_image_3d(
                             dst_target,
                             copy.dst_base.mip_level <span class="kw">as </span>i32,
                             copy.dst_base.origin.x <span class="kw">as </span>i32,
                             copy.dst_base.origin.y <span class="kw">as </span>i32,
-                            <span class="kw">if let </span>glow::TEXTURE_2D_ARRAY | glow::TEXTURE_CUBE_MAP_ARRAY =
-                                dst_target
-                            {
-                                copy.dst_base.array_layer <span class="kw">as </span>i32
-                            } <span class="kw">else </span>{
-                                copy.dst_base.origin.z <span class="kw">as </span>i32
-                            },
+                            get_z_offset(dst_target, <span class="kw-2">&amp;</span>copy.dst_base) <span class="kw">as </span>i32,
                             copy.src_base.origin.x <span class="kw">as </span>i32,
                             copy.src_base.origin.y <span class="kw">as </span>i32,
                             copy.size.width <span class="kw">as </span>i32,
@@ -2117,7 +2072,7 @@
                 } <span class="kw">else </span>{
                     <span class="kw">unsafe </span>{
                         gl.copy_tex_sub_image_2d(
-                            dst_target,
+                            get_2d_target(dst_target, copy.dst_base.array_layer),
                             copy.dst_base.mip_level <span class="kw">as </span>i32,
                             copy.dst_base.origin.x <span class="kw">as </span>i32,
                             copy.dst_base.origin.y <span class="kw">as </span>i32,
@@ -2175,13 +2130,7 @@
                                 copy.texture_base.mip_level <span class="kw">as </span>i32,
                                 copy.texture_base.origin.x <span class="kw">as </span>i32,
                                 copy.texture_base.origin.y <span class="kw">as </span>i32,
-                                <span class="kw">if let </span>glow::TEXTURE_2D_ARRAY | glow::TEXTURE_CUBE_MAP_ARRAY =
-                                    dst_target
-                                {
-                                    copy.texture_base.array_layer <span class="kw">as </span>i32
-                                } <span class="kw">else </span>{
-                                    copy.texture_base.origin.z <span class="kw">as </span>i32
-                                },
+                                get_z_offset(dst_target, <span class="kw-2">&amp;</span>copy.texture_base) <span class="kw">as </span>i32,
                                 copy.size.width <span class="kw">as </span>i32,
                                 copy.size.height <span class="kw">as </span>i32,
                                 copy.size.depth <span class="kw">as </span>i32,
@@ -2193,11 +2142,7 @@
                     } <span class="kw">else </span>{
                         <span class="kw">unsafe </span>{
                             gl.tex_sub_image_2d(
-                                <span class="kw">if let </span>glow::TEXTURE_CUBE_MAP = dst_target {
-                                    CUBEMAP_FACES[copy.texture_base.array_layer <span class="kw">as </span>usize]
-                                } <span class="kw">else </span>{
-                                    dst_target
-                                },
+                                get_2d_target(dst_target, copy.texture_base.array_layer),
                                 copy.texture_base.mip_level <span class="kw">as </span>i32,
                                 copy.texture_base.origin.x <span class="kw">as </span>i32,
                                 copy.texture_base.origin.y <span class="kw">as </span>i32,
@@ -2251,13 +2196,7 @@
                                 copy.texture_base.mip_level <span class="kw">as </span>i32,
                                 copy.texture_base.origin.x <span class="kw">as </span>i32,
                                 copy.texture_base.origin.y <span class="kw">as </span>i32,
-                                <span class="kw">if let </span>glow::TEXTURE_2D_ARRAY | glow::TEXTURE_CUBE_MAP_ARRAY =
-                                    dst_target
-                                {
-                                    copy.texture_base.array_layer <span class="kw">as </span>i32
-                                } <span class="kw">else </span>{
-                                    copy.texture_base.origin.z <span class="kw">as </span>i32
-                                },
+                                get_z_offset(dst_target, <span class="kw-2">&amp;</span>copy.texture_base) <span class="kw">as </span>i32,
                                 copy.size.width <span class="kw">as </span>i32,
                                 copy.size.height <span class="kw">as </span>i32,
                                 copy.size.depth <span class="kw">as </span>i32,
@@ -2268,11 +2207,7 @@
                     } <span class="kw">else </span>{
                         <span class="kw">unsafe </span>{
                             gl.compressed_tex_sub_image_2d(
-                                <span class="kw">if let </span>glow::TEXTURE_CUBE_MAP = dst_target {
-                                    CUBEMAP_FACES[copy.texture_base.array_layer <span class="kw">as </span>usize]
-                                } <span class="kw">else </span>{
-                                    dst_target
-                                },
+                                get_2d_target(dst_target, copy.texture_base.array_layer),
                                 copy.texture_base.mip_level <span class="kw">as </span>i32,
                                 copy.texture_base.origin.x <span class="kw">as </span>i32,
                                 copy.texture_base.origin.y <span class="kw">as </span>i32,
@@ -2401,34 +2336,97 @@
             C::EndQuery(target) =&gt; {
                 <span class="kw">unsafe </span>{ gl.end_query(target) };
             }
+            C::TimestampQuery(query) =&gt; {
+                <span class="kw">unsafe </span>{ gl.query_counter(query, glow::TIMESTAMP) };
+            }
             C::CopyQueryResults {
                 <span class="kw-2">ref </span>query_range,
                 <span class="kw-2">ref </span>dst,
                 dst_target,
                 dst_offset,
             } =&gt; {
-                <span class="self">self</span>.temp_query_results.clear();
-                <span class="kw">for </span><span class="kw-2">&amp;</span>query <span class="kw">in </span>queries[query_range.start <span class="kw">as </span>usize..query_range.end <span class="kw">as </span>usize].iter() {
-                    <span class="kw">let </span>result = <span class="kw">unsafe </span>{ gl.get_query_parameter_u32(query, glow::QUERY_RESULT) };
-                    <span class="self">self</span>.temp_query_results.push(result <span class="kw">as </span>u64);
-                }
-                <span class="kw">let </span>query_data = <span class="kw">unsafe </span>{
-                    slice::from_raw_parts(
-                        <span class="self">self</span>.temp_query_results.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8,
-                        <span class="self">self</span>.temp_query_results.len() * mem::size_of::&lt;u64&gt;(),
-                    )
-                };
-                <span class="kw">match </span>dst.raw {
-                    <span class="prelude-val">Some</span>(buffer) =&gt; {
-                        <span class="kw">unsafe </span>{ gl.bind_buffer(dst_target, <span class="prelude-val">Some</span>(buffer)) };
-                        <span class="kw">unsafe </span>{
-                            gl.buffer_sub_data_u8_slice(dst_target, dst_offset <span class="kw">as </span>i32, query_data)
-                        };
+                <span class="kw">if </span><span class="self">self
+                    </span>.shared
+                    .private_caps
+                    .contains(PrivateCapabilities::QUERY_BUFFERS)
+                    &amp;&amp; dst.raw.is_some()
+                {
+                    <span class="kw">unsafe </span>{
+                        <span class="comment">// We&#39;re assuming that the only relevant queries are 8 byte timestamps or
+                        // occlusion tests.
+                        </span><span class="kw">let </span>query_size = <span class="number">8</span>;
+
+                        <span class="kw">let </span>query_range_size = query_size * query_range.len();
+
+                        <span class="kw">let </span>buffer = gl.create_buffer().ok();
+                        gl.bind_buffer(glow::QUERY_BUFFER, buffer);
+                        gl.buffer_data_size(
+                            glow::QUERY_BUFFER,
+                            query_range_size <span class="kw">as _</span>,
+                            glow::STREAM_COPY,
+                        );
+
+                        <span class="kw">for </span>(i, <span class="kw-2">&amp;</span>query) <span class="kw">in </span>queries
+                            [query_range.start <span class="kw">as </span>usize..query_range.end <span class="kw">as </span>usize]
+                            .iter()
+                            .enumerate()
+                        {
+                            gl.get_query_parameter_u64_with_offset(
+                                query,
+                                glow::QUERY_RESULT,
+                                query_size * i,
+                            )
+                        }
+                        gl.bind_buffer(dst_target, dst.raw);
+                        gl.copy_buffer_sub_data(
+                            glow::QUERY_BUFFER,
+                            dst_target,
+                            <span class="number">0</span>,
+                            dst_offset <span class="kw">as _</span>,
+                            query_range_size <span class="kw">as _</span>,
+                        );
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(buffer) = buffer {
+                            gl.delete_buffer(buffer)
+                        }
                     }
-                    <span class="prelude-val">None </span>=&gt; {
-                        <span class="kw">let </span>data = <span class="kw-2">&amp;mut </span>dst.data.as_ref().unwrap().lock().unwrap();
-                        <span class="kw">let </span>len = query_data.len().min(data.len());
-                        data[..len].copy_from_slice(<span class="kw-2">&amp;</span>query_data[..len]);
+                } <span class="kw">else </span>{
+                    <span class="self">self</span>.temp_query_results.clear();
+                    <span class="kw">for </span><span class="kw-2">&amp;</span>query <span class="kw">in
+                        </span>queries[query_range.start <span class="kw">as </span>usize..query_range.end <span class="kw">as </span>usize].iter()
+                    {
+                        <span class="kw">let </span><span class="kw-2">mut </span>result: u64 = <span class="number">0</span>;
+                        <span class="kw">unsafe </span>{
+                            <span class="kw">let </span>result: <span class="kw-2">*mut </span>u64 = <span class="kw-2">&amp;mut </span>result;
+                            gl.get_query_parameter_u64_with_offset(
+                                query,
+                                glow::QUERY_RESULT,
+                                result <span class="kw">as </span>usize,
+                            )
+                        };
+                        <span class="self">self</span>.temp_query_results.push(result);
+                    }
+                    <span class="kw">let </span>query_data = <span class="kw">unsafe </span>{
+                        slice::from_raw_parts(
+                            <span class="self">self</span>.temp_query_results.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8,
+                            <span class="self">self</span>.temp_query_results.len() * mem::size_of::&lt;u64&gt;(),
+                        )
+                    };
+                    <span class="kw">match </span>dst.raw {
+                        <span class="prelude-val">Some</span>(buffer) =&gt; {
+                            <span class="kw">unsafe </span>{ gl.bind_buffer(dst_target, <span class="prelude-val">Some</span>(buffer)) };
+                            <span class="kw">unsafe </span>{
+                                gl.buffer_sub_data_u8_slice(
+                                    dst_target,
+                                    dst_offset <span class="kw">as </span>i32,
+                                    query_data,
+                                )
+                            };
+                        }
+                        <span class="prelude-val">None </span>=&gt; {
+                            <span class="kw">let </span>data = <span class="kw-2">&amp;mut </span>dst.data.as_ref().unwrap().lock().unwrap();
+                            <span class="kw">let </span>len = query_data.len().min(data.len());
+                            data[..len].copy_from_slice(<span class="kw-2">&amp;</span>query_data[..len]);
+                        }
                     }
                 }
             }
@@ -2509,16 +2507,6 @@
                     .map(|i| glow::COLOR_ATTACHMENT0 + i)
                     .collect::&lt;ArrayVec&lt;<span class="kw">_</span>, { <span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS }&gt;&gt;();
                 <span class="kw">unsafe </span>{ gl.draw_buffers(<span class="kw-2">&amp;</span>indices) };
-
-                <span class="kw">if </span><span class="self">self
-                    </span>.shared
-                    .private_caps
-                    .contains(<span class="kw">super</span>::PrivateCapabilities::CAN_DISABLE_DRAW_BUFFER)
-                {
-                    <span class="kw">for </span>draw_buffer <span class="kw">in </span><span class="number">0</span>..count <span class="kw">as </span>u32 {
-                        <span class="kw">unsafe </span>{ gl.disable_draw_buffer(glow::BLEND, draw_buffer) };
-                    }
-                }
             }
             C::ClearColorF {
                 draw_buffer,
@@ -2788,7 +2776,7 @@
                         )
                     };
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>blend) = <span class="kw-2">*</span>blend {
-                        <span class="kw">unsafe </span>{ gl.enable_draw_buffer(index, glow::BLEND) };
+                        <span class="kw">unsafe </span>{ gl.enable_draw_buffer(glow::BLEND, index) };
                         <span class="kw">if </span>blend.color != blend.alpha {
                             <span class="kw">unsafe </span>{
                                 gl.blend_equation_separate_draw_buffer(
@@ -2812,12 +2800,8 @@
                                 gl.blend_func_draw_buffer(index, blend.color.src, blend.color.dst)
                             };
                         }
-                    } <span class="kw">else if </span><span class="self">self
-                        </span>.shared
-                        .private_caps
-                        .contains(<span class="kw">super</span>::PrivateCapabilities::CAN_DISABLE_DRAW_BUFFER)
-                    {
-                        <span class="kw">unsafe </span>{ gl.disable_draw_buffer(index, glow::BLEND) };
+                    } <span class="kw">else </span>{
+                        <span class="kw">unsafe </span>{ gl.disable_draw_buffer(glow::BLEND, index) };
                     }
                 } <span class="kw">else </span>{
                     <span class="kw">unsafe </span>{
@@ -3050,13 +3034,7 @@
         surface: <span class="kw-2">&amp;mut </span><span class="kw">super</span>::Surface,
         texture: <span class="kw">super</span>::Texture,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::SurfaceError&gt; {
-        <span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), target_os = <span class="string">&quot;emscripten&quot;</span>))]
-        </span><span class="kw">let </span>gl = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.get_without_egl_lock() };
-
-        <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(target_os = <span class="string">&quot;emscripten&quot;</span>)))]
-        </span><span class="kw">let </span>gl = <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context.glow_context;
-
-        <span class="kw">unsafe </span>{ surface.present(texture, gl) }
+        <span class="kw">unsafe </span>{ surface.present(texture, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context) }
     }
 
     <span class="kw">unsafe fn </span>get_timestamp_period(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; f32 {

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/backend/direct.rs`."><title>direct.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (3223b0b5e 2023-09-20)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/master/logo.png" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/backend/direct.rs`."><title>direct.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-deb46770fd761b69.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0-nightly (1c05d50c8 2023-10-21)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f34af1a0ee6bacd.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/master/logo.png" alt="wgpu"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3174,40 +3174,13 @@
 <a href="#3174" id="3174">3174</a>
 <a href="#3175" id="3175">3175</a>
 <a href="#3176" id="3176">3176</a>
-<a href="#3177" id="3177">3177</a>
-<a href="#3178" id="3178">3178</a>
-<a href="#3179" id="3179">3179</a>
-<a href="#3180" id="3180">3180</a>
-<a href="#3181" id="3181">3181</a>
-<a href="#3182" id="3182">3182</a>
-<a href="#3183" id="3183">3183</a>
-<a href="#3184" id="3184">3184</a>
-<a href="#3185" id="3185">3185</a>
-<a href="#3186" id="3186">3186</a>
-<a href="#3187" id="3187">3187</a>
-<a href="#3188" id="3188">3188</a>
-<a href="#3189" id="3189">3189</a>
-<a href="#3190" id="3190">3190</a>
-<a href="#3191" id="3191">3191</a>
-<a href="#3192" id="3192">3192</a>
-<a href="#3193" id="3193">3193</a>
-<a href="#3194" id="3194">3194</a>
-<a href="#3195" id="3195">3195</a>
-<a href="#3196" id="3196">3196</a>
-<a href="#3197" id="3197">3197</a>
-<a href="#3198" id="3198">3198</a>
-<a href="#3199" id="3199">3199</a>
-<a href="#3200" id="3200">3200</a>
-<a href="#3201" id="3201">3201</a>
-<a href="#3202" id="3202">3202</a>
-<a href="#3203" id="3203">3203</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
     BufferDescriptor, CommandEncoderDescriptor, ComputePassDescriptor, ComputePipelineDescriptor,
     DownlevelCapabilities, Features, Label, Limits, LoadOp, MapMode, Operations,
     PipelineLayoutDescriptor, RenderBundleEncoderDescriptor, RenderPipelineDescriptor,
-    SamplerDescriptor, ShaderModuleDescriptor, ShaderModuleDescriptorSpirV, ShaderSource,
+    SamplerDescriptor, ShaderModuleDescriptor, ShaderModuleDescriptorSpirV, ShaderSource, StoreOp,
     SurfaceStatus, TextureDescriptor, TextureViewDescriptor, UncapturedErrorHandler,
 };
 
@@ -3297,14 +3270,6 @@
             <span class="self">self</span>.<span class="number">0
                 </span>.adapter_as_hal::&lt;A, F, R&gt;(adapter, hal_adapter_callback)
         }
-    }
-
-    <span class="kw">pub fn </span>texture_format_as_hal&lt;A: wgc::hal_api::HalApi&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        adapter: wgc::id::AdapterId,
-        texture_format: wgt::TextureFormat,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;A::TextureFormat&gt; {
-        <span class="self">self</span>.<span class="number">0</span>.texture_format_as_hal::&lt;A&gt;(adapter, texture_format)
     }
 
     <span class="kw">pub unsafe fn </span>create_device_from_hal&lt;A: wgc::hal_api::HalApi&gt;(
@@ -3423,55 +3388,14 @@
         }
     }
 
-    <span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;emscripten&quot;</span>))]
-    </span><span class="kw">pub unsafe fn </span>command_encoder_as_hal_mut&lt;
-        A: wgc::hal_api::HalApi,
-        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>A::CommandEncoder&gt;) -&gt; R,
-        R,
-    &gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        command_encoder: <span class="kw-2">&amp;</span><span class="kw">crate</span>::CommandEncoder,
-        hal_command_encoder_callback: F,
-    ) -&gt; R {
-        <span class="kw">unsafe </span>{
-            <span class="self">self</span>.<span class="number">0</span>.command_encoder_as_hal_mut::&lt;A, F, R&gt;(
-                &lt;&lt;<span class="self">Self </span><span class="kw">as </span><span class="kw">crate</span>::Context&gt;::CommandEncoderId&gt;::from(command_encoder.id.unwrap()),
-                hal_command_encoder_callback,
-            )
-        }
-    }
-
-    <span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;emscripten&quot;</span>))]
-    </span><span class="kw">pub unsafe fn </span>texture_as_hal&lt;
-        A: wgc::hal_api::HalApi,
-        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Texture&gt;) -&gt; R,
-        R,
-    &gt;(
+    <span class="kw">pub unsafe fn </span>texture_as_hal&lt;A: wgc::hal_api::HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Texture&gt;)&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         texture: <span class="kw-2">&amp;</span>Texture,
         hal_texture_callback: F,
-    ) -&gt; R {
+    ) {
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.<span class="number">0
-                </span>.texture_as_hal::&lt;A, F, R&gt;(texture.id, hal_texture_callback)
-        }
-    }
-
-    <span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;emscripten&quot;</span>))]
-    </span><span class="kw">pub unsafe fn </span>texture_view_as_hal&lt;
-        A: wgc::hal_api::HalApi,
-        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::TextureView&gt;) -&gt; R,
-        R,
-    &gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        texture_view: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TextureView,
-        hal_texture_view_callback: F,
-    ) -&gt; R {
-        <span class="kw">unsafe </span>{
-            <span class="self">self</span>.<span class="number">0</span>.texture_view_as_hal::&lt;A, F, R&gt;(
-                wgc::id::TextureViewId::from(texture_view.id),
-                hal_texture_view_callback,
-            )
+                </span>.texture_as_hal::&lt;A, F&gt;(texture.id, hal_texture_callback)
         }
     }
 
@@ -3532,6 +3456,21 @@
         <span class="kw">let </span>id = <span class="kw">unsafe </span>{
             <span class="self">self</span>.<span class="number">0
                 </span>.instance_create_surface_from_surface_handle(surface_handle, ())
+        };
+        Surface {
+            id,
+            configured_device: Mutex::default(),
+        }
+    }
+
+    <span class="attr">#[cfg(target_os = <span class="string">&quot;windows&quot;</span>)]
+    </span><span class="kw">pub unsafe fn </span>create_surface_from_swap_chain_panel(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        swap_chain_panel: <span class="kw-2">*mut </span>std::ffi::c_void,
+    ) -&gt; Surface {
+        <span class="kw">let </span>id = <span class="kw">unsafe </span>{
+            <span class="self">self</span>.<span class="number">0
+                </span>.instance_create_surface_from_swap_chain_panel(swap_chain_panel, ())
         };
         Surface {
             id,
@@ -3644,6 +3583,13 @@
     }
 }
 
+<span class="kw">fn </span>map_store_op(op: StoreOp) -&gt; wgc::command::StoreOp {
+    <span class="kw">match </span>op {
+        StoreOp::Store =&gt; wgc::command::StoreOp::Store,
+        StoreOp::Discard =&gt; wgc::command::StoreOp::Discard,
+    }
+}
+
 <span class="kw">fn </span>map_pass_channel&lt;V: Copy + Default&gt;(
     ops: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Operations&lt;V&gt;&gt;,
 ) -&gt; wgc::command::PassChannel&lt;V&gt; {
@@ -3653,11 +3599,7 @@
             store,
         }) =&gt; wgc::command::PassChannel {
             load_op: wgc::command::LoadOp::Clear,
-            store_op: <span class="kw">if </span>store {
-                wgc::command::StoreOp::Store
-            } <span class="kw">else </span>{
-                wgc::command::StoreOp::Discard
-            },
+            store_op: map_store_op(store),
             clear_value,
             read_only: <span class="bool-val">false</span>,
         },
@@ -3666,11 +3608,7 @@
             store,
         }) =&gt; wgc::command::PassChannel {
             load_op: wgc::command::LoadOp::Load,
-            store_op: <span class="kw">if </span>store {
-                wgc::command::StoreOp::Store
-            } <span class="kw">else </span>{
-                wgc::command::StoreOp::Discard
-            },
+            store_op: map_store_op(store),
             clear_value: V::default(),
             read_only: <span class="bool-val">false</span>,
         },
@@ -3874,8 +3812,7 @@
             ()
         ));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = error {
-            <span class="macro">log::error!</span>(<span class="string">&quot;Error in Adapter::request_device: {}&quot;</span>, err);
-            <span class="kw">return </span>ready(<span class="prelude-val">Err</span>(<span class="kw">crate</span>::RequestDeviceError));
+            <span class="kw">return </span>ready(<span class="prelude-val">Err</span>(err.into()));
         }
         <span class="kw">let </span>error_sink = Arc::new(Mutex::new(ErrorSinkRaw::new()));
         <span class="kw">let </span>device = Device {
@@ -4692,6 +4629,15 @@
         }
 
         <span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_drop(<span class="kw-2">*</span>device));
+    }
+    <span class="kw">fn </span>device_destroy(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId, _device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData) {
+        <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_destroy(<span class="kw-2">*</span>device));
+    }
+    <span class="kw">fn </span>device_lose(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId, _device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData) {
+        <span class="comment">// TODO: accept a reason, and pass it to device_lose.
+        </span><span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_lose(<span class="kw-2">*</span>device, <span class="prelude-val">None</span>));
     }
     <span class="kw">fn </span>device_poll(
         <span class="kw-2">&amp;</span><span class="self">self</span>,

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/render.rs`."><title>render.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (3223b0b5e 2023-09-20)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu_core/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/render.rs`."><title>render.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-deb46770fd761b69.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0-nightly (1c05d50c8 2023-10-21)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f34af1a0ee6bacd.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2751,6 +2751,100 @@
 <a href="#2751" id="2751">2751</a>
 <a href="#2752" id="2752">2752</a>
 <a href="#2753" id="2753">2753</a>
+<a href="#2754" id="2754">2754</a>
+<a href="#2755" id="2755">2755</a>
+<a href="#2756" id="2756">2756</a>
+<a href="#2757" id="2757">2757</a>
+<a href="#2758" id="2758">2758</a>
+<a href="#2759" id="2759">2759</a>
+<a href="#2760" id="2760">2760</a>
+<a href="#2761" id="2761">2761</a>
+<a href="#2762" id="2762">2762</a>
+<a href="#2763" id="2763">2763</a>
+<a href="#2764" id="2764">2764</a>
+<a href="#2765" id="2765">2765</a>
+<a href="#2766" id="2766">2766</a>
+<a href="#2767" id="2767">2767</a>
+<a href="#2768" id="2768">2768</a>
+<a href="#2769" id="2769">2769</a>
+<a href="#2770" id="2770">2770</a>
+<a href="#2771" id="2771">2771</a>
+<a href="#2772" id="2772">2772</a>
+<a href="#2773" id="2773">2773</a>
+<a href="#2774" id="2774">2774</a>
+<a href="#2775" id="2775">2775</a>
+<a href="#2776" id="2776">2776</a>
+<a href="#2777" id="2777">2777</a>
+<a href="#2778" id="2778">2778</a>
+<a href="#2779" id="2779">2779</a>
+<a href="#2780" id="2780">2780</a>
+<a href="#2781" id="2781">2781</a>
+<a href="#2782" id="2782">2782</a>
+<a href="#2783" id="2783">2783</a>
+<a href="#2784" id="2784">2784</a>
+<a href="#2785" id="2785">2785</a>
+<a href="#2786" id="2786">2786</a>
+<a href="#2787" id="2787">2787</a>
+<a href="#2788" id="2788">2788</a>
+<a href="#2789" id="2789">2789</a>
+<a href="#2790" id="2790">2790</a>
+<a href="#2791" id="2791">2791</a>
+<a href="#2792" id="2792">2792</a>
+<a href="#2793" id="2793">2793</a>
+<a href="#2794" id="2794">2794</a>
+<a href="#2795" id="2795">2795</a>
+<a href="#2796" id="2796">2796</a>
+<a href="#2797" id="2797">2797</a>
+<a href="#2798" id="2798">2798</a>
+<a href="#2799" id="2799">2799</a>
+<a href="#2800" id="2800">2800</a>
+<a href="#2801" id="2801">2801</a>
+<a href="#2802" id="2802">2802</a>
+<a href="#2803" id="2803">2803</a>
+<a href="#2804" id="2804">2804</a>
+<a href="#2805" id="2805">2805</a>
+<a href="#2806" id="2806">2806</a>
+<a href="#2807" id="2807">2807</a>
+<a href="#2808" id="2808">2808</a>
+<a href="#2809" id="2809">2809</a>
+<a href="#2810" id="2810">2810</a>
+<a href="#2811" id="2811">2811</a>
+<a href="#2812" id="2812">2812</a>
+<a href="#2813" id="2813">2813</a>
+<a href="#2814" id="2814">2814</a>
+<a href="#2815" id="2815">2815</a>
+<a href="#2816" id="2816">2816</a>
+<a href="#2817" id="2817">2817</a>
+<a href="#2818" id="2818">2818</a>
+<a href="#2819" id="2819">2819</a>
+<a href="#2820" id="2820">2820</a>
+<a href="#2821" id="2821">2821</a>
+<a href="#2822" id="2822">2822</a>
+<a href="#2823" id="2823">2823</a>
+<a href="#2824" id="2824">2824</a>
+<a href="#2825" id="2825">2825</a>
+<a href="#2826" id="2826">2826</a>
+<a href="#2827" id="2827">2827</a>
+<a href="#2828" id="2828">2828</a>
+<a href="#2829" id="2829">2829</a>
+<a href="#2830" id="2830">2830</a>
+<a href="#2831" id="2831">2831</a>
+<a href="#2832" id="2832">2832</a>
+<a href="#2833" id="2833">2833</a>
+<a href="#2834" id="2834">2834</a>
+<a href="#2835" id="2835">2835</a>
+<a href="#2836" id="2836">2836</a>
+<a href="#2837" id="2837">2837</a>
+<a href="#2838" id="2838">2838</a>
+<a href="#2839" id="2839">2839</a>
+<a href="#2840" id="2840">2840</a>
+<a href="#2841" id="2841">2841</a>
+<a href="#2842" id="2842">2842</a>
+<a href="#2843" id="2843">2843</a>
+<a href="#2844" id="2844">2844</a>
+<a href="#2845" id="2845">2845</a>
+<a href="#2846" id="2846">2846</a>
+<a href="#2847" id="2847">2847</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model::{BindError, BindGroupLayouts},
     command::{
@@ -2763,12 +2857,13 @@
         RenderCommand, RenderCommandError, StateChange,
     },
     device::{
-        AttachmentData, Device, MissingDownlevelFlags, MissingFeatures,
+        AttachmentData, Device, DeviceError, MissingDownlevelFlags, MissingFeatures,
         RenderPassCompatibilityCheckType, RenderPassCompatibilityError, RenderPassContext,
     },
     error::{ErrorFormatter, PrettyError},
     global::Global,
     hal_api::HalApi,
+    hal_label,
     hub::Token,
     id,
     identity::GlobalIdentityHandlerFactory,
@@ -3273,6 +3368,8 @@
 </span><span class="attr">#[derive(Clone, Debug, Error)]
 </span><span class="kw">pub enum </span>RenderPassErrorInner {
     <span class="attr">#[error(transparent)]
+    </span>Device(DeviceError),
+    <span class="attr">#[error(transparent)]
     </span>ColorAttachment(<span class="attr">#[from] </span>ColorAttachmentError),
     <span class="attr">#[error(transparent)]
     </span>Encoder(<span class="attr">#[from] </span>CommandEncoderError),
@@ -3405,6 +3502,12 @@
 <span class="kw">impl </span>From&lt;MissingTextureUsageError&gt; <span class="kw">for </span>RenderPassErrorInner {
     <span class="kw">fn </span>from(error: MissingTextureUsageError) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::RenderCommand(error.into())
+    }
+}
+
+<span class="kw">impl </span>From&lt;DeviceError&gt; <span class="kw">for </span>RenderPassErrorInner {
+    <span class="kw">fn </span>from(error: DeviceError) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Device(error)
     }
 }
 
@@ -3928,7 +4031,7 @@
         </span>};
 
         <span class="kw">let </span>hal_desc = hal::RenderPassDescriptor {
-            label,
+            label: hal_label(label, device.instance_flags),
             extent,
             sample_count,
             color_attachments: <span class="kw-2">&amp;</span>colors,
@@ -4064,7 +4167,17 @@
         timestamp_writes: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>RenderPassTimestampWrites&gt;,
         occlusion_query_set_id: <span class="prelude-ty">Option</span>&lt;id::QuerySetId&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), RenderPassError&gt; {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::run_render_pass&quot;</span>);
+        <span class="macro">profiling::scope!</span>(
+            <span class="string">&quot;CommandEncoder::run_render_pass {}&quot;</span>,
+            base.label.unwrap_or(<span class="string">&quot;&quot;</span>)
+        );
+
+        <span class="kw">let </span>discard_hal_labels = <span class="self">self
+            </span>.instance
+            .flags
+            .contains(wgt::InstanceFlags::DISCARD_HAL_LABELS);
+        <span class="kw">let </span>label = hal_label(base.label, <span class="self">self</span>.instance.flags);
+
         <span class="kw">let </span>init_scope = PassErrorScope::Pass(encoder_id);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
@@ -4098,8 +4211,13 @@
                 });
             }
 
-            <span class="kw">let </span>device = <span class="kw-2">&amp;</span>device_guard[cmd_buf.device_id.value];
-            cmd_buf.encoder.open_pass(base.label);
+            <span class="kw">let </span>device_id = cmd_buf.device_id.value;
+
+            <span class="kw">let </span>device = <span class="kw-2">&amp;</span>device_guard[device_id];
+            <span class="kw">if </span>!device.is_valid() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::Lost).map_pass_err(init_scope);
+            }
+            cmd_buf.encoder.open_pass(label);
 
             <span class="kw">let </span>(bundle_guard, <span class="kw-2">mut </span>token) = hub.render_bundles.read(<span class="kw-2">&amp;mut </span>token);
             <span class="kw">let </span>(pipeline_layout_guard, <span class="kw-2">mut </span>token) = hub.pipeline_layouts.read(<span class="kw-2">&amp;mut </span>token);
@@ -4118,7 +4236,7 @@
 
             <span class="kw">let </span><span class="kw-2">mut </span>info = RenderPassInfo::start(
                 device,
-                base.label,
+                label,
                 color_attachments,
                 depth_stencil_attachment,
                 timestamp_writes,
@@ -4167,6 +4285,8 @@
                         num_dynamic_offsets,
                         bind_group_id,
                     } =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_bind_group {index} {bind_group_id:?}&quot;</span>);
+
                         <span class="kw">let </span>scope = PassErrorScope::SetBindGroup(bind_group_id);
                         <span class="kw">let </span>max_bind_groups = device.limits.max_bind_groups;
                         <span class="kw">if </span>index &gt;= max_bind_groups {
@@ -4190,6 +4310,11 @@
                             .add_single(<span class="kw-2">&amp;*</span>bind_group_guard, bind_group_id)
                             .ok_or(RenderCommandError::InvalidBindGroup(bind_group_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        <span class="kw">if </span>bind_group.device_id.value != device_id {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice).map_pass_err(scope);
+                        }
+
                         bind_group
                             .validate_dynamic_bindings(index, <span class="kw-2">&amp;</span>temp_offsets, <span class="kw-2">&amp;</span>cmd_buf.limits)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
@@ -4245,6 +4370,8 @@
                         }
                     }
                     RenderCommand::SetPipeline(pipeline_id) =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_pipeline {pipeline_id:?}&quot;</span>);
+
                         <span class="kw">let </span>scope = PassErrorScope::SetPipelineRender(pipeline_id);
                         state.pipeline = <span class="prelude-val">Some</span>(pipeline_id);
 
@@ -4254,6 +4381,10 @@
                             .add_single(<span class="kw-2">&amp;*</span>render_pipeline_guard, pipeline_id)
                             .ok_or(RenderCommandError::InvalidPipeline(pipeline_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        <span class="kw">if </span>pipeline.device_id.value != device_id {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice).map_pass_err(scope);
+                        }
 
                         info.context
                             .check_compatible(
@@ -4364,12 +4495,19 @@
                         offset,
                         size,
                     } =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_index_buffer {buffer_id:?}&quot;</span>);
+
                         <span class="kw">let </span>scope = PassErrorScope::SetIndexBuffer(buffer_id);
                         <span class="kw">let </span>buffer: <span class="kw-2">&amp;</span>Buffer&lt;A&gt; = info
                             .usage_scope
                             .buffers
                             .merge_single(<span class="kw-2">&amp;*</span>buffer_guard, buffer_id, hal::BufferUses::INDEX)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        <span class="kw">if </span>buffer.device_id.value != device_id {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice).map_pass_err(scope);
+                        }
+
                         check_buffer_usage(buffer.usage, BufferUsages::INDEX)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                         <span class="kw">let </span>buf_raw = buffer
@@ -4410,12 +4548,19 @@
                         offset,
                         size,
                     } =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_vertex_buffer {slot} {buffer_id:?}&quot;</span>);
+
                         <span class="kw">let </span>scope = PassErrorScope::SetVertexBuffer(buffer_id);
                         <span class="kw">let </span>buffer: <span class="kw-2">&amp;</span>Buffer&lt;A&gt; = info
                             .usage_scope
                             .buffers
                             .merge_single(<span class="kw-2">&amp;*</span>buffer_guard, buffer_id, hal::BufferUses::VERTEX)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        <span class="kw">if </span>buffer.device_id.value != device_id {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice).map_pass_err(scope);
+                        }
+
                         check_buffer_usage(buffer.usage, BufferUsages::VERTEX)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                         <span class="kw">let </span>buf_raw = buffer
@@ -4457,6 +4602,8 @@
                         state.vertex.update_limits();
                     }
                     RenderCommand::SetBlendConstant(<span class="kw-2">ref </span>color) =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_blend_constant&quot;</span>);
+
                         state.blend_constant = OptionalState::Set;
                         <span class="kw">let </span>array = [
                             color.r <span class="kw">as </span>f32,
@@ -4469,6 +4616,8 @@
                         }
                     }
                     RenderCommand::SetStencilReference(value) =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_stencil_reference {value}&quot;</span>);
+
                         state.stencil_reference = value;
                         <span class="kw">if </span>state
                             .pipeline_flags
@@ -4484,6 +4633,8 @@
                         depth_min,
                         depth_max,
                     } =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_viewport {rect:?}&quot;</span>);
+
                         <span class="kw">let </span>scope = PassErrorScope::SetViewport;
                         <span class="kw">if </span>rect.x &lt; <span class="number">0.0
                             </span>|| rect.y &lt; <span class="number">0.0
@@ -4520,6 +4671,8 @@
                         size_bytes,
                         values_offset,
                     } =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_push_constants&quot;</span>);
+
                         <span class="kw">let </span>scope = PassErrorScope::SetPushConstant;
                         <span class="kw">let </span>values_offset = values_offset
                             .ok_or(RenderPassErrorInner::InvalidValuesOffset)
@@ -4548,6 +4701,8 @@
                         }
                     }
                     RenderCommand::SetScissor(<span class="kw-2">ref </span>rect) =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::set_scissor_rect {rect:?}&quot;</span>);
+
                         <span class="kw">let </span>scope = PassErrorScope::SetScissorRect;
                         <span class="kw">if </span>rect.x + rect.w &gt; info.extent.width
                             || rect.y + rect.h &gt; info.extent.height
@@ -4571,6 +4726,10 @@
                         first_vertex,
                         first_instance,
                     } =&gt; {
+                        <span class="macro">log::trace!</span>(
+                            <span class="string">&quot;RenderPass::draw {vertex_count} {instance_count} {first_vertex} {first_instance}&quot;
+                        </span>);
+
                         <span class="kw">let </span>indexed = <span class="bool-val">false</span>;
                         <span class="kw">let </span>scope = PassErrorScope::Draw {
                             indexed,
@@ -4613,6 +4772,8 @@
                         base_vertex,
                         first_instance,
                     } =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::draw_indexed {index_count} {instance_count} {first_index} {base_vertex} {first_instance}&quot;</span>);
+
                         <span class="kw">let </span>indexed = <span class="bool-val">true</span>;
                         <span class="kw">let </span>scope = PassErrorScope::Draw {
                             indexed,
@@ -4661,6 +4822,8 @@
                         count,
                         indexed,
                     } =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::draw_indirect (indexed:{indexed}) {buffer_id:?} {offset} {count:?}&quot;</span>);
+
                         <span class="kw">let </span>scope = PassErrorScope::Draw {
                             indexed,
                             indirect: <span class="bool-val">true</span>,
@@ -4735,6 +4898,8 @@
                         max_count,
                         indexed,
                     } =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::multi_draw_indirect_count (indexed:{indexed}) {buffer_id:?} {offset} {count_buffer_id:?} {count_buffer_offset:?} {max_count:?}&quot;</span>);
+
                         <span class="kw">let </span>scope = PassErrorScope::Draw {
                             indexed,
                             indirect: <span class="bool-val">true</span>,
@@ -4845,38 +5010,52 @@
                     }
                     RenderCommand::PushDebugGroup { color: <span class="kw">_</span>, len } =&gt; {
                         state.debug_scope_depth += <span class="number">1</span>;
-                        <span class="kw">let </span>label =
-                            str::from_utf8(<span class="kw-2">&amp;</span>base.string_data[string_offset..string_offset + len])
-                                .unwrap();
-                        string_offset += len;
-                        <span class="kw">unsafe </span>{
-                            raw.begin_debug_marker(label);
+                        <span class="kw">if </span>!discard_hal_labels {
+                            <span class="kw">let </span>label = str::from_utf8(
+                                <span class="kw-2">&amp;</span>base.string_data[string_offset..string_offset + len],
+                            )
+                            .unwrap();
+
+                            <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::push_debug_group {label:?}&quot;</span>);
+                            <span class="kw">unsafe </span>{
+                                raw.begin_debug_marker(label);
+                            }
                         }
+                        string_offset += len;
                     }
                     RenderCommand::PopDebugGroup =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::pop_debug_group&quot;</span>);
+
                         <span class="kw">let </span>scope = PassErrorScope::PopDebugGroup;
                         <span class="kw">if </span>state.debug_scope_depth == <span class="number">0 </span>{
                             <span class="kw">return </span><span class="prelude-val">Err</span>(RenderPassErrorInner::InvalidPopDebugGroup)
                                 .map_pass_err(scope);
                         }
                         state.debug_scope_depth -= <span class="number">1</span>;
-                        <span class="kw">unsafe </span>{
-                            raw.end_debug_marker();
+                        <span class="kw">if </span>!discard_hal_labels {
+                            <span class="kw">unsafe </span>{
+                                raw.end_debug_marker();
+                            }
                         }
                     }
                     RenderCommand::InsertDebugMarker { color: <span class="kw">_</span>, len } =&gt; {
-                        <span class="kw">let </span>label =
-                            str::from_utf8(<span class="kw-2">&amp;</span>base.string_data[string_offset..string_offset + len])
-                                .unwrap();
-                        string_offset += len;
-                        <span class="kw">unsafe </span>{
-                            raw.insert_debug_marker(label);
+                        <span class="kw">if </span>!discard_hal_labels {
+                            <span class="kw">let </span>label = str::from_utf8(
+                                <span class="kw-2">&amp;</span>base.string_data[string_offset..string_offset + len],
+                            )
+                            .unwrap();
+                            <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::insert_debug_marker {label:?}&quot;</span>);
+                            <span class="kw">unsafe </span>{
+                                raw.insert_debug_marker(label);
+                            }
                         }
+                        string_offset += len;
                     }
                     RenderCommand::WriteTimestamp {
                         query_set_id,
                         query_index,
                     } =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::write_timestamps {query_set_id:?} {query_index}&quot;</span>);
                         <span class="kw">let </span>scope = PassErrorScope::WriteTimestamp;
 
                         device
@@ -4900,6 +5079,7 @@
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                     }
                     RenderCommand::BeginOcclusionQuery { query_index } =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::begin_occlusion_query {query_index}&quot;</span>);
                         <span class="kw">let </span>scope = PassErrorScope::BeginOcclusionQuery;
 
                         <span class="kw">let </span>query_set_id = occlusion_query_set_id
@@ -4924,6 +5104,7 @@
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                     }
                     RenderCommand::EndOcclusionQuery =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::end_occlusion_query&quot;</span>);
                         <span class="kw">let </span>scope = PassErrorScope::EndOcclusionQuery;
 
                         end_occlusion_query(raw, <span class="kw-2">&amp;*</span>query_set_guard, <span class="kw-2">&amp;mut </span>active_query)
@@ -4933,6 +5114,7 @@
                         query_set_id,
                         query_index,
                     } =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::begin_pipeline_statistics_query {query_set_id:?} {query_index}&quot;</span>);
                         <span class="kw">let </span>scope = PassErrorScope::BeginPipelineStatisticsQuery;
 
                         <span class="kw">let </span>query_set = cmd_buf
@@ -4953,12 +5135,14 @@
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                     }
                     RenderCommand::EndPipelineStatisticsQuery =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::end_pipeline_statistics_query&quot;</span>);
                         <span class="kw">let </span>scope = PassErrorScope::EndPipelineStatisticsQuery;
 
                         end_pipeline_statistics_query(raw, <span class="kw-2">&amp;*</span>query_set_guard, <span class="kw-2">&amp;mut </span>active_query)
                             .map_pass_err(scope)<span class="question-mark">?</span>;
                     }
                     RenderCommand::ExecuteBundle(bundle_id) =&gt; {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPass::execute_bundle {bundle_id:?}&quot;</span>);
                         <span class="kw">let </span>scope = PassErrorScope::ExecuteBundle;
                         <span class="kw">let </span>bundle: <span class="kw-2">&amp;</span>command::RenderBundle&lt;A&gt; = cmd_buf
                             .trackers
@@ -4966,6 +5150,10 @@
                             .add_single(<span class="kw-2">&amp;*</span>bundle_guard, bundle_id)
                             .ok_or(RenderCommandError::InvalidRenderBundle(bundle_id))
                             .map_pass_err(scope)<span class="question-mark">?</span>;
+
+                        <span class="kw">if </span>bundle.device_id.value != device_id {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice).map_pass_err(scope);
+                        }
 
                         info.context
                             .check_compatible(

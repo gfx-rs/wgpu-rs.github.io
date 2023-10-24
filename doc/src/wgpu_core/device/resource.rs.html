@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/resource.rs`."><title>resource.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (3223b0b5e 2023-09-20)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu_core/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/resource.rs`."><title>resource.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-deb46770fd761b69.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0-nightly (1c05d50c8 2023-10-21)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f34af1a0ee6bacd.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3165,10 +3165,198 @@
 <a href="#3165" id="3165">3165</a>
 <a href="#3166" id="3166">3166</a>
 <a href="#3167" id="3167">3167</a>
+<a href="#3168" id="3168">3168</a>
+<a href="#3169" id="3169">3169</a>
+<a href="#3170" id="3170">3170</a>
+<a href="#3171" id="3171">3171</a>
+<a href="#3172" id="3172">3172</a>
+<a href="#3173" id="3173">3173</a>
+<a href="#3174" id="3174">3174</a>
+<a href="#3175" id="3175">3175</a>
+<a href="#3176" id="3176">3176</a>
+<a href="#3177" id="3177">3177</a>
+<a href="#3178" id="3178">3178</a>
+<a href="#3179" id="3179">3179</a>
+<a href="#3180" id="3180">3180</a>
+<a href="#3181" id="3181">3181</a>
+<a href="#3182" id="3182">3182</a>
+<a href="#3183" id="3183">3183</a>
+<a href="#3184" id="3184">3184</a>
+<a href="#3185" id="3185">3185</a>
+<a href="#3186" id="3186">3186</a>
+<a href="#3187" id="3187">3187</a>
+<a href="#3188" id="3188">3188</a>
+<a href="#3189" id="3189">3189</a>
+<a href="#3190" id="3190">3190</a>
+<a href="#3191" id="3191">3191</a>
+<a href="#3192" id="3192">3192</a>
+<a href="#3193" id="3193">3193</a>
+<a href="#3194" id="3194">3194</a>
+<a href="#3195" id="3195">3195</a>
+<a href="#3196" id="3196">3196</a>
+<a href="#3197" id="3197">3197</a>
+<a href="#3198" id="3198">3198</a>
+<a href="#3199" id="3199">3199</a>
+<a href="#3200" id="3200">3200</a>
+<a href="#3201" id="3201">3201</a>
+<a href="#3202" id="3202">3202</a>
+<a href="#3203" id="3203">3203</a>
+<a href="#3204" id="3204">3204</a>
+<a href="#3205" id="3205">3205</a>
+<a href="#3206" id="3206">3206</a>
+<a href="#3207" id="3207">3207</a>
+<a href="#3208" id="3208">3208</a>
+<a href="#3209" id="3209">3209</a>
+<a href="#3210" id="3210">3210</a>
+<a href="#3211" id="3211">3211</a>
+<a href="#3212" id="3212">3212</a>
+<a href="#3213" id="3213">3213</a>
+<a href="#3214" id="3214">3214</a>
+<a href="#3215" id="3215">3215</a>
+<a href="#3216" id="3216">3216</a>
+<a href="#3217" id="3217">3217</a>
+<a href="#3218" id="3218">3218</a>
+<a href="#3219" id="3219">3219</a>
+<a href="#3220" id="3220">3220</a>
+<a href="#3221" id="3221">3221</a>
+<a href="#3222" id="3222">3222</a>
+<a href="#3223" id="3223">3223</a>
+<a href="#3224" id="3224">3224</a>
+<a href="#3225" id="3225">3225</a>
+<a href="#3226" id="3226">3226</a>
+<a href="#3227" id="3227">3227</a>
+<a href="#3228" id="3228">3228</a>
+<a href="#3229" id="3229">3229</a>
+<a href="#3230" id="3230">3230</a>
+<a href="#3231" id="3231">3231</a>
+<a href="#3232" id="3232">3232</a>
+<a href="#3233" id="3233">3233</a>
+<a href="#3234" id="3234">3234</a>
+<a href="#3235" id="3235">3235</a>
+<a href="#3236" id="3236">3236</a>
+<a href="#3237" id="3237">3237</a>
+<a href="#3238" id="3238">3238</a>
+<a href="#3239" id="3239">3239</a>
+<a href="#3240" id="3240">3240</a>
+<a href="#3241" id="3241">3241</a>
+<a href="#3242" id="3242">3242</a>
+<a href="#3243" id="3243">3243</a>
+<a href="#3244" id="3244">3244</a>
+<a href="#3245" id="3245">3245</a>
+<a href="#3246" id="3246">3246</a>
+<a href="#3247" id="3247">3247</a>
+<a href="#3248" id="3248">3248</a>
+<a href="#3249" id="3249">3249</a>
+<a href="#3250" id="3250">3250</a>
+<a href="#3251" id="3251">3251</a>
+<a href="#3252" id="3252">3252</a>
+<a href="#3253" id="3253">3253</a>
+<a href="#3254" id="3254">3254</a>
+<a href="#3255" id="3255">3255</a>
+<a href="#3256" id="3256">3256</a>
+<a href="#3257" id="3257">3257</a>
+<a href="#3258" id="3258">3258</a>
+<a href="#3259" id="3259">3259</a>
+<a href="#3260" id="3260">3260</a>
+<a href="#3261" id="3261">3261</a>
+<a href="#3262" id="3262">3262</a>
+<a href="#3263" id="3263">3263</a>
+<a href="#3264" id="3264">3264</a>
+<a href="#3265" id="3265">3265</a>
+<a href="#3266" id="3266">3266</a>
+<a href="#3267" id="3267">3267</a>
+<a href="#3268" id="3268">3268</a>
+<a href="#3269" id="3269">3269</a>
+<a href="#3270" id="3270">3270</a>
+<a href="#3271" id="3271">3271</a>
+<a href="#3272" id="3272">3272</a>
+<a href="#3273" id="3273">3273</a>
+<a href="#3274" id="3274">3274</a>
+<a href="#3275" id="3275">3275</a>
+<a href="#3276" id="3276">3276</a>
+<a href="#3277" id="3277">3277</a>
+<a href="#3278" id="3278">3278</a>
+<a href="#3279" id="3279">3279</a>
+<a href="#3280" id="3280">3280</a>
+<a href="#3281" id="3281">3281</a>
+<a href="#3282" id="3282">3282</a>
+<a href="#3283" id="3283">3283</a>
+<a href="#3284" id="3284">3284</a>
+<a href="#3285" id="3285">3285</a>
+<a href="#3286" id="3286">3286</a>
+<a href="#3287" id="3287">3287</a>
+<a href="#3288" id="3288">3288</a>
+<a href="#3289" id="3289">3289</a>
+<a href="#3290" id="3290">3290</a>
+<a href="#3291" id="3291">3291</a>
+<a href="#3292" id="3292">3292</a>
+<a href="#3293" id="3293">3293</a>
+<a href="#3294" id="3294">3294</a>
+<a href="#3295" id="3295">3295</a>
+<a href="#3296" id="3296">3296</a>
+<a href="#3297" id="3297">3297</a>
+<a href="#3298" id="3298">3298</a>
+<a href="#3299" id="3299">3299</a>
+<a href="#3300" id="3300">3300</a>
+<a href="#3301" id="3301">3301</a>
+<a href="#3302" id="3302">3302</a>
+<a href="#3303" id="3303">3303</a>
+<a href="#3304" id="3304">3304</a>
+<a href="#3305" id="3305">3305</a>
+<a href="#3306" id="3306">3306</a>
+<a href="#3307" id="3307">3307</a>
+<a href="#3308" id="3308">3308</a>
+<a href="#3309" id="3309">3309</a>
+<a href="#3310" id="3310">3310</a>
+<a href="#3311" id="3311">3311</a>
+<a href="#3312" id="3312">3312</a>
+<a href="#3313" id="3313">3313</a>
+<a href="#3314" id="3314">3314</a>
+<a href="#3315" id="3315">3315</a>
+<a href="#3316" id="3316">3316</a>
+<a href="#3317" id="3317">3317</a>
+<a href="#3318" id="3318">3318</a>
+<a href="#3319" id="3319">3319</a>
+<a href="#3320" id="3320">3320</a>
+<a href="#3321" id="3321">3321</a>
+<a href="#3322" id="3322">3322</a>
+<a href="#3323" id="3323">3323</a>
+<a href="#3324" id="3324">3324</a>
+<a href="#3325" id="3325">3325</a>
+<a href="#3326" id="3326">3326</a>
+<a href="#3327" id="3327">3327</a>
+<a href="#3328" id="3328">3328</a>
+<a href="#3329" id="3329">3329</a>
+<a href="#3330" id="3330">3330</a>
+<a href="#3331" id="3331">3331</a>
+<a href="#3332" id="3332">3332</a>
+<a href="#3333" id="3333">3333</a>
+<a href="#3334" id="3334">3334</a>
+<a href="#3335" id="3335">3335</a>
+<a href="#3336" id="3336">3336</a>
+<a href="#3337" id="3337">3337</a>
+<a href="#3338" id="3338">3338</a>
+<a href="#3339" id="3339">3339</a>
+<a href="#3340" id="3340">3340</a>
+<a href="#3341" id="3341">3341</a>
+<a href="#3342" id="3342">3342</a>
+<a href="#3343" id="3343">3343</a>
+<a href="#3344" id="3344">3344</a>
+<a href="#3345" id="3345">3345</a>
+<a href="#3346" id="3346">3346</a>
+<a href="#3347" id="3347">3347</a>
+<a href="#3348" id="3348">3348</a>
+<a href="#3349" id="3349">3349</a>
+<a href="#3350" id="3350">3350</a>
+<a href="#3351" id="3351">3351</a>
+<a href="#3352" id="3352">3352</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
-    binding_model::{<span class="self">self</span>, get_bind_group_layout, try_get_bind_group_layout},
+    binding_model::{
+        <span class="self">self</span>, get_bind_group_layout, try_get_bind_group_layout, BglOrDuplicate,
+        BindGroupLayoutInner,
+    },
     command, conv,
     device::life::WaitIdleError,
     device::{
@@ -3176,6 +3364,7 @@
         RenderPassContext, CLEANUP_WAIT_MS,
     },
     hal_api::HalApi,
+    hal_label,
     hub::{Hub, Token},
     id,
     identity::GlobalIdentityHandlerFactory,
@@ -3239,6 +3428,19 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) active_submission_index: SubmissionIndex,
     <span class="kw">pub</span>(<span class="kw">super</span>) fence: A::Fence,
 
+    <span class="doccomment">/// Is this device valid? Valid is closely associated with &quot;lose the device&quot;,
+    /// which can be triggered by various methods, including at the end of device
+    /// destroy, and by any GPU errors that cause us to no longer trust the state
+    /// of the device. Ideally we would like to fold valid into the storage of
+    /// the device itself (for example as an Error enum), but unfortunately we
+    /// need to continue to be able to retrieve the device in poll_devices to
+    /// determine if it can be dropped. If our internal accesses of devices were
+    /// done through ref-counted references and external accesses checked for
+    /// Error enums, we wouldn&#39;t need this. For now, we need it. All the call
+    /// sites where we check it are areas that should be revisited if we start
+    /// using ref-counted references for internal access.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) valid: bool,
+
     <span class="doccomment">/// All live resources allocated with this [`Device`].
     ///
     /// Has to be locked temporarily only (locked last)
@@ -3252,6 +3454,7 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) limits: wgt::Limits,
     <span class="kw">pub</span>(<span class="kw">crate</span>) features: wgt::Features,
     <span class="kw">pub</span>(<span class="kw">crate</span>) downlevel: wgt::DownlevelCapabilities,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) instance_flags: wgt::InstanceFlags,
     <span class="comment">// TODO: move this behind another mutex. This would allow several methods to
     // switch to borrow Device immutably, such as `write_buffer`, `write_texture`,
     // and `buffer_unmap`.
@@ -3298,6 +3501,7 @@
         downlevel: wgt::DownlevelCapabilities,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
         trace_path: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
+        instance_flags: wgt::InstanceFlags,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, CreateDeviceError&gt; {
         <span class="attr">#[cfg(not(feature = <span class="string">&quot;trace&quot;</span>))]
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">_</span>) = trace_path {
@@ -3318,7 +3522,7 @@
         </span><span class="kw">let </span>zero_buffer = <span class="kw">unsafe </span>{
             open.device
                 .create_buffer(<span class="kw-2">&amp;</span>hal::BufferDescriptor {
-                    label: <span class="prelude-val">Some</span>(<span class="string">&quot;(wgpu internal) zero init buffer&quot;</span>),
+                    label: hal_label(<span class="prelude-val">Some</span>(<span class="string">&quot;(wgpu internal) zero init buffer&quot;</span>), instance_flags),
                     size: ZERO_BUFFER_SIZE,
                     usage: hal::BufferUses::COPY_SRC | hal::BufferUses::COPY_DST,
                     memory_flags: hal::MemoryFlags::empty(),
@@ -3356,6 +3560,7 @@
             command_allocator: Mutex::new(com_alloc),
             active_submission_index: <span class="number">0</span>,
             fence,
+            valid: <span class="bool-val">true</span>,
             trackers: Mutex::new(Tracker::new()),
             life_tracker: Mutex::new(life::LifetimeTracker::new()),
             temp_suspected: life::SuspectedResources::default(),
@@ -3377,8 +3582,13 @@
             limits: desc.limits.clone(),
             features: desc.features,
             downlevel,
+            instance_flags,
             pending_writes,
         })
+    }
+
+    <span class="kw">pub fn </span>is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.valid
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>lock_life&lt;<span class="lifetime">&#39;this</span>, <span class="lifetime">&#39;token</span>: <span class="lifetime">&#39;this</span>&gt;(
@@ -3612,7 +3822,7 @@
         memory_flags.set(hal::MemoryFlags::TRANSIENT, transient);
 
         <span class="kw">let </span>hal_desc = hal::BufferDescriptor {
-            label: desc.label.borrow_option(),
+            label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
             size: aligned_size,
             usage,
             memory_flags,
@@ -3868,7 +4078,7 @@
             };
 
         <span class="kw">let </span>hal_desc = hal::TextureDescriptor {
-            label: desc.label.borrow_option(),
+            label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
             size: desc.size,
             mip_level_count: desc.mip_level_count,
             sample_count: desc.sample_count,
@@ -3899,11 +4109,16 @@
                 wgt::TextureDimension::D3 =&gt; <span class="macro">unreachable!</span>(),
             };
 
+            <span class="kw">let </span>clear_label = hal_label(
+                <span class="prelude-val">Some</span>(<span class="string">&quot;(wgpu internal) clear texture view&quot;</span>),
+                <span class="self">self</span>.instance_flags,
+            );
+
             <span class="kw">let </span><span class="kw-2">mut </span>clear_views = SmallVec::new();
             <span class="kw">for </span>mip_level <span class="kw">in </span><span class="number">0</span>..desc.mip_level_count {
                 <span class="kw">for </span>array_layer <span class="kw">in </span><span class="number">0</span>..desc.size.depth_or_array_layers {
                     <span class="kw">let </span>desc = hal::TextureViewDescriptor {
-                        label: <span class="prelude-val">Some</span>(<span class="string">&quot;(wgpu internal) clear texture view&quot;</span>),
+                        label: clear_label,
                         format: desc.format,
                         dimension,
                         usage,
@@ -4205,7 +4420,7 @@
         };
 
         <span class="kw">let </span>hal_desc = hal::TextureViewDescriptor {
-            label: desc.label.borrow_option(),
+            label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
             format,
             dimension: resolved_dimension,
             usage,
@@ -4323,7 +4538,7 @@
         <span class="comment">//TODO: check for wgt::DownlevelFlags::COMPARISON_SAMPLERS
 
         </span><span class="kw">let </span>hal_desc = hal::SamplerDescriptor {
-            label: desc.label.borrow_option(),
+            label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
             address_modes: desc.address_modes,
             mag_filter: desc.mag_filter,
             min_filter: desc.min_filter,
@@ -4443,6 +4658,29 @@
                 .flags
                 .contains(wgt::DownlevelFlags::MULTISAMPLED_SHADING),
         );
+        caps.set(
+            Caps::DUAL_SOURCE_BLENDING,
+            <span class="self">self</span>.features.contains(wgt::Features::DUAL_SOURCE_BLENDING),
+        );
+        caps.set(
+            Caps::CUBE_ARRAY_TEXTURES,
+            <span class="self">self</span>.downlevel
+                .flags
+                .contains(wgt::DownlevelFlags::CUBE_ARRAY_TEXTURES),
+        );
+
+        <span class="kw">let </span>debug_source = <span class="kw">if </span><span class="self">self</span>.instance_flags.contains(wgt::InstanceFlags::DEBUG) {
+            <span class="prelude-val">Some</span>(hal::DebugSource {
+                file_name: Cow::Owned(
+                    desc.label
+                        .as_ref()
+                        .map_or(<span class="string">&quot;shader&quot;</span>.to_string(), |l| l.to_string()),
+                ),
+                source_code: Cow::Owned(source.clone()),
+            })
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>};
 
         <span class="kw">let </span>info = naga::valid::Validator::new(naga::valid::ValidationFlags::all(), caps)
             .validate(<span class="kw-2">&amp;</span>module)
@@ -4453,11 +4691,16 @@
                     inner: Box::new(inner),
                 })
             })<span class="question-mark">?</span>;
-        <span class="kw">let </span>interface = validation::Interface::new(<span class="kw-2">&amp;</span>module, <span class="kw-2">&amp;</span>info, <span class="self">self</span>.limits.clone());
-        <span class="kw">let </span>hal_shader = hal::ShaderInput::Naga(hal::NagaShader { module, info });
 
+        <span class="kw">let </span>interface =
+            validation::Interface::new(<span class="kw-2">&amp;</span>module, <span class="kw-2">&amp;</span>info, <span class="self">self</span>.limits.clone(), <span class="self">self</span>.features);
+        <span class="kw">let </span>hal_shader = hal::ShaderInput::Naga(hal::NagaShader {
+            module,
+            info,
+            debug_source,
+        });
         <span class="kw">let </span>hal_desc = hal::ShaderModuleDescriptor {
-            label: desc.label.borrow_option(),
+            label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
             runtime_checks: desc.shader_bound_checks.runtime_checks(),
         };
         <span class="kw">let </span>raw = <span class="kw">match unsafe </span>{ <span class="self">self</span>.raw.create_shader_module(<span class="kw-2">&amp;</span>hal_desc, hal_shader) } {
@@ -4496,7 +4739,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;pipeline::ShaderModule&lt;A&gt;, pipeline::CreateShaderModuleError&gt; {
         <span class="self">self</span>.require_features(wgt::Features::SPIRV_SHADER_PASSTHROUGH)<span class="question-mark">?</span>;
         <span class="kw">let </span>hal_desc = hal::ShaderModuleDescriptor {
-            label: desc.label.borrow_option(),
+            label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
             runtime_checks: desc.shader_bound_checks.runtime_checks(),
         };
         <span class="kw">let </span>hal_shader = hal::ShaderInput::SpirV(source);
@@ -4536,8 +4779,9 @@
             .iter(self_id.backend())
             .find(|<span class="kw-2">&amp;</span>(<span class="kw">_</span>, bgl)| {
                 bgl.device_id.value.<span class="number">0 </span>== self_id
-                    &amp;&amp; bgl.compatible_layout.is_none()
-                    &amp;&amp; bgl.entries == <span class="kw-2">*</span>entry_map
+                    &amp;&amp; bgl
+                        .as_inner()
+                        .map_or(<span class="bool-val">false</span>, |inner| inner.entries == <span class="kw-2">*</span>entry_map)
             })
             .map(|(id, value)| {
                 value.multi_ref_count.inc();
@@ -4552,7 +4796,12 @@
         pipeline_layout
             .bind_group_layout_ids
             .iter()
-            .map(|<span class="kw-2">&amp;</span>id| <span class="kw-2">&amp;</span>bgl_guard[id].entries)
+            .map(|<span class="kw-2">&amp;</span>id| {
+                <span class="kw-2">&amp;</span>get_bind_group_layout(bgl_guard, id)
+                    .<span class="number">1
+                    </span>.assume_deduplicated()
+                    .entries
+            })
             .collect()
     }
 
@@ -4571,7 +4820,9 @@
             .iter()
             .enumerate()
             .map(|(group_index, <span class="kw-2">&amp;</span>bgl_id)| pipeline::LateSizedBufferGroup {
-                shader_sizes: bgl_guard[bgl_id]
+                shader_sizes: get_bind_group_layout(bgl_guard, bgl_id)
+                    .<span class="number">1
+                    </span>.assume_deduplicated()
                     .entries
                     .values()
                     .filter_map(|entry| <span class="kw">match </span>entry.ty {
@@ -4597,7 +4848,7 @@
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>create_bind_group_layout(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         self_id: id::DeviceId,
-        label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
+        label: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Label,
         entry_map: binding_model::BindEntryMap,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;binding_model::BindGroupLayout&lt;A&gt;, binding_model::CreateBindGroupLayoutError&gt; {
         <span class="attr">#[derive(PartialEq)]
@@ -4762,7 +5013,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>hal_bindings = entry_map.values().cloned().collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         hal_bindings.sort_by_key(|b| b.binding);
         <span class="kw">let </span>hal_desc = hal::BindGroupLayoutDescriptor {
-            label,
+            label: label.to_hal(<span class="self">self</span>.instance_flags),
             flags: bgl_flags,
             entries: <span class="kw-2">&amp;</span>hal_bindings,
         };
@@ -4783,25 +5034,27 @@
             .map_err(binding_model::CreateBindGroupLayoutError::TooManyBindings)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(binding_model::BindGroupLayout {
-            raw,
             device_id: Stored {
                 value: id::Valid(self_id),
                 ref_count: <span class="self">self</span>.life_guard.add_ref(),
             },
             multi_ref_count: MultiRefCount::new(),
-            dynamic_count: entry_map
-                .values()
-                .filter(|b| b.ty.has_dynamic_offset())
-                .count(),
-            count_validator,
-            entries: entry_map,
-            <span class="attr">#[cfg(debug_assertions)]
-            </span>label: label.unwrap_or(<span class="string">&quot;&quot;</span>).to_string(),
-            compatible_layout: <span class="prelude-val">None</span>,
+            inner: BglOrDuplicate::Inner(BindGroupLayoutInner {
+                raw,
+                dynamic_count: entry_map
+                    .values()
+                    .filter(|b| b.ty.has_dynamic_offset())
+                    .count(),
+                count_validator,
+                entries: entry_map,
+                <span class="attr">#[cfg(debug_assertions)]
+                </span>label: label.borrow_or_default().to_string(),
+            }),
         })
     }
 
     <span class="kw">fn </span>create_buffer_binding&lt;<span class="lifetime">&#39;a</span>&gt;(
+        device_id: id::DeviceId,
         bb: <span class="kw-2">&amp;</span>binding_model::BufferBinding,
         binding: u32,
         decl: <span class="kw-2">&amp;</span>wgt::BindGroupLayoutEntry,
@@ -4859,6 +5112,11 @@
             .buffers
             .add_single(storage, bb.buffer_id, internal_use)
             .ok_or(Error::InvalidBuffer(bb.buffer_id))<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>buffer.device_id.value.<span class="number">0 </span>!= device_id {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
+        }
+
         check_buffer_usage(buffer.usage, pub_usage)<span class="question-mark">?</span>;
         <span class="kw">let </span>raw_buffer = buffer
             .raw
@@ -4929,6 +5187,7 @@
     }
 
     <span class="kw">fn </span>create_texture_binding(
+        device_id: id::DeviceId,
         view: <span class="kw-2">&amp;</span>resource::TextureView&lt;A&gt;,
         texture_guard: <span class="kw-2">&amp;</span>Storage&lt;resource::Texture&lt;A&gt;, id::TextureId&gt;,
         internal_use: hal::TextureUses,
@@ -4950,6 +5209,11 @@
             .ok_or(binding_model::CreateBindGroupError::InvalidTexture(
                 view.parent_id.value.<span class="number">0</span>,
             ))<span class="question-mark">?</span>;
+
+        <span class="kw">if </span>texture.device_id.value.<span class="number">0 </span>!= device_id {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
+        }
+
         check_texture_usage(texture.desc.usage, pub_usage)<span class="question-mark">?</span>;
 
         used_texture_ranges.push(TextureInitTrackerAction {
@@ -4967,7 +5231,9 @@
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>create_bind_group&lt;G: GlobalIdentityHandlerFactory&gt;(
+    <span class="comment">// This function expects the provided bind group layout to be resolved
+    // (not passing a duplicate) beforehand.
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>create_bind_group&lt;G: GlobalIdentityHandlerFactory&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         self_id: id::DeviceId,
         layout: <span class="kw-2">&amp;</span>binding_model::BindGroupLayout&lt;A&gt;,
@@ -4981,7 +5247,7 @@
             <span class="comment">// Check that the number of entries in the descriptor matches
             // the number of entries in the layout.
             </span><span class="kw">let </span>actual = desc.entries.len();
-            <span class="kw">let </span>expected = layout.entries.len();
+            <span class="kw">let </span>expected = layout.assume_deduplicated().entries.len();
             <span class="kw">if </span>actual != expected {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(Error::BindingsNumMismatch { expected, actual });
             }
@@ -5012,12 +5278,14 @@
             <span class="kw">let </span>binding = entry.binding;
             <span class="comment">// Find the corresponding declaration in the layout
             </span><span class="kw">let </span>decl = layout
+                .assume_deduplicated()
                 .entries
                 .get(<span class="kw-2">&amp;</span>binding)
                 .ok_or(Error::MissingBindingDeclaration(binding))<span class="question-mark">?</span>;
             <span class="kw">let </span>(res_index, count) = <span class="kw">match </span>entry.resource {
                 Br::Buffer(<span class="kw-2">ref </span>bb) =&gt; {
                     <span class="kw">let </span>bb = <span class="self">Self</span>::create_buffer_binding(
+                        self_id,
                         bb,
                         binding,
                         decl,
@@ -5040,6 +5308,7 @@
                     <span class="kw">let </span>res_index = hal_buffers.len();
                     <span class="kw">for </span>bb <span class="kw">in </span>bindings_array.iter() {
                         <span class="kw">let </span>bb = <span class="self">Self</span>::create_buffer_binding(
+                            self_id,
                             bb,
                             binding,
                             decl,
@@ -5061,6 +5330,10 @@
                                 .samplers
                                 .add_single(<span class="kw-2">&amp;*</span>sampler_guard, id)
                                 .ok_or(Error::InvalidSampler(id))<span class="question-mark">?</span>;
+
+                            <span class="kw">if </span>sampler.device_id.value.<span class="number">0 </span>!= self_id {
+                                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
+                            }
 
                             <span class="comment">// Allowed sampler values for filtering and comparison
                             </span><span class="kw">let </span>(allowed_filtering, allowed_comparison) = <span class="kw">match </span>ty {
@@ -5110,6 +5383,11 @@
                             .samplers
                             .add_single(<span class="kw-2">&amp;*</span>sampler_guard, id)
                             .ok_or(Error::InvalidSampler(id))<span class="question-mark">?</span>;
+
+                        <span class="kw">if </span>sampler.device_id.value.<span class="number">0 </span>!= self_id {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
+                        }
+
                         hal_samplers.push(<span class="kw-2">&amp;</span>sampler.raw);
                     }
 
@@ -5127,6 +5405,7 @@
                         <span class="string">&quot;SampledTexture, ReadonlyStorageTexture or WriteonlyStorageTexture&quot;</span>,
                     )<span class="question-mark">?</span>;
                     <span class="self">Self</span>::create_texture_binding(
+                        self_id,
                         view,
                         <span class="kw-2">&amp;</span>texture_guard,
                         internal_use,
@@ -5155,6 +5434,7 @@
                             <span class="self">Self</span>::texture_use_parameters(binding, decl, view,
                                                          <span class="string">&quot;SampledTextureArray, ReadonlyStorageTextureArray or WriteonlyStorageTextureArray&quot;</span>)<span class="question-mark">?</span>;
                         <span class="self">Self</span>::create_texture_binding(
+                            self_id,
                             view,
                             <span class="kw-2">&amp;</span>texture_guard,
                             internal_use,
@@ -5188,9 +5468,11 @@
             }
         }
 
+        <span class="kw">let </span>layout_inner = layout.assume_deduplicated();
+
         <span class="kw">let </span>hal_desc = hal::BindGroupDescriptor {
-            label: desc.label.borrow_option(),
-            layout: <span class="kw-2">&amp;</span>layout.raw,
+            label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
+            layout: <span class="kw-2">&amp;</span>layout_inner.raw,
             entries: <span class="kw-2">&amp;</span>hal_entries,
             buffers: <span class="kw-2">&amp;</span>hal_buffers,
             samplers: <span class="kw-2">&amp;</span>hal_samplers,
@@ -5218,7 +5500,7 @@
             used_texture_ranges,
             dynamic_binding_info,
             <span class="comment">// collect in the order of BGL iteration
-            </span>late_buffer_binding_sizes: layout
+            </span>late_buffer_binding_sizes: layout_inner
                 .entries
                 .keys()
                 .flat_map(|binding| late_buffer_binding_sizes.get(binding).cloned())
@@ -5448,10 +5730,15 @@
 
         <span class="comment">// validate total resource counts
         </span><span class="kw">for </span><span class="kw-2">&amp;</span>id <span class="kw">in </span>desc.bind_group_layouts.iter() {
-            <span class="kw">let </span>bind_group_layout = bgl_guard
-                .get(id)
-                .map_err(|<span class="kw">_</span>| Error::InvalidBindGroupLayout(id))<span class="question-mark">?</span>;
-            count_validator.merge(<span class="kw-2">&amp;</span>bind_group_layout.count_validator);
+            <span class="kw">let </span><span class="prelude-val">Some</span>(bind_group_layout) = try_get_bind_group_layout(bgl_guard, id) <span class="kw">else </span>{
+                <span class="kw">return </span><span class="prelude-val">Err</span>(Error::InvalidBindGroupLayout(id));
+            };
+
+            <span class="kw">if </span>bind_group_layout.device_id.value.<span class="number">0 </span>!= self_id {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
+            }
+
+            count_validator.merge(<span class="kw-2">&amp;</span>bind_group_layout.assume_deduplicated().count_validator);
         }
         count_validator
             .validate(<span class="kw-2">&amp;</span><span class="self">self</span>.limits)
@@ -5460,10 +5747,15 @@
         <span class="kw">let </span>bgl_vec = desc
             .bind_group_layouts
             .iter()
-            .map(|<span class="kw-2">&amp;</span>id| <span class="kw-2">&amp;</span>try_get_bind_group_layout(bgl_guard, id).unwrap().raw)
+            .map(|<span class="kw-2">&amp;</span>id| {
+                <span class="kw-2">&amp;</span>try_get_bind_group_layout(bgl_guard, id)
+                    .unwrap()
+                    .assume_deduplicated()
+                    .raw
+            })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="kw">let </span>hal_desc = hal::PipelineLayoutDescriptor {
-            label: desc.label.borrow_option(),
+            label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
             flags: hal::PipelineLayoutFlags::BASE_VERTEX_INSTANCE,
             bind_group_layouts: <span class="kw-2">&amp;</span>bgl_vec,
             push_constant_ranges: desc.push_constant_ranges.as_ref(),
@@ -5529,7 +5821,7 @@
                     <span class="kw-2">*</span>bgl_id = dedup_id;
                 }
                 <span class="prelude-val">None </span>=&gt; {
-                    <span class="kw">let </span>bgl = <span class="self">self</span>.create_bind_group_layout(self_id, <span class="prelude-val">None</span>, map)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>bgl = <span class="self">self</span>.create_bind_group_layout(self_id, <span class="kw-2">&amp;</span><span class="prelude-val">None</span>, map)<span class="question-mark">?</span>;
                     bgl_guard.force_replace(<span class="kw-2">*</span>bgl_id, bgl);
                 }
             };
@@ -5579,6 +5871,10 @@
             .get(desc.stage.module)
             .map_err(|<span class="kw">_</span>| validation::StageError::InvalidModule)<span class="question-mark">?</span>;
 
+        <span class="kw">if </span>shader_module.device_id.value.<span class="number">0 </span>!= self_id {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
+        }
+
         {
             <span class="kw">let </span>flag = wgt::ShaderStages::COMPUTE;
             <span class="kw">let </span>provided_layouts = <span class="kw">match </span>desc.layout {
@@ -5622,11 +5918,15 @@
             .get(pipeline_layout_id)
             .map_err(|<span class="kw">_</span>| pipeline::CreateComputePipelineError::InvalidLayout)<span class="question-mark">?</span>;
 
+        <span class="kw">if </span>layout.device_id.value.<span class="number">0 </span>!= self_id {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
+        }
+
         <span class="kw">let </span>late_sized_buffer_groups =
             Device::make_late_sized_buffer_groups(<span class="kw-2">&amp;</span>shader_binding_sizes, layout, <span class="kw-2">&amp;*</span>bgl_guard);
 
         <span class="kw">let </span>pipeline_desc = hal::ComputePipelineDescriptor {
-            label: desc.label.borrow_option(),
+            label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
             layout: <span class="kw-2">&amp;</span>layout.raw,
             stage: hal::ProgrammableStage {
                 entry_point: desc.stage.entry_point.as_ref(),
@@ -5727,6 +6027,8 @@
         <span class="kw">let </span><span class="kw-2">mut </span>vertex_steps = Vec::with_capacity(desc.vertex.buffers.len());
         <span class="kw">let </span><span class="kw-2">mut </span>vertex_buffers = Vec::with_capacity(desc.vertex.buffers.len());
         <span class="kw">let </span><span class="kw-2">mut </span>total_attributes = <span class="number">0</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>shader_expects_dual_source_blending = <span class="bool-val">false</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>pipeline_expects_dual_source_blending = <span class="bool-val">false</span>;
         <span class="kw">for </span>(i, vb_state) <span class="kw">in </span>desc.vertex.buffers.iter().enumerate() {
             vertex_steps.push(pipeline::VertexStep {
                 stride: vb_state.array_stride,
@@ -5867,7 +6169,25 @@
                     {
                         <span class="kw">break </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::FormatNotMultisampled(cs.format));
                     }
-
+                    <span class="kw">if let </span><span class="prelude-val">Some</span>(blend_mode) = cs.blend {
+                        <span class="kw">for </span>factor <span class="kw">in </span>[
+                            blend_mode.color.src_factor,
+                            blend_mode.color.dst_factor,
+                            blend_mode.alpha.src_factor,
+                            blend_mode.alpha.dst_factor,
+                        ] {
+                            <span class="kw">if </span>factor.ref_second_blend_source() {
+                                <span class="self">self</span>.require_features(wgt::Features::DUAL_SOURCE_BLENDING)<span class="question-mark">?</span>;
+                                <span class="kw">if </span>i == <span class="number">0 </span>{
+                                    pipeline_expects_dual_source_blending = <span class="bool-val">true</span>;
+                                    <span class="kw">break</span>;
+                                } <span class="kw">else </span>{
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(<span class="kw">crate</span>::pipeline::CreateRenderPipelineError
+                            ::BlendFactorOnUnsupportedTarget { factor, target: i <span class="kw">as </span>u32 });
+                                }
+                            }
+                        }
+                    }
                     <span class="kw">break </span><span class="prelude-val">None</span>;
                 };
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(e) = error {
@@ -5945,11 +6265,20 @@
                 }
             })<span class="question-mark">?</span>;
 
+            <span class="kw">if </span>shader_module.device_id.value.<span class="number">0 </span>!= self_id {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
+            }
+
             <span class="kw">let </span>provided_layouts = <span class="kw">match </span>desc.layout {
                 <span class="prelude-val">Some</span>(pipeline_layout_id) =&gt; {
                     <span class="kw">let </span>pipeline_layout = pipeline_layout_guard
                         .get(pipeline_layout_id)
                         .map_err(|<span class="kw">_</span>| pipeline::CreateRenderPipelineError::InvalidLayout)<span class="question-mark">?</span>;
+
+                    <span class="kw">if </span>pipeline_layout.device_id.value.<span class="number">0 </span>!= self_id {
+                        <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
+                    }
+
                     <span class="prelude-val">Some</span>(Device::get_introspection_bind_group_layouts(
                         pipeline_layout,
                         <span class="kw-2">&amp;*</span>bgl_guard,
@@ -6024,6 +6353,15 @@
                     }
                 }
 
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>interface) = shader_module.interface {
+                    shader_expects_dual_source_blending = interface
+                        .fragment_uses_dual_source_blending(<span class="kw-2">&amp;</span>fragment.stage.entry_point)
+                        .map_err(|error| pipeline::CreateRenderPipelineError::Stage {
+                            stage: flag,
+                            error,
+                        })<span class="question-mark">?</span>;
+                }
+
                 <span class="prelude-val">Some</span>(hal::ProgrammableStage {
                     module: <span class="kw-2">&amp;</span>shader_module.raw,
                     entry_point: fragment.stage.entry_point.as_ref(),
@@ -6031,6 +6369,17 @@
             }
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
         };
+
+        <span class="kw">if </span>!pipeline_expects_dual_source_blending &amp;&amp; shader_expects_dual_source_blending {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(
+                pipeline::CreateRenderPipelineError::ShaderExpectsPipelineToUseDualSourceBlending,
+            );
+        }
+        <span class="kw">if </span>pipeline_expects_dual_source_blending &amp;&amp; !shader_expects_dual_source_blending {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(
+                pipeline::CreateRenderPipelineError::PipelineExpectsShaderToUseDualSourceBlending,
+            );
+        }
 
         <span class="kw">if </span>validated_stages.contains(wgt::ShaderStages::FRAGMENT) {
             <span class="kw">for </span>(i, output) <span class="kw">in </span>io.iter() {
@@ -6107,7 +6456,7 @@
             Device::make_late_sized_buffer_groups(<span class="kw-2">&amp;</span>shader_binding_sizes, layout, <span class="kw-2">&amp;*</span>bgl_guard);
 
         <span class="kw">let </span>pipeline_desc = hal::RenderPipelineDescriptor {
-            label: desc.label.borrow_option(),
+            label: desc.label.to_hal(<span class="self">self</span>.instance_flags),
             layout: <span class="kw-2">&amp;</span>layout.raw,
             vertex_buffers: <span class="kw-2">&amp;</span>vertex_buffers,
             vertex_stage,
@@ -6266,7 +6615,7 @@
             });
         }
 
-        <span class="kw">let </span>hal_desc = desc.map_label(<span class="kw">crate</span>::LabelHelpers::borrow_option);
+        <span class="kw">let </span>hal_desc = desc.map_label(|label| label.to_hal(<span class="self">self</span>.instance_flags));
         <span class="prelude-val">Ok</span>(resource::QuerySet {
             raw: <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.create_query_set(<span class="kw-2">&amp;</span>hal_desc).unwrap() },
             device_id: Stored {
@@ -6277,6 +6626,27 @@
             desc: desc.map_label(|<span class="kw">_</span>| ()),
         })
     }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lose(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _reason: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) {
+        <span class="comment">// Follow the steps at https://gpuweb.github.io/gpuweb/#lose-the-device.
+
+        // Mark the device explicitly as invalid. This is checked in various
+        // places to prevent new work from being submitted.
+        </span><span class="self">self</span>.valid = <span class="bool-val">false</span>;
+
+        <span class="comment">// The following steps remain in &quot;lose the device&quot;:
+        // 1) Resolve the GPUDevice device.lost promise.
+
+        // TODO: triggger this passively or actively, and supply the reason.
+
+        // 2) Complete any outstanding mapAsync() steps.
+        // 3) Complete any outstanding onSubmittedWorkDone() steps.
+
+        // These parts are passively accomplished by setting valid to false,
+        // since that will prevent any new work from being added to the queues.
+        // Future calls to poll_devices will continue to check the work queues
+        // until they are cleared, and then drop the device.
+    </span>}
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Device&lt;A&gt; {

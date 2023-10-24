@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ComparisonType"],"fn":["calc_difference","compare_image_output"],"struct":["ReadbackBuffers"]};
+window.SIDEBAR_ITEMS = {"enum":["ComparisonType"],"fn":["compare_image_output"],"struct":["ReadbackBuffers"]};

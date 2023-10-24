@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/resource.rs`."><title>resource.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (3223b0b5e 2023-09-20)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../wgpu_core/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/resource.rs`."><title>resource.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-deb46770fd761b69.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0-nightly (1c05d50c8 2023-10-21)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-5f34af1a0ee6bacd.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -864,73 +864,12 @@
 <a href="#864" id="864">864</a>
 <a href="#865" id="865">865</a>
 <a href="#866" id="866">866</a>
-<a href="#867" id="867">867</a>
-<a href="#868" id="868">868</a>
-<a href="#869" id="869">869</a>
-<a href="#870" id="870">870</a>
-<a href="#871" id="871">871</a>
-<a href="#872" id="872">872</a>
-<a href="#873" id="873">873</a>
-<a href="#874" id="874">874</a>
-<a href="#875" id="875">875</a>
-<a href="#876" id="876">876</a>
-<a href="#877" id="877">877</a>
-<a href="#878" id="878">878</a>
-<a href="#879" id="879">879</a>
-<a href="#880" id="880">880</a>
-<a href="#881" id="881">881</a>
-<a href="#882" id="882">882</a>
-<a href="#883" id="883">883</a>
-<a href="#884" id="884">884</a>
-<a href="#885" id="885">885</a>
-<a href="#886" id="886">886</a>
-<a href="#887" id="887">887</a>
-<a href="#888" id="888">888</a>
-<a href="#889" id="889">889</a>
-<a href="#890" id="890">890</a>
-<a href="#891" id="891">891</a>
-<a href="#892" id="892">892</a>
-<a href="#893" id="893">893</a>
-<a href="#894" id="894">894</a>
-<a href="#895" id="895">895</a>
-<a href="#896" id="896">896</a>
-<a href="#897" id="897">897</a>
-<a href="#898" id="898">898</a>
-<a href="#899" id="899">899</a>
-<a href="#900" id="900">900</a>
-<a href="#901" id="901">901</a>
-<a href="#902" id="902">902</a>
-<a href="#903" id="903">903</a>
-<a href="#904" id="904">904</a>
-<a href="#905" id="905">905</a>
-<a href="#906" id="906">906</a>
-<a href="#907" id="907">907</a>
-<a href="#908" id="908">908</a>
-<a href="#909" id="909">909</a>
-<a href="#910" id="910">910</a>
-<a href="#911" id="911">911</a>
-<a href="#912" id="912">912</a>
-<a href="#913" id="913">913</a>
-<a href="#914" id="914">914</a>
-<a href="#915" id="915">915</a>
-<a href="#916" id="916">916</a>
-<a href="#917" id="917">917</a>
-<a href="#918" id="918">918</a>
-<a href="#919" id="919">919</a>
-<a href="#920" id="920">920</a>
-<a href="#921" id="921">921</a>
-<a href="#922" id="922">922</a>
-<a href="#923" id="923">923</a>
-<a href="#924" id="924">924</a>
-<a href="#925" id="925">925</a>
-<a href="#926" id="926">926</a>
-<a href="#927" id="927">927</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     device::{DeviceError, HostMap, MissingDownlevelFlags, MissingFeatures},
     global::Global,
     hal_api::HalApi,
     hub::Token,
-    id::{AdapterId, CommandEncoderId, DeviceId, SurfaceId, TextureId, TextureViewId, Valid},
+    id::{AdapterId, DeviceId, SurfaceId, TextureId, Valid},
     identity::GlobalIdentityHandlerFactory,
     init_tracker::{BufferInitTracker, TextureInitTracker},
     track::TextureSelector,
@@ -1365,11 +1304,11 @@
     <span class="doccomment">/// # Safety
     ///
     /// - The raw texture handle must not be manually destroyed
-    </span><span class="kw">pub unsafe fn </span>texture_as_hal&lt;A: HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Texture&gt;) -&gt; R, R&gt;(
+    </span><span class="kw">pub unsafe fn </span>texture_as_hal&lt;A: HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Texture&gt;)&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         id: TextureId,
         hal_texture_callback: F,
-    ) -&gt; R {
+    ) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Texture::as_hal&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
@@ -1378,26 +1317,7 @@
         <span class="kw">let </span>texture = guard.try_get(id).ok().flatten();
         <span class="kw">let </span>hal_texture = texture.and_then(|tex| tex.inner.as_raw());
 
-        hal_texture_callback(hal_texture)
-    }
-
-    <span class="doccomment">/// # Safety
-    ///
-    /// - The raw texture view handle must not be manually destroyed
-    </span><span class="kw">pub unsafe fn </span>texture_view_as_hal&lt;A: HalApi, F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::TextureView&gt;) -&gt; R, R&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        id: TextureViewId,
-        hal_texture_view_callback: F,
-    ) -&gt; R {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;TextureView::as_hal&quot;</span>);
-
-        <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(guard, <span class="kw">_</span>) = hub.texture_views.read(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>texture_view = guard.try_get(id).ok().flatten();
-        <span class="kw">let </span>hal_texture_view = texture_view.map(|tex| <span class="kw-2">&amp;</span>tex.raw);
-
-        hal_texture_view_callback(hal_texture_view)
+        hal_texture_callback(hal_texture);
     }
 
     <span class="doccomment">/// # Safety
@@ -1418,26 +1338,6 @@
         <span class="kw">let </span>hal_adapter = adapter.map(|adapter| <span class="kw-2">&amp;</span>adapter.raw.adapter);
 
         hal_adapter_callback(hal_adapter)
-    }
-
-    <span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;emscripten&quot;</span>))]
-    </span><span class="kw">pub fn </span>texture_format_as_hal&lt;A: HalApi&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        adapter: AdapterId,
-        texture_format: wgt::TextureFormat,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;A::TextureFormat&gt; {
-        <span class="kw">use </span>hal::Adapter;
-
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;TextureFormat::as_hal&quot;</span>);
-
-        <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-
-        <span class="kw">let </span>(guard, <span class="kw">_</span>) = hub.adapters.read(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>adapter = guard.try_get(adapter).ok().flatten();
-        <span class="kw">let </span>hal_adapter = adapter.map(|adapter| <span class="kw-2">&amp;</span>adapter.raw.adapter);
-
-        hal_adapter.map(|hal_adapter| hal_adapter.texture_format_as_hal(texture_format))
     }
 
     <span class="doccomment">/// # Safety
@@ -1476,28 +1376,6 @@
             .map(|surface| <span class="kw-2">&amp;mut </span>surface.raw);
 
         hal_surface_callback(hal_surface)
-    }
-
-    <span class="doccomment">/// # Safety
-    /// - The raw command encoder handle must not be manually destroyed
-    </span><span class="kw">pub unsafe fn </span>command_encoder_as_hal_mut&lt;
-        A: HalApi,
-        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>A::CommandEncoder&gt;) -&gt; R,
-        R,
-    &gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        id: CommandEncoderId,
-        hal_command_encoder_callback: F,
-    ) -&gt; R {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::as_hal_mut&quot;</span>);
-
-        <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(<span class="kw-2">mut </span>guard, <span class="kw">_</span>) = hub.command_buffers.write(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>command_encoder = guard.get_mut(id).ok();
-        <span class="kw">let </span>hal_command_encoder = command_encoder.map(|encoder| encoder.encoder.open());
-
-        hal_command_encoder_callback(hal_command_encoder)
     }
 }
 

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["fail","fail_if","initialize_instance","initialize_test","valid"],"mod":["image"],"struct":["FailureCase","FailureReasons","SurfaceGuard","TestParameters","TestingContext"]};
+window.SIDEBAR_ITEMS = {"attr":["gpu_test"],"fn":["execute_test","fail","fail_if","initialize_adapter","initialize_device","initialize_instance","valid"],"macro":["gpu_test_main"],"mod":["image","native"],"struct":["FailureCase","FailureReasons","GpuTestConfiguration","TestParameters","TestingContext"]};

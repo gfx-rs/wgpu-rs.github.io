@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":["framework"]};
+window.SIDEBAR_ITEMS = {"mod":["framework","utils"]};

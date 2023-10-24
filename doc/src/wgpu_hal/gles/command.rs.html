@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/command.rs`."><title>command.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (3223b0b5e 2023-09-20)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu_hal/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/command.rs`."><title>command.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-deb46770fd761b69.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0-nightly (1c05d50c8 2023-10-21)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f34af1a0ee6bacd.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1058,6 +1058,35 @@
 <a href="#1058" id="1058">1058</a>
 <a href="#1059" id="1059">1059</a>
 <a href="#1060" id="1060">1060</a>
+<a href="#1061" id="1061">1061</a>
+<a href="#1062" id="1062">1062</a>
+<a href="#1063" id="1063">1063</a>
+<a href="#1064" id="1064">1064</a>
+<a href="#1065" id="1065">1065</a>
+<a href="#1066" id="1066">1066</a>
+<a href="#1067" id="1067">1067</a>
+<a href="#1068" id="1068">1068</a>
+<a href="#1069" id="1069">1069</a>
+<a href="#1070" id="1070">1070</a>
+<a href="#1071" id="1071">1071</a>
+<a href="#1072" id="1072">1072</a>
+<a href="#1073" id="1073">1073</a>
+<a href="#1074" id="1074">1074</a>
+<a href="#1075" id="1075">1075</a>
+<a href="#1076" id="1076">1076</a>
+<a href="#1077" id="1077">1077</a>
+<a href="#1078" id="1078">1078</a>
+<a href="#1079" id="1079">1079</a>
+<a href="#1080" id="1080">1080</a>
+<a href="#1081" id="1081">1081</a>
+<a href="#1082" id="1082">1082</a>
+<a href="#1083" id="1083">1083</a>
+<a href="#1084" id="1084">1084</a>
+<a href="#1085" id="1085">1085</a>
+<a href="#1086" id="1086">1086</a>
+<a href="#1087" id="1087">1087</a>
+<a href="#1088" id="1088">1088</a>
+<a href="#1089" id="1089">1089</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, Command <span class="kw">as </span>C};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>std::{mem, ops::Range};
@@ -1091,6 +1120,7 @@
     dirty_vbuf_mask: usize,
     active_first_instance: u32,
     push_offset_to_uniform: ArrayVec&lt;<span class="kw">super</span>::UniformDesc, { <span class="kw">super</span>::MAX_PUSH_CONSTANTS }&gt;,
+    end_of_pass_timestamp: <span class="prelude-ty">Option</span>&lt;glow::Query&gt;,
 }
 
 <span class="kw">impl </span><span class="kw">super</span>::CommandBuffer {
@@ -1410,7 +1440,6 @@
                 dst: dst_raw,
                 dst_target,
                 copy,
-                dst_is_cubemap: dst.is_cubemap,
             })
         }
     }
@@ -1470,8 +1499,9 @@
     <span class="kw">unsafe fn </span>end_query(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span><span class="kw">super</span>::QuerySet, _index: u32) {
         <span class="self">self</span>.cmd_buffer.commands.push(C::EndQuery(set.target));
     }
-    <span class="kw">unsafe fn </span>write_timestamp(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _set: <span class="kw-2">&amp;</span><span class="kw">super</span>::QuerySet, _index: u32) {
-        <span class="macro">unimplemented!</span>()
+    <span class="kw">unsafe fn </span>write_timestamp(<span class="kw-2">&amp;mut </span><span class="self">self</span>, set: <span class="kw-2">&amp;</span><span class="kw">super</span>::QuerySet, index: u32) {
+        <span class="kw">let </span>query = set.queries[index <span class="kw">as </span>usize];
+        <span class="self">self</span>.cmd_buffer.commands.push(C::TimestampQuery(query));
     }
     <span class="kw">unsafe fn </span>reset_queries(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _set: <span class="kw-2">&amp;</span><span class="kw">super</span>::QuerySet, _range: Range&lt;u32&gt;) {
         <span class="comment">//TODO: what do we do here?
@@ -1500,6 +1530,16 @@
     <span class="comment">// render
 
     </span><span class="kw">unsafe fn </span>begin_render_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::RenderPassDescriptor&lt;<span class="kw">super</span>::Api&gt;) {
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.state.end_of_pass_timestamp.is_none());
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>t) = desc.timestamp_writes {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = t.beginning_of_pass_write_index {
+                <span class="kw">unsafe </span>{ <span class="self">self</span>.write_timestamp(t.query_set, index) }
+            }
+            <span class="self">self</span>.state.end_of_pass_timestamp = t
+                .end_of_pass_write_index
+                .map(|index| t.query_set.queries[index <span class="kw">as </span>usize]);
+        }
+
         <span class="self">self</span>.state.render_size = desc.extent;
         <span class="self">self</span>.state.resolve_attachments.clear();
         <span class="self">self</span>.state.invalidate_attachments.clear();
@@ -1684,6 +1724,10 @@
         }
         <span class="self">self</span>.state.vertex_attributes.clear();
         <span class="self">self</span>.state.primitive = <span class="kw">super</span>::PrimitiveState::default();
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(query) = <span class="self">self</span>.state.end_of_pass_timestamp.take() {
+            <span class="self">self</span>.cmd_buffer.commands.push(C::TimestampQuery(query));
+        }
     }
 
     <span class="kw">unsafe fn </span>set_bind_group(
@@ -2091,6 +2135,16 @@
     <span class="comment">// compute
 
     </span><span class="kw">unsafe fn </span>begin_compute_pass(<span class="kw-2">&amp;mut </span><span class="self">self</span>, desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::ComputePassDescriptor&lt;<span class="kw">super</span>::Api&gt;) {
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.state.end_of_pass_timestamp.is_none());
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>t) = desc.timestamp_writes {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(index) = t.beginning_of_pass_write_index {
+                <span class="kw">unsafe </span>{ <span class="self">self</span>.write_timestamp(t.query_set, index) }
+            }
+            <span class="self">self</span>.state.end_of_pass_timestamp = t
+                .end_of_pass_write_index
+                .map(|index| t.query_set.queries[index <span class="kw">as </span>usize]);
+        }
+
         <span class="kw">if let </span><span class="prelude-val">Some</span>(label) = desc.label {
             <span class="kw">let </span>range = <span class="self">self</span>.cmd_buffer.add_marker(label);
             <span class="self">self</span>.cmd_buffer.commands.push(C::PushDebugGroup(range));
@@ -2101,6 +2155,10 @@
         <span class="kw">if </span><span class="self">self</span>.state.has_pass_label {
             <span class="self">self</span>.cmd_buffer.commands.push(C::PopDebugGroup);
             <span class="self">self</span>.state.has_pass_label = <span class="bool-val">false</span>;
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(query) = <span class="self">self</span>.state.end_of_pass_timestamp.take() {
+            <span class="self">self</span>.cmd_buffer.commands.push(C::TimestampQuery(query));
         }
     }
 

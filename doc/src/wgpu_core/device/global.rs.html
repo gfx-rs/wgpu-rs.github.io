@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/global.rs`."><title>global.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fa3bb1812debf86c.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.74.0-nightly (3223b0b5e 2023-09-20)" data-channel="nightly" data-search-js="search-8be46b629f5f14a8.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-c5bd66d33317d69f.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu_core/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/global.rs`."><title>global.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-deb46770fd761b69.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.75.0-nightly (1c05d50c8 2023-10-21)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-5f34af1a0ee6bacd.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2772,10 +2772,263 @@
 <a href="#2772" id="2772">2772</a>
 <a href="#2773" id="2773">2773</a>
 <a href="#2774" id="2774">2774</a>
+<a href="#2775" id="2775">2775</a>
+<a href="#2776" id="2776">2776</a>
+<a href="#2777" id="2777">2777</a>
+<a href="#2778" id="2778">2778</a>
+<a href="#2779" id="2779">2779</a>
+<a href="#2780" id="2780">2780</a>
+<a href="#2781" id="2781">2781</a>
+<a href="#2782" id="2782">2782</a>
+<a href="#2783" id="2783">2783</a>
+<a href="#2784" id="2784">2784</a>
+<a href="#2785" id="2785">2785</a>
+<a href="#2786" id="2786">2786</a>
+<a href="#2787" id="2787">2787</a>
+<a href="#2788" id="2788">2788</a>
+<a href="#2789" id="2789">2789</a>
+<a href="#2790" id="2790">2790</a>
+<a href="#2791" id="2791">2791</a>
+<a href="#2792" id="2792">2792</a>
+<a href="#2793" id="2793">2793</a>
+<a href="#2794" id="2794">2794</a>
+<a href="#2795" id="2795">2795</a>
+<a href="#2796" id="2796">2796</a>
+<a href="#2797" id="2797">2797</a>
+<a href="#2798" id="2798">2798</a>
+<a href="#2799" id="2799">2799</a>
+<a href="#2800" id="2800">2800</a>
+<a href="#2801" id="2801">2801</a>
+<a href="#2802" id="2802">2802</a>
+<a href="#2803" id="2803">2803</a>
+<a href="#2804" id="2804">2804</a>
+<a href="#2805" id="2805">2805</a>
+<a href="#2806" id="2806">2806</a>
+<a href="#2807" id="2807">2807</a>
+<a href="#2808" id="2808">2808</a>
+<a href="#2809" id="2809">2809</a>
+<a href="#2810" id="2810">2810</a>
+<a href="#2811" id="2811">2811</a>
+<a href="#2812" id="2812">2812</a>
+<a href="#2813" id="2813">2813</a>
+<a href="#2814" id="2814">2814</a>
+<a href="#2815" id="2815">2815</a>
+<a href="#2816" id="2816">2816</a>
+<a href="#2817" id="2817">2817</a>
+<a href="#2818" id="2818">2818</a>
+<a href="#2819" id="2819">2819</a>
+<a href="#2820" id="2820">2820</a>
+<a href="#2821" id="2821">2821</a>
+<a href="#2822" id="2822">2822</a>
+<a href="#2823" id="2823">2823</a>
+<a href="#2824" id="2824">2824</a>
+<a href="#2825" id="2825">2825</a>
+<a href="#2826" id="2826">2826</a>
+<a href="#2827" id="2827">2827</a>
+<a href="#2828" id="2828">2828</a>
+<a href="#2829" id="2829">2829</a>
+<a href="#2830" id="2830">2830</a>
+<a href="#2831" id="2831">2831</a>
+<a href="#2832" id="2832">2832</a>
+<a href="#2833" id="2833">2833</a>
+<a href="#2834" id="2834">2834</a>
+<a href="#2835" id="2835">2835</a>
+<a href="#2836" id="2836">2836</a>
+<a href="#2837" id="2837">2837</a>
+<a href="#2838" id="2838">2838</a>
+<a href="#2839" id="2839">2839</a>
+<a href="#2840" id="2840">2840</a>
+<a href="#2841" id="2841">2841</a>
+<a href="#2842" id="2842">2842</a>
+<a href="#2843" id="2843">2843</a>
+<a href="#2844" id="2844">2844</a>
+<a href="#2845" id="2845">2845</a>
+<a href="#2846" id="2846">2846</a>
+<a href="#2847" id="2847">2847</a>
+<a href="#2848" id="2848">2848</a>
+<a href="#2849" id="2849">2849</a>
+<a href="#2850" id="2850">2850</a>
+<a href="#2851" id="2851">2851</a>
+<a href="#2852" id="2852">2852</a>
+<a href="#2853" id="2853">2853</a>
+<a href="#2854" id="2854">2854</a>
+<a href="#2855" id="2855">2855</a>
+<a href="#2856" id="2856">2856</a>
+<a href="#2857" id="2857">2857</a>
+<a href="#2858" id="2858">2858</a>
+<a href="#2859" id="2859">2859</a>
+<a href="#2860" id="2860">2860</a>
+<a href="#2861" id="2861">2861</a>
+<a href="#2862" id="2862">2862</a>
+<a href="#2863" id="2863">2863</a>
+<a href="#2864" id="2864">2864</a>
+<a href="#2865" id="2865">2865</a>
+<a href="#2866" id="2866">2866</a>
+<a href="#2867" id="2867">2867</a>
+<a href="#2868" id="2868">2868</a>
+<a href="#2869" id="2869">2869</a>
+<a href="#2870" id="2870">2870</a>
+<a href="#2871" id="2871">2871</a>
+<a href="#2872" id="2872">2872</a>
+<a href="#2873" id="2873">2873</a>
+<a href="#2874" id="2874">2874</a>
+<a href="#2875" id="2875">2875</a>
+<a href="#2876" id="2876">2876</a>
+<a href="#2877" id="2877">2877</a>
+<a href="#2878" id="2878">2878</a>
+<a href="#2879" id="2879">2879</a>
+<a href="#2880" id="2880">2880</a>
+<a href="#2881" id="2881">2881</a>
+<a href="#2882" id="2882">2882</a>
+<a href="#2883" id="2883">2883</a>
+<a href="#2884" id="2884">2884</a>
+<a href="#2885" id="2885">2885</a>
+<a href="#2886" id="2886">2886</a>
+<a href="#2887" id="2887">2887</a>
+<a href="#2888" id="2888">2888</a>
+<a href="#2889" id="2889">2889</a>
+<a href="#2890" id="2890">2890</a>
+<a href="#2891" id="2891">2891</a>
+<a href="#2892" id="2892">2892</a>
+<a href="#2893" id="2893">2893</a>
+<a href="#2894" id="2894">2894</a>
+<a href="#2895" id="2895">2895</a>
+<a href="#2896" id="2896">2896</a>
+<a href="#2897" id="2897">2897</a>
+<a href="#2898" id="2898">2898</a>
+<a href="#2899" id="2899">2899</a>
+<a href="#2900" id="2900">2900</a>
+<a href="#2901" id="2901">2901</a>
+<a href="#2902" id="2902">2902</a>
+<a href="#2903" id="2903">2903</a>
+<a href="#2904" id="2904">2904</a>
+<a href="#2905" id="2905">2905</a>
+<a href="#2906" id="2906">2906</a>
+<a href="#2907" id="2907">2907</a>
+<a href="#2908" id="2908">2908</a>
+<a href="#2909" id="2909">2909</a>
+<a href="#2910" id="2910">2910</a>
+<a href="#2911" id="2911">2911</a>
+<a href="#2912" id="2912">2912</a>
+<a href="#2913" id="2913">2913</a>
+<a href="#2914" id="2914">2914</a>
+<a href="#2915" id="2915">2915</a>
+<a href="#2916" id="2916">2916</a>
+<a href="#2917" id="2917">2917</a>
+<a href="#2918" id="2918">2918</a>
+<a href="#2919" id="2919">2919</a>
+<a href="#2920" id="2920">2920</a>
+<a href="#2921" id="2921">2921</a>
+<a href="#2922" id="2922">2922</a>
+<a href="#2923" id="2923">2923</a>
+<a href="#2924" id="2924">2924</a>
+<a href="#2925" id="2925">2925</a>
+<a href="#2926" id="2926">2926</a>
+<a href="#2927" id="2927">2927</a>
+<a href="#2928" id="2928">2928</a>
+<a href="#2929" id="2929">2929</a>
+<a href="#2930" id="2930">2930</a>
+<a href="#2931" id="2931">2931</a>
+<a href="#2932" id="2932">2932</a>
+<a href="#2933" id="2933">2933</a>
+<a href="#2934" id="2934">2934</a>
+<a href="#2935" id="2935">2935</a>
+<a href="#2936" id="2936">2936</a>
+<a href="#2937" id="2937">2937</a>
+<a href="#2938" id="2938">2938</a>
+<a href="#2939" id="2939">2939</a>
+<a href="#2940" id="2940">2940</a>
+<a href="#2941" id="2941">2941</a>
+<a href="#2942" id="2942">2942</a>
+<a href="#2943" id="2943">2943</a>
+<a href="#2944" id="2944">2944</a>
+<a href="#2945" id="2945">2945</a>
+<a href="#2946" id="2946">2946</a>
+<a href="#2947" id="2947">2947</a>
+<a href="#2948" id="2948">2948</a>
+<a href="#2949" id="2949">2949</a>
+<a href="#2950" id="2950">2950</a>
+<a href="#2951" id="2951">2951</a>
+<a href="#2952" id="2952">2952</a>
+<a href="#2953" id="2953">2953</a>
+<a href="#2954" id="2954">2954</a>
+<a href="#2955" id="2955">2955</a>
+<a href="#2956" id="2956">2956</a>
+<a href="#2957" id="2957">2957</a>
+<a href="#2958" id="2958">2958</a>
+<a href="#2959" id="2959">2959</a>
+<a href="#2960" id="2960">2960</a>
+<a href="#2961" id="2961">2961</a>
+<a href="#2962" id="2962">2962</a>
+<a href="#2963" id="2963">2963</a>
+<a href="#2964" id="2964">2964</a>
+<a href="#2965" id="2965">2965</a>
+<a href="#2966" id="2966">2966</a>
+<a href="#2967" id="2967">2967</a>
+<a href="#2968" id="2968">2968</a>
+<a href="#2969" id="2969">2969</a>
+<a href="#2970" id="2970">2970</a>
+<a href="#2971" id="2971">2971</a>
+<a href="#2972" id="2972">2972</a>
+<a href="#2973" id="2973">2973</a>
+<a href="#2974" id="2974">2974</a>
+<a href="#2975" id="2975">2975</a>
+<a href="#2976" id="2976">2976</a>
+<a href="#2977" id="2977">2977</a>
+<a href="#2978" id="2978">2978</a>
+<a href="#2979" id="2979">2979</a>
+<a href="#2980" id="2980">2980</a>
+<a href="#2981" id="2981">2981</a>
+<a href="#2982" id="2982">2982</a>
+<a href="#2983" id="2983">2983</a>
+<a href="#2984" id="2984">2984</a>
+<a href="#2985" id="2985">2985</a>
+<a href="#2986" id="2986">2986</a>
+<a href="#2987" id="2987">2987</a>
+<a href="#2988" id="2988">2988</a>
+<a href="#2989" id="2989">2989</a>
+<a href="#2990" id="2990">2990</a>
+<a href="#2991" id="2991">2991</a>
+<a href="#2992" id="2992">2992</a>
+<a href="#2993" id="2993">2993</a>
+<a href="#2994" id="2994">2994</a>
+<a href="#2995" id="2995">2995</a>
+<a href="#2996" id="2996">2996</a>
+<a href="#2997" id="2997">2997</a>
+<a href="#2998" id="2998">2998</a>
+<a href="#2999" id="2999">2999</a>
+<a href="#3000" id="3000">3000</a>
+<a href="#3001" id="3001">3001</a>
+<a href="#3002" id="3002">3002</a>
+<a href="#3003" id="3003">3003</a>
+<a href="#3004" id="3004">3004</a>
+<a href="#3005" id="3005">3005</a>
+<a href="#3006" id="3006">3006</a>
+<a href="#3007" id="3007">3007</a>
+<a href="#3008" id="3008">3008</a>
+<a href="#3009" id="3009">3009</a>
+<a href="#3010" id="3010">3010</a>
+<a href="#3011" id="3011">3011</a>
+<a href="#3012" id="3012">3012</a>
+<a href="#3013" id="3013">3013</a>
+<a href="#3014" id="3014">3014</a>
+<a href="#3015" id="3015">3015</a>
+<a href="#3016" id="3016">3016</a>
+<a href="#3017" id="3017">3017</a>
+<a href="#3018" id="3018">3018</a>
+<a href="#3019" id="3019">3019</a>
+<a href="#3020" id="3020">3020</a>
+<a href="#3021" id="3021">3021</a>
+<a href="#3022" id="3022">3022</a>
+<a href="#3023" id="3023">3023</a>
+<a href="#3024" id="3024">3024</a>
+<a href="#3025" id="3025">3025</a>
+<a href="#3026" id="3026">3026</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
-    binding_model, command, conv,
+    binding_model::{<span class="self">self</span>, BindGroupLayout},
+    command, conv,
     device::{life::WaitIdleError, map_buffer, queue, Device, DeviceError, HostMap},
     global::Global,
     hal_api::HalApi,
@@ -2876,6 +3129,9 @@
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
         <span class="kw">let </span>(device_guard, <span class="kw">_</span>) = hub.devices.read(<span class="kw-2">&amp;mut </span>token);
         <span class="kw">let </span>device = device_guard.get(device_id).map_err(|<span class="kw">_</span>| InvalidDevice)<span class="question-mark">?</span>;
+        <span class="kw">if </span>!device.valid {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(InvalidDevice);
+        }
 
         <span class="prelude-val">Ok</span>(device.features)
     }
@@ -2888,6 +3144,9 @@
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
         <span class="kw">let </span>(device_guard, <span class="kw">_</span>) = hub.devices.read(<span class="kw-2">&amp;mut </span>token);
         <span class="kw">let </span>device = device_guard.get(device_id).map_err(|<span class="kw">_</span>| InvalidDevice)<span class="question-mark">?</span>;
+        <span class="kw">if </span>!device.valid {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(InvalidDevice);
+        }
 
         <span class="prelude-val">Ok</span>(device.limits.clone())
     }
@@ -2900,6 +3159,9 @@
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
         <span class="kw">let </span>(device_guard, <span class="kw">_</span>) = hub.devices.read(<span class="kw-2">&amp;mut </span>token);
         <span class="kw">let </span>device = device_guard.get(device_id).map_err(|<span class="kw">_</span>| InvalidDevice)<span class="question-mark">?</span>;
+        <span class="kw">if </span>!device.valid {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(InvalidDevice);
+        }
 
         <span class="prelude-val">Ok</span>(device.downlevel.clone())
     }
@@ -2922,6 +3184,9 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>DeviceError::Lost.into();
+            }
 
             <span class="kw">if </span>desc.usage.is_empty() {
                 <span class="comment">// Per spec, `usage` must not be zero.
@@ -3024,7 +3289,7 @@
             };
 
             <span class="kw">let </span>id = fid.assign(buffer, <span class="kw-2">&amp;mut </span>token);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created buffer {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_buffer -&gt; {:?}&quot;</span>, id.<span class="number">0</span>);
 
             device
                 .trackers
@@ -3140,6 +3405,9 @@
         <span class="kw">let </span>device = device_guard
             .get(device_id)
             .map_err(|<span class="kw">_</span>| DeviceError::Invalid)<span class="question-mark">?</span>;
+        <span class="kw">if </span>!device.valid {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::Lost.into());
+        }
         <span class="kw">let </span>buffer = buffer_guard
             .get_mut(buffer_id)
             .map_err(|<span class="kw">_</span>| BufferAccessError::Invalid)<span class="question-mark">?</span>;
@@ -3197,6 +3465,9 @@
         <span class="kw">let </span>device = device_guard
             .get(device_id)
             .map_err(|<span class="kw">_</span>| DeviceError::Invalid)<span class="question-mark">?</span>;
+        <span class="kw">if </span>!device.valid {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::Lost.into());
+        }
         <span class="kw">let </span>buffer = buffer_guard
             .get_mut(buffer_id)
             .map_err(|<span class="kw">_</span>| BufferAccessError::Invalid)<span class="question-mark">?</span>;
@@ -3244,7 +3515,7 @@
             <span class="comment">//TODO: lock pending writes separately, keep the device read-only
             </span><span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw-2">mut </span>token) = hub.devices.write(<span class="kw-2">&amp;mut </span>token);
 
-            <span class="macro">log::info!</span>(<span class="string">&quot;Buffer {:?} is destroyed&quot;</span>, buffer_id);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Buffer::destroy {buffer_id:?}&quot;</span>);
             <span class="kw">let </span>(<span class="kw-2">mut </span>buffer_guard, <span class="kw">_</span>) = hub.buffers.write(<span class="kw-2">&amp;mut </span>token);
             <span class="kw">let </span>buffer = buffer_guard
                 .get_mut(buffer_id)
@@ -3295,7 +3566,7 @@
 
     <span class="kw">pub fn </span>buffer_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer_id: id::BufferId, wait: bool) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Buffer::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;buffer {:?} is dropped&quot;</span>, buffer_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Buffer::drop {buffer_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -3360,6 +3631,9 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>DeviceError::Lost.into();
+            }
             <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
                 trace
@@ -3375,7 +3649,7 @@
             <span class="kw">let </span>ref_count = texture.life_guard.add_ref();
 
             <span class="kw">let </span>id = fid.assign(texture, <span class="kw-2">&amp;mut </span>token);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created texture {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_texture -&gt; {:?}&quot;</span>, id.<span class="number">0</span>);
 
             device.trackers.lock().textures.insert_single(
                 id.<span class="number">0</span>,
@@ -3402,7 +3676,7 @@
         desc: <span class="kw-2">&amp;</span>resource::TextureDescriptor,
         id_in: Input&lt;G, id::TextureId&gt;,
     ) -&gt; (id::TextureId, <span class="prelude-ty">Option</span>&lt;resource::CreateTextureError&gt;) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_texture&quot;</span>);
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_texture_from_hal&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -3415,6 +3689,9 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>DeviceError::Lost.into();
+            }
 
             <span class="comment">// NB: Any change done through the raw texture handle will not be
             // recorded in the replay
@@ -3452,7 +3729,7 @@
             <span class="kw">let </span>ref_count = texture.life_guard.add_ref();
 
             <span class="kw">let </span>id = fid.assign(texture, <span class="kw-2">&amp;mut </span>token);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created texture {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_texture -&gt; {:?}&quot;</span>, id.<span class="number">0</span>);
 
             device.trackers.lock().textures.insert_single(
                 id.<span class="number">0</span>,
@@ -3491,6 +3768,9 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>DeviceError::Lost.into();
+            }
 
             <span class="comment">// NB: Any change done through the raw buffer handle will not be
             // recorded in the replay
@@ -3509,7 +3789,7 @@
             <span class="kw">let </span>ref_count = buffer.life_guard.add_ref();
 
             <span class="kw">let </span>id = fid.assign(buffer, <span class="kw-2">&amp;mut </span>token);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created buffer {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_buffer -&gt; {:?}&quot;</span>, id.<span class="number">0</span>);
 
             device
                 .trackers
@@ -3533,6 +3813,7 @@
         texture_id: id::TextureId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), resource::DestroyError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Texture::destroy&quot;</span>);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Texture::destroy {texture_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -3540,7 +3821,6 @@
         <span class="comment">//TODO: lock pending writes separately, keep the device read-only
         </span><span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw-2">mut </span>token) = hub.devices.write(<span class="kw-2">&amp;mut </span>token);
 
-        <span class="macro">log::info!</span>(<span class="string">&quot;Buffer {:?} is destroyed&quot;</span>, texture_id);
         <span class="kw">let </span>(<span class="kw-2">mut </span>texture_guard, <span class="kw">_</span>) = hub.textures.write(<span class="kw-2">&amp;mut </span>token);
         <span class="kw">let </span>texture = texture_guard
             .get_mut(texture_id)
@@ -3590,7 +3870,7 @@
 
     <span class="kw">pub fn </span>texture_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, texture_id: id::TextureId, wait: bool) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Texture::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;texture {:?} is dropped&quot;</span>, texture_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Texture::drop {texture_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -3674,8 +3954,13 @@
             <span class="kw">let </span>id = fid.assign(view, <span class="kw-2">&amp;mut </span>token);
 
             device.trackers.lock().views.insert_single(id, ref_count);
+
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Texture::create_view {:?} -&gt; {:?}&quot;</span>, texture_id, id.<span class="number">0</span>);
+
             <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
         };
+
+        <span class="macro">log::error!</span>(<span class="string">&quot;Texture::create_view {:?} error {:?}&quot;</span>, texture_id, error);
 
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default(), <span class="kw-2">&amp;mut </span>token);
         (id, <span class="prelude-val">Some</span>(error))
@@ -3691,7 +3976,7 @@
         wait: bool,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), resource::TextureViewDestroyError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;TextureView::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;texture view {:?} is dropped&quot;</span>, texture_view_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;TextureView::drop {:?}&quot;</span>, texture_view_id);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -3752,6 +4037,10 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>DeviceError::Lost.into();
+            }
+
             <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
                 trace
@@ -3768,6 +4057,8 @@
 
             device.trackers.lock().samplers.insert_single(id, ref_count);
 
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_sampler -&gt; {:?}&quot;</span>, id.<span class="number">0</span>);
+
             <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
         };
 
@@ -3781,7 +4072,7 @@
 
     <span class="kw">pub fn </span>sampler_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, sampler_id: id::SamplerId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Sampler::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;sampler {:?} is dropped&quot;</span>, sampler_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Sampler::drop {sampler_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -3830,6 +4121,10 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>DeviceError::Lost.into();
+            }
+
             <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
                 trace
@@ -3853,7 +4148,7 @@
             }
 
             <span class="kw">let </span><span class="kw-2">mut </span>compatible_layout = <span class="prelude-val">None</span>;
-            {
+            <span class="kw">let </span>layout = {
                 <span class="kw">let </span>(bgl_guard, <span class="kw">_</span>) = hub.bind_group_layouts.read(<span class="kw-2">&amp;mut </span>token);
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(id) =
                     Device::deduplicate_bind_group_layout(device_id, <span class="kw-2">&amp;</span>entry_map, <span class="kw-2">&amp;*</span>bgl_guard)
@@ -3866,25 +4161,38 @@
                     //    the branch and instead rely on the indirection to use the
                     //    proper bind group layout id.
                     </span><span class="kw">if </span>G::ids_are_generated_in_wgpu() {
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_bind_group_layout (duplicate of {id:?})&quot;</span>);
                         <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
                     }
 
                     compatible_layout = <span class="prelude-val">Some</span>(id::Valid(id));
                 }
-            }
 
-            <span class="kw">let </span><span class="kw-2">mut </span>layout = <span class="kw">match </span>device.create_bind_group_layout(
-                device_id,
-                desc.label.borrow_option(),
-                entry_map,
-            ) {
-                <span class="prelude-val">Ok</span>(layout) =&gt; layout,
-                <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(original_id) = compatible_layout {
+                    <span class="kw">let </span>original = <span class="kw-2">&amp;</span>bgl_guard[original_id];
+                    BindGroupLayout {
+                        device_id: original.device_id.clone(),
+                        inner: <span class="kw">crate</span>::binding_model::BglOrDuplicate::Duplicate(original_id),
+                        multi_ref_count: <span class="kw">crate</span>::MultiRefCount::new(),
+                    }
+                } <span class="kw">else </span>{
+                    <span class="kw">match </span>device.create_bind_group_layout(device_id, <span class="kw-2">&amp;</span>desc.label, entry_map) {
+                        <span class="prelude-val">Ok</span>(layout) =&gt; layout,
+                        <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
+                    }
+                }
             };
 
-            layout.compatible_layout = compatible_layout;
-
             <span class="kw">let </span>id = fid.assign(layout, <span class="kw-2">&amp;mut </span>token);
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(dupe) = compatible_layout {
+                <span class="macro">log::trace!</span>(
+                    <span class="string">&quot;Device::create_bind_group_layout (duplicate of {dupe:?}) -&gt; {:?}&quot;</span>,
+                    id.<span class="number">0
+                </span>);
+            } <span class="kw">else </span>{
+                <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_bind_group_layout -&gt; {:?}&quot;</span>, id.<span class="number">0</span>);
+            }
 
             <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
         };
@@ -3899,7 +4207,7 @@
 
     <span class="kw">pub fn </span>bind_group_layout_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, bind_group_layout_id: id::BindGroupLayoutId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;BindGroupLayout::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;bind group layout {:?} is dropped&quot;</span>, bind_group_layout_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;BindGroupLayout::drop {:?}&quot;</span>, bind_group_layout_id);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -3944,6 +4252,10 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>DeviceError::Lost.into();
+            }
+
             <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
                 trace
@@ -3960,6 +4272,9 @@
             };
 
             <span class="kw">let </span>id = fid.assign(layout, <span class="kw-2">&amp;mut </span>token);
+
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_pipeline_layout -&gt; {:?}&quot;</span>, id.<span class="number">0</span>);
+
             <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
         };
 
@@ -3973,7 +4288,7 @@
 
     <span class="kw">pub fn </span>pipeline_layout_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline_layout_id: id::PipelineLayoutId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;PipelineLayout::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;pipeline layout {:?} is dropped&quot;</span>, pipeline_layout_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;PipelineLayout::drop {:?}&quot;</span>, pipeline_layout_id);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -4023,6 +4338,10 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>DeviceError::Lost.into();
+            }
+
             <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
                 trace
@@ -4035,8 +4354,12 @@
                 <span class="prelude-val">Err</span>(..) =&gt; <span class="kw">break </span>binding_model::CreateBindGroupError::InvalidLayout,
             };
 
+            <span class="kw">if </span>bind_group_layout.device_id.value.<span class="number">0 </span>!= device_id {
+                <span class="kw">break </span>DeviceError::WrongDevice.into();
+            }
+
             <span class="kw">let </span><span class="kw-2">mut </span>layout_id = id::Valid(desc.layout);
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = bind_group_layout.compatible_layout {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = bind_group_layout.as_duplicate() {
                 layout_id = id;
                 bind_group_layout = <span class="kw-2">&amp;</span>bind_group_layout_guard[id];
             }
@@ -4055,7 +4378,8 @@
             <span class="kw">let </span>ref_count = bind_group.life_guard.add_ref();
 
             <span class="kw">let </span>id = fid.assign(bind_group, <span class="kw-2">&amp;mut </span>token);
-            <span class="macro">log::debug!</span>(<span class="string">&quot;Bind group {:?}&quot;</span>, id,);
+
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_bind_group -&gt; {:?}&quot;</span>, id.<span class="number">0</span>);
 
             device
                 .trackers
@@ -4075,7 +4399,7 @@
 
     <span class="kw">pub fn </span>bind_group_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, bind_group_id: id::BindGroupId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;BindGroup::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;bind group {:?} is dropped&quot;</span>, bind_group_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;BindGroup::drop {:?}&quot;</span>, bind_group_id);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -4125,6 +4449,10 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>DeviceError::Lost.into();
+            }
+
             <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
                 <span class="kw">let </span><span class="kw-2">mut </span>trace = trace.lock();
@@ -4155,6 +4483,9 @@
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
             <span class="kw">let </span>id = fid.assign(shader, <span class="kw-2">&amp;mut </span>token);
+
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_shader_module -&gt; {:?}&quot;</span>, id.<span class="number">0</span>);
+
             <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
         };
 
@@ -4190,6 +4521,10 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>DeviceError::Lost.into();
+            }
+
             <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
                 <span class="kw">let </span><span class="kw-2">mut </span>trace = trace.lock();
@@ -4222,7 +4557,7 @@
 
     <span class="kw">pub fn </span>shader_module_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, shader_module_id: id::ShaderModuleId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;ShaderModule::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;shader module {:?} is dropped&quot;</span>, shader_module_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;ShaderModule::drop {:?}&quot;</span>, shader_module_id);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -4260,6 +4595,10 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid,
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>DeviceError::Lost;
+            }
+
             <span class="kw">let </span>dev_stored = Stored {
                 value: id::Valid(device_id),
                 ref_count: device.life_guard.add_ref(),
@@ -4280,10 +4619,15 @@
                 device.features,
                 <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
                 </span>device.trace.is_some(),
-                <span class="kw-2">&amp;</span>desc.label,
+                desc.label
+                    .to_hal(device.instance_flags)
+                    .map(|s| s.to_string()),
             );
 
             <span class="kw">let </span>id = fid.assign(command_buffer, <span class="kw-2">&amp;mut </span>token);
+
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_command_encoder -&gt; {:?}&quot;</span>, id.<span class="number">0</span>);
+
             <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
         };
 
@@ -4297,7 +4641,7 @@
 
     <span class="kw">pub fn </span>command_encoder_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, command_encoder_id: id::CommandEncoderId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;command encoder {:?} is dropped&quot;</span>, command_encoder_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;CommandEncoder::drop {:?}&quot;</span>, command_encoder_id);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -4315,7 +4659,7 @@
 
     <span class="kw">pub fn </span>command_buffer_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, command_buffer_id: id::CommandBufferId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandBuffer::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;command buffer {:?} is dropped&quot;</span>, command_buffer_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;CommandBuffer::drop {:?}&quot;</span>, command_buffer_id);
         <span class="self">self</span>.command_encoder_drop::&lt;A&gt;(command_buffer_id)
     }
 
@@ -4328,6 +4672,7 @@
         <span class="prelude-ty">Option</span>&lt;command::CreateRenderBundleError&gt;,
     ) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::create_render_bundle_encoder&quot;</span>);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Device::device_create_render_bundle_encoder&quot;</span>);
         <span class="kw">let </span>(encoder, error) = <span class="kw">match </span>command::RenderBundleEncoder::new(desc, device_id, <span class="prelude-val">None</span>) {
             <span class="prelude-val">Ok</span>(encoder) =&gt; (encoder, <span class="prelude-val">None</span>),
             <span class="prelude-val">Err</span>(e) =&gt; (command::RenderBundleEncoder::dummy(device_id), <span class="prelude-val">Some</span>(e)),
@@ -4353,6 +4698,10 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>command::RenderBundleError::INVALID_DEVICE,
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>command::RenderBundleError::INVALID_DEVICE;
+            }
+
             <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
                 trace.lock().add(trace::Action::CreateRenderBundle {
@@ -4377,6 +4726,9 @@
             <span class="kw">let </span>id = fid.assign(render_bundle, <span class="kw-2">&amp;mut </span>token);
 
             device.trackers.lock().bundles.insert_single(id, ref_count);
+
+            <span class="macro">log::trace!</span>(<span class="string">&quot;RenderBundleEncoder::finish -&gt; {:?}&quot;</span>, id.<span class="number">0</span>);
+
             <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
         };
 
@@ -4390,7 +4742,7 @@
 
     <span class="kw">pub fn </span>render_bundle_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, render_bundle_id: id::RenderBundleId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;RenderBundle::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;render bundle {:?} is dropped&quot;</span>, render_bundle_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderBundle::drop {:?}&quot;</span>, render_bundle_id);
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
 
@@ -4435,6 +4787,10 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>DeviceError::Lost.into();
+            }
+
             <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
                 trace.lock().add(trace::Action::CreateQuerySet {
@@ -4461,12 +4817,15 @@
         };
 
         <span class="kw">let </span>id = fid.assign_error(<span class="string">&quot;&quot;</span>, <span class="kw-2">&amp;mut </span>token);
+
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_query_set -&gt; {:?}&quot;</span>, id);
+
         (id, <span class="prelude-val">Some</span>(error))
     }
 
     <span class="kw">pub fn </span>query_set_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query_set_id: id::QuerySetId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;QuerySet::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;query set {:?} is dropped&quot;</span>, query_set_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;QuerySet::drop {query_set_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -4524,6 +4883,10 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>DeviceError::Lost.into();
+            }
+
             <span class="kw">let </span>adapter = <span class="kw-2">&amp;</span>adapter_guard[device.adapter_id.value];
             <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
@@ -4548,7 +4911,7 @@
             <span class="kw">let </span>ref_count = pipeline.life_guard.add_ref();
 
             <span class="kw">let </span>id = fid.assign(pipeline, <span class="kw-2">&amp;mut </span>token);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created render pipeline {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_render_pipeline -&gt; {:?}&quot;</span>, id.<span class="number">0</span>);
 
             device
                 .trackers
@@ -4576,26 +4939,51 @@
     ) {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(pipeline_layout_guard, <span class="kw-2">mut </span>token) = hub.pipeline_layouts.read(<span class="kw-2">&amp;mut </span>token);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
-            <span class="kw">let </span>(bgl_guard, <span class="kw-2">mut </span>token) = hub.bind_group_layouts.read(<span class="kw-2">&amp;mut </span>token);
-            <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>token) = hub.bind_groups.read(<span class="kw-2">&amp;mut </span>token);
-            <span class="kw">let </span>(pipeline_guard, <span class="kw">_</span>) = hub.render_pipelines.read(<span class="kw-2">&amp;mut </span>token);
+            <span class="kw">let </span>device_id;
+            <span class="kw">let </span>id;
 
-            <span class="kw">let </span>pipeline = <span class="kw">match </span>pipeline_guard.get(pipeline_id) {
-                <span class="prelude-val">Ok</span>(pipeline) =&gt; pipeline,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidPipeline,
-            };
-            <span class="kw">let </span>id = <span class="kw">match </span>pipeline_layout_guard[pipeline.layout_id.value]
-                .bind_group_layout_ids
-                .get(index <span class="kw">as </span>usize)
             {
-                <span class="prelude-val">Some</span>(id) =&gt; id,
-                <span class="prelude-val">None </span>=&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidGroupIndex(index),
+                <span class="kw">let </span>(pipeline_layout_guard, <span class="kw-2">mut </span>token) = hub.pipeline_layouts.read(<span class="kw-2">&amp;mut </span>token);
+
+                <span class="kw">let </span>(bgl_guard, <span class="kw-2">mut </span>token) = hub.bind_group_layouts.read(<span class="kw-2">&amp;mut </span>token);
+                <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>token) = hub.bind_groups.read(<span class="kw-2">&amp;mut </span>token);
+                <span class="kw">let </span>(pipeline_guard, <span class="kw">_</span>) = hub.render_pipelines.read(<span class="kw-2">&amp;mut </span>token);
+
+                <span class="kw">let </span>pipeline = <span class="kw">match </span>pipeline_guard.get(pipeline_id) {
+                    <span class="prelude-val">Ok</span>(pipeline) =&gt; pipeline,
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidPipeline,
+                };
+                id = <span class="kw">match </span>pipeline_layout_guard[pipeline.layout_id.value]
+                    .bind_group_layout_ids
+                    .get(index <span class="kw">as </span>usize)
+                {
+                    <span class="prelude-val">Some</span>(id) =&gt; <span class="kw-2">*</span>id,
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidGroupIndex(index),
+                };
+
+                <span class="kw">let </span>layout = <span class="kw-2">&amp;</span>bgl_guard[id];
+                layout.multi_ref_count.inc();
+
+                <span class="kw">if </span>G::ids_are_generated_in_wgpu() {
+                    <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
+                }
+
+                device_id = layout.device_id.clone();
+            }
+
+            <span class="comment">// The ID is provided externally, so we must create a new bind group layout
+            // with the given ID as a duplicate of the existing one.
+            </span><span class="kw">let </span>new_layout = BindGroupLayout {
+                device_id,
+                inner: <span class="kw">crate</span>::binding_model::BglOrDuplicate::&lt;A&gt;::Duplicate(id),
+                multi_ref_count: <span class="kw">crate</span>::MultiRefCount::new(),
             };
 
-            bgl_guard[<span class="kw-2">*</span>id].multi_ref_count.inc();
+            <span class="kw">let </span>fid = hub.bind_group_layouts.prepare(id_in);
+            <span class="kw">let </span>id = fid.assign(new_layout, <span class="kw-2">&amp;mut </span>token);
+
             <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
         };
 
@@ -4612,7 +5000,7 @@
 
     <span class="kw">pub fn </span>render_pipeline_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, render_pipeline_id: id::RenderPipelineId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;RenderPipeline::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;render pipeline {:?} is dropped&quot;</span>, render_pipeline_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPipeline::drop {:?}&quot;</span>, render_pipeline_id);
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
         <span class="kw">let </span>(device_guard, <span class="kw-2">mut </span>token) = hub.devices.read(<span class="kw-2">&amp;mut </span>token);
@@ -4667,6 +5055,10 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
             };
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">break </span>DeviceError::Lost.into();
+            }
+
             <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
                 trace.lock().add(trace::Action::CreateComputePipeline {
@@ -4689,7 +5081,7 @@
             <span class="kw">let </span>ref_count = pipeline.life_guard.add_ref();
 
             <span class="kw">let </span>id = fid.assign(pipeline, <span class="kw-2">&amp;mut </span>token);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created compute pipeline {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_compute_pipeline -&gt; {:?}&quot;</span>, id.<span class="number">0</span>);
 
             device
                 .trackers
@@ -4716,26 +5108,51 @@
     ) {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(pipeline_layout_guard, <span class="kw-2">mut </span>token) = hub.pipeline_layouts.read(<span class="kw-2">&amp;mut </span>token);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
-            <span class="kw">let </span>(bgl_guard, <span class="kw-2">mut </span>token) = hub.bind_group_layouts.read(<span class="kw-2">&amp;mut </span>token);
-            <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>token) = hub.bind_groups.read(<span class="kw-2">&amp;mut </span>token);
-            <span class="kw">let </span>(pipeline_guard, <span class="kw">_</span>) = hub.compute_pipelines.read(<span class="kw-2">&amp;mut </span>token);
+            <span class="kw">let </span>device_id;
+            <span class="kw">let </span>id;
 
-            <span class="kw">let </span>pipeline = <span class="kw">match </span>pipeline_guard.get(pipeline_id) {
-                <span class="prelude-val">Ok</span>(pipeline) =&gt; pipeline,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidPipeline,
-            };
-            <span class="kw">let </span>id = <span class="kw">match </span>pipeline_layout_guard[pipeline.layout_id.value]
-                .bind_group_layout_ids
-                .get(index <span class="kw">as </span>usize)
             {
-                <span class="prelude-val">Some</span>(id) =&gt; id,
-                <span class="prelude-val">None </span>=&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidGroupIndex(index),
+                <span class="kw">let </span>(pipeline_layout_guard, <span class="kw-2">mut </span>token) = hub.pipeline_layouts.read(<span class="kw-2">&amp;mut </span>token);
+
+                <span class="kw">let </span>(bgl_guard, <span class="kw-2">mut </span>token) = hub.bind_group_layouts.read(<span class="kw-2">&amp;mut </span>token);
+                <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>token) = hub.bind_groups.read(<span class="kw-2">&amp;mut </span>token);
+                <span class="kw">let </span>(pipeline_guard, <span class="kw">_</span>) = hub.compute_pipelines.read(<span class="kw-2">&amp;mut </span>token);
+
+                <span class="kw">let </span>pipeline = <span class="kw">match </span>pipeline_guard.get(pipeline_id) {
+                    <span class="prelude-val">Ok</span>(pipeline) =&gt; pipeline,
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidPipeline,
+                };
+                id = <span class="kw">match </span>pipeline_layout_guard[pipeline.layout_id.value]
+                    .bind_group_layout_ids
+                    .get(index <span class="kw">as </span>usize)
+                {
+                    <span class="prelude-val">Some</span>(id) =&gt; <span class="kw-2">*</span>id,
+                    <span class="prelude-val">None </span>=&gt; <span class="kw">break </span>binding_model::GetBindGroupLayoutError::InvalidGroupIndex(index),
+                };
+
+                <span class="kw">let </span>layout = <span class="kw-2">&amp;</span>bgl_guard[id];
+                layout.multi_ref_count.inc();
+
+                <span class="kw">if </span>G::ids_are_generated_in_wgpu() {
+                    <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
+                }
+
+                device_id = layout.device_id.clone();
+            }
+
+            <span class="comment">// The ID is provided externally, so we must create a new bind group layout
+            // with the given ID as a duplicate of the existing one.
+            </span><span class="kw">let </span>new_layout = BindGroupLayout {
+                device_id,
+                inner: <span class="kw">crate</span>::binding_model::BglOrDuplicate::&lt;A&gt;::Duplicate(id),
+                multi_ref_count: <span class="kw">crate</span>::MultiRefCount::new(),
             };
 
-            bgl_guard[<span class="kw-2">*</span>id].multi_ref_count.inc();
+            <span class="kw">let </span>fid = hub.bind_group_layouts.prepare(id_in);
+            <span class="kw">let </span>id = fid.assign(new_layout, <span class="kw-2">&amp;mut </span>token);
+
             <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
         };
 
@@ -4752,7 +5169,7 @@
 
     <span class="kw">pub fn </span>compute_pipeline_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, compute_pipeline_id: id::ComputePipelineId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;ComputePipeline::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;compute pipeline {:?} is dropped&quot;</span>, compute_pipeline_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;ComputePipeline::drop {:?}&quot;</span>, compute_pipeline_id);
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
         <span class="kw">let </span>(device_guard, <span class="kw-2">mut </span>token) = hub.devices.read(<span class="kw-2">&amp;mut </span>token);
@@ -4903,130 +5320,148 @@
         }
 
         <span class="macro">log::info!</span>(<span class="string">&quot;configuring surface with {:?}&quot;</span>, config);
-        <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-
-        <span class="kw">let </span>(<span class="kw-2">mut </span>surface_guard, <span class="kw-2">mut </span>token) = <span class="self">self</span>.surfaces.write(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>(adapter_guard, <span class="kw-2">mut </span>token) = hub.adapters.read(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>(device_guard, <span class="kw-2">mut </span>token) = hub.devices.read(<span class="kw-2">&amp;mut </span>token);
 
         <span class="kw">let </span>error = <span class="lifetime">&#39;outer</span>: <span class="kw">loop </span>{
-            <span class="kw">let </span>device = <span class="kw">match </span>device_guard.get(device_id) {
-                <span class="prelude-val">Ok</span>(device) =&gt; device,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
-            };
-            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
-                trace
-                    .lock()
-                    .add(trace::Action::ConfigureSurface(surface_id, config.clone()));
-            }
+            <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
 
-            <span class="kw">let </span>surface = <span class="kw">match </span>surface_guard.get_mut(surface_id) {
-                <span class="prelude-val">Ok</span>(surface) =&gt; surface,
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>E::InvalidSurface,
-            };
+            <span class="comment">// User callbacks must not be called while we are holding locks.
+            </span><span class="kw">let </span>user_callbacks;
+            {
+                <span class="kw">let </span>(<span class="kw-2">mut </span>surface_guard, <span class="kw-2">mut </span>token) = <span class="self">self</span>.surfaces.write(<span class="kw-2">&amp;mut </span>token);
+                <span class="kw">let </span>(adapter_guard, <span class="kw-2">mut </span>token) = hub.adapters.read(<span class="kw-2">&amp;mut </span>token);
+                <span class="kw">let </span>(device_guard, <span class="kw-2">mut </span>token) = hub.devices.read(<span class="kw-2">&amp;mut </span>token);
 
-            <span class="kw">let </span>caps = <span class="kw">unsafe </span>{
-                <span class="kw">let </span>suf = A::get_surface(surface);
-                <span class="kw">let </span>adapter = <span class="kw-2">&amp;</span>adapter_guard[device.adapter_id.value];
-                <span class="kw">match </span>adapter.raw.adapter.surface_capabilities(<span class="kw-2">&amp;</span>suf.unwrap().raw) {
-                    <span class="prelude-val">Some</span>(caps) =&gt; caps,
-                    <span class="prelude-val">None </span>=&gt; <span class="kw">break </span>E::UnsupportedQueueFamily,
+                <span class="kw">let </span>device = <span class="kw">match </span>device_guard.get(device_id) {
+                    <span class="prelude-val">Ok</span>(device) =&gt; device,
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>DeviceError::Invalid.into(),
+                };
+                <span class="kw">if </span>!device.valid {
+                    <span class="kw">break </span>DeviceError::Lost.into();
                 }
-            };
 
-            <span class="kw">let </span><span class="kw-2">mut </span>hal_view_formats = <span class="macro">vec!</span>[];
-            <span class="kw">for </span>format <span class="kw">in </span>config.view_formats.iter() {
-                <span class="kw">if </span><span class="kw-2">*</span>format == config.format {
-                    <span class="kw">continue</span>;
+                <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+                </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
+                    trace
+                        .lock()
+                        .add(trace::Action::ConfigureSurface(surface_id, config.clone()));
                 }
-                <span class="kw">if </span>!caps.formats.contains(<span class="kw-2">&amp;</span>config.format) {
-                    <span class="kw">break </span><span class="lifetime">&#39;outer </span>E::UnsupportedFormat {
-                        requested: config.format,
-                        available: caps.formats,
-                    };
+
+                <span class="kw">let </span>surface = <span class="kw">match </span>surface_guard.get_mut(surface_id) {
+                    <span class="prelude-val">Ok</span>(surface) =&gt; surface,
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>E::InvalidSurface,
+                };
+
+                <span class="kw">let </span>caps = <span class="kw">unsafe </span>{
+                    <span class="kw">let </span>suf = A::get_surface(surface);
+                    <span class="kw">let </span>adapter = <span class="kw-2">&amp;</span>adapter_guard[device.adapter_id.value];
+                    <span class="kw">match </span>adapter.raw.adapter.surface_capabilities(<span class="kw-2">&amp;</span>suf.unwrap().raw) {
+                        <span class="prelude-val">Some</span>(caps) =&gt; caps,
+                        <span class="prelude-val">None </span>=&gt; <span class="kw">break </span>E::UnsupportedQueueFamily,
+                    }
+                };
+
+                <span class="kw">let </span><span class="kw-2">mut </span>hal_view_formats = <span class="macro">vec!</span>[];
+                <span class="kw">for </span>format <span class="kw">in </span>config.view_formats.iter() {
+                    <span class="kw">if </span><span class="kw-2">*</span>format == config.format {
+                        <span class="kw">continue</span>;
+                    }
+                    <span class="kw">if </span>!caps.formats.contains(<span class="kw-2">&amp;</span>config.format) {
+                        <span class="kw">break </span><span class="lifetime">&#39;outer </span>E::UnsupportedFormat {
+                            requested: config.format,
+                            available: caps.formats,
+                        };
+                    }
+                    <span class="kw">if </span>config.format.remove_srgb_suffix() != format.remove_srgb_suffix() {
+                        <span class="kw">break </span><span class="lifetime">&#39;outer </span>E::InvalidViewFormat(<span class="kw-2">*</span>format, config.format);
+                    }
+                    hal_view_formats.push(<span class="kw-2">*</span>format);
                 }
-                <span class="kw">if </span>config.format.remove_srgb_suffix() != format.remove_srgb_suffix() {
-                    <span class="kw">break </span><span class="lifetime">&#39;outer </span>E::InvalidViewFormat(<span class="kw-2">*</span>format, config.format);
+
+                <span class="kw">if </span>!hal_view_formats.is_empty() {
+                    <span class="kw">if let </span><span class="prelude-val">Err</span>(missing_flag) =
+                        device.require_downlevel_flags(wgt::DownlevelFlags::SURFACE_VIEW_FORMATS)
+                    {
+                        <span class="kw">break </span><span class="lifetime">&#39;outer </span>E::MissingDownlevelFlags(missing_flag);
+                    }
                 }
-                hal_view_formats.push(<span class="kw-2">*</span>format);
-            }
 
-            <span class="kw">if </span>!hal_view_formats.is_empty() {
-                <span class="kw">if let </span><span class="prelude-val">Err</span>(missing_flag) =
-                    device.require_downlevel_flags(wgt::DownlevelFlags::SURFACE_VIEW_FORMATS)
-                {
-                    <span class="kw">break </span><span class="lifetime">&#39;outer </span>E::MissingDownlevelFlags(missing_flag);
+                <span class="kw">let </span>num_frames = present::DESIRED_NUM_FRAMES
+                    .clamp(<span class="kw-2">*</span>caps.swap_chain_sizes.start(), <span class="kw-2">*</span>caps.swap_chain_sizes.end());
+                <span class="kw">let </span><span class="kw-2">mut </span>hal_config = hal::SurfaceConfiguration {
+                    swap_chain_size: num_frames,
+                    present_mode: config.present_mode,
+                    composite_alpha_mode: config.alpha_mode,
+                    format: config.format,
+                    extent: wgt::Extent3d {
+                        width: config.width,
+                        height: config.height,
+                        depth_or_array_layers: <span class="number">1</span>,
+                    },
+                    usage: conv::map_texture_usage(config.usage, hal::FormatAspects::COLOR),
+                    view_formats: hal_view_formats,
+                };
+
+                <span class="kw">if let </span><span class="prelude-val">Err</span>(error) = validate_surface_configuration(<span class="kw-2">&amp;mut </span>hal_config, <span class="kw-2">&amp;</span>caps) {
+                    <span class="kw">break </span>error;
                 }
-            }
 
-            <span class="kw">let </span>num_frames = present::DESIRED_NUM_FRAMES
-                .clamp(<span class="kw-2">*</span>caps.swap_chain_sizes.start(), <span class="kw-2">*</span>caps.swap_chain_sizes.end());
-            <span class="kw">let </span><span class="kw-2">mut </span>hal_config = hal::SurfaceConfiguration {
-                swap_chain_size: num_frames,
-                present_mode: config.present_mode,
-                composite_alpha_mode: config.alpha_mode,
-                format: config.format,
-                extent: wgt::Extent3d {
-                    width: config.width,
-                    height: config.height,
-                    depth_or_array_layers: <span class="number">1</span>,
-                },
-                usage: conv::map_texture_usage(config.usage, hal::FormatAspects::COLOR),
-                view_formats: hal_view_formats,
-            };
-
-            <span class="kw">if let </span><span class="prelude-val">Err</span>(error) = validate_surface_configuration(<span class="kw-2">&amp;mut </span>hal_config, <span class="kw-2">&amp;</span>caps) {
-                <span class="kw">break </span>error;
-            }
-
-            <span class="comment">// Wait for all work to finish before configuring the surface.
-            </span><span class="kw">if let </span><span class="prelude-val">Err</span>(e) = device.maintain(hub, wgt::Maintain::Wait, <span class="kw-2">&amp;mut </span>token) {
-                <span class="kw">break </span>e.into();
-            }
-
-            <span class="comment">// All textures must be destroyed before the surface can be re-configured.
-            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.take() {
-                <span class="kw">if </span>present.acquired_texture.is_some() {
-                    <span class="kw">break </span>E::PreviousOutputExists;
+                <span class="comment">// Wait for all work to finish before configuring the surface.
+                </span><span class="kw">match </span>device.maintain(hub, wgt::Maintain::Wait, <span class="kw-2">&amp;mut </span>token) {
+                    <span class="prelude-val">Ok</span>((closures, <span class="kw">_</span>)) =&gt; {
+                        user_callbacks = closures;
+                    }
+                    <span class="prelude-val">Err</span>(e) =&gt; {
+                        <span class="kw">break </span>e.into();
+                    }
                 }
-            }
 
-            <span class="comment">// TODO: Texture views may still be alive that point to the texture.
-            // this will allow the user to render to the surface texture, long after
-            // it has been removed.
-            //
-            // https://github.com/gfx-rs/wgpu/issues/4105
+                <span class="comment">// All textures must be destroyed before the surface can be re-configured.
+                </span><span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.take() {
+                    <span class="kw">if </span>present.acquired_texture.is_some() {
+                        <span class="kw">break </span>E::PreviousOutputExists;
+                    }
+                }
 
-            </span><span class="kw">match unsafe </span>{
-                A::get_surface_mut(surface)
-                    .unwrap()
-                    .raw
-                    .configure(<span class="kw-2">&amp;</span>device.raw, <span class="kw-2">&amp;</span>hal_config)
-            } {
-                <span class="prelude-val">Ok</span>(()) =&gt; (),
-                <span class="prelude-val">Err</span>(error) =&gt; {
-                    <span class="kw">break match </span>error {
-                        hal::SurfaceError::Outdated | hal::SurfaceError::Lost =&gt; E::InvalidSurface,
-                        hal::SurfaceError::Device(error) =&gt; E::Device(error.into()),
-                        hal::SurfaceError::Other(message) =&gt; {
-                            <span class="macro">log::error!</span>(<span class="string">&quot;surface configuration failed: {}&quot;</span>, message);
-                            E::InvalidSurface
+                <span class="comment">// TODO: Texture views may still be alive that point to the texture.
+                // this will allow the user to render to the surface texture, long after
+                // it has been removed.
+                //
+                // https://github.com/gfx-rs/wgpu/issues/4105
+
+                </span><span class="kw">match unsafe </span>{
+                    A::get_surface_mut(surface)
+                        .unwrap()
+                        .raw
+                        .configure(<span class="kw-2">&amp;</span>device.raw, <span class="kw-2">&amp;</span>hal_config)
+                } {
+                    <span class="prelude-val">Ok</span>(()) =&gt; (),
+                    <span class="prelude-val">Err</span>(error) =&gt; {
+                        <span class="kw">break match </span>error {
+                            hal::SurfaceError::Outdated | hal::SurfaceError::Lost =&gt; {
+                                E::InvalidSurface
+                            }
+                            hal::SurfaceError::Device(error) =&gt; E::Device(error.into()),
+                            hal::SurfaceError::Other(message) =&gt; {
+                                <span class="macro">log::error!</span>(<span class="string">&quot;surface configuration failed: {}&quot;</span>, message);
+                                E::InvalidSurface
+                            }
                         }
                     }
                 }
+
+                surface.presentation = <span class="prelude-val">Some</span>(present::Presentation {
+                    device_id: Stored {
+                        value: id::Valid(device_id),
+                        ref_count: device.life_guard.add_ref(),
+                    },
+                    config: config.clone(),
+                    num_frames,
+                    acquired_texture: <span class="prelude-val">None</span>,
+                });
             }
 
-            surface.presentation = <span class="prelude-val">Some</span>(present::Presentation {
-                device_id: Stored {
-                    value: id::Valid(device_id),
-                    ref_count: device.life_guard.add_ref(),
-                },
-                config: config.clone(),
-                num_frames,
-                acquired_texture: <span class="prelude-val">None</span>,
-            });
+            user_callbacks.fire();
 
             <span class="kw">return </span><span class="prelude-val">None</span>;
         };
@@ -5042,6 +5477,9 @@
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
         <span class="kw">let </span>(device_guard, <span class="kw-2">mut </span>token) = hub.devices.read(<span class="kw-2">&amp;mut </span>token);
         <span class="kw">let </span>device = device_guard.get(device_id).map_err(|<span class="kw">_</span>| InvalidDevice)<span class="question-mark">?</span>;
+        <span class="kw">if </span>!device.valid {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(InvalidDevice);
+        }
         device.lock_life(<span class="kw-2">&amp;mut </span>token).triage_suspected(
             hub,
             <span class="kw-2">&amp;</span>device.trackers,
@@ -5060,6 +5498,8 @@
         device_id: DeviceId,
         maintain: wgt::Maintain&lt;queue::WrappedSubmissionIndex&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;bool, WaitIdleError&gt; {
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Device::poll&quot;</span>);
+
         <span class="kw">let </span>(closures, queue_empty) = {
             <span class="kw">if let </span>wgt::Maintain::WaitForSubmissionIndex(submission_index) = maintain {
                 <span class="kw">if </span>submission_index.queue_id != device_id {
@@ -5175,26 +5615,36 @@
     }
 
     <span class="kw">pub fn </span>device_start_capture&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: DeviceId) {
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Device::start_capture&quot;</span>);
+
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
         <span class="kw">let </span>(device_guard, <span class="kw">_</span>) = hub.devices.read(<span class="kw-2">&amp;mut </span>token);
         <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = device_guard.get(id) {
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">return</span>;
+            }
             <span class="kw">unsafe </span>{ device.raw.start_capture() };
         }
     }
 
     <span class="kw">pub fn </span>device_stop_capture&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id: DeviceId) {
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Device::stop_capture&quot;</span>);
+
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
         <span class="kw">let </span>(device_guard, <span class="kw">_</span>) = hub.devices.read(<span class="kw-2">&amp;mut </span>token);
         <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = device_guard.get(id) {
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">return</span>;
+            }
             <span class="kw">unsafe </span>{ device.raw.stop_capture() };
         }
     }
 
     <span class="kw">pub fn </span>device_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;device {:?} is dropped&quot;</span>, device_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Device::drop {device_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -5206,6 +5656,50 @@
         </span><span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw">_</span>) = hub.devices.write(<span class="kw-2">&amp;mut </span>token);
         <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = device_guard.get_mut(device_id) {
             device.life_guard.ref_count.take().unwrap();
+        }
+    }
+
+    <span class="kw">pub fn </span>device_destroy&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId) {
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Device::destroy {device_id:?}&quot;</span>);
+
+        <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
+
+        <span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw">_</span>) = hub.devices.write(<span class="kw-2">&amp;mut </span>token);
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = device_guard.get_mut(device_id) {
+            <span class="comment">// Follow the steps at
+            // https://gpuweb.github.io/gpuweb/#dom-gpudevice-destroy.
+
+            // It&#39;s legal to call destroy multiple times, but if the device
+            // is already invalid, there&#39;s nothing more to do. There&#39;s also
+            // no need to return an error.
+            </span><span class="kw">if </span>!device.valid {
+                <span class="kw">return</span>;
+            }
+
+            <span class="comment">// The last part of destroy is to lose the device. The spec says
+            // delay that until all &quot;currently-enqueued operations on any
+            // queue on this device are completed.&quot;
+
+            // TODO: implement this delay.
+
+            // Finish by losing the device.
+
+            // TODO: associate this &quot;destroyed&quot; reason more tightly with
+            // the GPUDeviceLostReason defined in webgpu.idl.
+            </span>device.lose(<span class="prelude-val">Some</span>(<span class="string">&quot;destroyed&quot;</span>));
+        }
+    }
+
+    <span class="kw">pub fn </span>device_lose&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId, reason: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) {
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Device::lose {device_id:?}&quot;</span>);
+
+        <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
+
+        <span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw">_</span>) = hub.devices.write(<span class="kw-2">&amp;mut </span>token);
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = device_guard.get_mut(device_id) {
+            device.lose(reason);
         }
     }
 
@@ -5246,6 +5740,8 @@
         range: Range&lt;BufferAddress&gt;,
         op: BufferMapOperation,
     ) -&gt; BufferAccessResult {
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Buffer::map_async {buffer_id:?}&quot;</span>);
+
         <span class="comment">// User callbacks must not be called while holding buffer_map_async_inner&#39;s locks, so we
         // defer the error callback if it needs to be called immediately (typically when running
         // into errors).
@@ -5293,6 +5789,11 @@
                 }
             };
 
+            <span class="kw">let </span>device = <span class="kw-2">&amp;</span>device_guard[buffer.device_id.value];
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">return </span><span class="prelude-val">Err</span>((op, DeviceError::Lost.into()));
+            }
+
             <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = check_buffer_usage(buffer.usage, pub_usage) {
                 <span class="kw">return </span><span class="prelude-val">Err</span>((op, e.into()));
             }
@@ -5333,8 +5834,6 @@
             };
             <span class="macro">log::debug!</span>(<span class="string">&quot;Buffer {:?} map state -&gt; Waiting&quot;</span>, buffer_id);
 
-            <span class="kw">let </span>device = <span class="kw-2">&amp;</span>device_guard[buffer.device_id.value];
-
             <span class="kw">let </span>ret = (buffer.device_id.value, buffer.life_guard.add_ref());
 
             <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
@@ -5347,8 +5846,8 @@
         };
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;</span>device_guard[device_id];
-
-        device
+        <span class="comment">// Validity of device was confirmed in the code block that set device_id.
+        </span>device
             .lock_life(<span class="kw-2">&amp;mut </span>token)
             .map(id::Valid(buffer_id), ref_count);
 
@@ -5362,6 +5861,7 @@
         size: <span class="prelude-ty">Option</span>&lt;BufferAddress&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw-2">*mut </span>u8, u64), BufferAccessError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Buffer::get_mapped_range&quot;</span>);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Buffer::get_mapped_range {buffer_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
@@ -5522,6 +6022,7 @@
 
     <span class="kw">pub fn </span>buffer_unmap&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer_id: id::BufferId) -&gt; BufferAccessResult {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;unmap&quot;</span>, <span class="string">&quot;Buffer&quot;</span>);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Buffer::unmap {buffer_id:?}&quot;</span>);
 
         <span class="kw">let </span>closure;
         {
@@ -5535,6 +6036,9 @@
                 .get_mut(buffer_id)
                 .map_err(|<span class="kw">_</span>| BufferAccessError::Invalid)<span class="question-mark">?</span>;
             <span class="kw">let </span>device = <span class="kw-2">&amp;mut </span>device_guard[buffer.device_id.value];
+            <span class="kw">if </span>!device.valid {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::Lost.into());
+            }
 
             closure = <span class="self">self</span>.buffer_unmap_inner(buffer_id, buffer, device)
         }
