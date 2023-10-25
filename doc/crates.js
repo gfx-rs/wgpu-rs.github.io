@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["player","wgpu","wgpu_core","wgpu_example","wgpu_hal","wgpu_macros","wgpu_test","wgpu_types"];
+window.ALL_CRATES = ["naga","player","wgpu","wgpu_core","wgpu_example","wgpu_hal","wgpu_macros","wgpu_test","wgpu_types"];

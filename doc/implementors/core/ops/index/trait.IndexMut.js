@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"naga":[["impl&lt;T&gt; <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/ops/index/trait.IndexMut.html\" title=\"trait core::ops::index::IndexMut\">IndexMut</a>&lt;<a class=\"struct\" href=\"naga/struct.Handle.html\" title=\"struct naga::Handle\">Handle</a>&lt;T&gt;&gt; for <a class=\"struct\" href=\"naga/struct.Arena.html\" title=\"struct naga::Arena\">Arena</a>&lt;T&gt;"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
