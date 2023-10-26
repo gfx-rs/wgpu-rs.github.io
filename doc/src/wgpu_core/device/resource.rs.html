@@ -3350,6 +3350,34 @@
 <a href="#3350" id="3350">3350</a>
 <a href="#3351" id="3351">3351</a>
 <a href="#3352" id="3352">3352</a>
+<a href="#3353" id="3353">3353</a>
+<a href="#3354" id="3354">3354</a>
+<a href="#3355" id="3355">3355</a>
+<a href="#3356" id="3356">3356</a>
+<a href="#3357" id="3357">3357</a>
+<a href="#3358" id="3358">3358</a>
+<a href="#3359" id="3359">3359</a>
+<a href="#3360" id="3360">3360</a>
+<a href="#3361" id="3361">3361</a>
+<a href="#3362" id="3362">3362</a>
+<a href="#3363" id="3363">3363</a>
+<a href="#3364" id="3364">3364</a>
+<a href="#3365" id="3365">3365</a>
+<a href="#3366" id="3366">3366</a>
+<a href="#3367" id="3367">3367</a>
+<a href="#3368" id="3368">3368</a>
+<a href="#3369" id="3369">3369</a>
+<a href="#3370" id="3370">3370</a>
+<a href="#3371" id="3371">3371</a>
+<a href="#3372" id="3372">3372</a>
+<a href="#3373" id="3373">3373</a>
+<a href="#3374" id="3374">3374</a>
+<a href="#3375" id="3375">3375</a>
+<a href="#3376" id="3376">3376</a>
+<a href="#3377" id="3377">3377</a>
+<a href="#3378" id="3378">3378</a>
+<a href="#3379" id="3379">3379</a>
+<a href="#3380" id="3380">3380</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4014,6 +4042,14 @@
                 <span class="kw">return </span><span class="prelude-val">Err</span>(CreateTextureError::InvalidSampleCount(
                     desc.sample_count,
                     desc.format,
+                    desc.format
+                        .guaranteed_format_features(<span class="self">self</span>.features)
+                        .flags
+                        .supported_sample_counts(),
+                    adapter
+                        .get_texture_format_features(desc.format)
+                        .flags
+                        .supported_sample_counts(),
                 ));
             };
         }
@@ -6167,7 +6203,18 @@
                             .flags
                             .sample_count_supported(desc.multisample.count)
                     {
-                        <span class="kw">break </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::FormatNotMultisampled(cs.format));
+                        <span class="kw">break </span><span class="prelude-val">Some</span>(pipeline::ColorStateError::InvalidSampleCount(
+                            desc.multisample.count,
+                            cs.format,
+                            cs.format
+                                .guaranteed_format_features(<span class="self">self</span>.features)
+                                .flags
+                                .supported_sample_counts(),
+                            adapter
+                                .get_texture_format_features(cs.format)
+                                .flags
+                                .supported_sample_counts(),
+                        ));
                     }
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(blend_mode) = cs.blend {
                         <span class="kw">for </span>factor <span class="kw">in </span>[
@@ -6222,8 +6269,17 @@
                         .flags
                         .sample_count_supported(desc.multisample.count)
                 {
-                    <span class="kw">break </span><span class="prelude-val">Some</span>(pipeline::DepthStencilStateError::FormatNotMultisampled(
+                    <span class="kw">break </span><span class="prelude-val">Some</span>(pipeline::DepthStencilStateError::InvalidSampleCount(
+                        desc.multisample.count,
                         ds.format,
+                        ds.format
+                            .guaranteed_format_features(<span class="self">self</span>.features)
+                            .flags
+                            .supported_sample_counts(),
+                        adapter
+                            .get_texture_format_features(ds.format)
+                            .flags
+                            .supported_sample_counts(),
                     ));
                 }
 
