@@ -213,16 +213,16 @@ function makeMutClosure(arg0, arg1, dtor, f) {
 
     return real;
 }
-function __wbg_adapter_26(arg0, arg1) {
-    wasm._dyn_core__ops__function__FnMut_____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hf0820c312c454a80(arg0, arg1);
+function __wbg_adapter_26(arg0, arg1, arg2, arg3) {
+    wasm._dyn_core__ops__function__FnMut__A_B___Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__hdbacc19c6acd5f4c(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
 }
 
 function __wbg_adapter_29(arg0, arg1, arg2) {
-    wasm._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h296e26a38823edd2(arg0, arg1, addHeapObject(arg2));
+    wasm._dyn_core__ops__function__FnMut__A____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h0f01a2cbe0d9539d(arg0, arg1, addHeapObject(arg2));
 }
 
-function __wbg_adapter_36(arg0, arg1, arg2, arg3) {
-    wasm._dyn_core__ops__function__FnMut__A_B___Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h5663697a8f721910(arg0, arg1, addHeapObject(arg2), addHeapObject(arg3));
+function __wbg_adapter_34(arg0, arg1) {
+    wasm._dyn_core__ops__function__FnMut_____Output___R_as_wasm_bindgen__closure__WasmClosure___describe__invoke__h43787c945212baea(arg0, arg1);
 }
 
 function __wbg_adapter_43(arg0, arg1, arg2) {
@@ -1768,11 +1768,11 @@ function __wbg_get_imports() {
         return addHeapObject(ret);
     };
     imports.wbg.__wbindgen_closure_wrapper492 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 52, __wbg_adapter_29);
+        const ret = makeMutClosure(arg0, arg1, 52, __wbg_adapter_34);
         return addHeapObject(ret);
     };
     imports.wbg.__wbindgen_closure_wrapper493 = function(arg0, arg1, arg2) {
-        const ret = makeMutClosure(arg0, arg1, 52, __wbg_adapter_36);
+        const ret = makeMutClosure(arg0, arg1, 52, __wbg_adapter_29);
         return addHeapObject(ret);
     };
     imports.wbg.__wbindgen_closure_wrapper494 = function(arg0, arg1, arg2) {
