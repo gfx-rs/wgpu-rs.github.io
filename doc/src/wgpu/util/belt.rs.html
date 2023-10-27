@@ -181,17 +181,50 @@
 <a href="#181" id="181">181</a>
 <a href="#182" id="182">182</a>
 <a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     util::align_to, Buffer, BufferAddress, BufferDescriptor, BufferSize, BufferUsages,
     BufferViewMut, CommandEncoder, Device, MapMode,
 };
 <span class="kw">use </span>std::fmt;
-<span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span>std::sync::{mpsc, Arc};
 
 <span class="kw">struct </span>Chunk {
     buffer: Arc&lt;Buffer&gt;,
     size: BufferAddress,
     offset: BufferAddress,
+}
+
+<span class="doccomment">/// `Sync` wrapper that works by providing only exclusive access.
+///
+/// See https://doc.rust-lang.org/nightly/std/sync/struct.Exclusive.html
+</span><span class="kw">struct </span>Exclusive&lt;T&gt;(T);
+
+<span class="kw">unsafe impl</span>&lt;T&gt; Sync <span class="kw">for </span>Exclusive&lt;T&gt; {}
+
+<span class="kw">impl</span>&lt;T&gt; Exclusive&lt;T&gt; {
+    <span class="kw">fn </span>new(value: T) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(value)
+    }
+
+    <span class="kw">fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>T {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.<span class="number">0
+    </span>}
 }
 
 <span class="doccomment">/// Efficiently performs many buffer writes by sharing and reusing temporary buffers.
@@ -219,9 +252,9 @@
     /// into `active_chunks`.
     </span>free_chunks: Vec&lt;Chunk&gt;,
     <span class="doccomment">/// When closed chunks are mapped again, the map callback sends them here.
-    </span>sender: flume::Sender&lt;Chunk&gt;,
+    </span>sender: Exclusive&lt;mpsc::Sender&lt;Chunk&gt;&gt;,
     <span class="doccomment">/// Free chunks are received here to be put on `self.free_chunks`.
-    </span>receiver: flume::Receiver&lt;Chunk&gt;,
+    </span>receiver: Exclusive&lt;mpsc::Receiver&lt;Chunk&gt;&gt;,
 }
 
 <span class="kw">impl </span>StagingBelt {
@@ -236,14 +269,14 @@
     ///   (per [`StagingBelt::finish()`]); and
     /// * bigger is better, within these bounds.
     </span><span class="kw">pub fn </span>new(chunk_size: BufferAddress) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>(sender, receiver) = flume::unbounded();
+        <span class="kw">let </span>(sender, receiver) = std::sync::mpsc::channel();
         StagingBelt {
             chunk_size,
             active_chunks: Vec::new(),
             closed_chunks: Vec::new(),
             free_chunks: Vec::new(),
-            sender,
-            receiver,
+            sender: Exclusive::new(sender),
+            receiver: Exclusive::new(receiver),
         }
     }
 
@@ -331,9 +364,8 @@
     </span><span class="kw">pub fn </span>recall(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.receive_chunks();
 
-        <span class="kw">let </span>sender = <span class="kw-2">&amp;</span><span class="self">self</span>.sender;
         <span class="kw">for </span>chunk <span class="kw">in </span><span class="self">self</span>.closed_chunks.drain(..) {
-            <span class="kw">let </span>sender = sender.clone();
+            <span class="kw">let </span>sender = <span class="self">self</span>.sender.get_mut().clone();
             chunk
                 .buffer
                 .clone()
@@ -347,7 +379,7 @@
     <span class="doccomment">/// Move all chunks that the GPU is done with (and are now mapped again)
     /// from `self.receiver` to `self.free_chunks`.
     </span><span class="kw">fn </span>receive_chunks(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="kw">while let </span><span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>chunk) = <span class="self">self</span>.receiver.try_recv() {
+        <span class="kw">while let </span><span class="prelude-val">Ok</span>(<span class="kw-2">mut </span>chunk) = <span class="self">self</span>.receiver.get_mut().try_recv() {
             chunk.offset = <span class="number">0</span>;
             <span class="self">self</span>.free_chunks.push(chunk);
         }
