@@ -555,32 +555,6 @@
 <a href="#555" id="555">555</a>
 <a href="#556" id="556">556</a>
 <a href="#557" id="557">557</a>
-<a href="#558" id="558">558</a>
-<a href="#559" id="559">559</a>
-<a href="#560" id="560">560</a>
-<a href="#561" id="561">561</a>
-<a href="#562" id="562">562</a>
-<a href="#563" id="563">563</a>
-<a href="#564" id="564">564</a>
-<a href="#565" id="565">565</a>
-<a href="#566" id="566">566</a>
-<a href="#567" id="567">567</a>
-<a href="#568" id="568">568</a>
-<a href="#569" id="569">569</a>
-<a href="#570" id="570">570</a>
-<a href="#571" id="571">571</a>
-<a href="#572" id="572">572</a>
-<a href="#573" id="573">573</a>
-<a href="#574" id="574">574</a>
-<a href="#575" id="575">575</a>
-<a href="#576" id="576">576</a>
-<a href="#577" id="577">577</a>
-<a href="#578" id="578">578</a>
-<a href="#579" id="579">579</a>
-<a href="#580" id="580">580</a>
-<a href="#581" id="581">581</a>
-<a href="#582" id="582">582</a>
-<a href="#583" id="583">583</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
 </span><span class="kw">use </span>std::str::FromStr;
 <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
@@ -592,8 +566,9 @@
 <span class="kw">use </span>wgpu::{WasmNotSend, WasmNotSync};
 <span class="kw">use </span>wgpu_test::GpuTestConfiguration;
 <span class="kw">use </span>winit::{
-    event::{<span class="self">self</span>, WindowEvent},
+    event::{<span class="self">self</span>, KeyEvent, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
+    keyboard::{Key, NamedKey},
 };
 
 <span class="attr">#[allow(dead_code)]
@@ -614,9 +589,11 @@
     <span class="kw">fn </span>optional_features() -&gt; wgpu::Features {
         wgpu::Features::empty()
     }
+
     <span class="kw">fn </span>required_features() -&gt; wgpu::Features {
         wgpu::Features::empty()
     }
+
     <span class="kw">fn </span>required_downlevel_capabilities() -&gt; wgpu::DownlevelCapabilities {
         wgpu::DownlevelCapabilities {
             flags: wgpu::DownlevelFlags::empty(),
@@ -624,27 +601,31 @@
             ..wgpu::DownlevelCapabilities::default()
         }
     }
+
     <span class="kw">fn </span>required_limits() -&gt; wgpu::Limits {
         wgpu::Limits::downlevel_webgl2_defaults() <span class="comment">// These downlevel limits will allow the code to run on all possible hardware
     </span>}
+
     <span class="kw">fn </span>init(
         config: <span class="kw-2">&amp;</span>wgpu::SurfaceConfiguration,
         adapter: <span class="kw-2">&amp;</span>wgpu::Adapter,
         device: <span class="kw-2">&amp;</span>wgpu::Device,
         queue: <span class="kw-2">&amp;</span>wgpu::Queue,
     ) -&gt; <span class="self">Self</span>;
+
     <span class="kw">fn </span>resize(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         config: <span class="kw-2">&amp;</span>wgpu::SurfaceConfiguration,
         device: <span class="kw-2">&amp;</span>wgpu::Device,
         queue: <span class="kw-2">&amp;</span>wgpu::Queue,
     );
+
     <span class="kw">fn </span>update(<span class="kw-2">&amp;mut </span><span class="self">self</span>, event: WindowEvent);
+
     <span class="kw">fn </span>render(<span class="kw-2">&amp;mut </span><span class="self">self</span>, view: <span class="kw-2">&amp;</span>wgpu::TextureView, device: <span class="kw-2">&amp;</span>wgpu::Device, queue: <span class="kw-2">&amp;</span>wgpu::Queue);
 }
 
 <span class="kw">struct </span>Setup {
-    window: winit::window::Window,
     event_loop: EventLoop&lt;()&gt;,
     instance: wgpu::Instance,
     size: winit::dpi::PhysicalSize&lt;u32&gt;,
@@ -668,7 +649,7 @@
         env_logger::init();
     };
 
-    <span class="kw">let </span>event_loop = EventLoop::new();
+    <span class="kw">let </span>event_loop = EventLoop::new().unwrap();
     <span class="kw">let </span><span class="kw-2">mut </span>builder = winit::window::WindowBuilder::new();
     builder = builder.with_title(title);
     <span class="attr">#[cfg(windows_OFF)] </span><span class="comment">// TODO
@@ -692,8 +673,10 @@
             .and_then(|win| win.document())
             .and_then(|doc| doc.body())
             .and_then(|body| {
-                body.append_child(<span class="kw-2">&amp;</span>web_sys::Element::from(window.canvas()))
-                    .ok()
+                body.append_child(<span class="kw-2">&amp;</span>web_sys::Element::from(
+                    window.canvas().expect(<span class="string">&quot;Couldn&#39;t get canvas&quot;</span>),
+                ))
+                .ok()
             })
             .expect(<span class="string">&quot;couldn&#39;t append canvas to document body&quot;</span>);
     }
@@ -716,6 +699,7 @@
 
                 <span class="kw">let </span>bitmap_renderer = window
                     .canvas()
+                    .expect(<span class="string">&quot;Couldn&#39;t get html canvas&quot;</span>)
                     .get_context(<span class="string">&quot;bitmaprenderer&quot;</span>)
                     .expect(<span class="string">&quot;couldn&#39;t create ImageBitmapRenderingContext (Result)&quot;</span>)
                     .expect(<span class="string">&quot;couldn&#39;t create ImageBitmapRenderingContext (Option)&quot;</span>)
@@ -813,7 +797,6 @@
         </span>.expect(<span class="string">&quot;Unable to find a suitable GPU adapter!&quot;</span>);
 
     Setup {
-        window,
         event_loop,
         instance,
         size,
@@ -828,7 +811,6 @@
 
 <span class="kw">fn </span>start&lt;E: Example&gt;(
     <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))] </span>Setup {
-        window,
         event_loop,
         instance,
         size,
@@ -838,7 +820,6 @@
         queue,
     }: Setup,
     <span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)] </span>Setup {
-        window,
         event_loop,
         instance,
         size,
@@ -865,113 +846,103 @@
     </span><span class="kw">let </span>(<span class="kw-2">mut </span>frame_count, <span class="kw-2">mut </span>accum_time) = (<span class="number">0</span>, <span class="number">0.0</span>);
 
     <span class="macro">log::info!</span>(<span class="string">&quot;Entering render loop...&quot;</span>);
-    event_loop.run(<span class="kw">move </span>|event, <span class="kw">_</span>, control_flow| {
-        <span class="kw">let _ </span>= (<span class="kw-2">&amp;</span>instance, <span class="kw-2">&amp;</span>adapter); <span class="comment">// force ownership by the closure
-        </span><span class="kw-2">*</span>control_flow = <span class="kw">if </span><span class="macro">cfg!</span>(feature = <span class="string">&quot;metal-auto-capture&quot;</span>) {
-            ControlFlow::Exit
-        } <span class="kw">else </span>{
-            ControlFlow::Poll
-        };
-        <span class="kw">match </span>event {
-            event::Event::RedrawEventsCleared =&gt; {
-                window.request_redraw();
-            }
-            event::Event::WindowEvent {
-                event:
-                    WindowEvent::Resized(size)
-                    | WindowEvent::ScaleFactorChanged {
-                        new_inner_size: <span class="kw-2">&amp;mut </span>size,
-                        ..
-                    },
-                ..
-            } =&gt; {
-                <span class="macro">log::info!</span>(<span class="string">&quot;Resizing to {:?}&quot;</span>, size);
-                config.width = size.width.max(<span class="number">1</span>);
-                config.height = size.height.max(<span class="number">1</span>);
-                example.resize(<span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>queue);
-                surface.configure(<span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>config);
-            }
-            event::Event::WindowEvent { event, .. } =&gt; <span class="kw">match </span>event {
-                WindowEvent::KeyboardInput {
-                    input:
-                        event::KeyboardInput {
-                            virtual_keycode: <span class="prelude-val">Some</span>(event::VirtualKeyCode::Escape),
-                            state: event::ElementState::Pressed,
-                            ..
-                        },
-                    ..
-                }
-                | WindowEvent::CloseRequested =&gt; {
-                    <span class="kw-2">*</span>control_flow = ControlFlow::Exit;
-                }
-                <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
-                </span>WindowEvent::KeyboardInput {
-                    input:
-                        event::KeyboardInput {
-                            virtual_keycode: <span class="prelude-val">Some</span>(event::VirtualKeyCode::R),
-                            state: event::ElementState::Pressed,
-                            ..
-                        },
+    event_loop
+        .run(<span class="kw">move </span>|event, target| {
+            <span class="kw">let _ </span>= (<span class="kw-2">&amp;</span>instance, <span class="kw-2">&amp;</span>adapter); <span class="comment">// force ownership by the closure
+            </span>target.set_control_flow(ControlFlow::Poll);
+
+            <span class="kw">if </span><span class="macro">cfg!</span>(feature = <span class="string">&quot;metal-auto-capture&quot;</span>) {
+                target.exit();
+            };
+
+            <span class="kw">match </span>event {
+                event::Event::WindowEvent {
+                    event: WindowEvent::Resized(size),
                     ..
                 } =&gt; {
-                    <span class="macro">println!</span>(<span class="string">&quot;{:#?}&quot;</span>, instance.generate_report());
+                    config.width = size.width.max(<span class="number">1</span>);
+                    config.height = size.height.max(<span class="number">1</span>);
+                    example.resize(<span class="kw-2">&amp;</span>config, <span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>queue);
+                    surface.configure(<span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>config);
                 }
-                <span class="kw">_ </span>=&gt; {
-                    example.update(event);
-                }
-            },
-            event::Event::RedrawRequested(<span class="kw">_</span>) =&gt; {
-                <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
-                </span>{
-                    accum_time += last_frame_inst.elapsed().as_secs_f32();
-                    last_frame_inst = Instant::now();
-                    frame_count += <span class="number">1</span>;
-                    <span class="kw">if </span>frame_count == <span class="number">100 </span>{
-                        <span class="macro">println!</span>(
-                            <span class="string">&quot;Avg frame time {}ms&quot;</span>,
-                            accum_time * <span class="number">1000.0 </span>/ frame_count <span class="kw">as </span>f32
-                        );
-                        accum_time = <span class="number">0.0</span>;
-                        frame_count = <span class="number">0</span>;
+                event::Event::WindowEvent { event, .. } =&gt; <span class="kw">match </span>event {
+                    WindowEvent::KeyboardInput {
+                        event:
+                            KeyEvent {
+                                logical_key: Key::Named(NamedKey::Escape),
+                                ..
+                            },
+                        ..
                     }
-                }
-
-                <span class="kw">let </span>frame = <span class="kw">match </span>surface.get_current_texture() {
-                    <span class="prelude-val">Ok</span>(frame) =&gt; frame,
-                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
-                        surface.configure(<span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>config);
-                        surface
-                            .get_current_texture()
-                            .expect(<span class="string">&quot;Failed to acquire next surface texture!&quot;</span>)
+                    | WindowEvent::CloseRequested =&gt; {
+                        target.exit();
                     }
-                };
-                <span class="kw">let </span>view = frame.texture.create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor {
-                    format: <span class="prelude-val">Some</span>(surface_view_format),
-                    ..wgpu::TextureViewDescriptor::default()
-                });
-
-                example.render(<span class="kw-2">&amp;</span>view, <span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>queue);
-
-                frame.present();
-
-                <span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
-                </span>{
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(offscreen_canvas_setup) = <span class="kw-2">&amp;</span>offscreen_canvas_setup {
-                        <span class="kw">let </span>image_bitmap = offscreen_canvas_setup
-                            .offscreen_canvas
-                            .transfer_to_image_bitmap()
-                            .expect(<span class="string">&quot;couldn&#39;t transfer offscreen canvas to image bitmap.&quot;</span>);
-                        offscreen_canvas_setup
-                            .bitmap_renderer
-                            .transfer_from_image_bitmap(<span class="kw-2">&amp;</span>image_bitmap);
-
-                        <span class="macro">log::info!</span>(<span class="string">&quot;Transferring OffscreenCanvas to ImageBitmapRenderer&quot;</span>);
+                    <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+                    </span>WindowEvent::KeyboardInput {
+                        event:
+                            KeyEvent {
+                                logical_key: Key::Character(s),
+                                ..
+                            },
+                        ..
+                    } <span class="kw">if </span>s == <span class="string">&quot;r&quot; </span>=&gt; {
+                        <span class="macro">println!</span>(<span class="string">&quot;{:#?}&quot;</span>, instance.generate_report());
                     }
-                }
+                    event::WindowEvent::RedrawRequested =&gt; {
+                        <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+                        </span>{
+                            accum_time += last_frame_inst.elapsed().as_secs_f32();
+                            last_frame_inst = Instant::now();
+                            frame_count += <span class="number">1</span>;
+                            <span class="kw">if </span>frame_count == <span class="number">100 </span>{
+                                <span class="macro">println!</span>(
+                                    <span class="string">&quot;Avg frame time {}ms&quot;</span>,
+                                    accum_time * <span class="number">1000.0 </span>/ frame_count <span class="kw">as </span>f32
+                                );
+                                accum_time = <span class="number">0.0</span>;
+                                frame_count = <span class="number">0</span>;
+                            }
+                        }
+
+                        <span class="kw">let </span>frame = <span class="kw">match </span>surface.get_current_texture() {
+                            <span class="prelude-val">Ok</span>(frame) =&gt; frame,
+                            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; {
+                                surface.configure(<span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>config);
+                                surface
+                                    .get_current_texture()
+                                    .expect(<span class="string">&quot;Failed to acquire next surface texture!&quot;</span>)
+                            }
+                        };
+                        <span class="kw">let </span>view = frame.texture.create_view(<span class="kw-2">&amp;</span>wgpu::TextureViewDescriptor {
+                            format: <span class="prelude-val">Some</span>(surface_view_format),
+                            ..wgpu::TextureViewDescriptor::default()
+                        });
+
+                        example.render(<span class="kw-2">&amp;</span>view, <span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>queue);
+
+                        frame.present();
+
+                        <span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
+                        </span>{
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(offscreen_canvas_setup) = <span class="kw-2">&amp;</span>offscreen_canvas_setup {
+                                <span class="kw">let </span>image_bitmap = offscreen_canvas_setup
+                                    .offscreen_canvas
+                                    .transfer_to_image_bitmap()
+                                    .expect(<span class="string">&quot;couldn&#39;t transfer offscreen canvas to image bitmap.&quot;</span>);
+                                offscreen_canvas_setup
+                                    .bitmap_renderer
+                                    .transfer_from_image_bitmap(<span class="kw-2">&amp;</span>image_bitmap);
+
+                                <span class="macro">log::info!</span>(<span class="string">&quot;Transferring OffscreenCanvas to ImageBitmapRenderer&quot;</span>);
+                            }
+                        }
+                    }
+                    <span class="kw">_ </span>=&gt; example.update(event),
+                },
+                <span class="kw">_ </span>=&gt; {}
             }
-            <span class="kw">_ </span>=&gt; {}
-        }
-    });
+        })
+        .unwrap();
 }
 
 <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
@@ -1094,30 +1065,7 @@
                     <span class="kw-2">&amp;</span>ctx.queue,
                 );
 
-                {
-                    example.render(<span class="kw-2">&amp;</span>dst_view, <span class="kw-2">&amp;</span>ctx.device, <span class="kw-2">&amp;</span>ctx.queue);
-
-                    <span class="comment">// Handle specific case for bunnymark
-                    </span><span class="attr">#[allow(deprecated)]
-                    </span><span class="kw">if </span>params.image_path == <span class="string">&quot;/examples/bunnymark/screenshot.png&quot; </span>{
-                        <span class="comment">// Press spacebar to spawn bunnies
-                        </span>example.update(winit::event::WindowEvent::KeyboardInput {
-                            input: winit::event::KeyboardInput {
-                                scancode: <span class="number">0</span>,
-                                state: winit::event::ElementState::Pressed,
-                                virtual_keycode: <span class="prelude-val">Some</span>(winit::event::VirtualKeyCode::Space),
-                                modifiers: winit::event::ModifiersState::empty(),
-                            },
-                            device_id: <span class="kw">unsafe </span>{ winit::event::DeviceId::dummy() },
-                            is_synthetic: <span class="bool-val">false</span>,
-                        });
-
-                        <span class="comment">// Step 3 extra frames
-                        </span><span class="kw">for _ in </span><span class="number">0</span>..<span class="number">3 </span>{
-                            example.render(<span class="kw-2">&amp;</span>dst_view, <span class="kw-2">&amp;</span>ctx.device, <span class="kw-2">&amp;</span>ctx.queue);
-                        }
-                    }
-                }
+                example.render(<span class="kw-2">&amp;</span>dst_view, <span class="kw-2">&amp;</span>ctx.device, <span class="kw-2">&amp;</span>ctx.queue);
 
                 <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf = ctx
                     .device

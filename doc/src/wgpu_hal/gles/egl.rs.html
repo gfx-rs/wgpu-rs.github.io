@@ -1370,6 +1370,12 @@
 <a href="#1370" id="1370">1370</a>
 <a href="#1371" id="1371">1371</a>
 <a href="#1372" id="1372">1372</a>
+<a href="#1373" id="1373">1373</a>
+<a href="#1374" id="1374">1374</a>
+<a href="#1375" id="1375">1375</a>
+<a href="#1376" id="1376">1376</a>
+<a href="#1377" id="1377">1377</a>
+<a href="#1378" id="1378">1378</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>parking_lot::{Mutex, MutexGuard};
 
@@ -2237,7 +2243,7 @@
                     .unwrap();
 
                 <span class="kw">let </span>ret = <span class="kw">unsafe </span>{
-                    ANativeWindow_setBuffersGeometry(handle.a_native_window, <span class="number">0</span>, <span class="number">0</span>, format)
+                    ANativeWindow_setBuffersGeometry(handle.a_native_window.as_ptr(), <span class="number">0</span>, <span class="number">0</span>, format)
                 };
 
                 <span class="kw">if </span>ret != <span class="number">0 </span>{
@@ -2250,7 +2256,7 @@
             </span>(Rwh::Wayland(<span class="kw">_</span>), raw_window_handle::RawDisplayHandle::Wayland(display_handle)) =&gt; {
                 <span class="kw">if </span>inner
                     .wl_display
-                    .map(|ptr| ptr != display_handle.display)
+                    .map(|ptr| ptr != display_handle.display.as_ptr())
                     .unwrap_or(<span class="bool-val">true</span>)
                 {
                     <span class="comment">/* Wayland displays are not sharable between surfaces so if the
@@ -2272,7 +2278,7 @@
                             .unwrap()
                             .get_platform_display(
                                 EGL_PLATFORM_WAYLAND_KHR,
-                                display_handle.display,
+                                display_handle.display.as_ptr(),
                                 <span class="kw-2">&amp;</span>display_attributes,
                             )
                     }
@@ -2286,7 +2292,7 @@
                     )<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>old_inner = std::mem::replace(inner.deref_mut(), new_inner);
-                    inner.wl_display = <span class="prelude-val">Some</span>(display_handle.display);
+                    inner.wl_display = <span class="prelude-val">Some</span>(display_handle.display.as_ptr());
 
                     drop(old_inner);
                 }
@@ -2527,29 +2533,35 @@
                         <span class="kw-2">&amp;mut </span>temp_xcb_handle <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_ as </span><span class="kw-2">*mut </span>std::ffi::c_void
                     }
                     (WindowKind::AngleX11, Rwh::Xcb(handle)) =&gt; {
-                        handle.window <span class="kw">as </span><span class="kw-2">*mut </span>std::ffi::c_void
+                        handle.window.get() <span class="kw">as </span><span class="kw-2">*mut </span>std::ffi::c_void
                     }
-                    (WindowKind::Unknown, Rwh::AndroidNdk(handle)) =&gt; handle.a_native_window,
+                    (WindowKind::Unknown, Rwh::AndroidNdk(handle)) =&gt; {
+                        handle.a_native_window.as_ptr()
+                    }
                     (WindowKind::Wayland, Rwh::Wayland(handle)) =&gt; {
                         <span class="kw">let </span>library = <span class="kw-2">&amp;</span><span class="self">self</span>.wsi.display_owner.as_ref().unwrap().library;
                         <span class="kw">let </span>wl_egl_window_create: libloading::Symbol&lt;WlEglWindowCreateFun&gt; =
                             <span class="kw">unsafe </span>{ library.get(<span class="string">b&quot;wl_egl_window_create&quot;</span>) }.unwrap();
-                        <span class="kw">let </span>window = <span class="kw">unsafe </span>{ wl_egl_window_create(handle.surface, <span class="number">640</span>, <span class="number">480</span>) };
+                        <span class="kw">let </span>window =
+                            <span class="kw">unsafe </span>{ wl_egl_window_create(handle.surface.as_ptr(), <span class="number">640</span>, <span class="number">480</span>) }
+                                <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>;
                         wl_window = <span class="prelude-val">Some</span>(window);
                         window
                     }
                     <span class="attr">#[cfg(target_os = <span class="string">&quot;emscripten&quot;</span>)]
                     </span>(WindowKind::Unknown, Rwh::Web(handle)) =&gt; handle.id <span class="kw">as </span><span class="kw-2">*mut </span>std::ffi::c_void,
-                    (WindowKind::Unknown, Rwh::Win32(handle)) =&gt; handle.hwnd,
+                    (WindowKind::Unknown, Rwh::Win32(handle)) =&gt; {
+                        handle.hwnd.get() <span class="kw">as </span><span class="kw-2">*mut </span>std::ffi::c_void
+                    }
                     (WindowKind::Unknown, Rwh::AppKit(handle)) =&gt; {
                         <span class="attr">#[cfg(not(target_os = <span class="string">&quot;macos&quot;</span>))]
-                        </span><span class="kw">let </span>window_ptr = handle.ns_view;
+                        </span><span class="kw">let </span>window_ptr = handle.ns_view.as_ptr();
                         <span class="attr">#[cfg(target_os = <span class="string">&quot;macos&quot;</span>)]
                         </span><span class="kw">let </span>window_ptr = {
                             <span class="kw">use </span>objc::{msg_send, runtime::Object, sel, sel_impl};
                             <span class="comment">// ns_view always have a layer and don&#39;t need to verify that it exists.
                             </span><span class="kw">let </span>layer: <span class="kw-2">*mut </span>Object =
-                                <span class="macro">msg_send!</span>[handle.ns_view <span class="kw">as </span><span class="kw-2">*mut </span>Object, layer];
+                                <span class="macro">msg_send!</span>[handle.ns_view.as_ptr() <span class="kw">as </span><span class="kw-2">*mut </span>Object, layer];
                             layer <span class="kw">as </span><span class="kw-2">*mut </span>ffi::c_void
                         };
                         window_ptr

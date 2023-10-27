@@ -5418,6 +5418,24 @@
 <a href="#5418" id="5418">5418</a>
 <a href="#5419" id="5419">5419</a>
 <a href="#5420" id="5420">5420</a>
+<a href="#5421" id="5421">5421</a>
+<a href="#5422" id="5422">5422</a>
+<a href="#5423" id="5423">5423</a>
+<a href="#5424" id="5424">5424</a>
+<a href="#5425" id="5425">5425</a>
+<a href="#5426" id="5426">5426</a>
+<a href="#5427" id="5427">5427</a>
+<a href="#5428" id="5428">5428</a>
+<a href="#5429" id="5429">5429</a>
+<a href="#5430" id="5430">5430</a>
+<a href="#5431" id="5431">5431</a>
+<a href="#5432" id="5432">5432</a>
+<a href="#5433" id="5433">5433</a>
+<a href="#5434" id="5434">5434</a>
+<a href="#5435" id="5435">5435</a>
+<a href="#5436" id="5436">5436</a>
+<a href="#5437" id="5437">5437</a>
+<a href="#5438" id="5438">5438</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -7357,15 +7375,27 @@
     /// - On web: will panic if the `raw_window_handle` does not properly refer to a
     ///   canvas element.
     </span><span class="kw">pub unsafe fn </span>create_surface&lt;
-        W: raw_window_handle::HasRawWindowHandle + raw_window_handle::HasRawDisplayHandle,
+        W: raw_window_handle::HasWindowHandle + raw_window_handle::HasDisplayHandle,
     &gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         window: <span class="kw-2">&amp;</span>W,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
+        <span class="kw">let </span>raw_display_handle = window
+            .display_handle()
+            .map_err(|e| CreateSurfaceError {
+                inner: CreateSurfaceErrorKind::RawHandle(e),
+            })<span class="question-mark">?
+            </span>.as_raw();
+        <span class="kw">let </span>raw_window_handle = window
+            .window_handle()
+            .map_err(|e| CreateSurfaceError {
+                inner: CreateSurfaceErrorKind::RawHandle(e),
+            })<span class="question-mark">?
+            </span>.as_raw();
         <span class="kw">let </span>(id, data) = DynContext::instance_create_surface(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            raw_window_handle::HasRawDisplayHandle::raw_display_handle(window),
-            raw_window_handle::HasRawWindowHandle::raw_window_handle(window),
+            raw_display_handle,
+            raw_window_handle,
         )<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(Surface {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
@@ -8345,6 +8375,10 @@
     <span class="doccomment">/// Error from WebGPU surface creation.
     </span><span class="attr">#[allow(dead_code)] </span><span class="comment">// may be unused depending on target and features
     </span>Web(String),
+
+    <span class="doccomment">/// Error when trying to get a [`DisplayHandle`] or a [`WindowHandle`] from
+    /// `raw_window_handle`.
+    </span>RawHandle(raw_window_handle::HandleError),
 }
 <span class="macro">static_assertions::assert_impl_all!</span>(CreateSurfaceError: Send, Sync);
 
@@ -8358,6 +8392,7 @@
             </span>))]
             </span>CreateSurfaceErrorKind::Hal(e) =&gt; e.fmt(f),
             CreateSurfaceErrorKind::Web(e) =&gt; e.fmt(f),
+            CreateSurfaceErrorKind::RawHandle(e) =&gt; e.fmt(f),
         }
     }
 }
@@ -8372,6 +8407,7 @@
             </span>))]
             </span>CreateSurfaceErrorKind::Hal(e) =&gt; e.source(),
             CreateSurfaceErrorKind::Web(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+            CreateSurfaceErrorKind::RawHandle(e) =&gt; e.source(),
         }
     }
 }
