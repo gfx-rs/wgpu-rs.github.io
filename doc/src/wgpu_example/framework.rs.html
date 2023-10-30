@@ -560,6 +560,18 @@
 <a href="#560" id="560">560</a>
 <a href="#561" id="561">561</a>
 <a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
 </span><span class="kw">use </span>std::str::FromStr;
 <span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
@@ -592,6 +604,8 @@
 }
 
 <span class="kw">pub trait </span>Example: <span class="lifetime">&#39;static </span>+ Sized {
+    <span class="kw">const </span>SRGB: bool = <span class="bool-val">true</span>;
+
     <span class="kw">fn </span>optional_features() -&gt; wgpu::Features {
         wgpu::Features::empty()
     }
@@ -843,7 +857,12 @@
     <span class="kw">let </span><span class="kw-2">mut </span>config = surface
         .get_default_config(<span class="kw-2">&amp;</span>adapter, size.width, size.height)
         .expect(<span class="string">&quot;Surface isn&#39;t supported by the adapter.&quot;</span>);
-    <span class="kw">let </span>surface_view_format = config.format.add_srgb_suffix();
+    <span class="kw">let </span>surface_view_format = <span class="kw">if </span>E::SRGB {
+        config.format.add_srgb_suffix()
+    } <span class="kw">else </span>{
+        config.format.remove_srgb_suffix()
+    };
+    config.format = surface_view_format;
     config.view_formats.push(surface_view_format);
     surface.configure(<span class="kw-2">&amp;</span>device, <span class="kw-2">&amp;</span>config);
 
@@ -1036,6 +1055,11 @@
                 params.base_test_parameters.clone().features(features)
             })
             .run_async(<span class="kw">move </span>|ctx| <span class="kw">async move </span>{
+                <span class="kw">let </span>format = <span class="kw">if </span>E::SRGB {
+                    wgpu::TextureFormat::Rgba8UnormSrgb
+                } <span class="kw">else </span>{
+                    wgpu::TextureFormat::Rgba8Unorm
+                };
                 <span class="kw">let </span>dst_texture = ctx.device.create_texture(<span class="kw-2">&amp;</span>wgpu::TextureDescriptor {
                     label: <span class="prelude-val">Some</span>(<span class="string">&quot;destination&quot;</span>),
                     size: wgpu::Extent3d {
@@ -1046,7 +1070,7 @@
                     mip_level_count: <span class="number">1</span>,
                     sample_count: <span class="number">1</span>,
                     dimension: wgpu::TextureDimension::D2,
-                    format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                    format,
                     usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
                     view_formats: <span class="kw-2">&amp;</span>[],
                 });
@@ -1063,12 +1087,12 @@
                 <span class="kw">let </span><span class="kw-2">mut </span>example = E::init(
                     <span class="kw-2">&amp;</span>wgpu::SurfaceConfiguration {
                         usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-                        format: wgpu::TextureFormat::Rgba8UnormSrgb,
+                        format,
                         width: params.width,
                         height: params.height,
                         present_mode: wgpu::PresentMode::Fifo,
                         alpha_mode: wgpu::CompositeAlphaMode::Auto,
-                        view_formats: <span class="macro">vec!</span>[wgpu::TextureFormat::Rgba8UnormSrgb],
+                        view_formats: <span class="macro">vec!</span>[format],
                     },
                     <span class="kw-2">&amp;</span>ctx.adapter,
                     <span class="kw-2">&amp;</span>ctx.device,
