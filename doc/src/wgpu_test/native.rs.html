@@ -102,6 +102,11 @@
 <a href="#102" id="102">102</a>
 <a href="#103" id="103">103</a>
 <a href="#104" id="104">104</a>
+<a href="#105" id="105">105</a>
+<a href="#106" id="106">106</a>
+<a href="#107" id="107">107</a>
+<a href="#108" id="108">108</a>
+<a href="#109" id="109">109</a>
 </pre></div><pre class="rust"><code><span class="attr">#![cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
 </span><span class="doccomment">//! Infrastructure for the native, `cargo-nextest` based harness.
 //!
@@ -181,9 +186,11 @@
 
     <span class="kw">use </span><span class="kw">crate</span>::report::GpuReport;
 
-    <span class="kw">let </span>config_text =
+    <span class="kw">let </span>config_text = {
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Reading .gpuconfig&quot;</span>);
         <span class="kw-2">&amp;</span>std::fs::read_to_string(<span class="macro">format!</span>(<span class="string">&quot;{}/../.gpuconfig&quot;</span>, <span class="macro">env!</span>(<span class="string">&quot;CARGO_MANIFEST_DIR&quot;</span>)))
-            .context(<span class="string">&quot;Failed to read .gpuconfig, did you run the tests via `cargo xtask test`?&quot;</span>)<span class="question-mark">?</span>;
+            .context(<span class="string">&quot;Failed to read .gpuconfig, did you run the tests via `cargo xtask test`?&quot;</span>)<span class="question-mark">?
+    </span>};
     <span class="kw">let </span>report = GpuReport::from_json(config_text).context(<span class="string">&quot;Could not pare .gpuconfig JSON&quot;</span>)<span class="question-mark">?</span>;
 
     <span class="kw">let </span><span class="kw-2">mut </span>test_guard = TEST_LIST.lock();
@@ -202,7 +209,10 @@
 
 <span class="kw">fn </span>execute_native(tests: <span class="kw">impl </span>IntoIterator&lt;Item = NativeTest&gt;) {
     <span class="kw">let </span>args = libtest_mimic::Arguments::from_args();
-    <span class="kw">let </span>trials = tests.into_iter().map(NativeTest::into_trial).collect();
+    <span class="kw">let </span>trials = {
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;collecting tests&quot;</span>);
+        tests.into_iter().map(NativeTest::into_trial).collect()
+    };
 
     libtest_mimic::run(<span class="kw-2">&amp;</span>args, trials).exit_if_failed();
 }

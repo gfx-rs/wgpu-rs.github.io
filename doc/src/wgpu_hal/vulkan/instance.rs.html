@@ -951,6 +951,25 @@
 <a href="#951" id="951">951</a>
 <a href="#952" id="952">952</a>
 <a href="#953" id="953">953</a>
+<a href="#954" id="954">954</a>
+<a href="#955" id="955">955</a>
+<a href="#956" id="956">956</a>
+<a href="#957" id="957">957</a>
+<a href="#958" id="958">958</a>
+<a href="#959" id="959">959</a>
+<a href="#960" id="960">960</a>
+<a href="#961" id="961">961</a>
+<a href="#962" id="962">962</a>
+<a href="#963" id="963">963</a>
+<a href="#964" id="964">964</a>
+<a href="#965" id="965">965</a>
+<a href="#966" id="966">966</a>
+<a href="#967" id="967">967</a>
+<a href="#968" id="968">968</a>
+<a href="#969" id="969">969</a>
+<a href="#970" id="970">970</a>
+<a href="#971" id="971">971</a>
+<a href="#972" id="972">972</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::{c_void, CStr, CString},
     slice,
@@ -1162,14 +1181,16 @@
         _instance_api_version: u32,
         flags: wgt::InstanceFlags,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr&gt;, <span class="kw">crate</span>::InstanceError&gt; {
-        <span class="kw">let </span>instance_extensions = entry
-            .enumerate_instance_extension_properties(<span class="prelude-val">None</span>)
-            .map_err(|e| {
-                <span class="kw">crate</span>::InstanceError::with_source(
-                    String::from(<span class="string">&quot;enumerate_instance_extension_properties() failed&quot;</span>),
-                    e,
-                )
-            })<span class="question-mark">?</span>;
+        <span class="kw">let </span>instance_extensions = {
+            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkEnumerateInstanceExtensionProperties&quot;</span>);
+            entry.enumerate_instance_extension_properties(<span class="prelude-val">None</span>)
+        };
+        <span class="kw">let </span>instance_extensions = instance_extensions.map_err(|e| {
+            <span class="kw">crate</span>::InstanceError::with_source(
+                String::from(<span class="string">&quot;enumerate_instance_extension_properties() failed&quot;</span>),
+                e,
+            )
+        })<span class="question-mark">?</span>;
 
         <span class="comment">// Check our extensions against the available extensions
         </span><span class="kw">let </span><span class="kw-2">mut </span>extensions: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr&gt; = Vec::new();
@@ -1523,12 +1544,21 @@
 
 <span class="kw">impl </span><span class="kw">crate</span>::Instance&lt;<span class="kw">super</span>::Api&gt; <span class="kw">for </span><span class="kw">super</span>::Instance {
     <span class="kw">unsafe fn </span>init(desc: <span class="kw-2">&amp;</span><span class="kw">crate</span>::InstanceDescriptor) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="kw">crate</span>::InstanceError&gt; {
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Init Vulkan Backend&quot;</span>);
         <span class="kw">use </span><span class="kw">crate</span>::auxil::cstr_from_bytes_until_nul;
 
-        <span class="kw">let </span>entry = <span class="kw">unsafe </span>{ ash::Entry::load() }.map_err(|err| {
+        <span class="kw">let </span>entry = <span class="kw">unsafe </span>{
+            <span class="macro">profiling::scope!</span>(<span class="string">&quot;Load vk library&quot;</span>);
+            ash::Entry::load()
+        }
+        .map_err(|err| {
             <span class="kw">crate</span>::InstanceError::with_source(String::from(<span class="string">&quot;missing Vulkan entry points&quot;</span>), err)
         })<span class="question-mark">?</span>;
-        <span class="kw">let </span>instance_api_version = <span class="kw">match </span>entry.try_enumerate_instance_version() {
+        <span class="kw">let </span>version = {
+            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkEnumerateInstanceVersion&quot;</span>);
+            entry.try_enumerate_instance_version()
+        };
+        <span class="kw">let </span>instance_api_version = <span class="kw">match </span>version {
             <span class="comment">// Vulkan 1.1+
             </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(version)) =&gt; version,
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>) =&gt; vk::API_VERSION_1_0,
@@ -1565,7 +1595,11 @@
 
         <span class="kw">let </span>extensions = <span class="self">Self</span>::desired_extensions(<span class="kw-2">&amp;</span>entry, instance_api_version, desc.flags)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>instance_layers = entry.enumerate_instance_layer_properties().map_err(|e| {
+        <span class="kw">let </span>instance_layers = {
+            <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkEnumerateInstanceLayerProperties&quot;</span>);
+            entry.enumerate_instance_layer_properties()
+        };
+        <span class="kw">let </span>instance_layers = instance_layers.map_err(|e| {
             <span class="macro">log::info!</span>(<span class="string">&quot;enumerate_instance_layer_properties: {:?}&quot;</span>, e);
             <span class="kw">crate</span>::InstanceError::with_source(
                 String::from(<span class="string">&quot;enumerate_instance_layer_properties() failed&quot;</span>),
@@ -1661,7 +1695,11 @@
                 .enabled_layer_names(<span class="kw-2">&amp;</span>str_pointers[..layers.len()])
                 .enabled_extension_names(<span class="kw-2">&amp;</span>str_pointers[layers.len()..]);
 
-            <span class="kw">unsafe </span>{ entry.create_instance(<span class="kw-2">&amp;</span>create_info, <span class="prelude-val">None</span>) }.map_err(|e| {
+            <span class="kw">unsafe </span>{
+                <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkCreateInstance&quot;</span>);
+                entry.create_instance(<span class="kw-2">&amp;</span>create_info, <span class="prelude-val">None</span>)
+            }
+            .map_err(|e| {
                 <span class="kw">crate</span>::InstanceError::with_source(
                     String::from(<span class="string">&quot;Entry::create_instance() failed&quot;</span>),
                     e,
