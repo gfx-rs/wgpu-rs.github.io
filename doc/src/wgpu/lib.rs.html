@@ -5437,6 +5437,8 @@
 <a href="#5437" id="5437">5437</a>
 <a href="#5438" id="5438">5438</a>
 <a href="#5439" id="5439">5439</a>
+<a href="#5440" id="5440">5440</a>
+<a href="#5441" id="5441">5441</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -7393,11 +7395,13 @@
                 inner: CreateSurfaceErrorKind::RawHandle(e),
             })<span class="question-mark">?
             </span>.as_raw();
-        <span class="kw">let </span>(id, data) = DynContext::instance_create_surface(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
-            raw_display_handle,
-            raw_window_handle,
-        )<span class="question-mark">?</span>;
+        <span class="kw">let </span>(id, data) = <span class="kw">unsafe </span>{
+            DynContext::instance_create_surface(
+                <span class="kw-2">&amp;*</span><span class="self">self</span>.context,
+                raw_display_handle,
+                raw_window_handle,
+            )
+        }<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(Surface {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
             id,
