@@ -1565,6 +1565,19 @@
 <a href="#1565" id="1565">1565</a>
 <a href="#1566" id="1566">1566</a>
 <a href="#1567" id="1567">1567</a>
+<a href="#1568" id="1568">1568</a>
+<a href="#1569" id="1569">1569</a>
+<a href="#1570" id="1570">1570</a>
+<a href="#1571" id="1571">1571</a>
+<a href="#1572" id="1572">1572</a>
+<a href="#1573" id="1573">1573</a>
+<a href="#1574" id="1574">1574</a>
+<a href="#1575" id="1575">1575</a>
+<a href="#1576" id="1576">1576</a>
+<a href="#1577" id="1577">1577</a>
+<a href="#1578" id="1578">1578</a>
+<a href="#1579" id="1579">1579</a>
+<a href="#1580" id="1580">1580</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv::is_layered_target, Command <span class="kw">as </span>C, PrivateCapabilities};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glow::HasContext;
@@ -1694,6 +1707,7 @@
                     };
                 } <span class="kw">else </span>{
                     <span class="kw">unsafe </span>{
+                        <span class="macro">assert_eq!</span>(view.mip_levels.len(), <span class="number">1</span>);
                         gl.framebuffer_texture_2d(
                             fbo_target,
                             attachment,
@@ -2913,9 +2927,21 @@
                 texture,
                 target,
                 aspects,
+                <span class="kw-2">ref </span>mip_levels,
             } =&gt; {
                 <span class="kw">unsafe </span>{ gl.active_texture(glow::TEXTURE0 + slot) };
                 <span class="kw">unsafe </span>{ gl.bind_texture(target, <span class="prelude-val">Some</span>(texture)) };
+
+                <span class="kw">unsafe </span>{
+                    gl.tex_parameter_i32(target, glow::TEXTURE_BASE_LEVEL, mip_levels.start <span class="kw">as </span>i32)
+                };
+                <span class="kw">unsafe </span>{
+                    gl.tex_parameter_i32(
+                        target,
+                        glow::TEXTURE_MAX_LEVEL,
+                        (mip_levels.end - <span class="number">1</span>) <span class="kw">as </span>i32,
+                    )
+                };
 
                 <span class="kw">let </span>version = gl.version();
                 <span class="kw">let </span>is_min_es_3_1 = version.is_embedded &amp;&amp; (version.major, version.minor) &gt;= (<span class="number">3</span>, <span class="number">1</span>);

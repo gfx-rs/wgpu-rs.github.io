@@ -1463,6 +1463,7 @@
 <a href="#1463" id="1463">1463</a>
 <a href="#1464" id="1464">1464</a>
 <a href="#1465" id="1465">1465</a>
+<a href="#1466" id="1466">1466</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PrivateCapabilities};
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -2623,8 +2624,8 @@
                 }
                 wgt::BindingType::Texture { .. } =&gt; {
                     <span class="kw">let </span>view = desc.textures[entry.resource_index <span class="kw">as </span>usize].view;
-                    <span class="kw">if </span>view.mip_levels.start != <span class="number">0 </span>|| view.array_layers.start != <span class="number">0 </span>{
-                        <span class="macro">log::error!</span>(<span class="string">&quot;Unable to create a sampled texture binding for non-zero mipmap level or array layer.\n{}&quot;</span>,
+                    <span class="kw">if </span>view.array_layers.start != <span class="number">0 </span>{
+                        <span class="macro">log::error!</span>(<span class="string">&quot;Unable to create a sampled texture binding for non-zero array layer.\n{}&quot;</span>,
                             <span class="string">&quot;This is an implementation problem of wgpu-hal/gles backend.&quot;</span>)
                     }
                     <span class="kw">let </span>(raw, target) = view.inner.as_native();
@@ -2632,6 +2633,7 @@
                         raw,
                         target,
                         aspects: view.aspects,
+                        mip_levels: view.mip_levels.clone(),
                     }
                 }
                 wgt::BindingType::StorageTexture {
