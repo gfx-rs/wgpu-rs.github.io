@@ -718,10 +718,10 @@
 <a href="#718" id="718">718</a>
 <a href="#719" id="719">719</a>
 <a href="#720" id="720">720</a>
-<a href="#721" id="721">721</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{number::consume_number, Error, ExpectedToken};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::NumberError;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::{conv, Number};
+<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Scalar;
 <span class="kw">use </span><span class="kw">crate</span>::Span;
 
 <span class="kw">type </span>TokenSpan&lt;<span class="lifetime">&#39;a</span>&gt; = (Token&lt;<span class="lifetime">&#39;a</span>&gt;, Span);
@@ -1095,9 +1095,7 @@
     }
 
     <span class="doccomment">/// Parses a generic scalar type, for example `&lt;f32&gt;`.
-    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_scalar_generic(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw">crate</span>::ScalarKind, <span class="kw">crate</span>::Bytes), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_scalar_generic(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Scalar, Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
         <span class="self">self</span>.expect_generic_paren(<span class="string">&#39;&lt;&#39;</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>pair = <span class="kw">match </span><span class="self">self</span>.next() {
             (Token::Word(word), span) =&gt; {
@@ -1114,11 +1112,11 @@
     /// Returns the span covering the inner type, excluding the brackets.
     </span><span class="kw">pub</span>(<span class="kw">in </span><span class="kw">crate</span>::front::wgsl) <span class="kw">fn </span>next_scalar_generic_with_span(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(<span class="kw">crate</span>::ScalarKind, <span class="kw">crate</span>::Bytes, Span), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Scalar, Span), Error&lt;<span class="lifetime">&#39;a</span>&gt;&gt; {
         <span class="self">self</span>.expect_generic_paren(<span class="string">&#39;&lt;&#39;</span>)<span class="question-mark">?</span>;
         <span class="kw">let </span>pair = <span class="kw">match </span><span class="self">self</span>.next() {
             (Token::Word(word), span) =&gt; conv::get_scalar_type(word)
-                .map(|(a, b)| (a, b, span))
+                .map(|scalar| (scalar, span))
                 .ok_or(Error::UnknownScalarType(span)),
             (<span class="kw">_</span>, span) =&gt; <span class="prelude-val">Err</span>(Error::UnknownScalarType(span)),
         }<span class="question-mark">?</span>;

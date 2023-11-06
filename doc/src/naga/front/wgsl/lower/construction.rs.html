@@ -1075,13 +1075,13 @@
         ctx: <span class="kw-2">&amp;mut </span>ExpressionContext&lt;<span class="lifetime">&#39;source</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;out</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Constructor&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;&gt;, Error&lt;<span class="lifetime">&#39;source</span>&gt;&gt; {
         <span class="kw">let </span>handle = <span class="kw">match </span><span class="kw-2">*</span>constructor {
-            ast::ConstructorType::Scalar { width, kind } =&gt; {
-                <span class="kw">let </span>ty = ctx.ensure_type_exists(<span class="kw">crate</span>::TypeInner::Scalar { width, kind });
+            ast::ConstructorType::Scalar(scalar) =&gt; {
+                <span class="kw">let </span>ty = ctx.ensure_type_exists(scalar.to_inner_scalar());
                 Constructor::Type(ty)
             }
             ast::ConstructorType::PartialVector { size } =&gt; Constructor::PartialVector { size },
-            ast::ConstructorType::Vector { size, kind, width } =&gt; {
-                <span class="kw">let </span>ty = ctx.ensure_type_exists(<span class="kw">crate</span>::TypeInner::Vector { size, kind, width });
+            ast::ConstructorType::Vector { size, scalar } =&gt; {
+                <span class="kw">let </span>ty = ctx.ensure_type_exists(scalar.to_inner_vector(size));
                 Constructor::Type(ty)
             }
             ast::ConstructorType::PartialMatrix { columns, rows } =&gt; {

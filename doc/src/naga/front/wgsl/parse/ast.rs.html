@@ -489,17 +489,8 @@
 <a href="#489" id="489">489</a>
 <a href="#490" id="490">490</a>
 <a href="#491" id="491">491</a>
-<a href="#492" id="492">492</a>
-<a href="#493" id="493">493</a>
-<a href="#494" id="494">494</a>
-<a href="#495" id="495">495</a>
-<a href="#496" id="496">496</a>
-<a href="#497" id="497">497</a>
-<a href="#498" id="498">498</a>
-<a href="#499" id="499">499</a>
-<a href="#500" id="500">500</a>
-<a href="#501" id="501">501</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::number::Number;
+<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Scalar;
 <span class="kw">use crate</span>::{Arena, FastIndexSet, Handle, Span};
 <span class="kw">use </span>std::hash::Hash;
 
@@ -713,24 +704,17 @@
 
 <span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>Type&lt;<span class="lifetime">&#39;a</span>&gt; {
-    Scalar {
-        kind: <span class="kw">crate</span>::ScalarKind,
-        width: <span class="kw">crate</span>::Bytes,
-    },
+    Scalar(Scalar),
     Vector {
         size: <span class="kw">crate</span>::VectorSize,
-        kind: <span class="kw">crate</span>::ScalarKind,
-        width: <span class="kw">crate</span>::Bytes,
+        scalar: Scalar,
     },
     Matrix {
         columns: <span class="kw">crate</span>::VectorSize,
         rows: <span class="kw">crate</span>::VectorSize,
         width: <span class="kw">crate</span>::Bytes,
     },
-    Atomic {
-        kind: <span class="kw">crate</span>::ScalarKind,
-        width: <span class="kw">crate</span>::Bytes,
-    },
+    Atomic(Scalar),
     Pointer {
         base: Handle&lt;Type&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
         space: <span class="kw">crate</span>::AddressSpace,
@@ -845,10 +829,7 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>ConstructorType&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="doccomment">/// A scalar type or conversion: `f32(1)`.
-    </span>Scalar {
-        kind: <span class="kw">crate</span>::ScalarKind,
-        width: <span class="kw">crate</span>::Bytes,
-    },
+    </span>Scalar(Scalar),
 
     <span class="doccomment">/// A vector construction whose component type is inferred from the
     /// argument: `vec3(1.0)`.
@@ -858,8 +839,7 @@
     /// `vec3&lt;f32&gt;(1.0)`.
     </span>Vector {
         size: <span class="kw">crate</span>::VectorSize,
-        kind: <span class="kw">crate</span>::ScalarKind,
-        width: <span class="kw">crate</span>::Bytes,
+        scalar: Scalar,
     },
 
     <span class="doccomment">/// A matrix construction whose component type is inferred from the

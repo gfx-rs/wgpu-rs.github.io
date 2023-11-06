@@ -708,6 +708,7 @@
 <a href="#708" id="708">708</a>
 <a href="#709" id="709">709</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::lexer::Token;
+<span class="kw">use </span><span class="kw">crate</span>::front::wgsl::Scalar;
 <span class="kw">use </span><span class="kw">crate</span>::proc::{Alignment, ConstantEvaluatorError, ResolveError};
 <span class="kw">use crate</span>::{SourceLocation, Span};
 <span class="kw">use </span>codespan_reporting::diagnostic::{Diagnostic, Label};
@@ -848,7 +849,7 @@
     UnexpectedComponents(Span),
     UnexpectedOperationInConstContext(Span),
     BadNumber(Span, NumberError),
-    BadMatrixScalarKind(Span, <span class="kw">crate</span>::ScalarKind, u8),
+    BadMatrixScalarKind(Span, Scalar),
     BadAccessor(Span),
     BadTexture(Span),
     BadTypeCast {
@@ -858,8 +859,7 @@
     },
     BadTextureSampleType {
         span: Span,
-        kind: <span class="kw">crate</span>::ScalarKind,
-        width: u8,
+        scalar: Scalar,
     },
     BadIncrDecrReferenceType(Span),
     InvalidResolve(ResolveError),
@@ -1013,10 +1013,10 @@
                 labels: <span class="macro">vec!</span>[(bad_span, err.to_string().into())],
                 notes: <span class="macro">vec!</span>[],
             },
-            Error::BadMatrixScalarKind(span, kind, width) =&gt; ParseError {
+            Error::BadMatrixScalarKind(span, scalar) =&gt; ParseError {
                 message: <span class="macro">format!</span>(
                     <span class="string">&quot;matrix scalar type must be floating-point, but found `{}`&quot;</span>,
-                    kind.to_wgsl(width)
+                    scalar.to_wgsl()
                 ),
                 labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;must be floating-point (e.g. `f32`)&quot;</span>.into())],
                 notes: <span class="macro">vec!</span>[],
@@ -1036,10 +1036,10 @@
                 labels: <span class="macro">vec!</span>[(bad_span, <span class="string">&quot;unknown scalar type&quot;</span>.into())],
                 notes: <span class="macro">vec!</span>[<span class="string">&quot;Valid scalar types are f32, f64, i32, u32, bool&quot;</span>.into()],
             },
-            Error::BadTextureSampleType { span, kind, width } =&gt; ParseError {
+            Error::BadTextureSampleType { span, scalar } =&gt; ParseError {
                 message: <span class="macro">format!</span>(
                     <span class="string">&quot;texture sample type must be one of f32, i32 or u32, but found {}&quot;</span>,
-                    kind.to_wgsl(width)
+                    scalar.to_wgsl()
                 ),
                 labels: <span class="macro">vec!</span>[(span, <span class="string">&quot;must be one of f32, i32 or u32&quot;</span>.into())],
                 notes: <span class="macro">vec!</span>[],

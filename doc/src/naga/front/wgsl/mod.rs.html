@@ -301,6 +301,43 @@
 <a href="#301" id="301">301</a>
 <a href="#302" id="302">302</a>
 <a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Frontend for [WGSL][wgsl] (WebGPU Shading Language).
 
@@ -407,9 +444,10 @@ Frontend for [WGSL][wgsl] (WebGPU Shading Language).
         <span class="kw">use </span><span class="kw">crate</span>::TypeInner <span class="kw">as </span>Ti;
 
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            Ti::Scalar { kind, width } =&gt; kind.to_wgsl(width),
+            Ti::Scalar { kind, width } =&gt; Scalar { kind, width }.to_wgsl(),
             Ti::Vector { size, kind, width } =&gt; {
-                <span class="macro">format!</span>(<span class="string">&quot;vec{}&lt;{}&gt;&quot;</span>, size <span class="kw">as </span>u32, kind.to_wgsl(width))
+                <span class="kw">let </span>scalar = Scalar { kind, width };
+                <span class="macro">format!</span>(<span class="string">&quot;vec{}&lt;{}&gt;&quot;</span>, size <span class="kw">as </span>u32, scalar.to_wgsl())
             }
             Ti::Matrix {
                 columns,
@@ -420,11 +458,15 @@ Frontend for [WGSL][wgsl] (WebGPU Shading Language).
                     <span class="string">&quot;mat{}x{}&lt;{}&gt;&quot;</span>,
                     columns <span class="kw">as </span>u32,
                     rows <span class="kw">as </span>u32,
-                    <span class="kw">crate</span>::ScalarKind::Float.to_wgsl(width),
+                    Scalar {
+                        kind: <span class="kw">crate</span>::ScalarKind::Float,
+                        width
+                    }
+                    .to_wgsl(),
                 )
             }
             Ti::Atomic { kind, width } =&gt; {
-                <span class="macro">format!</span>(<span class="string">&quot;atomic&lt;{}&gt;&quot;</span>, kind.to_wgsl(width))
+                <span class="macro">format!</span>(<span class="string">&quot;atomic&lt;{}&gt;&quot;</span>, Scalar { kind, width }.to_wgsl())
             }
             Ti::Pointer { base, .. } =&gt; {
                 <span class="kw">let </span>base = <span class="kw-2">&amp;</span>gctx.types[base];
@@ -432,7 +474,7 @@ Frontend for [WGSL][wgsl] (WebGPU Shading Language).
                 <span class="macro">format!</span>(<span class="string">&quot;ptr&lt;{name}&gt;&quot;</span>)
             }
             Ti::ValuePointer { kind, width, .. } =&gt; {
-                <span class="macro">format!</span>(<span class="string">&quot;ptr&lt;{}&gt;&quot;</span>, kind.to_wgsl(width))
+                <span class="macro">format!</span>(<span class="string">&quot;ptr&lt;{}&gt;&quot;</span>, Scalar { kind, width }.to_wgsl())
             }
             Ti::Array { base, size, .. } =&gt; {
                 <span class="kw">let </span>member_type = <span class="kw-2">&amp;</span>gctx.types[base];
@@ -472,7 +514,7 @@ Frontend for [WGSL][wgsl] (WebGPU Shading Language).
                         <span class="comment">// Note: The only valid widths are 4 bytes wide.
                         // The lexer has already verified this, so we can safely assume it here.
                         // https://gpuweb.github.io/gpuweb/wgsl/#sampled-texture-type
-                        </span><span class="kw">let </span>element_type = kind.to_wgsl(<span class="number">4</span>);
+                        </span><span class="kw">let </span>element_type = Scalar { kind, width: <span class="number">4 </span>}.to_wgsl();
                         <span class="macro">format!</span>(<span class="string">&quot;&lt;{element_type}&gt;&quot;</span>)
                     }
                     <span class="kw">crate</span>::ImageClass::Depth { multi: <span class="kw">_ </span>} =&gt; String::new(),
@@ -590,18 +632,50 @@ Frontend for [WGSL][wgsl] (WebGPU Shading Language).
     }
 }
 
-<span class="kw">impl </span><span class="kw">crate</span>::ScalarKind {
+<span class="doccomment">/// Characteristics of a scalar type.
+</span><span class="attr">#[derive(Clone, Copy, Debug)]
+</span><span class="kw">pub struct </span>Scalar {
+    <span class="doccomment">/// How the value&#39;s bits are to be interpreted.
+    </span><span class="kw">pub </span>kind: <span class="kw">crate</span>::ScalarKind,
+
+    <span class="doccomment">/// The size of the value in bytes.
+    </span><span class="kw">pub </span>width: <span class="kw">crate</span>::Bytes,
+}
+
+<span class="kw">impl </span>Scalar {
     <span class="doccomment">/// Format a scalar kind+width as a type is written in wgsl.
     ///
     /// Examples: `f32`, `u64`, `bool`.
-    </span><span class="kw">fn </span>to_wgsl(<span class="self">self</span>, width: u8) -&gt; String {
-        <span class="kw">let </span>prefix = <span class="kw">match </span><span class="self">self </span>{
+    </span><span class="kw">fn </span>to_wgsl(<span class="self">self</span>) -&gt; String {
+        <span class="kw">let </span>prefix = <span class="kw">match </span><span class="self">self</span>.kind {
             <span class="kw">crate</span>::ScalarKind::Sint =&gt; <span class="string">&quot;i&quot;</span>,
             <span class="kw">crate</span>::ScalarKind::Uint =&gt; <span class="string">&quot;u&quot;</span>,
             <span class="kw">crate</span>::ScalarKind::Float =&gt; <span class="string">&quot;f&quot;</span>,
             <span class="kw">crate</span>::ScalarKind::Bool =&gt; <span class="kw">return </span><span class="string">&quot;bool&quot;</span>.to_string(),
         };
-        <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, prefix, width * <span class="number">8</span>)
+        <span class="macro">format!</span>(<span class="string">&quot;{}{}&quot;</span>, prefix, <span class="self">self</span>.width * <span class="number">8</span>)
+    }
+
+    <span class="kw">const fn </span>to_inner_scalar(<span class="self">self</span>) -&gt; <span class="kw">crate</span>::TypeInner {
+        <span class="kw">crate</span>::TypeInner::Scalar {
+            kind: <span class="self">self</span>.kind,
+            width: <span class="self">self</span>.width,
+        }
+    }
+
+    <span class="kw">const fn </span>to_inner_vector(<span class="self">self</span>, size: <span class="kw">crate</span>::VectorSize) -&gt; <span class="kw">crate</span>::TypeInner {
+        <span class="kw">crate</span>::TypeInner::Vector {
+            size,
+            kind: <span class="self">self</span>.kind,
+            width: <span class="self">self</span>.width,
+        }
+    }
+
+    <span class="kw">const fn </span>to_inner_atomic(<span class="self">self</span>) -&gt; <span class="kw">crate</span>::TypeInner {
+        <span class="kw">crate</span>::TypeInner::Atomic {
+            kind: <span class="self">self</span>.kind,
+            width: <span class="self">self</span>.width,
+        }
     }
 }
 </code></pre></div></section></main></body></html>
