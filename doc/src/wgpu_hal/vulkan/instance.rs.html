@@ -970,6 +970,30 @@
 <a href="#970" id="970">970</a>
 <a href="#971" id="971">971</a>
 <a href="#972" id="972">972</a>
+<a href="#973" id="973">973</a>
+<a href="#974" id="974">974</a>
+<a href="#975" id="975">975</a>
+<a href="#976" id="976">976</a>
+<a href="#977" id="977">977</a>
+<a href="#978" id="978">978</a>
+<a href="#979" id="979">979</a>
+<a href="#980" id="980">980</a>
+<a href="#981" id="981">981</a>
+<a href="#982" id="982">982</a>
+<a href="#983" id="983">983</a>
+<a href="#984" id="984">984</a>
+<a href="#985" id="985">985</a>
+<a href="#986" id="986">986</a>
+<a href="#987" id="987">987</a>
+<a href="#988" id="988">988</a>
+<a href="#989" id="989">989</a>
+<a href="#990" id="990">990</a>
+<a href="#991" id="991">991</a>
+<a href="#992" id="992">992</a>
+<a href="#993" id="993">993</a>
+<a href="#994" id="994">994</a>
+<a href="#995" id="995">995</a>
+<a href="#996" id="996">996</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{
     ffi::{c_void, CStr, CString},
     slice,
@@ -1123,6 +1147,17 @@
     vk::FALSE
 }
 
+<span class="kw">impl </span><span class="kw">super</span>::DebugUtilsCreateInfo {
+    <span class="kw">fn </span>to_vk_create_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; vk::DebugUtilsMessengerCreateInfoEXTBuilder&lt;<span class="lifetime">&#39;_</span>&gt; {
+        <span class="kw">let </span>user_data_ptr: <span class="kw-2">*const </span><span class="kw">super</span>::DebugUtilsMessengerUserData = <span class="kw-2">&amp;*</span><span class="self">self</span>.callback_data;
+        vk::DebugUtilsMessengerCreateInfoEXT::builder()
+            .message_severity(<span class="self">self</span>.severity)
+            .message_type(<span class="self">self</span>.message_type)
+            .user_data(user_data_ptr <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>)
+            .pfn_user_callback(<span class="prelude-val">Some</span>(debug_utils_messenger_callback))
+    }
+}
+
 <span class="kw">impl </span><span class="kw">super</span>::Swapchain {
     <span class="doccomment">/// # Safety
     ///
@@ -1269,7 +1304,7 @@
         raw_instance: ash::Instance,
         instance_api_version: u32,
         android_sdk_version: u32,
-        debug_utils_user_data: <span class="prelude-ty">Option</span>&lt;<span class="kw">super</span>::DebugUtilsMessengerUserData&gt;,
+        debug_utils_create_info: <span class="prelude-ty">Option</span>&lt;<span class="kw">super</span>::DebugUtilsCreateInfo&gt;,
         extensions: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr&gt;,
         flags: wgt::InstanceFlags,
         has_nv_optimus: bool,
@@ -1277,42 +1312,19 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="kw">crate</span>::InstanceError&gt; {
         <span class="macro">log::info!</span>(<span class="string">&quot;Instance version: 0x{:x}&quot;</span>, instance_api_version);
 
-        <span class="kw">let </span>debug_utils = <span class="kw">if let </span><span class="prelude-val">Some</span>(debug_callback_user_data) = debug_utils_user_data {
+        <span class="kw">let </span>debug_utils = <span class="kw">if let </span><span class="prelude-val">Some</span>(debug_utils_create_info) = debug_utils_create_info {
             <span class="kw">if </span>extensions.contains(<span class="kw-2">&amp;</span>ext::DebugUtils::name()) {
                 <span class="macro">log::info!</span>(<span class="string">&quot;Enabling debug utils&quot;</span>);
-                <span class="comment">// Move the callback data to the heap, to ensure it will never be
-                // moved.
-                </span><span class="kw">let </span>callback_data = Box::new(debug_callback_user_data);
 
                 <span class="kw">let </span>extension = ext::DebugUtils::new(<span class="kw-2">&amp;</span>entry, <span class="kw-2">&amp;</span>raw_instance);
-                <span class="comment">// having ERROR unconditionally because Vk doesn&#39;t like empty flags
-                </span><span class="kw">let </span><span class="kw-2">mut </span>severity = vk::DebugUtilsMessageSeverityFlagsEXT::ERROR;
-                <span class="kw">if </span>log::max_level() &gt;= log::LevelFilter::Debug {
-                    severity |= vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE;
-                }
-                <span class="kw">if </span>log::max_level() &gt;= log::LevelFilter::Info {
-                    severity |= vk::DebugUtilsMessageSeverityFlagsEXT::INFO;
-                }
-                <span class="kw">if </span>log::max_level() &gt;= log::LevelFilter::Warn {
-                    severity |= vk::DebugUtilsMessageSeverityFlagsEXT::WARNING;
-                }
-                <span class="kw">let </span>user_data_ptr: <span class="kw-2">*const </span><span class="kw">super</span>::DebugUtilsMessengerUserData = <span class="kw-2">&amp;*</span>callback_data;
-                <span class="kw">let </span>vk_info = vk::DebugUtilsMessengerCreateInfoEXT::builder()
-                    .flags(vk::DebugUtilsMessengerCreateFlagsEXT::empty())
-                    .message_severity(severity)
-                    .message_type(
-                        vk::DebugUtilsMessageTypeFlagsEXT::GENERAL
-                            | vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION
-                            | vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE,
-                    )
-                    .pfn_user_callback(<span class="prelude-val">Some</span>(debug_utils_messenger_callback))
-                    .user_data(user_data_ptr <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>);
+                <span class="kw">let </span>vk_info = debug_utils_create_info.to_vk_create_info();
                 <span class="kw">let </span>messenger =
                     <span class="kw">unsafe </span>{ extension.create_debug_utils_messenger(<span class="kw-2">&amp;</span>vk_info, <span class="prelude-val">None</span>) }.unwrap();
+
                 <span class="prelude-val">Some</span>(<span class="kw">super</span>::DebugUtils {
                     extension,
                     messenger,
-                    callback_data,
+                    callback_data: debug_utils_create_info.callback_data,
                 })
             } <span class="kw">else </span>{
                 <span class="macro">log::info!</span>(<span class="string">&quot;Debug utils not enabled: extension not listed&quot;</span>);
@@ -1531,10 +1543,12 @@
 <span class="kw">impl </span>Drop <span class="kw">for </span><span class="kw">super</span>::InstanceShared {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">unsafe </span>{
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(du) = <span class="self">self</span>.debug_utils.take() {
+            <span class="comment">// Keep du alive since destroy_instance may also log
+            </span><span class="kw">let </span>_du = <span class="self">self</span>.debug_utils.take().map(|du| {
                 du.extension
                     .destroy_debug_utils_messenger(du.messenger, <span class="prelude-val">None</span>);
-            }
+                du
+            });
             <span class="kw">if let </span><span class="prelude-val">Some</span>(_drop_guard) = <span class="self">self</span>.drop_guard.take() {
                 <span class="self">self</span>.raw.destroy_instance(<span class="prelude-val">None</span>);
             }
@@ -1625,21 +1639,52 @@
         <span class="kw">let </span><span class="kw-2">mut </span>layers: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>CStr&gt; = Vec::new();
 
         <span class="comment">// Request validation layer if asked.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>debug_callback_user_data = <span class="prelude-val">None</span>;
-        <span class="kw">if </span>desc.flags.contains(wgt::InstanceFlags::VALIDATION) {
+        </span><span class="kw">let </span><span class="kw-2">mut </span>debug_utils = <span class="prelude-val">None</span>;
+        <span class="kw">if </span>desc.flags.intersects(wgt::InstanceFlags::VALIDATION) {
             <span class="kw">let </span>validation_layer_name =
                 CStr::from_bytes_with_nul(<span class="string">b&quot;VK_LAYER_KHRONOS_validation\0&quot;</span>).unwrap();
             <span class="kw">if let </span><span class="prelude-val">Some</span>(layer_properties) = find_layer(<span class="kw-2">&amp;</span>instance_layers, validation_layer_name) {
                 layers.push(validation_layer_name);
-                debug_callback_user_data = <span class="prelude-val">Some</span>(<span class="kw">super</span>::DebugUtilsMessengerUserData {
-                    validation_layer_description: cstr_from_bytes_until_nul(
-                        <span class="kw-2">&amp;</span>layer_properties.description,
-                    )
-                    .unwrap()
-                    .to_owned(),
-                    validation_layer_spec_version: layer_properties.spec_version,
-                    has_obs_layer,
-                });
+
+                <span class="kw">if </span>extensions.contains(<span class="kw-2">&amp;</span>ext::DebugUtils::name()) {
+                    <span class="comment">// Put the callback data on the heap, to ensure it will never be
+                    // moved.
+                    </span><span class="kw">let </span>callback_data = Box::new(<span class="kw">super</span>::DebugUtilsMessengerUserData {
+                        validation_layer_description: cstr_from_bytes_until_nul(
+                            <span class="kw-2">&amp;</span>layer_properties.description,
+                        )
+                        .unwrap()
+                        .to_owned(),
+                        validation_layer_spec_version: layer_properties.spec_version,
+                        has_obs_layer,
+                    });
+
+                    <span class="comment">// having ERROR unconditionally because Vk doesn&#39;t like empty flags
+                    </span><span class="kw">let </span><span class="kw-2">mut </span>severity = vk::DebugUtilsMessageSeverityFlagsEXT::ERROR;
+                    <span class="kw">if </span>log::max_level() &gt;= log::LevelFilter::Debug {
+                        severity |= vk::DebugUtilsMessageSeverityFlagsEXT::VERBOSE;
+                    }
+                    <span class="kw">if </span>log::max_level() &gt;= log::LevelFilter::Info {
+                        severity |= vk::DebugUtilsMessageSeverityFlagsEXT::INFO;
+                    }
+                    <span class="kw">if </span>log::max_level() &gt;= log::LevelFilter::Warn {
+                        severity |= vk::DebugUtilsMessageSeverityFlagsEXT::WARNING;
+                    }
+
+                    <span class="kw">let </span>message_type = vk::DebugUtilsMessageTypeFlagsEXT::GENERAL
+                        | vk::DebugUtilsMessageTypeFlagsEXT::VALIDATION
+                        | vk::DebugUtilsMessageTypeFlagsEXT::PERFORMANCE;
+
+                    <span class="kw">let </span>create_info = <span class="kw">super</span>::DebugUtilsCreateInfo {
+                        severity,
+                        message_type,
+                        callback_data,
+                    };
+
+                    <span class="kw">let </span>vk_create_info = create_info.to_vk_create_info().build();
+
+                    debug_utils = <span class="prelude-val">Some</span>((create_info, vk_create_info));
+                }
             } <span class="kw">else </span>{
                 <span class="macro">log::warn!</span>(
                     <span class="string">&quot;InstanceFlags::VALIDATION requested, but unable to find layer: {}&quot;</span>,
@@ -1678,22 +1723,25 @@
         </span><span class="kw">if </span>extensions.contains(<span class="kw-2">&amp;</span>ash::vk::KhrPortabilityEnumerationFn::name()) {
             flags |= vk::InstanceCreateFlags::ENUMERATE_PORTABILITY_KHR;
         }
-
         <span class="kw">let </span>vk_instance = {
             <span class="kw">let </span>str_pointers = layers
                 .iter()
                 .chain(extensions.iter())
-                .map(|<span class="kw-2">&amp;</span>s| {
+                .map(|<span class="kw-2">&amp;</span>s: &amp;&amp;<span class="lifetime">&#39;static </span><span class="kw">_</span>| {
                     <span class="comment">// Safe because `layers` and `extensions` entries have static lifetime.
                     </span>s.as_ptr()
                 })
                 .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-            <span class="kw">let </span>create_info = vk::InstanceCreateInfo::builder()
+            <span class="kw">let </span><span class="kw-2">mut </span>create_info = vk::InstanceCreateInfo::builder()
                 .flags(flags)
                 .application_info(<span class="kw-2">&amp;</span>app_info)
                 .enabled_layer_names(<span class="kw-2">&amp;</span>str_pointers[..layers.len()])
                 .enabled_extension_names(<span class="kw-2">&amp;</span>str_pointers[layers.len()..]);
+
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>(<span class="kw">_</span>, <span class="kw-2">ref mut </span>vk_create_info)) = debug_utils.as_mut() {
+                create_info = create_info.push_next(vk_create_info);
+            }
 
             <span class="kw">unsafe </span>{
                 <span class="macro">profiling::scope!</span>(<span class="string">&quot;vkCreateInstance&quot;</span>);
@@ -1713,7 +1761,7 @@
                 vk_instance,
                 instance_api_version,
                 android_sdk_version,
-                debug_callback_user_data,
+                debug_utils.map(|(i, <span class="kw">_</span>)| i),
                 extensions,
                 desc.flags,
                 has_nv_optimus,
