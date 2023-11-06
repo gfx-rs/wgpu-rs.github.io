@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["ComparisonType","ShaderStage"],"fn":["cast_slice","run"],"struct":["ExampleTestParams"],"trait":["Example"]};
+window.SIDEBAR_ITEMS = {"enum":["ComparisonType"],"fn":["run"],"struct":["ExampleTestParams"],"trait":["Example"]};
