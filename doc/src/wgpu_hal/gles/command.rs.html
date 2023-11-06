@@ -1093,6 +1093,55 @@
 <a href="#1093" id="1093">1093</a>
 <a href="#1094" id="1094">1094</a>
 <a href="#1095" id="1095">1095</a>
+<a href="#1096" id="1096">1096</a>
+<a href="#1097" id="1097">1097</a>
+<a href="#1098" id="1098">1098</a>
+<a href="#1099" id="1099">1099</a>
+<a href="#1100" id="1100">1100</a>
+<a href="#1101" id="1101">1101</a>
+<a href="#1102" id="1102">1102</a>
+<a href="#1103" id="1103">1103</a>
+<a href="#1104" id="1104">1104</a>
+<a href="#1105" id="1105">1105</a>
+<a href="#1106" id="1106">1106</a>
+<a href="#1107" id="1107">1107</a>
+<a href="#1108" id="1108">1108</a>
+<a href="#1109" id="1109">1109</a>
+<a href="#1110" id="1110">1110</a>
+<a href="#1111" id="1111">1111</a>
+<a href="#1112" id="1112">1112</a>
+<a href="#1113" id="1113">1113</a>
+<a href="#1114" id="1114">1114</a>
+<a href="#1115" id="1115">1115</a>
+<a href="#1116" id="1116">1116</a>
+<a href="#1117" id="1117">1117</a>
+<a href="#1118" id="1118">1118</a>
+<a href="#1119" id="1119">1119</a>
+<a href="#1120" id="1120">1120</a>
+<a href="#1121" id="1121">1121</a>
+<a href="#1122" id="1122">1122</a>
+<a href="#1123" id="1123">1123</a>
+<a href="#1124" id="1124">1124</a>
+<a href="#1125" id="1125">1125</a>
+<a href="#1126" id="1126">1126</a>
+<a href="#1127" id="1127">1127</a>
+<a href="#1128" id="1128">1128</a>
+<a href="#1129" id="1129">1129</a>
+<a href="#1130" id="1130">1130</a>
+<a href="#1131" id="1131">1131</a>
+<a href="#1132" id="1132">1132</a>
+<a href="#1133" id="1133">1133</a>
+<a href="#1134" id="1134">1134</a>
+<a href="#1135" id="1135">1135</a>
+<a href="#1136" id="1136">1136</a>
+<a href="#1137" id="1137">1137</a>
+<a href="#1138" id="1138">1138</a>
+<a href="#1139" id="1139">1139</a>
+<a href="#1140" id="1140">1140</a>
+<a href="#1141" id="1141">1141</a>
+<a href="#1142" id="1142">1142</a>
+<a href="#1143" id="1143">1143</a>
+<a href="#1144" id="1144">1144</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, Command <span class="kw">as </span>C};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>std::{mem, ops::Range};
@@ -1103,8 +1152,7 @@
     sampler_index: <span class="prelude-ty">Option</span>&lt;u8&gt;,
 }
 
-<span class="attr">#[derive(Default)]
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>State {
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>State {
     topology: u32,
     primitive: <span class="kw">super</span>::PrimitiveState,
     index_format: wgt::IndexFormat,
@@ -1125,8 +1173,39 @@
     instance_vbuf_mask: usize,
     dirty_vbuf_mask: usize,
     active_first_instance: u32,
-    push_offset_to_uniform: ArrayVec&lt;<span class="kw">super</span>::UniformDesc, { <span class="kw">super</span>::MAX_PUSH_CONSTANTS }&gt;,
+    push_constant_descs: ArrayVec&lt;<span class="kw">super</span>::PushConstantDesc, { <span class="kw">super</span>::MAX_PUSH_CONSTANT_COMMANDS }&gt;,
+    <span class="comment">// The current state of the push constant data block.
+    </span>current_push_constant_data: [u32; <span class="kw">super</span>::MAX_PUSH_CONSTANTS],
     end_of_pass_timestamp: <span class="prelude-ty">Option</span>&lt;glow::Query&gt;,
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>State {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            topology: Default::default(),
+            primitive: Default::default(),
+            index_format: Default::default(),
+            index_offset: Default::default(),
+            vertex_buffers: Default::default(),
+            vertex_attributes: Default::default(),
+            color_targets: Default::default(),
+            stencil: Default::default(),
+            depth_bias: Default::default(),
+            alpha_to_coverage_enabled: Default::default(),
+            samplers: Default::default(),
+            texture_slots: Default::default(),
+            render_size: Default::default(),
+            resolve_attachments: Default::default(),
+            invalidate_attachments: Default::default(),
+            has_pass_label: Default::default(),
+            instance_vbuf_mask: Default::default(),
+            dirty_vbuf_mask: Default::default(),
+            active_first_instance: Default::default(),
+            push_constant_descs: Default::default(),
+            current_push_constant_data: [<span class="number">0</span>; <span class="kw">super</span>::MAX_PUSH_CONSTANTS],
+            end_of_pass_timestamp: Default::default(),
+        }
+    }
 }
 
 <span class="kw">impl </span><span class="kw">super</span>::CommandBuffer {
@@ -1271,10 +1350,7 @@
     <span class="kw">fn </span>set_pipeline_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>, inner: <span class="kw-2">&amp;</span><span class="kw">super</span>::PipelineInner) {
         <span class="self">self</span>.cmd_buffer.commands.push(C::SetProgram(inner.program));
 
-        <span class="self">self</span>.state.push_offset_to_uniform.clear();
-        <span class="self">self</span>.state
-            .push_offset_to_uniform
-            .extend(inner.uniforms.iter().cloned());
+        <span class="self">self</span>.state.push_constant_descs = inner.push_constant_descs.clone();
 
         <span class="comment">// rebind textures, if needed
         </span><span class="kw">let </span><span class="kw-2">mut </span>dirty_textures = <span class="number">0u32</span>;
@@ -1824,24 +1900,46 @@
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         _layout: <span class="kw-2">&amp;</span><span class="kw">super</span>::PipelineLayout,
         _stages: wgt::ShaderStages,
-        start_offset: u32,
+        offset_bytes: u32,
         data: <span class="kw-2">&amp;</span>[u32],
     ) {
-        <span class="kw">let </span>range = <span class="self">self</span>.cmd_buffer.add_push_constant_data(data);
+        <span class="comment">// There is nothing preventing the user from trying to update a single value within
+        // a vector or matrix in the set_push_constant call, as to the user, all of this is
+        // just memory. However OpenGL does not allow parital uniform updates.
+        //
+        // As such, we locally keep a copy of the current state of the push constant memory
+        // block. If the user tries to update a single value, we have the data to update the entirety
+        // of the uniform.
+        </span><span class="kw">let </span>start_words = offset_bytes / <span class="number">4</span>;
+        <span class="kw">let </span>end_words = start_words + data.len() <span class="kw">as </span>u32;
+        <span class="self">self</span>.state.current_push_constant_data[start_words <span class="kw">as </span>usize..end_words <span class="kw">as </span>usize]
+            .copy_from_slice(data);
 
-        <span class="kw">let </span>end = start_offset + data.len() <span class="kw">as </span>u32 * <span class="number">4</span>;
-        <span class="kw">let </span><span class="kw-2">mut </span>offset = start_offset;
-        <span class="kw">while </span>offset &lt; end {
-            <span class="kw">let </span>uniform = <span class="self">self</span>.state.push_offset_to_uniform[offset <span class="kw">as </span>usize / <span class="number">4</span>].clone();
-            <span class="kw">let </span>size = uniform.size;
-            <span class="kw">if </span>uniform.location.is_none() {
-                <span class="macro">panic!</span>(<span class="string">&quot;No uniform for push constant&quot;</span>);
+        <span class="comment">// We iterate over the uniform list as there may be multiple uniforms that need
+        // updating from the same push constant memory (one for each shader stage).
+        //
+        // Additionally, any statically unused uniform descs will have been removed from this list
+        // by OpenGL, so the uniform list is not contiguous.
+        </span><span class="kw">for </span>uniform <span class="kw">in </span><span class="self">self</span>.state.push_constant_descs.iter().cloned() {
+            <span class="kw">let </span>uniform_size_words = uniform.size_bytes / <span class="number">4</span>;
+            <span class="kw">let </span>uniform_start_words = uniform.offset / <span class="number">4</span>;
+            <span class="kw">let </span>uniform_end_words = uniform_start_words + uniform_size_words;
+
+            <span class="comment">// Is true if any word within the uniform binding was updated
+            </span><span class="kw">let </span>needs_updating =
+                start_words &lt; uniform_end_words || uniform_start_words &lt;= end_words;
+
+            <span class="kw">if </span>needs_updating {
+                <span class="kw">let </span>uniform_data = <span class="kw-2">&amp;</span><span class="self">self</span>.state.current_push_constant_data
+                    [uniform_start_words <span class="kw">as </span>usize..uniform_end_words <span class="kw">as </span>usize];
+
+                <span class="kw">let </span>range = <span class="self">self</span>.cmd_buffer.add_push_constant_data(uniform_data);
+
+                <span class="self">self</span>.cmd_buffer.commands.push(C::SetPushConstants {
+                    uniform,
+                    offset: range.start,
+                });
             }
-            <span class="self">self</span>.cmd_buffer.commands.push(C::SetPushConstants {
-                uniform,
-                offset: range.start + offset,
-            });
-            offset += size;
         }
     }
 

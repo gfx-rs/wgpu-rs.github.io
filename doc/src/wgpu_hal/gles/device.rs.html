@@ -1464,6 +1464,13 @@
 <a href="#1464" id="1464">1464</a>
 <a href="#1465" id="1465">1465</a>
 <a href="#1466" id="1466">1466</a>
+<a href="#1467" id="1467">1467</a>
+<a href="#1468" id="1468">1468</a>
+<a href="#1469" id="1469">1469</a>
+<a href="#1470" id="1470">1470</a>
+<a href="#1471" id="1471">1471</a>
+<a href="#1472" id="1472">1472</a>
+<a href="#1473" id="1473">1473</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PrivateCapabilities};
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -1489,6 +1496,7 @@
     layout: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">super</span>::PipelineLayout,
     sampler_map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="kw">super</span>::SamplerBindMap,
     name_binding_map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>NameBindingMap,
+    push_constant_items: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Vec&lt;naga::back::glsl::PushConstantItem&gt;,
     multiview: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU32&gt;,
 }
 
@@ -1519,7 +1527,7 @@
                 <span class="prelude-val">Some</span>(name) =&gt; name.clone(),
                 <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
             };
-            <span class="macro">log::debug!</span>(
+            <span class="macro">log::trace!</span>(
                 <span class="string">&quot;Rebind buffer: {:?} -&gt; {}, register={:?}, slot={}&quot;</span>,
                 var.name.as_ref(),
                 <span class="kw-2">&amp;</span>name,
@@ -1567,6 +1575,8 @@
                 naga::ShaderStage::Compute =&gt; {}
             }
         }
+
+        <span class="kw-2">*</span><span class="self">self</span>.push_constant_items = reflection_info.push_constant_items;
     }
 }
 
@@ -1745,7 +1755,7 @@
     <span class="kw">unsafe fn </span>create_pipeline&lt;<span class="lifetime">&#39;a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         gl: <span class="kw-2">&amp;</span>glow::Context,
-        shaders: ArrayVec&lt;ShaderStage&lt;<span class="lifetime">&#39;a</span>&gt;, <span class="number">3</span>&gt;,
+        shaders: ArrayVec&lt;ShaderStage&lt;<span class="lifetime">&#39;a</span>&gt;, { <span class="kw">crate</span>::MAX_CONCURRENT_SHADER_STAGES }&gt;,
         layout: <span class="kw-2">&amp;</span><span class="kw">super</span>::PipelineLayout,
         <span class="attr">#[cfg_attr(target_arch = <span class="string">&quot;wasm32&quot;</span>, allow(unused))] </span>label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         multiview: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU32&gt;,
@@ -1793,7 +1803,7 @@
 
     <span class="kw">unsafe fn </span>create_program&lt;<span class="lifetime">&#39;a</span>&gt;(
         gl: <span class="kw-2">&amp;</span>glow::Context,
-        shaders: ArrayVec&lt;ShaderStage&lt;<span class="lifetime">&#39;a</span>&gt;, <span class="number">3</span>&gt;,
+        shaders: ArrayVec&lt;ShaderStage&lt;<span class="lifetime">&#39;a</span>&gt;, { <span class="kw">crate</span>::MAX_CONCURRENT_SHADER_STAGES }&gt;,
         layout: <span class="kw-2">&amp;</span><span class="kw">super</span>::PipelineLayout,
         <span class="attr">#[cfg_attr(target_arch = <span class="string">&quot;wasm32&quot;</span>, allow(unused))] </span>label: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;,
         multiview: <span class="prelude-ty">Option</span>&lt;std::num::NonZeroU32&gt;,
@@ -1814,16 +1824,22 @@
         }
 
         <span class="kw">let </span><span class="kw-2">mut </span>name_binding_map = NameBindingMap::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>push_constant_items = ArrayVec::&lt;<span class="kw">_</span>, { <span class="kw">crate</span>::MAX_CONCURRENT_SHADER_STAGES }&gt;::new();
         <span class="kw">let </span><span class="kw-2">mut </span>sampler_map = [<span class="prelude-val">None</span>; <span class="kw">super</span>::MAX_TEXTURE_SLOTS];
         <span class="kw">let </span><span class="kw-2">mut </span>has_stages = wgt::ShaderStages::empty();
-        <span class="kw">let </span><span class="kw-2">mut </span>shaders_to_delete = arrayvec::ArrayVec::&lt;<span class="kw">_</span>, <span class="number">3</span>&gt;::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>shaders_to_delete = ArrayVec::&lt;<span class="kw">_</span>, { <span class="kw">crate</span>::MAX_CONCURRENT_SHADER_STAGES }&gt;::new();
 
-        <span class="kw">for </span>(naga_stage, stage) <span class="kw">in </span>shaders {
+        <span class="kw">for </span><span class="kw-2">&amp;</span>(naga_stage, stage) <span class="kw">in </span><span class="kw-2">&amp;</span>shaders {
             has_stages |= map_naga_stage(naga_stage);
+            <span class="kw">let </span>pc_item = {
+                push_constant_items.push(Vec::new());
+                push_constant_items.last_mut().unwrap()
+            };
             <span class="kw">let </span>context = CompilationContext {
                 layout,
                 sampler_map: <span class="kw-2">&amp;mut </span>sampler_map,
                 name_binding_map: <span class="kw-2">&amp;mut </span>name_binding_map,
+                push_constant_items: pc_item,
                 multiview,
             };
 
@@ -1875,6 +1891,7 @@
                 <span class="kw">match </span>register {
                     <span class="kw">super</span>::BindingRegister::UniformBuffers =&gt; {
                         <span class="kw">let </span>index = <span class="kw">unsafe </span>{ gl.get_uniform_block_index(program, name) }.unwrap();
+                        <span class="macro">log::trace!</span>(<span class="string">&quot;\tBinding slot {slot} to block index {index}&quot;</span>);
                         <span class="kw">unsafe </span>{ gl.uniform_block_binding(program, index, slot <span class="kw">as _</span>) };
                     }
                     <span class="kw">super</span>::BindingRegister::StorageBuffers =&gt; {
@@ -1895,41 +1912,38 @@
             }
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>uniforms: [<span class="kw">super</span>::UniformDesc; <span class="kw">super</span>::MAX_PUSH_CONSTANTS] =
-            [<span class="prelude-val">None</span>; <span class="kw">super</span>::MAX_PUSH_CONSTANTS].map(|<span class="kw">_</span>: <span class="prelude-ty">Option</span>&lt;()&gt;| Default::default());
-        <span class="kw">let </span>count = <span class="kw">unsafe </span>{ gl.get_active_uniforms(program) };
-        <span class="kw">let </span><span class="kw-2">mut </span>offset = <span class="number">0</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>uniforms = ArrayVec::new();
 
-        <span class="kw">for </span>uniform <span class="kw">in </span><span class="number">0</span>..count {
-            <span class="kw">let </span>glow::ActiveUniform { utype, name, .. } =
-                <span class="kw">unsafe </span>{ gl.get_active_uniform(program, uniform) }.unwrap();
+        <span class="kw">for </span>(stage_idx, stage_items) <span class="kw">in </span>push_constant_items.into_iter().enumerate() {
+            <span class="kw">for </span>item <span class="kw">in </span>stage_items {
+                <span class="kw">let </span>naga_module = <span class="kw-2">&amp;</span>shaders[stage_idx].<span class="number">1</span>.module.naga.module;
+                <span class="kw">let </span>type_inner = <span class="kw-2">&amp;</span>naga_module.types[item.ty].inner;
 
-            <span class="kw">if </span>conv::is_opaque_type(utype) {
-                <span class="kw">continue</span>;
-            }
+                <span class="kw">let </span>location = <span class="kw">unsafe </span>{ gl.get_uniform_location(program, <span class="kw-2">&amp;</span>item.access_path) };
 
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(location) = <span class="kw">unsafe </span>{ gl.get_uniform_location(program, <span class="kw-2">&amp;</span>name) } {
-                <span class="kw">if </span>uniforms[offset / <span class="number">4</span>].location.is_some() {
-                    <span class="macro">panic!</span>(<span class="string">&quot;Offset already occupied&quot;</span>)
+                <span class="macro">log::trace!</span>(
+                    <span class="string">&quot;push constant item: name={}, ty={:?}, offset={}, location={:?}&quot;</span>,
+                    item.access_path,
+                    type_inner,
+                    item.offset,
+                    location,
+                );
+
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(location) = location {
+                    uniforms.push(<span class="kw">super</span>::PushConstantDesc {
+                        location,
+                        offset: item.offset,
+                        size_bytes: type_inner.size(naga_module.to_ctx()),
+                        ty: type_inner.clone(),
+                    });
                 }
-
-                <span class="comment">// `size` will always be 1 so we need to guess the real size from the type
-                </span><span class="kw">let </span>uniform_size = conv::uniform_byte_size(utype);
-
-                uniforms[offset / <span class="number">4</span>] = <span class="kw">super</span>::UniformDesc {
-                    location: <span class="prelude-val">Some</span>(location),
-                    size: uniform_size,
-                    utype,
-                };
-
-                offset += uniform_size <span class="kw">as </span>usize;
             }
         }
 
         <span class="prelude-val">Ok</span>(Arc::new(<span class="kw">super</span>::PipelineInner {
             program,
             sampler_map,
-            uniforms,
+            push_constant_descs: uniforms,
         }))
     }
 }

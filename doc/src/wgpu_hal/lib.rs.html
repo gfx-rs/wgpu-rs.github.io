@@ -1411,6 +1411,17 @@
 <a href="#1411" id="1411">1411</a>
 <a href="#1412" id="1412">1412</a>
 <a href="#1413" id="1413">1413</a>
+<a href="#1414" id="1414">1414</a>
+<a href="#1415" id="1415">1415</a>
+<a href="#1416" id="1416">1416</a>
+<a href="#1417" id="1417">1417</a>
+<a href="#1418" id="1418">1418</a>
+<a href="#1419" id="1419">1419</a>
+<a href="#1420" id="1420">1420</a>
+<a href="#1421" id="1421">1421</a>
+<a href="#1422" id="1422">1422</a>
+<a href="#1423" id="1423">1423</a>
+<a href="#1424" id="1424">1424</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the internal unsafe graphics abstraction API.
  *  It follows WebGPU for the most part, re-using wgpu-types,
  *  with the following deviations:
@@ -1510,6 +1521,9 @@
 <span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::{WasmNotSend, WasmNotSync};
 
+<span class="comment">// - Vertex + Fragment
+// - Compute
+</span><span class="kw">pub const </span>MAX_CONCURRENT_SHADER_STAGES: usize = <span class="number">2</span>;
 <span class="kw">pub const </span>MAX_ANISOTROPY: u8 = <span class="number">16</span>;
 <span class="kw">pub const </span>MAX_BIND_GROUPS: usize = <span class="number">8</span>;
 <span class="kw">pub const </span>MAX_VERTEX_BUFFERS: usize = <span class="number">16</span>;
@@ -1913,11 +1927,19 @@
         dynamic_offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
     );
 
-    <span class="kw">unsafe fn </span>set_push_constants(
+    <span class="doccomment">/// Sets a range in push constant data.
+    ///
+    /// IMPORTANT: while the data is passed as words, the offset is in bytes!
+    ///
+    /// # Safety
+    ///
+    /// - `offset_bytes` must be a multiple of 4.
+    /// - The range of push constants written must be valid for the pipeline layout at draw time.
+    </span><span class="kw">unsafe fn </span>set_push_constants(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         layout: <span class="kw-2">&amp;</span>A::PipelineLayout,
         stages: wgt::ShaderStages,
-        offset: u32,
+        offset_bytes: u32,
         data: <span class="kw-2">&amp;</span>[u32],
     );
 
