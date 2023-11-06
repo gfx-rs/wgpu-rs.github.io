@@ -3378,6 +3378,7 @@
 <a href="#3378" id="3378">3378</a>
 <a href="#3379" id="3379">3379</a>
 <a href="#3380" id="3380">3380</a>
+<a href="#3381" id="3381">3381</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -4705,18 +4706,19 @@
                 .contains(wgt::DownlevelFlags::CUBE_ARRAY_TEXTURES),
         );
 
-        <span class="kw">let </span>debug_source = <span class="kw">if </span><span class="self">self</span>.instance_flags.contains(wgt::InstanceFlags::DEBUG) {
-            <span class="prelude-val">Some</span>(hal::DebugSource {
-                file_name: Cow::Owned(
-                    desc.label
-                        .as_ref()
-                        .map_or(<span class="string">&quot;shader&quot;</span>.to_string(), |l| l.to_string()),
-                ),
-                source_code: Cow::Owned(source.clone()),
-            })
-        } <span class="kw">else </span>{
-            <span class="prelude-val">None
-        </span>};
+        <span class="kw">let </span>debug_source =
+            <span class="kw">if </span><span class="self">self</span>.instance_flags.contains(wgt::InstanceFlags::DEBUG) &amp;&amp; !source.is_empty() {
+                <span class="prelude-val">Some</span>(hal::DebugSource {
+                    file_name: Cow::Owned(
+                        desc.label
+                            .as_ref()
+                            .map_or(<span class="string">&quot;shader&quot;</span>.to_string(), |l| l.to_string()),
+                    ),
+                    source_code: Cow::Owned(source.clone()),
+                })
+            } <span class="kw">else </span>{
+                <span class="prelude-val">None
+            </span>};
 
         <span class="kw">let </span>info = naga::valid::Validator::new(naga::valid::ValidationFlags::all(), caps)
             .validate(<span class="kw-2">&amp;</span>module)
