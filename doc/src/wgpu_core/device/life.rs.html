@@ -932,12 +932,18 @@
 <a href="#932" id="932">932</a>
 <a href="#933" id="933">933</a>
 <a href="#934" id="934">934</a>
+<a href="#935" id="935">935</a>
+<a href="#936" id="936">936</a>
+<a href="#937" id="937">937</a>
+<a href="#938" id="938">938</a>
+<a href="#939" id="939">939</a>
+<a href="#940" id="940">940</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     device::{
         queue::{EncoderInFlight, SubmittedWorkDoneClosure, TempResource},
-        DeviceError,
+        DeviceError, DeviceLostClosure,
     },
     hal_api::HalApi,
     hub::{Hub, Token},
@@ -1247,6 +1253,11 @@
     /// must happen _after_ all mapped buffer callbacks are mapped, so we defer them
     /// here until the next time the device is maintained.
     </span>work_done_closures: SmallVec&lt;[SubmittedWorkDoneClosure; <span class="number">1</span>]&gt;,
+
+    <span class="doccomment">/// Closure to be called on &quot;lose the device&quot;. This is invoked directly by
+    /// device.lose or by the UserCallbacks returned from maintain when the device
+    /// has been destroyed and its queues are empty.
+    </span><span class="kw">pub </span>device_lost_closure: <span class="prelude-ty">Option</span>&lt;DeviceLostClosure&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: hal::Api&gt; LifetimeTracker&lt;A&gt; {
@@ -1260,6 +1271,7 @@
             free_resources: NonReferencedResources::new(),
             ready_to_map: Vec::new(),
             work_done_closures: SmallVec::new(),
+            device_lost_closure: <span class="prelude-val">None</span>,
         }
     }
 

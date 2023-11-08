@@ -3063,12 +3063,21 @@
 <a href="#3063" id="3063">3063</a>
 <a href="#3064" id="3064">3064</a>
 <a href="#3065" id="3065">3065</a>
+<a href="#3066" id="3066">3066</a>
+<a href="#3067" id="3067">3067</a>
+<a href="#3068" id="3068">3068</a>
+<a href="#3069" id="3069">3069</a>
+<a href="#3070" id="3070">3070</a>
+<a href="#3071" id="3071">3071</a>
+<a href="#3072" id="3072">3072</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
     binding_model::{<span class="self">self</span>, BindGroupLayout},
     command, conv,
-    device::{life::WaitIdleError, map_buffer, queue, Device, DeviceError, HostMap},
+    device::{
+        life::WaitIdleError, map_buffer, queue, Device, DeviceError, DeviceLostClosure, HostMap,
+    },
     global::Global,
     hal_api::HalApi,
     hub::Token,
@@ -5737,6 +5746,21 @@
         }
     }
 
+    <span class="kw">pub fn </span>device_set_device_lost_closure&lt;A: HalApi&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        device_id: DeviceId,
+        device_lost_closure: DeviceLostClosure,
+    ) {
+        <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
+
+        <span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw-2">mut </span>token) = hub.devices.write(<span class="kw-2">&amp;mut </span>token);
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = device_guard.get_mut(device_id) {
+            <span class="kw">let </span><span class="kw-2">mut </span>life_tracker = device.lock_life(<span class="kw-2">&amp;mut </span>token);
+            life_tracker.device_lost_closure = <span class="prelude-val">Some</span>(device_lost_closure);
+        }
+    }
+
     <span class="kw">pub fn </span>device_destroy&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId) {
         <span class="macro">log::trace!</span>(<span class="string">&quot;Device::destroy {device_id:?}&quot;</span>);
 
@@ -5748,36 +5772,26 @@
             <span class="comment">// Follow the steps at
             // https://gpuweb.github.io/gpuweb/#dom-gpudevice-destroy.
 
-            // It&#39;s legal to call destroy multiple times, but if the device
-            // is already invalid, there&#39;s nothing more to do. There&#39;s also
-            // no need to return an error.
-            </span><span class="kw">if </span>!device.valid {
-                <span class="kw">return</span>;
-            }
-
-            <span class="comment">// The last part of destroy is to lose the device. The spec says
+            // The last part of destroy is to lose the device. The spec says
             // delay that until all &quot;currently-enqueued operations on any
-            // queue on this device are completed.&quot;
-
-            // TODO: implement this delay.
-
-            // Finish by losing the device.
-
-            // TODO: associate this &quot;destroyed&quot; reason more tightly with
-            // the GPUDeviceLostReason defined in webgpu.idl.
-            </span>device.lose(<span class="prelude-val">Some</span>(<span class="string">&quot;destroyed&quot;</span>));
+            // queue on this device are completed.&quot; This is accomplished by
+            // setting valid to false, and then relying upon maintain to
+            // check for empty queues and a DeviceLostClosure. At that time,
+            // the DeviceLostClosure will be called with &quot;destroyed&quot; as the
+            // reason.
+            </span>device.valid = <span class="bool-val">false</span>;
         }
     }
 
-    <span class="kw">pub fn </span>device_lose&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId, reason: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) {
-        <span class="macro">log::trace!</span>(<span class="string">&quot;Device::lose {device_id:?}&quot;</span>);
+    <span class="kw">pub fn </span>device_mark_lost&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId, message: <span class="kw-2">&amp;</span>str) {
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Device::mark_lost {device_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
 
-        <span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw">_</span>) = hub.devices.write(<span class="kw-2">&amp;mut </span>token);
+        <span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw-2">mut </span>token) = hub.devices.write(<span class="kw-2">&amp;mut </span>token);
         <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = device_guard.get_mut(device_id) {
-            device.lose(reason);
+            device.lose(<span class="kw-2">&amp;mut </span>token, message);
         }
     }
 

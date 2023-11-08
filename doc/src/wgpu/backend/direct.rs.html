@@ -3175,6 +3175,23 @@
 <a href="#3175" id="3175">3175</a>
 <a href="#3176" id="3176">3176</a>
 <a href="#3177" id="3177">3177</a>
+<a href="#3178" id="3178">3178</a>
+<a href="#3179" id="3179">3179</a>
+<a href="#3180" id="3180">3180</a>
+<a href="#3181" id="3181">3181</a>
+<a href="#3182" id="3182">3182</a>
+<a href="#3183" id="3183">3183</a>
+<a href="#3184" id="3184">3184</a>
+<a href="#3185" id="3185">3185</a>
+<a href="#3186" id="3186">3186</a>
+<a href="#3187" id="3187">3187</a>
+<a href="#3188" id="3188">3188</a>
+<a href="#3189" id="3189">3189</a>
+<a href="#3190" id="3190">3190</a>
+<a href="#3191" id="3191">3191</a>
+<a href="#3192" id="3192">3192</a>
+<a href="#3193" id="3193">3193</a>
+<a href="#3194" id="3194">3194</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -3199,6 +3216,7 @@
     sync::Arc,
 };
 <span class="kw">use </span>wgc::command::{bundle_ffi::<span class="kw-2">*</span>, compute_ffi::<span class="kw-2">*</span>, render_ffi::<span class="kw-2">*</span>};
+<span class="kw">use </span>wgc::device::DeviceLostClosure;
 <span class="kw">use </span>wgc::id::TypedId;
 <span class="kw">use </span>wgt::{WasmNotSend, WasmNotSync};
 
@@ -4632,14 +4650,30 @@
 
         <span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_drop(<span class="kw-2">*</span>device));
     }
+    <span class="kw">fn </span>device_set_device_lost_callback(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId,
+        _device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData,
+        device_lost_callback: <span class="kw">crate</span>::context::DeviceLostCallback,
+    ) {
+        <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="kw">let </span>device_lost_closure = DeviceLostClosure::from_rust(device_lost_callback);
+        <span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_set_device_lost_closure(<span class="kw-2">*</span>device, device_lost_closure));
+    }
     <span class="kw">fn </span>device_destroy(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId, _device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData) {
         <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
         <span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_destroy(<span class="kw-2">*</span>device));
     }
-    <span class="kw">fn </span>device_lose(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId, _device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData) {
-        <span class="comment">// TODO: accept a reason, and pass it to device_lose.
+    <span class="kw">fn </span>device_mark_lost(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId,
+        _device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData,
+        message: <span class="kw-2">&amp;</span>str,
+    ) {
+        <span class="comment">// We do not provide a reason to device_lose, because all reasons other than
+        // destroyed (which this is not) are &quot;unknown&quot;.
         </span><span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-        <span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_lose(<span class="kw-2">*</span>device, <span class="prelude-val">None</span>));
+        <span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_mark_lost(<span class="kw-2">*</span>device, message));
     }
     <span class="kw">fn </span>device_poll(
         <span class="kw-2">&amp;</span><span class="self">self</span>,

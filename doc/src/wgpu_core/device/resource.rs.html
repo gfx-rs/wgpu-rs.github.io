@@ -3379,6 +3379,27 @@
 <a href="#3379" id="3379">3379</a>
 <a href="#3380" id="3380">3380</a>
 <a href="#3381" id="3381">3381</a>
+<a href="#3382" id="3382">3382</a>
+<a href="#3383" id="3383">3383</a>
+<a href="#3384" id="3384">3384</a>
+<a href="#3385" id="3385">3385</a>
+<a href="#3386" id="3386">3386</a>
+<a href="#3387" id="3387">3387</a>
+<a href="#3388" id="3388">3388</a>
+<a href="#3389" id="3389">3389</a>
+<a href="#3390" id="3390">3390</a>
+<a href="#3391" id="3391">3391</a>
+<a href="#3392" id="3392">3392</a>
+<a href="#3393" id="3393">3393</a>
+<a href="#3394" id="3394">3394</a>
+<a href="#3395" id="3395">3395</a>
+<a href="#3396" id="3396">3396</a>
+<a href="#3397" id="3397">3397</a>
+<a href="#3398" id="3398">3398</a>
+<a href="#3399" id="3399">3399</a>
+<a href="#3400" id="3400">3400</a>
+<a href="#3401" id="3401">3401</a>
+<a href="#3402" id="3402">3402</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -3389,8 +3410,8 @@
     command, conv,
     device::life::WaitIdleError,
     device::{
-        AttachmentData, CommandAllocator, MissingDownlevelFlags, MissingFeatures,
-        RenderPassContext, CLEANUP_WAIT_MS,
+        AttachmentData, CommandAllocator, DeviceLostInvocation, MissingDownlevelFlags,
+        MissingFeatures, RenderPassContext, CLEANUP_WAIT_MS,
     },
     hal_api::HalApi,
     hal_label,
@@ -3415,7 +3436,7 @@
 <span class="kw">use </span>parking_lot::{Mutex, MutexGuard};
 <span class="kw">use </span>smallvec::SmallVec;
 <span class="kw">use </span>thiserror::Error;
-<span class="kw">use </span>wgt::{TextureFormat, TextureSampleType, TextureViewDimension};
+<span class="kw">use </span>wgt::{DeviceLostReason, TextureFormat, TextureSampleType, TextureViewDimension};
 
 <span class="kw">use </span>std::{borrow::Cow, iter, num::NonZeroU32};
 
@@ -3696,9 +3717,24 @@
         <span class="kw">let </span>mapping_closures = life_tracker.handle_mapping(hub, <span class="kw-2">&amp;</span><span class="self">self</span>.raw, <span class="kw-2">&amp;</span><span class="self">self</span>.trackers, token);
         life_tracker.cleanup(<span class="kw-2">&amp;</span><span class="self">self</span>.raw);
 
+        <span class="comment">// Detect if we have been destroyed and now need to lose the device.
+        // If we are invalid (set at start of destroy) and our queue is empty,
+        // and we have a DeviceLostClosure, return the closure to be called by
+        // our caller. This will complete the steps for both destroy and for
+        // &quot;lose the device&quot;.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>device_lost_invocations = SmallVec::new();
+        <span class="kw">if </span>!<span class="self">self</span>.valid &amp;&amp; life_tracker.queue_empty() &amp;&amp; life_tracker.device_lost_closure.is_some() {
+            device_lost_invocations.push(DeviceLostInvocation {
+                closure: life_tracker.device_lost_closure.take().unwrap(),
+                reason: DeviceLostReason::Destroyed,
+                message: String::new(),
+            });
+        }
+
         <span class="kw">let </span>closures = UserClosures {
             mappings: mapping_closures,
             submissions: submission_closures,
+            device_lost_invocations,
         };
         <span class="prelude-val">Ok</span>((closures, life_tracker.queue_empty()))
     }
@@ -6685,19 +6721,25 @@
         })
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lose(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _reason: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lose&lt;<span class="lifetime">&#39;this</span>, <span class="lifetime">&#39;token</span>: <span class="lifetime">&#39;this</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">&#39;this </span><span class="kw-2">mut </span><span class="self">self</span>,
+        token: <span class="kw-2">&amp;mut </span>Token&lt;<span class="lifetime">&#39;token</span>, <span class="self">Self</span>&gt;,
+        message: <span class="kw-2">&amp;</span>str,
+    ) {
         <span class="comment">// Follow the steps at https://gpuweb.github.io/gpuweb/#lose-the-device.
 
         // Mark the device explicitly as invalid. This is checked in various
         // places to prevent new work from being submitted.
         </span><span class="self">self</span>.valid = <span class="bool-val">false</span>;
 
-        <span class="comment">// The following steps remain in &quot;lose the device&quot;:
-        // 1) Resolve the GPUDevice device.lost promise.
+        <span class="comment">// 1) Resolve the GPUDevice device.lost promise.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>life_tracker = <span class="self">self</span>.lock_life(token);
+        <span class="kw">if </span>life_tracker.device_lost_closure.is_some() {
+            <span class="kw">let </span>device_lost_closure = life_tracker.device_lost_closure.take().unwrap();
+            device_lost_closure.call(DeviceLostReason::Unknown, message.to_string());
+        }
 
-        // TODO: triggger this passively or actively, and supply the reason.
-
-        // 2) Complete any outstanding mapAsync() steps.
+        <span class="comment">// 2) Complete any outstanding mapAsync() steps.
         // 3) Complete any outstanding onSubmittedWorkDone() steps.
 
         // These parts are passively accomplished by setting valid to false,
