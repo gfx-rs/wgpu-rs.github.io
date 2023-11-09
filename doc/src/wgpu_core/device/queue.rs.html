@@ -1470,8 +1470,6 @@
 <a href="#1470" id="1470">1470</a>
 <a href="#1471" id="1471">1471</a>
 <a href="#1472" id="1472">1472</a>
-<a href="#1473" id="1473">1473</a>
-<a href="#1474" id="1474">1474</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -2585,12 +2583,10 @@
                         </span>used_surface_textures.set_size(texture_guard.len());
 
                         <span class="attr">#[allow(unused_mut)]
-                        </span><span class="kw">let </span><span class="kw-2">mut </span>cmdbuf = <span class="kw">match </span>hub
-                            .command_buffers
-                            .unregister_locked(cmb_id, <span class="kw-2">&amp;mut *</span>command_buffer_guard)
+                        </span><span class="kw">let </span><span class="kw-2">mut </span>cmdbuf = <span class="kw">match </span>command_buffer_guard.take_and_mark_destroyed(cmb_id)
                         {
-                            <span class="prelude-val">Some</span>(cmdbuf) =&gt; cmdbuf,
-                            <span class="prelude-val">None </span>=&gt; <span class="kw">continue</span>,
+                            <span class="prelude-val">Ok</span>(cmdbuf) =&gt; cmdbuf,
+                            <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">continue</span>,
                         };
 
                         <span class="kw">if </span>cmdbuf.device_id.value.<span class="number">0 </span>!= queue_id {
