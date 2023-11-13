@@ -6719,6 +6719,28 @@
 <a href="#6719" id="6719">6719</a>
 <a href="#6720" id="6720">6720</a>
 <a href="#6721" id="6721">6721</a>
+<a href="#6722" id="6722">6722</a>
+<a href="#6723" id="6723">6723</a>
+<a href="#6724" id="6724">6724</a>
+<a href="#6725" id="6725">6725</a>
+<a href="#6726" id="6726">6726</a>
+<a href="#6727" id="6727">6727</a>
+<a href="#6728" id="6728">6728</a>
+<a href="#6729" id="6729">6729</a>
+<a href="#6730" id="6730">6730</a>
+<a href="#6731" id="6731">6731</a>
+<a href="#6732" id="6732">6732</a>
+<a href="#6733" id="6733">6733</a>
+<a href="#6734" id="6734">6734</a>
+<a href="#6735" id="6735">6735</a>
+<a href="#6736" id="6736">6736</a>
+<a href="#6737" id="6737">6737</a>
+<a href="#6738" id="6738">6738</a>
+<a href="#6739" id="6739">6739</a>
+<a href="#6740" id="6740">6740</a>
+<a href="#6741" id="6741">6741</a>
+<a href="#6742" id="6742">6742</a>
+<a href="#6743" id="6743">6743</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the API surface of WebGPU that is agnostic of the backend.
  *  This API is used for targeting both Web and Native.
  */
@@ -9534,7 +9556,9 @@
         }
     }
 
-    <span class="doccomment">/// Returns the dimension of a block of texels.
+    <span class="doccomment">/// Returns the dimension of a [block](https://gpuweb.github.io/gpuweb/#texel-block) of texels.
+    ///
+    /// Uncompressed formats have a block dimension of `(1, 1)`.
     </span><span class="kw">pub fn </span>block_dimensions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (u32, u32) {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::R8Unorm
@@ -9946,14 +9970,34 @@
         }
     }
 
-    <span class="doccomment">/// Returns the [texel block size](https://gpuweb.github.io/gpuweb/#texel-block-size)
-    /// of this format.
+    <span class="doccomment">/// The number of bytes one [texel block](https://gpuweb.github.io/gpuweb/#texel-block) occupies during an image copy, if applicable.
+    ///
+    /// Known as the [texel block copy footprint](https://gpuweb.github.io/gpuweb/#texel-block-copy-footprint).
+    ///
+    /// Note that for uncompressed formats this is the same as the size of a single texel,
+    /// since uncompressed formats have a block size of 1x1.
     ///
     /// Returns `None` if any of the following are true:
     ///  - the format is combined depth-stencil and no `aspect` was provided
     ///  - the format is `Depth24Plus`
     ///  - the format is `Depth24PlusStencil8` and `aspect` is depth.
+    </span><span class="attr">#[deprecated(since = <span class="string">&quot;0.19.0&quot;</span>, note = <span class="string">&quot;Use `block_copy_size` instead.&quot;</span>)]
     </span><span class="kw">pub fn </span>block_size(<span class="kw-2">&amp;</span><span class="self">self</span>, aspect: <span class="prelude-ty">Option</span>&lt;TextureAspect&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+        <span class="self">self</span>.block_copy_size(aspect)
+    }
+
+    <span class="doccomment">/// The number of bytes one [texel block](https://gpuweb.github.io/gpuweb/#texel-block) occupies during an image copy, if applicable.
+    ///
+    /// Known as the [texel block copy footprint](https://gpuweb.github.io/gpuweb/#texel-block-copy-footprint).
+    ///
+    /// Note that for uncompressed formats this is the same as the size of a single texel,
+    /// since uncompressed formats have a block size of 1x1.
+    ///
+    /// Returns `None` if any of the following are true:
+    ///  - the format is combined depth-stencil and no `aspect` was provided
+    ///  - the format is `Depth24Plus`
+    ///  - the format is `Depth24PlusStencil8` and `aspect` is depth.
+    </span><span class="kw">pub fn </span>block_copy_size(<span class="kw-2">&amp;</span><span class="self">self</span>, aspect: <span class="prelude-ty">Option</span>&lt;TextureAspect&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::R8Unorm | <span class="self">Self</span>::R8Snorm | <span class="self">Self</span>::R8Uint | <span class="self">Self</span>::R8Sint =&gt; <span class="prelude-val">Some</span>(<span class="number">1</span>),
 

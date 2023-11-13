@@ -1028,7 +1028,7 @@
     aspect: TextureAspect,
 ) {
     <span class="kw">let </span>(block_width, block_height) = texture.format().block_dimensions();
-    <span class="kw">let </span>block_size = texture.format().block_size(<span class="prelude-val">Some</span>(aspect)).unwrap();
+    <span class="kw">let </span>block_size = texture.format().block_copy_size(<span class="prelude-val">Some</span>(aspect)).unwrap();
     <span class="kw">let </span>bytes_per_row = align_to(
         (texture.width() / block_width) * block_size,
         COPY_BYTES_PER_ROW_ALIGNMENT,
@@ -1141,7 +1141,7 @@
             <span class="kw">let </span><span class="kw-2">mut </span>buffer_depth_bytes_per_row = (texture.width() / block_width)
                 * texture
                     .format()
-                    .block_size(<span class="prelude-val">Some</span>(TextureAspect::DepthOnly))
+                    .block_copy_size(<span class="prelude-val">Some</span>(TextureAspect::DepthOnly))
                     .unwrap_or(<span class="number">4</span>);
             <span class="kw">if </span>should_align_buffer_size {
                 buffer_depth_bytes_per_row =
@@ -1155,7 +1155,7 @@
                 (texture.width() / block_width)
                     * texture
                         .format()
-                        .block_size(<span class="prelude-val">Some</span>(TextureAspect::StencilOnly))
+                        .block_copy_size(<span class="prelude-val">Some</span>(TextureAspect::StencilOnly))
                         .unwrap_or(<span class="number">4</span>),
                 COPY_BYTES_PER_ROW_ALIGNMENT,
             );
@@ -1182,8 +1182,8 @@
                 buffer_stencil: <span class="prelude-val">Some</span>(buffer_stencil),
             }
         } <span class="kw">else </span>{
-            <span class="kw">let </span><span class="kw-2">mut </span>bytes_per_row =
-                (texture.width() / block_width) * texture.format().block_size(<span class="prelude-val">None</span>).unwrap_or(<span class="number">4</span>);
+            <span class="kw">let </span><span class="kw-2">mut </span>bytes_per_row = (texture.width() / block_width)
+                * texture.format().block_copy_size(<span class="prelude-val">None</span>).unwrap_or(<span class="number">4</span>);
             <span class="kw">if </span>should_align_buffer_size {
                 bytes_per_row = align_to(bytes_per_row, COPY_BYTES_PER_ROW_ALIGNMENT);
             }
@@ -1221,7 +1221,7 @@
         device.poll(Maintain::Wait);
         <span class="kw">let </span>(block_width, block_height) = <span class="self">self</span>.texture_format.block_dimensions();
         <span class="kw">let </span>expected_bytes_per_row = (<span class="self">self</span>.texture_width / block_width)
-            * <span class="self">self</span>.texture_format.block_size(aspect).unwrap_or(<span class="number">4</span>);
+            * <span class="self">self</span>.texture_format.block_copy_size(aspect).unwrap_or(<span class="number">4</span>);
         <span class="kw">let </span>expected_buffer_size = expected_bytes_per_row
             * (<span class="self">self</span>.texture_height / block_height)
             * <span class="self">self</span>.texture_depth_or_array_layers;
