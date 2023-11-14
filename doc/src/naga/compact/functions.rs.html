@@ -104,28 +104,12 @@
 <a href="#104" id="104">104</a>
 <a href="#105" id="105">105</a>
 <a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::handle_set_map::HandleSet;
 <span class="kw">use super</span>::{FunctionMap, ModuleMap};
-<span class="kw">use </span><span class="kw">crate</span>::arena::Handle;
 
 <span class="kw">pub struct </span>FunctionTracer&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub </span>module: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">crate</span>::Module,
     <span class="kw">pub </span>function: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">crate</span>::Function,
+    <span class="kw">pub </span>constants: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">crate</span>::Arena&lt;<span class="kw">crate</span>::Constant&gt;,
 
     <span class="kw">pub </span>types_used: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Type&gt;,
     <span class="kw">pub </span>constants_used: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Constant&gt;,
@@ -138,57 +122,43 @@
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; FunctionTracer&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="kw">pub fn </span>trace(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">for </span>argument <span class="kw">in </span><span class="self">self</span>.function.arguments.iter() {
-            <span class="self">self</span>.trace_type(argument.ty);
+            <span class="self">self</span>.types_used.insert(argument.ty);
         }
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>result) = <span class="self">self</span>.function.result {
-            <span class="self">self</span>.trace_type(result.ty);
+            <span class="self">self</span>.types_used.insert(result.ty);
         }
 
         <span class="kw">for </span>(<span class="kw">_</span>, local) <span class="kw">in </span><span class="self">self</span>.function.local_variables.iter() {
-            <span class="self">self</span>.trace_type(local.ty);
+            <span class="self">self</span>.types_used.insert(local.ty);
             <span class="kw">if let </span><span class="prelude-val">Some</span>(init) = local.init {
-                <span class="self">self</span>.trace_expression(init);
+                <span class="self">self</span>.expressions_used.insert(init);
             }
         }
 
         <span class="comment">// Treat named expressions as alive, for the sake of our test suite,
         // which uses `let blah = expr;` to exercise lots of things.
-        </span><span class="kw">for </span>(value, _name) <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.function.named_expressions {
-            <span class="self">self</span>.trace_expression(<span class="kw-2">*</span>value);
+        </span><span class="kw">for </span>(<span class="kw-2">&amp;</span>value, _name) <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.function.named_expressions {
+            <span class="self">self</span>.expressions_used.insert(value);
         }
 
         <span class="self">self</span>.trace_block(<span class="kw-2">&amp;</span><span class="self">self</span>.function.body);
-    }
 
-    <span class="kw">pub fn </span>trace_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: Handle&lt;<span class="kw">crate</span>::Type&gt;) {
-        <span class="self">self</span>.as_type().trace_type(ty)
-    }
-
-    <span class="kw">pub fn </span>trace_expression(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;) {
-        <span class="self">self</span>.as_expression().trace_expression(expr);
-    }
-
-    <span class="kw">fn </span>as_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">super</span>::types::TypeTracer {
-        <span class="kw">super</span>::types::TypeTracer {
-            types: <span class="kw-2">&amp;</span><span class="self">self</span>.module.types,
-            types_used: <span class="self">self</span>.types_used,
-        }
+        <span class="comment">// Given that `trace_block` has marked the expressions used
+        // directly by statements, walk the arena to find all
+        // expressions used, directly or indirectly.
+        </span><span class="self">self</span>.as_expression().trace_expressions();
     }
 
     <span class="kw">fn </span>as_expression(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">super</span>::expressions::ExpressionTracer {
         <span class="kw">super</span>::expressions::ExpressionTracer {
-            types: <span class="kw-2">&amp;</span><span class="self">self</span>.module.types,
-            constants: <span class="kw-2">&amp;</span><span class="self">self</span>.module.constants,
+            constants: <span class="self">self</span>.constants,
             expressions: <span class="kw-2">&amp;</span><span class="self">self</span>.function.expressions,
 
             types_used: <span class="self">self</span>.types_used,
             constants_used: <span class="self">self</span>.constants_used,
             expressions_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.expressions_used,
-            const_expressions: <span class="prelude-val">Some</span>((
-                <span class="kw-2">&amp;</span><span class="self">self</span>.module.const_expressions,
-                <span class="kw-2">&amp;mut </span><span class="self">self</span>.const_expressions_used,
-            )),
+            const_expressions_used: <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.const_expressions_used),
         }
     }
 }

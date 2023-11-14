@@ -292,6 +292,12 @@
 <a href="#292" id="292">292</a>
 <a href="#293" id="293">293</a>
 <a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::functions::FunctionTracer;
 <span class="kw">use </span><span class="kw">super</span>::FunctionMap;
 <span class="kw">use </span><span class="kw">crate</span>::arena::Handle;
@@ -316,7 +322,7 @@
                         <span class="kw-2">ref </span>accept,
                         <span class="kw-2">ref </span>reject,
                     } =&gt; {
-                        <span class="self">self</span>.trace_expression(condition);
+                        <span class="self">self</span>.expressions_used.insert(condition);
                         worklist.push(accept);
                         worklist.push(reject);
                     }
@@ -324,7 +330,7 @@
                         selector,
                         <span class="kw-2">ref </span>cases,
                     } =&gt; {
-                        <span class="self">self</span>.trace_expression(selector);
+                        <span class="self">self</span>.expressions_used.insert(selector);
                         <span class="kw">for </span>case <span class="kw">in </span>cases {
                             worklist.push(<span class="kw-2">&amp;</span>case.body);
                         }
@@ -335,15 +341,17 @@
                         break_if,
                     } =&gt; {
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(break_if) = break_if {
-                            <span class="self">self</span>.trace_expression(break_if);
+                            <span class="self">self</span>.expressions_used.insert(break_if);
                         }
                         worklist.push(body);
                         worklist.push(continuing);
                     }
-                    St::Return { value: <span class="prelude-val">Some</span>(value) } =&gt; <span class="self">self</span>.trace_expression(value),
+                    St::Return { value: <span class="prelude-val">Some</span>(value) } =&gt; {
+                        <span class="self">self</span>.expressions_used.insert(value);
+                    }
                     St::Store { pointer, value } =&gt; {
-                        <span class="self">self</span>.trace_expression(pointer);
-                        <span class="self">self</span>.trace_expression(value);
+                        <span class="self">self</span>.expressions_used.insert(pointer);
+                        <span class="self">self</span>.expressions_used.insert(value);
                     }
                     St::ImageStore {
                         image,
@@ -351,12 +359,12 @@
                         array_index,
                         value,
                     } =&gt; {
-                        <span class="self">self</span>.trace_expression(image);
-                        <span class="self">self</span>.trace_expression(coordinate);
+                        <span class="self">self</span>.expressions_used.insert(image);
+                        <span class="self">self</span>.expressions_used.insert(coordinate);
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(array_index) = array_index {
-                            <span class="self">self</span>.trace_expression(array_index);
+                            <span class="self">self</span>.expressions_used.insert(array_index);
                         }
-                        <span class="self">self</span>.trace_expression(value);
+                        <span class="self">self</span>.expressions_used.insert(value);
                     }
                     St::Atomic {
                         pointer,
@@ -364,14 +372,14 @@
                         value,
                         result,
                     } =&gt; {
-                        <span class="self">self</span>.trace_expression(pointer);
+                        <span class="self">self</span>.expressions_used.insert(pointer);
                         <span class="self">self</span>.trace_atomic_function(fun);
-                        <span class="self">self</span>.trace_expression(value);
-                        <span class="self">self</span>.trace_expression(result);
+                        <span class="self">self</span>.expressions_used.insert(value);
+                        <span class="self">self</span>.expressions_used.insert(result);
                     }
                     St::WorkGroupUniformLoad { pointer, result } =&gt; {
-                        <span class="self">self</span>.trace_expression(pointer);
-                        <span class="self">self</span>.trace_expression(result);
+                        <span class="self">self</span>.expressions_used.insert(pointer);
+                        <span class="self">self</span>.expressions_used.insert(result);
                     }
                     St::Call {
                         function: <span class="kw">_</span>,
@@ -379,14 +387,14 @@
                         result,
                     } =&gt; {
                         <span class="kw">for </span>expr <span class="kw">in </span>arguments {
-                            <span class="self">self</span>.trace_expression(<span class="kw-2">*</span>expr);
+                            <span class="self">self</span>.expressions_used.insert(<span class="kw-2">*</span>expr);
                         }
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(result) = result {
-                            <span class="self">self</span>.trace_expression(result);
+                            <span class="self">self</span>.expressions_used.insert(result);
                         }
                     }
                     St::RayQuery { query, <span class="kw-2">ref </span>fun } =&gt; {
-                        <span class="self">self</span>.trace_expression(query);
+                        <span class="self">self</span>.expressions_used.insert(query);
                         <span class="self">self</span>.trace_ray_query_function(fun);
                     }
 
@@ -406,7 +414,9 @@
         <span class="kw">match </span><span class="kw-2">*</span>fun {
             Af::Exchange {
                 compare: <span class="prelude-val">Some</span>(expr),
-            } =&gt; <span class="self">self</span>.trace_expression(expr),
+            } =&gt; {
+                <span class="self">self</span>.expressions_used.insert(expr);
+            }
             Af::Exchange { compare: <span class="prelude-val">None </span>}
             | Af::Add
             | Af::Subtract
@@ -425,10 +435,12 @@
                 acceleration_structure,
                 descriptor,
             } =&gt; {
-                <span class="self">self</span>.trace_expression(acceleration_structure);
-                <span class="self">self</span>.trace_expression(descriptor);
+                <span class="self">self</span>.expressions_used.insert(acceleration_structure);
+                <span class="self">self</span>.expressions_used.insert(descriptor);
             }
-            Qf::Proceed { result } =&gt; <span class="self">self</span>.trace_expression(result),
+            Qf::Proceed { result } =&gt; {
+                <span class="self">self</span>.expressions_used.insert(result);
+            }
             Qf::Terminate =&gt; {}
         }
     }

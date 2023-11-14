@@ -284,6 +284,19 @@
 <a href="#284" id="284">284</a>
 <a href="#285" id="285">285</a>
 <a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a>
+<a href="#289" id="289">289</a>
+<a href="#290" id="290">290</a>
+<a href="#291" id="291">291</a>
+<a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
 </pre></div><pre class="rust"><code><span class="kw">mod </span>expressions;
 <span class="kw">mod </span>functions;
 <span class="kw">mod </span>handle_set_map;
@@ -322,9 +335,9 @@
     {
         <span class="kw">for </span>(<span class="kw">_</span>, global) <span class="kw">in </span>module.global_variables.iter() {
             <span class="macro">log::trace!</span>(<span class="string">&quot;tracing global {:?}&quot;</span>, global.name);
-            module_tracer.as_type().trace_type(global.ty);
+            module_tracer.types_used.insert(global.ty);
             <span class="kw">if let </span><span class="prelude-val">Some</span>(init) = global.init {
-                module_tracer.as_const_expression().trace_expression(init);
+                module_tracer.const_expressions_used.insert(init);
             }
         }
     }
@@ -336,25 +349,23 @@
     </span><span class="kw">for </span>(handle, constant) <span class="kw">in </span>module.constants.iter() {
         <span class="kw">if </span>constant.name.is_some() {
             module_tracer.constants_used.insert(handle);
-            module_tracer.as_type().trace_type(constant.ty);
-            module_tracer
-                .as_const_expression()
-                .trace_expression(constant.init);
+            module_tracer.const_expressions_used.insert(constant.init);
         }
     }
 
     <span class="comment">// We assume that all functions are used.
     //
     // Observe which types, constant expressions, constants, and
-    // expressions each function uses, and produce maps from
-    // pre-compaction to post-compaction handles.
+    // expressions each function uses, and produce maps for each
+    // function from pre-compaction to post-compaction expression
+    // handles.
     </span><span class="macro">log::trace!</span>(<span class="string">&quot;tracing functions&quot;</span>);
     <span class="kw">let </span>function_maps: Vec&lt;FunctionMap&gt; = module
         .functions
         .iter()
         .map(|(<span class="kw">_</span>, f)| {
             <span class="macro">log::trace!</span>(<span class="string">&quot;tracing function {:?}&quot;</span>, f.name);
-            <span class="kw">let </span><span class="kw-2">mut </span>function_tracer = module_tracer.enter_function(f);
+            <span class="kw">let </span><span class="kw-2">mut </span>function_tracer = module_tracer.as_function(f);
             function_tracer.trace();
             FunctionMap::from(function_tracer)
         })
@@ -367,11 +378,29 @@
         .iter()
         .map(|e| {
             <span class="macro">log::trace!</span>(<span class="string">&quot;tracing entry point {:?}&quot;</span>, e.function.name);
-            <span class="kw">let </span><span class="kw-2">mut </span>used = module_tracer.enter_function(<span class="kw-2">&amp;</span>e.function);
+            <span class="kw">let </span><span class="kw-2">mut </span>used = module_tracer.as_function(<span class="kw-2">&amp;</span>e.function);
             used.trace();
             FunctionMap::from(used)
         })
         .collect();
+
+    <span class="comment">// Given that the above steps have marked all the constant
+    // expressions used directly by globals, constants, functions, and
+    // entry points, walk the constant expression arena to find all
+    // constant expressions used, directly or indirectly.
+    </span>module_tracer.as_const_expression().trace_expressions();
+
+    <span class="comment">// Constants&#39; initializers are taken care of already, because
+    // expression tracing sees through constants. But we still need to
+    // note type usage.
+    </span><span class="kw">for </span>(handle, constant) <span class="kw">in </span>module.constants.iter() {
+        <span class="kw">if </span>module_tracer.constants_used.contains(handle) {
+            module_tracer.types_used.insert(constant.ty);
+        }
+    }
+
+    <span class="comment">// Propagate usage through types.
+    </span>module_tracer.as_type().trace_types();
 
     <span class="comment">// Now that we know what is used and what is never touched,
     // produce maps from the `Handle`s that appear in `module` now to
@@ -475,15 +504,14 @@
             <span class="kw-2">ref </span>predeclared_types,
         } = <span class="kw-2">*</span>special_types;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>type_tracer = <span class="self">self</span>.as_type();
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ray_desc) = <span class="kw-2">*</span>ray_desc {
-            type_tracer.trace_type(ray_desc);
+            <span class="self">self</span>.types_used.insert(ray_desc);
         }
         <span class="kw">if let </span><span class="prelude-val">Some</span>(ray_intersection) = <span class="kw-2">*</span>ray_intersection {
-            type_tracer.trace_type(ray_intersection);
+            <span class="self">self</span>.types_used.insert(ray_intersection);
         }
         <span class="kw">for </span>(<span class="kw">_</span>, <span class="kw-2">&amp;</span>handle) <span class="kw">in </span>predeclared_types {
-            type_tracer.trace_type(handle);
+            <span class="self">self</span>.types_used.insert(handle);
         }
     }
 
@@ -496,24 +524,22 @@
 
     <span class="kw">fn </span>as_const_expression(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; expressions::ExpressionTracer {
         expressions::ExpressionTracer {
-            types: <span class="kw-2">&amp;</span><span class="self">self</span>.module.types,
-            constants: <span class="kw-2">&amp;</span><span class="self">self</span>.module.constants,
             expressions: <span class="kw-2">&amp;</span><span class="self">self</span>.module.const_expressions,
+            constants: <span class="kw-2">&amp;</span><span class="self">self</span>.module.constants,
             types_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.types_used,
             constants_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.constants_used,
             expressions_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.const_expressions_used,
-            const_expressions: <span class="prelude-val">None</span>,
+            const_expressions_used: <span class="prelude-val">None</span>,
         }
     }
 
-    <span class="kw">pub fn </span>enter_function&lt;<span class="lifetime">&#39;tracer</span>&gt;(
+    <span class="kw">pub fn </span>as_function&lt;<span class="lifetime">&#39;tracer</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;tracer </span><span class="kw-2">mut </span><span class="self">self</span>,
         function: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tracer </span><span class="kw">crate</span>::Function,
     ) -&gt; FunctionTracer&lt;<span class="lifetime">&#39;tracer</span>&gt; {
         FunctionTracer {
-            module: <span class="self">self</span>.module,
             function,
-
+            constants: <span class="kw-2">&amp;</span><span class="self">self</span>.module.constants,
             types_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.types_used,
             constants_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.constants_used,
             const_expressions_used: <span class="kw-2">&amp;mut </span><span class="self">self</span>.const_expressions_used,

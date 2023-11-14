@@ -156,6 +156,18 @@
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, Handle, Range, UniqueArena};
 
 <span class="kw">type </span>Index = std::num::NonZeroU32;
@@ -184,13 +196,23 @@
     }
 
     <span class="doccomment">/// Add `handle` to the set.
-    ///
-    /// Return `true` if the handle was not already in the set. In
-    /// other words, return true if it was newly inserted.
-    </span><span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: Handle&lt;T&gt;) -&gt; bool {
+    </span><span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handle: Handle&lt;T&gt;) {
         <span class="comment">// Note that, oddly, `Handle::index` does not return a 1-based
         // `Index`, but rather a zero-based `usize`.
-        </span><span class="self">self</span>.members.insert(handle.index())
+        </span><span class="self">self</span>.members.insert(handle.index());
+    }
+
+    <span class="doccomment">/// Add handles from `iter` to the set.
+    </span><span class="kw">pub fn </span>insert_iter(<span class="kw-2">&amp;mut </span><span class="self">self</span>, iter: <span class="kw">impl </span>IntoIterator&lt;Item = Handle&lt;T&gt;&gt;) {
+        <span class="kw">for </span>handle <span class="kw">in </span>iter {
+            <span class="self">self</span>.insert(handle);
+        }
+    }
+
+    <span class="kw">pub fn </span>contains(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;T&gt;) -&gt; bool {
+        <span class="comment">// Note that, oddly, `Handle::index` does not return a 1-based
+        // `Index`, but rather a zero-based `usize`.
+        </span><span class="self">self</span>.members.contains(handle.index())
     }
 }
 
@@ -306,7 +328,9 @@
                 <span class="comment">// Build a zero-based end-exclusive range, given one-based handle indices.
                 </span>compacted = first1.get() - <span class="number">1</span>..last1.get();
             } <span class="kw">else </span>{
-                compacted = first1.get() - <span class="number">1</span>..first1.get();
+                <span class="comment">// The range contains only a single live handle, which
+                // we identified with the first `find_map` call.
+                </span>compacted = first1.get() - <span class="number">1</span>..first1.get();
             }
         } <span class="kw">else </span>{
             compacted = <span class="number">0</span>..<span class="number">0</span>;

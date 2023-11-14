@@ -387,16 +387,10 @@
 <a href="#387" id="387">387</a>
 <a href="#388" id="388">388</a>
 <a href="#389" id="389">389</a>
-<a href="#390" id="390">390</a>
-<a href="#391" id="391">391</a>
-<a href="#392" id="392">392</a>
-<a href="#393" id="393">393</a>
-<a href="#394" id="394">394</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleMap, HandleSet, ModuleMap};
-<span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, Handle, UniqueArena};
+<span class="kw">use </span><span class="kw">crate</span>::arena::{Arena, Handle};
 
 <span class="kw">pub struct </span>ExpressionTracer&lt;<span class="lifetime">&#39;tracer</span>&gt; {
-    <span class="kw">pub </span>types: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tracer </span>UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
     <span class="kw">pub </span>constants: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tracer </span>Arena&lt;<span class="kw">crate</span>::Constant&gt;,
 
     <span class="doccomment">/// The arena in which we are currently tracing expressions.
@@ -415,34 +409,51 @@
     /// the module&#39;s constant expression arena.
     </span><span class="kw">pub </span>expressions_used: <span class="kw-2">&amp;</span><span class="lifetime">&#39;tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
 
-    <span class="doccomment">/// The constant expression arena and its used map, if we haven&#39;t
-    /// switched to tracing constant expressions yet.
-    </span><span class="kw">pub </span>const_expressions: <span class="prelude-ty">Option</span>&lt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;tracer </span>Arena&lt;<span class="kw">crate</span>::Expression&gt;,
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;,
-    )&gt;,
+    <span class="doccomment">/// The used set for the module&#39;s `const_expressions` arena.
+    ///
+    /// If `None`, we are already tracing the constant expressions,
+    /// and `expressions_used` already refers to their handle set.
+    </span><span class="kw">pub </span>const_expressions_used: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;tracer </span><span class="kw-2">mut </span>HandleSet&lt;<span class="kw">crate</span>::Expression&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;tracer</span>&gt; ExpressionTracer&lt;<span class="lifetime">&#39;tracer</span>&gt; {
-    <span class="kw">pub fn </span>trace_expression(<span class="kw-2">&amp;mut </span><span class="self">self</span>, expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;) {
+    <span class="doccomment">/// Propagate usage through `self.expressions`, starting with `self.expressions_used`.
+    ///
+    /// Treat `self.expressions_used` as the initial set of &quot;known
+    /// live&quot; expressions, and follow through to identify all
+    /// transitively used expressions.
+    ///
+    /// Mark types, constants, and constant expressions used directly
+    /// by `self.expressions` as used. Items used indirectly are not
+    /// marked.
+    ///
+    /// [fe]: crate::Function::expressions
+    /// [ce]: crate::Module::const_expressions
+    </span><span class="kw">pub fn </span>trace_expressions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="macro">log::trace!</span>(
             <span class="string">&quot;entering trace_expression of {}&quot;</span>,
-            <span class="kw">if </span><span class="self">self</span>.const_expressions.is_some() {
+            <span class="kw">if </span><span class="self">self</span>.const_expressions_used.is_some() {
                 <span class="string">&quot;function expressions&quot;
             </span>} <span class="kw">else </span>{
                 <span class="string">&quot;const expressions&quot;
             </span>}
         );
-        <span class="kw">let </span><span class="kw-2">mut </span>work_list = <span class="macro">vec!</span>[expr];
-        <span class="kw">while let </span><span class="prelude-val">Some</span>(expr) = work_list.pop() {
-            <span class="comment">// If we&#39;ve already seen this expression, no need to trace further.
-            </span><span class="kw">if </span>!<span class="self">self</span>.expressions_used.insert(expr) {
+
+        <span class="comment">// We don&#39;t need recursion or a work list. Because an
+        // expression may only refer to other expressions that precede
+        // it in the arena, it suffices to make a single pass over the
+        // arena from back to front, marking the referents of used
+        // expressions as used themselves.
+        </span><span class="kw">for </span>(handle, expr) <span class="kw">in </span><span class="self">self</span>.expressions.iter().rev() {
+            <span class="comment">// If this expression isn&#39;t used, it doesn&#39;t matter what it uses.
+            </span><span class="kw">if </span>!<span class="self">self</span>.expressions_used.contains(handle) {
                 <span class="kw">continue</span>;
             }
+
             <span class="macro">log::trace!</span>(<span class="string">&quot;tracing new expression {:?}&quot;</span>, expr);
 
             <span class="kw">use </span><span class="kw">crate</span>::Expression <span class="kw">as </span>Ex;
-            <span class="kw">match </span><span class="self">self</span>.expressions[expr] {
+            <span class="kw">match </span><span class="kw-2">*</span>expr {
                 <span class="comment">// Expressions that do not contain handles that need to be traced.
                 </span>Ex::Literal(<span class="kw">_</span>)
                 | Ex::FunctionArgument(<span class="kw">_</span>)
@@ -453,24 +464,34 @@
 
                 Ex::Constant(handle) =&gt; {
                     <span class="self">self</span>.constants_used.insert(handle);
-                    <span class="kw">let </span>constant = <span class="kw-2">&amp;</span><span class="self">self</span>.constants[handle];
-                    <span class="self">self</span>.trace_type(constant.ty);
-                    <span class="self">self</span>.trace_const_expression(constant.init);
+                    <span class="comment">// Constants and expressions are mutually recursive, which
+                    // complicates our nice one-pass algorithm. However, since
+                    // constants don&#39;t refer to each other, we can get around
+                    // this by looking *through* each constant and marking its
+                    // initializer as used. Since `expr` refers to the constant,
+                    // and the constant refers to the initializer, it must
+                    // precede `expr` in the arena.
+                    </span><span class="kw">let </span>init = <span class="self">self</span>.constants[handle].init;
+                    <span class="kw">match </span><span class="self">self</span>.const_expressions_used {
+                        <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>used) =&gt; used.insert(init),
+                        <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.expressions_used.insert(init),
+                    }
                 }
-                Ex::ZeroValue(ty) =&gt; <span class="self">self</span>.trace_type(ty),
+                Ex::ZeroValue(ty) =&gt; <span class="self">self</span>.types_used.insert(ty),
                 Ex::Compose { ty, <span class="kw-2">ref </span>components } =&gt; {
-                    <span class="self">self</span>.trace_type(ty);
-                    work_list.extend(components);
+                    <span class="self">self</span>.types_used.insert(ty);
+                    <span class="self">self</span>.expressions_used
+                        .insert_iter(components.iter().cloned());
                 }
-                Ex::Access { base, index } =&gt; work_list.extend([base, index]),
-                Ex::AccessIndex { base, index: <span class="kw">_ </span>} =&gt; work_list.push(base),
-                Ex::Splat { size: <span class="kw">_</span>, value } =&gt; work_list.push(value),
+                Ex::Access { base, index } =&gt; <span class="self">self</span>.expressions_used.insert_iter([base, index]),
+                Ex::AccessIndex { base, index: <span class="kw">_ </span>} =&gt; <span class="self">self</span>.expressions_used.insert(base),
+                Ex::Splat { size: <span class="kw">_</span>, value } =&gt; <span class="self">self</span>.expressions_used.insert(value),
                 Ex::Swizzle {
                     size: <span class="kw">_</span>,
                     vector,
                     pattern: <span class="kw">_</span>,
-                } =&gt; work_list.push(vector),
-                Ex::Load { pointer } =&gt; work_list.push(pointer),
+                } =&gt; <span class="self">self</span>.expressions_used.insert(vector),
+                Ex::Load { pointer } =&gt; <span class="self">self</span>.expressions_used.insert(pointer),
                 Ex::ImageSample {
                     image,
                     sampler,
@@ -481,20 +502,20 @@
                     <span class="kw-2">ref </span>level,
                     depth_ref,
                 } =&gt; {
-                    work_list.push(image);
-                    work_list.push(sampler);
-                    work_list.push(coordinate);
-                    work_list.extend(array_index);
-                    <span class="kw">if let </span><span class="prelude-val">Some</span>(offset) = offset {
-                        <span class="self">self</span>.trace_const_expression(offset);
+                    <span class="self">self</span>.expressions_used
+                        .insert_iter([image, sampler, coordinate]);
+                    <span class="self">self</span>.expressions_used.insert_iter(array_index);
+                    <span class="kw">match </span><span class="self">self</span>.const_expressions_used {
+                        <span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>used) =&gt; used.insert_iter(offset),
+                        <span class="prelude-val">None </span>=&gt; <span class="self">self</span>.expressions_used.insert_iter(offset),
                     }
                     <span class="kw">use </span><span class="kw">crate</span>::SampleLevel <span class="kw">as </span>Sl;
                     <span class="kw">match </span><span class="kw-2">*</span>level {
                         Sl::Auto | Sl::Zero =&gt; {}
-                        Sl::Exact(expr) | Sl::Bias(expr) =&gt; work_list.push(expr),
-                        Sl::Gradient { x, y } =&gt; work_list.extend([x, y]),
+                        Sl::Exact(expr) | Sl::Bias(expr) =&gt; <span class="self">self</span>.expressions_used.insert(expr),
+                        Sl::Gradient { x, y } =&gt; <span class="self">self</span>.expressions_used.insert_iter([x, y]),
                     }
-                    work_list.extend(depth_ref);
+                    <span class="self">self</span>.expressions_used.insert_iter(depth_ref);
                 }
                 Ex::ImageLoad {
                     image,
@@ -503,33 +524,37 @@
                     sample,
                     level,
                 } =&gt; {
-                    work_list.push(image);
-                    work_list.push(coordinate);
-                    work_list.extend(array_index);
-                    work_list.extend(sample);
-                    work_list.extend(level);
+                    <span class="self">self</span>.expressions_used.insert(image);
+                    <span class="self">self</span>.expressions_used.insert(coordinate);
+                    <span class="self">self</span>.expressions_used.insert_iter(array_index);
+                    <span class="self">self</span>.expressions_used.insert_iter(sample);
+                    <span class="self">self</span>.expressions_used.insert_iter(level);
                 }
                 Ex::ImageQuery { image, <span class="kw-2">ref </span>query } =&gt; {
-                    work_list.push(image);
+                    <span class="self">self</span>.expressions_used.insert(image);
                     <span class="kw">use </span><span class="kw">crate</span>::ImageQuery <span class="kw">as </span>Iq;
                     <span class="kw">match </span><span class="kw-2">*</span>query {
-                        Iq::Size { level } =&gt; work_list.extend(level),
+                        Iq::Size { level } =&gt; <span class="self">self</span>.expressions_used.insert_iter(level),
                         Iq::NumLevels | Iq::NumLayers | Iq::NumSamples =&gt; {}
                     }
                 }
-                Ex::Unary { op: <span class="kw">_</span>, expr } =&gt; work_list.push(expr),
-                Ex::Binary { op: <span class="kw">_</span>, left, right } =&gt; work_list.extend([left, right]),
+                Ex::Unary { op: <span class="kw">_</span>, expr } =&gt; <span class="self">self</span>.expressions_used.insert(expr),
+                Ex::Binary { op: <span class="kw">_</span>, left, right } =&gt; {
+                    <span class="self">self</span>.expressions_used.insert_iter([left, right]);
+                }
                 Ex::Select {
                     condition,
                     accept,
                     reject,
-                } =&gt; work_list.extend([condition, accept, reject]),
+                } =&gt; <span class="self">self
+                    </span>.expressions_used
+                    .insert_iter([condition, accept, reject]),
                 Ex::Derivative {
                     axis: <span class="kw">_</span>,
                     ctrl: <span class="kw">_</span>,
                     expr,
-                } =&gt; work_list.push(expr),
-                Ex::Relational { fun: <span class="kw">_</span>, argument } =&gt; work_list.push(argument),
+                } =&gt; <span class="self">self</span>.expressions_used.insert(expr),
+                Ex::Relational { fun: <span class="kw">_</span>, argument } =&gt; <span class="self">self</span>.expressions_used.insert(argument),
                 Ex::Math {
                     fun: <span class="kw">_</span>,
                     arg,
@@ -537,60 +562,25 @@
                     arg2,
                     arg3,
                 } =&gt; {
-                    work_list.push(arg);
-                    work_list.extend(arg1);
-                    work_list.extend(arg2);
-                    work_list.extend(arg3);
+                    <span class="self">self</span>.expressions_used.insert(arg);
+                    <span class="self">self</span>.expressions_used.insert_iter(arg1);
+                    <span class="self">self</span>.expressions_used.insert_iter(arg2);
+                    <span class="self">self</span>.expressions_used.insert_iter(arg3);
                 }
                 Ex::As {
                     expr,
                     kind: <span class="kw">_</span>,
                     convert: <span class="kw">_</span>,
-                } =&gt; work_list.push(expr),
-                Ex::AtomicResult { ty, comparison: <span class="kw">_ </span>} =&gt; <span class="self">self</span>.trace_type(ty),
-                Ex::WorkGroupUniformLoadResult { ty } =&gt; <span class="self">self</span>.trace_type(ty),
-                Ex::ArrayLength(expr) =&gt; work_list.push(expr),
+                } =&gt; <span class="self">self</span>.expressions_used.insert(expr),
+                Ex::AtomicResult { ty, comparison: <span class="kw">_ </span>} =&gt; <span class="self">self</span>.types_used.insert(ty),
+                Ex::WorkGroupUniformLoadResult { ty } =&gt; <span class="self">self</span>.types_used.insert(ty),
+                Ex::ArrayLength(expr) =&gt; <span class="self">self</span>.expressions_used.insert(expr),
                 Ex::RayQueryGetIntersection {
                     query,
                     committed: <span class="kw">_</span>,
-                } =&gt; work_list.push(query),
+                } =&gt; <span class="self">self</span>.expressions_used.insert(query),
             }
         }
-    }
-
-    <span class="kw">fn </span>trace_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: Handle&lt;<span class="kw">crate</span>::Type&gt;) {
-        <span class="kw">let </span><span class="kw-2">mut </span>types_used = <span class="kw">super</span>::types::TypeTracer {
-            types: <span class="self">self</span>.types,
-            types_used: <span class="self">self</span>.types_used,
-        };
-        types_used.trace_type(ty);
-    }
-
-    <span class="kw">pub fn </span>as_const_expression(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; ExpressionTracer {
-        <span class="kw">match </span><span class="self">self</span>.const_expressions {
-            <span class="prelude-val">Some</span>((<span class="kw-2">ref mut </span>exprs, <span class="kw-2">ref mut </span>exprs_used)) =&gt; ExpressionTracer {
-                expressions: exprs,
-                expressions_used: exprs_used,
-                types: <span class="self">self</span>.types,
-                constants: <span class="self">self</span>.constants,
-                types_used: <span class="self">self</span>.types_used,
-                constants_used: <span class="self">self</span>.constants_used,
-                const_expressions: <span class="prelude-val">None</span>,
-            },
-            <span class="prelude-val">None </span>=&gt; ExpressionTracer {
-                types: <span class="self">self</span>.types,
-                constants: <span class="self">self</span>.constants,
-                expressions: <span class="self">self</span>.expressions,
-                types_used: <span class="self">self</span>.types_used,
-                constants_used: <span class="self">self</span>.constants_used,
-                expressions_used: <span class="self">self</span>.expressions_used,
-                const_expressions: <span class="prelude-val">None</span>,
-            },
-        }
-    }
-
-    <span class="kw">fn </span>trace_const_expression(<span class="kw-2">&amp;mut </span><span class="self">self</span>, const_expr: Handle&lt;<span class="kw">crate</span>::Expression&gt;) {
-        <span class="self">self</span>.as_const_expression().trace_expression(const_expr);
     }
 }
 

@@ -91,6 +91,15 @@
 <a href="#91" id="91">91</a>
 <a href="#92" id="92">92</a>
 <a href="#93" id="93">93</a>
+<a href="#94" id="94">94</a>
+<a href="#95" id="95">95</a>
+<a href="#96" id="96">96</a>
+<a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
+<a href="#99" id="99">99</a>
+<a href="#100" id="100">100</a>
+<a href="#101" id="101">101</a>
+<a href="#102" id="102">102</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{HandleSet, ModuleMap};
 <span class="kw">use crate</span>::{Handle, UniqueArena};
 
@@ -100,16 +109,25 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; TypeTracer&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">pub fn </span>trace_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ty: Handle&lt;<span class="kw">crate</span>::Type&gt;) {
-        <span class="kw">let </span><span class="kw-2">mut </span>work_list = <span class="macro">vec!</span>[ty];
-        <span class="kw">while let </span><span class="prelude-val">Some</span>(ty) = work_list.pop() {
-            <span class="comment">// If we&#39;ve already seen this type, no need to traverse further.
-            </span><span class="kw">if </span>!<span class="self">self</span>.types_used.insert(ty) {
+    <span class="doccomment">/// Propagate usage through `self.types`, starting with `self.types_used`.
+    ///
+    /// Treat `self.types_used` as the initial set of &quot;known
+    /// live&quot; types, and follow through to identify all
+    /// transitively used types.
+    </span><span class="kw">pub fn </span>trace_types(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="comment">// We don&#39;t need recursion or a work list. Because an
+        // expression may only refer to other expressions that precede
+        // it in the arena, it suffices to make a single pass over the
+        // arena from back to front, marking the referents of used
+        // expressions as used themselves.
+        </span><span class="kw">for </span>(handle, ty) <span class="kw">in </span><span class="self">self</span>.types.iter().rev() {
+            <span class="comment">// If this type isn&#39;t used, it doesn&#39;t matter what it uses.
+            </span><span class="kw">if </span>!<span class="self">self</span>.types_used.contains(handle) {
                 <span class="kw">continue</span>;
             }
 
             <span class="kw">use </span><span class="kw">crate</span>::TypeInner <span class="kw">as </span>Ti;
-            <span class="kw">match </span><span class="self">self</span>.types[ty].inner {
+            <span class="kw">match </span>ty.inner {
                 <span class="comment">// Types that do not contain handles.
                 </span>Ti::Scalar { .. }
                 | Ti::Vector { .. }
@@ -122,19 +140,19 @@
                 | Ti::RayQuery =&gt; {}
 
                 <span class="comment">// Types that do contain handles.
-                </span>Ti::Pointer { base, space: <span class="kw">_ </span>} =&gt; work_list.push(base),
-                Ti::Array {
+                </span>Ti::Pointer { base, space: <span class="kw">_ </span>}
+                | Ti::Array {
                     base,
                     size: <span class="kw">_</span>,
                     stride: <span class="kw">_</span>,
-                } =&gt; work_list.push(base),
+                }
+                | Ti::BindingArray { base, size: <span class="kw">_ </span>} =&gt; <span class="self">self</span>.types_used.insert(base),
                 Ti::Struct {
                     <span class="kw-2">ref </span>members,
                     span: <span class="kw">_</span>,
                 } =&gt; {
-                    work_list.extend(members.iter().map(|m| m.ty));
+                    <span class="self">self</span>.types_used.insert_iter(members.iter().map(|m| m.ty));
                 }
-                Ti::BindingArray { base, size: <span class="kw">_ </span>} =&gt; work_list.push(base),
             }
         }
     }
