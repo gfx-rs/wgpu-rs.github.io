@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/proc/constant_evaluator.rs`."><title>constant_evaluator.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (2b603f95a 2023-11-12)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/proc/constant_evaluator.rs`."><title>constant_evaluator.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (ba7c7a301 2023-11-13)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1808,6 +1808,17 @@
 <a href="#1808" id="1808">1808</a>
 <a href="#1809" id="1809">1809</a>
 <a href="#1810" id="1810">1810</a>
+<a href="#1811" id="1811">1811</a>
+<a href="#1812" id="1812">1812</a>
+<a href="#1813" id="1813">1813</a>
+<a href="#1814" id="1814">1814</a>
+<a href="#1815" id="1815">1815</a>
+<a href="#1816" id="1816">1816</a>
+<a href="#1817" id="1817">1817</a>
+<a href="#1818" id="1818">1818</a>
+<a href="#1819" id="1819">1819</a>
+<a href="#1820" id="1820">1820</a>
+<a href="#1821" id="1821">1821</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     arena::{Arena, Handle, UniqueArena},
     ArraySize, BinaryOperator, Constant, Expression, Literal, ScalarKind, Span, Type, TypeInner,
@@ -2214,7 +2225,7 @@
                 <span class="kw">let </span>expr = <span class="self">self</span>.check_and_get(expr)<span class="question-mark">?</span>;
 
                 <span class="kw">match </span>convert {
-                    <span class="prelude-val">Some</span>(width) =&gt; <span class="self">self</span>.cast(expr, kind, width, span),
+                    <span class="prelude-val">Some</span>(width) =&gt; <span class="self">self</span>.cast(expr, <span class="kw">crate</span>::Scalar { kind, width }, span),
                     <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(ConstantEvaluatorError::NotImplemented(
                         <span class="string">&quot;bitcast built-in function&quot;</span>.into(),
                     )),
@@ -2272,12 +2283,11 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;, ConstantEvaluatorError&gt; {
         <span class="kw">match </span><span class="self">self</span>.expressions[value] {
             Expression::Literal(literal) =&gt; {
-                <span class="kw">let </span>kind = literal.scalar_kind();
-                <span class="kw">let </span>width = literal.width();
+                <span class="kw">let </span>scalar = literal.scalar();
                 <span class="kw">let </span>ty = <span class="self">self</span>.types.insert(
                     Type {
                         name: <span class="prelude-val">None</span>,
-                        inner: TypeInner::Vector { size, kind, width },
+                        inner: TypeInner::Vector { size, scalar },
                     },
                     span,
                 );
@@ -2289,7 +2299,7 @@
             }
             Expression::ZeroValue(ty) =&gt; {
                 <span class="kw">let </span>inner = <span class="kw">match </span><span class="self">self</span>.types[ty].inner {
-                    TypeInner::Scalar { kind, width } =&gt; TypeInner::Vector { size, kind, width },
+                    TypeInner::Scalar(scalar) =&gt; TypeInner::Vector { size, scalar },
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::SplatScalarOnly),
                 };
                 <span class="kw">let </span>res_ty = <span class="self">self</span>.types.insert(Type { name: <span class="prelude-val">None</span>, inner }, span);
@@ -2308,14 +2318,10 @@
         pattern: [<span class="kw">crate</span>::SwizzleComponent; <span class="number">4</span>],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;, ConstantEvaluatorError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>get_dst_ty = |ty| <span class="kw">match </span><span class="self">self</span>.types[ty].inner {
-            <span class="kw">crate</span>::TypeInner::Vector {
-                size: <span class="kw">_</span>,
-                kind,
-                width,
-            } =&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.types.insert(
+            <span class="kw">crate</span>::TypeInner::Vector { size: <span class="kw">_</span>, scalar } =&gt; <span class="prelude-val">Ok</span>(<span class="self">self</span>.types.insert(
                 Type {
                     name: <span class="prelude-val">None</span>,
-                    inner: <span class="kw">crate</span>::TypeInner::Vector { size, kind, width },
+                    inner: <span class="kw">crate</span>::TypeInner::Vector { size, scalar },
                 },
                 span,
             )),
@@ -2421,7 +2427,10 @@
                 &amp;&amp; <span class="macro">matches!</span>(
                     <span class="self">self</span>.types[ty0].inner,
                     <span class="kw">crate</span>::TypeInner::Vector {
-                        kind: <span class="kw">crate</span>::ScalarKind::Float,
+                        scalar: <span class="kw">crate</span>::Scalar {
+                            kind: <span class="kw">crate</span>::ScalarKind::Float,
+                            ..
+                        },
                         ..
                     }
                 ) =&gt;
@@ -2519,7 +2528,10 @@
                 &amp;&amp; <span class="macro">matches!</span>(
                     <span class="self">self</span>.types[ty0].inner,
                     <span class="kw">crate</span>::TypeInner::Vector {
-                        kind: <span class="kw">crate</span>::ScalarKind::Float,
+                        scalar: <span class="kw">crate</span>::Scalar {
+                            kind: <span class="kw">crate</span>::ScalarKind::Float,
+                            ..
+                        },
                         ..
                     }
                 ) =&gt;
@@ -2641,10 +2653,10 @@
             Expression::ZeroValue(ty)
                 <span class="kw">if </span><span class="macro">matches!</span>(
                     <span class="self">self</span>.types[ty].inner,
-                    <span class="kw">crate</span>::TypeInner::Scalar {
+                    <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
                         kind: <span class="kw">crate</span>::ScalarKind::Uint,
                         ..
-                    }
+                    })
                 ) =&gt;
             {
                 <span class="prelude-val">Ok</span>(<span class="number">0</span>)
@@ -2683,18 +2695,17 @@
         span: Span,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;, ConstantEvaluatorError&gt; {
         <span class="kw">match </span><span class="self">self</span>.types[ty].inner {
-            TypeInner::Scalar { kind, width } =&gt; {
+            TypeInner::Scalar(scalar) =&gt; {
                 <span class="kw">let </span>expr = Expression::Literal(
-                    Literal::zero(kind, width)
-                        .ok_or(ConstantEvaluatorError::TypeNotConstructible)<span class="question-mark">?</span>,
+                    Literal::zero(scalar).ok_or(ConstantEvaluatorError::TypeNotConstructible)<span class="question-mark">?</span>,
                 );
                 <span class="self">self</span>.register_evaluated_expr(expr, span)
             }
-            TypeInner::Vector { size, kind, width } =&gt; {
+            TypeInner::Vector { size, scalar } =&gt; {
                 <span class="kw">let </span>scalar_ty = <span class="self">self</span>.types.insert(
                     Type {
                         name: <span class="prelude-val">None</span>,
-                        inner: TypeInner::Scalar { kind, width },
+                        inner: TypeInner::Scalar(scalar),
                     },
                     span,
                 );
@@ -2715,8 +2726,10 @@
                         name: <span class="prelude-val">None</span>,
                         inner: TypeInner::Vector {
                             size: rows,
-                            kind: ScalarKind::Float,
-                            width,
+                            scalar: <span class="kw">crate</span>::Scalar {
+                                kind: ScalarKind::Float,
+                                width,
+                            },
                         },
                     },
                     span,
@@ -2753,43 +2766,57 @@
         }
     }
 
-    <span class="doccomment">/// Convert the scalar components of `expr` to `kind` and `target_width`.
+    <span class="doccomment">/// Convert the scalar components of `expr` to `target`.
     ///
     /// Treat `span` as the location of the resulting expression.
     </span><span class="kw">pub fn </span>cast(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         expr: Handle&lt;Expression&gt;,
-        kind: ScalarKind,
-        target_width: <span class="kw">crate</span>::Bytes,
+        target: <span class="kw">crate</span>::Scalar,
         span: Span,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;, ConstantEvaluatorError&gt; {
+        <span class="kw">use </span><span class="kw">crate</span>::Scalar <span class="kw">as </span>Sc;
+        <span class="kw">use </span><span class="kw">crate</span>::ScalarKind <span class="kw">as </span>Sk;
+
         <span class="kw">let </span>expr = <span class="self">self</span>.eval_zero_value_and_splat(expr, span)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>expr = <span class="kw">match </span><span class="self">self</span>.expressions[expr] {
             Expression::Literal(literal) =&gt; {
-                <span class="kw">let </span>literal = <span class="kw">match </span>(kind, target_width) {
-                    (ScalarKind::Sint, <span class="number">4</span>) =&gt; Literal::I32(<span class="kw">match </span>literal {
+                <span class="kw">let </span>literal = <span class="kw">match </span>target {
+                    Sc {
+                        kind: Sk::Sint,
+                        width: <span class="number">4</span>,
+                    } =&gt; Literal::I32(<span class="kw">match </span>literal {
                         Literal::I32(v) =&gt; v,
                         Literal::U32(v) =&gt; v <span class="kw">as </span>i32,
                         Literal::F32(v) =&gt; v <span class="kw">as </span>i32,
                         Literal::Bool(v) =&gt; v <span class="kw">as </span>i32,
                         Literal::F64(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg),
                     }),
-                    (ScalarKind::Uint, <span class="number">4</span>) =&gt; Literal::U32(<span class="kw">match </span>literal {
+                    Sc {
+                        kind: Sk::Uint,
+                        width: <span class="number">4</span>,
+                    } =&gt; Literal::U32(<span class="kw">match </span>literal {
                         Literal::I32(v) =&gt; v <span class="kw">as </span>u32,
                         Literal::U32(v) =&gt; v,
                         Literal::F32(v) =&gt; v <span class="kw">as </span>u32,
                         Literal::Bool(v) =&gt; v <span class="kw">as </span>u32,
                         Literal::F64(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg),
                     }),
-                    (ScalarKind::Float, <span class="number">4</span>) =&gt; Literal::F32(<span class="kw">match </span>literal {
+                    Sc {
+                        kind: Sk::Float,
+                        width: <span class="number">4</span>,
+                    } =&gt; Literal::F32(<span class="kw">match </span>literal {
                         Literal::I32(v) =&gt; v <span class="kw">as </span>f32,
                         Literal::U32(v) =&gt; v <span class="kw">as </span>f32,
                         Literal::F32(v) =&gt; v,
                         Literal::Bool(v) =&gt; v <span class="kw">as </span>u32 <span class="kw">as </span>f32,
                         Literal::F64(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg),
                     }),
-                    (ScalarKind::Bool, <span class="kw">crate</span>::BOOL_WIDTH) =&gt; Literal::Bool(<span class="kw">match </span>literal {
+                    Sc {
+                        kind: Sk::Bool,
+                        width: <span class="kw">crate</span>::BOOL_WIDTH,
+                    } =&gt; Literal::Bool(<span class="kw">match </span>literal {
                         Literal::I32(v) =&gt; v != <span class="number">0</span>,
                         Literal::U32(v) =&gt; v != <span class="number">0</span>,
                         Literal::F32(v) =&gt; v != <span class="number">0.0</span>,
@@ -2807,20 +2834,19 @@
                 <span class="kw">let </span>ty_inner = <span class="kw">match </span><span class="self">self</span>.types[ty].inner {
                     TypeInner::Vector { size, .. } =&gt; TypeInner::Vector {
                         size,
-                        kind,
-                        width: target_width,
+                        scalar: target,
                     },
                     TypeInner::Matrix { columns, rows, .. } =&gt; TypeInner::Matrix {
                         columns,
                         rows,
-                        width: target_width,
+                        width: target.width,
                     },
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg),
                 };
 
                 <span class="kw">let </span><span class="kw-2">mut </span>components = src_components.clone();
                 <span class="kw">for </span>component <span class="kw">in </span><span class="kw-2">&amp;mut </span>components {
-                    <span class="kw-2">*</span>component = <span class="self">self</span>.cast(<span class="kw-2">*</span>component, kind, target_width, span)<span class="question-mark">?</span>;
+                    <span class="kw-2">*</span>component = <span class="self">self</span>.cast(<span class="kw-2">*</span>component, target, span)<span class="question-mark">?</span>;
                 }
 
                 <span class="kw">let </span>ty = <span class="self">self</span>.types.insert(
@@ -3115,10 +3141,7 @@
         <span class="kw">let </span>scalar_ty = types.insert(
             Type {
                 name: <span class="prelude-val">None</span>,
-                inner: TypeInner::Scalar {
-                    kind: ScalarKind::Sint,
-                    width: <span class="number">4</span>,
-                },
+                inner: TypeInner::Scalar(<span class="kw">crate</span>::Scalar::I32),
             },
             Default::default(),
         );
@@ -3128,8 +3151,10 @@
                 name: <span class="prelude-val">None</span>,
                 inner: TypeInner::Vector {
                     size: VectorSize::Bi,
-                    kind: ScalarKind::Sint,
-                    width: <span class="number">4</span>,
+                    scalar: <span class="kw">crate</span>::Scalar {
+                        kind: ScalarKind::Sint,
+                        width: <span class="number">4</span>,
+                    },
                 },
             },
             Default::default(),
@@ -3251,10 +3276,7 @@
         <span class="kw">let </span>scalar_ty = types.insert(
             Type {
                 name: <span class="prelude-val">None</span>,
-                inner: TypeInner::Scalar {
-                    kind: ScalarKind::Sint,
-                    width: <span class="number">4</span>,
-                },
+                inner: TypeInner::Scalar(<span class="kw">crate</span>::Scalar::I32),
             },
             Default::default(),
         );
@@ -3319,8 +3341,10 @@
                 name: <span class="prelude-val">None</span>,
                 inner: TypeInner::Vector {
                     size: VectorSize::Tri,
-                    kind: ScalarKind::Float,
-                    width: <span class="number">4</span>,
+                    scalar: <span class="kw">crate</span>::Scalar {
+                        kind: ScalarKind::Float,
+                        width: <span class="number">4</span>,
+                    },
                 },
             },
             Default::default(),
@@ -3459,10 +3483,7 @@
         <span class="kw">let </span>i32_ty = types.insert(
             Type {
                 name: <span class="prelude-val">None</span>,
-                inner: TypeInner::Scalar {
-                    kind: ScalarKind::Sint,
-                    width: <span class="number">4</span>,
-                },
+                inner: TypeInner::Scalar(<span class="kw">crate</span>::Scalar::I32),
             },
             Default::default(),
         );
@@ -3472,8 +3493,10 @@
                 name: <span class="prelude-val">None</span>,
                 inner: TypeInner::Vector {
                     size: VectorSize::Bi,
-                    kind: ScalarKind::Sint,
-                    width: <span class="number">4</span>,
+                    scalar: <span class="kw">crate</span>::Scalar {
+                        kind: ScalarKind::Sint,
+                        width: <span class="number">4</span>,
+                    },
                 },
             },
             Default::default(),
@@ -3543,10 +3566,7 @@
         <span class="kw">let </span>i32_ty = types.insert(
             Type {
                 name: <span class="prelude-val">None</span>,
-                inner: TypeInner::Scalar {
-                    kind: ScalarKind::Sint,
-                    width: <span class="number">4</span>,
-                },
+                inner: TypeInner::Scalar(<span class="kw">crate</span>::Scalar::I32),
             },
             Default::default(),
         );
@@ -3556,8 +3576,10 @@
                 name: <span class="prelude-val">None</span>,
                 inner: TypeInner::Vector {
                     size: VectorSize::Bi,
-                    kind: ScalarKind::Sint,
-                    width: <span class="number">4</span>,
+                    scalar: <span class="kw">crate</span>::Scalar {
+                        kind: ScalarKind::Sint,
+                        width: <span class="number">4</span>,
+                    },
                 },
             },
             Default::default(),

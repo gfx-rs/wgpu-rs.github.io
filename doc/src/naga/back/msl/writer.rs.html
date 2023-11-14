@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/msl/writer.rs`."><title>writer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (2b603f95a 2023-11-12)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/msl/writer.rs`."><title>writer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (ba7c7a301 2023-11-13)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -4622,6 +4622,31 @@
 <a href="#4622" id="4622">4622</a>
 <a href="#4623" id="4623">4623</a>
 <a href="#4624" id="4624">4624</a>
+<a href="#4625" id="4625">4625</a>
+<a href="#4626" id="4626">4626</a>
+<a href="#4627" id="4627">4627</a>
+<a href="#4628" id="4628">4628</a>
+<a href="#4629" id="4629">4629</a>
+<a href="#4630" id="4630">4630</a>
+<a href="#4631" id="4631">4631</a>
+<a href="#4632" id="4632">4632</a>
+<a href="#4633" id="4633">4633</a>
+<a href="#4634" id="4634">4634</a>
+<a href="#4635" id="4635">4635</a>
+<a href="#4636" id="4636">4636</a>
+<a href="#4637" id="4637">4637</a>
+<a href="#4638" id="4638">4638</a>
+<a href="#4639" id="4639">4639</a>
+<a href="#4640" id="4640">4640</a>
+<a href="#4641" id="4641">4641</a>
+<a href="#4642" id="4642">4642</a>
+<a href="#4643" id="4643">4643</a>
+<a href="#4644" id="4644">4644</a>
+<a href="#4645" id="4645">4645</a>
+<a href="#4646" id="4646">4646</a>
+<a href="#4647" id="4647">4647</a>
+<a href="#4648" id="4648">4648</a>
+<a href="#4649" id="4649">4649</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::Handle,
@@ -4669,28 +4694,28 @@
 /// - A two element slice `[ROWS COLUMNS]` produces a matrix of the given size.
 </span><span class="kw">fn </span>put_numeric_type(
     out: <span class="kw-2">&amp;mut </span><span class="kw">impl </span>Write,
-    kind: <span class="kw">crate</span>::ScalarKind,
+    scalar: <span class="kw">crate</span>::Scalar,
     sizes: <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::VectorSize],
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), FmtError&gt; {
-    <span class="kw">match </span>(kind, sizes) {
-        (kind, <span class="kw-2">&amp;</span>[]) =&gt; {
-            <span class="macro">write!</span>(out, <span class="string">&quot;{}&quot;</span>, kind.to_msl_name())
+    <span class="kw">match </span>(scalar, sizes) {
+        (scalar, <span class="kw-2">&amp;</span>[]) =&gt; {
+            <span class="macro">write!</span>(out, <span class="string">&quot;{}&quot;</span>, scalar.to_msl_name())
         }
-        (kind, <span class="kw-2">&amp;</span>[rows]) =&gt; {
+        (scalar, <span class="kw-2">&amp;</span>[rows]) =&gt; {
             <span class="macro">write!</span>(
                 out,
                 <span class="string">&quot;{}::{}{}&quot;</span>,
                 NAMESPACE,
-                kind.to_msl_name(),
+                scalar.to_msl_name(),
                 back::vector_size_str(rows)
             )
         }
-        (kind, <span class="kw-2">&amp;</span>[rows, columns]) =&gt; {
+        (scalar, <span class="kw-2">&amp;</span>[rows, columns]) =&gt; {
             <span class="macro">write!</span>(
                 out,
                 <span class="string">&quot;{}::{}{}x{}&quot;</span>,
                 NAMESPACE,
-                kind.to_msl_name(),
+                scalar.to_msl_name(),
                 back::vector_size_str(columns),
                 back::vector_size_str(rows)
             )
@@ -4720,13 +4745,13 @@
         }
 
         <span class="kw">match </span>ty.inner {
-            <span class="kw">crate</span>::TypeInner::Scalar { kind, .. } =&gt; put_numeric_type(out, kind, <span class="kw-2">&amp;</span>[]),
-            <span class="kw">crate</span>::TypeInner::Atomic { kind, .. } =&gt; {
-                <span class="macro">write!</span>(out, <span class="string">&quot;{}::atomic_{}&quot;</span>, NAMESPACE, kind.to_msl_name())
+            <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; put_numeric_type(out, scalar, <span class="kw-2">&amp;</span>[]),
+            <span class="kw">crate</span>::TypeInner::Atomic(scalar) =&gt; {
+                <span class="macro">write!</span>(out, <span class="string">&quot;{}::atomic_{}&quot;</span>, NAMESPACE, scalar.to_msl_name())
             }
-            <span class="kw">crate</span>::TypeInner::Vector { size, kind, .. } =&gt; put_numeric_type(out, kind, <span class="kw-2">&amp;</span>[size]),
+            <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; put_numeric_type(out, scalar, <span class="kw-2">&amp;</span>[size]),
             <span class="kw">crate</span>::TypeInner::Matrix { columns, rows, .. } =&gt; {
-                put_numeric_type(out, <span class="kw">crate</span>::ScalarKind::Float, <span class="kw-2">&amp;</span>[rows, columns])
+                put_numeric_type(out, <span class="kw">crate</span>::Scalar::F32, <span class="kw-2">&amp;</span>[rows, columns])
             }
             <span class="kw">crate</span>::TypeInner::Pointer { base, space } =&gt; {
                 <span class="kw">let </span>sub = <span class="self">Self </span>{
@@ -4742,8 +4767,7 @@
             }
             <span class="kw">crate</span>::TypeInner::ValuePointer {
                 size,
-                kind,
-                width: <span class="kw">_</span>,
+                scalar,
                 space,
             } =&gt; {
                 <span class="kw">match </span>space.to_msl_name() {
@@ -4751,8 +4775,8 @@
                     <span class="prelude-val">None </span>=&gt; <span class="kw">return </span><span class="prelude-val">Ok</span>(()),
                 };
                 <span class="kw">match </span>size {
-                    <span class="prelude-val">Some</span>(rows) =&gt; put_numeric_type(out, kind, <span class="kw-2">&amp;</span>[rows])<span class="question-mark">?</span>,
-                    <span class="prelude-val">None </span>=&gt; put_numeric_type(out, kind, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>,
+                    <span class="prelude-val">Some</span>(rows) =&gt; put_numeric_type(out, scalar, <span class="kw-2">&amp;</span>[rows])<span class="question-mark">?</span>,
+                    <span class="prelude-val">None </span>=&gt; put_numeric_type(out, scalar, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>,
                 };
 
                 <span class="macro">write!</span>(out, <span class="string">&quot;&amp;&quot;</span>)
@@ -4818,7 +4842,7 @@
                         (<span class="string">&quot;texture&quot;</span>, <span class="string">&quot;&quot;</span>, format.into(), access)
                     }
                 };
-                <span class="kw">let </span>base_name = kind.to_msl_name();
+                <span class="kw">let </span>base_name = <span class="kw">crate</span>::Scalar { kind, width: <span class="number">4 </span>}.to_msl_name();
                 <span class="kw">let </span>array_str = <span class="kw">if </span>arrayed { <span class="string">&quot;_array&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;&quot; </span>};
                 <span class="macro">write!</span>(
                     out,
@@ -4943,13 +4967,26 @@
     </span>struct_member_pads: FastHashSet&lt;(Handle&lt;<span class="kw">crate</span>::Type&gt;, u32)&gt;,
 }
 
-<span class="kw">impl </span><span class="kw">crate</span>::ScalarKind {
+<span class="kw">impl </span><span class="kw">crate</span>::Scalar {
     <span class="kw">const fn </span>to_msl_name(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+        <span class="kw">use </span><span class="kw">crate</span>::ScalarKind <span class="kw">as </span>Sk;
         <span class="kw">match </span><span class="self">self </span>{
-            <span class="self">Self</span>::Float =&gt; <span class="string">&quot;float&quot;</span>,
-            <span class="self">Self</span>::Sint =&gt; <span class="string">&quot;int&quot;</span>,
-            <span class="self">Self</span>::Uint =&gt; <span class="string">&quot;uint&quot;</span>,
-            <span class="self">Self</span>::Bool =&gt; <span class="string">&quot;bool&quot;</span>,
+            <span class="self">Self </span>{
+                kind: Sk::Float,
+                width: <span class="kw">_</span>,
+            } =&gt; <span class="string">&quot;float&quot;</span>,
+            <span class="self">Self </span>{
+                kind: Sk::Sint,
+                width: <span class="kw">_</span>,
+            } =&gt; <span class="string">&quot;int&quot;</span>,
+            <span class="self">Self </span>{
+                kind: Sk::Uint,
+                width: <span class="kw">_</span>,
+            } =&gt; <span class="string">&quot;uint&quot;</span>,
+            <span class="self">Self </span>{
+                kind: Sk::Bool,
+                width: <span class="kw">_</span>,
+            } =&gt; <span class="string">&quot;bool&quot;</span>,
         }
     }
 }
@@ -4967,7 +5004,7 @@
     span: u32,
     index: usize,
     module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
-) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::ScalarKind&gt; {
+) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Scalar&gt; {
     <span class="kw">let </span>member = <span class="kw-2">&amp;</span>members[index];
     <span class="comment">//Note: this is imperfect - the same structure can be used for host-shared
     // things, where packed float would matter.
@@ -4986,9 +5023,8 @@
     <span class="kw">match </span><span class="kw-2">*</span>ty_inner {
         <span class="kw">crate</span>::TypeInner::Vector {
             size: <span class="kw">crate</span>::VectorSize::Tri,
-            width: <span class="number">4</span>,
-            kind,
-        } <span class="kw">if </span>member.offset &amp; <span class="number">0xF </span>!= <span class="number">0 </span>|| is_tight =&gt; <span class="prelude-val">Some</span>(kind),
+            scalar: scalar @ <span class="kw">crate</span>::Scalar { width: <span class="number">4</span>, .. },
+        } <span class="kw">if </span>member.offset &amp; <span class="number">0xF </span>!= <span class="number">0 </span>|| is_tight =&gt; <span class="prelude-val">Some</span>(scalar),
         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
     }
 }
@@ -5066,10 +5102,10 @@
 
         <span class="kw">match </span><span class="self">self</span>.inner {
             <span class="comment">// value types are concise enough, we only alias them if they are named
-            </span>Ti::Scalar { .. }
+            </span>Ti::Scalar(<span class="kw">_</span>)
             | Ti::Vector { .. }
             | Ti::Matrix { .. }
-            | Ti::Atomic { .. }
+            | Ti::Atomic(<span class="kw">_</span>)
             | Ti::Pointer { .. }
             | Ti::ValuePointer { .. } =&gt; <span class="self">self</span>.name.is_some(),
             <span class="comment">// composite types are better to be aliased, regardless of the name
@@ -5173,10 +5209,7 @@
         index::access_needs_check(base, index, <span class="self">self</span>.module, <span class="self">self</span>.function, <span class="self">self</span>.info)
     }
 
-    <span class="kw">fn </span>get_packed_vec_kind(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        expr_handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::ScalarKind&gt; {
+    <span class="kw">fn </span>get_packed_vec_kind(<span class="kw-2">&amp;</span><span class="self">self</span>, expr_handle: Handle&lt;<span class="kw">crate</span>::Expression&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Scalar&gt; {
         <span class="kw">match </span><span class="self">self</span>.function.expressions[expr_handle] {
             <span class="kw">crate</span>::Expression::AccessIndex { base, index } =&gt; {
                 <span class="kw">let </span>ty = <span class="kw">match </span><span class="kw-2">*</span><span class="self">self</span>.resolve_type(base) {
@@ -5297,7 +5330,8 @@
             <span class="kw">crate</span>::TypeInner::Image { dim, .. } =&gt; dim,
             <span class="kw-2">ref </span>other =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;Unexpected type {:?}&quot;</span>, other),
         };
-        <span class="kw">let </span>coordinate_type = kind.to_msl_name();
+        <span class="kw">let </span>scalar = <span class="kw">crate</span>::Scalar { kind, width: <span class="number">4 </span>};
+        <span class="kw">let </span>coordinate_type = scalar.to_msl_name();
         <span class="kw">match </span>dim {
             <span class="kw">crate</span>::ImageDimension::D1 =&gt; {
                 <span class="comment">// Since 1D textures never have mipmaps, MSL requires that the
@@ -5345,11 +5379,11 @@
     ) -&gt; BackendResult {
         <span class="comment">// coordinates in IR are int, but Metal expects uint
         </span><span class="kw">match </span><span class="kw-2">*</span>context.resolve_type(expr) {
-            <span class="kw">crate</span>::TypeInner::Scalar { .. } =&gt; {
-                put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, <span class="kw">crate</span>::ScalarKind::Uint, <span class="kw-2">&amp;</span>[])<span class="question-mark">?
+            <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">_</span>) =&gt; {
+                put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, <span class="kw">crate</span>::Scalar::U32, <span class="kw-2">&amp;</span>[])<span class="question-mark">?
             </span>}
             <span class="kw">crate</span>::TypeInner::Vector { size, .. } =&gt; {
-                put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, <span class="kw">crate</span>::ScalarKind::Uint, <span class="kw-2">&amp;</span>[size])<span class="question-mark">?
+                put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, <span class="kw">crate</span>::Scalar::U32, <span class="kw-2">&amp;</span>[size])<span class="question-mark">?
             </span>}
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation),
         };
@@ -5923,7 +5957,7 @@
                 };
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{ty_name}&quot;</span>)<span class="question-mark">?</span>;
                 <span class="kw">match </span>module.types[ty].inner {
-                    <span class="kw">crate</span>::TypeInner::Scalar { .. }
+                    <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">_</span>)
                     | <span class="kw">crate</span>::TypeInner::Vector { .. }
                     | <span class="kw">crate</span>::TypeInner::Matrix { .. } =&gt; {
                         <span class="self">self</span>.put_call_parameters_impl(
@@ -5950,11 +5984,11 @@
                 }
             }
             <span class="kw">crate</span>::Expression::Splat { size, value } =&gt; {
-                <span class="kw">let </span>scalar_kind = <span class="kw">match </span><span class="kw-2">*</span>get_expr_ty(ctx, value).inner_with(<span class="kw-2">&amp;</span>module.types) {
-                    <span class="kw">crate</span>::TypeInner::Scalar { kind, .. } =&gt; kind,
+                <span class="kw">let </span>scalar = <span class="kw">match </span><span class="kw-2">*</span>get_expr_ty(ctx, value).inner_with(<span class="kw-2">&amp;</span>module.types) {
+                    <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; scalar,
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation),
                 };
-                put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, scalar_kind, <span class="kw-2">&amp;</span>[size])<span class="question-mark">?</span>;
+                put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, scalar, <span class="kw-2">&amp;</span>[size])<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;(&quot;</span>)<span class="question-mark">?</span>;
                 put_expression(<span class="self">self</span>, ctx, value)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
@@ -6250,10 +6284,10 @@
                 accept,
                 reject,
             } =&gt; <span class="kw">match </span><span class="kw-2">*</span>context.resolve_type(condition) {
-                <span class="kw">crate</span>::TypeInner::Scalar {
+                <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">crate</span>::Scalar {
                     kind: <span class="kw">crate</span>::ScalarKind::Bool,
                     ..
-                } =&gt; {
+                }) =&gt; {
                     <span class="kw">if </span>!is_scoped {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;(&quot;</span>)<span class="question-mark">?</span>;
                     }
@@ -6267,7 +6301,11 @@
                     }
                 }
                 <span class="kw">crate</span>::TypeInner::Vector {
-                    kind: <span class="kw">crate</span>::ScalarKind::Bool,
+                    scalar:
+                        <span class="kw">crate</span>::Scalar {
+                            kind: <span class="kw">crate</span>::ScalarKind::Bool,
+                            ..
+                        },
                     ..
                 } =&gt; {
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{NAMESPACE}::select(&quot;</span>)<span class="question-mark">?</span>;
@@ -6311,7 +6349,7 @@
 
                 <span class="kw">let </span>arg_type = context.resolve_type(arg);
                 <span class="kw">let </span>scalar_argument = <span class="kw">match </span>arg_type {
-                    <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Scalar { .. } =&gt; <span class="bool-val">true</span>,
+                    <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
                     <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
                 };
 
@@ -6356,7 +6394,11 @@
                     <span class="comment">// geometry
                     </span>Mf::Dot =&gt; <span class="kw">match </span><span class="kw-2">*</span>context.resolve_type(arg) {
                         <span class="kw">crate</span>::TypeInner::Vector {
-                            kind: <span class="kw">crate</span>::ScalarKind::Float,
+                            scalar:
+                                <span class="kw">crate</span>::Scalar {
+                                    kind: <span class="kw">crate</span>::ScalarKind::Float,
+                                    ..
+                                },
                             ..
                         } =&gt; <span class="string">&quot;dot&quot;</span>,
                         <span class="kw">crate</span>::TypeInner::Vector { size, .. } =&gt; {
@@ -6462,16 +6504,16 @@
 
                     <span class="comment">// or metal will complain that select is ambiguous
                     </span><span class="kw">match </span><span class="kw-2">*</span>inner {
-                        <span class="kw">crate</span>::TypeInner::Vector { size, kind, .. } =&gt; {
+                        <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; {
                             <span class="kw">let </span>size = back::vector_size_str(size);
-                            <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Sint = kind {
+                            <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Sint = scalar.kind {
                                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;int{size}&quot;</span>)<span class="question-mark">?</span>;
                             } <span class="kw">else </span>{
                                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;uint{size}&quot;</span>)<span class="question-mark">?</span>;
                             }
                         }
-                        <span class="kw">crate</span>::TypeInner::Scalar { kind, .. } =&gt; {
-                            <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Sint = kind {
+                        <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; {
+                            <span class="kw">if let </span><span class="kw">crate</span>::ScalarKind::Sint = scalar.kind {
                                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;int&quot;</span>)<span class="question-mark">?</span>;
                             } <span class="kw">else </span>{
                                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;uint&quot;</span>)<span class="question-mark">?</span>;
@@ -6517,19 +6559,15 @@
                 kind,
                 convert,
             } =&gt; <span class="kw">match </span><span class="kw-2">*</span>context.resolve_type(expr) {
-                <span class="kw">crate</span>::TypeInner::Scalar {
-                    kind: src_kind,
-                    width: src_width,
-                }
-                | <span class="kw">crate</span>::TypeInner::Vector {
-                    kind: src_kind,
-                    width: src_width,
-                    ..
-                } =&gt; {
+                <span class="kw">crate</span>::TypeInner::Scalar(src) | <span class="kw">crate</span>::TypeInner::Vector { scalar: src, .. } =&gt; {
+                    <span class="kw">let </span>target_scalar = <span class="kw">crate</span>::Scalar {
+                        kind,
+                        width: convert.unwrap_or(src.width),
+                    };
                     <span class="kw">let </span>is_bool_cast =
-                        kind == <span class="kw">crate</span>::ScalarKind::Bool || src_kind == <span class="kw">crate</span>::ScalarKind::Bool;
+                        kind == <span class="kw">crate</span>::ScalarKind::Bool || src.kind == <span class="kw">crate</span>::ScalarKind::Bool;
                     <span class="kw">let </span>op = <span class="kw">match </span>convert {
-                        <span class="prelude-val">Some</span>(w) <span class="kw">if </span>w == src_width || is_bool_cast =&gt; <span class="string">&quot;static_cast&quot;</span>,
+                        <span class="prelude-val">Some</span>(w) <span class="kw">if </span>w == src.width || is_bool_cast =&gt; <span class="string">&quot;static_cast&quot;</span>,
                         <span class="prelude-val">Some</span>(<span class="number">8</span>) <span class="kw">if </span>kind == <span class="kw">crate</span>::ScalarKind::Float =&gt; {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::CapabilityNotSupported(valid::Capabilities::FLOAT64))
                         }
@@ -6539,16 +6577,24 @@
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{op}&lt;&quot;</span>)<span class="question-mark">?</span>;
                     <span class="kw">match </span><span class="kw-2">*</span>context.resolve_type(expr) {
                         <span class="kw">crate</span>::TypeInner::Vector { size, .. } =&gt; {
-                            put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, kind, <span class="kw-2">&amp;</span>[size])<span class="question-mark">?
+                            put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, target_scalar, <span class="kw-2">&amp;</span>[size])<span class="question-mark">?
                         </span>}
-                        <span class="kw">_ </span>=&gt; put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, kind, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>,
+                        <span class="kw">_ </span>=&gt; put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, target_scalar, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>,
                     };
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;&gt;(&quot;</span>)<span class="question-mark">?</span>;
                     <span class="self">self</span>.put_expression(expr, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
                 }
-                <span class="kw">crate</span>::TypeInner::Matrix { columns, rows, .. } =&gt; {
-                    put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, kind, <span class="kw-2">&amp;</span>[rows, columns])<span class="question-mark">?</span>;
+                <span class="kw">crate</span>::TypeInner::Matrix {
+                    columns,
+                    rows,
+                    width,
+                } =&gt; {
+                    <span class="kw">let </span>target_scalar = <span class="kw">crate</span>::Scalar {
+                        kind,
+                        width: convert.unwrap_or(width),
+                    };
+                    put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, target_scalar, <span class="kw-2">&amp;</span>[rows, columns])<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;(&quot;</span>)<span class="question-mark">?</span>;
                     <span class="self">self</span>.put_expression(expr, context, <span class="bool-val">true</span>)<span class="question-mark">?</span>;
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
@@ -6632,8 +6678,8 @@
         context: <span class="kw-2">&amp;</span>ExpressionContext,
         is_scoped: bool,
     ) -&gt; BackendResult {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar_kind) = context.get_packed_vec_kind(expr_handle) {
-            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{}::{}3(&quot;</span>, NAMESPACE, scalar_kind.to_msl_name())<span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(scalar) = context.get_packed_vec_kind(expr_handle) {
+            <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{}::{}3(&quot;</span>, NAMESPACE, scalar.to_msl_name())<span class="question-mark">?</span>;
             <span class="self">self</span>.put_expression(expr_handle, context, is_scoped)<span class="question-mark">?</span>;
             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;)&quot;</span>)<span class="question-mark">?</span>;
         } <span class="kw">else </span>{
@@ -7099,8 +7145,8 @@
                         // check what kind of product this is depending
                         // on the resolve type of the Dot function itself
                         </span><span class="kw">let </span>inner = context.resolve_type(expr_handle);
-                        <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Scalar { kind, .. } = <span class="kw-2">*</span>inner {
-                            <span class="kw">match </span>kind {
+                        <span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Scalar(scalar) = <span class="kw-2">*</span>inner {
+                            <span class="kw">match </span>scalar.kind {
                                 <span class="kw">crate</span>::ScalarKind::Sint | <span class="kw">crate</span>::ScalarKind::Uint =&gt; {
                                     <span class="self">self</span>.need_bake_expressions.insert(arg);
                                     <span class="self">self</span>.need_bake_expressions.insert(arg1.unwrap());
@@ -7146,14 +7192,19 @@
                 };
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{ty_name}&quot;</span>)<span class="question-mark">?</span>;
             }
-            TypeResolution::Value(<span class="kw">crate</span>::TypeInner::Scalar { kind, .. }) =&gt; {
-                put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, kind, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
+            TypeResolution::Value(<span class="kw">crate</span>::TypeInner::Scalar(scalar)) =&gt; {
+                put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, scalar, <span class="kw-2">&amp;</span>[])<span class="question-mark">?</span>;
             }
-            TypeResolution::Value(<span class="kw">crate</span>::TypeInner::Vector { size, kind, .. }) =&gt; {
-                put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, kind, <span class="kw-2">&amp;</span>[size])<span class="question-mark">?</span>;
+            TypeResolution::Value(<span class="kw">crate</span>::TypeInner::Vector { size, scalar }) =&gt; {
+                put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, scalar, <span class="kw-2">&amp;</span>[size])<span class="question-mark">?</span>;
             }
-            TypeResolution::Value(<span class="kw">crate</span>::TypeInner::Matrix { columns, rows, .. }) =&gt; {
-                put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, <span class="kw">crate</span>::ScalarKind::Float, <span class="kw-2">&amp;</span>[rows, columns])<span class="question-mark">?</span>;
+            TypeResolution::Value(<span class="kw">crate</span>::TypeInner::Matrix {
+                columns,
+                rows,
+                width,
+            }) =&gt; {
+                <span class="kw">let </span>element = <span class="kw">crate</span>::Scalar::float(width);
+                put_numeric_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>.out, element, <span class="kw-2">&amp;</span>[rows, columns])<span class="question-mark">?</span>;
             }
             TypeResolution::Value(<span class="kw-2">ref </span>other) =&gt; {
                 <span class="macro">log::warn!</span>(<span class="string">&quot;Type {:?} isn&#39;t a known local&quot;</span>, other); <span class="comment">//TEMP!
@@ -7916,13 +7967,13 @@
 
                         <span class="comment">// If the member should be packed (as is the case for a misaligned vec3) issue a packed vector
                         </span><span class="kw">match </span>should_pack_struct_member(members, span, index, module) {
-                            <span class="prelude-val">Some</span>(kind) =&gt; {
+                            <span class="prelude-val">Some</span>(scalar) =&gt; {
                                 <span class="macro">writeln!</span>(
                                     <span class="self">self</span>.out,
                                     <span class="string">&quot;{}{}::packed_{}3 {};&quot;</span>,
                                     back::INDENT,
                                     NAMESPACE,
-                                    kind.to_msl_name(),
+                                    scalar.to_msl_name(),
                                     member_name
                                 )<span class="question-mark">?</span>;
                             }
@@ -7946,11 +7997,10 @@
                                 <span class="comment">// for 3-component vectors, add one component
                                 </span><span class="kw">if let </span><span class="kw">crate</span>::TypeInner::Vector {
                                     size: <span class="kw">crate</span>::VectorSize::Tri,
-                                    kind: <span class="kw">_</span>,
-                                    width,
+                                    scalar,
                                 } = <span class="kw-2">*</span>ty_inner
                                 {
-                                    last_offset += width <span class="kw">as </span>u32;
+                                    last_offset += scalar.width <span class="kw">as </span>u32;
                                 }
                             }
                         }

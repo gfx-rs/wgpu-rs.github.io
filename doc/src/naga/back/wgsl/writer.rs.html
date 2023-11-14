@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/wgsl/writer.rs`."><title>writer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (2b603f95a 2023-11-12)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/wgsl/writer.rs`."><title>writer.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (ba7c7a301 2023-11-13)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1920,6 +1920,35 @@
 <a href="#1920" id="1920">1920</a>
 <a href="#1921" id="1921">1921</a>
 <a href="#1922" id="1922">1922</a>
+<a href="#1923" id="1923">1923</a>
+<a href="#1924" id="1924">1924</a>
+<a href="#1925" id="1925">1925</a>
+<a href="#1926" id="1926">1926</a>
+<a href="#1927" id="1927">1927</a>
+<a href="#1928" id="1928">1928</a>
+<a href="#1929" id="1929">1929</a>
+<a href="#1930" id="1930">1930</a>
+<a href="#1931" id="1931">1931</a>
+<a href="#1932" id="1932">1932</a>
+<a href="#1933" id="1933">1933</a>
+<a href="#1934" id="1934">1934</a>
+<a href="#1935" id="1935">1935</a>
+<a href="#1936" id="1936">1936</a>
+<a href="#1937" id="1937">1937</a>
+<a href="#1938" id="1938">1938</a>
+<a href="#1939" id="1939">1939</a>
+<a href="#1940" id="1940">1940</a>
+<a href="#1941" id="1941">1941</a>
+<a href="#1942" id="1942">1942</a>
+<a href="#1943" id="1943">1943</a>
+<a href="#1944" id="1944">1944</a>
+<a href="#1945" id="1945">1945</a>
+<a href="#1946" id="1946">1946</a>
+<a href="#1947" id="1947">1947</a>
+<a href="#1948" id="1948">1948</a>
+<a href="#1949" id="1949">1949</a>
+<a href="#1950" id="1950">1950</a>
+<a href="#1951" id="1951">1951</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Error;
 <span class="kw">use crate</span>::{
     back,
@@ -2348,11 +2377,11 @@
     /// Adds no trailing or leading whitespace
     </span><span class="kw">fn </span>write_value_type(<span class="kw-2">&amp;mut </span><span class="self">self</span>, module: <span class="kw-2">&amp;</span>Module, inner: <span class="kw-2">&amp;</span>TypeInner) -&gt; BackendResult {
         <span class="kw">match </span><span class="kw-2">*</span>inner {
-            TypeInner::Vector { size, kind, width } =&gt; <span class="macro">write!</span>(
+            TypeInner::Vector { size, scalar } =&gt; <span class="macro">write!</span>(
                 <span class="self">self</span>.out,
                 <span class="string">&quot;vec{}&lt;{}&gt;&quot;</span>,
                 back::vector_size_str(size),
-                scalar_kind_str(kind, width),
+                scalar_kind_str(scalar),
             )<span class="question-mark">?</span>,
             TypeInner::Sampler { comparison: <span class="bool-val">false </span>} =&gt; {
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;sampler&quot;</span>)<span class="question-mark">?</span>;
@@ -2374,7 +2403,7 @@
                     Ic::Sampled { kind, multi } =&gt; (
                         <span class="string">&quot;&quot;</span>,
                         <span class="kw">if </span>multi { <span class="string">&quot;multisampled_&quot; </span>} <span class="kw">else </span>{ <span class="string">&quot;&quot; </span>},
-                        scalar_kind_str(kind, <span class="number">4</span>),
+                        scalar_kind_str(<span class="kw">crate</span>::Scalar { kind, width: <span class="number">4 </span>}),
                         <span class="string">&quot;&quot;</span>,
                     ),
                     Ic::Depth { multi } =&gt; {
@@ -2403,11 +2432,11 @@
                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;&lt;{format_str}{storage_str}&gt;&quot;</span>)<span class="question-mark">?</span>;
                 }
             }
-            TypeInner::Scalar { kind, width } =&gt; {
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{}&quot;</span>, scalar_kind_str(kind, width))<span class="question-mark">?</span>;
+            TypeInner::Scalar(scalar) =&gt; {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{}&quot;</span>, scalar_kind_str(scalar))<span class="question-mark">?</span>;
             }
-            TypeInner::Atomic { kind, width } =&gt; {
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;atomic&lt;{}&gt;&quot;</span>, scalar_kind_str(kind, width))<span class="question-mark">?</span>;
+            TypeInner::Atomic(scalar) =&gt; {
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;atomic&lt;{}&gt;&quot;</span>, scalar_kind_str(scalar))<span class="question-mark">?</span>;
             }
             TypeInner::Array {
                 base,
@@ -2474,13 +2503,12 @@
             }
             TypeInner::ValuePointer {
                 size: <span class="prelude-val">None</span>,
-                kind,
-                width,
+                scalar,
                 space,
             } =&gt; {
                 <span class="kw">let </span>(address, maybe_access) = address_space_str(space);
                 <span class="kw">if let </span><span class="prelude-val">Some</span>(space) = address {
-                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;ptr&lt;{}, {}&quot;</span>, space, scalar_kind_str(kind, width))<span class="question-mark">?</span>;
+                    <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;ptr&lt;{}, {}&quot;</span>, space, scalar_kind_str(scalar))<span class="question-mark">?</span>;
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(access) = maybe_access {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;, {access}&quot;</span>)<span class="question-mark">?</span>;
                     }
@@ -2493,8 +2521,7 @@
             }
             TypeInner::ValuePointer {
                 size: <span class="prelude-val">Some</span>(size),
-                kind,
-                width,
+                scalar,
                 space,
             } =&gt; {
                 <span class="kw">let </span>(address, maybe_access) = address_space_str(space);
@@ -2504,7 +2531,7 @@
                         <span class="string">&quot;ptr&lt;{}, vec{}&lt;{}&gt;&quot;</span>,
                         space,
                         back::vector_size_str(size),
-                        scalar_kind_str(kind, width)
+                        scalar_kind_str(scalar)
                     )<span class="question-mark">?</span>;
                     <span class="kw">if let </span><span class="prelude-val">Some</span>(access) = maybe_access {
                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;, {access}&quot;</span>)<span class="question-mark">?</span>;
@@ -3336,7 +3363,11 @@
                         width,
                         ..
                     } =&gt; {
-                        <span class="kw">let </span>scalar_kind_str = scalar_kind_str(kind, convert.unwrap_or(width));
+                        <span class="kw">let </span>scalar = <span class="kw">crate</span>::Scalar {
+                            kind,
+                            width: convert.unwrap_or(width),
+                        };
+                        <span class="kw">let </span>scalar_kind_str = scalar_kind_str(scalar);
                         <span class="macro">write!</span>(
                             <span class="self">self</span>.out,
                             <span class="string">&quot;mat{}x{}&lt;{}&gt;&quot;</span>,
@@ -3345,17 +3376,28 @@
                             scalar_kind_str
                         )<span class="question-mark">?</span>;
                     }
-                    TypeInner::Vector { size, width, .. } =&gt; {
+                    TypeInner::Vector {
+                        size,
+                        scalar: <span class="kw">crate</span>::Scalar { width, .. },
+                    } =&gt; {
+                        <span class="kw">let </span>scalar = <span class="kw">crate</span>::Scalar {
+                            kind,
+                            width: convert.unwrap_or(width),
+                        };
                         <span class="kw">let </span>vector_size_str = back::vector_size_str(size);
-                        <span class="kw">let </span>scalar_kind_str = scalar_kind_str(kind, convert.unwrap_or(width));
+                        <span class="kw">let </span>scalar_kind_str = scalar_kind_str(scalar);
                         <span class="kw">if </span>convert.is_some() {
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;vec{vector_size_str}&lt;{scalar_kind_str}&gt;&quot;</span>)<span class="question-mark">?</span>;
                         } <span class="kw">else </span>{
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;bitcast&lt;vec{vector_size_str}&lt;{scalar_kind_str}&gt;&gt;&quot;</span>)<span class="question-mark">?</span>;
                         }
                     }
-                    TypeInner::Scalar { width, .. } =&gt; {
-                        <span class="kw">let </span>scalar_kind_str = scalar_kind_str(kind, convert.unwrap_or(width));
+                    TypeInner::Scalar(<span class="kw">crate</span>::Scalar { width, .. }) =&gt; {
+                        <span class="kw">let </span>scalar = <span class="kw">crate</span>::Scalar {
+                            kind,
+                            width: convert.unwrap_or(width),
+                        };
+                        <span class="kw">let </span>scalar_kind_str = scalar_kind_str(scalar);
                         <span class="kw">if </span>convert.is_some() {
                             <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{scalar_kind_str}&quot;</span>)<span class="question-mark">?
                         </span>} <span class="kw">else </span>{
@@ -3705,15 +3747,31 @@
     }
 }
 
-<span class="kw">const fn </span>scalar_kind_str(kind: <span class="kw">crate</span>::ScalarKind, width: u8) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+<span class="kw">const fn </span>scalar_kind_str(scalar: <span class="kw">crate</span>::Scalar) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+    <span class="kw">use </span><span class="kw">crate</span>::Scalar;
     <span class="kw">use </span><span class="kw">crate</span>::ScalarKind <span class="kw">as </span>Sk;
 
-    <span class="kw">match </span>(kind, width) {
-        (Sk::Float, <span class="number">8</span>) =&gt; <span class="string">&quot;f64&quot;</span>,
-        (Sk::Float, <span class="number">4</span>) =&gt; <span class="string">&quot;f32&quot;</span>,
-        (Sk::Sint, <span class="number">4</span>) =&gt; <span class="string">&quot;i32&quot;</span>,
-        (Sk::Uint, <span class="number">4</span>) =&gt; <span class="string">&quot;u32&quot;</span>,
-        (Sk::Bool, <span class="number">1</span>) =&gt; <span class="string">&quot;bool&quot;</span>,
+    <span class="kw">match </span>scalar {
+        Scalar {
+            kind: Sk::Float,
+            width: <span class="number">8</span>,
+        } =&gt; <span class="string">&quot;f64&quot;</span>,
+        Scalar {
+            kind: Sk::Float,
+            width: <span class="number">4</span>,
+        } =&gt; <span class="string">&quot;f32&quot;</span>,
+        Scalar {
+            kind: Sk::Sint,
+            width: <span class="number">4</span>,
+        } =&gt; <span class="string">&quot;i32&quot;</span>,
+        Scalar {
+            kind: Sk::Uint,
+            width: <span class="number">4</span>,
+        } =&gt; <span class="string">&quot;u32&quot;</span>,
+        Scalar {
+            kind: Sk::Bool,
+            width: <span class="number">1</span>,
+        } =&gt; <span class="string">&quot;bool&quot;</span>,
         <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
     }
 }

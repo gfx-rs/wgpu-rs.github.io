@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/validation.rs`."><title>validation.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (2b603f95a 2023-11-12)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/validation.rs`."><title>validation.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (ba7c7a301 2023-11-13)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1265,13 +1265,18 @@
 <span class="attr">#[derive(Clone, Copy, Debug)]
 </span><span class="kw">pub struct </span>NumericType {
     dim: NumericDimension,
-    kind: naga::ScalarKind,
-    width: naga::Bytes,
+    scalar: naga::Scalar,
 }
 
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>NumericType {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
-        <span class="macro">write!</span>(f, <span class="string">&quot;{:?}{}{}&quot;</span>, <span class="self">self</span>.kind, <span class="self">self</span>.width * <span class="number">8</span>, <span class="self">self</span>.dim)
+        <span class="macro">write!</span>(
+            f,
+            <span class="string">&quot;{:?}{}{}&quot;</span>,
+            <span class="self">self</span>.scalar.kind,
+            <span class="self">self</span>.scalar.width * <span class="number">8</span>,
+            <span class="self">self</span>.dim
+        )
     }
 }
 
@@ -1800,77 +1805,76 @@
 
 <span class="kw">impl </span>NumericType {
     <span class="kw">fn </span>from_vertex_format(format: wgt::VertexFormat) -&gt; <span class="self">Self </span>{
-        <span class="kw">use </span>naga::{ScalarKind <span class="kw">as </span>Sk, VectorSize <span class="kw">as </span>Vs};
+        <span class="kw">use </span>naga::{Scalar, VectorSize <span class="kw">as </span>Vs};
         <span class="kw">use </span>wgt::VertexFormat <span class="kw">as </span>Vf;
 
-        <span class="kw">let </span>(dim, kind, width) = <span class="kw">match </span>format {
-            Vf::Uint32 =&gt; (NumericDimension::Scalar, Sk::Uint, <span class="number">4</span>),
+        <span class="kw">let </span>(dim, scalar) = <span class="kw">match </span>format {
+            Vf::Uint32 =&gt; (NumericDimension::Scalar, Scalar::U32),
             Vf::Uint8x2 | Vf::Uint16x2 | Vf::Uint32x2 =&gt; {
-                (NumericDimension::Vector(Vs::Bi), Sk::Uint, <span class="number">4</span>)
+                (NumericDimension::Vector(Vs::Bi), Scalar::U32)
             }
-            Vf::Uint32x3 =&gt; (NumericDimension::Vector(Vs::Tri), Sk::Uint, <span class="number">4</span>),
+            Vf::Uint32x3 =&gt; (NumericDimension::Vector(Vs::Tri), Scalar::U32),
             Vf::Uint8x4 | Vf::Uint16x4 | Vf::Uint32x4 =&gt; {
-                (NumericDimension::Vector(Vs::Quad), Sk::Uint, <span class="number">4</span>)
+                (NumericDimension::Vector(Vs::Quad), Scalar::U32)
             }
-            Vf::Sint32 =&gt; (NumericDimension::Scalar, Sk::Sint, <span class="number">4</span>),
+            Vf::Sint32 =&gt; (NumericDimension::Scalar, Scalar::I32),
             Vf::Sint8x2 | Vf::Sint16x2 | Vf::Sint32x2 =&gt; {
-                (NumericDimension::Vector(Vs::Bi), Sk::Sint, <span class="number">4</span>)
+                (NumericDimension::Vector(Vs::Bi), Scalar::I32)
             }
-            Vf::Sint32x3 =&gt; (NumericDimension::Vector(Vs::Tri), Sk::Sint, <span class="number">4</span>),
+            Vf::Sint32x3 =&gt; (NumericDimension::Vector(Vs::Tri), Scalar::I32),
             Vf::Sint8x4 | Vf::Sint16x4 | Vf::Sint32x4 =&gt; {
-                (NumericDimension::Vector(Vs::Quad), Sk::Sint, <span class="number">4</span>)
+                (NumericDimension::Vector(Vs::Quad), Scalar::I32)
             }
-            Vf::Float32 =&gt; (NumericDimension::Scalar, Sk::Float, <span class="number">4</span>),
+            Vf::Float32 =&gt; (NumericDimension::Scalar, Scalar::F32),
             Vf::Unorm8x2
             | Vf::Snorm8x2
             | Vf::Unorm16x2
             | Vf::Snorm16x2
             | Vf::Float16x2
-            | Vf::Float32x2 =&gt; (NumericDimension::Vector(Vs::Bi), Sk::Float, <span class="number">4</span>),
-            Vf::Float32x3 =&gt; (NumericDimension::Vector(Vs::Tri), Sk::Float, <span class="number">4</span>),
+            | Vf::Float32x2 =&gt; (NumericDimension::Vector(Vs::Bi), Scalar::F32),
+            Vf::Float32x3 =&gt; (NumericDimension::Vector(Vs::Tri), Scalar::F32),
             Vf::Unorm8x4
             | Vf::Snorm8x4
             | Vf::Unorm16x4
             | Vf::Snorm16x4
             | Vf::Float16x4
-            | Vf::Float32x4 =&gt; (NumericDimension::Vector(Vs::Quad), Sk::Float, <span class="number">4</span>),
-            Vf::Float64 =&gt; (NumericDimension::Scalar, Sk::Float, <span class="number">8</span>),
-            Vf::Float64x2 =&gt; (NumericDimension::Vector(Vs::Bi), Sk::Float, <span class="number">8</span>),
-            Vf::Float64x3 =&gt; (NumericDimension::Vector(Vs::Tri), Sk::Float, <span class="number">8</span>),
-            Vf::Float64x4 =&gt; (NumericDimension::Vector(Vs::Quad), Sk::Float, <span class="number">8</span>),
+            | Vf::Float32x4 =&gt; (NumericDimension::Vector(Vs::Quad), Scalar::F32),
+            Vf::Float64 =&gt; (NumericDimension::Scalar, Scalar::F64),
+            Vf::Float64x2 =&gt; (NumericDimension::Vector(Vs::Bi), Scalar::F64),
+            Vf::Float64x3 =&gt; (NumericDimension::Vector(Vs::Tri), Scalar::F64),
+            Vf::Float64x4 =&gt; (NumericDimension::Vector(Vs::Quad), Scalar::F64),
         };
 
         NumericType {
             dim,
-            kind,
             <span class="comment">//Note: Shader always sees data as int, uint, or float.
             // It doesn&#39;t know if the original is normalized in a tighter form.
-            </span>width,
+            </span>scalar,
         }
     }
 
     <span class="kw">fn </span>from_texture_format(format: wgt::TextureFormat) -&gt; <span class="self">Self </span>{
-        <span class="kw">use </span>naga::{ScalarKind <span class="kw">as </span>Sk, VectorSize <span class="kw">as </span>Vs};
+        <span class="kw">use </span>naga::{Scalar, VectorSize <span class="kw">as </span>Vs};
         <span class="kw">use </span>wgt::TextureFormat <span class="kw">as </span>Tf;
 
-        <span class="kw">let </span>(dim, kind) = <span class="kw">match </span>format {
+        <span class="kw">let </span>(dim, scalar) = <span class="kw">match </span>format {
             Tf::R8Unorm | Tf::R8Snorm | Tf::R16Float | Tf::R32Float =&gt; {
-                (NumericDimension::Scalar, Sk::Float)
+                (NumericDimension::Scalar, Scalar::F32)
             }
-            Tf::R8Uint | Tf::R16Uint | Tf::R32Uint =&gt; (NumericDimension::Scalar, Sk::Uint),
-            Tf::R8Sint | Tf::R16Sint | Tf::R32Sint =&gt; (NumericDimension::Scalar, Sk::Sint),
+            Tf::R8Uint | Tf::R16Uint | Tf::R32Uint =&gt; (NumericDimension::Scalar, Scalar::U32),
+            Tf::R8Sint | Tf::R16Sint | Tf::R32Sint =&gt; (NumericDimension::Scalar, Scalar::I32),
             Tf::Rg8Unorm | Tf::Rg8Snorm | Tf::Rg16Float | Tf::Rg32Float =&gt; {
-                (NumericDimension::Vector(Vs::Bi), Sk::Float)
+                (NumericDimension::Vector(Vs::Bi), Scalar::F32)
             }
             Tf::Rg8Uint | Tf::Rg16Uint | Tf::Rg32Uint =&gt; {
-                (NumericDimension::Vector(Vs::Bi), Sk::Uint)
+                (NumericDimension::Vector(Vs::Bi), Scalar::U32)
             }
             Tf::Rg8Sint | Tf::Rg16Sint | Tf::Rg32Sint =&gt; {
-                (NumericDimension::Vector(Vs::Bi), Sk::Sint)
+                (NumericDimension::Vector(Vs::Bi), Scalar::I32)
             }
-            Tf::R16Snorm | Tf::R16Unorm =&gt; (NumericDimension::Scalar, Sk::Float),
-            Tf::Rg16Snorm | Tf::Rg16Unorm =&gt; (NumericDimension::Vector(Vs::Bi), Sk::Float),
-            Tf::Rgba16Snorm | Tf::Rgba16Unorm =&gt; (NumericDimension::Vector(Vs::Quad), Sk::Float),
+            Tf::R16Snorm | Tf::R16Unorm =&gt; (NumericDimension::Scalar, Scalar::F32),
+            Tf::Rg16Snorm | Tf::Rg16Unorm =&gt; (NumericDimension::Vector(Vs::Bi), Scalar::F32),
+            Tf::Rgba16Snorm | Tf::Rgba16Unorm =&gt; (NumericDimension::Vector(Vs::Quad), Scalar::F32),
             Tf::Rgba8Unorm
             | Tf::Rgba8UnormSrgb
             | Tf::Rgba8Snorm
@@ -1878,14 +1882,14 @@
             | Tf::Bgra8UnormSrgb
             | Tf::Rgb10a2Unorm
             | Tf::Rgba16Float
-            | Tf::Rgba32Float =&gt; (NumericDimension::Vector(Vs::Quad), Sk::Float),
+            | Tf::Rgba32Float =&gt; (NumericDimension::Vector(Vs::Quad), Scalar::F32),
             Tf::Rgba8Uint | Tf::Rgba16Uint | Tf::Rgba32Uint | Tf::Rgb10a2Uint =&gt; {
-                (NumericDimension::Vector(Vs::Quad), Sk::Uint)
+                (NumericDimension::Vector(Vs::Quad), Scalar::U32)
             }
             Tf::Rgba8Sint | Tf::Rgba16Sint | Tf::Rgba32Sint =&gt; {
-                (NumericDimension::Vector(Vs::Quad), Sk::Sint)
+                (NumericDimension::Vector(Vs::Quad), Scalar::I32)
             }
-            Tf::Rg11b10Float =&gt; (NumericDimension::Vector(Vs::Tri), Sk::Float),
+            Tf::Rg11b10Float =&gt; (NumericDimension::Vector(Vs::Tri), Scalar::F32),
             Tf::Stencil8
             | Tf::Depth16Unorm
             | Tf::Depth32Float
@@ -1894,7 +1898,7 @@
             | Tf::Depth24PlusStencil8 =&gt; {
                 <span class="macro">panic!</span>(<span class="string">&quot;Unexpected depth format&quot;</span>)
             }
-            Tf::Rgb9e5Ufloat =&gt; (NumericDimension::Vector(Vs::Tri), Sk::Float),
+            Tf::Rgb9e5Ufloat =&gt; (NumericDimension::Vector(Vs::Tri), Scalar::F32),
             Tf::Bc1RgbaUnorm
             | Tf::Bc1RgbaUnormSrgb
             | Tf::Bc2RgbaUnorm
@@ -1906,36 +1910,35 @@
             | Tf::Etc2Rgb8A1Unorm
             | Tf::Etc2Rgb8A1UnormSrgb
             | Tf::Etc2Rgba8Unorm
-            | Tf::Etc2Rgba8UnormSrgb =&gt; (NumericDimension::Vector(Vs::Quad), Sk::Float),
+            | Tf::Etc2Rgba8UnormSrgb =&gt; (NumericDimension::Vector(Vs::Quad), Scalar::F32),
             Tf::Bc4RUnorm | Tf::Bc4RSnorm | Tf::EacR11Unorm | Tf::EacR11Snorm =&gt; {
-                (NumericDimension::Scalar, Sk::Float)
+                (NumericDimension::Scalar, Scalar::F32)
             }
             Tf::Bc5RgUnorm | Tf::Bc5RgSnorm | Tf::EacRg11Unorm | Tf::EacRg11Snorm =&gt; {
-                (NumericDimension::Vector(Vs::Bi), Sk::Float)
+                (NumericDimension::Vector(Vs::Bi), Scalar::F32)
             }
             Tf::Bc6hRgbUfloat | Tf::Bc6hRgbFloat | Tf::Etc2Rgb8Unorm | Tf::Etc2Rgb8UnormSrgb =&gt; {
-                (NumericDimension::Vector(Vs::Tri), Sk::Float)
+                (NumericDimension::Vector(Vs::Tri), Scalar::F32)
             }
             Tf::Astc {
                 block: <span class="kw">_</span>,
                 channel: <span class="kw">_</span>,
-            } =&gt; (NumericDimension::Vector(Vs::Quad), Sk::Float),
+            } =&gt; (NumericDimension::Vector(Vs::Quad), Scalar::F32),
         };
 
         NumericType {
             dim,
-            kind,
             <span class="comment">//Note: Shader always sees data as int, uint, or float.
             // It doesn&#39;t know if the original is normalized in a tighter form.
-            </span>width: <span class="number">4</span>,
+            </span>scalar,
         }
     }
 
     <span class="kw">fn </span>is_subtype_of(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>NumericType) -&gt; bool {
-        <span class="kw">if </span><span class="self">self</span>.width &gt; other.width {
+        <span class="kw">if </span><span class="self">self</span>.scalar.width &gt; other.scalar.width {
             <span class="kw">return </span><span class="bool-val">false</span>;
         }
-        <span class="kw">if </span><span class="self">self</span>.kind != other.kind {
+        <span class="kw">if </span><span class="self">self</span>.scalar.kind != other.scalar.kind {
             <span class="kw">return </span><span class="bool-val">false</span>;
         }
         <span class="kw">match </span>(<span class="self">self</span>.dim, other.dim) {
@@ -1950,7 +1953,7 @@
     }
 
     <span class="kw">fn </span>is_compatible_with(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>NumericType) -&gt; bool {
-        <span class="kw">if </span><span class="self">self</span>.kind != other.kind {
+        <span class="kw">if </span><span class="self">self</span>.scalar.kind != other.scalar.kind {
             <span class="kw">return </span><span class="bool-val">false</span>;
         }
         <span class="kw">match </span>(<span class="self">self</span>.dim, other.dim) {
@@ -1986,15 +1989,13 @@
         arena: <span class="kw-2">&amp;</span>naga::UniqueArena&lt;naga::Type&gt;,
     ) {
         <span class="kw">let </span>numeric_ty = <span class="kw">match </span>arena[ty].inner {
-            naga::TypeInner::Scalar { kind, width } =&gt; NumericType {
+            naga::TypeInner::Scalar(scalar) =&gt; NumericType {
                 dim: NumericDimension::Scalar,
-                kind,
-                width,
+                scalar,
             },
-            naga::TypeInner::Vector { size, kind, width } =&gt; NumericType {
+            naga::TypeInner::Vector { size, scalar } =&gt; NumericType {
                 dim: NumericDimension::Vector(size),
-                kind,
-                width,
+                scalar,
             },
             naga::TypeInner::Matrix {
                 columns,
@@ -2002,8 +2003,7 @@
                 width,
             } =&gt; NumericType {
                 dim: NumericDimension::Matrix(columns, rows),
-                kind: naga::ScalarKind::Float,
-                width,
+                scalar: naga::Scalar::float(width),
             },
             naga::TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
                 <span class="kw">for </span>member <span class="kw">in </span>members {

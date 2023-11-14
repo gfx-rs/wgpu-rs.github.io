@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/valid/expression.rs`."><title>expression.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (2b603f95a 2023-11-12)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/valid/expression.rs`."><title>expression.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (ba7c7a301 2023-11-13)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1599,6 +1599,62 @@
 <a href="#1599" id="1599">1599</a>
 <a href="#1600" id="1600">1600</a>
 <a href="#1601" id="1601">1601</a>
+<a href="#1602" id="1602">1602</a>
+<a href="#1603" id="1603">1603</a>
+<a href="#1604" id="1604">1604</a>
+<a href="#1605" id="1605">1605</a>
+<a href="#1606" id="1606">1606</a>
+<a href="#1607" id="1607">1607</a>
+<a href="#1608" id="1608">1608</a>
+<a href="#1609" id="1609">1609</a>
+<a href="#1610" id="1610">1610</a>
+<a href="#1611" id="1611">1611</a>
+<a href="#1612" id="1612">1612</a>
+<a href="#1613" id="1613">1613</a>
+<a href="#1614" id="1614">1614</a>
+<a href="#1615" id="1615">1615</a>
+<a href="#1616" id="1616">1616</a>
+<a href="#1617" id="1617">1617</a>
+<a href="#1618" id="1618">1618</a>
+<a href="#1619" id="1619">1619</a>
+<a href="#1620" id="1620">1620</a>
+<a href="#1621" id="1621">1621</a>
+<a href="#1622" id="1622">1622</a>
+<a href="#1623" id="1623">1623</a>
+<a href="#1624" id="1624">1624</a>
+<a href="#1625" id="1625">1625</a>
+<a href="#1626" id="1626">1626</a>
+<a href="#1627" id="1627">1627</a>
+<a href="#1628" id="1628">1628</a>
+<a href="#1629" id="1629">1629</a>
+<a href="#1630" id="1630">1630</a>
+<a href="#1631" id="1631">1631</a>
+<a href="#1632" id="1632">1632</a>
+<a href="#1633" id="1633">1633</a>
+<a href="#1634" id="1634">1634</a>
+<a href="#1635" id="1635">1635</a>
+<a href="#1636" id="1636">1636</a>
+<a href="#1637" id="1637">1637</a>
+<a href="#1638" id="1638">1638</a>
+<a href="#1639" id="1639">1639</a>
+<a href="#1640" id="1640">1640</a>
+<a href="#1641" id="1641">1641</a>
+<a href="#1642" id="1642">1642</a>
+<a href="#1643" id="1643">1643</a>
+<a href="#1644" id="1644">1644</a>
+<a href="#1645" id="1645">1645</a>
+<a href="#1646" id="1646">1646</a>
+<a href="#1647" id="1647">1647</a>
+<a href="#1648" id="1648">1648</a>
+<a href="#1649" id="1649">1649</a>
+<a href="#1650" id="1650">1650</a>
+<a href="#1651" id="1651">1651</a>
+<a href="#1652" id="1652">1652</a>
+<a href="#1653" id="1653">1653</a>
+<a href="#1654" id="1654">1654</a>
+<a href="#1655" id="1655">1655</a>
+<a href="#1656" id="1656">1656</a>
+<a href="#1657" id="1657">1657</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
 </span><span class="kw">use super</span>::{
     compose::validate_compose, validate_atomic_compare_exchange_struct, FunctionInfo, ModuleInfo,
@@ -1822,7 +1878,7 @@
         info: <span class="kw-2">&amp;</span>FunctionInfo,
         mod_info: <span class="kw-2">&amp;</span>ModuleInfo,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;ShaderStages, ExpressionError&gt; {
-        <span class="kw">use crate</span>::{Expression <span class="kw">as </span>E, ScalarKind <span class="kw">as </span>Sk, TypeInner <span class="kw">as </span>Ti};
+        <span class="kw">use crate</span>::{Expression <span class="kw">as </span>E, Scalar <span class="kw">as </span>Sc, ScalarKind <span class="kw">as </span>Sk, TypeInner <span class="kw">as </span>Ti};
 
         <span class="kw">let </span>resolver = ExpressionTypeResolver {
             root,
@@ -1847,10 +1903,10 @@
                 };
                 <span class="kw">match </span>resolver[index] {
                     <span class="comment">//TODO: only allow one of these
-                    </span>Ti::Scalar {
+                    </span>Ti::Scalar(Sc {
                         kind: Sk::Sint | Sk::Uint,
-                        width: <span class="kw">_</span>,
-                    } =&gt; {}
+                        ..
+                    }) =&gt; {}
                     <span class="kw-2">ref </span>other =&gt; {
                         <span class="macro">log::error!</span>(<span class="string">&quot;Indexing by {:?}&quot;</span>, other);
                         <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidIndexType(index));
@@ -2013,10 +2069,10 @@
                         }
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = array_index {
                             <span class="kw">match </span>resolver[expr] {
-                                Ti::Scalar {
+                                Ti::Scalar(Sc {
                                     kind: Sk::Sint | Sk::Uint,
-                                    width: <span class="kw">_</span>,
-                                } =&gt; {}
+                                    ..
+                                }) =&gt; {}
                                 <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageArrayIndexType(expr)),
                             }
                         }
@@ -2053,13 +2109,15 @@
                     <span class="kw">crate</span>::ImageDimension::D3 | <span class="kw">crate</span>::ImageDimension::Cube =&gt; <span class="number">3</span>,
                 };
                 <span class="kw">match </span>resolver[coordinate] {
-                    Ti::Scalar {
+                    Ti::Scalar(Sc {
                         kind: Sk::Float, ..
-                    } <span class="kw">if </span>num_components == <span class="number">1 </span>=&gt; {}
+                    }) <span class="kw">if </span>num_components == <span class="number">1 </span>=&gt; {}
                     Ti::Vector {
                         size,
-                        kind: Sk::Float,
-                        ..
+                        scalar:
+                            Sc {
+                                kind: Sk::Float, ..
+                            },
                     } <span class="kw">if </span>size <span class="kw">as </span>u32 == num_components =&gt; {}
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageCoordinateType(dim, coordinate)),
                 }
@@ -2067,11 +2125,10 @@
                 <span class="comment">// check constant offset
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(const_expr) = offset {
                     <span class="kw">match </span><span class="kw-2">*</span>mod_info[const_expr].inner_with(<span class="kw-2">&amp;</span>module.types) {
-                        Ti::Scalar { kind: Sk::Sint, .. } <span class="kw">if </span>num_components == <span class="number">1 </span>=&gt; {}
+                        Ti::Scalar(Sc { kind: Sk::Sint, .. }) <span class="kw">if </span>num_components == <span class="number">1 </span>=&gt; {}
                         Ti::Vector {
                             size,
-                            kind: Sk::Sint,
-                            ..
+                            scalar: Sc { kind: Sk::Sint, .. },
                         } <span class="kw">if </span>size <span class="kw">as </span>u32 == num_components =&gt; {}
                         <span class="kw">_ </span>=&gt; {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleOffset(dim, const_expr));
@@ -2082,9 +2139,9 @@
                 <span class="comment">// check depth reference type
                 </span><span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = depth_ref {
                     <span class="kw">match </span>resolver[expr] {
-                        Ti::Scalar {
+                        Ti::Scalar(Sc {
                             kind: Sk::Float, ..
-                        } =&gt; {}
+                        }) =&gt; {}
                         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidDepthReference(expr)),
                     }
                     <span class="kw">match </span>level {
@@ -2119,44 +2176,48 @@
                     <span class="kw">crate</span>::SampleLevel::Zero =&gt; ShaderStages::all(),
                     <span class="kw">crate</span>::SampleLevel::Exact(expr) =&gt; {
                         <span class="kw">match </span>resolver[expr] {
-                            Ti::Scalar {
+                            Ti::Scalar(Sc {
                                 kind: Sk::Float, ..
-                            } =&gt; {}
+                            }) =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleLevelExactType(expr)),
                         }
                         ShaderStages::all()
                     }
                     <span class="kw">crate</span>::SampleLevel::Bias(expr) =&gt; {
                         <span class="kw">match </span>resolver[expr] {
-                            Ti::Scalar {
+                            Ti::Scalar(Sc {
                                 kind: Sk::Float, ..
-                            } =&gt; {}
+                            }) =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleLevelBiasType(expr)),
                         }
                         ShaderStages::FRAGMENT
                     }
                     <span class="kw">crate</span>::SampleLevel::Gradient { x, y } =&gt; {
                         <span class="kw">match </span>resolver[x] {
-                            Ti::Scalar {
+                            Ti::Scalar(Sc {
                                 kind: Sk::Float, ..
-                            } <span class="kw">if </span>num_components == <span class="number">1 </span>=&gt; {}
+                            }) <span class="kw">if </span>num_components == <span class="number">1 </span>=&gt; {}
                             Ti::Vector {
                                 size,
-                                kind: Sk::Float,
-                                ..
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Float, ..
+                                    },
                             } <span class="kw">if </span>size <span class="kw">as </span>u32 == num_components =&gt; {}
                             <span class="kw">_ </span>=&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleLevelGradientType(dim, x))
                             }
                         }
                         <span class="kw">match </span>resolver[y] {
-                            Ti::Scalar {
+                            Ti::Scalar(Sc {
                                 kind: Sk::Float, ..
-                            } <span class="kw">if </span>num_components == <span class="number">1 </span>=&gt; {}
+                            }) <span class="kw">if </span>num_components == <span class="number">1 </span>=&gt; {}
                             Ti::Vector {
                                 size,
-                                kind: Sk::Float,
-                                ..
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Float, ..
+                                    },
                             } <span class="kw">if </span>size <span class="kw">as </span>u32 == num_components =&gt; {}
                             <span class="kw">_ </span>=&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidSampleLevelGradientType(dim, y))
@@ -2193,10 +2254,10 @@
                         }
                         <span class="kw">if let </span><span class="prelude-val">Some</span>(expr) = array_index {
                             <span class="kw">match </span>resolver[expr] {
-                                Ti::Scalar {
+                                Ti::Scalar(Sc {
                                     kind: Sk::Sint | Sk::Uint,
                                     width: <span class="kw">_</span>,
-                                } =&gt; {}
+                                }) =&gt; {}
                                 <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidImageArrayIndexType(expr)),
                             }
                         }
@@ -2270,7 +2331,7 @@
                 <span class="kw">let </span>right_inner = <span class="kw-2">&amp;</span>resolver[right];
                 <span class="kw">let </span>good = <span class="kw">match </span>op {
                     Bo::Add | Bo::Subtract =&gt; <span class="kw">match </span><span class="kw-2">*</span>left_inner {
-                        Ti::Scalar { kind, .. } | Ti::Vector { kind, .. } =&gt; <span class="kw">match </span>kind {
+                        Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
                             Sk::Uint | Sk::Sint | Sk::Float =&gt; left_inner == right_inner,
                             Sk::Bool =&gt; <span class="bool-val">false</span>,
                         },
@@ -2278,7 +2339,7 @@
                         <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
                     },
                     Bo::Divide | Bo::Modulo =&gt; <span class="kw">match </span><span class="kw-2">*</span>left_inner {
-                        Ti::Scalar { kind, .. } | Ti::Vector { kind, .. } =&gt; <span class="kw">match </span>kind {
+                        Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
                             Sk::Uint | Sk::Sint | Sk::Float =&gt; left_inner == right_inner,
                             Sk::Bool =&gt; <span class="bool-val">false</span>,
                         },
@@ -2291,52 +2352,62 @@
                         };
                         <span class="kw">let </span>types_match = <span class="kw">match </span>(left_inner, right_inner) {
                             <span class="comment">// Straight scalar and mixed scalar/vector.
-                            </span>(<span class="kw-2">&amp;</span>Ti::Scalar { kind: kind1, .. }, <span class="kw-2">&amp;</span>Ti::Scalar { kind: kind2, .. })
-                            | (<span class="kw-2">&amp;</span>Ti::Vector { kind: kind1, .. }, <span class="kw-2">&amp;</span>Ti::Scalar { kind: kind2, .. })
-                            | (<span class="kw-2">&amp;</span>Ti::Scalar { kind: kind1, .. }, <span class="kw-2">&amp;</span>Ti::Vector { kind: kind2, .. }) =&gt; {
-                                kind1 == kind2
-                            }
+                            </span>(<span class="kw-2">&amp;</span>Ti::Scalar(scalar1), <span class="kw-2">&amp;</span>Ti::Scalar(scalar2))
+                            | (
+                                <span class="kw-2">&amp;</span>Ti::Vector {
+                                    scalar: scalar1, ..
+                                },
+                                <span class="kw-2">&amp;</span>Ti::Scalar(scalar2),
+                            )
+                            | (
+                                <span class="kw-2">&amp;</span>Ti::Scalar(scalar1),
+                                <span class="kw-2">&amp;</span>Ti::Vector {
+                                    scalar: scalar2, ..
+                                },
+                            ) =&gt; scalar1 == scalar2,
                             <span class="comment">// Scalar/matrix.
                             </span>(
-                                <span class="kw-2">&amp;</span>Ti::Scalar {
+                                <span class="kw-2">&amp;</span>Ti::Scalar(Sc {
                                     kind: Sk::Float, ..
-                                },
+                                }),
                                 <span class="kw-2">&amp;</span>Ti::Matrix { .. },
                             )
                             | (
                                 <span class="kw-2">&amp;</span>Ti::Matrix { .. },
-                                <span class="kw-2">&amp;</span>Ti::Scalar {
+                                <span class="kw-2">&amp;</span>Ti::Scalar(Sc {
                                     kind: Sk::Float, ..
-                                },
+                                }),
                             ) =&gt; <span class="bool-val">true</span>,
                             <span class="comment">// Vector/vector.
                             </span>(
                                 <span class="kw-2">&amp;</span>Ti::Vector {
-                                    kind: kind1,
                                     size: size1,
-                                    ..
+                                    scalar: scalar1,
                                 },
                                 <span class="kw-2">&amp;</span>Ti::Vector {
-                                    kind: kind2,
                                     size: size2,
-                                    ..
+                                    scalar: scalar2,
                                 },
-                            ) =&gt; kind1 == kind2 &amp;&amp; size1 == size2,
+                            ) =&gt; scalar1 == scalar2 &amp;&amp; size1 == size2,
                             <span class="comment">// Matrix * vector.
                             </span>(
                                 <span class="kw-2">&amp;</span>Ti::Matrix { columns, .. },
                                 <span class="kw-2">&amp;</span>Ti::Vector {
-                                    kind: Sk::Float,
                                     size,
-                                    ..
+                                    scalar:
+                                        Sc {
+                                            kind: Sk::Float, ..
+                                        },
                                 },
                             ) =&gt; columns == size,
                             <span class="comment">// Vector * matrix.
                             </span>(
                                 <span class="kw-2">&amp;</span>Ti::Vector {
-                                    kind: Sk::Float,
                                     size,
-                                    ..
+                                    scalar:
+                                        Sc {
+                                            kind: Sk::Float, ..
+                                        },
                                 },
                                 <span class="kw-2">&amp;</span>Ti::Matrix { rows, .. },
                             ) =&gt; size == rows,
@@ -2345,24 +2416,14 @@
                             }
                             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
                         };
-                        <span class="kw">let </span>left_width = <span class="kw">match </span><span class="kw-2">*</span>left_inner {
-                            Ti::Scalar { width, .. }
-                            | Ti::Vector { width, .. }
-                            | Ti::Matrix { width, .. } =&gt; width,
-                            <span class="kw">_ </span>=&gt; <span class="number">0</span>,
-                        };
-                        <span class="kw">let </span>right_width = <span class="kw">match </span><span class="kw-2">*</span>right_inner {
-                            Ti::Scalar { width, .. }
-                            | Ti::Vector { width, .. }
-                            | Ti::Matrix { width, .. } =&gt; width,
-                            <span class="kw">_ </span>=&gt; <span class="number">0</span>,
-                        };
+                        <span class="kw">let </span>left_width = left_inner.scalar_width().unwrap_or(<span class="number">0</span>);
+                        <span class="kw">let </span>right_width = right_inner.scalar_width().unwrap_or(<span class="number">0</span>);
                         kind_allowed &amp;&amp; types_match &amp;&amp; left_width == right_width
                     }
                     Bo::Equal | Bo::NotEqual =&gt; left_inner.is_sized() &amp;&amp; left_inner == right_inner,
                     Bo::Less | Bo::LessEqual | Bo::Greater | Bo::GreaterEqual =&gt; {
                         <span class="kw">match </span><span class="kw-2">*</span>left_inner {
-                            Ti::Scalar { kind, .. } | Ti::Vector { kind, .. } =&gt; <span class="kw">match </span>kind {
+                            Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
                                 Sk::Uint | Sk::Sint | Sk::Float =&gt; left_inner == right_inner,
                                 Sk::Bool =&gt; <span class="bool-val">false</span>,
                             },
@@ -2373,16 +2434,18 @@
                         }
                     }
                     Bo::LogicalAnd | Bo::LogicalOr =&gt; <span class="kw">match </span><span class="kw-2">*</span>left_inner {
-                        Ti::Scalar { kind: Sk::Bool, .. } | Ti::Vector { kind: Sk::Bool, .. } =&gt; {
-                            left_inner == right_inner
-                        }
+                        Ti::Scalar(Sc { kind: Sk::Bool, .. })
+                        | Ti::Vector {
+                            scalar: Sc { kind: Sk::Bool, .. },
+                            ..
+                        } =&gt; left_inner == right_inner,
                         <span class="kw-2">ref </span>other =&gt; {
                             <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} left type {:?}&quot;</span>, op, other);
                             <span class="bool-val">false
                         </span>}
                     },
                     Bo::And | Bo::InclusiveOr =&gt; <span class="kw">match </span><span class="kw-2">*</span>left_inner {
-                        Ti::Scalar { kind, .. } | Ti::Vector { kind, .. } =&gt; <span class="kw">match </span>kind {
+                        Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
                             Sk::Bool | Sk::Sint | Sk::Uint =&gt; left_inner == right_inner,
                             Sk::Float =&gt; <span class="bool-val">false</span>,
                         },
@@ -2392,7 +2455,7 @@
                         </span>}
                     },
                     Bo::ExclusiveOr =&gt; <span class="kw">match </span><span class="kw-2">*</span>left_inner {
-                        Ti::Scalar { kind, .. } | Ti::Vector { kind, .. } =&gt; <span class="kw">match </span>kind {
+                        Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; <span class="kw">match </span>scalar.kind {
                             Sk::Sint | Sk::Uint =&gt; left_inner == right_inner,
                             Sk::Bool | Sk::Float =&gt; <span class="bool-val">false</span>,
                         },
@@ -2402,27 +2465,26 @@
                         </span>}
                     },
                     Bo::ShiftLeft | Bo::ShiftRight =&gt; {
-                        <span class="kw">let </span>(base_size, base_kind) = <span class="kw">match </span><span class="kw-2">*</span>left_inner {
-                            Ti::Scalar { kind, .. } =&gt; (<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>), kind),
-                            Ti::Vector { size, kind, .. } =&gt; (<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(size)), kind),
+                        <span class="kw">let </span>(base_size, base_scalar) = <span class="kw">match </span><span class="kw-2">*</span>left_inner {
+                            Ti::Scalar(scalar) =&gt; (<span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>), scalar),
+                            Ti::Vector { size, scalar } =&gt; (<span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(size)), scalar),
                             <span class="kw-2">ref </span>other =&gt; {
                                 <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} base type {:?}&quot;</span>, op, other);
-                                (<span class="prelude-val">Err</span>(()), Sk::Bool)
+                                (<span class="prelude-val">Err</span>(()), Sc::BOOL)
                             }
                         };
                         <span class="kw">let </span>shift_size = <span class="kw">match </span><span class="kw-2">*</span>right_inner {
-                            Ti::Scalar { kind: Sk::Uint, .. } =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
+                            Ti::Scalar(Sc { kind: Sk::Uint, .. }) =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>),
                             Ti::Vector {
                                 size,
-                                kind: Sk::Uint,
-                                ..
+                                scalar: Sc { kind: Sk::Uint, .. },
                             } =&gt; <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(size)),
                             <span class="kw-2">ref </span>other =&gt; {
                                 <span class="macro">log::error!</span>(<span class="string">&quot;Op {:?} shift type {:?}&quot;</span>, op, other);
                                 <span class="prelude-val">Err</span>(())
                             }
                         };
-                        <span class="kw">match </span>base_kind {
+                        <span class="kw">match </span>base_scalar.kind {
                             Sk::Sint | Sk::Uint =&gt; base_size.is_ok() &amp;&amp; base_size == shift_size,
                             Sk::Float | Sk::Bool =&gt; <span class="bool-val">false</span>,
                         }
@@ -2451,10 +2513,10 @@
                 <span class="kw">let </span>accept_inner = <span class="kw-2">&amp;</span>resolver[accept];
                 <span class="kw">let </span>reject_inner = <span class="kw-2">&amp;</span>resolver[reject];
                 <span class="kw">let </span>condition_good = <span class="kw">match </span>resolver[condition] {
-                    Ti::Scalar {
+                    Ti::Scalar(Sc {
                         kind: Sk::Bool,
                         width: <span class="kw">_</span>,
-                    } =&gt; {
+                    }) =&gt; {
                         <span class="comment">// When `condition` is a single boolean, `accept` and
                         // `reject` can be vectors or scalars.
                         </span><span class="kw">match </span><span class="kw-2">*</span>accept_inner {
@@ -2464,8 +2526,11 @@
                     }
                     Ti::Vector {
                         size,
-                        kind: Sk::Bool,
-                        width: <span class="kw">_</span>,
+                        scalar:
+                            Sc {
+                                kind: Sk::Bool,
+                                width: <span class="kw">_</span>,
+                            },
                     } =&gt; <span class="kw">match </span><span class="kw-2">*</span>accept_inner {
                         Ti::Vector {
                             size: other_size, ..
@@ -2481,11 +2546,15 @@
             }
             E::Derivative { expr, .. } =&gt; {
                 <span class="kw">match </span>resolver[expr] {
-                    Ti::Scalar {
+                    Ti::Scalar(Sc {
                         kind: Sk::Float, ..
-                    }
+                    })
                     | Ti::Vector {
-                        kind: Sk::Float, ..
+                        scalar:
+                            Sc {
+                                kind: Sk::Float, ..
+                            },
+                        ..
                     } =&gt; {}
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidDerivative),
                 }
@@ -2496,19 +2565,18 @@
                 <span class="kw">let </span>argument_inner = <span class="kw-2">&amp;</span>resolver[argument];
                 <span class="kw">match </span>fun {
                     Rf::All | Rf::Any =&gt; <span class="kw">match </span><span class="kw-2">*</span>argument_inner {
-                        Ti::Vector { kind: Sk::Bool, .. } =&gt; {}
+                        Ti::Vector {
+                            scalar: Sc { kind: Sk::Bool, .. },
+                            ..
+                        } =&gt; {}
                         <span class="kw-2">ref </span>other =&gt; {
                             <span class="macro">log::error!</span>(<span class="string">&quot;All/Any of type {:?}&quot;</span>, other);
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidBooleanVector(argument));
                         }
                     },
                     Rf::IsNan | Rf::IsInf =&gt; <span class="kw">match </span><span class="kw-2">*</span>argument_inner {
-                        Ti::Scalar {
-                            kind: Sk::Float, ..
-                        }
-                        | Ti::Vector {
-                            kind: Sk::Float, ..
-                        } =&gt; {}
+                        Ti::Scalar(scalar) | Ti::Vector { scalar, .. }
+                            <span class="kw">if </span>scalar.kind == Sk::Float =&gt; {}
                         <span class="kw-2">ref </span>other =&gt; {
                             <span class="macro">log::error!</span>(<span class="string">&quot;Float test of type {:?}&quot;</span>, other);
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidFloatArgument(argument));
@@ -2537,7 +2605,9 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun));
                         }
                         <span class="kw">let </span>good = <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            Ti::Scalar { kind, .. } | Ti::Vector { kind, .. } =&gt; kind != Sk::Bool,
+                            Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; {
+                                scalar.kind != Sk::Bool
+                            }
                             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
                         };
                         <span class="kw">if </span>!good {
@@ -2550,7 +2620,9 @@
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun)),
                         };
                         <span class="kw">let </span>good = <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            Ti::Scalar { kind, .. } | Ti::Vector { kind, .. } =&gt; kind != Sk::Bool,
+                            Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; {
+                                scalar.kind != Sk::Bool
+                            }
                             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
                         };
                         <span class="kw">if </span>!good {
@@ -2570,7 +2642,9 @@
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun)),
                         };
                         <span class="kw">let </span>good = <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            Ti::Scalar { kind, .. } | Ti::Vector { kind, .. } =&gt; kind != Sk::Bool,
+                            Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; {
+                                scalar.kind != Sk::Bool
+                            }
                             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
                         };
                         <span class="kw">if </span>!good {
@@ -2622,12 +2696,8 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun));
                         }
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            Ti::Scalar {
-                                kind: Sk::Float, ..
-                            }
-                            | Ti::Vector {
-                                kind: Sk::Float, ..
-                            } =&gt; {}
+                            Ti::Scalar(scalar) | Ti::Vector { scalar, .. }
+                                <span class="kw">if </span>scalar.kind == Sk::Float =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
                         }
                     }
@@ -2636,12 +2706,16 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun));
                         }
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            Ti::Scalar {
+                            Ti::Scalar(Sc {
                                 kind: Sk::Float | Sk::Sint,
                                 ..
-                            }
+                            })
                             | Ti::Vector {
-                                kind: Sk::Float | Sk::Sint,
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Float | Sk::Sint,
+                                        ..
+                                    },
                                 ..
                             } =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
@@ -2653,12 +2727,8 @@
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun)),
                         };
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            Ti::Scalar {
-                                kind: Sk::Float, ..
-                            }
-                            | Ti::Vector {
-                                kind: Sk::Float, ..
-                            } =&gt; {}
+                            Ti::Scalar(scalar) | Ti::Vector { scalar, .. }
+                                <span class="kw">if </span>scalar.kind == Sk::Float =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
                         }
                         <span class="kw">if </span>arg1_ty != arg_ty {
@@ -2673,16 +2743,10 @@
                         <span class="kw">if </span>arg1_ty.is_some() || arg2_ty.is_some() || arg3_ty.is_some() {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun));
                         }
-                        <span class="kw">if </span>!<span class="macro">matches!</span>(
-                            <span class="kw-2">*</span>arg_ty,
-                            Ti::Scalar {
-                                kind: Sk::Float,
-                                ..
-                            } | Ti::Vector {
-                                kind: Sk::Float,
-                                ..
-                            },
-                        ) {
+                        <span class="kw">if </span>!<span class="macro">matches!</span>(<span class="kw-2">*</span>arg_ty,
+                                     Ti::Scalar(scalar) | Ti::Vector { scalar, .. }
+                                     <span class="kw">if </span>scalar.kind == Sk::Float)
+                        {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">1</span>, arg));
                         }
                     }
@@ -2692,24 +2756,25 @@
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun)),
                         };
                         <span class="kw">let </span>size0 = <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            Ti::Scalar {
+                            Ti::Scalar(Sc {
                                 kind: Sk::Float, ..
-                            } =&gt; <span class="prelude-val">None</span>,
+                            }) =&gt; <span class="prelude-val">None</span>,
                             Ti::Vector {
-                                kind: Sk::Float,
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Float, ..
+                                    },
                                 size,
-                                ..
                             } =&gt; <span class="prelude-val">Some</span>(size),
                             <span class="kw">_ </span>=&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg));
                             }
                         };
                         <span class="kw">let </span>good = <span class="kw">match </span><span class="kw-2">*</span>arg1_ty {
-                            Ti::Scalar { kind: Sk::Sint, .. } <span class="kw">if </span>size0.is_none() =&gt; <span class="bool-val">true</span>,
+                            Ti::Scalar(Sc { kind: Sk::Sint, .. }) <span class="kw">if </span>size0.is_none() =&gt; <span class="bool-val">true</span>,
                             Ti::Vector {
                                 size,
-                                kind: Sk::Sint,
-                                ..
+                                scalar: Sc { kind: Sk::Sint, .. },
                             } <span class="kw">if </span><span class="prelude-val">Some</span>(size) == size0 =&gt; <span class="bool-val">true</span>,
                             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
                         };
@@ -2728,7 +2793,11 @@
                         };
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
                             Ti::Vector {
-                                kind: Sk::Float | Sk::Sint | Sk::Uint,
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Float | Sk::Sint | Sk::Uint,
+                                        ..
+                                    },
                                 ..
                             } =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
@@ -2748,7 +2817,11 @@
                         };
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
                             Ti::Vector {
-                                kind: Sk::Float, ..
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Float, ..
+                                    },
+                                ..
                             } =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
                         }
@@ -2768,7 +2841,11 @@
 
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
                             Ti::Vector {
-                                kind: Sk::Float, ..
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Float, ..
+                                    },
+                                ..
                             } =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
                         }
@@ -2784,13 +2861,17 @@
                         <span class="kw">match </span>(arg_ty, arg2_ty) {
                             (
                                 <span class="kw-2">&amp;</span>Ti::Vector {
-                                    width: vector_width,
+                                    scalar:
+                                        Sc {
+                                            width: vector_width,
+                                            ..
+                                        },
                                     ..
                                 },
-                                <span class="kw-2">&amp;</span>Ti::Scalar {
+                                <span class="kw-2">&amp;</span>Ti::Scalar(Sc {
                                     width: scalar_width,
                                     kind: Sk::Float,
-                                },
+                                }),
                             ) <span class="kw">if </span>vector_width == scalar_width =&gt; {}
                             <span class="kw">_ </span>=&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(
@@ -2807,7 +2888,11 @@
                         }
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
                             Ti::Vector {
-                                kind: Sk::Float, ..
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Float, ..
+                                    },
+                                ..
                             } =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
                         }
@@ -2818,11 +2903,15 @@
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun)),
                         };
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            Ti::Scalar {
+                            Ti::Scalar(Sc {
                                 kind: Sk::Float, ..
-                            }
+                            })
                             | Ti::Vector {
-                                kind: Sk::Float, ..
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Float, ..
+                                    },
+                                ..
                             } =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
                         }
@@ -2847,13 +2936,16 @@
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun)),
                         };
                         <span class="kw">let </span>arg_width = <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            Ti::Scalar {
+                            Ti::Scalar(Sc {
                                 kind: Sk::Float,
                                 width,
-                            }
+                            })
                             | Ti::Vector {
-                                kind: Sk::Float,
-                                width,
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Float,
+                                        width,
+                                    },
                                 ..
                             } =&gt; width,
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
@@ -2867,10 +2959,10 @@
                         }
                         <span class="comment">// the last argument can always be a scalar
                         </span><span class="kw">match </span><span class="kw-2">*</span>arg2_ty {
-                            Ti::Scalar {
+                            Ti::Scalar(Sc {
                                 kind: Sk::Float,
                                 width,
-                            } <span class="kw">if </span>width == arg_width =&gt; {}
+                            }) <span class="kw">if </span>width == arg_width =&gt; {}
                             <span class="kw">_ if </span>arg2_ty == arg_ty =&gt; {}
                             <span class="kw">_ </span>=&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(
@@ -2912,12 +3004,16 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun));
                         }
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            Ti::Scalar {
+                            Ti::Scalar(Sc {
                                 kind: Sk::Sint | Sk::Uint,
                                 ..
-                            }
+                            })
                             | Ti::Vector {
-                                kind: Sk::Sint | Sk::Uint,
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Sint | Sk::Uint,
+                                        ..
+                                    },
                                 ..
                             } =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
@@ -2929,12 +3025,16 @@
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun)),
                         };
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            Ti::Scalar {
+                            Ti::Scalar(Sc {
                                 kind: Sk::Sint | Sk::Uint,
                                 ..
-                            }
+                            })
                             | Ti::Vector {
-                                kind: Sk::Sint | Sk::Uint,
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Sint | Sk::Uint,
+                                        ..
+                                    },
                                 ..
                             } =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
@@ -2947,7 +3047,7 @@
                             ));
                         }
                         <span class="kw">match </span><span class="kw-2">*</span>arg2_ty {
-                            Ti::Scalar { kind: Sk::Uint, .. } =&gt; {}
+                            Ti::Scalar(Sc { kind: Sk::Uint, .. }) =&gt; {}
                             <span class="kw">_ </span>=&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(
                                     fun,
@@ -2957,7 +3057,7 @@
                             }
                         }
                         <span class="kw">match </span><span class="kw-2">*</span>arg3_ty {
-                            Ti::Scalar { kind: Sk::Uint, .. } =&gt; {}
+                            Ti::Scalar(Sc { kind: Sk::Uint, .. }) =&gt; {}
                             <span class="kw">_ </span>=&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(
                                     fun,
@@ -2973,18 +3073,22 @@
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun)),
                         };
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            Ti::Scalar {
+                            Ti::Scalar(Sc {
                                 kind: Sk::Sint | Sk::Uint,
                                 ..
-                            }
+                            })
                             | Ti::Vector {
-                                kind: Sk::Sint | Sk::Uint,
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Sint | Sk::Uint,
+                                        ..
+                                    },
                                 ..
                             } =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
                         }
                         <span class="kw">match </span><span class="kw-2">*</span>arg1_ty {
-                            Ti::Scalar { kind: Sk::Uint, .. } =&gt; {}
+                            Ti::Scalar(Sc { kind: Sk::Uint, .. }) =&gt; {}
                             <span class="kw">_ </span>=&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(
                                     fun,
@@ -2994,7 +3098,7 @@
                             }
                         }
                         <span class="kw">match </span><span class="kw-2">*</span>arg2_ty {
-                            Ti::Scalar { kind: Sk::Uint, .. } =&gt; {}
+                            Ti::Scalar(Sc { kind: Sk::Uint, .. }) =&gt; {}
                             <span class="kw">_ </span>=&gt; {
                                 <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(
                                     fun,
@@ -3011,8 +3115,10 @@
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
                             Ti::Vector {
                                 size: <span class="kw">crate</span>::VectorSize::Bi,
-                                kind: Sk::Float,
-                                ..
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Float, ..
+                                    },
                             } =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
                         }
@@ -3024,8 +3130,10 @@
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
                             Ti::Vector {
                                 size: <span class="kw">crate</span>::VectorSize::Quad,
-                                kind: Sk::Float,
-                                ..
+                                scalar:
+                                    Sc {
+                                        kind: Sk::Float, ..
+                                    },
                             } =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
                         }
@@ -3039,7 +3147,7 @@
                             <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::WrongArgumentCount(fun));
                         }
                         <span class="kw">match </span><span class="kw-2">*</span>arg_ty {
-                            Ti::Scalar { kind: Sk::Uint, .. } =&gt; {}
+                            Ti::Scalar(Sc { kind: Sk::Uint, .. }) =&gt; {}
                             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidArgumentType(fun, <span class="number">0</span>, arg)),
                         }
                     }
@@ -3051,14 +3159,18 @@
                 kind,
                 convert,
             } =&gt; {
-                <span class="kw">let </span>base_width = <span class="kw">match </span>resolver[expr] {
-                    <span class="kw">crate</span>::TypeInner::Scalar { width, .. }
-                    | <span class="kw">crate</span>::TypeInner::Vector { width, .. }
-                    | <span class="kw">crate</span>::TypeInner::Matrix { width, .. } =&gt; width,
+                <span class="kw">let </span><span class="kw-2">mut </span>base_scalar = <span class="kw">match </span>resolver[expr] {
+                    <span class="kw">crate</span>::TypeInner::Scalar(scalar) | <span class="kw">crate</span>::TypeInner::Vector { scalar, .. } =&gt; {
+                        scalar
+                    }
+                    <span class="kw">crate</span>::TypeInner::Matrix { width, .. } =&gt; <span class="kw">crate</span>::Scalar::float(width),
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidCastArgument),
                 };
-                <span class="kw">let </span>width = convert.unwrap_or(base_width);
-                <span class="kw">if </span><span class="self">self</span>.check_width(kind, width).is_err() {
+                base_scalar.kind = kind;
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(width) = convert {
+                    base_scalar.width = width;
+                }
+                <span class="kw">if </span><span class="self">self</span>.check_width(base_scalar).is_err() {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(ExpressionError::InvalidCastArgument);
                 }
                 ShaderStages::all()
@@ -3066,10 +3178,12 @@
             E::CallResult(function) =&gt; mod_info.functions[function.index()].available_stages,
             E::AtomicResult { ty, comparison } =&gt; {
                 <span class="kw">let </span>scalar_predicate = |ty: <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner| <span class="kw">match </span>ty {
-                    <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Scalar {
-                        kind: kind @ (<span class="kw">crate</span>::ScalarKind::Uint | <span class="kw">crate</span>::ScalarKind::Sint),
-                        width,
-                    } =&gt; <span class="self">self</span>.check_width(kind, width).is_ok(),
+                    <span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner::Scalar(
+                        scalar @ Sc {
+                            kind: <span class="kw">crate</span>::ScalarKind::Uint | <span class="kw">crate</span>::ScalarKind::Sint,
+                            ..
+                        },
+                    ) =&gt; <span class="self">self</span>.check_width(scalar).is_ok(),
                     <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
                 };
                 <span class="kw">let </span>good = <span class="kw">match </span><span class="kw-2">&amp;</span>module.types[ty].inner {
@@ -3170,9 +3284,7 @@
     }
 
     <span class="kw">pub fn </span>validate_literal(<span class="kw-2">&amp;</span><span class="self">self</span>, literal: <span class="kw">crate</span>::Literal) -&gt; <span class="prelude-ty">Result</span>&lt;(), LiteralError&gt; {
-        <span class="kw">let </span>kind = literal.scalar_kind();
-        <span class="kw">let </span>width = literal.width();
-        <span class="self">self</span>.check_width(kind, width)<span class="question-mark">?</span>;
+        <span class="self">self</span>.check_width(literal.scalar())<span class="question-mark">?</span>;
         check_literal_value(literal)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())

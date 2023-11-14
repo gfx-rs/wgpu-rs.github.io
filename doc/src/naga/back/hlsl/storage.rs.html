@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/hlsl/storage.rs`."><title>storage.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (2b603f95a 2023-11-12)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-9dd44ab47b99a0fb.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `naga/src/back/hlsl/storage.rs`."><title>storage.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="naga" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (ba7c7a301 2023-11-13)" data-channel="nightly" data-search-js="search-8fbf244ebcf71464.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -498,12 +498,6 @@
 <a href="#498" id="498">498</a>
 <a href="#499" id="499">499</a>
 <a href="#500" id="500">500</a>
-<a href="#501" id="501">501</a>
-<a href="#502" id="502">502</a>
-<a href="#503" id="503">503</a>
-<a href="#504" id="504">504</a>
-<a href="#505" id="505">505</a>
-<a href="#506" id="506">506</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Generating accesses to [`ByteAddressBuffer`] contents.
 
@@ -663,25 +657,21 @@ needed once HLSL for the access has been generated.
         func_ctx: <span class="kw-2">&amp;</span>FunctionCtx,
     ) -&gt; BackendResult {
         <span class="kw">match </span><span class="kw-2">*</span>result_ty.inner_with(<span class="kw-2">&amp;</span>module.types) {
-            <span class="kw">crate</span>::TypeInner::Scalar { kind, width: <span class="kw">_ </span>} =&gt; {
+            <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; {
                 <span class="comment">// working around the borrow checker in `self.write_expr`
                 </span><span class="kw">let </span>chain = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_access_chain);
                 <span class="kw">let </span>var_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::GlobalVariable(var_handle)];
-                <span class="kw">let </span>cast = kind.to_hlsl_cast();
+                <span class="kw">let </span>cast = scalar.kind.to_hlsl_cast();
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{cast}({var_name}.Load(&quot;</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_storage_address(module, <span class="kw-2">&amp;</span>chain, func_ctx)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;))&quot;</span>)<span class="question-mark">?</span>;
                 <span class="self">self</span>.temp_access_chain = chain;
             }
-            <span class="kw">crate</span>::TypeInner::Vector {
-                size,
-                kind,
-                width: <span class="kw">_</span>,
-            } =&gt; {
+            <span class="kw">crate</span>::TypeInner::Vector { size, scalar } =&gt; {
                 <span class="comment">// working around the borrow checker in `self.write_expr`
                 </span><span class="kw">let </span>chain = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_access_chain);
                 <span class="kw">let </span>var_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::GlobalVariable(var_handle)];
-                <span class="kw">let </span>cast = kind.to_hlsl_cast();
+                <span class="kw">let </span>cast = scalar.kind.to_hlsl_cast();
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{}({}.Load{}(&quot;</span>, cast, var_name, size <span class="kw">as </span>u8)<span class="question-mark">?</span>;
                 <span class="self">self</span>.write_storage_address(module, <span class="kw-2">&amp;</span>chain, func_ctx)<span class="question-mark">?</span>;
                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;))&quot;</span>)<span class="question-mark">?</span>;
@@ -695,7 +685,7 @@ needed once HLSL for the access has been generated.
                 <span class="macro">write!</span>(
                     <span class="self">self</span>.out,
                     <span class="string">&quot;{}{}x{}(&quot;</span>,
-                    <span class="kw">crate</span>::ScalarKind::Float.to_hlsl_str(width)<span class="question-mark">?</span>,
+                    <span class="kw">crate</span>::Scalar::float(width).to_hlsl_str()<span class="question-mark">?</span>,
                     columns <span class="kw">as </span>u8,
                     rows <span class="kw">as </span>u8,
                 )<span class="question-mark">?</span>;
@@ -705,8 +695,7 @@ needed once HLSL for the access has been generated.
                 <span class="kw">let </span>iter = (<span class="number">0</span>..columns <span class="kw">as </span>u32).map(|i| {
                     <span class="kw">let </span>ty_inner = <span class="kw">crate</span>::TypeInner::Vector {
                         size: rows,
-                        kind: <span class="kw">crate</span>::ScalarKind::Float,
-                        width,
+                        scalar: <span class="kw">crate</span>::Scalar::float(width),
                     };
                     (TypeResolution::Value(ty_inner), i * row_stride)
                 });
@@ -802,7 +791,7 @@ needed once HLSL for the access has been generated.
             }
         };
         <span class="kw">match </span><span class="kw-2">*</span>ty_resolution.inner_with(<span class="kw-2">&amp;</span>module.types) {
-            <span class="kw">crate</span>::TypeInner::Scalar { .. } =&gt; {
+            <span class="kw">crate</span>::TypeInner::Scalar(<span class="kw">_</span>) =&gt; {
                 <span class="comment">// working around the borrow checker in `self.write_expr`
                 </span><span class="kw">let </span>chain = mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.temp_access_chain);
                 <span class="kw">let </span>var_name = <span class="kw-2">&amp;</span><span class="self">self</span>.names[<span class="kw-2">&amp;</span>NameKey::GlobalVariable(var_handle)];
@@ -836,7 +825,7 @@ needed once HLSL for the access has been generated.
                     <span class="self">self</span>.out,
                     <span class="string">&quot;{}{}{}x{} {}{} = &quot;</span>,
                     level.next(),
-                    <span class="kw">crate</span>::ScalarKind::Float.to_hlsl_str(width)<span class="question-mark">?</span>,
+                    <span class="kw">crate</span>::Scalar::float(width).to_hlsl_str()<span class="question-mark">?</span>,
                     columns <span class="kw">as </span>u8,
                     rows <span class="kw">as </span>u8,
                     STORE_TEMP_NAME,
@@ -854,8 +843,7 @@ needed once HLSL for the access has been generated.
                         .push(SubAccess::Offset(i * row_stride));
                     <span class="kw">let </span>ty_inner = <span class="kw">crate</span>::TypeInner::Vector {
                         size: rows,
-                        kind: <span class="kw">crate</span>::ScalarKind::Float,
-                        width,
+                        scalar: <span class="kw">crate</span>::Scalar::float(width),
                     };
                     <span class="kw">let </span>sv = StoreValue::TempIndex {
                         depth,
@@ -976,8 +964,8 @@ needed once HLSL for the access has been generated.
                 <span class="kw">crate</span>::TypeInner::Pointer { base, .. } =&gt; <span class="kw">match </span>module.types[base].inner {
                     <span class="kw">crate</span>::TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; Parent::Struct(members),
                     <span class="kw">crate</span>::TypeInner::Array { stride, .. } =&gt; Parent::Array { stride },
-                    <span class="kw">crate</span>::TypeInner::Vector { width, .. } =&gt; Parent::Array {
-                        stride: width <span class="kw">as </span>u32,
+                    <span class="kw">crate</span>::TypeInner::Vector { scalar, .. } =&gt; Parent::Array {
+                        stride: scalar.width <span class="kw">as </span>u32,
                     },
                     <span class="kw">crate</span>::TypeInner::Matrix { rows, width, .. } =&gt; Parent::Array {
                         <span class="comment">// The stride between matrices is the count of rows as this is how
@@ -986,8 +974,8 @@ needed once HLSL for the access has been generated.
                     },
                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 },
-                <span class="kw">crate</span>::TypeInner::ValuePointer { width, .. } =&gt; Parent::Array {
-                    stride: width <span class="kw">as </span>u32,
+                <span class="kw">crate</span>::TypeInner::ValuePointer { scalar, .. } =&gt; Parent::Array {
+                    stride: scalar.width <span class="kw">as </span>u32,
                 },
                 <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
             };
