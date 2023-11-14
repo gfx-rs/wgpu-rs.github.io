@@ -3567,8 +3567,8 @@
 
             <span class="macro">log::trace!</span>(<span class="string">&quot;Buffer::destroy {buffer_id:?}&quot;</span>);
             <span class="kw">let </span>(<span class="kw-2">mut </span>buffer_guard, <span class="kw">_</span>) = hub.buffers.write(<span class="kw-2">&amp;mut </span>token);
-            <span class="kw">let </span><span class="kw-2">mut </span>buffer = buffer_guard
-                .take_and_mark_destroyed(buffer_id)
+            <span class="kw">let </span>buffer = buffer_guard
+                .get_and_mark_destroyed(buffer_id)
                 .map_err(|<span class="kw">_</span>| resource::DestroyError::Invalid)<span class="question-mark">?</span>;
 
             <span class="kw">let </span>device = <span class="kw-2">&amp;mut </span>device_guard[buffer.device_id.value];
@@ -3578,7 +3578,7 @@
                 </span>| <span class="kw-2">&amp;</span>BufferMapState::Init { .. }
                 | <span class="kw-2">&amp;</span>BufferMapState::Active { .. }
                 =&gt; {
-                    <span class="self">self</span>.buffer_unmap_inner(buffer_id, <span class="kw-2">&amp;mut </span>buffer, device)
+                    <span class="self">self</span>.buffer_unmap_inner(buffer_id, buffer, device)
                         .unwrap_or(<span class="prelude-val">None</span>)
                 }
                 <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -3623,7 +3623,7 @@
 
         <span class="kw">let </span>(ref_count, last_submit_index, device_id) = {
             <span class="kw">let </span>(<span class="kw-2">mut </span>buffer_guard, <span class="kw">_</span>) = hub.buffers.write(<span class="kw-2">&amp;mut </span>token);
-            <span class="kw">match </span>buffer_guard.get_mut(buffer_id) {
+            <span class="kw">match </span>buffer_guard.get_occupied_or_destroyed(buffer_id) {
                 <span class="prelude-val">Ok</span>(buffer) =&gt; {
                     <span class="kw">let </span>ref_count = buffer.life_guard.ref_count.take().unwrap();
                     <span class="kw">let </span>last_submit_index = buffer.life_guard.life_count();
@@ -3872,8 +3872,8 @@
         </span><span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw-2">mut </span>token) = hub.devices.write(<span class="kw-2">&amp;mut </span>token);
 
         <span class="kw">let </span>(<span class="kw-2">mut </span>texture_guard, <span class="kw">_</span>) = hub.textures.write(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span><span class="kw-2">mut </span>texture = texture_guard
-            .take_and_mark_destroyed(texture_id)
+        <span class="kw">let </span>texture = texture_guard
+            .get_and_mark_destroyed(texture_id)
             .map_err(|<span class="kw">_</span>| resource::DestroyError::Invalid)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>device = <span class="kw-2">&amp;mut </span>device_guard[texture.device_id.value];
@@ -3927,7 +3927,7 @@
 
         <span class="kw">let </span>(ref_count, last_submit_index, device_id) = {
             <span class="kw">let </span>(<span class="kw-2">mut </span>texture_guard, <span class="kw">_</span>) = hub.textures.write(<span class="kw-2">&amp;mut </span>token);
-            <span class="kw">match </span>texture_guard.get_mut(texture_id) {
+            <span class="kw">match </span>texture_guard.get_occupied_or_destroyed(texture_id) {
                 <span class="prelude-val">Ok</span>(texture) =&gt; {
                     <span class="kw">let </span>ref_count = texture.life_guard.ref_count.take().unwrap();
                     <span class="kw">let </span>last_submit_index = texture.life_guard.life_count();
