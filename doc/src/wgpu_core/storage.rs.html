@@ -300,6 +300,23 @@
 <a href="#300" id="300">300</a>
 <a href="#301" id="301">301</a>
 <a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{marker::PhantomData, mem, ops};
 
 <span class="kw">use </span>wgt::Backend;
@@ -451,13 +468,30 @@
     /// destroyed resource leads to a validation error. This should be used internally
     /// in places where we want to do some manipulation potentially after the element
     /// was destroyed (for example the drop implementation).
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_occupied_or_destroyed(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: I) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>T, InvalidId&gt; {
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_occupied_or_destroyed_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: I) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;mut </span>T, InvalidId&gt; {
         <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
         <span class="kw">let </span>(result, storage_epoch) = <span class="kw">match </span><span class="self">self</span>.map.get_mut(index <span class="kw">as </span>usize) {
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>Element::Occupied(<span class="kw-2">ref mut </span>v, epoch))
             | <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>Element::Destroyed(<span class="kw-2">ref mut </span>v, epoch)) =&gt; (<span class="prelude-val">Ok</span>(v), epoch),
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>Element::Vacant) | <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;{}[{}] does not exist&quot;</span>, <span class="self">self</span>.kind, index),
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>Element::Error(epoch, ..)) =&gt; (<span class="prelude-val">Err</span>(InvalidId), epoch),
+        };
+        <span class="macro">assert_eq!</span>(
+            epoch, storage_epoch,
+            <span class="string">&quot;{}[{}] is no longer alive&quot;</span>,
+            <span class="self">self</span>.kind, index
+        );
+        result
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_occupied_or_destroyed(<span class="kw-2">&amp;</span><span class="self">self</span>, id: I) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span>T, InvalidId&gt; {
+        <span class="kw">let </span>(index, epoch, <span class="kw">_</span>) = id.unzip();
+        <span class="kw">let </span>(result, storage_epoch) = <span class="kw">match </span><span class="self">self</span>.map.get(index <span class="kw">as </span>usize) {
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Occupied(<span class="kw-2">ref </span>v, epoch)) | <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Destroyed(<span class="kw-2">ref </span>v, epoch)) =&gt; {
+                (<span class="prelude-val">Ok</span>(v), epoch)
+            }
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Vacant) | <span class="prelude-val">None </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;{}[{}] does not exist&quot;</span>, <span class="self">self</span>.kind, index),
+            <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>Element::Error(epoch, ..)) =&gt; (<span class="prelude-val">Err</span>(InvalidId), epoch),
         };
         <span class="macro">assert_eq!</span>(
             epoch, storage_epoch,
