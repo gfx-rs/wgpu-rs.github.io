@@ -938,6 +938,13 @@
 <a href="#938" id="938">938</a>
 <a href="#939" id="939">939</a>
 <a href="#940" id="940">940</a>
+<a href="#941" id="941">941</a>
+<a href="#942" id="942">942</a>
+<a href="#943" id="943">943</a>
+<a href="#944" id="944">944</a>
+<a href="#945" id="945">945</a>
+<a href="#946" id="946">946</a>
+<a href="#947" id="947">947</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -1780,21 +1787,22 @@
 
         <span class="kw">for </span>stored <span class="kw">in </span><span class="self">self</span>.mapped.drain(..) {
             <span class="kw">let </span>resource_id = stored.value;
-            <span class="kw">let </span>buf = <span class="kw-2">&amp;</span>buffer_guard[resource_id];
+            <span class="comment">// The buffer may have been destroyed since the map request.
+            </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(buf) = buffer_guard.get(resource_id.<span class="number">0</span>) {
+                <span class="kw">let </span>submit_index = buf.life_guard.life_count();
+                <span class="macro">log::trace!</span>(
+                    <span class="string">&quot;Mapping of {:?} at submission {:?} gets assigned to active {:?}&quot;</span>,
+                    resource_id,
+                    submit_index,
+                    <span class="self">self</span>.active.iter().position(|a| a.index == submit_index)
+                );
 
-            <span class="kw">let </span>submit_index = buf.life_guard.life_count();
-            <span class="macro">log::trace!</span>(
-                <span class="string">&quot;Mapping of {:?} at submission {:?} gets assigned to active {:?}&quot;</span>,
-                resource_id,
-                submit_index,
-                <span class="self">self</span>.active.iter().position(|a| a.index == submit_index)
-            );
-
-            <span class="self">self</span>.active
-                .iter_mut()
-                .find(|a| a.index == submit_index)
-                .map_or(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ready_to_map, |a| <span class="kw-2">&amp;mut </span>a.mapped)
-                .push(resource_id);
+                <span class="self">self</span>.active
+                    .iter_mut()
+                    .find(|a| a.index == submit_index)
+                    .map_or(<span class="kw-2">&amp;mut </span><span class="self">self</span>.ready_to_map, |a| <span class="kw-2">&amp;mut </span>a.mapped)
+                    .push(resource_id);
+            }
         }
     }
 
@@ -1819,7 +1827,13 @@
             Vec::with_capacity(<span class="self">self</span>.ready_to_map.len());
         <span class="kw">let </span><span class="kw-2">mut </span>trackers = trackers.lock();
         <span class="kw">for </span>buffer_id <span class="kw">in </span><span class="self">self</span>.ready_to_map.drain(..) {
-            <span class="kw">let </span>buffer = <span class="kw-2">&amp;mut </span>buffer_guard[buffer_id];
+            <span class="kw">let </span>buffer = <span class="kw">match </span>buffer_guard.get_occupied_or_destroyed_mut(buffer_id.<span class="number">0</span>) {
+                <span class="prelude-val">Ok</span>(buf) =&gt; buf,
+                <span class="prelude-val">Err</span>(..) =&gt; {
+                    <span class="comment">// The buffer may have been destroyed since the map request.
+                    </span><span class="kw">continue</span>;
+                }
+            };
             <span class="kw">if </span>buffer.life_guard.ref_count.is_none() &amp;&amp; trackers.buffers.remove_abandoned(buffer_id)
             {
                 buffer.map_state = resource::BufferMapState::Idle;
