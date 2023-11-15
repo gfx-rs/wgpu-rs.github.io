@@ -2312,10 +2312,6 @@
 <a href="#2312" id="2312">2312</a>
 <a href="#2313" id="2313">2313</a>
 <a href="#2314" id="2314">2314</a>
-<a href="#2315" id="2315">2315</a>
-<a href="#2316" id="2316">2316</a>
-<a href="#2317" id="2317">2317</a>
-<a href="#2318" id="2318">2318</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     ast::{
         BuiltinVariations, FunctionDeclaration, FunctionKind, Overload, ParameterInfo,
@@ -3564,18 +3560,14 @@
                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 };
 
-                <span class="kw">let </span>second_scalar = <span class="kw">if </span>fun == MacroCall::MathFunction(MathFunction::Ldexp) {
-                    Scalar {
-                        kind: Sk::Sint,
-                        width: float_width,
-                    }
-                } <span class="kw">else </span>{
-                    float_scalar
+                <span class="kw">let </span>second_scalar = <span class="kw">match </span>fun {
+                    MacroCall::MathFunction(MathFunction::Ldexp) =&gt; Scalar::I32,
+                    <span class="kw">_ </span>=&gt; float_scalar,
                 };
 
                 declaration
                     .overloads
-                    .push(module.add_builtin(<span class="macro">vec!</span>[ty(Scalar::F32), ty(second_scalar)], fun))
+                    .push(module.add_builtin(<span class="macro">vec!</span>[ty(float_scalar), ty(second_scalar)], fun))
             }
         }
         <span class="string">&quot;transpose&quot; </span>=&gt; {
