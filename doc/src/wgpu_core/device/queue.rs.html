@@ -1471,6 +1471,15 @@
 <a href="#1471" id="1471">1471</a>
 <a href="#1472" id="1472">1472</a>
 <a href="#1473" id="1473">1473</a>
+<a href="#1474" id="1474">1474</a>
+<a href="#1475" id="1475">1475</a>
+<a href="#1476" id="1476">1476</a>
+<a href="#1477" id="1477">1477</a>
+<a href="#1478" id="1478">1478</a>
+<a href="#1479" id="1479">1479</a>
+<a href="#1480" id="1480">1480</a>
+<a href="#1481" id="1481">1481</a>
+<a href="#1482" id="1482">1482</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -2612,13 +2621,16 @@
 
                         // update submission IDs
                         </span><span class="kw">for </span>id <span class="kw">in </span>cmdbuf.trackers.buffers.used() {
-                            <span class="kw">let </span>buffer = <span class="kw-2">&amp;mut </span>buffer_guard[id];
-                            <span class="kw">let </span>raw_buf = <span class="kw">match </span>buffer.raw {
-                                <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>raw) =&gt; raw,
-                                <span class="prelude-val">None </span>=&gt; {
+                            <span class="kw">let </span>buffer = <span class="kw">match </span>buffer_guard.get(id.<span class="number">0</span>) {
+                                <span class="prelude-val">Ok</span>(buf) =&gt; buf,
+                                <span class="prelude-val">Err</span>(..) =&gt; {
                                     <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedBuffer(id.<span class="number">0</span>));
                                 }
                             };
+                            <span class="comment">// get fails if the buffer is invalid or destroyed so we can assume
+                            // the raw buffer is not None.
+                            </span><span class="kw">let </span>raw_buf = buffer.raw.as_ref().unwrap();
+
                             <span class="kw">if </span>!buffer.life_guard.use_at(submit_index) {
                                 <span class="kw">if let </span>BufferMapState::Active { .. } = buffer.map_state {
                                     <span class="macro">log::warn!</span>(<span class="string">&quot;Dropped buffer has a pending mapping.&quot;</span>);
@@ -2634,10 +2646,16 @@
                             }
                         }
                         <span class="kw">for </span>id <span class="kw">in </span>cmdbuf.trackers.textures.used() {
-                            <span class="kw">let </span>texture = <span class="kw-2">&amp;mut </span>texture_guard[id];
+                            <span class="kw">let </span>texture = <span class="kw">match </span>texture_guard.get_mut(id.<span class="number">0</span>) {
+                                <span class="prelude-val">Ok</span>(tex) =&gt; tex,
+                                <span class="prelude-val">Err</span>(..) =&gt; {
+                                    <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedTexture(id.<span class="number">0</span>));
+                                }
+                            };
+
                             <span class="kw">let </span>should_extend = <span class="kw">match </span>texture.inner {
                                 TextureInner::Native { raw: <span class="prelude-val">None </span>} =&gt; {
-                                    <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedTexture(id.<span class="number">0</span>));
+                                    <span class="macro">unreachable!</span>();
                                 }
                                 TextureInner::Native { raw: <span class="prelude-val">Some</span>(<span class="kw">_</span>) } =&gt; <span class="bool-val">false</span>,
                                 TextureInner::Surface {
