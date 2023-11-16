@@ -5452,6 +5452,66 @@
 <a href="#5452" id="5452">5452</a>
 <a href="#5453" id="5453">5453</a>
 <a href="#5454" id="5454">5454</a>
+<a href="#5455" id="5455">5455</a>
+<a href="#5456" id="5456">5456</a>
+<a href="#5457" id="5457">5457</a>
+<a href="#5458" id="5458">5458</a>
+<a href="#5459" id="5459">5459</a>
+<a href="#5460" id="5460">5460</a>
+<a href="#5461" id="5461">5461</a>
+<a href="#5462" id="5462">5462</a>
+<a href="#5463" id="5463">5463</a>
+<a href="#5464" id="5464">5464</a>
+<a href="#5465" id="5465">5465</a>
+<a href="#5466" id="5466">5466</a>
+<a href="#5467" id="5467">5467</a>
+<a href="#5468" id="5468">5468</a>
+<a href="#5469" id="5469">5469</a>
+<a href="#5470" id="5470">5470</a>
+<a href="#5471" id="5471">5471</a>
+<a href="#5472" id="5472">5472</a>
+<a href="#5473" id="5473">5473</a>
+<a href="#5474" id="5474">5474</a>
+<a href="#5475" id="5475">5475</a>
+<a href="#5476" id="5476">5476</a>
+<a href="#5477" id="5477">5477</a>
+<a href="#5478" id="5478">5478</a>
+<a href="#5479" id="5479">5479</a>
+<a href="#5480" id="5480">5480</a>
+<a href="#5481" id="5481">5481</a>
+<a href="#5482" id="5482">5482</a>
+<a href="#5483" id="5483">5483</a>
+<a href="#5484" id="5484">5484</a>
+<a href="#5485" id="5485">5485</a>
+<a href="#5486" id="5486">5486</a>
+<a href="#5487" id="5487">5487</a>
+<a href="#5488" id="5488">5488</a>
+<a href="#5489" id="5489">5489</a>
+<a href="#5490" id="5490">5490</a>
+<a href="#5491" id="5491">5491</a>
+<a href="#5492" id="5492">5492</a>
+<a href="#5493" id="5493">5493</a>
+<a href="#5494" id="5494">5494</a>
+<a href="#5495" id="5495">5495</a>
+<a href="#5496" id="5496">5496</a>
+<a href="#5497" id="5497">5497</a>
+<a href="#5498" id="5498">5498</a>
+<a href="#5499" id="5499">5499</a>
+<a href="#5500" id="5500">5500</a>
+<a href="#5501" id="5501">5501</a>
+<a href="#5502" id="5502">5502</a>
+<a href="#5503" id="5503">5503</a>
+<a href="#5504" id="5504">5504</a>
+<a href="#5505" id="5505">5505</a>
+<a href="#5506" id="5506">5506</a>
+<a href="#5507" id="5507">5507</a>
+<a href="#5508" id="5508">5508</a>
+<a href="#5509" id="5509">5509</a>
+<a href="#5510" id="5510">5510</a>
+<a href="#5511" id="5511">5511</a>
+<a href="#5512" id="5512">5512</a>
+<a href="#5513" id="5513">5513</a>
+<a href="#5514" id="5514">5514</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -5481,6 +5541,7 @@
 <span class="kw">use </span>context::{Context, DeviceRequest, DynContext, ObjectId};
 <span class="kw">use </span>parking_lot::Mutex;
 
+<span class="kw">use </span>raw_window_handle::{HasDisplayHandle, HasWindowHandle};
 <span class="kw">pub use </span>wgt::{
     AdapterInfo, AddressMode, AstcBlock, AstcChannel, Backend, Backends, BindGroupLayoutEntry,
     BindingType, BlendComponent, BlendFactor, BlendOperation, BlendState, BufferAddress,
@@ -5833,6 +5894,10 @@
 </span><span class="kw">pub type </span>SurfaceConfiguration = wgt::SurfaceConfiguration&lt;Vec&lt;TextureFormat&gt;&gt;;
 <span class="macro">static_assertions::assert_impl_all!</span>(SurfaceConfiguration: Send, Sync);
 
+<span class="kw">trait </span>WgpuSurfaceRequirement: WasmNotSend + WasmNotSync {}
+
+<span class="kw">impl</span>&lt;T: WasmNotSend + WasmNotSync&gt; WgpuSurfaceRequirement <span class="kw">for </span>T {}
+
 <span class="doccomment">/// Handle to a presentable surface.
 ///
 /// A `Surface` represents a platform-specific surface (e.g. a window) onto which rendered images may
@@ -5841,9 +5906,9 @@
 /// This type is unique to the Rust API of `wgpu`. In the WebGPU specification,
 /// [`GPUCanvasContext`](https://gpuweb.github.io/gpuweb/#canvas-context)
 /// serves a similar role.
-</span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Surface {
+</span><span class="kw">pub struct </span>Surface&lt;<span class="lifetime">&#39;window</span>&gt; {
     context: Arc&lt;C&gt;,
+    _surface: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>WgpuSurfaceRequirement + <span class="lifetime">&#39;window</span>&gt;&gt;,
     id: ObjectId,
     data: Box&lt;Data&gt;,
     <span class="comment">// Stores the latest `SurfaceConfiguration` that was set using `Surface::configure`.
@@ -5854,6 +5919,28 @@
     // been created is is additionally wrapped in an option.
     </span>config: Mutex&lt;<span class="prelude-ty">Option</span>&lt;SurfaceConfiguration&gt;&gt;,
 }
+
+<span class="comment">// This custom implementation is required because [`Surface::_surface`] doesn&#39;t
+// require [`Debug`](fmt::Debug), which we should not require from the user.
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;window</span>&gt; fmt::Debug <span class="kw">for </span>Surface&lt;<span class="lifetime">&#39;window</span>&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">&quot;Surface&quot;</span>)
+            .field(<span class="string">&quot;context&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.context)
+            .field(
+                <span class="string">&quot;_surface&quot;</span>,
+                <span class="kw-2">&amp;</span><span class="kw">if </span><span class="self">self</span>._surface.is_some() {
+                    <span class="string">&quot;Some&quot;
+                </span>} <span class="kw">else </span>{
+                    <span class="string">&quot;None&quot;
+                </span>},
+            )
+            .field(<span class="string">&quot;id&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.id)
+            .field(<span class="string">&quot;data&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.data)
+            .field(<span class="string">&quot;config&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.config)
+            .finish()
+    }
+}
+
 <span class="attr">#[cfg(any(
     not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
     all(
@@ -5863,7 +5950,7 @@
 ))]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(Surface: Send, Sync);
 
-<span class="kw">impl </span>Drop <span class="kw">for </span>Surface {
+<span class="kw">impl </span>Drop <span class="kw">for </span>Surface&lt;<span class="lifetime">&#39;_</span>&gt; {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if </span>!thread::panicking() {
             <span class="self">self</span>.context.surface_drop(<span class="kw-2">&amp;</span><span class="self">self</span>.id, <span class="self">self</span>.data.as_ref())
@@ -6625,7 +6712,7 @@
 ///
 /// Corresponds to [WebGPU `GPURequestAdapterOptions`](
 /// https://gpuweb.github.io/gpuweb/#dictdef-gpurequestadapteroptions).
-</span><span class="kw">pub type </span>RequestAdapterOptions&lt;<span class="lifetime">&#39;a</span>&gt; = RequestAdapterOptionsBase&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Surface&gt;;
+</span><span class="kw">pub type </span>RequestAdapterOptions&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>&gt; = RequestAdapterOptionsBase&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Surface&lt;<span class="lifetime">&#39;b</span>&gt;&gt;;
 <span class="attr">#[cfg(any(
     not(target_arch = <span class="string">&quot;wasm32&quot;</span>),
     all(
@@ -7374,11 +7461,9 @@
     /// If the specified display and window handle are not supported by any of the backends, then the surface
     /// will not be supported by any adapters.
     ///
-    /// # Safety
-    ///
-    /// - `raw_window_handle` must be a valid object to create a surface upon.
-    /// - `raw_window_handle` must remain valid until after the returned [`Surface`] is
-    ///   dropped.
+    /// If a reference is passed in `window`, the returned [`Surface`] will
+    /// hold a lifetime to it. Owned values will return a [`Surface&lt;&#39;static&gt;`]
+    /// instead.
     ///
     /// # Errors
     ///
@@ -7390,12 +7475,37 @@
     /// - On macOS/Metal: will panic if not called on the main thread.
     /// - On web: will panic if the `raw_window_handle` does not properly refer to a
     ///   canvas element.
-    </span><span class="kw">pub unsafe fn </span>create_surface&lt;
-        W: raw_window_handle::HasWindowHandle + raw_window_handle::HasDisplayHandle,
-    &gt;(
+    </span><span class="kw">pub fn </span>create_surface&lt;<span class="lifetime">&#39;window</span>, W&gt;(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        window: W,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface&lt;<span class="lifetime">&#39;window</span>&gt;, CreateSurfaceError&gt;
+    <span class="kw">where
+        </span>W: HasWindowHandle + HasDisplayHandle + WasmNotSend + WasmNotSync + <span class="lifetime">&#39;window</span>,
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>surface = <span class="kw">unsafe </span>{ <span class="self">self</span>.create_surface_from_raw(<span class="kw-2">&amp;</span>window) }<span class="question-mark">?</span>;
+        surface._surface = <span class="prelude-val">Some</span>(Box::new(window));
+        <span class="prelude-val">Ok</span>(surface)
+    }
+
+    <span class="doccomment">/// An alternative version to [`create_surface()`](Self::create_surface)
+    /// which has no lifetime requirements to `window` and doesn&#39;t require
+    /// [`Send`] or [`Sync`] (on non-Wasm targets). This makes it `unsafe`
+    /// instead and always returns a [`Surface&lt;&#39;static&gt;`].
+    ///
+    /// See [`create_surface()`](Self::create_surface) for more details.
+    ///
+    /// # Safety
+    ///
+    /// - `raw_window_handle` must be a valid object to create a surface upon.
+    /// - `raw_window_handle` must remain valid until after the returned [`Surface`] is
+    ///   dropped.
+    </span><span class="kw">pub unsafe fn </span>create_surface_from_raw&lt;W&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         window: <span class="kw-2">&amp;</span>W,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface&lt;<span class="lifetime">&#39;static</span>&gt;, CreateSurfaceError&gt;
+    <span class="kw">where
+        </span>W: HasWindowHandle + HasDisplayHandle,
+    {
         <span class="kw">let </span>raw_display_handle = window
             .display_handle()
             .map_err(|e| CreateSurfaceError {
@@ -7417,6 +7527,7 @@
         }<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(Surface {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
+            _surface: <span class="prelude-val">None</span>,
             id,
             data,
             config: Mutex::new(<span class="prelude-val">None</span>),
@@ -7432,7 +7543,7 @@
     </span><span class="kw">pub unsafe fn </span>create_surface_from_core_animation_layer(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         layer: <span class="kw-2">*mut </span>std::ffi::c_void,
-    ) -&gt; Surface {
+    ) -&gt; Surface&lt;<span class="lifetime">&#39;static</span>&gt; {
         <span class="kw">let </span>surface = <span class="kw">unsafe </span>{
             <span class="self">self</span>.context
                 .as_any()
@@ -7442,6 +7553,7 @@
         };
         Surface {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
+            _surface: <span class="prelude-val">None</span>,
             id: ObjectId::from(surface.id()),
             data: Box::new(surface),
             config: Mutex::new(<span class="prelude-val">None</span>),
@@ -7454,7 +7566,10 @@
     ///
     /// - visual must be a valid IDCompositionVisual to create a surface upon.
     </span><span class="attr">#[cfg(target_os = <span class="string">&quot;windows&quot;</span>)]
-    </span><span class="kw">pub unsafe fn </span>create_surface_from_visual(<span class="kw-2">&amp;</span><span class="self">self</span>, visual: <span class="kw-2">*mut </span>std::ffi::c_void) -&gt; Surface {
+    </span><span class="kw">pub unsafe fn </span>create_surface_from_visual(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        visual: <span class="kw-2">*mut </span>std::ffi::c_void,
+    ) -&gt; Surface&lt;<span class="lifetime">&#39;static</span>&gt; {
         <span class="kw">let </span>surface = <span class="kw">unsafe </span>{
             <span class="self">self</span>.context
                 .as_any()
@@ -7464,6 +7579,7 @@
         };
         Surface {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
+            _surface: <span class="prelude-val">None</span>,
             id: ObjectId::from(surface.id()),
             data: Box::new(surface),
             config: Mutex::new(<span class="prelude-val">None</span>),
@@ -7479,7 +7595,7 @@
     </span><span class="kw">pub unsafe fn </span>create_surface_from_surface_handle(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         surface_handle: <span class="kw-2">*mut </span>std::ffi::c_void,
-    ) -&gt; Surface {
+    ) -&gt; Surface&lt;<span class="lifetime">&#39;static</span>&gt; {
         <span class="kw">let </span>surface = <span class="kw">unsafe </span>{
             <span class="self">self</span>.context
                 .as_any()
@@ -7489,6 +7605,7 @@
         };
         Surface {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
+            _surface: <span class="prelude-val">None</span>,
             id: ObjectId::from(surface.id()),
             data: Box::new(surface),
             config: Mutex::new(<span class="prelude-val">None</span>),
@@ -7504,7 +7621,7 @@
     </span><span class="kw">pub unsafe fn </span>create_surface_from_swap_chain_panel(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         swap_chain_panel: <span class="kw-2">*mut </span>std::ffi::c_void,
-    ) -&gt; Surface {
+    ) -&gt; Surface&lt;<span class="lifetime">&#39;static</span>&gt; {
         <span class="kw">let </span>surface = <span class="kw">unsafe </span>{
             <span class="self">self</span>.context
                 .as_any()
@@ -7514,6 +7631,7 @@
         };
         Surface {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
+            _surface: <span class="prelude-val">None</span>,
             id: ObjectId::from(surface.id()),
             data: Box::new(surface),
             config: Mutex::new(<span class="prelude-val">None</span>),
@@ -7533,7 +7651,7 @@
     </span><span class="kw">pub fn </span>create_surface_from_canvas(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         canvas: web_sys::HtmlCanvasElement,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface&lt;<span class="lifetime">&#39;static</span>&gt;, CreateSurfaceError&gt; {
         <span class="kw">let </span>surface = <span class="self">self
             </span>.context
             .as_any()
@@ -7544,6 +7662,7 @@
         <span class="comment">// TODO: This is ugly, a way to create things from a native context needs to be made nicer.
         </span><span class="prelude-val">Ok</span>(Surface {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
+            _surface: <span class="prelude-val">None</span>,
             <span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;webgl&quot;</span>))]
             </span>id: ObjectId::from(surface.id()),
             <span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;webgl&quot;</span>))]
@@ -7569,7 +7688,7 @@
     </span><span class="kw">pub fn </span>create_surface_from_offscreen_canvas(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         canvas: web_sys::OffscreenCanvas,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface, CreateSurfaceError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface&lt;<span class="lifetime">&#39;static</span>&gt;, CreateSurfaceError&gt; {
         <span class="kw">let </span>surface = <span class="self">self
             </span>.context
             .as_any()
@@ -7580,6 +7699,7 @@
         <span class="comment">// TODO: This is ugly, a way to create things from a native context needs to be made nicer.
         </span><span class="prelude-val">Ok</span>(Surface {
             context: Arc::clone(<span class="kw-2">&amp;</span><span class="self">self</span>.context),
+            _surface: <span class="prelude-val">None</span>,
             <span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;webgl&quot;</span>))]
             </span>id: ObjectId::from(surface.id()),
             <span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), feature = <span class="string">&quot;webgl&quot;</span>))]
@@ -10367,7 +10487,7 @@
     }
 }
 
-<span class="kw">impl </span>Surface {
+<span class="kw">impl </span>Surface&lt;<span class="lifetime">&#39;_</span>&gt; {
     <span class="doccomment">/// Returns the capabilities of the surface when used with the given adapter.
     ///
     /// Returns specified values (see [`SurfaceCapabilities`]) if surface is incompatible with the adapter.
@@ -10757,7 +10877,7 @@
 }
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;expose-ids&quot;</span>)]
-</span><span class="kw">impl </span>Surface {
+</span><span class="kw">impl </span>Surface&lt;<span class="lifetime">&#39;_</span>&gt; {
     <span class="doccomment">/// Returns a globally-unique identifier for this `Surface`.
     ///
     /// Calling this method multiple times on the same object will always return the same value.

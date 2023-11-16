@@ -606,7 +606,10 @@
 <a href="#606" id="606">606</a>
 <a href="#607" id="607">607</a>
 <a href="#608" id="608">608</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>wgpu::{Instance, Surface, WasmNotSend, WasmNotSync};
+<a href="#609" id="609">609</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
+
+<span class="kw">use </span>wgpu::{Instance, Surface, WasmNotSend, WasmNotSync};
 <span class="kw">use </span>wgpu_test::GpuTestConfiguration;
 <span class="kw">use </span>winit::{
     dpi::PhysicalSize,
@@ -698,7 +701,7 @@
 
 <span class="kw">struct </span>EventLoopWrapper {
     event_loop: EventLoop&lt;()&gt;,
-    window: Window,
+    window: Arc&lt;Window&gt;,
 }
 
 <span class="kw">impl </span>EventLoopWrapper {
@@ -706,7 +709,7 @@
         <span class="kw">let </span>event_loop = EventLoop::new().unwrap();
         <span class="kw">let </span><span class="kw-2">mut </span>builder = winit::window::WindowBuilder::new();
         builder = builder.with_title(title);
-        <span class="kw">let </span>window = builder.build(<span class="kw-2">&amp;</span>event_loop).unwrap();
+        <span class="kw">let </span>window = Arc::new(builder.build(<span class="kw-2">&amp;</span>event_loop).unwrap());
 
         <span class="attr">#[cfg(target_arch = <span class="string">&quot;wasm32&quot;</span>)]
         </span>{
@@ -729,7 +732,7 @@
 ///
 /// As surface usage varies per platform, wrapping this up cleans up the event loop code.
 </span><span class="kw">struct </span>SurfaceWrapper {
-    surface: <span class="prelude-ty">Option</span>&lt;wgpu::Surface&gt;,
+    surface: <span class="prelude-ty">Option</span>&lt;wgpu::Surface&lt;<span class="lifetime">&#39;static</span>&gt;&gt;,
     config: <span class="prelude-ty">Option</span>&lt;wgpu::SurfaceConfiguration&gt;,
 }
 
@@ -749,9 +752,9 @@
     ///
     /// We cannot unconditionally create a surface here, as Android requires
     /// us to wait until we recieve the `Resumed` event to do so.
-    </span><span class="kw">fn </span>pre_adapter(<span class="kw-2">&amp;mut </span><span class="self">self</span>, instance: <span class="kw-2">&amp;</span>Instance, window: <span class="kw-2">&amp;</span>Window) {
+    </span><span class="kw">fn </span>pre_adapter(<span class="kw-2">&amp;mut </span><span class="self">self</span>, instance: <span class="kw-2">&amp;</span>Instance, window: Arc&lt;Window&gt;) {
         <span class="kw">if </span><span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>) {
-            <span class="self">self</span>.surface = <span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ instance.create_surface(<span class="kw-2">&amp;</span>window).unwrap() });
+            <span class="self">self</span>.surface = <span class="prelude-val">Some</span>(instance.create_surface(window).unwrap());
         }
     }
 
@@ -771,7 +774,7 @@
     /// On all native platforms, this is where we create the surface.
     ///
     /// Additionally, we configure the surface based on the (now valid) window size.
-    </span><span class="kw">fn </span>resume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;</span>ExampleContext, window: <span class="kw-2">&amp;</span>Window, srgb: bool) {
+    </span><span class="kw">fn </span>resume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, context: <span class="kw-2">&amp;</span>ExampleContext, window: Arc&lt;Window&gt;, srgb: bool) {
         <span class="comment">// Window size is only actually valid after we enter the event loop.
         </span><span class="kw">let </span>window_size = window.inner_size();
         <span class="kw">let </span>width = window_size.width.max(<span class="number">1</span>);
@@ -781,7 +784,7 @@
 
         <span class="comment">// We didn&#39;t create the surface in pre_adapter, so we need to do so now.
         </span><span class="kw">if </span>!<span class="macro">cfg!</span>(target_arch = <span class="string">&quot;wasm32&quot;</span>) {
-            <span class="self">self</span>.surface = <span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ context.instance.create_surface(<span class="kw-2">&amp;</span>window).unwrap() });
+            <span class="self">self</span>.surface = <span class="prelude-val">Some</span>(context.instance.create_surface(window).unwrap());
         }
 
         <span class="comment">// From here on, self.surface should be Some.
@@ -860,7 +863,7 @@
 }
 <span class="kw">impl </span>ExampleContext {
     <span class="doccomment">/// Initializes the example context.
-    </span><span class="kw">async fn </span>init_async&lt;E: Example&gt;(surface: <span class="kw-2">&amp;mut </span>SurfaceWrapper, window: <span class="kw-2">&amp;</span>Window) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">async fn </span>init_async&lt;E: Example&gt;(surface: <span class="kw-2">&amp;mut </span>SurfaceWrapper, window: Arc&lt;Window&gt;) -&gt; <span class="self">Self </span>{
         <span class="macro">log::info!</span>(<span class="string">&quot;Initializing wgpu...&quot;</span>);
 
         <span class="kw">let </span>backends = wgpu::util::backend_bits_from_env().unwrap_or_default();
@@ -965,8 +968,7 @@
     init_logger();
     <span class="kw">let </span>window_loop = EventLoopWrapper::new(title);
     <span class="kw">let </span><span class="kw-2">mut </span>surface = SurfaceWrapper::new();
-    <span class="kw">let </span>context = ExampleContext::init_async::&lt;E&gt;(<span class="kw-2">&amp;mut </span>surface, <span class="kw-2">&amp;</span>window_loop.window).<span class="kw">await</span>;
-
+    <span class="kw">let </span>context = ExampleContext::init_async::&lt;E&gt;(<span class="kw-2">&amp;mut </span>surface, window_loop.window.clone()).<span class="kw">await</span>;
     <span class="kw">let </span><span class="kw-2">mut </span>frame_counter = FrameCounter::new();
 
     <span class="comment">// We wait to create the example until we have a valid surface.
@@ -992,7 +994,7 @@
 
             <span class="kw">match </span>event {
                 <span class="kw-2">ref </span>e <span class="kw">if </span>SurfaceWrapper::start_condition(e) =&gt; {
-                    surface.resume(<span class="kw-2">&amp;</span>context, <span class="kw-2">&amp;</span>window_loop.window, E::SRGB);
+                    surface.resume(<span class="kw-2">&amp;</span>context, window_loop.window.clone(), E::SRGB);
 
                     <span class="comment">// If we haven&#39;t created the example yet, do so now.
                     </span><span class="kw">if </span>example.is_none() {
