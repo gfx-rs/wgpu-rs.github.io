@@ -807,6 +807,21 @@
 <a href="#807" id="807">807</a>
 <a href="#808" id="808">808</a>
 <a href="#809" id="809">809</a>
+<a href="#810" id="810">810</a>
+<a href="#811" id="811">811</a>
+<a href="#812" id="812">812</a>
+<a href="#813" id="813">813</a>
+<a href="#814" id="814">814</a>
+<a href="#815" id="815">815</a>
+<a href="#816" id="816">816</a>
+<a href="#817" id="817">817</a>
+<a href="#818" id="818">818</a>
+<a href="#819" id="819">819</a>
+<a href="#820" id="820">820</a>
+<a href="#821" id="821">821</a>
+<a href="#822" id="822">822</a>
+<a href="#823" id="823">823</a>
+<a href="#824" id="824">824</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{cmp::Ordering, fmt, hash, marker::PhantomData, num::NonZeroU32, ops};
 
 <span class="doccomment">/// An unique index in the arena array that a handle points to.
@@ -1239,11 +1254,26 @@
         </span>P: FnMut(Handle&lt;T&gt;, <span class="kw-2">&amp;mut </span>T) -&gt; bool,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>retained = <span class="number">0</span>;
         <span class="self">self</span>.data.retain_mut(|elt| {
+            <span class="kw">let </span>handle = Handle::new(Index::new(index <span class="kw">as </span>u32 + <span class="number">1</span>).unwrap());
+            <span class="kw">let </span>keep = predicate(handle, elt);
+
+            <span class="comment">// Since `predicate` needs mutable access to each element,
+            // we can&#39;t feasibly call it twice, so we have to compact
+            // spans by hand in parallel as part of this iteration.
+            </span><span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
+            </span><span class="kw">if </span>keep {
+                <span class="self">self</span>.span_info[retained] = <span class="self">self</span>.span_info[index];
+                retained += <span class="number">1</span>;
+            }
+
             index += <span class="number">1</span>;
-            <span class="kw">let </span>handle = Handle::new(Index::new(index).unwrap());
-            predicate(handle, elt)
-        })
+            keep
+        });
+
+        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
+        </span><span class="self">self</span>.span_info.truncate(retained);
     }
 }
 
