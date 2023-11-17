@@ -499,32 +499,6 @@
 <a href="#499" id="499">499</a>
 <a href="#500" id="500">500</a>
 <a href="#501" id="501">501</a>
-<a href="#502" id="502">502</a>
-<a href="#503" id="503">503</a>
-<a href="#504" id="504">504</a>
-<a href="#505" id="505">505</a>
-<a href="#506" id="506">506</a>
-<a href="#507" id="507">507</a>
-<a href="#508" id="508">508</a>
-<a href="#509" id="509">509</a>
-<a href="#510" id="510">510</a>
-<a href="#511" id="511">511</a>
-<a href="#512" id="512">512</a>
-<a href="#513" id="513">513</a>
-<a href="#514" id="514">514</a>
-<a href="#515" id="515">515</a>
-<a href="#516" id="516">516</a>
-<a href="#517" id="517">517</a>
-<a href="#518" id="518">518</a>
-<a href="#519" id="519">519</a>
-<a href="#520" id="520">520</a>
-<a href="#521" id="521">521</a>
-<a href="#522" id="522">522</a>
-<a href="#523" id="523">523</a>
-<a href="#524" id="524">524</a>
-<a href="#525" id="525">525</a>
-<a href="#526" id="526">526</a>
-<a href="#527" id="527">527</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{Arena, Handle, UniqueArena};
 <span class="kw">use </span>std::{error::Error, fmt, ops::Range};
 
@@ -655,8 +629,7 @@
 </span><span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>WithSpan&lt;E&gt; {
     inner: E,
-    <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-    </span>spans: Vec&lt;SpanContext&gt;,
+    spans: Vec&lt;SpanContext&gt;,
 }
 
 <span class="kw">impl</span>&lt;E&gt; fmt::Display <span class="kw">for </span>WithSpan&lt;E&gt;
@@ -692,8 +665,7 @@
     </span><span class="kw">pub const fn </span>new(inner: E) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             inner,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-            </span>spans: Vec::new(),
+            spans: Vec::new(),
         }
     }
 
@@ -709,23 +681,15 @@
 
     <span class="doccomment">/// Iterator over stored [`SpanContext`]s.
     </span><span class="kw">pub fn </span>spans(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>ExactSizeIterator&lt;Item = <span class="kw-2">&amp;</span>SpanContext&gt; {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="kw">return </span><span class="self">self</span>.spans.iter();
-        <span class="attr">#[cfg(not(feature = <span class="string">&quot;span&quot;</span>))]
-        </span><span class="kw">return </span>std::iter::empty();
+        <span class="self">self</span>.spans.iter()
     }
 
     <span class="doccomment">/// Add a new span with description.
-    </span><span class="attr">#[cfg_attr(
-        not(feature = <span class="string">&quot;span&quot;</span>),
-        allow(unused_variables, unused_mut, clippy::missing_const_for_fn)
-    )]
     </span><span class="kw">pub fn </span>with_span&lt;S&gt;(<span class="kw-2">mut </span><span class="self">self</span>, span: Span, description: S) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>S: ToString,
     {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="kw">if </span>span.is_defined() {
+        <span class="kw">if </span>span.is_defined() {
             <span class="self">self</span>.spans.push((span, description.to_string()));
         }
         <span class="self">self
@@ -750,8 +714,7 @@
     {
         WithSpan {
             inner: <span class="self">self</span>.inner.into(),
-            <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-            </span>spans: <span class="self">self</span>.spans,
+            spans: <span class="self">self</span>.spans,
         }
     }
 
@@ -761,15 +724,12 @@
     <span class="kw">where
         </span>F: FnOnce(E) -&gt; WithSpan&lt;E2&gt;,
     {
-        <span class="attr">#[cfg_attr(not(feature = <span class="string">&quot;span&quot;</span>), allow(unused_mut))]
-        </span><span class="kw">let </span><span class="kw-2">mut </span>res = func(<span class="self">self</span>.inner);
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span>res.spans.extend(<span class="self">self</span>.spans);
+        <span class="kw">let </span><span class="kw-2">mut </span>res = func(<span class="self">self</span>.inner);
+        res.spans.extend(<span class="self">self</span>.spans);
         res
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-    </span><span class="doccomment">/// Return a [`SourceLocation`] for our first span, if we have one.
+    <span class="doccomment">/// Return a [`SourceLocation`] for our first span, if we have one.
     </span><span class="kw">pub fn </span>location(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;SourceLocation&gt; {
         <span class="kw">if </span><span class="self">self</span>.spans.is_empty() {
             <span class="kw">return </span><span class="prelude-val">None</span>;
@@ -778,15 +738,7 @@
         <span class="prelude-val">Some</span>(<span class="self">self</span>.spans[<span class="number">0</span>].<span class="number">0</span>.location(source))
     }
 
-    <span class="attr">#[cfg(not(feature = <span class="string">&quot;span&quot;</span>))]
-    #[allow(clippy::missing_const_for_fn)]
-    </span><span class="doccomment">/// Return a [`SourceLocation`] for our first span, if we have one.
-    </span><span class="kw">pub fn </span>location(<span class="kw-2">&amp;</span><span class="self">self</span>, _source: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;SourceLocation&gt; {
-        <span class="prelude-val">None
-    </span>}
-
-    <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-    </span><span class="kw">fn </span>diagnostic(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; codespan_reporting::diagnostic::Diagnostic&lt;()&gt;
+    <span class="kw">fn </span>diagnostic(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; codespan_reporting::diagnostic::Diagnostic&lt;()&gt;
     <span class="kw">where
         </span>E: Error,
     {
@@ -813,7 +765,6 @@
     }
 
     <span class="doccomment">/// Emits a summary of the error to standard error stream.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
     </span><span class="kw">pub fn </span>emit_to_stderr(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str)
     <span class="kw">where
         </span>E: Error,
@@ -822,7 +773,6 @@
     }
 
     <span class="doccomment">/// Emits a summary of the error to standard error stream.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
     </span><span class="kw">pub fn </span>emit_to_stderr_with_path(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str)
     <span class="kw">where
         </span>E: Error,
@@ -838,7 +788,6 @@
     }
 
     <span class="doccomment">/// Emits a summary of the error to a string.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
     </span><span class="kw">pub fn </span>emit_to_string(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str) -&gt; String
     <span class="kw">where
         </span>E: Error,
@@ -847,7 +796,6 @@
     }
 
     <span class="doccomment">/// Emits a summary of the error to a string.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
     </span><span class="kw">pub fn </span>emit_to_string_with_path(<span class="kw-2">&amp;</span><span class="self">self</span>, source: <span class="kw-2">&amp;</span>str, path: <span class="kw-2">&amp;</span>str) -&gt; String
     <span class="kw">where
         </span>E: Error,

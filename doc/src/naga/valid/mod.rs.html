@@ -475,22 +475,6 @@
 <a href="#475" id="475">475</a>
 <a href="#476" id="476">476</a>
 <a href="#477" id="477">477</a>
-<a href="#478" id="478">478</a>
-<a href="#479" id="479">479</a>
-<a href="#480" id="480">480</a>
-<a href="#481" id="481">481</a>
-<a href="#482" id="482">482</a>
-<a href="#483" id="483">483</a>
-<a href="#484" id="484">484</a>
-<a href="#485" id="485">485</a>
-<a href="#486" id="486">486</a>
-<a href="#487" id="487">487</a>
-<a href="#488" id="488">488</a>
-<a href="#489" id="489">489</a>
-<a href="#490" id="490">490</a>
-<a href="#491" id="491">491</a>
-<a href="#492" id="492">492</a>
-<a href="#493" id="493">493</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Shader validator.
 */
@@ -538,31 +522,22 @@ Shader validator.
     /// should never panic.
     ///
     /// The default value for `ValidationFlags` is
-    /// `ValidationFlags::all()`. If Naga&#39;s `&quot;validate&quot;` feature is
-    /// enabled, this requests full validation; otherwise, this
-    /// requests no validation. (The `&quot;validate&quot;` feature is disabled
-    /// by default.)
+    /// `ValidationFlags::all()`.
     </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(serde::Serialize))]
     #[cfg_attr(feature = <span class="string">&quot;deserialize&quot;</span>, derive(serde::Deserialize))]
     #[derive(Clone, Copy, Debug, Eq, PartialEq)]
     </span><span class="kw">pub struct </span>ValidationFlags: u8 {
         <span class="doccomment">/// Expressions.
-        </span><span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
         </span><span class="kw">const </span>EXPRESSIONS = <span class="number">0x1</span>;
         <span class="doccomment">/// Statements and blocks of them.
-        </span><span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
         </span><span class="kw">const </span>BLOCKS = <span class="number">0x2</span>;
         <span class="doccomment">/// Uniformity of control flow for operations that require it.
-        </span><span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
         </span><span class="kw">const </span>CONTROL_FLOW_UNIFORMITY = <span class="number">0x4</span>;
         <span class="doccomment">/// Host-shareable structure layouts.
-        </span><span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
         </span><span class="kw">const </span>STRUCT_LAYOUTS = <span class="number">0x8</span>;
         <span class="doccomment">/// Constants.
-        </span><span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
         </span><span class="kw">const </span>CONSTANTS = <span class="number">0x10</span>;
         <span class="doccomment">/// Group, binding, and location attributes.
-        </span><span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
         </span><span class="kw">const </span>BINDINGS = <span class="number">0x20</span>;
     }
 }
@@ -730,8 +705,7 @@ Shader validator.
 }
 
 <span class="kw">impl </span><span class="kw">crate</span>::TypeInner {
-    <span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
-    </span><span class="kw">const fn </span>is_sized(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    <span class="kw">const fn </span>is_sized(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::Scalar { .. }
             | <span class="self">Self</span>::Vector { .. }
@@ -754,7 +728,6 @@ Shader validator.
     }
 
     <span class="doccomment">/// Return the `ImageDimension` for which `self` is an appropriate coordinate.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
     </span><span class="kw">const fn </span>image_storage_coordinates(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::ImageDimension&gt; {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::Scalar(<span class="kw">crate</span>::Scalar {
@@ -809,8 +782,7 @@ Shader validator.
         <span class="self">self</span>.valid_expression_set.clear();
     }
 
-    <span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
-    </span><span class="kw">fn </span>validate_constant(
+    <span class="kw">fn </span>validate_constant(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         handle: Handle&lt;<span class="kw">crate</span>::Constant&gt;,
         gctx: <span class="kw">crate</span>::proc::GlobalCtx,
@@ -840,8 +812,7 @@ Shader validator.
         <span class="self">self</span>.reset();
         <span class="self">self</span>.reset_types(module.types.len());
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
-        </span><span class="self">Self</span>::validate_module_handles(module).map_err(|e| e.with_span())<span class="question-mark">?</span>;
+        <span class="self">Self</span>::validate_module_handles(module).map_err(|e| e.with_span())<span class="question-mark">?</span>;
 
         <span class="self">self</span>.layouter.update(module.to_ctx()).map_err(|e| {
             <span class="kw">let </span>handle = e.ty;
@@ -890,8 +861,7 @@ Shader validator.
             </span>}
         }
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
-        </span><span class="kw">if </span><span class="self">self</span>.flags.contains(ValidationFlags::CONSTANTS) {
+        <span class="kw">if </span><span class="self">self</span>.flags.contains(ValidationFlags::CONSTANTS) {
             <span class="kw">for </span>(handle, <span class="kw">_</span>) <span class="kw">in </span>module.const_expressions.iter() {
                 <span class="self">self</span>.validate_const_expression(handle, module.to_ctx(), <span class="kw-2">&amp;</span>mod_info)
                     .map_err(|source| {
@@ -913,8 +883,7 @@ Shader validator.
             </span>}
         }
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
-        </span><span class="kw">for </span>(var_handle, var) <span class="kw">in </span>module.global_variables.iter() {
+        <span class="kw">for </span>(var_handle, var) <span class="kw">in </span>module.global_variables.iter() {
             <span class="self">self</span>.validate_global_var(var, module.to_ctx(), <span class="kw-2">&amp;</span>mod_info)
                 .map_err(|source| {
                     ValidationError::GlobalVariable {
@@ -972,8 +941,7 @@ Shader validator.
     }
 }
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;validate&quot;</span>)]
-</span><span class="kw">fn </span>validate_atomic_compare_exchange_struct(
+<span class="kw">fn </span>validate_atomic_compare_exchange_struct(
     types: <span class="kw-2">&amp;</span><span class="kw">crate</span>::UniqueArena&lt;<span class="kw">crate</span>::Type&gt;,
     members: <span class="kw-2">&amp;</span>[<span class="kw">crate</span>::StructMember],
     scalar_predicate: <span class="kw">impl </span>FnOnce(<span class="kw-2">&amp;</span><span class="kw">crate</span>::TypeInner) -&gt; bool,

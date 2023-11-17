@@ -770,58 +770,6 @@
 <a href="#770" id="770">770</a>
 <a href="#771" id="771">771</a>
 <a href="#772" id="772">772</a>
-<a href="#773" id="773">773</a>
-<a href="#774" id="774">774</a>
-<a href="#775" id="775">775</a>
-<a href="#776" id="776">776</a>
-<a href="#777" id="777">777</a>
-<a href="#778" id="778">778</a>
-<a href="#779" id="779">779</a>
-<a href="#780" id="780">780</a>
-<a href="#781" id="781">781</a>
-<a href="#782" id="782">782</a>
-<a href="#783" id="783">783</a>
-<a href="#784" id="784">784</a>
-<a href="#785" id="785">785</a>
-<a href="#786" id="786">786</a>
-<a href="#787" id="787">787</a>
-<a href="#788" id="788">788</a>
-<a href="#789" id="789">789</a>
-<a href="#790" id="790">790</a>
-<a href="#791" id="791">791</a>
-<a href="#792" id="792">792</a>
-<a href="#793" id="793">793</a>
-<a href="#794" id="794">794</a>
-<a href="#795" id="795">795</a>
-<a href="#796" id="796">796</a>
-<a href="#797" id="797">797</a>
-<a href="#798" id="798">798</a>
-<a href="#799" id="799">799</a>
-<a href="#800" id="800">800</a>
-<a href="#801" id="801">801</a>
-<a href="#802" id="802">802</a>
-<a href="#803" id="803">803</a>
-<a href="#804" id="804">804</a>
-<a href="#805" id="805">805</a>
-<a href="#806" id="806">806</a>
-<a href="#807" id="807">807</a>
-<a href="#808" id="808">808</a>
-<a href="#809" id="809">809</a>
-<a href="#810" id="810">810</a>
-<a href="#811" id="811">811</a>
-<a href="#812" id="812">812</a>
-<a href="#813" id="813">813</a>
-<a href="#814" id="814">814</a>
-<a href="#815" id="815">815</a>
-<a href="#816" id="816">816</a>
-<a href="#817" id="817">817</a>
-<a href="#818" id="818">818</a>
-<a href="#819" id="819">819</a>
-<a href="#820" id="820">820</a>
-<a href="#821" id="821">821</a>
-<a href="#822" id="822">822</a>
-<a href="#823" id="823">823</a>
-<a href="#824" id="824">824</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{cmp::Ordering, fmt, hash, marker::PhantomData, num::NonZeroU32, ops};
 
 <span class="doccomment">/// An unique index in the arena array that a handle points to.
@@ -1071,8 +1019,7 @@
 </span><span class="kw">pub struct </span>Arena&lt;T&gt; {
     <span class="doccomment">/// Values of this arena.
     </span>data: Vec&lt;T&gt;,
-    <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-    #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>span_info: Vec&lt;Span&gt;,
 }
 
@@ -1093,8 +1040,7 @@
     </span><span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
         Arena {
             data: Vec::new(),
-            <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-            </span>span_info: Vec::new(),
+            span_info: Vec::new(),
         }
     }
 
@@ -1134,12 +1080,9 @@
 
     <span class="doccomment">/// Adds a new value to the arena, returning a typed handle.
     </span><span class="kw">pub fn </span>append(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T, span: Span) -&gt; Handle&lt;T&gt; {
-        <span class="attr">#[cfg(not(feature = <span class="string">&quot;span&quot;</span>))]
-        </span><span class="kw">let _ </span>= span;
         <span class="kw">let </span>index = <span class="self">self</span>.data.len();
         <span class="self">self</span>.data.push(value);
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="self">self</span>.span_info.push(span);
+        <span class="self">self</span>.span_info.push(span);
         Handle::from_usize(index)
     }
 
@@ -1201,18 +1144,10 @@
     }
 
     <span class="kw">pub fn </span>get_span(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;T&gt;) -&gt; Span {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span>{
-            <span class="kw-2">*</span><span class="self">self
-                </span>.span_info
-                .get(handle.index())
-                .unwrap_or(<span class="kw-2">&amp;</span>Span::default())
-        }
-        <span class="attr">#[cfg(not(feature = <span class="string">&quot;span&quot;</span>))]
-        </span>{
-            <span class="kw">let _ </span>= handle;
-            Span::default()
-        }
+        <span class="kw-2">*</span><span class="self">self
+            </span>.span_info
+            .get(handle.index())
+            .unwrap_or(<span class="kw-2">&amp;</span>Span::default())
     }
 
     <span class="doccomment">/// Assert that `handle` is valid for this arena.
@@ -1262,7 +1197,6 @@
             <span class="comment">// Since `predicate` needs mutable access to each element,
             // we can&#39;t feasibly call it twice, so we have to compact
             // spans by hand in parallel as part of this iteration.
-            </span><span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
             </span><span class="kw">if </span>keep {
                 <span class="self">self</span>.span_info[retained] = <span class="self">self</span>.span_info[index];
                 retained += <span class="number">1</span>;
@@ -1272,8 +1206,7 @@
             keep
         });
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="self">self</span>.span_info.truncate(retained);
+        <span class="self">self</span>.span_info.truncate(retained);
     }
 }
 
@@ -1287,16 +1220,11 @@
         </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
         <span class="kw">let </span>data = Vec::deserialize(deserializer)<span class="question-mark">?</span>;
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="kw">let </span>span_info = std::iter::repeat(Span::default())
+        <span class="kw">let </span>span_info = std::iter::repeat(Span::default())
             .take(data.len())
             .collect();
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            data,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-            </span>span_info,
-        })
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ data, span_info })
     }
 }
 
@@ -1385,7 +1313,6 @@
     /// promises that its elements &quot;are indexed in a compact range, without
     /// holes in the range 0..set.len()&quot;, so we can always use the indices
     /// returned by insertion as indices into this vector.
-    </span><span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
     </span>span_info: Vec&lt;Span&gt;,
 }
 
@@ -1394,8 +1321,7 @@
     </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         UniqueArena {
             set: FastIndexSet::default(),
-            <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-            </span>span_info: Vec::new(),
+            span_info: Vec::new(),
         }
     }
 
@@ -1412,38 +1338,25 @@
     <span class="doccomment">/// Clears the arena, keeping all allocations.
     </span><span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.set.clear();
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="self">self</span>.span_info.clear();
+        <span class="self">self</span>.span_info.clear();
     }
 
     <span class="doccomment">/// Return the span associated with `handle`.
     ///
     /// If a value has been inserted multiple times, the span returned is the
     /// one provided with the first insertion.
-    ///
-    /// If the `span` feature is not enabled, always return `Span::default`.
-    /// This can be detected with [`Span::is_defined`].
     </span><span class="kw">pub fn </span>get_span(<span class="kw-2">&amp;</span><span class="self">self</span>, handle: Handle&lt;T&gt;) -&gt; Span {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span>{
-            <span class="kw-2">*</span><span class="self">self
-                </span>.span_info
-                .get(handle.index())
-                .unwrap_or(<span class="kw-2">&amp;</span>Span::default())
-        }
-        <span class="attr">#[cfg(not(feature = <span class="string">&quot;span&quot;</span>))]
-        </span>{
-            <span class="kw">let _ </span>= handle;
-            Span::default()
-        }
+        <span class="kw-2">*</span><span class="self">self
+            </span>.span_info
+            .get(handle.index())
+            .unwrap_or(<span class="kw-2">&amp;</span>Span::default())
     }
 
     <span class="attr">#[cfg(feature = <span class="string">&quot;compact&quot;</span>)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>drain_all(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; UniqueArenaDrain&lt;T&gt; {
         UniqueArenaDrain {
             inner_elts: <span class="self">self</span>.set.drain(..),
-            <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-            </span>inner_spans: <span class="self">self</span>.span_info.drain(..),
+            inner_spans: <span class="self">self</span>.span_info.drain(..),
             index: Index::new(<span class="number">1</span>).unwrap(),
         }
     }
@@ -1452,8 +1365,7 @@
 <span class="attr">#[cfg(feature = <span class="string">&quot;compact&quot;</span>)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>UniqueArenaDrain&lt;<span class="lifetime">&#39;a</span>, T&gt; {
     inner_elts: indexmap::set::Drain&lt;<span class="lifetime">&#39;a</span>, T&gt;,
-    <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-    </span>inner_spans: std::vec::Drain&lt;<span class="lifetime">&#39;a</span>, Span&gt;,
+    inner_spans: std::vec::Drain&lt;<span class="lifetime">&#39;a</span>, Span&gt;,
     index: Index,
 }
 
@@ -1466,10 +1378,7 @@
             <span class="prelude-val">Some</span>(elt) =&gt; {
                 <span class="kw">let </span>handle = Handle::new(<span class="self">self</span>.index);
                 <span class="self">self</span>.index = <span class="self">self</span>.index.checked_add(<span class="number">1</span>).unwrap();
-                <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-                </span><span class="kw">let </span>span = <span class="self">self</span>.inner_spans.next().unwrap();
-                <span class="attr">#[cfg(not(feature = <span class="string">&quot;span&quot;</span>))]
-                </span><span class="kw">let </span>span = Span::default();
+                <span class="kw">let </span>span = <span class="self">self</span>.inner_spans.next().unwrap();
                 <span class="prelude-val">Some</span>((handle, elt, span))
             }
             <span class="prelude-val">None </span>=&gt; <span class="prelude-val">None</span>,
@@ -1496,27 +1405,21 @@
     /// If this arena already contains an element that is `Eq` to `value`,
     /// return a `Handle` to the existing element, and drop `value`.
     ///
-    /// When the `span` feature is enabled, if `value` is inserted into the
-    /// arena, associate `span` with it. An element&#39;s span can be retrieved with
-    /// the [`get_span`] method.
+    /// If `value` is inserted into the arena, associate `span` with
+    /// it. An element&#39;s span can be retrieved with the [`get_span`]
+    /// method.
     ///
     /// [`Handle&lt;T&gt;`]: Handle
     /// [`get_span`]: UniqueArena::get_span
     </span><span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, value: T, span: Span) -&gt; Handle&lt;T&gt; {
         <span class="kw">let </span>(index, added) = <span class="self">self</span>.set.insert_full(value);
 
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span>{
-            <span class="kw">if </span>added {
-                <span class="macro">debug_assert!</span>(index == <span class="self">self</span>.span_info.len());
-                <span class="self">self</span>.span_info.push(span);
-            }
-
-            <span class="macro">debug_assert!</span>(<span class="self">self</span>.set.len() == <span class="self">self</span>.span_info.len());
+        <span class="kw">if </span>added {
+            <span class="macro">debug_assert!</span>(index == <span class="self">self</span>.span_info.len());
+            <span class="self">self</span>.span_info.push(span);
         }
 
-        <span class="attr">#[cfg(not(feature = <span class="string">&quot;span&quot;</span>))]
-        </span><span class="kw">let _ </span>= (span, added);
+        <span class="macro">debug_assert!</span>(<span class="self">self</span>.set.len() == <span class="self">self</span>.span_info.len());
 
         Handle::from_usize(index)
     }
@@ -1603,14 +1506,9 @@
         </span>D: serde::Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
         <span class="kw">let </span>set = FastIndexSet::deserialize(deserializer)<span class="question-mark">?</span>;
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="kw">let </span>span_info = std::iter::repeat(Span::default()).take(set.len()).collect();
+        <span class="kw">let </span>span_info = std::iter::repeat(Span::default()).take(set.len()).collect();
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            set,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-            </span>span_info,
-        })
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ set, span_info })
     }
 }
 
@@ -1624,8 +1522,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>arena = <span class="self">Self</span>::default();
         <span class="kw">for </span>elem <span class="kw">in </span>u.arbitrary_iter()<span class="question-mark">? </span>{
             arena.set.insert(elem<span class="question-mark">?</span>);
-            <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-            </span>arena.span_info.push(Span::UNDEFINED);
+            arena.span_info.push(Span::UNDEFINED);
         }
         <span class="prelude-val">Ok</span>(arena)
     }
@@ -1634,8 +1531,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>arena = <span class="self">Self</span>::default();
         <span class="kw">for </span>elem <span class="kw">in </span>u.arbitrary_take_rest_iter()<span class="question-mark">? </span>{
             arena.set.insert(elem<span class="question-mark">?</span>);
-            <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-            </span>arena.span_info.push(Span::UNDEFINED);
+            arena.span_info.push(Span::UNDEFINED);
         }
         <span class="prelude-val">Ok</span>(arena)
     }

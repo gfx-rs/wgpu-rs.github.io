@@ -121,27 +121,6 @@
 <a href="#121" id="121">121</a>
 <a href="#122" id="122">122</a>
 <a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
-<a href="#128" id="128">128</a>
-<a href="#129" id="129">129</a>
-<a href="#130" id="130">130</a>
-<a href="#131" id="131">131</a>
-<a href="#132" id="132">132</a>
-<a href="#133" id="133">133</a>
-<a href="#134" id="134">134</a>
-<a href="#135" id="135">135</a>
-<a href="#136" id="136">136</a>
-<a href="#137" id="137">137</a>
-<a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{Span, Statement};
 <span class="kw">use </span>std::ops::{Deref, DerefMut, RangeBounds};
 
@@ -152,8 +131,7 @@
 #[cfg_attr(feature = <span class="string">&quot;arbitrary&quot;</span>, derive(arbitrary::Arbitrary))]
 </span><span class="kw">pub struct </span>Block {
     body: Vec&lt;Statement&gt;,
-    <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-    #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>span_info: Vec&lt;Span&gt;,
 }
 
@@ -161,36 +139,28 @@
     <span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             body: Vec::new(),
-            <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-            </span>span_info: Vec::new(),
+            span_info: Vec::new(),
         }
     }
 
     <span class="kw">pub fn </span>from_vec(body: Vec&lt;Statement&gt;) -&gt; <span class="self">Self </span>{
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="kw">let </span>span_info = std::iter::repeat(Span::default())
+        <span class="kw">let </span>span_info = std::iter::repeat(Span::default())
             .take(body.len())
             .collect();
-        <span class="self">Self </span>{
-            body,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-            </span>span_info,
-        }
+        <span class="self">Self </span>{ body, span_info }
     }
 
     <span class="kw">pub fn </span>with_capacity(capacity: usize) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             body: Vec::with_capacity(capacity),
-            <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-            </span>span_info: Vec::with_capacity(capacity),
+            span_info: Vec::with_capacity(capacity),
         }
     }
 
     <span class="attr">#[allow(unused_variables)]
     </span><span class="kw">pub fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, end: Statement, span: Span) {
         <span class="self">self</span>.body.push(end);
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="self">self</span>.span_info.push(span);
+        <span class="self">self</span>.span_info.push(span);
     }
 
     <span class="kw">pub fn </span>extend(<span class="kw-2">&amp;mut </span><span class="self">self</span>, item: <span class="prelude-ty">Option</span>&lt;(Statement, Span)&gt;) {
@@ -200,43 +170,31 @@
     }
 
     <span class="kw">pub fn </span>extend_block(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: <span class="self">Self</span>) {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="self">self</span>.span_info.extend(other.span_info);
+        <span class="self">self</span>.span_info.extend(other.span_info);
         <span class="self">self</span>.body.extend(other.body);
     }
 
     <span class="kw">pub fn </span>append(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: <span class="kw-2">&amp;mut </span><span class="self">Self</span>) {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="self">self</span>.span_info.append(<span class="kw-2">&amp;mut </span>other.span_info);
+        <span class="self">self</span>.span_info.append(<span class="kw-2">&amp;mut </span>other.span_info);
         <span class="self">self</span>.body.append(<span class="kw-2">&amp;mut </span>other.body);
     }
 
     <span class="kw">pub fn </span>cull&lt;R: RangeBounds&lt;usize&gt; + Clone&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, range: R) {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="self">self</span>.span_info.drain(range.clone());
+        <span class="self">self</span>.span_info.drain(range.clone());
         <span class="self">self</span>.body.drain(range);
     }
 
     <span class="kw">pub fn </span>splice&lt;R: RangeBounds&lt;usize&gt; + Clone&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, range: R, other: <span class="self">Self</span>) {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="self">self</span>.span_info.splice(range.clone(), other.span_info);
+        <span class="self">self</span>.span_info.splice(range.clone(), other.span_info);
         <span class="self">self</span>.body.splice(range, other.body);
     }
     <span class="kw">pub fn </span>span_iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (<span class="kw-2">&amp;</span>Statement, <span class="kw-2">&amp;</span>Span)&gt; {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="kw">let </span>span_iter = <span class="self">self</span>.span_info.iter();
-        <span class="attr">#[cfg(not(feature = <span class="string">&quot;span&quot;</span>))]
-        </span><span class="kw">let </span>span_iter = std::iter::repeat_with(|| <span class="kw-2">&amp;</span>Span::UNDEFINED);
-
+        <span class="kw">let </span>span_iter = <span class="self">self</span>.span_info.iter();
         <span class="self">self</span>.body.iter().zip(span_iter)
     }
 
     <span class="kw">pub fn </span>span_iter_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = (<span class="kw-2">&amp;mut </span>Statement, <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>Span&gt;)&gt; {
-        <span class="attr">#[cfg(feature = <span class="string">&quot;span&quot;</span>)]
-        </span><span class="kw">let </span>span_iter = <span class="self">self</span>.span_info.iter_mut().map(<span class="prelude-val">Some</span>);
-        <span class="attr">#[cfg(not(feature = <span class="string">&quot;span&quot;</span>))]
-        </span><span class="kw">let </span>span_iter = std::iter::repeat_with(|| <span class="prelude-val">None</span>);
-
+        <span class="kw">let </span>span_iter = <span class="self">self</span>.span_info.iter_mut().map(<span class="prelude-val">Some</span>);
         <span class="self">self</span>.body.iter_mut().zip(span_iter)
     }
 
