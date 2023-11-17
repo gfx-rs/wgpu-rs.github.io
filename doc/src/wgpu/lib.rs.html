@@ -5508,10 +5508,6 @@
 <a href="#5508" id="5508">5508</a>
 <a href="#5509" id="5509">5509</a>
 <a href="#5510" id="5510">5510</a>
-<a href="#5511" id="5511">5511</a>
-<a href="#5512" id="5512">5512</a>
-<a href="#5513" id="5513">5513</a>
-<a href="#5514" id="5514">5514</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -5557,7 +5553,7 @@
     StencilFaceState, StencilOperation, StencilState, StorageTextureAccess, SurfaceCapabilities,
     SurfaceStatus, TextureAspect, TextureDimension, TextureFormat, TextureFormatFeatureFlags,
     TextureFormatFeatures, TextureSampleType, TextureUsages, TextureViewDimension, VertexAttribute,
-    VertexFormat, VertexStepMode, WasmNotSend, WasmNotSync, COPY_BUFFER_ALIGNMENT,
+    VertexFormat, VertexStepMode, WasmNotSend, WasmNotSendSync, WasmNotSync, COPY_BUFFER_ALIGNMENT,
     COPY_BYTES_PER_ROW_ALIGNMENT, MAP_ALIGNMENT, PUSH_CONSTANT_ALIGNMENT,
     QUERY_RESOLVE_BUFFER_ALIGNMENT, QUERY_SET_MAX_QUERIES, QUERY_SIZE, VERTEX_STRIDE_ALIGNMENT,
 };
@@ -5894,10 +5890,6 @@
 </span><span class="kw">pub type </span>SurfaceConfiguration = wgt::SurfaceConfiguration&lt;Vec&lt;TextureFormat&gt;&gt;;
 <span class="macro">static_assertions::assert_impl_all!</span>(SurfaceConfiguration: Send, Sync);
 
-<span class="kw">trait </span>WgpuSurfaceRequirement: WasmNotSend + WasmNotSync {}
-
-<span class="kw">impl</span>&lt;T: WasmNotSend + WasmNotSync&gt; WgpuSurfaceRequirement <span class="kw">for </span>T {}
-
 <span class="doccomment">/// Handle to a presentable surface.
 ///
 /// A `Surface` represents a platform-specific surface (e.g. a window) onto which rendered images may
@@ -5908,7 +5900,7 @@
 /// serves a similar role.
 </span><span class="kw">pub struct </span>Surface&lt;<span class="lifetime">&#39;window</span>&gt; {
     context: Arc&lt;C&gt;,
-    _surface: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>WgpuSurfaceRequirement + <span class="lifetime">&#39;window</span>&gt;&gt;,
+    _surface: <span class="prelude-ty">Option</span>&lt;Box&lt;<span class="kw">dyn </span>WasmNotSendSync + <span class="lifetime">&#39;window</span>&gt;&gt;,
     id: ObjectId,
     data: Box&lt;Data&gt;,
     <span class="comment">// Stores the latest `SurfaceConfiguration` that was set using `Surface::configure`.
@@ -7480,7 +7472,7 @@
         window: W,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Surface&lt;<span class="lifetime">&#39;window</span>&gt;, CreateSurfaceError&gt;
     <span class="kw">where
-        </span>W: HasWindowHandle + HasDisplayHandle + WasmNotSend + WasmNotSync + <span class="lifetime">&#39;window</span>,
+        </span>W: HasWindowHandle + HasDisplayHandle + WasmNotSendSync + <span class="lifetime">&#39;window</span>,
     {
         <span class="kw">let </span><span class="kw-2">mut </span>surface = <span class="kw">unsafe </span>{ <span class="self">self</span>.create_surface_from_raw(<span class="kw-2">&amp;</span>window) }<span class="question-mark">?</span>;
         surface._surface = <span class="prelude-val">Some</span>(Box::new(window));
@@ -10974,12 +10966,12 @@
     <span class="kw">use </span>std::any::Any;
     <span class="kw">use </span>std::fmt;
 
-    <span class="kw">use </span>wgt::{WasmNotSend, WasmNotSync};
+    <span class="kw">use </span>wgt::WasmNotSendSync;
 
-    <span class="kw">pub trait </span>AnyWasmNotSendSync: Any + WasmNotSend + WasmNotSync {
+    <span class="kw">pub trait </span>AnyWasmNotSendSync: Any + WasmNotSendSync {
         <span class="kw">fn </span>upcast_any_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Any;
     }
-    <span class="kw">impl</span>&lt;T: Any + WasmNotSend + WasmNotSync&gt; AnyWasmNotSendSync <span class="kw">for </span>T {
+    <span class="kw">impl</span>&lt;T: Any + WasmNotSendSync&gt; AnyWasmNotSendSync <span class="kw">for </span>T {
         <span class="attr">#[inline]
         </span><span class="kw">fn </span>upcast_any_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Any {
             <span class="self">self

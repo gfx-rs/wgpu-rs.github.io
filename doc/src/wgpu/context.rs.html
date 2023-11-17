@@ -4112,15 +4112,13 @@
 <a href="#4112" id="4112">4112</a>
 <a href="#4113" id="4113">4113</a>
 <a href="#4114" id="4114">4114</a>
-<a href="#4115" id="4115">4115</a>
-<a href="#4116" id="4116">4116</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{any::Any, fmt::Debug, future::Future, num::NonZeroU64, ops::Range, pin::Pin, sync::Arc};
 
 <span class="kw">use </span>wgt::{
     strict_assert, strict_assert_eq, AdapterInfo, BufferAddress, BufferSize, Color,
     DeviceLostReason, DownlevelCapabilities, DynamicOffset, Extent3d, Features, ImageDataLayout,
     ImageSubresourceRange, IndexFormat, Limits, ShaderStages, SurfaceStatus, TextureFormat,
-    TextureFormatFeatures, WasmNotSend, WasmNotSync,
+    TextureFormatFeatures, WasmNotSend, WasmNotSendSync,
 };
 
 <span class="kw">use crate</span>::{
@@ -4143,55 +4141,55 @@
 <span class="doccomment">/// Meta trait for an data associated with an id tracked by a context.
 ///
 /// There is no need to manually implement this trait since there is a blanket implementation for this trait.
-</span><span class="kw">pub trait </span>ContextData: Debug + WasmNotSend + WasmNotSync + <span class="lifetime">&#39;static </span>{}
-<span class="kw">impl</span>&lt;T: Debug + WasmNotSend + WasmNotSync + <span class="lifetime">&#39;static</span>&gt; ContextData <span class="kw">for </span>T {}
+</span><span class="kw">pub trait </span>ContextData: Debug + WasmNotSendSync + <span class="lifetime">&#39;static </span>{}
+<span class="kw">impl</span>&lt;T: Debug + WasmNotSendSync + <span class="lifetime">&#39;static</span>&gt; ContextData <span class="kw">for </span>T {}
 
-<span class="kw">pub trait </span>Context: Debug + WasmNotSend + WasmNotSync + Sized {
-    <span class="kw">type </span>AdapterId: ContextId + WasmNotSend + WasmNotSync;
+<span class="kw">pub trait </span>Context: Debug + WasmNotSendSync + Sized {
+    <span class="kw">type </span>AdapterId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>AdapterData: ContextData;
-    <span class="kw">type </span>DeviceId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>DeviceId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>DeviceData: ContextData;
-    <span class="kw">type </span>QueueId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>QueueId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>QueueData: ContextData;
-    <span class="kw">type </span>ShaderModuleId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>ShaderModuleId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>ShaderModuleData: ContextData;
-    <span class="kw">type </span>BindGroupLayoutId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>BindGroupLayoutId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>BindGroupLayoutData: ContextData;
-    <span class="kw">type </span>BindGroupId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>BindGroupId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>BindGroupData: ContextData;
-    <span class="kw">type </span>TextureViewId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>TextureViewId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>TextureViewData: ContextData;
-    <span class="kw">type </span>SamplerId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>SamplerId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>SamplerData: ContextData;
-    <span class="kw">type </span>BufferId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>BufferId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>BufferData: ContextData;
-    <span class="kw">type </span>TextureId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>TextureId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>TextureData: ContextData;
-    <span class="kw">type </span>QuerySetId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>QuerySetId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>QuerySetData: ContextData;
-    <span class="kw">type </span>PipelineLayoutId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>PipelineLayoutId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>PipelineLayoutData: ContextData;
-    <span class="kw">type </span>RenderPipelineId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>RenderPipelineId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>RenderPipelineData: ContextData;
-    <span class="kw">type </span>ComputePipelineId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>ComputePipelineId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>ComputePipelineData: ContextData;
-    <span class="kw">type </span>CommandEncoderId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>CommandEncoderId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>CommandEncoderData: ContextData;
     <span class="kw">type </span>ComputePassId: ContextId;
     <span class="kw">type </span>ComputePassData: ContextData;
     <span class="kw">type </span>RenderPassId: ContextId;
     <span class="kw">type </span>RenderPassData: ContextData;
-    <span class="kw">type </span>CommandBufferId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>CommandBufferId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>CommandBufferData: ContextData;
     <span class="kw">type </span>RenderBundleEncoderId: ContextId;
     <span class="kw">type </span>RenderBundleEncoderData: ContextData;
-    <span class="kw">type </span>RenderBundleId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>RenderBundleId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>RenderBundleData: ContextData;
-    <span class="kw">type </span>SurfaceId: ContextId + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>SurfaceId: ContextId + WasmNotSendSync;
     <span class="kw">type </span>SurfaceData: ContextData;
 
-    <span class="kw">type </span>SurfaceOutputDetail: WasmNotSend + WasmNotSync + <span class="lifetime">&#39;static</span>;
-    <span class="kw">type </span>SubmissionIndex: ContextId + Clone + Copy + WasmNotSend + WasmNotSync;
+    <span class="kw">type </span>SurfaceOutputDetail: WasmNotSendSync + <span class="lifetime">&#39;static</span>;
+    <span class="kw">type </span>SubmissionIndex: ContextId + Clone + Copy + WasmNotSendSync;
     <span class="kw">type </span>SubmissionIndexData: ContextData + Copy;
 
     <span class="kw">type </span>RequestAdapterFuture: Future&lt;Output = <span class="prelude-ty">Option</span>&lt;(<span class="self">Self</span>::AdapterId, <span class="self">Self</span>::AdapterData)&gt;&gt;
@@ -5198,15 +5196,13 @@
 ))]
 </span><span class="macro">static_assertions::assert_impl_all!</span>(ObjectId: Send, Sync);
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_ref&lt;T: Debug + WasmNotSend + WasmNotSync + <span class="lifetime">&#39;static</span>&gt;(
-    data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data,
-) -&gt; <span class="kw-2">&amp;</span>T {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>downcast_ref&lt;T: Debug + WasmNotSendSync + <span class="lifetime">&#39;static</span>&gt;(data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) -&gt; <span class="kw-2">&amp;</span>T {
     <span class="macro">strict_assert!</span>(data.is::&lt;T&gt;());
     <span class="comment">// Copied from std.
     </span><span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(data <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">dyn </span>Any <span class="kw">as </span><span class="kw-2">*const </span>T) }
 }
 
-<span class="kw">fn </span>downcast_mut&lt;T: Debug + WasmNotSend + WasmNotSync + <span class="lifetime">&#39;static</span>&gt;(data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data) -&gt; <span class="kw-2">&amp;mut </span>T {
+<span class="kw">fn </span>downcast_mut&lt;T: Debug + WasmNotSendSync + <span class="lifetime">&#39;static</span>&gt;(data: <span class="kw-2">&amp;mut </span><span class="kw">crate</span>::Data) -&gt; <span class="kw-2">&amp;mut </span>T {
     <span class="macro">strict_assert!</span>(data.is::&lt;T&gt;());
     <span class="comment">// Copied from std.
     </span><span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(data <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">dyn </span>Any <span class="kw">as </span><span class="kw-2">*mut </span>T) }
@@ -5344,7 +5340,7 @@
 </span><span class="kw">pub type </span>DeviceLostCallback = Box&lt;<span class="kw">dyn </span>FnOnce(DeviceLostReason, String) + <span class="lifetime">&#39;static</span>&gt;;
 
 <span class="doccomment">/// An object safe variant of [`Context`] implemented by all types that implement [`Context`].
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>DynContext: Debug + WasmNotSend + WasmNotSync {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">trait </span>DynContext: Debug + WasmNotSendSync {
     <span class="kw">fn </span>as_any(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>Any;
 
     <span class="kw">unsafe fn </span>instance_create_surface(
@@ -8205,7 +8201,7 @@
     }
 }
 
-<span class="kw">pub trait </span>QueueWriteBuffer: WasmNotSend + WasmNotSync {
+<span class="kw">pub trait </span>QueueWriteBuffer: WasmNotSendSync {
     <span class="kw">fn </span>slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8];
 
     <span class="kw">fn </span>slice_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8];
