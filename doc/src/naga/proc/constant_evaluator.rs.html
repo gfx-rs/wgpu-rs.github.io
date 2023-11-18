@@ -1791,6 +1791,30 @@
 <a href="#1791" id="1791">1791</a>
 <a href="#1792" id="1792">1792</a>
 <a href="#1793" id="1793">1793</a>
+<a href="#1794" id="1794">1794</a>
+<a href="#1795" id="1795">1795</a>
+<a href="#1796" id="1796">1796</a>
+<a href="#1797" id="1797">1797</a>
+<a href="#1798" id="1798">1798</a>
+<a href="#1799" id="1799">1799</a>
+<a href="#1800" id="1800">1800</a>
+<a href="#1801" id="1801">1801</a>
+<a href="#1802" id="1802">1802</a>
+<a href="#1803" id="1803">1803</a>
+<a href="#1804" id="1804">1804</a>
+<a href="#1805" id="1805">1805</a>
+<a href="#1806" id="1806">1806</a>
+<a href="#1807" id="1807">1807</a>
+<a href="#1808" id="1808">1808</a>
+<a href="#1809" id="1809">1809</a>
+<a href="#1810" id="1810">1810</a>
+<a href="#1811" id="1811">1811</a>
+<a href="#1812" id="1812">1812</a>
+<a href="#1813" id="1813">1813</a>
+<a href="#1814" id="1814">1814</a>
+<a href="#1815" id="1815">1815</a>
+<a href="#1816" id="1816">1816</a>
+<a href="#1817" id="1817">1817</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     arena::{Arena, Handle, UniqueArena},
     ArraySize, BinaryOperator, Constant, Expression, Literal, ScalarKind, Span, Type, TypeInner,
@@ -2661,6 +2685,22 @@
     /// [`ZeroValue`]: Expression::ZeroValue
     /// [`Literal`]: Expression::Literal
     /// [`Compose`]: Expression::Compose
+    </span><span class="kw">fn </span>eval_zero_value(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        expr: Handle&lt;Expression&gt;,
+        span: Span,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;, ConstantEvaluatorError&gt; {
+        <span class="kw">match </span><span class="self">self</span>.expressions[expr] {
+            Expression::ZeroValue(ty) =&gt; <span class="self">self</span>.eval_zero_value_impl(ty, span),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(expr),
+        }
+    }
+
+    <span class="doccomment">/// Lower [`ZeroValue`] expressions to [`Literal`] and [`Compose`] expressions.
+    ///
+    /// [`ZeroValue`]: Expression::ZeroValue
+    /// [`Literal`]: Expression::Literal
+    /// [`Compose`]: Expression::Compose
     </span><span class="kw">fn </span>eval_zero_value_impl(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         ty: Handle&lt;Type&gt;,
@@ -2746,7 +2786,7 @@
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;, ConstantEvaluatorError&gt; {
         <span class="kw">use </span><span class="kw">crate</span>::Scalar <span class="kw">as </span>Sc;
 
-        <span class="kw">let </span>expr = <span class="self">self</span>.eval_zero_value_and_splat(expr, span)<span class="question-mark">?</span>;
+        <span class="kw">let </span>expr = <span class="self">self</span>.eval_zero_value(expr, span)<span class="question-mark">?</span>;
 
         <span class="kw">let </span>expr = <span class="kw">match </span><span class="self">self</span>.expressions[expr] {
             Expression::Literal(literal) =&gt; {
@@ -2814,6 +2854,14 @@
                 );
 
                 Expression::Compose { ty, components }
+            }
+            Expression::Splat { size, value } =&gt; {
+                <span class="kw">let </span>value_span = <span class="self">self</span>.expressions.get_span(value);
+                <span class="kw">let </span>cast_value = <span class="self">self</span>.cast(value, target, value_span)<span class="question-mark">?</span>;
+                Expression::Splat {
+                    size,
+                    value: cast_value,
+                }
             }
             <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg),
         };
