@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/queue.rs`."><title>queue.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/queue.rs`."><title>queue.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1731,10 +1731,23 @@
 <a href="#1731" id="1731">1731</a>
 <a href="#1732" id="1732">1732</a>
 <a href="#1733" id="1733">1733</a>
+<a href="#1734" id="1734">1734</a>
+<a href="#1735" id="1735">1735</a>
+<a href="#1736" id="1736">1736</a>
+<a href="#1737" id="1737">1737</a>
+<a href="#1738" id="1738">1738</a>
+<a href="#1739" id="1739">1739</a>
+<a href="#1740" id="1740">1740</a>
+<a href="#1741" id="1741">1741</a>
+<a href="#1742" id="1742">1742</a>
+<a href="#1743" id="1743">1743</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv::is_layered_target, Command <span class="kw">as </span>C, PrivateCapabilities};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glow::HasContext;
-<span class="kw">use </span>std::{mem, slice, sync::Arc};
+<span class="kw">use </span>std::{
+    mem, slice,
+    sync::{atomic::Ordering, Arc},
+};
 
 <span class="kw">const </span>DEBUG_ID: u32 = <span class="number">0</span>;
 
@@ -1788,16 +1801,17 @@
         <span class="kw">unsafe </span>{ gl.draw_buffers(<span class="kw-2">&amp;</span>[glow::COLOR_ATTACHMENT0 + draw_buffer]) };
         <span class="kw">unsafe </span>{ gl.draw_arrays(glow::TRIANGLES, <span class="number">0</span>, <span class="number">3</span>) };
 
-        <span class="kw">if </span><span class="self">self</span>.draw_buffer_count != <span class="number">0 </span>{
+        <span class="kw">let </span>draw_buffer_count = <span class="self">self</span>.draw_buffer_count.load(Ordering::Relaxed);
+        <span class="kw">if </span>draw_buffer_count != <span class="number">0 </span>{
             <span class="comment">// Reset the draw buffers to what they were before the clear
-            </span><span class="kw">let </span>indices = (<span class="number">0</span>..<span class="self">self</span>.draw_buffer_count <span class="kw">as </span>u32)
+            </span><span class="kw">let </span>indices = (<span class="number">0</span>..draw_buffer_count <span class="kw">as </span>u32)
                 .map(|i| glow::COLOR_ATTACHMENT0 + i)
                 .collect::&lt;ArrayVec&lt;<span class="kw">_</span>, { <span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS }&gt;&gt;();
             <span class="kw">unsafe </span>{ gl.draw_buffers(<span class="kw-2">&amp;</span>indices) };
         }
     }
 
-    <span class="kw">unsafe fn </span>reset_state(<span class="kw-2">&amp;mut </span><span class="self">self</span>, gl: <span class="kw-2">&amp;</span>glow::Context) {
+    <span class="kw">unsafe fn </span>reset_state(<span class="kw-2">&amp;</span><span class="self">self</span>, gl: <span class="kw-2">&amp;</span>glow::Context) {
         <span class="kw">unsafe </span>{ gl.use_program(<span class="prelude-val">None</span>) };
         <span class="kw">unsafe </span>{ gl.bind_framebuffer(glow::FRAMEBUFFER, <span class="prelude-val">None</span>) };
         <span class="kw">unsafe </span>{ gl.disable(glow::DEPTH_TEST) };
@@ -1812,7 +1826,8 @@
         }
 
         <span class="kw">unsafe </span>{ gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, <span class="prelude-val">None</span>) };
-        <span class="self">self</span>.current_index_buffer = <span class="prelude-val">None</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>current_index_buffer = <span class="self">self</span>.current_index_buffer.lock();
+        <span class="kw-2">*</span>current_index_buffer = <span class="prelude-val">None</span>;
     }
 
     <span class="kw">unsafe fn </span>set_attachment(
@@ -1879,7 +1894,7 @@
     }
 
     <span class="kw">unsafe fn </span>process(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         gl: <span class="kw-2">&amp;</span>glow::Context,
         command: <span class="kw-2">&amp;</span>C,
         <span class="attr">#[cfg_attr(target_arch = <span class="string">&quot;wasm32&quot;</span>, allow(unused))] </span>data_bytes: <span class="kw-2">&amp;</span>[u8],
@@ -2088,7 +2103,10 @@
                 <span class="kw">unsafe </span>{ gl.bind_buffer(copy_src_target, <span class="prelude-val">None</span>) };
                 <span class="kw">if </span>is_index_buffer_only_element_dst {
                     <span class="kw">unsafe </span>{
-                        gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, <span class="self">self</span>.current_index_buffer)
+                        gl.bind_buffer(
+                            glow::ELEMENT_ARRAY_BUFFER,
+                            <span class="kw-2">*</span><span class="self">self</span>.current_index_buffer.lock(),
+                        )
                     };
                 } <span class="kw">else </span>{
                     <span class="kw">unsafe </span>{ gl.bind_buffer(copy_dst_target, <span class="prelude-val">None</span>) };
@@ -2532,7 +2550,8 @@
             }
             C::SetIndexBuffer(buffer) =&gt; {
                 <span class="kw">unsafe </span>{ gl.bind_buffer(glow::ELEMENT_ARRAY_BUFFER, <span class="prelude-val">Some</span>(buffer)) };
-                <span class="self">self</span>.current_index_buffer = <span class="prelude-val">Some</span>(buffer);
+                <span class="kw">let </span><span class="kw-2">mut </span>current_index_buffer = <span class="self">self</span>.current_index_buffer.lock();
+                <span class="kw-2">*</span>current_index_buffer = <span class="prelude-val">Some</span>(buffer);
             }
             C::BeginQuery(query, target) =&gt; {
                 <span class="kw">unsafe </span>{ gl.begin_query(target, query) };
@@ -2594,7 +2613,8 @@
                         }
                     }
                 } <span class="kw">else </span>{
-                    <span class="self">self</span>.temp_query_results.clear();
+                    <span class="kw">let </span><span class="kw-2">mut </span>temp_query_results = <span class="self">self</span>.temp_query_results.lock();
+                    temp_query_results.clear();
                     <span class="kw">for </span><span class="kw-2">&amp;</span>query <span class="kw">in
                         </span>queries[query_range.start <span class="kw">as </span>usize..query_range.end <span class="kw">as </span>usize].iter()
                     {
@@ -2607,12 +2627,12 @@
                                 result <span class="kw">as </span>usize,
                             )
                         };
-                        <span class="self">self</span>.temp_query_results.push(result);
+                        temp_query_results.push(result);
                     }
                     <span class="kw">let </span>query_data = <span class="kw">unsafe </span>{
                         slice::from_raw_parts(
-                            <span class="self">self</span>.temp_query_results.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8,
-                            <span class="self">self</span>.temp_query_results.len() * mem::size_of::&lt;u64&gt;(),
+                            temp_query_results.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u8,
+                            temp_query_results.len() * mem::size_of::&lt;u64&gt;(),
                         )
                     };
                     <span class="kw">match </span>dst.raw {
@@ -2712,7 +2732,7 @@
                 }
             }
             C::SetDrawColorBuffers(count) =&gt; {
-                <span class="self">self</span>.draw_buffer_count = count;
+                <span class="self">self</span>.draw_buffer_count.store(count, Ordering::Relaxed);
                 <span class="kw">let </span>indices = (<span class="number">0</span>..count <span class="kw">as </span>u32)
                     .map(|i| glow::COLOR_ATTACHMENT0 + i)
                     .collect::&lt;ArrayVec&lt;<span class="kw">_</span>, { <span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS }&gt;&gt;();
@@ -3393,7 +3413,7 @@
 
 <span class="kw">impl </span><span class="kw">crate</span>::Queue&lt;<span class="kw">super</span>::Api&gt; <span class="kw">for </span><span class="kw">super</span>::Queue {
     <span class="kw">unsafe fn </span>submit(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         command_buffers: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="kw">super</span>::CommandBuffer],
         signal_fence: <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;mut </span><span class="kw">super</span>::Fence, <span class="kw">crate</span>::FenceValue)&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
@@ -3440,8 +3460,8 @@
     }
 
     <span class="kw">unsafe fn </span>present(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        surface: <span class="kw-2">&amp;mut </span><span class="kw">super</span>::Surface,
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        surface: <span class="kw-2">&amp;</span><span class="kw">super</span>::Surface,
         texture: <span class="kw">super</span>::Texture,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::SurfaceError&gt; {
         <span class="kw">unsafe </span>{ surface.present(texture, <span class="kw-2">&amp;</span><span class="self">self</span>.shared.context) }

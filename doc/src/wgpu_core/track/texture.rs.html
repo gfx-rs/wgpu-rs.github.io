@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/track/texture.rs`."><title>texture.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/track/texture.rs`."><title>texture.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1493,63 +1493,6 @@
 <a href="#1493" id="1493">1493</a>
 <a href="#1494" id="1494">1494</a>
 <a href="#1495" id="1495">1495</a>
-<a href="#1496" id="1496">1496</a>
-<a href="#1497" id="1497">1497</a>
-<a href="#1498" id="1498">1498</a>
-<a href="#1499" id="1499">1499</a>
-<a href="#1500" id="1500">1500</a>
-<a href="#1501" id="1501">1501</a>
-<a href="#1502" id="1502">1502</a>
-<a href="#1503" id="1503">1503</a>
-<a href="#1504" id="1504">1504</a>
-<a href="#1505" id="1505">1505</a>
-<a href="#1506" id="1506">1506</a>
-<a href="#1507" id="1507">1507</a>
-<a href="#1508" id="1508">1508</a>
-<a href="#1509" id="1509">1509</a>
-<a href="#1510" id="1510">1510</a>
-<a href="#1511" id="1511">1511</a>
-<a href="#1512" id="1512">1512</a>
-<a href="#1513" id="1513">1513</a>
-<a href="#1514" id="1514">1514</a>
-<a href="#1515" id="1515">1515</a>
-<a href="#1516" id="1516">1516</a>
-<a href="#1517" id="1517">1517</a>
-<a href="#1518" id="1518">1518</a>
-<a href="#1519" id="1519">1519</a>
-<a href="#1520" id="1520">1520</a>
-<a href="#1521" id="1521">1521</a>
-<a href="#1522" id="1522">1522</a>
-<a href="#1523" id="1523">1523</a>
-<a href="#1524" id="1524">1524</a>
-<a href="#1525" id="1525">1525</a>
-<a href="#1526" id="1526">1526</a>
-<a href="#1527" id="1527">1527</a>
-<a href="#1528" id="1528">1528</a>
-<a href="#1529" id="1529">1529</a>
-<a href="#1530" id="1530">1530</a>
-<a href="#1531" id="1531">1531</a>
-<a href="#1532" id="1532">1532</a>
-<a href="#1533" id="1533">1533</a>
-<a href="#1534" id="1534">1534</a>
-<a href="#1535" id="1535">1535</a>
-<a href="#1536" id="1536">1536</a>
-<a href="#1537" id="1537">1537</a>
-<a href="#1538" id="1538">1538</a>
-<a href="#1539" id="1539">1539</a>
-<a href="#1540" id="1540">1540</a>
-<a href="#1541" id="1541">1541</a>
-<a href="#1542" id="1542">1542</a>
-<a href="#1543" id="1543">1543</a>
-<a href="#1544" id="1544">1544</a>
-<a href="#1545" id="1545">1545</a>
-<a href="#1546" id="1546">1546</a>
-<a href="#1547" id="1547">1547</a>
-<a href="#1548" id="1548">1548</a>
-<a href="#1549" id="1549">1549</a>
-<a href="#1550" id="1550">1550</a>
-<a href="#1551" id="1551">1551</a>
-<a href="#1552" id="1552">1552</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Texture Trackers
  *
  * Texture trackers are signifigantly more complicated than
@@ -1571,25 +1514,25 @@
  *   will treat the contents as junk.
 !*/
 
-</span><span class="kw">use super</span>::{range::RangedStates, PendingTransition};
+</span><span class="kw">use super</span>::{range::RangedStates, PendingTransition, PendingTransitionList, ResourceTracker};
 <span class="kw">use crate</span>::{
     hal_api::HalApi,
-    id::{TextureId, TypedId, Valid},
-    resource::Texture,
-    storage,
+    id::{TextureId, TypedId},
+    resource::{Resource, Texture, TextureInner},
     track::{
         invalid_resource_state, skip_barrier, ResourceMetadata, ResourceMetadataProvider,
         ResourceUses, UsageConflict,
     },
-    LifeGuard, RefCount,
 };
 <span class="kw">use </span>hal::TextureUses;
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>naga::FastHashMap;
+
+<span class="kw">use </span>parking_lot::{Mutex, RwLockReadGuard};
 <span class="kw">use </span>wgt::{strict_assert, strict_assert_eq};
 
-<span class="kw">use </span>std::{borrow::Cow, iter, marker::PhantomData, ops::Range, vec::Drain};
+<span class="kw">use </span>std::{borrow::Cow, iter, marker::PhantomData, ops::Range, sync::Arc, vec::Drain};
 
 <span class="doccomment">/// Specifies a particular set of subresources in a texture.
 </span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq)]
@@ -1700,23 +1643,22 @@
     }
 }
 
-<span class="doccomment">/// Stores all the textures that a bind group stores.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>TextureBindGroupState&lt;A: HalApi&gt; {
-    textures: Vec&lt;(
-        Valid&lt;TextureId&gt;,
-        <span class="prelude-ty">Option</span>&lt;TextureSelector&gt;,
-        RefCount,
-        TextureUses,
-    )&gt;,
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">struct </span>TextureBindGroupStateData&lt;A: HalApi&gt; {
+    selector: <span class="prelude-ty">Option</span>&lt;TextureSelector&gt;,
+    texture: Arc&lt;Texture&lt;A&gt;&gt;,
+    usage: TextureUses,
+}
 
-    _phantom: PhantomData&lt;A&gt;,
+<span class="doccomment">/// Stores all the textures that a bind group stores.
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>TextureBindGroupState&lt;A: HalApi&gt; {
+    textures: Mutex&lt;Vec&lt;TextureBindGroupStateData&lt;A&gt;&gt;&gt;,
 }
 <span class="kw">impl</span>&lt;A: HalApi&gt; TextureBindGroupState&lt;A&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            textures: Vec::new(),
-
-            _phantom: PhantomData,
+            textures: Mutex::new(Vec::new()),
         }
     }
 
@@ -1724,30 +1666,35 @@
     ///
     /// When this list of states is merged into a tracker, the memory
     /// accesses will be in a constant assending order.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>optimize(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.textures
-            .sort_unstable_by_key(|<span class="kw-2">&amp;</span>(id, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>)| id.<span class="number">0</span>.unzip().<span class="number">0</span>);
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>optimize(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let </span><span class="kw-2">mut </span>textures = <span class="self">self</span>.textures.lock();
+        textures.sort_unstable_by_key(|v| v.texture.as_info().id().unzip().<span class="number">0</span>);
     }
 
-    <span class="doccomment">/// Returns a list of all buffers tracked. May contain duplicates.
-    </span><span class="kw">pub fn </span>used(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Valid&lt;TextureId&gt;&gt; + <span class="lifetime">&#39;_ </span>{
-        <span class="self">self</span>.textures.iter().map(|<span class="kw-2">&amp;</span>(id, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>)| id)
+    <span class="doccomment">/// Returns a list of all textures tracked. May contain duplicates.
+    </span><span class="kw">pub fn </span>drain_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;Texture&lt;A&gt;&gt;&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>textures = <span class="self">self</span>.textures.lock();
+        textures
+            .drain(..)
+            .map(|v| v.texture)
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+            .into_iter()
     }
 
     <span class="doccomment">/// Adds the given resource with the given state.
     </span><span class="kw">pub fn </span>add_single&lt;<span class="lifetime">&#39;a</span>&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        storage: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>storage::Storage&lt;Texture&lt;A&gt;, TextureId&gt;,
-        id: TextureId,
-        ref_count: RefCount,
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        texture: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Arc&lt;Texture&lt;A&gt;&gt;,
         selector: <span class="prelude-ty">Option</span>&lt;TextureSelector&gt;,
         state: TextureUses,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Texture&lt;A&gt;&gt; {
-        <span class="kw">let </span>value = storage.get(id).ok()<span class="question-mark">?</span>;
-
-        <span class="self">self</span>.textures.push((Valid(id), selector, ref_count, state));
-
-        <span class="prelude-val">Some</span>(value)
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Arc&lt;Texture&lt;A&gt;&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>textures = <span class="self">self</span>.textures.lock();
+        textures.push(TextureBindGroupStateData {
+            selector,
+            texture: texture.clone(),
+            usage: state,
+        });
+        <span class="prelude-val">Some</span>(texture)
     }
 }
 
@@ -1755,7 +1702,7 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>TextureStateSet {
     simple: Vec&lt;TextureUses&gt;,
-    complex: FastHashMap&lt;u32, ComplexTextureState&gt;,
+    complex: FastHashMap&lt;usize, ComplexTextureState&gt;,
 }
 <span class="kw">impl </span>TextureStateSet {
     <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
@@ -1763,6 +1710,11 @@
             simple: Vec::new(),
             complex: FastHashMap::default(),
         }
+    }
+
+    <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.simple.clear();
+        <span class="self">self</span>.complex.clear();
     }
 
     <span class="kw">fn </span>set_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize) {
@@ -1774,8 +1726,7 @@
 </span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>TextureUsageScope&lt;A: HalApi&gt; {
     set: TextureStateSet,
-
-    metadata: ResourceMetadata&lt;A&gt;,
+    metadata: ResourceMetadata&lt;A, TextureId, Texture&lt;A&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; TextureUsageScope&lt;A&gt; {
@@ -1795,7 +1746,7 @@
         <span class="macro">strict_assert!</span>(<span class="kw">if </span><span class="self">self</span>.metadata.contains(index)
             &amp;&amp; <span class="self">self</span>.set.simple[index] == TextureUses::COMPLEX
         {
-            <span class="self">self</span>.set.complex.contains_key(<span class="kw-2">&amp;</span>(index <span class="kw">as </span>u32))
+            <span class="self">self</span>.set.complex.contains_key(<span class="kw-2">&amp;</span>index)
         } <span class="kw">else </span>{
             <span class="bool-val">true
         </span>});
@@ -1810,9 +1761,11 @@
         <span class="self">self</span>.metadata.set_size(size);
     }
 
-    <span class="doccomment">/// Returns a list of all textures tracked.
-    </span><span class="kw">pub fn </span>used(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Valid&lt;TextureId&gt;&gt; + <span class="lifetime">&#39;_ </span>{
-        <span class="self">self</span>.metadata.owned_ids()
+    <span class="doccomment">/// Drains all textures tracked.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>drain_resources(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;Texture&lt;A&gt;&gt;&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="kw">let </span>resources = <span class="self">self</span>.metadata.drain_resources();
+        <span class="self">self</span>.set.clear();
+        resources.into_iter()
     }
 
     <span class="doccomment">/// Returns true if the tracker owns no resources.
@@ -1829,29 +1782,23 @@
     ///
     /// If the given tracker uses IDs higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>merge_usage_scope(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        storage: <span class="kw-2">&amp;</span>storage::Storage&lt;Texture&lt;A&gt;, TextureId&gt;,
-        scope: <span class="kw-2">&amp;</span><span class="self">Self</span>,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
+    </span><span class="kw">pub fn </span>merge_usage_scope(<span class="kw-2">&amp;mut </span><span class="self">self</span>, scope: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
         <span class="kw">let </span>incoming_size = scope.set.simple.len();
         <span class="kw">if </span>incoming_size &gt; <span class="self">self</span>.set.simple.len() {
             <span class="self">self</span>.set_size(incoming_size);
         }
 
         <span class="kw">for </span>index <span class="kw">in </span>scope.metadata.owned_indices() {
-            <span class="kw">let </span>index32 = index <span class="kw">as </span>u32;
-
             <span class="self">self</span>.tracker_assert_in_bounds(index);
             scope.tracker_assert_in_bounds(index);
 
-            <span class="kw">let </span>texture_data = <span class="kw">unsafe </span>{ texture_data_from_texture(storage, index32) };
+            <span class="kw">let </span>texture_selector =
+                <span class="kw">unsafe </span>{ <span class="kw-2">&amp;</span>scope.metadata.get_resource_unchecked(index).full_range };
             <span class="kw">unsafe </span>{
                 insert_or_merge(
-                    texture_data,
+                    texture_selector,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.set,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
-                    index32,
                     index,
                     TextureStateProvider::TextureSet { set: <span class="kw-2">&amp;</span>scope.set },
                     ResourceMetadataProvider::Indirect {
@@ -1878,11 +1825,11 @@
     /// method is called.
     </span><span class="kw">pub unsafe fn </span>merge_bind_group(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        storage: <span class="kw-2">&amp;</span>storage::Storage&lt;Texture&lt;A&gt;, TextureId&gt;,
         bind_group: <span class="kw-2">&amp;</span>TextureBindGroupState&lt;A&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
-        <span class="kw">for </span><span class="kw-2">&amp;</span>(id, <span class="kw-2">ref </span>selector, <span class="kw-2">ref </span>ref_count, state) <span class="kw">in </span><span class="kw-2">&amp;</span>bind_group.textures {
-            <span class="kw">unsafe </span>{ <span class="self">self</span>.merge_single(storage, id, selector.clone(), ref_count, state)<span class="question-mark">? </span>};
+        <span class="kw">let </span>textures = bind_group.textures.lock();
+        <span class="kw">for </span>t <span class="kw">in </span><span class="kw-2">&amp;*</span>textures {
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.merge_single(<span class="kw-2">&amp;</span>t.texture, t.selector.clone(), t.usage)<span class="question-mark">? </span>};
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -1903,29 +1850,24 @@
     /// method is called.
     </span><span class="kw">pub unsafe fn </span>merge_single(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        storage: <span class="kw-2">&amp;</span>storage::Storage&lt;Texture&lt;A&gt;, TextureId&gt;,
-        id: Valid&lt;TextureId&gt;,
+        texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;,
         selector: <span class="prelude-ty">Option</span>&lt;TextureSelector&gt;,
-        ref_count: <span class="kw-2">&amp;</span>RefCount,
         new_state: TextureUses,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
-        <span class="kw">let </span>(index32, epoch, <span class="kw">_</span>) = id.<span class="number">0</span>.unzip();
-        <span class="kw">let </span>index = index32 <span class="kw">as </span>usize;
+        <span class="kw">let </span>index = texture.as_info().id().unzip().<span class="number">0 </span><span class="kw">as </span>usize;
 
         <span class="self">self</span>.tracker_assert_in_bounds(index);
 
-        <span class="kw">let </span>texture_data = <span class="kw">unsafe </span>{ texture_data_from_texture(storage, index32) };
+        <span class="kw">let </span>texture_selector = <span class="kw-2">&amp;</span>texture.full_range;
         <span class="kw">unsafe </span>{
             insert_or_merge(
-                texture_data,
+                texture_selector,
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.set,
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
-                index32,
                 index,
                 TextureStateProvider::from_option(selector, new_state),
                 ResourceMetadataProvider::Direct {
-                    epoch,
-                    ref_count: Cow::Borrowed(ref_count),
+                    resource: Cow::Borrowed(texture),
                 },
             )<span class="question-mark">?
         </span>};
@@ -1939,12 +1881,56 @@
     start_set: TextureStateSet,
     end_set: TextureStateSet,
 
-    metadata: ResourceMetadata&lt;A&gt;,
+    metadata: ResourceMetadata&lt;A, TextureId, Texture&lt;A&gt;&gt;,
 
     temp: Vec&lt;PendingTransition&lt;TextureUses&gt;&gt;,
 
     _phantom: PhantomData&lt;A&gt;,
 }
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; ResourceTracker&lt;TextureId, Texture&lt;A&gt;&gt; <span class="kw">for </span>TextureTracker&lt;A&gt; {
+    <span class="doccomment">/// Removes the given resource from the tracker iff we have the last reference to the
+    /// resource and the epoch matches.
+    ///
+    /// Returns true if the resource was removed.
+    ///
+    /// If the ID is higher than the length of internal vectors,
+    /// false will be returned.
+    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: TextureId, external_count: usize) -&gt; bool {
+        <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+
+        <span class="kw">if </span>index &gt; <span class="self">self</span>.metadata.size() {
+            <span class="kw">return </span><span class="bool-val">false</span>;
+        }
+
+        <span class="self">self</span>.tracker_assert_in_bounds(index);
+
+        <span class="kw">unsafe </span>{
+            <span class="kw">if </span><span class="self">self</span>.metadata.contains_unchecked(index) {
+                <span class="kw">let </span>existing_ref_count = <span class="self">self</span>.metadata.get_ref_count_unchecked(index);
+                <span class="comment">//2 ref count if only in Device Tracker and suspected resource itself and already released from user
+                //so not appearing in Registry
+                </span><span class="kw">let </span>min_ref_count = <span class="number">1 </span>+ external_count;
+                <span class="kw">if </span>existing_ref_count &lt;= min_ref_count {
+                    <span class="self">self</span>.start_set.complex.remove(<span class="kw-2">&amp;</span>index);
+                    <span class="self">self</span>.end_set.complex.remove(<span class="kw-2">&amp;</span>index);
+                    <span class="self">self</span>.metadata.remove(index);
+                    <span class="macro">log::info!</span>(<span class="string">&quot;Texture {:?} is not tracked anymore&quot;</span>, id,);
+                    <span class="kw">return </span><span class="bool-val">true</span>;
+                } <span class="kw">else </span>{
+                    <span class="macro">log::info!</span>(
+                        <span class="string">&quot;Texture {:?} is still referenced from {}&quot;</span>,
+                        id,
+                        existing_ref_count
+                    );
+                }
+            }
+        }
+
+        <span class="bool-val">false
+    </span>}
+}
+
 <span class="kw">impl</span>&lt;A: HalApi&gt; TextureTracker&lt;A&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
@@ -1968,14 +1954,14 @@
         <span class="macro">strict_assert!</span>(<span class="kw">if </span><span class="self">self</span>.metadata.contains(index)
             &amp;&amp; <span class="self">self</span>.start_set.simple[index] == TextureUses::COMPLEX
         {
-            <span class="self">self</span>.start_set.complex.contains_key(<span class="kw-2">&amp;</span>(index <span class="kw">as </span>u32))
+            <span class="self">self</span>.start_set.complex.contains_key(<span class="kw-2">&amp;</span>index)
         } <span class="kw">else </span>{
             <span class="bool-val">true
         </span>});
         <span class="macro">strict_assert!</span>(<span class="kw">if </span><span class="self">self</span>.metadata.contains(index)
             &amp;&amp; <span class="self">self</span>.end_set.simple[index] == TextureUses::COMPLEX
         {
-            <span class="self">self</span>.end_set.complex.contains_key(<span class="kw-2">&amp;</span>(index <span class="kw">as </span>u32))
+            <span class="self">self</span>.end_set.complex.contains_key(<span class="kw-2">&amp;</span>index)
         } <span class="kw">else </span>{
             <span class="bool-val">true
         </span>});
@@ -2000,30 +1986,28 @@
     }
 
     <span class="doccomment">/// Returns a list of all textures tracked.
-    </span><span class="kw">pub fn </span>used(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Valid&lt;TextureId&gt;&gt; + <span class="lifetime">&#39;_ </span>{
-        <span class="self">self</span>.metadata.owned_ids()
+    </span><span class="kw">pub fn </span>used_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;Texture&lt;A&gt;&gt;&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="self">self</span>.metadata.owned_resources()
     }
 
-    <span class="doccomment">/// Drains all currently pending transitions.
-    </span><span class="kw">pub fn </span>drain(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Drain&lt;PendingTransition&lt;TextureUses&gt;&gt; {
-        <span class="self">self</span>.temp.drain(..)
-    }
-
-    <span class="doccomment">/// Get the refcount of the given resource.
-    ///
-    /// # Safety
-    ///
-    /// [`Self::set_size`] must be called with the maximum possible Buffer ID before this
-    /// method is called.
-    ///
-    /// The resource must be tracked by this tracker.
-    </span><span class="kw">pub unsafe fn </span>get_ref_count(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Valid&lt;TextureId&gt;) -&gt; <span class="kw-2">&amp;</span>RefCount {
-        <span class="kw">let </span>(index32, <span class="kw">_</span>, <span class="kw">_</span>) = id.<span class="number">0</span>.unzip();
-        <span class="kw">let </span>index = index32 <span class="kw">as </span>usize;
-
-        <span class="self">self</span>.tracker_assert_in_bounds(index);
-
-        <span class="kw">unsafe </span>{ <span class="self">self</span>.metadata.get_ref_count_unchecked(index) }
+    <span class="doccomment">/// Drain all currently pending transitions.
+    </span><span class="kw">pub fn </span>drain_transitions&lt;<span class="lifetime">&#39;a</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>,
+    ) -&gt; (
+        PendingTransitionList,
+        Vec&lt;RwLockReadGuard&lt;<span class="lifetime">&#39;a</span>, <span class="prelude-ty">Option</span>&lt;TextureInner&lt;A&gt;&gt;&gt;&gt;,
+    ) {
+        <span class="kw">let </span><span class="kw-2">mut </span>textures = Vec::new();
+        <span class="kw">let </span>transitions = <span class="self">self
+            </span>.temp
+            .drain(..)
+            .map(|pending| {
+                <span class="kw">let </span>tex = <span class="kw">unsafe </span>{ <span class="self">self</span>.metadata.get_resource_unchecked(pending.id <span class="kw">as _</span>) };
+                textures.push(tex.inner());
+                pending
+            })
+            .collect();
+        (transitions, textures)
     }
 
     <span class="doccomment">/// Inserts a single texture and a state into the resource tracker.
@@ -2032,9 +2016,8 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: TextureId, ref_count: RefCount, usage: TextureUses) {
-        <span class="kw">let </span>(index32, epoch, <span class="kw">_</span>) = id.unzip();
-        <span class="kw">let </span>index = index32 <span class="kw">as </span>usize;
+    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: TextureId, resource: Arc&lt;Texture&lt;A&gt;&gt;, usage: TextureUses) {
+        <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
 
         <span class="self">self</span>.allow_index(index);
 
@@ -2052,13 +2035,11 @@
                 <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.start_set),
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.end_set,
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
-                index32,
                 index,
                 TextureStateProvider::KnownSingle { state: usage },
                 <span class="prelude-val">None</span>,
                 ResourceMetadataProvider::Direct {
-                    epoch,
-                    ref_count: Cow::Owned(ref_count),
+                    resource: Cow::Owned(resource),
                 },
             )
         };
@@ -2073,13 +2054,11 @@
     /// the vectors will be extended. A call to set_size is not needed.
     </span><span class="kw">pub fn </span>set_single(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        texture: <span class="kw-2">&amp;</span>Texture&lt;A&gt;,
-        id: TextureId,
+        texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;,
         selector: TextureSelector,
         new_state: TextureUses,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;Drain&lt;<span class="lifetime">&#39;_</span>, PendingTransition&lt;TextureUses&gt;&gt;&gt; {
-        <span class="kw">let </span>(index32, epoch, <span class="kw">_</span>) = id.unzip();
-        <span class="kw">let </span>index = index32 <span class="kw">as </span>usize;
+        <span class="kw">let </span>index = texture.as_info().id().unzip().<span class="number">0 </span><span class="kw">as </span>usize;
 
         <span class="self">self</span>.allow_index(index);
 
@@ -2087,18 +2066,19 @@
 
         <span class="kw">unsafe </span>{
             insert_or_barrier_update(
-                (<span class="kw-2">&amp;</span>texture.life_guard, <span class="kw-2">&amp;</span>texture.full_range),
+                <span class="kw-2">&amp;</span>texture.full_range,
                 <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.start_set),
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.end_set,
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
-                index32,
                 index,
                 TextureStateProvider::Selector {
                     selector,
                     state: new_state,
                 },
                 <span class="prelude-val">None</span>,
-                ResourceMetadataProvider::Resource { epoch },
+                ResourceMetadataProvider::Direct {
+                    resource: Cow::Owned(texture.clone()),
+                },
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.temp,
             )
         }
@@ -2110,32 +2090,26 @@
     ///
     /// If a transition is needed to get the texture into the needed state,
     /// those transitions are stored within the tracker. A subsequent
-    /// call to [`Self::drain`] is needed to get those transitions.
+    /// call to [`Self::drain_transitions`] is needed to get those transitions.
     ///
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>set_from_tracker(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        storage: <span class="kw-2">&amp;</span>storage::Storage&lt;Texture&lt;A&gt;, TextureId&gt;,
-        tracker: <span class="kw-2">&amp;</span><span class="self">Self</span>,
-    ) {
+    </span><span class="kw">pub fn </span>set_from_tracker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, tracker: <span class="kw-2">&amp;</span><span class="self">Self</span>) {
         <span class="kw">let </span>incoming_size = tracker.start_set.simple.len();
         <span class="kw">if </span>incoming_size &gt; <span class="self">self</span>.start_set.simple.len() {
             <span class="self">self</span>.set_size(incoming_size);
         }
 
         <span class="kw">for </span>index <span class="kw">in </span>tracker.metadata.owned_indices() {
-            <span class="kw">let </span>index32 = index <span class="kw">as </span>u32;
-
             <span class="self">self</span>.tracker_assert_in_bounds(index);
             tracker.tracker_assert_in_bounds(index);
             <span class="kw">unsafe </span>{
+                <span class="kw">let </span>texture_selector = <span class="kw-2">&amp;</span>tracker.metadata.get_resource_unchecked(index).full_range;
                 insert_or_barrier_update(
-                    texture_data_from_texture(storage, index32),
+                    texture_selector,
                     <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.start_set),
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.end_set,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
-                    index32,
                     index,
                     TextureStateProvider::TextureSet {
                         set: <span class="kw-2">&amp;</span>tracker.start_set,
@@ -2156,32 +2130,26 @@
     ///
     /// If a transition is needed to get the textures into the needed state,
     /// those transitions are stored within the tracker. A subsequent
-    /// call to [`Self::drain`] is needed to get those transitions.
+    /// call to [`Self::drain_transitions`] is needed to get those transitions.
     ///
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>set_from_usage_scope(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        storage: <span class="kw-2">&amp;</span>storage::Storage&lt;Texture&lt;A&gt;, TextureId&gt;,
-        scope: <span class="kw-2">&amp;</span>TextureUsageScope&lt;A&gt;,
-    ) {
+    </span><span class="kw">pub fn </span>set_from_usage_scope(<span class="kw-2">&amp;mut </span><span class="self">self</span>, scope: <span class="kw-2">&amp;</span>TextureUsageScope&lt;A&gt;) {
         <span class="kw">let </span>incoming_size = scope.set.simple.len();
         <span class="kw">if </span>incoming_size &gt; <span class="self">self</span>.start_set.simple.len() {
             <span class="self">self</span>.set_size(incoming_size);
         }
 
         <span class="kw">for </span>index <span class="kw">in </span>scope.metadata.owned_indices() {
-            <span class="kw">let </span>index32 = index <span class="kw">as </span>u32;
-
             <span class="self">self</span>.tracker_assert_in_bounds(index);
             scope.tracker_assert_in_bounds(index);
             <span class="kw">unsafe </span>{
+                <span class="kw">let </span>texture_selector = <span class="kw-2">&amp;</span>scope.metadata.get_resource_unchecked(index).full_range;
                 insert_or_barrier_update(
-                    texture_data_from_texture(storage, index32),
+                    texture_selector,
                     <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.start_set),
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.end_set,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
-                    index32,
                     index,
                     TextureStateProvider::TextureSet { set: <span class="kw-2">&amp;</span>scope.set },
                     <span class="prelude-val">None</span>,
@@ -2200,7 +2168,7 @@
     ///
     /// If a transition is needed to get the textures into the needed state,
     /// those transitions are stored within the tracker. A subsequent
-    /// call to [`Self::drain`] is needed to get those transitions.
+    /// call to [`Self::drain_transitions`] is needed to get those transitions.
     ///
     /// This is a really funky method used by Compute Passes to generate
     /// barriers after a call to dispatch without needing to iterate
@@ -2214,7 +2182,6 @@
     /// method is called.
     </span><span class="kw">pub unsafe fn </span>set_and_remove_from_usage_scope_sparse(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        storage: <span class="kw-2">&amp;</span>storage::Storage&lt;Texture&lt;A&gt;, TextureId&gt;,
         scope: <span class="kw-2">&amp;mut </span>TextureUsageScope&lt;A&gt;,
         bind_group_state: <span class="kw-2">&amp;</span>TextureBindGroupState&lt;A&gt;,
     ) {
@@ -2223,22 +2190,21 @@
             <span class="self">self</span>.set_size(incoming_size);
         }
 
-        <span class="kw">for </span><span class="kw-2">&amp;</span>(id, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>) <span class="kw">in </span>bind_group_state.textures.iter() {
-            <span class="kw">let </span>(index32, <span class="kw">_</span>, <span class="kw">_</span>) = id.<span class="number">0</span>.unzip();
-            <span class="kw">let </span>index = index32 <span class="kw">as </span>usize;
+        <span class="kw">let </span>textures = bind_group_state.textures.lock();
+        <span class="kw">for </span>t <span class="kw">in </span>textures.iter() {
+            <span class="kw">let </span>index = t.texture.as_info().id().unzip().<span class="number">0 </span><span class="kw">as </span>usize;
             scope.tracker_assert_in_bounds(index);
 
             <span class="kw">if unsafe </span>{ !scope.metadata.contains_unchecked(index) } {
                 <span class="kw">continue</span>;
             }
-            <span class="kw">let </span>texture_data = <span class="kw">unsafe </span>{ texture_data_from_texture(storage, index32) };
+            <span class="kw">let </span>texture_selector = <span class="kw-2">&amp;</span>t.texture.full_range;
             <span class="kw">unsafe </span>{
                 insert_or_barrier_update(
-                    texture_data,
+                    texture_selector,
                     <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span><span class="self">self</span>.start_set),
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.end_set,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.metadata,
-                    index32,
                     index,
                     TextureStateProvider::TextureSet { set: <span class="kw-2">&amp;</span>scope.set },
                     <span class="prelude-val">None</span>,
@@ -2259,9 +2225,8 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// false will be returned.
-    </span><span class="kw">pub fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Valid&lt;TextureId&gt;) -&gt; bool {
-        <span class="kw">let </span>(index32, epoch, <span class="kw">_</span>) = id.<span class="number">0</span>.unzip();
-        <span class="kw">let </span>index = index32 <span class="kw">as </span>usize;
+    </span><span class="kw">pub fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: TextureId) -&gt; bool {
+        <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
 
         <span class="kw">if </span>index &gt; <span class="self">self</span>.metadata.size() {
             <span class="kw">return </span><span class="bool-val">false</span>;
@@ -2271,51 +2236,10 @@
 
         <span class="kw">unsafe </span>{
             <span class="kw">if </span><span class="self">self</span>.metadata.contains_unchecked(index) {
-                <span class="kw">let </span>existing_epoch = <span class="self">self</span>.metadata.get_epoch_unchecked(index);
-                <span class="macro">assert_eq!</span>(existing_epoch, epoch);
-
-                <span class="self">self</span>.start_set.complex.remove(<span class="kw-2">&amp;</span>index32);
-                <span class="self">self</span>.end_set.complex.remove(<span class="kw-2">&amp;</span>index32);
-
+                <span class="self">self</span>.start_set.complex.remove(<span class="kw-2">&amp;</span>index);
+                <span class="self">self</span>.end_set.complex.remove(<span class="kw-2">&amp;</span>index);
                 <span class="self">self</span>.metadata.remove(index);
-
                 <span class="kw">return </span><span class="bool-val">true</span>;
-            }
-        }
-
-        <span class="bool-val">false
-    </span>}
-
-    <span class="doccomment">/// Removes the given resource from the tracker iff we have the last reference to the
-    /// resource and the epoch matches.
-    ///
-    /// Returns true if the resource was removed.
-    ///
-    /// If the ID is higher than the length of internal vectors,
-    /// false will be returned.
-    </span><span class="kw">pub fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Valid&lt;TextureId&gt;) -&gt; bool {
-        <span class="kw">let </span>(index32, epoch, <span class="kw">_</span>) = id.<span class="number">0</span>.unzip();
-        <span class="kw">let </span>index = index32 <span class="kw">as </span>usize;
-
-        <span class="kw">if </span>index &gt; <span class="self">self</span>.metadata.size() {
-            <span class="kw">return </span><span class="bool-val">false</span>;
-        }
-
-        <span class="self">self</span>.tracker_assert_in_bounds(index);
-
-        <span class="kw">unsafe </span>{
-            <span class="kw">if </span><span class="self">self</span>.metadata.contains_unchecked(index) {
-                <span class="kw">let </span>existing_epoch = <span class="self">self</span>.metadata.get_epoch_unchecked(index);
-                <span class="kw">let </span>existing_ref_count = <span class="self">self</span>.metadata.get_ref_count_unchecked(index);
-
-                <span class="kw">if </span>existing_epoch == epoch &amp;&amp; existing_ref_count.load() == <span class="number">1 </span>{
-                    <span class="self">self</span>.start_set.complex.remove(<span class="kw-2">&amp;</span>index32);
-                    <span class="self">self</span>.end_set.complex.remove(<span class="kw-2">&amp;</span>index32);
-
-                    <span class="self">self</span>.metadata.remove(index);
-
-                    <span class="kw">return </span><span class="bool-val">true</span>;
-                }
             }
         }
 
@@ -2380,7 +2304,7 @@
     ///
     /// # Panics
     ///
-    /// Panics if texture_data is None and this uses a Selector source.
+    /// Panics if texture_selector is None and this uses a Selector source.
     ///
     /// # Safety
     ///
@@ -2388,8 +2312,7 @@
     </span><span class="attr">#[inline(always)]
     </span><span class="kw">unsafe fn </span>get_state(
         <span class="self">self</span>,
-        texture_data: <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>LifeGuard, <span class="kw-2">&amp;</span>TextureSelector)&gt;,
-        index32: u32,
+        texture_selector: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>TextureSelector&gt;,
         index: usize,
     ) -&gt; SingleOrManyStates&lt;
         TextureUses,
@@ -2402,7 +2325,7 @@
                 // and if it is we promote to a simple state. This allows upstream
                 // code to specify selectors willy nilly, and all that are really
                 // single states are promoted here.
-                </span><span class="kw">if </span><span class="kw-2">*</span>texture_data.unwrap().<span class="number">1 </span>== selector {
+                </span><span class="kw">if </span><span class="kw-2">*</span>texture_selector.unwrap() == selector {
                     SingleOrManyStates::Single(state)
                 } <span class="kw">else </span>{
                     SingleOrManyStates::Many(EitherIter::Left(iter::once((selector, state))))
@@ -2412,7 +2335,7 @@
                 <span class="kw">let </span>new_state = <span class="kw-2">*</span><span class="kw">unsafe </span>{ set.simple.get_unchecked(index) };
 
                 <span class="kw">if </span>new_state == TextureUses::COMPLEX {
-                    <span class="kw">let </span>new_complex = <span class="kw">unsafe </span>{ set.complex.get(<span class="kw-2">&amp;</span>index32).unwrap_unchecked() };
+                    <span class="kw">let </span>new_complex = <span class="kw">unsafe </span>{ set.complex.get(<span class="kw-2">&amp;</span>index).unwrap_unchecked() };
 
                     SingleOrManyStates::Many(EitherIter::Right(
                         new_complex.to_selector_state_iter(),
@@ -2423,17 +2346,6 @@
             }
         }
     }
-}
-
-<span class="doccomment">/// Helper function that gets what is needed from the texture storage
-/// out of the texture storage.
-</span><span class="attr">#[inline(always)]
-</span><span class="kw">unsafe fn </span>texture_data_from_texture&lt;A: HalApi&gt;(
-    storage: <span class="kw-2">&amp;</span>storage::Storage&lt;Texture&lt;A&gt;, TextureId&gt;,
-    index32: u32,
-) -&gt; (<span class="kw-2">&amp;</span>LifeGuard, <span class="kw-2">&amp;</span>TextureSelector) {
-    <span class="kw">let </span>texture = <span class="kw">unsafe </span>{ storage.get_unchecked(index32) };
-    (<span class="kw-2">&amp;</span>texture.life_guard, <span class="kw-2">&amp;</span>texture.full_range)
 }
 
 <span class="doccomment">/// Does an insertion operation if the index isn&#39;t tracked
@@ -2447,24 +2359,22 @@
 /// to this function, either directly or via metadata or provider structs.
 </span><span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>insert_or_merge&lt;A: HalApi&gt;(
-    texture_data: (<span class="kw-2">&amp;</span>LifeGuard, <span class="kw-2">&amp;</span>TextureSelector),
+    texture_selector: <span class="kw-2">&amp;</span>TextureSelector,
     current_state_set: <span class="kw-2">&amp;mut </span>TextureStateSet,
-    resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;A&gt;,
-    index32: u32,
+    resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;A, TextureId, Texture&lt;A&gt;&gt;,
     index: usize,
     state_provider: TextureStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;,
-    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">&#39;_</span>, A&gt;,
+    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">&#39;_</span>, A, TextureId, Texture&lt;A&gt;&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
     <span class="kw">let </span>currently_owned = <span class="kw">unsafe </span>{ resource_metadata.contains_unchecked(index) };
 
     <span class="kw">if </span>!currently_owned {
         <span class="kw">unsafe </span>{
             insert(
-                <span class="prelude-val">Some</span>(texture_data),
+                <span class="prelude-val">Some</span>(texture_selector),
                 <span class="prelude-val">None</span>,
                 current_state_set,
                 resource_metadata,
-                index32,
                 index,
                 state_provider,
                 <span class="prelude-val">None</span>,
@@ -2476,9 +2386,8 @@
 
     <span class="kw">unsafe </span>{
         merge(
-            texture_data,
+            texture_selector,
             current_state_set,
-            index32,
             index,
             state_provider,
             metadata_provider,
@@ -2505,15 +2414,14 @@
 /// to this function, either directly or via metadata or provider structs.
 </span><span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>insert_or_barrier_update&lt;A: HalApi&gt;(
-    texture_data: (<span class="kw-2">&amp;</span>LifeGuard, <span class="kw-2">&amp;</span>TextureSelector),
+    texture_selector: <span class="kw-2">&amp;</span>TextureSelector,
     start_state: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>TextureStateSet&gt;,
     current_state_set: <span class="kw-2">&amp;mut </span>TextureStateSet,
-    resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;A&gt;,
-    index32: u32,
+    resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;A, TextureId, Texture&lt;A&gt;&gt;,
     index: usize,
     start_state_provider: TextureStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;,
     end_state_provider: <span class="prelude-ty">Option</span>&lt;TextureStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;&gt;,
-    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">&#39;_</span>, A&gt;,
+    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">&#39;_</span>, A, TextureId, Texture&lt;A&gt;&gt;,
     barriers: <span class="kw-2">&amp;mut </span>Vec&lt;PendingTransition&lt;TextureUses&gt;&gt;,
 ) {
     <span class="kw">let </span>currently_owned = <span class="kw">unsafe </span>{ resource_metadata.contains_unchecked(index) };
@@ -2521,11 +2429,10 @@
     <span class="kw">if </span>!currently_owned {
         <span class="kw">unsafe </span>{
             insert(
-                <span class="prelude-val">Some</span>(texture_data),
+                <span class="prelude-val">Some</span>(texture_selector),
                 start_state,
                 current_state_set,
                 resource_metadata,
-                index32,
                 index,
                 start_state_provider,
                 end_state_provider,
@@ -2538,9 +2445,8 @@
     <span class="kw">let </span>update_state_provider = end_state_provider.unwrap_or_else(|| start_state_provider.clone());
     <span class="kw">unsafe </span>{
         barrier(
-            texture_data,
+            texture_selector,
             current_state_set,
-            index32,
             index,
             start_state_provider,
             barriers,
@@ -2550,10 +2456,9 @@
     <span class="kw">let </span>start_state_set = start_state.unwrap();
     <span class="kw">unsafe </span>{
         update(
-            texture_data,
+            texture_selector,
             start_state_set,
             current_state_set,
-            index32,
             index,
             update_state_provider,
         )
@@ -2562,24 +2467,23 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>insert&lt;A: HalApi&gt;(
-    texture_data: <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;</span>LifeGuard, <span class="kw-2">&amp;</span>TextureSelector)&gt;,
+    texture_selector: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>TextureSelector&gt;,
     start_state: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>TextureStateSet&gt;,
     end_state: <span class="kw-2">&amp;mut </span>TextureStateSet,
-    resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;A&gt;,
-    index32: u32,
+    resource_metadata: <span class="kw-2">&amp;mut </span>ResourceMetadata&lt;A, TextureId, Texture&lt;A&gt;&gt;,
     index: usize,
     start_state_provider: TextureStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;,
     end_state_provider: <span class="prelude-ty">Option</span>&lt;TextureStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;&gt;,
-    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">&#39;_</span>, A&gt;,
+    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">&#39;_</span>, A, TextureId, Texture&lt;A&gt;&gt;,
 ) {
-    <span class="kw">let </span>start_layers = <span class="kw">unsafe </span>{ start_state_provider.get_state(texture_data, index32, index) };
+    <span class="kw">let </span>start_layers = <span class="kw">unsafe </span>{ start_state_provider.get_state(texture_selector, index) };
     <span class="kw">match </span>start_layers {
         SingleOrManyStates::Single(state) =&gt; {
             <span class="comment">// This should only ever happen with a wgpu bug, but let&#39;s just double
             // check that resource states don&#39;t have any conflicts.
             </span><span class="macro">strict_assert_eq!</span>(invalid_resource_state(state), <span class="bool-val">false</span>);
 
-            <span class="macro">log::trace!</span>(<span class="string">&quot;\ttex {index32}: insert start {state:?}&quot;</span>);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;\ttex {index}: insert start {state:?}&quot;</span>);
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(start_state) = start_state {
                 <span class="kw">unsafe </span>{ <span class="kw-2">*</span>start_state.simple.get_unchecked_mut(index) = state };
@@ -2591,100 +2495,95 @@
             }
         }
         SingleOrManyStates::Many(state_iter) =&gt; {
-            <span class="kw">let </span>full_range = texture_data.unwrap().<span class="number">1</span>.clone();
+            <span class="kw">let </span>full_range = texture_selector.unwrap().clone();
 
             <span class="kw">let </span>complex =
                 <span class="kw">unsafe </span>{ ComplexTextureState::from_selector_state_iter(full_range, state_iter) };
 
-            <span class="macro">log::trace!</span>(<span class="string">&quot;\ttex {index32}: insert start {complex:?}&quot;</span>);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;\ttex {index}: insert start {complex:?}&quot;</span>);
 
             <span class="kw">if let </span><span class="prelude-val">Some</span>(start_state) = start_state {
                 <span class="kw">unsafe </span>{ <span class="kw-2">*</span>start_state.simple.get_unchecked_mut(index) = TextureUses::COMPLEX };
-                start_state.complex.insert(index32, complex.clone());
+                start_state.complex.insert(index, complex.clone());
             }
 
             <span class="comment">// We only need to insert ourselves the end state if there is no end state provider.
             </span><span class="kw">if </span>end_state_provider.is_none() {
                 <span class="kw">unsafe </span>{ <span class="kw-2">*</span>end_state.simple.get_unchecked_mut(index) = TextureUses::COMPLEX };
-                end_state.complex.insert(index32, complex);
+                end_state.complex.insert(index, complex);
             }
         }
     }
 
     <span class="kw">if let </span><span class="prelude-val">Some</span>(end_state_provider) = end_state_provider {
-        <span class="kw">match unsafe </span>{ end_state_provider.get_state(texture_data, index32, index) } {
+        <span class="kw">match unsafe </span>{ end_state_provider.get_state(texture_selector, index) } {
             SingleOrManyStates::Single(state) =&gt; {
                 <span class="comment">// This should only ever happen with a wgpu bug, but let&#39;s just double
                 // check that resource states don&#39;t have any conflicts.
                 </span><span class="macro">strict_assert_eq!</span>(invalid_resource_state(state), <span class="bool-val">false</span>);
 
-                <span class="macro">log::trace!</span>(<span class="string">&quot;\ttex {index32}: insert end {state:?}&quot;</span>);
+                <span class="macro">log::trace!</span>(<span class="string">&quot;\ttex {index}: insert end {state:?}&quot;</span>);
 
                 <span class="comment">// We only need to insert into the end, as there is guarenteed to be
                 // a start state provider.
                 </span><span class="kw">unsafe </span>{ <span class="kw-2">*</span>end_state.simple.get_unchecked_mut(index) = state };
             }
             SingleOrManyStates::Many(state_iter) =&gt; {
-                <span class="kw">let </span>full_range = texture_data.unwrap().<span class="number">1</span>.clone();
+                <span class="kw">let </span>full_range = texture_selector.unwrap().clone();
 
                 <span class="kw">let </span>complex = <span class="kw">unsafe </span>{
                     ComplexTextureState::from_selector_state_iter(full_range, state_iter)
                 };
 
-                <span class="macro">log::trace!</span>(<span class="string">&quot;\ttex {index32}: insert end {complex:?}&quot;</span>);
+                <span class="macro">log::trace!</span>(<span class="string">&quot;\ttex {index}: insert end {complex:?}&quot;</span>);
 
                 <span class="comment">// We only need to insert into the end, as there is guarenteed to be
                 // a start state provider.
                 </span><span class="kw">unsafe </span>{ <span class="kw-2">*</span>end_state.simple.get_unchecked_mut(index) = TextureUses::COMPLEX };
-                end_state.complex.insert(index32, complex);
+                end_state.complex.insert(index, complex);
             }
         }
     }
 
     <span class="kw">unsafe </span>{
-        <span class="kw">let </span>(epoch, ref_count) =
-            metadata_provider.get_own(texture_data.map(|(life_guard, <span class="kw">_</span>)| life_guard), index);
-        resource_metadata.insert(index, epoch, ref_count);
+        <span class="kw">let </span>resource = metadata_provider.get_own(index);
+        resource_metadata.insert(index, resource);
     }
 }
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>merge&lt;A: HalApi&gt;(
-    texture_data: (<span class="kw-2">&amp;</span>LifeGuard, <span class="kw-2">&amp;</span>TextureSelector),
+    texture_selector: <span class="kw-2">&amp;</span>TextureSelector,
     current_state_set: <span class="kw-2">&amp;mut </span>TextureStateSet,
-    index32: u32,
     index: usize,
     state_provider: TextureStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;,
-    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">&#39;_</span>, A&gt;,
+    metadata_provider: ResourceMetadataProvider&lt;<span class="lifetime">&#39;_</span>, A, TextureId, Texture&lt;A&gt;&gt;,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
     <span class="kw">let </span>current_simple = <span class="kw">unsafe </span>{ current_state_set.simple.get_unchecked_mut(index) };
     <span class="kw">let </span>current_state = <span class="kw">if </span><span class="kw-2">*</span>current_simple == TextureUses::COMPLEX {
         SingleOrManyStates::Many(<span class="kw">unsafe </span>{
-            current_state_set
-                .complex
-                .get_mut(<span class="kw-2">&amp;</span>index32)
-                .unwrap_unchecked()
+            current_state_set.complex.get_mut(<span class="kw-2">&amp;</span>index).unwrap_unchecked()
         })
     } <span class="kw">else </span>{
         SingleOrManyStates::Single(current_simple)
     };
 
-    <span class="kw">let </span>new_state = <span class="kw">unsafe </span>{ state_provider.get_state(<span class="prelude-val">Some</span>(texture_data), index32, index) };
+    <span class="kw">let </span>new_state = <span class="kw">unsafe </span>{ state_provider.get_state(<span class="prelude-val">Some</span>(texture_selector), index) };
 
     <span class="kw">match </span>(current_state, new_state) {
         (SingleOrManyStates::Single(current_simple), SingleOrManyStates::Single(new_simple)) =&gt; {
             <span class="kw">let </span>merged_state = <span class="kw-2">*</span>current_simple | new_simple;
 
-            <span class="macro">log::trace!</span>(<span class="string">&quot;\ttex {index32}: merge simple {current_simple:?} + {new_simple:?}&quot;</span>);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;\ttex {index}: merge simple {current_simple:?} + {new_simple:?}&quot;</span>);
 
             <span class="kw">if </span>invalid_resource_state(merged_state) {
                 <span class="kw">return </span><span class="prelude-val">Err</span>(UsageConflict::from_texture(
                     TextureId::zip(
-                        index32,
+                        index <span class="kw">as _</span>,
                         <span class="kw">unsafe </span>{ metadata_provider.get_epoch(index) },
                         A::VARIANT,
                     ),
-                    texture_data.<span class="number">1</span>.clone(),
+                    texture_selector.clone(),
                     <span class="kw-2">*</span>current_simple,
                     new_simple,
                 ));
@@ -2698,22 +2597,20 @@
             // as there wasn&#39;t one before.
             </span><span class="kw">let </span><span class="kw-2">mut </span>new_complex = <span class="kw">unsafe </span>{
                 ComplexTextureState::from_selector_state_iter(
-                    texture_data.<span class="number">1</span>.clone(),
-                    iter::once((texture_data.<span class="number">1</span>.clone(), <span class="kw-2">*</span>current_simple)),
+                    texture_selector.clone(),
+                    iter::once((texture_selector.clone(), <span class="kw-2">*</span>current_simple)),
                 )
             };
 
             <span class="kw">for </span>(selector, new_state) <span class="kw">in </span>new_many {
                 <span class="kw">let </span>merged_state = <span class="kw-2">*</span>current_simple | new_state;
 
-                <span class="macro">log::trace!</span>(
-                    <span class="string">&quot;\ttex {index32}: merge {selector:?} {current_simple:?} + {new_state:?}&quot;
-                </span>);
+                <span class="macro">log::trace!</span>(<span class="string">&quot;\ttex {index}: merge {selector:?} {current_simple:?} + {new_state:?}&quot;</span>);
 
                 <span class="kw">if </span>invalid_resource_state(merged_state) {
                     <span class="kw">return </span><span class="prelude-val">Err</span>(UsageConflict::from_texture(
                         TextureId::zip(
-                            index32,
+                            index <span class="kw">as _</span>,
                             <span class="kw">unsafe </span>{ metadata_provider.get_epoch(index) },
                             A::VARIANT,
                         ),
@@ -2737,7 +2634,7 @@
             }
 
             <span class="kw-2">*</span>current_simple = TextureUses::COMPLEX;
-            current_state_set.complex.insert(index32, new_complex);
+            current_state_set.complex.insert(index, new_complex);
         }
         (SingleOrManyStates::Many(current_complex), SingleOrManyStates::Single(new_simple)) =&gt; {
             <span class="kw">for </span>(mip_id, mip) <span class="kw">in </span>current_complex.mips.iter_mut().enumerate() {
@@ -2751,14 +2648,14 @@
                     </span><span class="kw">let </span>merged_state = merged_state - TextureUses::UNKNOWN;
 
                     <span class="macro">log::trace!</span>(
-                        <span class="string">&quot;\ttex {index32}: merge mip {mip_id} layers {layers:?} \
+                        <span class="string">&quot;\ttex {index}: merge mip {mip_id} layers {layers:?} \
                          {current_layer_state:?} + {new_simple:?}&quot;
                     </span>);
 
                     <span class="kw">if </span>invalid_resource_state(merged_state) {
                         <span class="kw">return </span><span class="prelude-val">Err</span>(UsageConflict::from_texture(
                             TextureId::zip(
-                                index32,
+                                index <span class="kw">as _</span>,
                                 <span class="kw">unsafe </span>{ metadata_provider.get_epoch(index) },
                                 A::VARIANT,
                             ),
@@ -2796,14 +2693,14 @@
                         }
 
                         <span class="macro">log::trace!</span>(
-                            <span class="string">&quot;\ttex {index32}: merge mip {mip_id} layers {layers:?} \
+                            <span class="string">&quot;\ttex {index}: merge mip {mip_id} layers {layers:?} \
                              {current_layer_state:?} + {new_state:?}&quot;
                         </span>);
 
                         <span class="kw">if </span>invalid_resource_state(merged_state) {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(UsageConflict::from_texture(
                                 TextureId::zip(
-                                    index32,
+                                    index <span class="kw">as _</span>,
                                     <span class="kw">unsafe </span>{ metadata_provider.get_epoch(index) },
                                     A::VARIANT,
                                 ),
@@ -2828,9 +2725,8 @@
 
 <span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>barrier(
-    texture_data: (<span class="kw-2">&amp;</span>LifeGuard, <span class="kw-2">&amp;</span>TextureSelector),
+    texture_selector: <span class="kw-2">&amp;</span>TextureSelector,
     current_state_set: <span class="kw-2">&amp;</span>TextureStateSet,
-    index32: u32,
     index: usize,
     state_provider: TextureStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;,
     barriers: <span class="kw-2">&amp;mut </span>Vec&lt;PendingTransition&lt;TextureUses&gt;&gt;,
@@ -2838,13 +2734,13 @@
     <span class="kw">let </span>current_simple = <span class="kw">unsafe </span>{ <span class="kw-2">*</span>current_state_set.simple.get_unchecked(index) };
     <span class="kw">let </span>current_state = <span class="kw">if </span>current_simple == TextureUses::COMPLEX {
         SingleOrManyStates::Many(<span class="kw">unsafe </span>{
-            current_state_set.complex.get(<span class="kw-2">&amp;</span>index32).unwrap_unchecked()
+            current_state_set.complex.get(<span class="kw-2">&amp;</span>index).unwrap_unchecked()
         })
     } <span class="kw">else </span>{
         SingleOrManyStates::Single(current_simple)
     };
 
-    <span class="kw">let </span>new_state = <span class="kw">unsafe </span>{ state_provider.get_state(<span class="prelude-val">Some</span>(texture_data), index32, index) };
+    <span class="kw">let </span>new_state = <span class="kw">unsafe </span>{ state_provider.get_state(<span class="prelude-val">Some</span>(texture_selector), index) };
 
     <span class="kw">match </span>(current_state, new_state) {
         (SingleOrManyStates::Single(current_simple), SingleOrManyStates::Single(new_simple)) =&gt; {
@@ -2852,11 +2748,11 @@
                 <span class="kw">return</span>;
             }
 
-            <span class="macro">log::trace!</span>(<span class="string">&quot;\ttex {index32}: transition simple {current_simple:?} -&gt; {new_simple:?}&quot;</span>);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;\ttex {index}: transition simple {current_simple:?} -&gt; {new_simple:?}&quot;</span>);
 
             barriers.push(PendingTransition {
-                id: index32,
-                selector: texture_data.<span class="number">1</span>.clone(),
+                id: index <span class="kw">as _</span>,
+                selector: texture_selector.clone(),
                 usage: current_simple..new_simple,
             });
         }
@@ -2871,11 +2767,11 @@
                 }
 
                 <span class="macro">log::trace!</span>(
-                    <span class="string">&quot;\ttex {index32}: transition {selector:?} {current_simple:?} -&gt; {new_state:?}&quot;
+                    <span class="string">&quot;\ttex {index}: transition {selector:?} {current_simple:?} -&gt; {new_state:?}&quot;
                 </span>);
 
                 barriers.push(PendingTransition {
-                    id: index32,
+                    id: index <span class="kw">as _</span>,
                     selector,
                     usage: current_simple..new_state,
                 });
@@ -2895,12 +2791,12 @@
                     }
 
                     <span class="macro">log::trace!</span>(
-                        <span class="string">&quot;\ttex {index32}: transition mip {mip_id} layers {layers:?} \
+                        <span class="string">&quot;\ttex {index}: transition mip {mip_id} layers {layers:?} \
                          {current_layer_state:?} -&gt; {new_simple:?}&quot;
                     </span>);
 
                     barriers.push(PendingTransition {
-                        id: index32,
+                        id: index <span class="kw">as _</span>,
                         selector: TextureSelector {
                             mips: mip_id..mip_id + <span class="number">1</span>,
                             layers: layers.clone(),
@@ -2929,12 +2825,12 @@
                         }
 
                         <span class="macro">log::trace!</span>(
-                            <span class="string">&quot;\ttex {index32}: transition mip {mip_id} layers {layers:?} \
+                            <span class="string">&quot;\ttex {index}: transition mip {mip_id} layers {layers:?} \
                             {current_layer_state:?} -&gt; {new_state:?}&quot;
                         </span>);
 
                         barriers.push(PendingTransition {
-                            id: index32,
+                            id: index <span class="kw">as _</span>,
                             selector: TextureSelector {
                                 mips: mip_id..mip_id + <span class="number">1</span>,
                                 layers,
@@ -2951,10 +2847,9 @@
 <span class="attr">#[allow(clippy::needless_option_as_deref)] </span><span class="comment">// we use this for reborrowing Option&lt;&amp;mut T&gt;
 </span><span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>update(
-    texture_data: (<span class="kw-2">&amp;</span>LifeGuard, <span class="kw-2">&amp;</span>TextureSelector),
+    texture_selector: <span class="kw-2">&amp;</span>TextureSelector,
     start_state_set: <span class="kw-2">&amp;mut </span>TextureStateSet,
     current_state_set: <span class="kw-2">&amp;mut </span>TextureStateSet,
-    index32: u32,
     index: usize,
     state_provider: TextureStateProvider&lt;<span class="lifetime">&#39;_</span>&gt;,
 ) {
@@ -2965,23 +2860,19 @@
     // If the state is simple, the first insert to the tracker would cover it.
     </span><span class="kw">let </span><span class="kw-2">mut </span>start_complex = <span class="prelude-val">None</span>;
     <span class="kw">if </span>start_simple == TextureUses::COMPLEX {
-        start_complex =
-            <span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ start_state_set.complex.get_mut(<span class="kw-2">&amp;</span>index32).unwrap_unchecked() });
+        start_complex = <span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ start_state_set.complex.get_mut(<span class="kw-2">&amp;</span>index).unwrap_unchecked() });
     }
 
     <span class="kw">let </span>current_simple = <span class="kw">unsafe </span>{ current_state_set.simple.get_unchecked_mut(index) };
     <span class="kw">let </span>current_state = <span class="kw">if </span><span class="kw-2">*</span>current_simple == TextureUses::COMPLEX {
         SingleOrManyStates::Many(<span class="kw">unsafe </span>{
-            current_state_set
-                .complex
-                .get_mut(<span class="kw-2">&amp;</span>index32)
-                .unwrap_unchecked()
+            current_state_set.complex.get_mut(<span class="kw-2">&amp;</span>index).unwrap_unchecked()
         })
     } <span class="kw">else </span>{
         SingleOrManyStates::Single(current_simple)
     };
 
-    <span class="kw">let </span>new_state = <span class="kw">unsafe </span>{ state_provider.get_state(<span class="prelude-val">Some</span>(texture_data), index32, index) };
+    <span class="kw">let </span>new_state = <span class="kw">unsafe </span>{ state_provider.get_state(<span class="prelude-val">Some</span>(texture_selector), index) };
 
     <span class="kw">match </span>(current_state, new_state) {
         (SingleOrManyStates::Single(current_simple), SingleOrManyStates::Single(new_simple)) =&gt; {
@@ -2993,8 +2884,8 @@
             // as there wasn&#39;t one before.
             </span><span class="kw">let </span><span class="kw-2">mut </span>new_complex = <span class="kw">unsafe </span>{
                 ComplexTextureState::from_selector_state_iter(
-                    texture_data.<span class="number">1</span>.clone(),
-                    iter::once((texture_data.<span class="number">1</span>.clone(), <span class="kw-2">*</span>current_simple)),
+                    texture_selector.clone(),
+                    iter::once((texture_selector.clone(), <span class="kw-2">*</span>current_simple)),
                 )
             };
 
@@ -3016,7 +2907,7 @@
             }
 
             <span class="kw-2">*</span>current_simple = TextureUses::COMPLEX;
-            current_state_set.complex.insert(index32, new_complex);
+            current_state_set.complex.insert(index, new_complex);
         }
         (SingleOrManyStates::Many(current_complex), SingleOrManyStates::Single(new_single)) =&gt; {
             <span class="kw">for </span>(mip_id, mip) <span class="kw">in </span>current_complex.mips.iter().enumerate() {
@@ -3042,12 +2933,7 @@
             }
 
             <span class="kw">unsafe </span>{ <span class="kw-2">*</span>current_state_set.simple.get_unchecked_mut(index) = new_single };
-            <span class="kw">unsafe </span>{
-                current_state_set
-                    .complex
-                    .remove(<span class="kw-2">&amp;</span>index32)
-                    .unwrap_unchecked()
-            };
+            <span class="kw">unsafe </span>{ current_state_set.complex.remove(<span class="kw-2">&amp;</span>index).unwrap_unchecked() };
         }
         (SingleOrManyStates::Many(current_complex), SingleOrManyStates::Many(new_many)) =&gt; {
             <span class="kw">for </span>(selector, new_state) <span class="kw">in </span>new_many {

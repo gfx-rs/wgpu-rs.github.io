@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/pipeline.rs`."><title>pipeline.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/pipeline.rs`."><title>pipeline.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -445,16 +445,95 @@
 <a href="#445" id="445">445</a>
 <a href="#446" id="446">446</a>
 <a href="#447" id="447">447</a>
-</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
-    binding_model::{CreateBindGroupLayoutError, CreatePipelineLayoutError},
+<a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
+<a href="#455" id="455">455</a>
+<a href="#456" id="456">456</a>
+<a href="#457" id="457">457</a>
+<a href="#458" id="458">458</a>
+<a href="#459" id="459">459</a>
+<a href="#460" id="460">460</a>
+<a href="#461" id="461">461</a>
+<a href="#462" id="462">462</a>
+<a href="#463" id="463">463</a>
+<a href="#464" id="464">464</a>
+<a href="#465" id="465">465</a>
+<a href="#466" id="466">466</a>
+<a href="#467" id="467">467</a>
+<a href="#468" id="468">468</a>
+<a href="#469" id="469">469</a>
+<a href="#470" id="470">470</a>
+<a href="#471" id="471">471</a>
+<a href="#472" id="472">472</a>
+<a href="#473" id="473">473</a>
+<a href="#474" id="474">474</a>
+<a href="#475" id="475">475</a>
+<a href="#476" id="476">476</a>
+<a href="#477" id="477">477</a>
+<a href="#478" id="478">478</a>
+<a href="#479" id="479">479</a>
+<a href="#480" id="480">480</a>
+<a href="#481" id="481">481</a>
+<a href="#482" id="482">482</a>
+<a href="#483" id="483">483</a>
+<a href="#484" id="484">484</a>
+<a href="#485" id="485">485</a>
+<a href="#486" id="486">486</a>
+<a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
+<a href="#493" id="493">493</a>
+<a href="#494" id="494">494</a>
+<a href="#495" id="495">495</a>
+<a href="#496" id="496">496</a>
+<a href="#497" id="497">497</a>
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+</pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
+<span class="kw">use crate</span>::{
+    binding_model::{CreateBindGroupLayoutError, CreatePipelineLayoutError, PipelineLayout},
     command::ColorAttachmentError,
-    device::{DeviceError, MissingDownlevelFlags, MissingFeatures, RenderPassContext},
-    id::{DeviceId, PipelineLayoutId, ShaderModuleId},
-    resource::Resource,
-    validation, Label, LifeGuard, Stored,
+    device::{Device, DeviceError, MissingDownlevelFlags, MissingFeatures, RenderPassContext},
+    hal_api::HalApi,
+    id::{ComputePipelineId, PipelineLayoutId, RenderPipelineId, ShaderModuleId},
+    resource::{Resource, ResourceInfo, ResourceType},
+    validation, Label,
 };
 <span class="kw">use </span>arrayvec::ArrayVec;
-<span class="kw">use </span>std::{borrow::Cow, error::Error, fmt, marker::PhantomData, num::NonZeroU32};
+<span class="kw">use </span>std::{borrow::Cow, error::Error, fmt, marker::PhantomData, num::NonZeroU32, sync::Arc};
 <span class="kw">use </span>thiserror::Error;
 
 <span class="doccomment">/// Information about buffer bindings, which
@@ -487,26 +566,53 @@
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>ShaderModule&lt;A: hal::Api&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: A::ShaderModule,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) device_id: Stored&lt;DeviceId&gt;,
+</span><span class="kw">pub struct </span>ShaderModule&lt;A: HalApi&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::ShaderModule&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) interface: <span class="prelude-ty">Option</span>&lt;validation::Interface&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;ShaderModuleId&gt;,
     <span class="attr">#[cfg(debug_assertions)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
 }
 
-<span class="kw">impl</span>&lt;A: hal::Api&gt; Resource <span class="kw">for </span>ShaderModule&lt;A&gt; {
-    <span class="kw">const </span>TYPE: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;ShaderModule&quot;</span>;
+<span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>ShaderModule&lt;A&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="macro">log::info!</span>(<span class="string">&quot;Destroying ShaderModule {:?}&quot;</span>, <span class="self">self</span>.info.label());
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
+            <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span><span class="self">self</span>.device.trace.lock() {
+                trace.add(trace::Action::DestroyShaderModule(<span class="self">self</span>.info.id()));
+            }
+            <span class="kw">unsafe </span>{
+                <span class="kw">use </span>hal::Device;
+                <span class="self">self</span>.device.raw().destroy_shader_module(raw);
+            }
+        }
+    }
+}
 
-    <span class="kw">fn </span>life_guard(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>LifeGuard {
-        <span class="macro">unreachable!</span>()
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;ShaderModuleId&gt; <span class="kw">for </span>ShaderModule&lt;A&gt; {
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;ShaderModule&quot;</span>;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;ShaderModuleId&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;ShaderModuleId&gt; {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
+    }
+
+    <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
         <span class="attr">#[cfg(debug_assertions)]
-        </span><span class="kw">return </span><span class="kw-2">&amp;</span><span class="self">self</span>.label;
+        </span><span class="kw">return </span><span class="self">self</span>.label.clone();
         <span class="attr">#[cfg(not(debug_assertions))]
-        </span><span class="kw">return </span><span class="string">&quot;&quot;</span>;
+        </span><span class="kw">return </span>String::new();
+    }
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; ShaderModule&lt;A&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::ShaderModule {
+        <span class="self">self</span>.raw.as_ref().unwrap()
     }
 }
 
@@ -659,19 +765,42 @@
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>ComputePipeline&lt;A: hal::Api&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: A::ComputePipeline,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) layout_id: Stored&lt;PipelineLayoutId&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) device_id: Stored&lt;DeviceId&gt;,
+</span><span class="kw">pub struct </span>ComputePipeline&lt;A: HalApi&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::ComputePipeline&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) layout: Arc&lt;PipelineLayout&lt;A&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) _shader_module: Arc&lt;ShaderModule&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) late_sized_buffer_groups: ArrayVec&lt;LateSizedBufferGroup, { hal::MAX_BIND_GROUPS }&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) life_guard: LifeGuard,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;ComputePipelineId&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: hal::Api&gt; Resource <span class="kw">for </span>ComputePipeline&lt;A&gt; {
-    <span class="kw">const </span>TYPE: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;ComputePipeline&quot;</span>;
+<span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>ComputePipeline&lt;A&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="macro">log::info!</span>(<span class="string">&quot;Destroying ComputePipeline {:?}&quot;</span>, <span class="self">self</span>.info.label());
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
+            <span class="kw">unsafe </span>{
+                <span class="kw">use </span>hal::Device;
+                <span class="self">self</span>.device.raw().destroy_compute_pipeline(raw);
+            }
+        }
+    }
+}
 
-    <span class="kw">fn </span>life_guard(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>LifeGuard {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.life_guard
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;ComputePipelineId&gt; <span class="kw">for </span>ComputePipeline&lt;A&gt; {
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;ComputePipeline&quot;</span>;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;ComputePipelineId&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.info
+    }
+
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;ComputePipelineId&gt; {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
+    }
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; ComputePipeline&lt;A&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::ComputePipeline {
+        <span class="self">self</span>.raw.as_ref().unwrap()
     }
 }
 
@@ -873,23 +1002,46 @@
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>RenderPipeline&lt;A: hal::Api&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: A::RenderPipeline,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) layout_id: Stored&lt;PipelineLayoutId&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) device_id: Stored&lt;DeviceId&gt;,
+</span><span class="kw">pub struct </span>RenderPipeline&lt;A: HalApi&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::RenderPipeline&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) layout: Arc&lt;PipelineLayout&lt;A&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) _shader_modules: Vec&lt;Arc&lt;ShaderModule&lt;A&gt;&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) pass_context: RenderPassContext,
     <span class="kw">pub</span>(<span class="kw">crate</span>) flags: PipelineFlags,
     <span class="kw">pub</span>(<span class="kw">crate</span>) strip_index_format: <span class="prelude-ty">Option</span>&lt;wgt::IndexFormat&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) vertex_steps: Vec&lt;VertexStep&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) late_sized_buffer_groups: ArrayVec&lt;LateSizedBufferGroup, { hal::MAX_BIND_GROUPS }&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) life_guard: LifeGuard,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;RenderPipelineId&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: hal::Api&gt; Resource <span class="kw">for </span>RenderPipeline&lt;A&gt; {
-    <span class="kw">const </span>TYPE: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;RenderPipeline&quot;</span>;
+<span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>RenderPipeline&lt;A&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="macro">log::info!</span>(<span class="string">&quot;Destroying RenderPipeline {:?}&quot;</span>, <span class="self">self</span>.info.label());
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
+            <span class="kw">unsafe </span>{
+                <span class="kw">use </span>hal::Device;
+                <span class="self">self</span>.device.raw().destroy_render_pipeline(raw);
+            }
+        }
+    }
+}
 
-    <span class="kw">fn </span>life_guard(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>LifeGuard {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.life_guard
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;RenderPipelineId&gt; <span class="kw">for </span>RenderPipeline&lt;A&gt; {
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;RenderPipeline&quot;</span>;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;RenderPipelineId&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.info
+    }
+
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;RenderPipelineId&gt; {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
+    }
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; RenderPipeline&lt;A&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::RenderPipeline {
+        <span class="self">self</span>.raw.as_ref().unwrap()
     }
 }
 </code></pre></div></section></main></body></html>

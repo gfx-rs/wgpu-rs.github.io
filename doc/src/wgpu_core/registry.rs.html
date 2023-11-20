@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/registry.rs`."><title>registry.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/registry.rs`."><title>registry.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -195,63 +195,75 @@
 <a href="#195" id="195">195</a>
 <a href="#196" id="196">196</a>
 <a href="#197" id="197">197</a>
-<a href="#198" id="198">198</a>
-<a href="#199" id="199">199</a>
-<a href="#200" id="200">200</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>parking_lot::{RwLock, RwLockReadGuard, RwLockWriteGuard};
 <span class="kw">use </span>wgt::Backend;
 
 <span class="kw">use crate</span>::{
-    hub::{Access, Token},
     id,
-    identity::{IdentityHandler, IdentityHandlerFactory},
+    identity::{IdentityHandlerFactory, IdentityManager},
     resource::Resource,
-    storage::Storage,
+    storage::{Element, InvalidId, Storage},
 };
 
-<span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>Registry&lt;T: Resource, I: id::TypedId, F: IdentityHandlerFactory&lt;I&gt;&gt; {
-    identity: F::Filter,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) data: RwLock&lt;Storage&lt;T, I&gt;&gt;,
+<span class="attr">#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>RegistryReport {
+    <span class="kw">pub </span>num_allocated: usize,
+    <span class="kw">pub </span>num_kept_from_user: usize,
+    <span class="kw">pub </span>num_released_from_user: usize,
+    <span class="kw">pub </span>num_destroyed_from_user: usize,
+    <span class="kw">pub </span>num_error: usize,
+    <span class="kw">pub </span>element_size: usize,
+}
+
+<span class="kw">impl </span>RegistryReport {
+    <span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.num_allocated + <span class="self">self</span>.num_kept_from_user == <span class="number">0
+    </span>}
+}
+
+<span class="doccomment">/// Registry is the primary holder of each resource type
+/// Every resource is now arcanized so the last arc released
+/// will in the end free the memory and release the inner raw resource
+///
+/// Registry act as the main entry point to keep resource alive
+/// when created and released from user land code
+///
+/// A resource may still be alive when released from user land code
+/// if it&#39;s used in active submission or anyway kept alive from
+/// any other dependent resource
+///
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>Registry&lt;I: id::TypedId, T: Resource&lt;I&gt;&gt; {
+    identity: Arc&lt;IdentityManager&lt;I&gt;&gt;,
+    storage: RwLock&lt;Storage&lt;T, I&gt;&gt;,
     backend: Backend,
 }
 
-<span class="kw">impl</span>&lt;T: Resource, I: id::TypedId, F: IdentityHandlerFactory&lt;I&gt;&gt; Registry&lt;T, I, F&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new(backend: Backend, factory: <span class="kw-2">&amp;</span>F) -&gt; <span class="self">Self </span>{
+<span class="kw">impl</span>&lt;I: id::TypedId, T: Resource&lt;I&gt;&gt; Registry&lt;I, T&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>new&lt;F: IdentityHandlerFactory&lt;I&gt;&gt;(backend: Backend, factory: <span class="kw-2">&amp;</span>F) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             identity: factory.spawn(),
-            data: RwLock::new(Storage {
-                map: Vec::new(),
-                kind: T::TYPE,
-                _phantom: PhantomData,
-            }),
+            storage: RwLock::new(Storage::new()),
             backend,
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>without_backend(factory: <span class="kw-2">&amp;</span>F, kind: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            identity: factory.spawn(),
-            data: RwLock::new(Storage {
-                map: Vec::new(),
-                kind,
-                _phantom: PhantomData,
-            }),
-            backend: Backend::Empty,
-        }
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>without_backend&lt;F: IdentityHandlerFactory&lt;I&gt;&gt;(factory: <span class="kw-2">&amp;</span>F) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new(Backend::Empty, factory)
     }
 }
 
 <span class="attr">#[must_use]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>FutureId&lt;<span class="lifetime">&#39;a</span>, I: id::TypedId, T&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>FutureId&lt;<span class="lifetime">&#39;a</span>, I: id::TypedId, T: Resource&lt;I&gt;&gt; {
     id: I,
+    identity: Arc&lt;IdentityManager&lt;I&gt;&gt;,
     data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>RwLock&lt;Storage&lt;T, I&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;I: id::TypedId + Copy, T&gt; FutureId&lt;<span class="lifetime">&#39;_</span>, I, T&gt; {
-    <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
+<span class="kw">impl</span>&lt;I: id::TypedId + Copy, T: Resource&lt;I&gt;&gt; FutureId&lt;<span class="lifetime">&#39;_</span>, I, T&gt; {
+    <span class="attr">#[allow(dead_code)]
     </span><span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; I {
         <span class="self">self</span>.id
     }
@@ -260,134 +272,98 @@
         <span class="self">self</span>.id
     }
 
-    <span class="kw">pub fn </span>assign&lt;<span class="lifetime">&#39;a</span>, A: Access&lt;T&gt;&gt;(<span class="self">self</span>, value: T, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Token&lt;A&gt;) -&gt; id::Valid&lt;I&gt; {
-        <span class="self">self</span>.data.write().insert(<span class="self">self</span>.id, value);
-        id::Valid(<span class="self">self</span>.id)
+    <span class="kw">pub fn </span>init(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="kw-2">mut </span>value: T) -&gt; Arc&lt;T&gt; {
+        value.as_info_mut().set_id(<span class="self">self</span>.id, <span class="kw-2">&amp;</span><span class="self">self</span>.identity);
+        Arc::new(value)
     }
 
-    <span class="kw">pub fn </span>assign_error&lt;<span class="lifetime">&#39;a</span>, A: Access&lt;T&gt;&gt;(<span class="self">self</span>, label: <span class="kw-2">&amp;</span>str, <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Token&lt;A&gt;) -&gt; I {
+    <span class="kw">pub fn </span>assign(<span class="self">self</span>, value: T) -&gt; (I, Arc&lt;T&gt;) {
+        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="self">self</span>.data.write();
+        data.insert(<span class="self">self</span>.id, <span class="self">self</span>.init(value));
+        (<span class="self">self</span>.id, data.get(<span class="self">self</span>.id).unwrap().clone())
+    }
+
+    <span class="kw">pub fn </span>assign_existing(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>Arc&lt;T&gt;) -&gt; I {
+        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="self">self</span>.data.write();
+        <span class="attr">#[cfg(debug_assertions)]
+        </span><span class="macro">debug_assert!</span>(!data.contains(<span class="self">self</span>.id));
+        data.insert(<span class="self">self</span>.id, value.clone());
+        <span class="self">self</span>.id
+    }
+
+    <span class="kw">pub fn </span>assign_error(<span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) -&gt; I {
         <span class="self">self</span>.data.write().insert_error(<span class="self">self</span>.id, label);
         <span class="self">self</span>.id
     }
 }
 
-<span class="kw">impl</span>&lt;T: Resource, I: id::TypedId + Copy, F: IdentityHandlerFactory&lt;I&gt;&gt; Registry&lt;T, I, F&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>prepare(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        id_in: &lt;F::Filter <span class="kw">as </span>IdentityHandler&lt;I&gt;&gt;::Input,
-    ) -&gt; FutureId&lt;I, T&gt; {
+<span class="kw">impl</span>&lt;I: id::TypedId, T: Resource&lt;I&gt;&gt; Registry&lt;I, T&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>prepare&lt;F&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, id_in: F::Input) -&gt; FutureId&lt;I, T&gt;
+    <span class="kw">where
+        </span>F: IdentityHandlerFactory&lt;I&gt;,
+    {
         FutureId {
-            id: <span class="self">self</span>.identity.process(id_in, <span class="self">self</span>.backend),
-            data: <span class="kw-2">&amp;</span><span class="self">self</span>.data,
+            id: <span class="kw">if </span>F::autogenerate_ids() {
+                <span class="self">self</span>.identity.process(<span class="self">self</span>.backend)
+            } <span class="kw">else </span>{
+                <span class="self">self</span>.identity.mark_as_used(F::input_to_id(id_in))
+            },
+            identity: <span class="self">self</span>.identity.clone(),
+            data: <span class="kw-2">&amp;</span><span class="self">self</span>.storage,
         }
     }
-
-    <span class="doccomment">/// Acquire read access to this `Registry`&#39;s contents.
-    ///
-    /// The caller must present a mutable reference to a `Token&lt;A&gt;`,
-    /// for some type `A` that comes before this `Registry`&#39;s resource
-    /// type `T` in the lock ordering. A `Token&lt;Root&gt;` grants
-    /// permission to lock any field; see [`Token::root`].
-    ///
-    /// Once the read lock is acquired, return a new `Token&lt;T&gt;`, along
-    /// with a read guard for this `Registry`&#39;s [`Storage`], which can
-    /// be indexed by id to get at the actual resources.
-    ///
-    /// The borrow checker ensures that the caller cannot again access
-    /// its `Token&lt;A&gt;` until it has dropped both the guard and the
-    /// `Token&lt;T&gt;`.
-    ///
-    /// See the [`Hub`] type for more details on locking.
-    ///
-    /// [`Hub`]: crate::hub::Hub
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>read&lt;<span class="lifetime">&#39;a</span>, A: Access&lt;T&gt;&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>,
-        _token: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Token&lt;A&gt;,
-    ) -&gt; (RwLockReadGuard&lt;<span class="lifetime">&#39;a</span>, Storage&lt;T, I&gt;&gt;, Token&lt;<span class="lifetime">&#39;a</span>, T&gt;) {
-        (<span class="self">self</span>.data.read(), Token::new())
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>request(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; FutureId&lt;I, T&gt; {
+        FutureId {
+            id: <span class="self">self</span>.identity.process(<span class="self">self</span>.backend),
+            identity: <span class="self">self</span>.identity.clone(),
+            data: <span class="kw-2">&amp;</span><span class="self">self</span>.storage,
+        }
     }
-
-    <span class="doccomment">/// Acquire write access to this `Registry`&#39;s contents.
-    ///
-    /// The caller must present a mutable reference to a `Token&lt;A&gt;`,
-    /// for some type `A` that comes before this `Registry`&#39;s resource
-    /// type `T` in the lock ordering. A `Token&lt;Root&gt;` grants
-    /// permission to lock any field; see [`Token::root`].
-    ///
-    /// Once the lock is acquired, return a new `Token&lt;T&gt;`, along with
-    /// a write guard for this `Registry`&#39;s [`Storage`], which can be
-    /// indexed by id to get at the actual resources.
-    ///
-    /// The borrow checker ensures that the caller cannot again access
-    /// its `Token&lt;A&gt;` until it has dropped both the guard and the
-    /// `Token&lt;T&gt;`.
-    ///
-    /// See the [`Hub`] type for more details on locking.
-    ///
-    /// [`Hub`]: crate::hub::Hub
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write&lt;<span class="lifetime">&#39;a</span>, A: Access&lt;T&gt;&gt;(
-        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>,
-        _token: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Token&lt;A&gt;,
-    ) -&gt; (RwLockWriteGuard&lt;<span class="lifetime">&#39;a</span>, Storage&lt;T, I&gt;&gt;, Token&lt;<span class="lifetime">&#39;a</span>, T&gt;) {
-        (<span class="self">self</span>.data.write(), Token::new())
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>contains(<span class="kw-2">&amp;</span><span class="self">self</span>, id: I) -&gt; bool {
+        <span class="self">self</span>.read().contains(id)
     }
-
-    <span class="doccomment">/// Unregister the resource at `id`.
-    ///
-    /// The caller must prove that it already holds a write lock for
-    /// this `Registry` by passing a mutable reference to this
-    /// `Registry`&#39;s storage, obtained from the write guard returned
-    /// by a previous call to [`write`], as the `guard` parameter.
-    </span><span class="kw">pub fn </span>unregister_locked(<span class="kw-2">&amp;</span><span class="self">self</span>, id: I, guard: <span class="kw-2">&amp;mut </span>Storage&lt;T, I&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;T&gt; {
-        <span class="kw">let </span>value = guard.remove(id);
-        <span class="comment">//Note: careful about the order here!
-        </span><span class="self">self</span>.identity.free(id);
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: I) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Arc&lt;T&gt;&gt;, InvalidId&gt; {
+        <span class="self">self</span>.read().try_get(id).map(|o| o.cloned())
+    }
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: I) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;T&gt;, InvalidId&gt; {
+        <span class="self">self</span>.read().get(id).map(|v| v.clone())
+    }
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>read&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>) -&gt; RwLockReadGuard&lt;<span class="lifetime">&#39;a</span>, Storage&lt;T, I&gt;&gt; {
+        <span class="self">self</span>.storage.read()
+    }
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>write&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>) -&gt; RwLockWriteGuard&lt;<span class="lifetime">&#39;a</span>, Storage&lt;T, I&gt;&gt; {
+        <span class="self">self</span>.storage.write()
+    }
+    <span class="kw">pub fn </span>unregister_locked(<span class="kw-2">&amp;</span><span class="self">self</span>, id: I, storage: <span class="kw-2">&amp;mut </span>Storage&lt;T, I&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;T&gt;&gt; {
+        storage.remove(id)
+    }
+    <span class="kw">pub fn </span>force_replace(<span class="kw-2">&amp;</span><span class="self">self</span>, id: I, <span class="kw-2">mut </span>value: T) {
+        <span class="kw">let </span><span class="kw-2">mut </span>storage = <span class="self">self</span>.storage.write();
+        value.as_info_mut().set_id(id, <span class="kw-2">&amp;</span><span class="self">self</span>.identity);
+        storage.force_replace(id, value)
+    }
+    <span class="kw">pub fn </span>force_replace_with_error(<span class="kw-2">&amp;</span><span class="self">self</span>, id: I, label: <span class="kw-2">&amp;</span>str) {
+        <span class="kw">let </span><span class="kw-2">mut </span>storage = <span class="self">self</span>.storage.write();
+        storage.remove(id);
+        storage.insert_error(id, label);
+    }
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>unregister(<span class="kw-2">&amp;</span><span class="self">self</span>, id: I) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;T&gt;&gt; {
+        <span class="kw">let </span>value = <span class="self">self</span>.storage.write().remove(id);
         <span class="comment">//Returning None is legal if it&#39;s an error ID
         </span>value
     }
 
-    <span class="doccomment">/// Unregister the resource at `id` and return its value, if any.
-    ///
-    /// The caller must present a mutable reference to a `Token&lt;A&gt;`,
-    /// for some type `A` that comes before this `Registry`&#39;s resource
-    /// type `T` in the lock ordering.
-    ///
-    /// This returns a `Token&lt;T&gt;`, but it&#39;s almost useless, because it
-    /// doesn&#39;t return a lock guard to go with it: its only effect is
-    /// to make the token you passed to this function inaccessible.
-    /// However, the `Token&lt;T&gt;` can be used to satisfy some functions&#39;
-    /// bureacratic expectations that you will have one available.
-    ///
-    /// The borrow checker ensures that the caller cannot again access
-    /// its `Token&lt;A&gt;` until it has dropped both the guard and the
-    /// `Token&lt;T&gt;`.
-    ///
-    /// See the [`Hub`] type for more details on locking.
-    ///
-    /// [`Hub`]: crate::hub::Hub
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>unregister&lt;<span class="lifetime">&#39;a</span>, A: Access&lt;T&gt;&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        id: I,
-        _token: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Token&lt;A&gt;,
-    ) -&gt; (<span class="prelude-ty">Option</span>&lt;T&gt;, Token&lt;<span class="lifetime">&#39;a</span>, T&gt;) {
-        <span class="kw">let </span>value = <span class="self">self</span>.data.write().remove(id);
-        <span class="comment">//Note: careful about the order here!
-        </span><span class="self">self</span>.identity.free(id);
-        <span class="comment">//Returning None is legal if it&#39;s an error ID
-        </span>(value, Token::new())
-    }
-
     <span class="kw">pub fn </span>label_for_resource(<span class="kw-2">&amp;</span><span class="self">self</span>, id: I) -&gt; String {
-        <span class="kw">let </span>guard = <span class="self">self</span>.data.read();
+        <span class="kw">let </span>guard = <span class="self">self</span>.storage.read();
 
-        <span class="kw">let </span>type_name = guard.kind;
+        <span class="kw">let </span>type_name = guard.kind();
         <span class="kw">match </span>guard.get(id) {
             <span class="prelude-val">Ok</span>(res) =&gt; {
                 <span class="kw">let </span>label = res.label();
                 <span class="kw">if </span>label.is_empty() {
                     <span class="macro">format!</span>(<span class="string">&quot;&lt;{}-{:?}&gt;&quot;</span>, type_name, id.unzip())
                 } <span class="kw">else </span>{
-                    label.to_string()
+                    label
                 }
             }
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">format!</span>(
@@ -396,6 +372,24 @@
                 guard.label_for_invalid_id(id)
             ),
         }
+    }
+
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>generate_report(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; RegistryReport {
+        <span class="kw">let </span>storage = <span class="self">self</span>.storage.read();
+        <span class="kw">let </span><span class="kw-2">mut </span>report = RegistryReport {
+            element_size: std::mem::size_of::&lt;T&gt;(),
+            ..Default::default()
+        };
+        report.num_allocated = <span class="self">self</span>.identity.values.lock().count();
+        <span class="kw">for </span>element <span class="kw">in </span>storage.map.iter() {
+            <span class="kw">match </span><span class="kw-2">*</span>element {
+                Element::Occupied(..) =&gt; report.num_kept_from_user += <span class="number">1</span>,
+                Element::Destroyed(..) =&gt; report.num_destroyed_from_user += <span class="number">1</span>,
+                Element::Vacant =&gt; report.num_released_from_user += <span class="number">1</span>,
+                Element::Error(..) =&gt; report.num_error += <span class="number">1</span>,
+            }
+        }
+        report
     }
 }
 </code></pre></div></section></main></body></html>

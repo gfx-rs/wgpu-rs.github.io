@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/adapter.rs`."><title>adapter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/gles/adapter.rs`."><title>adapter.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1221,8 +1221,10 @@
 <a href="#1221" id="1221">1221</a>
 <a href="#1222" id="1222">1222</a>
 <a href="#1223" id="1223">1223</a>
+<a href="#1224" id="1224">1224</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
-<span class="kw">use </span>std::sync::Arc;
+<span class="kw">use </span>parking_lot::Mutex;
+<span class="kw">use </span>std::sync::{atomic::AtomicU8, Arc};
 <span class="kw">use </span>wgt::AstcChannel;
 
 <span class="kw">use </span><span class="kw">crate</span>::auxil::db;
@@ -1436,9 +1438,9 @@
         <span class="kw">let </span>vendor = <span class="kw">unsafe </span>{ gl.get_parameter_string(vendor_const) };
         <span class="kw">let </span>renderer = <span class="kw">unsafe </span>{ gl.get_parameter_string(renderer_const) };
         <span class="kw">let </span>version = <span class="kw">unsafe </span>{ gl.get_parameter_string(glow::VERSION) };
-        <span class="macro">log::trace!</span>(<span class="string">&quot;Vendor: {}&quot;</span>, vendor);
-        <span class="macro">log::trace!</span>(<span class="string">&quot;Renderer: {}&quot;</span>, renderer);
-        <span class="macro">log::trace!</span>(<span class="string">&quot;Version: {}&quot;</span>, version);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;Vendor: {}&quot;</span>, vendor);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;Renderer: {}&quot;</span>, renderer);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;Version: {}&quot;</span>, version);
 
         <span class="kw">let </span>full_ver = <span class="self">Self</span>::parse_full_version(<span class="kw-2">&amp;</span>version).ok();
         <span class="kw">let </span>es_ver = full_ver
@@ -1494,7 +1496,7 @@
 
         <span class="kw">let </span>shading_language_version = {
             <span class="kw">let </span>sl_version = <span class="kw">unsafe </span>{ gl.get_parameter_string(glow::SHADING_LANGUAGE_VERSION) };
-            <span class="macro">log::trace!</span>(<span class="string">&quot;SL version: {}&quot;</span>, <span class="kw-2">&amp;</span>sl_version);
+            <span class="macro">log::debug!</span>(<span class="string">&quot;SL version: {}&quot;</span>, <span class="kw-2">&amp;</span>sl_version);
             <span class="kw">if </span>full_ver.is_some() {
                 <span class="kw">let </span>(sl_major, sl_minor) = <span class="self">Self</span>::parse_full_version(<span class="kw-2">&amp;</span>sl_version).ok()<span class="question-mark">?</span>;
                 <span class="kw">let </span><span class="kw-2">mut </span>value = sl_major <span class="kw">as </span>u16 * <span class="number">100 </span>+ sl_minor <span class="kw">as </span>u16 * <span class="number">10</span>;
@@ -1513,7 +1515,7 @@
             }
         };
 
-        <span class="macro">log::trace!</span>(<span class="string">&quot;Supported GL Extensions: {:#?}&quot;</span>, extensions);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;Supported GL Extensions: {:#?}&quot;</span>, extensions);
 
         <span class="kw">let </span>supported = |(req_es_major, req_es_minor), (req_full_major, req_full_minor)| {
             <span class="kw">let </span>es_supported = es_ver
@@ -2142,9 +2144,9 @@
                 shader_clear_program,
                 shader_clear_program_color_uniform_location,
                 zero_buffer,
-                temp_query_results: Vec::new(),
-                draw_buffer_count: <span class="number">1</span>,
-                current_index_buffer: <span class="prelude-val">None</span>,
+                temp_query_results: Mutex::new(Vec::new()),
+                draw_buffer_count: AtomicU8::new(<span class="number">1</span>),
+                current_index_buffer: Mutex::new(<span class="prelude-val">None</span>),
             },
         })
     }

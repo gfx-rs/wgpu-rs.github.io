@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Storage","StorageReport"]};
+window.SIDEBAR_ITEMS = {"struct":["Storage"]};

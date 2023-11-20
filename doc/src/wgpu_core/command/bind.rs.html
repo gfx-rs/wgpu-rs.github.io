@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/bind.rs`."><title>bind.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/bind.rs`."><title>bind.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -349,41 +349,15 @@
 <a href="#349" id="349">349</a>
 <a href="#350" id="350">350</a>
 <a href="#351" id="351">351</a>
-<a href="#352" id="352">352</a>
-<a href="#353" id="353">353</a>
-<a href="#354" id="354">354</a>
-<a href="#355" id="355">355</a>
-<a href="#356" id="356">356</a>
-<a href="#357" id="357">357</a>
-<a href="#358" id="358">358</a>
-<a href="#359" id="359">359</a>
-<a href="#360" id="360">360</a>
-<a href="#361" id="361">361</a>
-<a href="#362" id="362">362</a>
-<a href="#363" id="363">363</a>
-<a href="#364" id="364">364</a>
-<a href="#365" id="365">365</a>
-<a href="#366" id="366">366</a>
-<a href="#367" id="367">367</a>
-<a href="#368" id="368">368</a>
-<a href="#369" id="369">369</a>
-<a href="#370" id="370">370</a>
-<a href="#371" id="371">371</a>
-<a href="#372" id="372">372</a>
-<a href="#373" id="373">373</a>
-<a href="#374" id="374">374</a>
-<a href="#375" id="375">375</a>
-<a href="#376" id="376">376</a>
-</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
-    binding_model::{
-        BindGroup, BindGroupLayouts, LateMinBufferBindingSizeMismatch, PipelineLayout,
-    },
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
+
+<span class="kw">use crate</span>::{
+    binding_model::{BindGroup, LateMinBufferBindingSizeMismatch, PipelineLayout},
     device::SHADER_STAGE_COUNT,
     hal_api::HalApi,
-    id::{BindGroupId, PipelineLayoutId, Valid},
+    id::BindGroupId,
     pipeline::LateSizedBufferGroup,
-    storage::Storage,
-    Stored,
+    resource::Resource,
 };
 
 <span class="kw">use </span>arrayvec::ArrayVec;
@@ -391,73 +365,85 @@
 <span class="kw">type </span>BindGroupMask = u8;
 
 <span class="kw">mod </span>compat {
-    <span class="kw">use crate</span>::{
-        binding_model::BindGroupLayouts,
-        id::{BindGroupLayoutId, Valid},
-    };
-    <span class="kw">use </span>std::ops::Range;
+    <span class="kw">use </span>arrayvec::ArrayVec;
 
-    <span class="attr">#[derive(Debug, Default)]
-    </span><span class="kw">struct </span>Entry {
-        assigned: <span class="prelude-ty">Option</span>&lt;Valid&lt;BindGroupLayoutId&gt;&gt;,
-        expected: <span class="prelude-ty">Option</span>&lt;Valid&lt;BindGroupLayoutId&gt;&gt;,
+    <span class="kw">use crate</span>::{binding_model::BindGroupLayout, hal_api::HalApi, resource::Resource};
+    <span class="kw">use </span>std::{ops::Range, sync::Arc};
+
+    <span class="attr">#[derive(Debug, Clone)]
+    </span><span class="kw">struct </span>Entry&lt;A: HalApi&gt; {
+        assigned: <span class="prelude-ty">Option</span>&lt;Arc&lt;BindGroupLayout&lt;A&gt;&gt;&gt;,
+        expected: <span class="prelude-ty">Option</span>&lt;Arc&lt;BindGroupLayout&lt;A&gt;&gt;&gt;,
     }
 
-    <span class="kw">impl </span>Entry {
+    <span class="kw">impl</span>&lt;A: HalApi&gt; Entry&lt;A&gt; {
+        <span class="kw">fn </span>empty() -&gt; <span class="self">Self </span>{
+            <span class="self">Self </span>{
+                assigned: <span class="prelude-val">None</span>,
+                expected: <span class="prelude-val">None</span>,
+            }
+        }
         <span class="kw">fn </span>is_active(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
             <span class="self">self</span>.assigned.is_some() &amp;&amp; <span class="self">self</span>.expected.is_some()
         }
 
-        <span class="kw">fn </span>is_valid&lt;A: hal::Api&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, bind_group_layouts: <span class="kw-2">&amp;</span>BindGroupLayouts&lt;A&gt;) -&gt; bool {
-            <span class="kw">if </span><span class="self">self</span>.expected.is_none() || <span class="self">self</span>.expected == <span class="self">self</span>.assigned {
+        <span class="kw">fn </span>is_valid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+            <span class="kw">if </span><span class="self">self</span>.expected.is_none() {
                 <span class="kw">return </span><span class="bool-val">true</span>;
             }
-
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(id) = <span class="self">self</span>.assigned {
-                <span class="kw">return </span>bind_group_layouts[id].as_duplicate() == <span class="self">self</span>.expected;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(expected_bgl) = <span class="self">self</span>.expected.as_ref() {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(assigned_bgl) = <span class="self">self</span>.assigned.as_ref() {
+                    <span class="kw">if </span>expected_bgl.is_equal(assigned_bgl) {
+                        <span class="kw">return </span><span class="bool-val">true</span>;
+                    }
+                }
             }
-
             <span class="bool-val">false
         </span>}
+
+        <span class="kw">fn </span>is_incompatible(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+            <span class="self">self</span>.expected.is_none() || !<span class="self">self</span>.is_valid()
+        }
     }
 
-    <span class="attr">#[derive(Debug)]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BoundBindGroupLayouts {
-        entries: [Entry; hal::MAX_BIND_GROUPS],
+    <span class="attr">#[derive(Debug, Default)]
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>BoundBindGroupLayouts&lt;A: HalApi&gt; {
+        entries: ArrayVec&lt;Entry&lt;A&gt;, { hal::MAX_BIND_GROUPS }&gt;,
     }
 
-    <span class="kw">impl </span>BoundBindGroupLayouts {
+    <span class="kw">impl</span>&lt;A: HalApi&gt; BoundBindGroupLayouts&lt;A&gt; {
         <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
             <span class="self">Self </span>{
-                entries: Default::default(),
+                entries: (<span class="number">0</span>..hal::MAX_BIND_GROUPS).map(|<span class="kw">_</span>| Entry::empty()).collect(),
             }
         }
-
         <span class="kw">fn </span>make_range(<span class="kw-2">&amp;</span><span class="self">self</span>, start_index: usize) -&gt; Range&lt;usize&gt; {
             <span class="comment">// find first incompatible entry
             </span><span class="kw">let </span>end = <span class="self">self
                 </span>.entries
                 .iter()
-                .position(|e| e.expected.is_none() || e.assigned != e.expected)
+                .position(|e| e.is_incompatible())
                 .unwrap_or(<span class="self">self</span>.entries.len());
             start_index..end.max(start_index)
         }
 
         <span class="kw">pub fn </span>update_expectations(
             <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-            expectations: <span class="kw-2">&amp;</span>[Valid&lt;BindGroupLayoutId&gt;],
+            expectations: <span class="kw-2">&amp;</span>[Arc&lt;BindGroupLayout&lt;A&gt;&gt;],
         ) -&gt; Range&lt;usize&gt; {
             <span class="kw">let </span>start_index = <span class="self">self
                 </span>.entries
                 .iter()
                 .zip(expectations)
-                .position(|(e, <span class="kw-2">&amp;</span>expect)| e.expected != <span class="prelude-val">Some</span>(expect))
+                .position(|(e, expect)| {
+                    e.expected.is_none() || !e.expected.as_ref().unwrap().is_equal(expect)
+                })
                 .unwrap_or(expectations.len());
-            <span class="kw">for </span>(e, <span class="kw-2">&amp;</span>expect) <span class="kw">in </span><span class="self">self</span>.entries[start_index..]
+            <span class="kw">for </span>(e, expect) <span class="kw">in </span><span class="self">self</span>.entries[start_index..]
                 .iter_mut()
                 .zip(expectations[start_index..].iter())
             {
-                e.expected = <span class="prelude-val">Some</span>(expect);
+                e.expected = <span class="prelude-val">Some</span>(expect.clone());
             }
             <span class="kw">for </span>e <span class="kw">in </span><span class="self">self</span>.entries[expectations.len()..].iter_mut() {
                 e.expected = <span class="prelude-val">None</span>;
@@ -465,7 +451,7 @@
             <span class="self">self</span>.make_range(start_index)
         }
 
-        <span class="kw">pub fn </span>assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize, value: Valid&lt;BindGroupLayoutId&gt;) -&gt; Range&lt;usize&gt; {
+        <span class="kw">pub fn </span>assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize, value: Arc&lt;BindGroupLayout&lt;A&gt;&gt;) -&gt; Range&lt;usize&gt; {
             <span class="self">self</span>.entries[index].assigned = <span class="prelude-val">Some</span>(value);
             <span class="self">self</span>.make_range(index)
         }
@@ -477,52 +463,15 @@
                 .filter_map(|(i, e)| <span class="kw">if </span>e.is_active() { <span class="prelude-val">Some</span>(i) } <span class="kw">else </span>{ <span class="prelude-val">None </span>})
         }
 
-        <span class="kw">pub fn </span>invalid_mask&lt;A: hal::Api&gt;(
-            <span class="kw-2">&amp;</span><span class="self">self</span>,
-            bind_group_layouts: <span class="kw-2">&amp;</span>BindGroupLayouts&lt;A&gt;,
-        ) -&gt; <span class="kw">super</span>::BindGroupMask {
+        <span class="kw">pub fn </span>invalid_mask(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">super</span>::BindGroupMask {
             <span class="self">self</span>.entries.iter().enumerate().fold(<span class="number">0</span>, |mask, (i, entry)| {
-                <span class="kw">if </span>entry.is_valid(bind_group_layouts) {
+                <span class="kw">if </span>entry.is_valid() {
                     mask
                 } <span class="kw">else </span>{
                     mask | <span class="number">1u8 </span>&lt;&lt; i
                 }
             })
         }
-    }
-
-    <span class="attr">#[test]
-    </span><span class="kw">fn </span>test_compatibility() {
-        <span class="kw">fn </span>id(val: u32) -&gt; Valid&lt;BindGroupLayoutId&gt; {
-            BindGroupLayoutId::dummy(val)
-        }
-
-        <span class="kw">let </span><span class="kw-2">mut </span>man = BoundBindGroupLayouts::new();
-        man.entries[<span class="number">0</span>] = Entry {
-            expected: <span class="prelude-val">Some</span>(id(<span class="number">3</span>)),
-            assigned: <span class="prelude-val">Some</span>(id(<span class="number">2</span>)),
-        };
-        man.entries[<span class="number">1</span>] = Entry {
-            expected: <span class="prelude-val">Some</span>(id(<span class="number">1</span>)),
-            assigned: <span class="prelude-val">Some</span>(id(<span class="number">1</span>)),
-        };
-        man.entries[<span class="number">2</span>] = Entry {
-            expected: <span class="prelude-val">Some</span>(id(<span class="number">4</span>)),
-            assigned: <span class="prelude-val">Some</span>(id(<span class="number">5</span>)),
-        };
-        <span class="comment">// check that we rebind [1] after [0] became compatible
-        </span><span class="macro">assert_eq!</span>(man.assign(<span class="number">0</span>, id(<span class="number">3</span>)), <span class="number">0</span>..<span class="number">2</span>);
-        <span class="comment">// check that nothing is rebound
-        </span><span class="macro">assert_eq!</span>(man.update_expectations(<span class="kw-2">&amp;</span>[id(<span class="number">3</span>), id(<span class="number">2</span>)]), <span class="number">1</span>..<span class="number">1</span>);
-        <span class="comment">// check that [1] and [2] are rebound on expectations change
-        </span><span class="macro">assert_eq!</span>(man.update_expectations(<span class="kw-2">&amp;</span>[id(<span class="number">3</span>), id(<span class="number">1</span>), id(<span class="number">5</span>)]), <span class="number">1</span>..<span class="number">3</span>);
-        <span class="comment">// reset the first two bindings
-        </span><span class="macro">assert_eq!</span>(man.update_expectations(<span class="kw-2">&amp;</span>[id(<span class="number">4</span>), id(<span class="number">6</span>), id(<span class="number">5</span>)]), <span class="number">0</span>..<span class="number">0</span>);
-        <span class="comment">// check that nothing is rebound, even if there is a match,
-        // since earlier binding is incompatible.
-        </span><span class="macro">assert_eq!</span>(man.assign(<span class="number">1</span>, id(<span class="number">6</span>)), <span class="number">1</span>..<span class="number">1</span>);
-        <span class="comment">// finally, bind everything
-        </span><span class="macro">assert_eq!</span>(man.assign(<span class="number">0</span>, id(<span class="number">4</span>)), <span class="number">0</span>..<span class="number">3</span>);
     }
 }
 
@@ -532,9 +481,9 @@
     bound_size: wgt::BufferAddress,
 }
 
-<span class="attr">#[derive(Debug, Default)]
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>EntryPayload {
-    <span class="kw">pub</span>(<span class="kw">super</span>) group_id: <span class="prelude-ty">Option</span>&lt;Stored&lt;BindGroupId&gt;&gt;,
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>EntryPayload&lt;A: HalApi&gt; {
+    <span class="kw">pub</span>(<span class="kw">super</span>) group: <span class="prelude-ty">Option</span>&lt;Arc&lt;BindGroup&lt;A&gt;&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">super</span>) dynamic_offsets: Vec&lt;wgt::DynamicOffset&gt;,
     late_buffer_bindings: Vec&lt;LateBufferBinding&gt;,
     <span class="doccomment">/// Since `LateBufferBinding` may contain information about the bindings
@@ -542,49 +491,57 @@
     </span><span class="kw">pub</span>(<span class="kw">super</span>) late_bindings_effective_count: usize,
 }
 
-<span class="kw">impl </span>EntryPayload {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Default <span class="kw">for </span>EntryPayload&lt;A&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            group: <span class="prelude-val">None</span>,
+            dynamic_offsets: Default::default(),
+            late_buffer_bindings: Default::default(),
+            late_bindings_effective_count: Default::default(),
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; EntryPayload&lt;A&gt; {
     <span class="kw">fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.group_id = <span class="prelude-val">None</span>;
+        <span class="self">self</span>.group = <span class="prelude-val">None</span>;
         <span class="self">self</span>.dynamic_offsets.clear();
         <span class="self">self</span>.late_buffer_bindings.clear();
         <span class="self">self</span>.late_bindings_effective_count = <span class="number">0</span>;
     }
 }
 
-<span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Binder {
-    <span class="kw">pub</span>(<span class="kw">super</span>) pipeline_layout_id: <span class="prelude-ty">Option</span>&lt;Valid&lt;PipelineLayoutId&gt;&gt;, <span class="comment">//TODO: strongly `Stored`
-    </span>manager: compat::BoundBindGroupLayouts,
-    payloads: [EntryPayload; hal::MAX_BIND_GROUPS],
+<span class="attr">#[derive(Debug, Default)]
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Binder&lt;A: HalApi&gt; {
+    <span class="kw">pub</span>(<span class="kw">super</span>) pipeline_layout: <span class="prelude-ty">Option</span>&lt;Arc&lt;PipelineLayout&lt;A&gt;&gt;&gt;,
+    manager: compat::BoundBindGroupLayouts&lt;A&gt;,
+    payloads: [EntryPayload&lt;A&gt;; hal::MAX_BIND_GROUPS],
 }
 
-<span class="kw">impl </span>Binder {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Binder&lt;A&gt; {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            pipeline_layout_id: <span class="prelude-val">None</span>,
+            pipeline_layout: <span class="prelude-val">None</span>,
             manager: compat::BoundBindGroupLayouts::new(),
             payloads: Default::default(),
         }
     }
-
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>reset(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.pipeline_layout_id = <span class="prelude-val">None</span>;
+        <span class="self">self</span>.pipeline_layout = <span class="prelude-val">None</span>;
         <span class="self">self</span>.manager = compat::BoundBindGroupLayouts::new();
         <span class="kw">for </span>payload <span class="kw">in </span><span class="self">self</span>.payloads.iter_mut() {
             payload.reset();
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>change_pipeline_layout&lt;<span class="lifetime">&#39;a</span>, A: HalApi&gt;(
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>change_pipeline_layout&lt;<span class="lifetime">&#39;a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>,
-        guard: <span class="kw-2">&amp;</span>Storage&lt;PipelineLayout&lt;A&gt;, PipelineLayoutId&gt;,
-        new_id: Valid&lt;PipelineLayoutId&gt;,
+        new: <span class="kw-2">&amp;</span>Arc&lt;PipelineLayout&lt;A&gt;&gt;,
         late_sized_buffer_groups: <span class="kw-2">&amp;</span>[LateSizedBufferGroup],
-    ) -&gt; (usize, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[EntryPayload]) {
-        <span class="kw">let </span>old_id_opt = <span class="self">self</span>.pipeline_layout_id.replace(new_id);
-        <span class="kw">let </span>new = <span class="kw-2">&amp;</span>guard[new_id];
+    ) -&gt; (usize, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[EntryPayload&lt;A&gt;]) {
+        <span class="kw">let </span>old_id_opt = <span class="self">self</span>.pipeline_layout.replace(new.clone());
 
-        <span class="kw">let </span><span class="kw-2">mut </span>bind_range = <span class="self">self</span>.manager.update_expectations(<span class="kw-2">&amp;</span>new.bind_group_layout_ids);
+        <span class="kw">let </span><span class="kw-2">mut </span>bind_range = <span class="self">self</span>.manager.update_expectations(<span class="kw-2">&amp;</span>new.bind_group_layouts);
 
         <span class="comment">// Update the buffer binding sizes that are required by shaders.
         </span><span class="kw">for </span>(payload, late_group) <span class="kw">in </span><span class="self">self</span>.payloads.iter_mut().zip(late_sized_buffer_groups) {
@@ -608,8 +565,7 @@
             }
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(old_id) = old_id_opt {
-            <span class="kw">let </span>old = <span class="kw-2">&amp;</span>guard[old_id];
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(old) = old_id_opt {
             <span class="comment">// root constants are the base compatibility property
             </span><span class="kw">if </span>old.push_constant_ranges != new.push_constant_ranges {
                 bind_range.start = <span class="number">0</span>;
@@ -619,21 +575,18 @@
         (bind_range.start, <span class="kw-2">&amp;</span><span class="self">self</span>.payloads[bind_range])
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>assign_group&lt;<span class="lifetime">&#39;a</span>, A: HalApi&gt;(
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>assign_group&lt;<span class="lifetime">&#39;a</span>&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>,
         index: usize,
-        bind_group_id: Valid&lt;BindGroupId&gt;,
-        bind_group: <span class="kw-2">&amp;</span>BindGroup&lt;A&gt;,
+        bind_group: <span class="kw-2">&amp;</span>Arc&lt;BindGroup&lt;A&gt;&gt;,
         offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
-    ) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[EntryPayload] {
+    ) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[EntryPayload&lt;A&gt;] {
+        <span class="kw">let </span>bind_group_id = bind_group.as_info().id();
         <span class="macro">log::trace!</span>(<span class="string">&quot;\tBinding [{}] = group {:?}&quot;</span>, index, bind_group_id);
-        <span class="macro">debug_assert_eq!</span>(A::VARIANT, bind_group_id.<span class="number">0</span>.backend());
+        <span class="macro">debug_assert_eq!</span>(A::VARIANT, bind_group_id.backend());
 
         <span class="kw">let </span>payload = <span class="kw-2">&amp;mut </span><span class="self">self</span>.payloads[index];
-        payload.group_id = <span class="prelude-val">Some</span>(Stored {
-            value: bind_group_id,
-            ref_count: bind_group.life_guard.add_ref(),
-        });
+        payload.group = <span class="prelude-val">Some</span>(bind_group.clone());
         payload.dynamic_offsets.clear();
         payload.dynamic_offsets.extend_from_slice(offsets);
 
@@ -657,22 +610,19 @@
             }
         }
 
-        <span class="kw">let </span>bind_range = <span class="self">self</span>.manager.assign(index, bind_group.layout_id);
+        <span class="kw">let </span>bind_range = <span class="self">self</span>.manager.assign(index, bind_group.layout.clone());
         <span class="kw-2">&amp;</span><span class="self">self</span>.payloads[bind_range]
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>list_active(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Valid&lt;BindGroupId&gt;&gt; + <span class="lifetime">&#39;_ </span>{
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>list_active(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = BindGroupId&gt; + <span class="lifetime">&#39;_ </span>{
         <span class="kw">let </span>payloads = <span class="kw-2">&amp;</span><span class="self">self</span>.payloads;
         <span class="self">self</span>.manager
             .list_active()
-            .map(<span class="kw">move </span>|index| payloads[index].group_id.as_ref().unwrap().value)
+            .map(<span class="kw">move </span>|index| payloads[index].group.as_ref().unwrap().as_info().id())
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>invalid_mask&lt;A: hal::Api&gt;(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        bind_group_layouts: <span class="kw-2">&amp;</span>BindGroupLayouts&lt;A&gt;,
-    ) -&gt; BindGroupMask {
-        <span class="self">self</span>.manager.invalid_mask(bind_group_layouts)
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>invalid_mask(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; BindGroupMask {
+        <span class="self">self</span>.manager.invalid_mask()
     }
 
     <span class="doccomment">/// Scan active buffer bindings corresponding to layouts without `min_binding_size` specified.

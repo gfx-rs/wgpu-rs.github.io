@@ -1,4 +1,0 @@
-(function() {var implementors = {
-"player":[["impl&lt;I: <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html\" title=\"trait core::clone::Clone\">Clone</a> + <a class=\"trait\" href=\"https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html\" title=\"trait core::fmt::Debug\">Debug</a> + TypedId&gt; IdentityHandler&lt;I&gt; for <a class=\"struct\" href=\"player/struct.IdentityPassThrough.html\" title=\"struct player::IdentityPassThrough\">IdentityPassThrough</a>&lt;I&gt;"]],
-"wgpu_core":[]
-};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

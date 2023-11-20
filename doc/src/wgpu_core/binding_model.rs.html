@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/binding_model.rs`."><title>binding_model.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/binding_model.rs`."><title>binding_model.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -919,26 +919,31 @@
 <a href="#919" id="919">919</a>
 <a href="#920" id="920">920</a>
 <a href="#921" id="921">921</a>
+<a href="#922" id="922">922</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
-    device::{DeviceError, MissingDownlevelFlags, MissingFeatures, SHADER_STAGE_COUNT},
+    device::{Device, DeviceError, MissingDownlevelFlags, MissingFeatures, SHADER_STAGE_COUNT},
     error::{ErrorFormatter, PrettyError},
     hal_api::HalApi,
-    id::{BindGroupLayoutId, BufferId, DeviceId, SamplerId, TextureId, TextureViewId, Valid},
+    id::{
+        BindGroupId, BindGroupLayoutId, BufferId, PipelineLayoutId, SamplerId, TextureId,
+        TextureViewId,
+    },
     init_tracker::{BufferInitTrackerAction, TextureInitTrackerAction},
-    resource::Resource,
+    resource::{Resource, ResourceInfo, ResourceType},
     track::{BindGroupStates, UsageConflict},
     validation::{MissingBufferUsageError, MissingTextureUsageError},
-    FastHashMap, Label, LifeGuard, MultiRefCount, Stored,
+    FastHashMap, Label,
 };
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 
+<span class="kw">use </span>parking_lot::RwLock;
 <span class="attr">#[cfg(feature = <span class="string">&quot;replay&quot;</span>)]
 </span><span class="kw">use </span>serde::Deserialize;
 <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span>serde::Serialize;
 
-<span class="kw">use </span>std::{borrow::Cow, ops::Range};
+<span class="kw">use </span>std::{borrow::Cow, ops::Range, sync::Arc};
 
 <span class="kw">use </span>thiserror::Error;
 
@@ -1367,96 +1372,53 @@
 ///  - produced bind groups
 ///  - produced pipeline layouts
 ///  - pipelines with implicit layouts
-</span><span class="kw">pub struct </span>BindGroupLayout&lt;A: hal::Api&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) device_id: Stored&lt;DeviceId&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) multi_ref_count: MultiRefCount,
-    <span class="comment">// When a layout created and there already exists a compatible layout the new layout
-    // keeps a reference to the older compatible one. In some places we substitute the
-    // bind group layout id with its compatible sibling.
-    // Since this substitution can come at a cost, it is skipped when wgpu-core generates
-    // its own resource IDs.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) inner: BglOrDuplicate&lt;A&gt;,
-}
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">enum </span>BglOrDuplicate&lt;A: hal::Api&gt; {
-    Inner(BindGroupLayoutInner&lt;A&gt;),
-    Duplicate(Valid&lt;BindGroupLayoutId&gt;),
-}
-
-<span class="kw">pub struct </span>BindGroupLayoutInner&lt;A: hal::Api&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: A::BindGroupLayout,
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>BindGroupLayout&lt;A: HalApi&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::BindGroupLayout&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) entries: BindEntryMap,
     <span class="attr">#[allow(unused)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) dynamic_count: usize,
     <span class="kw">pub</span>(<span class="kw">crate</span>) count_validator: BindingTypeMaxCountValidator,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;BindGroupLayoutId&gt;,
     <span class="attr">#[cfg(debug_assertions)]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) label: String,
 }
 
-<span class="kw">impl</span>&lt;A: hal::Api&gt; BindGroupLayout&lt;A&gt; {
-    <span class="attr">#[track_caller]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>assume_deduplicated(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>BindGroupLayoutInner&lt;A&gt; {
-        <span class="self">self</span>.as_inner().unwrap()
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_inner(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>BindGroupLayoutInner&lt;A&gt;&gt; {
-        <span class="kw">match </span><span class="self">self</span>.inner {
-            BglOrDuplicate::Inner(<span class="kw-2">ref </span>inner) =&gt; <span class="prelude-val">Some</span>(inner),
-            BglOrDuplicate::Duplicate(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-        }
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>into_inner(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;BindGroupLayoutInner&lt;A&gt;&gt; {
-        <span class="kw">match </span><span class="self">self</span>.inner {
-            BglOrDuplicate::Inner(inner) =&gt; <span class="prelude-val">Some</span>(inner),
-            BglOrDuplicate::Duplicate(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-        }
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>as_duplicate(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Valid&lt;BindGroupLayoutId&gt;&gt; {
-        <span class="kw">match </span><span class="self">self</span>.inner {
-            BglOrDuplicate::Duplicate(id) =&gt; <span class="prelude-val">Some</span>(id),
-            BglOrDuplicate::Inner(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
+<span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>BindGroupLayout&lt;A&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="macro">log::info!</span>(<span class="string">&quot;Destroying BindGroupLayout {:?}&quot;</span>, <span class="self">self</span>.info.label());
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
+            <span class="kw">unsafe </span>{
+                <span class="kw">use </span>hal::Device;
+                <span class="self">self</span>.device.raw().destroy_bind_group_layout(raw);
+            }
         }
     }
 }
 
-<span class="kw">impl</span>&lt;A: hal::Api&gt; Resource <span class="kw">for </span>BindGroupLayout&lt;A&gt; {
-    <span class="kw">const </span>TYPE: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;BindGroupLayout&quot;</span>;
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;BindGroupLayoutId&gt; <span class="kw">for </span>BindGroupLayout&lt;A&gt; {
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;BindGroupLayout&quot;</span>;
 
-    <span class="kw">fn </span>life_guard(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>LifeGuard {
-        <span class="macro">unreachable!</span>()
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;BindGroupLayoutId&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;BindGroupLayoutId&gt; {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
+    }
+
+    <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
         <span class="attr">#[cfg(debug_assertions)]
-        </span><span class="kw">return </span><span class="self">self</span>.as_inner().map_or(<span class="string">&quot;&quot;</span>, |inner| <span class="kw-2">&amp;</span>inner.label);
+        </span><span class="kw">return </span><span class="self">self</span>.label.clone();
         <span class="attr">#[cfg(not(debug_assertions))]
-        </span><span class="kw">return </span><span class="string">&quot;&quot;</span>;
+        </span><span class="kw">return </span>String::new();
     }
 }
-
-<span class="comment">// If a bindgroup needs to be substitued with its compatible equivalent, return the latter.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>try_get_bind_group_layout&lt;A: HalApi&gt;(
-    layouts: <span class="kw-2">&amp;</span>BindGroupLayouts&lt;A&gt;,
-    id: BindGroupLayoutId,
-) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>BindGroupLayout&lt;A&gt;&gt; {
-    <span class="kw">let </span>layout = layouts.get(id).ok()<span class="question-mark">?</span>;
-    <span class="kw">if let </span>BglOrDuplicate::Duplicate(original_id) = layout.inner {
-        <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>layouts[original_id]);
+<span class="kw">impl</span>&lt;A: HalApi&gt; BindGroupLayout&lt;A&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::BindGroupLayout {
+        <span class="self">self</span>.raw.as_ref().unwrap()
     }
-
-    <span class="prelude-val">Some</span>(layout)
-}
-
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>get_bind_group_layout&lt;A: HalApi&gt;(
-    layouts: <span class="kw-2">&amp;</span>BindGroupLayouts&lt;A&gt;,
-    id: Valid&lt;BindGroupLayoutId&gt;,
-) -&gt; (Valid&lt;BindGroupLayoutId&gt;, <span class="kw-2">&amp;</span>BindGroupLayout&lt;A&gt;) {
-    <span class="kw">let </span>layout = <span class="kw-2">&amp;</span>layouts[id];
-    layout
-        .as_duplicate()
-        .map_or((id, layout), |deduped| (deduped, <span class="kw-2">&amp;</span>layouts[deduped]))
 }
 
 <span class="attr">#[derive(Clone, Debug, Error)]
@@ -1556,15 +1518,30 @@
 }
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub struct </span>PipelineLayout&lt;A: hal::Api&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: A::PipelineLayout,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) device_id: Stored&lt;DeviceId&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) life_guard: LifeGuard,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) bind_group_layout_ids: ArrayVec&lt;Valid&lt;BindGroupLayoutId&gt;, { hal::MAX_BIND_GROUPS }&gt;,
+</span><span class="kw">pub struct </span>PipelineLayout&lt;A: HalApi&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::PipelineLayout&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;PipelineLayoutId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) bind_group_layouts: ArrayVec&lt;Arc&lt;BindGroupLayout&lt;A&gt;&gt;, { hal::MAX_BIND_GROUPS }&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) push_constant_ranges: ArrayVec&lt;wgt::PushConstantRange, { SHADER_STAGE_COUNT }&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: hal::Api&gt; PipelineLayout&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>PipelineLayout&lt;A&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="macro">log::info!</span>(<span class="string">&quot;Destroying PipelineLayout {:?}&quot;</span>, <span class="self">self</span>.info.label());
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
+            <span class="kw">unsafe </span>{
+                <span class="kw">use </span>hal::Device;
+                <span class="self">self</span>.device.raw().destroy_pipeline_layout(raw);
+            }
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; PipelineLayout&lt;A&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::PipelineLayout {
+        <span class="self">self</span>.raw.as_ref().unwrap()
+    }
     <span class="doccomment">/// Validate push constants match up with expected ranges.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_push_constant_ranges(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -1644,11 +1621,15 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: hal::Api&gt; Resource <span class="kw">for </span>PipelineLayout&lt;A&gt; {
-    <span class="kw">const </span>TYPE: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;PipelineLayout&quot;</span>;
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;PipelineLayoutId&gt; <span class="kw">for </span>PipelineLayout&lt;A&gt; {
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;PipelineLayout&quot;</span>;
 
-    <span class="kw">fn </span>life_guard(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>LifeGuard {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.life_guard
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;PipelineLayoutId&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.info
+    }
+
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;PipelineLayoutId&gt; {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 }
 
@@ -1751,37 +1732,54 @@
     }
 }
 
-<span class="kw">pub struct </span>BindGroup&lt;A: HalApi&gt; {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: A::BindGroup,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) device_id: Stored&lt;DeviceId&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) layout_id: Valid&lt;BindGroupLayoutId&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) life_guard: LifeGuard,
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>BindGroup&lt;A: HalApi&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: <span class="prelude-ty">Option</span>&lt;A::BindGroup&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) device: Arc&lt;Device&lt;A&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) layout: Arc&lt;BindGroupLayout&lt;A&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;BindGroupId&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) used: BindGroupStates&lt;A&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) used_buffer_ranges: Vec&lt;BufferInitTrackerAction&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) used_texture_ranges: Vec&lt;TextureInitTrackerAction&gt;,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) dynamic_binding_info: Vec&lt;BindGroupDynamicBindingData&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) used_buffer_ranges: RwLock&lt;Vec&lt;BufferInitTrackerAction&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) used_texture_ranges: RwLock&lt;Vec&lt;TextureInitTrackerAction&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) dynamic_binding_info: RwLock&lt;Vec&lt;BindGroupDynamicBindingData&gt;&gt;,
     <span class="doccomment">/// Actual binding sizes for buffers that don&#39;t have `min_binding_size`
     /// specified in BGL. Listed in the order of iteration of `BGL.entries`.
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) late_buffer_binding_sizes: Vec&lt;wgt::BufferSize&gt;,
 }
 
+<span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>BindGroup&lt;A&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="macro">log::info!</span>(<span class="string">&quot;Destroying BindGroup {:?}&quot;</span>, <span class="self">self</span>.info.label());
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(raw) = <span class="self">self</span>.raw.take() {
+            <span class="kw">unsafe </span>{
+                <span class="kw">use </span>hal::Device;
+                <span class="self">self</span>.device.raw().destroy_bind_group(raw);
+            }
+        }
+    }
+}
+
 <span class="kw">impl</span>&lt;A: HalApi&gt; BindGroup&lt;A&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>raw(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>A::BindGroup {
+        <span class="self">self</span>.raw.as_ref().unwrap()
+    }
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>validate_dynamic_bindings(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         bind_group_index: u32,
         offsets: <span class="kw-2">&amp;</span>[wgt::DynamicOffset],
         limits: <span class="kw-2">&amp;</span>wgt::Limits,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), BindError&gt; {
-        <span class="kw">if </span><span class="self">self</span>.dynamic_binding_info.len() != offsets.len() {
+        <span class="kw">if </span><span class="self">self</span>.dynamic_binding_info.read().len() != offsets.len() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(BindError::MismatchedDynamicOffsetCount {
                 group: bind_group_index,
-                expected: <span class="self">self</span>.dynamic_binding_info.len(),
+                expected: <span class="self">self</span>.dynamic_binding_info.read().len(),
                 actual: offsets.len(),
             });
         }
 
         <span class="kw">for </span>(idx, (info, <span class="kw-2">&amp;</span>offset)) <span class="kw">in </span><span class="self">self
             </span>.dynamic_binding_info
+            .read()
             .iter()
             .zip(offsets.iter())
             .enumerate()
@@ -1815,11 +1813,15 @@
     }
 }
 
-<span class="kw">impl</span>&lt;A: HalApi&gt; Resource <span class="kw">for </span>BindGroup&lt;A&gt; {
-    <span class="kw">const </span>TYPE: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;BindGroup&quot;</span>;
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;BindGroupId&gt; <span class="kw">for </span>BindGroup&lt;A&gt; {
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;BindGroup&quot;</span>;
 
-    <span class="kw">fn </span>life_guard(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>LifeGuard {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.life_guard
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;BindGroupId&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.info
+    }
+
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;BindGroupId&gt; {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 }
 

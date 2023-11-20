@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-hal/src/vulkan/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_hal" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -690,6 +690,20 @@
 <a href="#690" id="690">690</a>
 <a href="#691" id="691">691</a>
 <a href="#692" id="692">692</a>
+<a href="#693" id="693">693</a>
+<a href="#694" id="694">694</a>
+<a href="#695" id="695">695</a>
+<a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 # Vulkan API internals.
 
@@ -723,14 +737,23 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 <span class="kw">mod </span>device;
 <span class="kw">mod </span>instance;
 
-<span class="kw">use </span>std::{borrow::Borrow, ffi::CStr, fmt, num::NonZeroU32, sync::Arc};
+<span class="kw">use </span>std::{
+    borrow::Borrow,
+    ffi::CStr,
+    fmt,
+    num::NonZeroU32,
+    sync::{
+        atomic::{AtomicIsize, Ordering},
+        Arc,
+    },
+};
 
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>ash::{
     extensions::{ext, khr},
     vk,
 };
-<span class="kw">use </span>parking_lot::Mutex;
+<span class="kw">use </span>parking_lot::{Mutex, RwLock};
 
 <span class="kw">const </span>MILLIS_TO_NANOS: u64 = <span class="number">1_000_000</span>;
 <span class="kw">const </span>MAX_TOTAL_ATTACHMENTS: usize = <span class="kw">crate</span>::MAX_COLOR_ATTACHMENTS * <span class="number">2 </span>+ <span class="number">1</span>;
@@ -838,7 +861,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     raw: vk::SurfaceKHR,
     functor: khr::Surface,
     instance: Arc&lt;InstanceShared&gt;,
-    swapchain: <span class="prelude-ty">Option</span>&lt;Swapchain&gt;,
+    swapchain: RwLock&lt;<span class="prelude-ty">Option</span>&lt;Swapchain&gt;&gt;,
 }
 
 <span class="attr">#[derive(Debug)]
@@ -1032,7 +1055,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     /// It would be correct to use a single semaphore there, but
     /// [Intel hangs in `anv_queue_finish`](https://gitlab.freedesktop.org/mesa/mesa/-/issues/5508).
     </span>relay_semaphores: [vk::Semaphore; <span class="number">2</span>],
-    relay_index: <span class="prelude-ty">Option</span>&lt;usize&gt;,
+    relay_index: AtomicIsize,
 }
 
 <span class="attr">#[derive(Debug)]
@@ -1252,7 +1275,7 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
 
 <span class="kw">impl </span><span class="kw">crate</span>::Queue&lt;Api&gt; <span class="kw">for </span>Queue {
     <span class="kw">unsafe fn </span>submit(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
         command_buffers: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>CommandBuffer],
         signal_fence: <span class="prelude-ty">Option</span>&lt;(<span class="kw-2">&amp;mut </span>Fence, <span class="kw">crate</span>::FenceValue)&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::DeviceError&gt; {
@@ -1297,16 +1320,17 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
         }
 
         <span class="kw">let </span>wait_stage_mask = [vk::PipelineStageFlags::TOP_OF_PIPE];
-        <span class="kw">let </span>sem_index = <span class="kw">match </span><span class="self">self</span>.relay_index {
-            <span class="prelude-val">Some</span>(old_index) =&gt; {
-                vk_info = vk_info
-                    .wait_semaphores(<span class="kw-2">&amp;</span><span class="self">self</span>.relay_semaphores[old_index..old_index + <span class="number">1</span>])
-                    .wait_dst_stage_mask(<span class="kw-2">&amp;</span>wait_stage_mask);
-                (old_index + <span class="number">1</span>) % <span class="self">self</span>.relay_semaphores.len()
-            }
-            <span class="prelude-val">None </span>=&gt; <span class="number">0</span>,
-        };
-        <span class="self">self</span>.relay_index = <span class="prelude-val">Some</span>(sem_index);
+        <span class="kw">let </span>old_index = <span class="self">self</span>.relay_index.load(Ordering::Relaxed);
+        <span class="kw">let </span>sem_index = <span class="kw">if </span>old_index &gt;= <span class="number">0 </span>{
+            vk_info = vk_info
+                .wait_semaphores(<span class="kw-2">&amp;</span><span class="self">self</span>.relay_semaphores[old_index <span class="kw">as </span>usize..old_index <span class="kw">as </span>usize + <span class="number">1</span>])
+                .wait_dst_stage_mask(<span class="kw-2">&amp;</span>wait_stage_mask);
+            (old_index <span class="kw">as </span>usize + <span class="number">1</span>) % <span class="self">self</span>.relay_semaphores.len()
+        } <span class="kw">else </span>{
+            <span class="number">0
+        </span>};
+        <span class="self">self</span>.relay_index
+            .store(sem_index <span class="kw">as </span>isize, Ordering::Relaxed);
         signal_semaphores[<span class="number">0</span>] = <span class="self">self</span>.relay_semaphores[sem_index];
 
         <span class="kw">let </span>signal_count = <span class="kw">if </span>signal_semaphores[<span class="number">1</span>] == vk::Semaphore::null() {
@@ -1326,11 +1350,12 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
     }
 
     <span class="kw">unsafe fn </span>present(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        surface: <span class="kw-2">&amp;mut </span>Surface,
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        surface: <span class="kw-2">&amp;</span>Surface,
         texture: SurfaceTexture,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw">crate</span>::SurfaceError&gt; {
-        <span class="kw">let </span>ssc = surface.swapchain.as_ref().unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>swapchain = surface.swapchain.write();
+        <span class="kw">let </span>ssc = swapchain.as_mut().unwrap();
 
         <span class="kw">let </span>swapchains = [ssc.raw];
         <span class="kw">let </span>image_indices = [texture.index];
@@ -1338,8 +1363,11 @@ Otherwise, we manage a pool of `VkFence` objects behind each `hal::Fence`.
             .swapchains(<span class="kw-2">&amp;</span>swapchains)
             .image_indices(<span class="kw-2">&amp;</span>image_indices);
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(old_index) = <span class="self">self</span>.relay_index.take() {
-            vk_info = vk_info.wait_semaphores(<span class="kw-2">&amp;</span><span class="self">self</span>.relay_semaphores[old_index..old_index + <span class="number">1</span>]);
+        <span class="kw">let </span>old_index = <span class="self">self</span>.relay_index.swap(-<span class="number">1</span>, Ordering::Relaxed);
+        <span class="kw">if </span>old_index &gt;= <span class="number">0 </span>{
+            vk_info = vk_info.wait_semaphores(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.relay_semaphores[old_index <span class="kw">as </span>usize..old_index <span class="kw">as </span>usize + <span class="number">1</span>],
+            );
         }
 
         <span class="kw">let </span>suboptimal = {

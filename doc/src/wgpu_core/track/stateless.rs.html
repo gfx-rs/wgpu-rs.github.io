@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/track/stateless.rs`."><title>stateless.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/track/stateless.rs`."><title>stateless.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -201,35 +201,65 @@
 <a href="#201" id="201">201</a>
 <a href="#202" id="202">202</a>
 <a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! Stateless Trackers
  *
  * Stateless trackers don&#39;t have any state, so make no
  * distinction between a usage scope and a full tracker.
 !*/
 
-</span><span class="kw">use </span>std::marker::PhantomData;
+</span><span class="kw">use </span>std::{marker::PhantomData, sync::Arc};
+
+<span class="kw">use </span>parking_lot::Mutex;
 
 <span class="kw">use crate</span>::{
-    hal_api::HalApi,
-    id::{TypedId, Valid},
-    resource, storage,
-    track::ResourceMetadata,
-    RefCount,
+    hal_api::HalApi, id::TypedId, resource::Resource, storage::Storage, track::ResourceMetadata,
 };
 
-<span class="doccomment">/// Stores all the resources that a bind group stores.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>StatelessBindGroupSate&lt;T, Id: TypedId&gt; {
-    resources: Vec&lt;(Valid&lt;Id&gt;, RefCount)&gt;,
+<span class="kw">use </span><span class="kw">super</span>::ResourceTracker;
 
-    _phantom: PhantomData&lt;T&gt;,
+<span class="doccomment">/// Stores all the resources that a bind group stores.
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>StatelessBindGroupSate&lt;Id: TypedId, T: Resource&lt;Id&gt;&gt; {
+    resources: Mutex&lt;Vec&lt;(Id, Arc&lt;T&gt;)&gt;&gt;,
 }
 
-<span class="kw">impl</span>&lt;T: resource::Resource, Id: TypedId&gt; StatelessBindGroupSate&lt;T, Id&gt; {
+<span class="kw">impl</span>&lt;Id: TypedId, T: Resource&lt;Id&gt;&gt; StatelessBindGroupSate&lt;Id, T&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            resources: Vec::new(),
-
-            _phantom: PhantomData,
+            resources: Mutex::new(Vec::new()),
         }
     }
 
@@ -237,43 +267,97 @@
     ///
     /// When this list of states is merged into a tracker, the memory
     /// accesses will be in a constant assending order.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>optimize(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.resources
-            .sort_unstable_by_key(|<span class="kw-2">&amp;</span>(id, <span class="kw">_</span>)| id.<span class="number">0</span>.unzip().<span class="number">0</span>);
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>optimize(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let </span><span class="kw-2">mut </span>resources = <span class="self">self</span>.resources.lock();
+        resources.sort_unstable_by_key(|<span class="kw-2">&amp;</span>(id, <span class="kw">_</span>)| id.unzip().<span class="number">0</span>);
     }
 
     <span class="doccomment">/// Returns a list of all resources tracked. May contain duplicates.
-    </span><span class="kw">pub fn </span>used(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Valid&lt;Id&gt;&gt; + <span class="lifetime">&#39;_ </span>{
-        <span class="self">self</span>.resources.iter().map(|<span class="kw-2">&amp;</span>(id, <span class="kw">_</span>)| id)
+    </span><span class="kw">pub fn </span>used_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;T&gt;&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="kw">let </span>resources = <span class="self">self</span>.resources.lock();
+        resources
+            .iter()
+            .map(|<span class="kw-2">&amp;</span>(<span class="kw">_</span>, <span class="kw-2">ref </span>resource)| resource.clone())
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+            .into_iter()
+    }
+
+    <span class="doccomment">/// Returns a list of all resources tracked. May contain duplicates.
+    </span><span class="kw">pub fn </span>drain_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;T&gt;&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>resources = <span class="self">self</span>.resources.lock();
+        resources
+            .drain(..)
+            .map(|(<span class="kw">_</span>, r)| r)
+            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
+            .into_iter()
     }
 
     <span class="doccomment">/// Adds the given resource.
-    </span><span class="kw">pub fn </span>add_single&lt;<span class="lifetime">&#39;a</span>&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        storage: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>storage::Storage&lt;T, Id&gt;,
-        id: Id,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+    </span><span class="kw">pub fn </span>add_single&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, storage: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Storage&lt;T, Id&gt;, id: Id) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
         <span class="kw">let </span>resource = storage.get(id).ok()<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.resources
-            .push((Valid(id), resource.life_guard().add_ref()));
+        <span class="kw">let </span><span class="kw-2">mut </span>resources = <span class="self">self</span>.resources.lock();
+        resources.push((id, resource.clone()));
 
         <span class="prelude-val">Some</span>(resource)
     }
 }
 
 <span class="doccomment">/// Stores all resource state within a command buffer or device.
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>StatelessTracker&lt;A: HalApi, T, Id: TypedId&gt; {
-    metadata: ResourceMetadata&lt;A&gt;,
-
-    _phantom: PhantomData&lt;(T, Id)&gt;,
+</span><span class="attr">#[derive(Debug)]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>StatelessTracker&lt;A: HalApi, Id: TypedId, T: Resource&lt;Id&gt;&gt; {
+    metadata: ResourceMetadata&lt;A, Id, T&gt;,
+    _phantom: PhantomData&lt;Id&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: HalApi, T: resource::Resource, Id: TypedId&gt; StatelessTracker&lt;A, T, Id&gt; {
+<span class="kw">impl</span>&lt;A: HalApi, Id: TypedId, T: Resource&lt;Id&gt;&gt; ResourceTracker&lt;Id, T&gt;
+    <span class="kw">for </span>StatelessTracker&lt;A, Id, T&gt;
+{
+    <span class="doccomment">/// Removes the given resource from the tracker iff we have the last reference to the
+    /// resource and the epoch matches.
+    ///
+    /// Returns true if the resource was removed.
+    ///
+    /// If the ID is higher than the length of internal vectors,
+    /// false will be returned.
+    </span><span class="kw">fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id, external_count: usize) -&gt; bool {
+        <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
+
+        <span class="kw">if </span>index &gt; <span class="self">self</span>.metadata.size() {
+            <span class="kw">return </span><span class="bool-val">false</span>;
+        }
+
+        <span class="self">self</span>.tracker_assert_in_bounds(index);
+
+        <span class="kw">unsafe </span>{
+            <span class="kw">if </span><span class="self">self</span>.metadata.contains_unchecked(index) {
+                <span class="kw">let </span>existing_ref_count = <span class="self">self</span>.metadata.get_ref_count_unchecked(index);
+                <span class="comment">//2 ref count if only in Device Tracker and suspected resource itself and already released from user
+                //so not appearing in Registry
+                </span><span class="kw">let </span>min_ref_count = <span class="number">1 </span>+ external_count;
+                <span class="kw">if </span>existing_ref_count &lt;= min_ref_count {
+                    <span class="self">self</span>.metadata.remove(index);
+                    <span class="macro">log::info!</span>(<span class="string">&quot;{} {:?} is not tracked anymore&quot;</span>, T::TYPE, id,);
+                    <span class="kw">return </span><span class="bool-val">true</span>;
+                } <span class="kw">else </span>{
+                    <span class="macro">log::info!</span>(
+                        <span class="string">&quot;{} {:?} is still referenced from {}&quot;</span>,
+                        T::TYPE,
+                        id,
+                        existing_ref_count
+                    );
+                }
+            }
+        }
+
+        <span class="bool-val">false
+    </span>}
+}
+
+<span class="kw">impl</span>&lt;A: HalApi, Id: TypedId, T: Resource&lt;Id&gt;&gt; StatelessTracker&lt;A, Id, T&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             metadata: ResourceMetadata::new(),
-
             _phantom: PhantomData,
         }
     }
@@ -298,8 +382,14 @@
     }
 
     <span class="doccomment">/// Returns a list of all resources tracked.
-    </span><span class="kw">pub fn </span>used(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Valid&lt;Id&gt;&gt; + <span class="lifetime">&#39;_ </span>{
-        <span class="self">self</span>.metadata.owned_ids()
+    </span><span class="kw">pub fn </span>used_resources(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;T&gt;&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="self">self</span>.metadata.owned_resources()
+    }
+
+    <span class="doccomment">/// Returns a list of all resources tracked.
+    </span><span class="kw">pub fn </span>drain_resources(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Iterator&lt;Item = Arc&lt;T&gt;&gt; + <span class="lifetime">&#39;_ </span>{
+        <span class="kw">let </span>resources = <span class="self">self</span>.metadata.drain_resources();
+        resources.into_iter()
     }
 
     <span class="doccomment">/// Inserts a single resource into the resource tracker.
@@ -308,8 +398,8 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Valid&lt;Id&gt;, ref_count: RefCount) {
-        <span class="kw">let </span>(index32, epoch, <span class="kw">_</span>) = id.<span class="number">0</span>.unzip();
+    </span><span class="kw">pub fn </span>insert_single(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Id, resource: Arc&lt;T&gt;) {
+        <span class="kw">let </span>(index32, _epoch, <span class="kw">_</span>) = id.unzip();
         <span class="kw">let </span>index = index32 <span class="kw">as </span>usize;
 
         <span class="self">self</span>.allow_index(index);
@@ -317,7 +407,7 @@
         <span class="self">self</span>.tracker_assert_in_bounds(index);
 
         <span class="kw">unsafe </span>{
-            <span class="self">self</span>.metadata.insert(index, epoch, ref_count);
+            <span class="self">self</span>.metadata.insert(index, resource);
         }
     }
 
@@ -325,14 +415,10 @@
     ///
     /// If the ID is higher than the length of internal vectors,
     /// the vectors will be extended. A call to set_size is not needed.
-    </span><span class="kw">pub fn </span>add_single&lt;<span class="lifetime">&#39;a</span>&gt;(
-        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        storage: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>storage::Storage&lt;T, Id&gt;,
-        id: Id,
-    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
-        <span class="kw">let </span>item = storage.get(id).ok()<span class="question-mark">?</span>;
+    </span><span class="kw">pub fn </span>add_single&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, storage: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Storage&lt;T, Id&gt;, id: Id) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Arc&lt;T&gt;&gt; {
+        <span class="kw">let </span>resource = storage.get(id).ok()<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>(index32, epoch, <span class="kw">_</span>) = id.unzip();
+        <span class="kw">let </span>(index32, _epoch, <span class="kw">_</span>) = id.unzip();
         <span class="kw">let </span>index = index32 <span class="kw">as </span>usize;
 
         <span class="self">self</span>.allow_index(index);
@@ -340,11 +426,10 @@
         <span class="self">self</span>.tracker_assert_in_bounds(index);
 
         <span class="kw">unsafe </span>{
-            <span class="self">self</span>.metadata
-                .insert(index, epoch, item.life_guard().add_ref());
+            <span class="self">self</span>.metadata.insert(index, resource.clone());
         }
 
-        <span class="prelude-val">Some</span>(item)
+        <span class="prelude-val">Some</span>(resource)
     }
 
     <span class="doccomment">/// Adds the given resources from the given tracker.
@@ -364,44 +449,25 @@
                 <span class="kw">let </span>previously_owned = <span class="self">self</span>.metadata.contains_unchecked(index);
 
                 <span class="kw">if </span>!previously_owned {
-                    <span class="kw">let </span>epoch = other.metadata.get_epoch_unchecked(index);
-                    <span class="kw">let </span>other_ref_count = other.metadata.get_ref_count_unchecked(index);
-                    <span class="self">self</span>.metadata.insert(index, epoch, other_ref_count.clone());
+                    <span class="kw">let </span>other_resource = other.metadata.get_resource_unchecked(index);
+                    <span class="self">self</span>.metadata.insert(index, other_resource.clone());
                 }
             }
         }
     }
 
-    <span class="doccomment">/// Removes the given resource from the tracker iff we have the last reference to the
-    /// resource and the epoch matches.
-    ///
-    /// Returns true if the resource was removed.
-    ///
-    /// If the ID is higher than the length of internal vectors,
-    /// false will be returned.
-    </span><span class="kw">pub fn </span>remove_abandoned(<span class="kw-2">&amp;mut </span><span class="self">self</span>, id: Valid&lt;Id&gt;) -&gt; bool {
-        <span class="kw">let </span>(index32, epoch, <span class="kw">_</span>) = id.<span class="number">0</span>.unzip();
-        <span class="kw">let </span>index = index32 <span class="kw">as </span>usize;
-
+    <span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, id: Id) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Arc&lt;T&gt;&gt; {
+        <span class="kw">let </span>index = id.unzip().<span class="number">0 </span><span class="kw">as </span>usize;
         <span class="kw">if </span>index &gt; <span class="self">self</span>.metadata.size() {
-            <span class="kw">return </span><span class="bool-val">false</span>;
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
-
         <span class="self">self</span>.tracker_assert_in_bounds(index);
-
         <span class="kw">unsafe </span>{
             <span class="kw">if </span><span class="self">self</span>.metadata.contains_unchecked(index) {
-                <span class="kw">let </span>existing_epoch = <span class="self">self</span>.metadata.get_epoch_unchecked(index);
-                <span class="kw">let </span>existing_ref_count = <span class="self">self</span>.metadata.get_ref_count_unchecked(index);
-
-                <span class="kw">if </span>existing_epoch == epoch &amp;&amp; existing_ref_count.load() == <span class="number">1 </span>{
-                    <span class="self">self</span>.metadata.remove(index);
-                    <span class="kw">return </span><span class="bool-val">true</span>;
-                }
+                <span class="kw">return </span><span class="prelude-val">Some</span>(<span class="self">self</span>.metadata.get_resource_unchecked(index));
             }
         }
-
-        <span class="bool-val">false
+        <span class="prelude-val">None
     </span>}
 }
 </code></pre></div></section></main></body></html>

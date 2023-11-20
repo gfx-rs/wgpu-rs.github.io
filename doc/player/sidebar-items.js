@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["IdentityPassThrough","IdentityPassThroughFactory"],"trait":["GlobalPlay"]};
+window.SIDEBAR_ITEMS = {"struct":["IdentityPassThroughFactory"],"trait":["GlobalPlay"]};

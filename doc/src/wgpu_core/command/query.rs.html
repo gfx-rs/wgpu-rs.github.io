@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/query.rs`."><title>query.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/query.rs`."><title>query.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -485,6 +485,11 @@
 <a href="#485" id="485">485</a>
 <a href="#486" id="486">486</a>
 <a href="#487" id="487">487</a>
+<a href="#488" id="488">488</a>
+<a href="#489" id="489">489</a>
+<a href="#490" id="490">490</a>
+<a href="#491" id="491">491</a>
+<a href="#492" id="492">492</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>hal::CommandEncoder <span class="kw">as _</span>;
 
 <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
@@ -493,7 +498,6 @@
     command::{CommandBuffer, CommandEncoderError},
     global::Global,
     hal_api::HalApi,
-    hub::Token,
     id::{<span class="self">self</span>, Id, TypedId},
     identity::GlobalIdentityHandlerFactory,
     init_tracker::MemoryInitKind,
@@ -506,11 +510,11 @@
 <span class="kw">use </span>wgt::BufferAddress;
 
 <span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>QueryResetMap&lt;A: hal::Api&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>QueryResetMap&lt;A: HalApi&gt; {
     map: FastHashMap&lt;Index, (Vec&lt;bool&gt;, Epoch)&gt;,
     _phantom: PhantomData&lt;A&gt;,
 }
-<span class="kw">impl</span>&lt;A: hal::Api&gt; QueryResetMap&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; QueryResetMap&lt;A&gt; {
     <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             map: FastHashMap::default(),
@@ -556,7 +560,7 @@
                     <span class="comment">// We&#39;ve hit the end of a run, dispatch a reset
                     </span>(<span class="prelude-val">Some</span>(start), <span class="bool-val">false</span>) =&gt; {
                         run_start = <span class="prelude-val">None</span>;
-                        <span class="kw">unsafe </span>{ raw_encoder.reset_queries(<span class="kw-2">&amp;</span>query_set.raw, start..idx <span class="kw">as </span>u32) };
+                        <span class="kw">unsafe </span>{ raw_encoder.reset_queries(query_set.raw(), start..idx <span class="kw">as </span>u32) };
                     }
                     <span class="comment">// We&#39;re starting a run
                     </span>(<span class="prelude-val">None</span>, <span class="bool-val">true</span>) =&gt; {
@@ -698,7 +702,7 @@
             });
         }
 
-        <span class="prelude-val">Ok</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.raw)
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.raw())
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>validate_and_write_timestamp(
@@ -719,7 +723,7 @@
         <span class="kw">unsafe </span>{
             <span class="comment">// If we don&#39;t have a reset state tracker which can defer resets, we must reset now.
             </span><span class="kw">if </span>needs_reset {
-                raw_encoder.reset_queries(<span class="kw-2">&amp;</span><span class="self">self</span>.raw, query_index..(query_index + <span class="number">1</span>));
+                raw_encoder.reset_queries(<span class="self">self</span>.raw(), query_index..(query_index + <span class="number">1</span>));
             }
             raw_encoder.write_timestamp(query_set, query_index);
         }
@@ -753,7 +757,8 @@
         <span class="kw">unsafe </span>{
             <span class="comment">// If we don&#39;t have a reset state tracker which can defer resets, we must reset now.
             </span><span class="kw">if </span>needs_reset {
-                raw_encoder.reset_queries(<span class="kw-2">&amp;</span><span class="self">self</span>.raw, query_index..(query_index + <span class="number">1</span>));
+                raw_encoder
+                    .reset_queries(<span class="self">self</span>.raw.as_ref().unwrap(), query_index..(query_index + <span class="number">1</span>));
             }
             raw_encoder.begin_query(query_set, query_index);
         }
@@ -787,7 +792,7 @@
         <span class="kw">unsafe </span>{
             <span class="comment">// If we don&#39;t have a reset state tracker which can defer resets, we must reset now.
             </span><span class="kw">if </span>needs_reset {
-                raw_encoder.reset_queries(<span class="kw-2">&amp;</span><span class="self">self</span>.raw, query_index..(query_index + <span class="number">1</span>));
+                raw_encoder.reset_queries(<span class="self">self</span>.raw(), query_index..(query_index + <span class="number">1</span>));
             }
             raw_encoder.begin_query(query_set, query_index);
         }
@@ -805,7 +810,7 @@
         <span class="comment">// We can unwrap here as the validity was validated when the active query was set
         </span><span class="kw">let </span>query_set = storage.get(query_set_id).unwrap();
 
-        <span class="kw">unsafe </span>{ raw_encoder.end_query(<span class="kw-2">&amp;</span>query_set.raw, query_index) };
+        <span class="kw">unsafe </span>{ raw_encoder.end_query(query_set.raw.as_ref().unwrap(), query_index) };
 
         <span class="prelude-val">Ok</span>(())
     } <span class="kw">else </span>{
@@ -822,7 +827,7 @@
         <span class="comment">// We can unwrap here as the validity was validated when the active query was set
         </span><span class="kw">let </span>query_set = storage.get(query_set_id).unwrap();
 
-        <span class="kw">unsafe </span>{ raw_encoder.end_query(<span class="kw-2">&amp;</span>query_set.raw, query_index) };
+        <span class="kw">unsafe </span>{ raw_encoder.end_query(query_set.raw(), query_index) };
 
         <span class="prelude-val">Ok</span>(())
     } <span class="kw">else </span>{
@@ -838,24 +843,26 @@
         query_index: u32,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueryError&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
 
-        <span class="kw">let </span>(<span class="kw-2">mut </span>cmd_buf_guard, <span class="kw-2">mut </span>token) = hub.command_buffers.write(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>(query_set_guard, <span class="kw">_</span>) = hub.query_sets.read(<span class="kw-2">&amp;mut </span>token);
-
-        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder_mut(<span class="kw-2">&amp;mut </span>cmd_buf_guard, command_encoder_id)<span class="question-mark">?</span>;
-        <span class="kw">let </span>raw_encoder = cmd_buf.encoder.open();
+        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, command_encoder_id)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
         <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf.commands {
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
             list.push(TraceCommand::WriteTimestamp {
                 query_set_id,
                 query_index,
             });
         }
 
-        <span class="kw">let </span>query_set = cmd_buf
-            .trackers
+        <span class="kw">let </span>encoder = <span class="kw-2">&amp;mut </span>cmd_buf_data.encoder;
+        <span class="kw">let </span>tracker = <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers;
+
+        <span class="kw">let </span>raw_encoder = encoder.open();
+
+        <span class="kw">let </span>query_set_guard = hub.query_sets.read();
+        <span class="kw">let </span>query_set = tracker
             .query_sets
             .add_single(<span class="kw-2">&amp;*</span>query_set_guard, query_set_id)
             .ok_or(QueryError::InvalidQuerySet(query_set_id))<span class="question-mark">?</span>;
@@ -875,17 +882,13 @@
         destination_offset: BufferAddress,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueryError&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
 
-        <span class="kw">let </span>(<span class="kw-2">mut </span>cmd_buf_guard, <span class="kw-2">mut </span>token) = hub.command_buffers.write(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>(query_set_guard, <span class="kw-2">mut </span>token) = hub.query_sets.read(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>(buffer_guard, <span class="kw">_</span>) = hub.buffers.read(<span class="kw-2">&amp;mut </span>token);
-
-        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder_mut(<span class="kw-2">&amp;mut </span>cmd_buf_guard, command_encoder_id)<span class="question-mark">?</span>;
-        <span class="kw">let </span>raw_encoder = cmd_buf.encoder.open();
+        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, command_encoder_id)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
 
         <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf.commands {
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
             list.push(TraceCommand::ResolveQuerySet {
                 query_set_id,
                 start_query,
@@ -895,22 +898,31 @@
             });
         }
 
+        <span class="kw">let </span>encoder = <span class="kw-2">&amp;mut </span>cmd_buf_data.encoder;
+        <span class="kw">let </span>tracker = <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers;
+        <span class="kw">let </span>buffer_memory_init_actions = <span class="kw-2">&amp;mut </span>cmd_buf_data.buffer_memory_init_actions;
+        <span class="kw">let </span>raw_encoder = encoder.open();
+
         <span class="kw">if </span>destination_offset % wgt::QUERY_RESOLVE_BUFFER_ALIGNMENT != <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">Err</span>(QueryError::Resolve(ResolveError::BufferOffsetAlignment));
         }
-
-        <span class="kw">let </span>query_set = cmd_buf
-            .trackers
+        <span class="kw">let </span>query_set_guard = hub.query_sets.read();
+        <span class="kw">let </span>query_set = tracker
             .query_sets
             .add_single(<span class="kw-2">&amp;*</span>query_set_guard, query_set_id)
             .ok_or(QueryError::InvalidQuerySet(query_set_id))<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>(dst_buffer, dst_pending) = cmd_buf
-            .trackers
-            .buffers
-            .set_single(<span class="kw-2">&amp;*</span>buffer_guard, destination, hal::BufferUses::COPY_DST)
-            .ok_or(QueryError::InvalidBuffer(destination))<span class="question-mark">?</span>;
-        <span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(dst_buffer));
+        <span class="kw">let </span>(dst_buffer, dst_pending) = {
+            <span class="kw">let </span>buffer_guard = hub.buffers.read();
+            <span class="kw">let </span>dst_buffer = buffer_guard
+                .get(destination)
+                .map_err(|<span class="kw">_</span>| QueryError::InvalidBuffer(destination))<span class="question-mark">?</span>;
+            tracker
+                .buffers
+                .set_single(dst_buffer, hal::BufferUses::COPY_DST)
+                .ok_or(QueryError::InvalidBuffer(destination))<span class="question-mark">?
+        </span>};
+        <span class="kw">let </span>dst_barrier = dst_pending.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>dst_buffer));
 
         <span class="kw">if </span>!dst_buffer.usage.contains(wgt::BufferUsages::QUERY_RESOLVE) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ResolveError::MissingBufferUsage.into());
@@ -950,20 +962,18 @@
         }
 
         <span class="comment">// TODO(https://github.com/gfx-rs/wgpu/issues/3993): Need to track initialization state.
-        </span>cmd_buf
-            .buffer_memory_init_actions
-            .extend(dst_buffer.initialization_status.create_action(
-                destination,
-                buffer_start_offset..buffer_end_offset,
-                MemoryInitKind::ImplicitlyInitialized,
-            ));
+        </span>buffer_memory_init_actions.extend(dst_buffer.initialization_status.read().create_action(
+            <span class="kw-2">&amp;</span>dst_buffer,
+            buffer_start_offset..buffer_end_offset,
+            MemoryInitKind::ImplicitlyInitialized,
+        ));
 
         <span class="kw">unsafe </span>{
             raw_encoder.transition_buffers(dst_barrier.into_iter());
             raw_encoder.copy_query_results(
-                <span class="kw-2">&amp;</span>query_set.raw,
+                query_set.raw(),
                 start_query..end_query,
-                dst_buffer.raw.as_ref().unwrap(),
+                dst_buffer.raw(),
                 destination_offset,
                 wgt::BufferSize::new_unchecked(stride <span class="kw">as </span>u64),
             );

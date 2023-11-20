@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/compute.rs`."><title>compute.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/compute.rs`."><title>compute.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1059,39 +1059,10 @@
 <a href="#1059" id="1059">1059</a>
 <a href="#1060" id="1060">1060</a>
 <a href="#1061" id="1061">1061</a>
-<a href="#1062" id="1062">1062</a>
-<a href="#1063" id="1063">1063</a>
-<a href="#1064" id="1064">1064</a>
-<a href="#1065" id="1065">1065</a>
-<a href="#1066" id="1066">1066</a>
-<a href="#1067" id="1067">1067</a>
-<a href="#1068" id="1068">1068</a>
-<a href="#1069" id="1069">1069</a>
-<a href="#1070" id="1070">1070</a>
-<a href="#1071" id="1071">1071</a>
-<a href="#1072" id="1072">1072</a>
-<a href="#1073" id="1073">1073</a>
-<a href="#1074" id="1074">1074</a>
-<a href="#1075" id="1075">1075</a>
-<a href="#1076" id="1076">1076</a>
-<a href="#1077" id="1077">1077</a>
-<a href="#1078" id="1078">1078</a>
-<a href="#1079" id="1079">1079</a>
-<a href="#1080" id="1080">1080</a>
-<a href="#1081" id="1081">1081</a>
-<a href="#1082" id="1082">1082</a>
-<a href="#1083" id="1083">1083</a>
-<a href="#1084" id="1084">1084</a>
-<a href="#1085" id="1085">1085</a>
-<a href="#1086" id="1086">1086</a>
-<a href="#1087" id="1087">1087</a>
-<a href="#1088" id="1088">1088</a>
-<a href="#1089" id="1089">1089</a>
-<a href="#1090" id="1090">1090</a>
-</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
+</pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::resource::Resource;
+<span class="kw">use crate</span>::{
     binding_model::{
-        BindError, BindGroup, BindGroupLayouts, LateMinBufferBindingSizeMismatch,
-        PushConstantUploadError,
+        BindError, BindGroup, LateMinBufferBindingSizeMismatch, PushConstantUploadError,
     },
     command::{
         bind::Binder,
@@ -1104,14 +1075,12 @@
     error::{ErrorFormatter, PrettyError},
     global::Global,
     hal_api::HalApi,
-    hal_label,
-    hub::Token,
-    id,
+    hal_label, id,
     id::DeviceId,
     identity::GlobalIdentityHandlerFactory,
     init_tracker::MemoryInitKind,
     pipeline,
-    resource::{<span class="self">self</span>, Buffer, Texture},
+    resource::{<span class="self">self</span>},
     storage::Storage,
     track::{Tracker, UsageConflict, UsageScope},
     validation::{check_buffer_usage, MissingBufferUsageError},
@@ -1371,15 +1340,15 @@
 }
 
 <span class="kw">struct </span>State&lt;A: HalApi&gt; {
-    binder: Binder,
+    binder: Binder&lt;A&gt;,
     pipeline: <span class="prelude-ty">Option</span>&lt;id::ComputePipelineId&gt;,
     scope: UsageScope&lt;A&gt;,
     debug_scope_depth: u32,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; State&lt;A&gt; {
-    <span class="kw">fn </span>is_ready(<span class="kw-2">&amp;</span><span class="self">self</span>, bind_group_layouts: <span class="kw-2">&amp;</span>BindGroupLayouts&lt;A&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), DispatchError&gt; {
-        <span class="kw">let </span>bind_mask = <span class="self">self</span>.binder.invalid_mask(bind_group_layouts);
+    <span class="kw">fn </span>is_ready(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), DispatchError&gt; {
+        <span class="kw">let </span>bind_mask = <span class="self">self</span>.binder.invalid_mask();
         <span class="kw">if </span>bind_mask != <span class="number">0 </span>{
             <span class="comment">//let (expected, provided) = self.binder.entries[index as usize].info();
             </span><span class="kw">return </span><span class="prelude-val">Err</span>(DispatchError::IncompatibleBindGroup {
@@ -1401,15 +1370,10 @@
         raw_encoder: <span class="kw-2">&amp;mut </span>A::CommandEncoder,
         base_trackers: <span class="kw-2">&amp;mut </span>Tracker&lt;A&gt;,
         bind_group_guard: <span class="kw-2">&amp;</span>Storage&lt;BindGroup&lt;A&gt;, id::BindGroupId&gt;,
-        buffer_guard: <span class="kw-2">&amp;</span>Storage&lt;Buffer&lt;A&gt;, id::BufferId&gt;,
-        texture_guard: <span class="kw-2">&amp;</span>Storage&lt;Texture&lt;A&gt;, id::TextureId&gt;,
-        indirect_buffer: <span class="prelude-ty">Option</span>&lt;id::Valid&lt;id::BufferId&gt;&gt;,
+        indirect_buffer: <span class="prelude-ty">Option</span>&lt;id::BufferId&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), UsageConflict&gt; {
         <span class="kw">for </span>id <span class="kw">in </span><span class="self">self</span>.binder.list_active() {
-            <span class="kw">unsafe </span>{
-                <span class="self">self</span>.scope
-                    .merge_bind_group(texture_guard, <span class="kw-2">&amp;</span>bind_group_guard[id].used)<span class="question-mark">?
-            </span>};
+            <span class="kw">unsafe </span>{ <span class="self">self</span>.scope.merge_bind_group(<span class="kw-2">&amp;</span>bind_group_guard[id].used)<span class="question-mark">? </span>};
             <span class="comment">// Note: stateless trackers are not merged: the lifetime reference
             // is held to the bind group itself.
         </span>}
@@ -1417,7 +1381,6 @@
         <span class="kw">for </span>id <span class="kw">in </span><span class="self">self</span>.binder.list_active() {
             <span class="kw">unsafe </span>{
                 base_trackers.set_and_remove_from_usage_scope_sparse(
-                    texture_guard,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.scope,
                     <span class="kw-2">&amp;</span>bind_group_guard[id].used,
                 )
@@ -1433,7 +1396,7 @@
 
         <span class="macro">log::trace!</span>(<span class="string">&quot;Encoding dispatch barriers&quot;</span>);
 
-        CommandBuffer::drain_barriers(raw_encoder, base_trackers, buffer_guard, texture_guard);
+        CommandBuffer::drain_barriers(raw_encoder, base_trackers);
         <span class="prelude-val">Ok</span>(())
     }
 }
@@ -1464,49 +1427,46 @@
         <span class="kw">let </span>init_scope = PassErrorScope::Pass(encoder_id);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
 
-        <span class="kw">let </span>(device_guard, <span class="kw-2">mut </span>token) = hub.devices.read(<span class="kw-2">&amp;mut </span>token);
-
-        <span class="kw">let </span>(<span class="kw-2">mut </span>cmd_buf_guard, <span class="kw-2">mut </span>token) = hub.command_buffers.write(<span class="kw-2">&amp;mut </span>token);
-        <span class="comment">// Spell out the type, to placate rust-analyzer.
-        // https://github.com/rust-lang/rust-analyzer/issues/12247
-        </span><span class="kw">let </span>cmd_buf: <span class="kw-2">&amp;mut </span>CommandBuffer&lt;A&gt; =
-            CommandBuffer::get_encoder_mut(<span class="kw-2">&amp;mut *</span>cmd_buf_guard, encoder_id)
-                .map_pass_err(init_scope)<span class="question-mark">?</span>;
-
-        <span class="comment">// We automatically keep extending command buffers over time, and because
-        // we want to insert a command buffer _before_ what we&#39;re about to record,
-        // we need to make sure to close the previous one.
-        </span>cmd_buf.encoder.close();
-        <span class="comment">// We will reset this to `Recording` if we succeed, acts as a fail-safe.
-        </span>cmd_buf.status = CommandEncoderStatus::Error;
-        <span class="kw">let </span>raw = cmd_buf.encoder.open();
-
-        <span class="kw">let </span>device = <span class="kw-2">&amp;</span>device_guard[cmd_buf.device_id.value];
+        <span class="kw">let </span>cmd_buf = CommandBuffer::get_encoder(hub, encoder_id).map_pass_err(init_scope)<span class="question-mark">?</span>;
+        <span class="kw">let </span>device = <span class="kw-2">&amp;</span>cmd_buf.device;
         <span class="kw">if </span>!device.is_valid() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(ComputePassErrorInner::InvalidDevice(
-                cmd_buf.device_id.value.<span class="number">0</span>,
+                cmd_buf.device.as_info().id(),
             ))
             .map_pass_err(init_scope);
         }
 
+        <span class="kw">let </span><span class="kw-2">mut </span>cmd_buf_data = cmd_buf.data.lock();
+        <span class="kw">let </span>cmd_buf_data = cmd_buf_data.as_mut().unwrap();
+
         <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf.commands {
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>list) = cmd_buf_data.commands {
             list.push(<span class="kw">crate</span>::device::trace::Command::RunComputePass {
                 base: BasePass::from_ref(base),
                 timestamp_writes: timestamp_writes.cloned(),
             });
         }
 
-        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>token) = hub.render_bundles.read(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>(pipeline_layout_guard, <span class="kw-2">mut </span>token) = hub.pipeline_layouts.read(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>(bind_group_guard, <span class="kw-2">mut </span>token) = hub.bind_groups.read(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>(pipeline_guard, <span class="kw-2">mut </span>token) = hub.compute_pipelines.read(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>(query_set_guard, <span class="kw-2">mut </span>token) = hub.query_sets.read(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>(bind_group_layout_guard, <span class="kw-2">mut </span>token) = hub.bind_group_layouts.read(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>(buffer_guard, <span class="kw-2">mut </span>token) = hub.buffers.read(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>(texture_guard, <span class="kw">_</span>) = hub.textures.read(<span class="kw-2">&amp;mut </span>token);
+        <span class="kw">let </span>encoder = <span class="kw-2">&amp;mut </span>cmd_buf_data.encoder;
+        <span class="kw">let </span>status = <span class="kw-2">&amp;mut </span>cmd_buf_data.status;
+        <span class="kw">let </span>tracker = <span class="kw-2">&amp;mut </span>cmd_buf_data.trackers;
+        <span class="kw">let </span>buffer_memory_init_actions = <span class="kw-2">&amp;mut </span>cmd_buf_data.buffer_memory_init_actions;
+        <span class="kw">let </span>texture_memory_actions = <span class="kw-2">&amp;mut </span>cmd_buf_data.texture_memory_actions;
+
+        <span class="comment">// We automatically keep extending command buffers over time, and because
+        // we want to insert a command buffer _before_ what we&#39;re about to record,
+        // we need to make sure to close the previous one.
+        </span>encoder.close();
+        <span class="comment">// will be reset to true if recording is done without errors
+        </span><span class="kw-2">*</span>status = CommandEncoderStatus::Error;
+        <span class="kw">let </span>raw = encoder.open();
+
+        <span class="kw">let </span>bind_group_guard = hub.bind_groups.read();
+        <span class="kw">let </span>pipeline_guard = hub.compute_pipelines.read();
+        <span class="kw">let </span>query_set_guard = hub.query_sets.read();
+        <span class="kw">let </span>buffer_guard = hub.buffers.read();
+        <span class="kw">let </span>texture_guard = hub.textures.read();
 
         <span class="kw">let </span><span class="kw-2">mut </span>state = State {
             binder: Binder::new(),
@@ -1520,8 +1480,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>active_query = <span class="prelude-val">None</span>;
 
         <span class="kw">let </span>timestamp_writes = <span class="kw">if let </span><span class="prelude-val">Some</span>(tw) = timestamp_writes {
-            <span class="kw">let </span>query_set: <span class="kw-2">&amp;</span>resource::QuerySet&lt;A&gt; = cmd_buf
-                .trackers
+            <span class="kw">let </span>query_set: <span class="kw-2">&amp;</span>resource::QuerySet&lt;A&gt; = tracker
                 .query_sets
                 .add_single(<span class="kw-2">&amp;*</span>query_set_guard, tw.query_set)
                 .ok_or(ComputePassErrorInner::InvalidQuerySet(tw.query_set))
@@ -1542,12 +1501,12 @@
             // But no point in erroring over that nuance here!
             </span><span class="kw">if let </span><span class="prelude-val">Some</span>(range) = range {
                 <span class="kw">unsafe </span>{
-                    raw.reset_queries(<span class="kw-2">&amp;</span>query_set.raw, range);
+                    raw.reset_queries(query_set.raw.as_ref().unwrap(), range);
                 }
             }
 
             <span class="prelude-val">Some</span>(hal::ComputePassTimestampWrites {
-                query_set: <span class="kw-2">&amp;</span>query_set.raw,
+                query_set: query_set.raw.as_ref().unwrap(),
                 beginning_of_pass_write_index: tw.beginning_of_pass_write_index,
                 end_of_pass_write_index: tw.end_of_pass_write_index,
             })
@@ -1555,7 +1514,7 @@
             <span class="prelude-val">None
         </span>};
 
-        cmd_buf.trackers.set_size(
+        tracker.set_size(
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>buffer_guard),
             <span class="prelude-val">Some</span>(<span class="kw-2">&amp;*</span>texture_guard),
             <span class="prelude-val">None</span>,
@@ -1611,8 +1570,7 @@
                     );
                     dynamic_offset_count += num_dynamic_offsets <span class="kw">as </span>usize;
 
-                    <span class="kw">let </span>bind_group: <span class="kw-2">&amp;</span>BindGroup&lt;A&gt; = cmd_buf
-                        .trackers
+                    <span class="kw">let </span>bind_group = tracker
                         .bind_groups
                         .add_single(<span class="kw-2">&amp;*</span>bind_group_guard, bind_group_id)
                         .ok_or(ComputePassErrorInner::InvalidBindGroup(bind_group_id))
@@ -1621,42 +1579,43 @@
                         .validate_dynamic_bindings(index, <span class="kw-2">&amp;</span>temp_offsets, <span class="kw-2">&amp;</span>cmd_buf.limits)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                    cmd_buf.buffer_memory_init_actions.extend(
-                        bind_group.used_buffer_ranges.iter().filter_map(
-                            |action| <span class="kw">match </span>buffer_guard.get(action.id) {
-                                <span class="prelude-val">Ok</span>(buffer) =&gt; buffer.initialization_status.check_action(action),
-                                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
-                            },
-                        ),
+                    buffer_memory_init_actions.extend(
+                        bind_group
+                            .used_buffer_ranges
+                            .read()
+                            .iter()
+                            .filter_map(|action| {
+                                action
+                                    .buffer
+                                    .initialization_status
+                                    .read()
+                                    .check_action(action)
+                            }),
                     );
 
-                    <span class="kw">for </span>action <span class="kw">in </span>bind_group.used_texture_ranges.iter() {
-                        pending_discard_init_fixups.extend(
-                            cmd_buf
-                                .texture_memory_actions
-                                .register_init_action(action, <span class="kw-2">&amp;</span>texture_guard),
-                        );
+                    <span class="kw">for </span>action <span class="kw">in </span>bind_group.used_texture_ranges.read().iter() {
+                        pending_discard_init_fixups
+                            .extend(texture_memory_actions.register_init_action(action));
                     }
 
-                    <span class="kw">let </span>pipeline_layout_id = state.binder.pipeline_layout_id;
-                    <span class="kw">let </span>entries = state.binder.assign_group(
-                        index <span class="kw">as </span>usize,
-                        id::Valid(bind_group_id),
-                        bind_group,
-                        <span class="kw-2">&amp;</span>temp_offsets,
-                    );
-                    <span class="kw">if </span>!entries.is_empty() {
-                        <span class="kw">let </span>pipeline_layout =
-                            <span class="kw-2">&amp;</span>pipeline_layout_guard[pipeline_layout_id.unwrap()].raw;
+                    <span class="kw">let </span>pipeline_layout = state.binder.pipeline_layout.clone();
+                    <span class="kw">let </span>entries =
+                        state
+                            .binder
+                            .assign_group(index <span class="kw">as </span>usize, bind_group, <span class="kw-2">&amp;</span>temp_offsets);
+                    <span class="kw">if </span>!entries.is_empty() &amp;&amp; pipeline_layout.is_some() {
+                        <span class="kw">let </span>pipeline_layout = pipeline_layout.as_ref().unwrap().raw();
                         <span class="kw">for </span>(i, e) <span class="kw">in </span>entries.iter().enumerate() {
-                            <span class="kw">let </span>raw_bg = <span class="kw-2">&amp;</span>bind_group_guard[e.group_id.as_ref().unwrap().value].raw;
-                            <span class="kw">unsafe </span>{
-                                raw.set_bind_group(
-                                    pipeline_layout,
-                                    index + i <span class="kw">as </span>u32,
-                                    raw_bg,
-                                    <span class="kw-2">&amp;</span>e.dynamic_offsets,
-                                );
+                            <span class="kw">if let </span><span class="prelude-val">Some</span>(group) = e.group.as_ref() {
+                                <span class="kw">let </span>raw_bg = group.raw();
+                                <span class="kw">unsafe </span>{
+                                    raw.set_bind_group(
+                                        pipeline_layout,
+                                        index + i <span class="kw">as </span>u32,
+                                        raw_bg,
+                                        <span class="kw-2">&amp;</span>e.dynamic_offsets,
+                                    );
+                                }
                             }
                         }
                     }
@@ -1666,44 +1625,48 @@
 
                     state.pipeline = <span class="prelude-val">Some</span>(pipeline_id);
 
-                    <span class="kw">let </span>pipeline: <span class="kw-2">&amp;</span>pipeline::ComputePipeline&lt;A&gt; = cmd_buf
-                        .trackers
+                    <span class="kw">let </span>pipeline: <span class="kw-2">&amp;</span>pipeline::ComputePipeline&lt;A&gt; = tracker
                         .compute_pipelines
                         .add_single(<span class="kw-2">&amp;*</span>pipeline_guard, pipeline_id)
                         .ok_or(ComputePassErrorInner::InvalidPipeline(pipeline_id))
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
                     <span class="kw">unsafe </span>{
-                        raw.set_compute_pipeline(<span class="kw-2">&amp;</span>pipeline.raw);
+                        raw.set_compute_pipeline(pipeline.raw());
                     }
 
                     <span class="comment">// Rebind resources
-                    </span><span class="kw">if </span>state.binder.pipeline_layout_id != <span class="prelude-val">Some</span>(pipeline.layout_id.value) {
-                        <span class="kw">let </span>pipeline_layout = <span class="kw-2">&amp;</span>pipeline_layout_guard[pipeline.layout_id.value];
-
+                    </span><span class="kw">if </span>state.binder.pipeline_layout.is_none()
+                        || !state
+                            .binder
+                            .pipeline_layout
+                            .as_ref()
+                            .unwrap()
+                            .is_equal(<span class="kw-2">&amp;</span>pipeline.layout)
+                    {
                         <span class="kw">let </span>(start_index, entries) = state.binder.change_pipeline_layout(
-                            <span class="kw-2">&amp;*</span>pipeline_layout_guard,
-                            pipeline.layout_id.value,
+                            <span class="kw-2">&amp;</span>pipeline.layout,
                             <span class="kw-2">&amp;</span>pipeline.late_sized_buffer_groups,
                         );
                         <span class="kw">if </span>!entries.is_empty() {
                             <span class="kw">for </span>(i, e) <span class="kw">in </span>entries.iter().enumerate() {
-                                <span class="kw">let </span>raw_bg =
-                                    <span class="kw-2">&amp;</span>bind_group_guard[e.group_id.as_ref().unwrap().value].raw;
-                                <span class="kw">unsafe </span>{
-                                    raw.set_bind_group(
-                                        <span class="kw-2">&amp;</span>pipeline_layout.raw,
-                                        start_index <span class="kw">as </span>u32 + i <span class="kw">as </span>u32,
-                                        raw_bg,
-                                        <span class="kw-2">&amp;</span>e.dynamic_offsets,
-                                    );
+                                <span class="kw">if let </span><span class="prelude-val">Some</span>(group) = e.group.as_ref() {
+                                    <span class="kw">let </span>raw_bg = group.raw();
+                                    <span class="kw">unsafe </span>{
+                                        raw.set_bind_group(
+                                            pipeline.layout.raw(),
+                                            start_index <span class="kw">as </span>u32 + i <span class="kw">as </span>u32,
+                                            raw_bg,
+                                            <span class="kw-2">&amp;</span>e.dynamic_offsets,
+                                        );
+                                    }
                                 }
                             }
                         }
 
                         <span class="comment">// Clear push constant ranges
                         </span><span class="kw">let </span>non_overlapping = <span class="kw">super</span>::bind::compute_nonoverlapping_ranges(
-                            <span class="kw-2">&amp;</span>pipeline_layout.push_constant_ranges,
+                            <span class="kw-2">&amp;</span>pipeline.layout.push_constant_ranges,
                         );
                         <span class="kw">for </span>range <span class="kw">in </span>non_overlapping {
                             <span class="kw">let </span>offset = range.range.start;
@@ -1713,7 +1676,7 @@
                                 size_bytes,
                                 |clear_offset, clear_data| <span class="kw">unsafe </span>{
                                     raw.set_push_constants(
-                                        <span class="kw-2">&amp;</span>pipeline_layout.raw,
+                                        pipeline.layout.raw(),
                                         wgt::ShaderStages::COMPUTE,
                                         clear_offset,
                                         clear_data,
@@ -1736,15 +1699,15 @@
                     <span class="kw">let </span>data_slice =
                         <span class="kw-2">&amp;</span>base.push_constant_data[(values_offset <span class="kw">as </span>usize)..values_end_offset];
 
-                    <span class="kw">let </span>pipeline_layout_id = state
+                    <span class="kw">let </span>pipeline_layout = state
                         .binder
-                        .pipeline_layout_id
+                        .pipeline_layout
+                        .as_ref()
                         <span class="comment">//TODO: don&#39;t error here, lazily update the push constants
                         </span>.ok_or(ComputePassErrorInner::Dispatch(
                             DispatchError::MissingPipeline,
                         ))
                         .map_pass_err(scope)<span class="question-mark">?</span>;
-                    <span class="kw">let </span>pipeline_layout = <span class="kw-2">&amp;</span>pipeline_layout_guard[pipeline_layout_id];
 
                     pipeline_layout
                         .validate_push_constant_ranges(
@@ -1756,7 +1719,7 @@
 
                     <span class="kw">unsafe </span>{
                         raw.set_push_constants(
-                            <span class="kw-2">&amp;</span>pipeline_layout.raw,
+                            pipeline_layout.raw(),
                             wgt::ShaderStages::COMPUTE,
                             offset,
                             data_slice,
@@ -1768,19 +1731,10 @@
                         indirect: <span class="bool-val">false</span>,
                         pipeline: state.pipeline,
                     };
+                    state.is_ready().map_pass_err(scope)<span class="question-mark">?</span>;
 
                     state
-                        .is_ready(<span class="kw-2">&amp;*</span>bind_group_layout_guard)
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
-                    state
-                        .flush_states(
-                            raw,
-                            <span class="kw-2">&amp;mut </span>intermediate_trackers,
-                            <span class="kw-2">&amp;*</span>bind_group_guard,
-                            <span class="kw-2">&amp;*</span>buffer_guard,
-                            <span class="kw-2">&amp;*</span>texture_guard,
-                            <span class="prelude-val">None</span>,
-                        )
+                        .flush_states(raw, <span class="kw-2">&amp;mut </span>intermediate_trackers, <span class="kw-2">&amp;*</span>bind_group_guard, <span class="prelude-val">None</span>)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
                     <span class="kw">let </span>groups_size_limit = cmd_buf.limits.max_compute_workgroups_per_dimension;
@@ -1808,15 +1762,13 @@
                         pipeline: state.pipeline,
                     };
 
-                    state
-                        .is_ready(<span class="kw-2">&amp;*</span>bind_group_layout_guard)
-                        .map_pass_err(scope)<span class="question-mark">?</span>;
+                    state.is_ready().map_pass_err(scope)<span class="question-mark">?</span>;
 
                     device
                         .require_downlevel_flags(wgt::DownlevelFlags::INDIRECT_EXECUTION)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>indirect_buffer: <span class="kw-2">&amp;</span>Buffer&lt;A&gt; = state
+                    <span class="kw">let </span>indirect_buffer = state
                         .scope
                         .buffers
                         .merge_single(<span class="kw-2">&amp;*</span>buffer_guard, buffer_id, hal::BufferUses::INDIRECT)
@@ -1842,9 +1794,9 @@
 
                     <span class="kw">let </span>stride = <span class="number">3 </span>* <span class="number">4</span>; <span class="comment">// 3 integers, x/y/z group size
 
-                    </span>cmd_buf.buffer_memory_init_actions.extend(
-                        indirect_buffer.initialization_status.create_action(
-                            buffer_id,
+                    </span>buffer_memory_init_actions.extend(
+                        indirect_buffer.initialization_status.read().create_action(
+                            indirect_buffer,
                             offset..(offset + stride),
                             MemoryInitKind::NeedsInitializedMemory,
                         ),
@@ -1855,9 +1807,7 @@
                             raw,
                             <span class="kw-2">&amp;mut </span>intermediate_trackers,
                             <span class="kw-2">&amp;*</span>bind_group_guard,
-                            <span class="kw-2">&amp;*</span>buffer_guard,
-                            <span class="kw-2">&amp;*</span>texture_guard,
-                            <span class="prelude-val">Some</span>(id::Valid(buffer_id)),
+                            <span class="prelude-val">Some</span>(buffer_id),
                         )
                         .map_pass_err(scope)<span class="question-mark">?</span>;
                     <span class="kw">unsafe </span>{
@@ -1909,8 +1859,7 @@
                         .require_features(wgt::Features::TIMESTAMP_QUERY_INSIDE_PASSES)
                         .map_pass_err(scope)<span class="question-mark">?</span>;
 
-                    <span class="kw">let </span>query_set: <span class="kw-2">&amp;</span>resource::QuerySet&lt;A&gt; = cmd_buf
-                        .trackers
+                    <span class="kw">let </span>query_set: <span class="kw-2">&amp;</span>resource::QuerySet&lt;A&gt; = tracker
                         .query_sets
                         .add_single(<span class="kw-2">&amp;*</span>query_set_guard, query_set_id)
                         .ok_or(ComputePassErrorInner::InvalidQuerySet(query_set_id))
@@ -1926,8 +1875,7 @@
                 } =&gt; {
                     <span class="kw">let </span>scope = PassErrorScope::BeginPipelineStatisticsQuery;
 
-                    <span class="kw">let </span>query_set: <span class="kw-2">&amp;</span>resource::QuerySet&lt;A&gt; = cmd_buf
-                        .trackers
+                    <span class="kw">let </span>query_set: <span class="kw-2">&amp;</span>resource::QuerySet&lt;A&gt; = tracker
                         .query_sets
                         .add_single(<span class="kw-2">&amp;*</span>query_set_guard, query_set_id)
                         .ok_or(ComputePassErrorInner::InvalidQuerySet(query_set_id))
@@ -1955,33 +1903,27 @@
         <span class="kw">unsafe </span>{
             raw.end_compute_pass();
         }
+
         <span class="comment">// We&#39;ve successfully recorded the compute pass, bring the
         // command buffer out of the error state.
-        </span>cmd_buf.status = CommandEncoderStatus::Recording;
+        </span><span class="kw-2">*</span>status = CommandEncoderStatus::Recording;
 
         <span class="comment">// Stop the current command buffer.
-        </span>cmd_buf.encoder.close();
+        </span>encoder.close();
 
         <span class="comment">// Create a new command buffer, which we will insert _before_ the body of the compute pass.
         //
         // Use that buffer to insert barriers and clear discarded images.
-        </span><span class="kw">let </span>transit = cmd_buf.encoder.open();
+        </span><span class="kw">let </span>transit = encoder.open();
         fixup_discarded_surfaces(
             pending_discard_init_fixups.into_iter(),
             transit,
-            <span class="kw-2">&amp;</span>texture_guard,
-            <span class="kw-2">&amp;mut </span>cmd_buf.trackers.textures,
+            <span class="kw-2">&amp;mut </span>tracker.textures,
             device,
         );
-        CommandBuffer::insert_barriers_from_tracker(
-            transit,
-            <span class="kw-2">&amp;mut </span>cmd_buf.trackers,
-            <span class="kw-2">&amp;</span>intermediate_trackers,
-            <span class="kw-2">&amp;*</span>buffer_guard,
-            <span class="kw-2">&amp;*</span>texture_guard,
-        );
+        CommandBuffer::insert_barriers_from_tracker(transit, tracker, <span class="kw-2">&amp;</span>intermediate_trackers);
         <span class="comment">// Close the command buffer, and swap it with the previous.
-        </span>cmd_buf.encoder.close_and_swap();
+        </span>encoder.close_and_swap();
 
         <span class="prelude-val">Ok</span>(())
     }

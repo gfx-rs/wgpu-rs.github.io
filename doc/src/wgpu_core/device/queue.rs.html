@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/queue.rs`."><title>queue.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/queue.rs`."><title>queue.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1480,6 +1480,66 @@
 <a href="#1480" id="1480">1480</a>
 <a href="#1481" id="1481">1481</a>
 <a href="#1482" id="1482">1482</a>
+<a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a>
+<a href="#1485" id="1485">1485</a>
+<a href="#1486" id="1486">1486</a>
+<a href="#1487" id="1487">1487</a>
+<a href="#1488" id="1488">1488</a>
+<a href="#1489" id="1489">1489</a>
+<a href="#1490" id="1490">1490</a>
+<a href="#1491" id="1491">1491</a>
+<a href="#1492" id="1492">1492</a>
+<a href="#1493" id="1493">1493</a>
+<a href="#1494" id="1494">1494</a>
+<a href="#1495" id="1495">1495</a>
+<a href="#1496" id="1496">1496</a>
+<a href="#1497" id="1497">1497</a>
+<a href="#1498" id="1498">1498</a>
+<a href="#1499" id="1499">1499</a>
+<a href="#1500" id="1500">1500</a>
+<a href="#1501" id="1501">1501</a>
+<a href="#1502" id="1502">1502</a>
+<a href="#1503" id="1503">1503</a>
+<a href="#1504" id="1504">1504</a>
+<a href="#1505" id="1505">1505</a>
+<a href="#1506" id="1506">1506</a>
+<a href="#1507" id="1507">1507</a>
+<a href="#1508" id="1508">1508</a>
+<a href="#1509" id="1509">1509</a>
+<a href="#1510" id="1510">1510</a>
+<a href="#1511" id="1511">1511</a>
+<a href="#1512" id="1512">1512</a>
+<a href="#1513" id="1513">1513</a>
+<a href="#1514" id="1514">1514</a>
+<a href="#1515" id="1515">1515</a>
+<a href="#1516" id="1516">1516</a>
+<a href="#1517" id="1517">1517</a>
+<a href="#1518" id="1518">1518</a>
+<a href="#1519" id="1519">1519</a>
+<a href="#1520" id="1520">1520</a>
+<a href="#1521" id="1521">1521</a>
+<a href="#1522" id="1522">1522</a>
+<a href="#1523" id="1523">1523</a>
+<a href="#1524" id="1524">1524</a>
+<a href="#1525" id="1525">1525</a>
+<a href="#1526" id="1526">1526</a>
+<a href="#1527" id="1527">1527</a>
+<a href="#1528" id="1528">1528</a>
+<a href="#1529" id="1529">1529</a>
+<a href="#1530" id="1530">1530</a>
+<a href="#1531" id="1531">1531</a>
+<a href="#1532" id="1532">1532</a>
+<a href="#1533" id="1533">1533</a>
+<a href="#1534" id="1534">1534</a>
+<a href="#1535" id="1535">1535</a>
+<a href="#1536" id="1536">1536</a>
+<a href="#1537" id="1537">1537</a>
+<a href="#1538" id="1538">1538</a>
+<a href="#1539" id="1539">1539</a>
+<a href="#1540" id="1540">1540</a>
+<a href="#1541" id="1541">1541</a>
+<a href="#1542" id="1542">1542</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace::Action;
 <span class="kw">use crate</span>::{
@@ -1488,24 +1548,56 @@
         ClearError, CommandBuffer, CopySide, ImageCopyTexture, TransferError,
     },
     conv,
-    device::{DeviceError, WaitIdleError},
+    device::{life::ResourceMaps, DeviceError, WaitIdleError},
     get_lowest_common_denom,
     global::Global,
     hal_api::HalApi,
     hal_label,
-    hub::Token,
-    id,
+    id::{<span class="self">self</span>, QueueId},
     identity::{GlobalIdentityHandlerFactory, Input},
     init_tracker::{has_copy_partial_init_tracker_coverage, TextureInitRange},
-    resource::{BufferAccessError, BufferMapState, StagingBuffer, TextureInner},
-    track, FastHashSet, SubmissionIndex,
+    resource::{
+        Buffer, BufferAccessError, BufferMapState, Resource, ResourceInfo, ResourceType,
+        StagingBuffer, Texture, TextureInner,
+    },
+    track, FastHashMap, SubmissionIndex,
 };
 
 <span class="kw">use </span>hal::{CommandEncoder <span class="kw">as _</span>, Device <span class="kw">as _</span>, Queue <span class="kw">as _</span>};
 <span class="kw">use </span>parking_lot::Mutex;
-<span class="kw">use </span>smallvec::SmallVec;
-<span class="kw">use </span>std::{iter, mem, ptr};
+
+<span class="kw">use </span>std::{
+    iter, mem, ptr,
+    sync::{atomic::Ordering, Arc},
+};
 <span class="kw">use </span>thiserror::Error;
+
+<span class="kw">use </span><span class="kw">super</span>::Device;
+
+<span class="kw">pub struct </span>Queue&lt;A: HalApi&gt; {
+    <span class="kw">pub </span>device: <span class="prelude-ty">Option</span>&lt;Arc&lt;Device&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>raw: <span class="prelude-ty">Option</span>&lt;A::Queue&gt;,
+    <span class="kw">pub </span>info: ResourceInfo&lt;QueueId&gt;,
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;QueueId&gt; <span class="kw">for </span>Queue&lt;A&gt; {
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;Queue&quot;</span>;
+
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;QueueId&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.info
+    }
+
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;QueueId&gt; {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
+    }
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; Drop <span class="kw">for </span>Queue&lt;A&gt; {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>queue = <span class="self">self</span>.raw.take().unwrap();
+        <span class="self">self</span>.device.as_ref().unwrap().release_queue(queue);
+    }
+}
 
 <span class="doccomment">/// Number of command buffers that we generate from the same pool
 /// for the write_xxx commands, before the pool is recycled.
@@ -1591,7 +1683,7 @@
 <span class="attr">#[repr(C)]
 #[derive(Debug, Copy, Clone)]
 </span><span class="kw">pub struct </span>WrappedSubmissionIndex {
-    <span class="kw">pub </span>queue_id: id::QueueId,
+    <span class="kw">pub </span>queue_id: QueueId,
     <span class="kw">pub </span>index: SubmissionIndex,
 }
 
@@ -1609,19 +1701,20 @@
 /// - `LifetimeTracker::free_resources`: resources to be freed in the next
 ///   `maintain` call, no longer used anywhere
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub enum </span>TempResource&lt;A: hal::Api&gt; {
-    Buffer(A::Buffer),
-    Texture(A::Texture, SmallVec&lt;[A::TextureView; <span class="number">1</span>]&gt;),
+</span><span class="kw">pub enum </span>TempResource&lt;A: HalApi&gt; {
+    Buffer(Arc&lt;Buffer&lt;A&gt;&gt;),
+    StagingBuffer(Arc&lt;StagingBuffer&lt;A&gt;&gt;),
+    Texture(Arc&lt;Texture&lt;A&gt;&gt;),
 }
 
 <span class="doccomment">/// A queue execution for a particular command encoder.
-</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>EncoderInFlight&lt;A: hal::Api&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>EncoderInFlight&lt;A: HalApi&gt; {
     raw: A::CommandEncoder,
     cmd_buffers: Vec&lt;A::CommandBuffer&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: hal::Api&gt; EncoderInFlight&lt;A&gt; {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">unsafe fn </span>land(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; A::CommandEncoder {
+<span class="kw">impl</span>&lt;A: HalApi&gt; EncoderInFlight&lt;A&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>land(<span class="kw-2">mut </span><span class="self">self</span>) -&gt; A::CommandEncoder {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.raw.reset_all(<span class="self">self</span>.cmd_buffers.into_iter()) };
         <span class="self">self</span>.raw
     }
@@ -1642,25 +1735,29 @@
 /// time the user submits a wgpu command buffer, ahead of the user&#39;s
 /// commands.
 ///
+/// Important:
+/// When locking pending_writes be sure that tracker is not locked
+/// and try to lock trackers for the minimum timespan possible
+///
 /// All uses of [`StagingBuffer`]s end up here.
 </span><span class="attr">#[derive(Debug)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>PendingWrites&lt;A: hal::Api&gt; {
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>PendingWrites&lt;A: HalApi&gt; {
     <span class="kw">pub </span>command_encoder: A::CommandEncoder,
     <span class="kw">pub </span>is_active: bool,
     <span class="kw">pub </span>temp_resources: Vec&lt;TempResource&lt;A&gt;&gt;,
-    <span class="kw">pub </span>dst_buffers: FastHashSet&lt;id::BufferId&gt;,
-    <span class="kw">pub </span>dst_textures: FastHashSet&lt;id::TextureId&gt;,
+    <span class="kw">pub </span>dst_buffers: FastHashMap&lt;id::BufferId, Arc&lt;Buffer&lt;A&gt;&gt;&gt;,
+    <span class="kw">pub </span>dst_textures: FastHashMap&lt;id::TextureId, Arc&lt;Texture&lt;A&gt;&gt;&gt;,
     <span class="kw">pub </span>executing_command_buffers: Vec&lt;A::CommandBuffer&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: hal::Api&gt; PendingWrites&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; PendingWrites&lt;A&gt; {
     <span class="kw">pub fn </span>new(command_encoder: A::CommandEncoder) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             command_encoder,
             is_active: <span class="bool-val">false</span>,
             temp_resources: Vec::new(),
-            dst_buffers: FastHashSet::default(),
-            dst_textures: FastHashSet::default(),
+            dst_buffers: FastHashMap::default(),
+            dst_textures: FastHashMap::default(),
             executing_command_buffers: Vec::new(),
         }
     }
@@ -1675,27 +1772,16 @@
             device.destroy_command_encoder(<span class="self">self</span>.command_encoder);
         }
 
-        <span class="kw">for </span>resource <span class="kw">in </span><span class="self">self</span>.temp_resources {
-            <span class="kw">match </span>resource {
-                TempResource::Buffer(buffer) =&gt; <span class="kw">unsafe </span>{
-                    device.destroy_buffer(buffer);
-                },
-                TempResource::Texture(texture, views) =&gt; <span class="kw">unsafe </span>{
-                    <span class="kw">for </span>view <span class="kw">in </span>views.into_iter() {
-                        device.destroy_texture_view(view);
-                    }
-                    device.destroy_texture(texture);
-                },
-            }
-        }
+        <span class="self">self</span>.temp_resources.clear();
     }
 
     <span class="kw">pub fn </span>consume_temp(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource: TempResource&lt;A&gt;) {
         <span class="self">self</span>.temp_resources.push(resource);
     }
 
-    <span class="kw">fn </span>consume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: StagingBuffer&lt;A&gt;) {
-        <span class="self">self</span>.temp_resources.push(TempResource::Buffer(buffer.raw));
+    <span class="kw">fn </span>consume(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: Arc&lt;StagingBuffer&lt;A&gt;&gt;) {
+        <span class="self">self</span>.temp_resources
+            .push(TempResource::StagingBuffer(buffer));
     }
 
     <span class="attr">#[must_use]
@@ -1715,15 +1801,12 @@
     <span class="attr">#[must_use]
     </span><span class="kw">fn </span>post_submit(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        command_allocator: <span class="kw-2">&amp;</span>Mutex&lt;<span class="kw">super</span>::CommandAllocator&lt;A&gt;&gt;,
+        command_allocator: <span class="kw-2">&amp;mut </span><span class="kw">super</span>::CommandAllocator&lt;A&gt;,
         device: <span class="kw-2">&amp;</span>A::Device,
         queue: <span class="kw-2">&amp;</span>A::Queue,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;EncoderInFlight&lt;A&gt;&gt; {
         <span class="kw">if </span><span class="self">self</span>.executing_command_buffers.len() &gt;= WRITE_COMMAND_BUFFERS_PER_POOL {
-            <span class="kw">let </span>new_encoder = command_allocator
-                .lock()
-                .acquire_encoder(device, queue)
-                .unwrap();
+            <span class="kw">let </span>new_encoder = command_allocator.acquire_encoder(device, queue).unwrap();
             <span class="prelude-val">Some</span>(EncoderInFlight {
                 raw: mem::replace(<span class="kw-2">&amp;mut </span><span class="self">self</span>.command_encoder, new_encoder),
                 cmd_buffers: mem::take(<span class="kw-2">&amp;mut </span><span class="self">self</span>.executing_command_buffers),
@@ -1756,7 +1839,7 @@
 }
 
 <span class="kw">fn </span>prepare_staging_buffer&lt;A: HalApi&gt;(
-    device: <span class="kw-2">&amp;mut </span>A::Device,
+    device: <span class="kw-2">&amp;</span>Arc&lt;Device&lt;A&gt;&gt;,
     size: wgt::BufferAddress,
     instance_flags: wgt::InstanceFlags,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;(StagingBuffer&lt;A&gt;, <span class="kw-2">*mut </span>u8), DeviceError&gt; {
@@ -1768,24 +1851,31 @@
         memory_flags: hal::MemoryFlags::TRANSIENT,
     };
 
-    <span class="kw">let </span>buffer = <span class="kw">unsafe </span>{ device.create_buffer(<span class="kw-2">&amp;</span>stage_desc)<span class="question-mark">? </span>};
-    <span class="kw">let </span>mapping = <span class="kw">unsafe </span>{ device.map_buffer(<span class="kw-2">&amp;</span>buffer, <span class="number">0</span>..size) }<span class="question-mark">?</span>;
+    <span class="kw">let </span>buffer = <span class="kw">unsafe </span>{ device.raw().create_buffer(<span class="kw-2">&amp;</span>stage_desc)<span class="question-mark">? </span>};
+    <span class="kw">let </span>mapping = <span class="kw">unsafe </span>{ device.raw().map_buffer(<span class="kw-2">&amp;</span>buffer, <span class="number">0</span>..size) }<span class="question-mark">?</span>;
 
     <span class="kw">let </span>staging_buffer = StagingBuffer {
-        raw: buffer,
+        raw: Mutex::new(<span class="prelude-val">Some</span>(buffer)),
+        device: device.clone(),
         size,
+        info: ResourceInfo::new(<span class="string">&quot;&lt;StagingBuffer&gt;&quot;</span>),
         is_coherent: mapping.is_coherent,
     };
 
     <span class="prelude-val">Ok</span>((staging_buffer, mapping.ptr.as_ptr()))
 }
 
-<span class="kw">impl</span>&lt;A: hal::Api&gt; StagingBuffer&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; StagingBuffer&lt;A&gt; {
     <span class="kw">unsafe fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>A::Device) -&gt; <span class="prelude-ty">Result</span>&lt;(), DeviceError&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.is_coherent {
-            <span class="kw">unsafe </span>{ device.flush_mapped_ranges(<span class="kw-2">&amp;</span><span class="self">self</span>.raw, iter::once(<span class="number">0</span>..<span class="self">self</span>.size)) };
+            <span class="kw">unsafe </span>{
+                device.flush_mapped_ranges(
+                    <span class="self">self</span>.raw.lock().as_ref().unwrap(),
+                    iter::once(<span class="number">0</span>..<span class="self">self</span>.size),
+                )
+            };
         }
-        <span class="kw">unsafe </span>{ device.unmap_buffer(<span class="kw-2">&amp;</span><span class="self">self</span>.raw)<span class="question-mark">? </span>};
+        <span class="kw">unsafe </span>{ device.unmap_buffer(<span class="self">self</span>.raw.lock().as_ref().unwrap())<span class="question-mark">? </span>};
         <span class="prelude-val">Ok</span>(())
     }
 }
@@ -1831,7 +1921,7 @@
 </span><span class="kw">impl</span>&lt;G: GlobalIdentityHandlerFactory&gt; Global&lt;G&gt; {
     <span class="kw">pub fn </span>queue_write_buffer&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        queue_id: id::QueueId,
+        queue_id: QueueId,
         buffer_id: id::BufferId,
         buffer_offset: wgt::BufferAddress,
         data: <span class="kw-2">&amp;</span>[u8],
@@ -1839,18 +1929,18 @@
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Queue::write_buffer&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>root_token = <span class="kw-2">&amp;mut </span>Token::root();
 
-        <span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw-2">ref mut </span>device_token) = hub.devices.write(root_token);
-        <span class="kw">let </span>device = device_guard
-            .get_mut(queue_id)
-            .map_err(|<span class="kw">_</span>| DeviceError::Invalid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>queue = hub
+            .queues
+            .get(queue_id)
+            .map_err(|<span class="kw">_</span>| DeviceError::InvalidQueueId)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>device = queue.device.as_ref().unwrap();
 
         <span class="kw">let </span>data_size = data.len() <span class="kw">as </span>wgt::BufferAddress;
 
         <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
-            <span class="kw">let </span><span class="kw-2">mut </span>trace = trace.lock();
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
             <span class="kw">let </span>data_path = trace.make_binary(<span class="string">&quot;bin&quot;</span>, data);
             trace.add(Action::WriteBuffer {
                 id: buffer_id,
@@ -1869,124 +1959,131 @@
         // freed, even if an error occurs. All paths from here must call
         // `device.pending_writes.consume`.
         </span><span class="kw">let </span>(staging_buffer, staging_buffer_ptr) =
-            prepare_staging_buffer(<span class="kw-2">&amp;mut </span>device.raw, data_size, device.instance_flags)<span class="question-mark">?</span>;
+            prepare_staging_buffer(device, data_size, device.instance_flags)<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
+        <span class="kw">let </span>pending_writes = pending_writes.as_mut().unwrap();
+
+        <span class="kw">let </span>stage_fid = hub.staging_buffers.request();
+        <span class="kw">let </span>staging_buffer = stage_fid.init(staging_buffer);
 
         <span class="kw">if let </span><span class="prelude-val">Err</span>(flush_error) = <span class="kw">unsafe </span>{
             <span class="macro">profiling::scope!</span>(<span class="string">&quot;copy&quot;</span>);
             ptr::copy_nonoverlapping(data.as_ptr(), staging_buffer_ptr, data.len());
-            staging_buffer.flush(<span class="kw-2">&amp;</span>device.raw)
+            staging_buffer.flush(device.raw())
         } {
-            device.pending_writes.consume(staging_buffer);
+            pending_writes.consume(staging_buffer);
             <span class="kw">return </span><span class="prelude-val">Err</span>(flush_error.into());
         }
 
         <span class="kw">let </span>result = <span class="self">self</span>.queue_write_staging_buffer_impl(
-            queue_id,
             device,
-            device_token,
+            pending_writes,
             <span class="kw-2">&amp;</span>staging_buffer,
             buffer_id,
             buffer_offset,
         );
 
-        device.pending_writes.consume(staging_buffer);
+        pending_writes.consume(staging_buffer);
         result
     }
 
     <span class="kw">pub fn </span>queue_create_staging_buffer&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        queue_id: id::QueueId,
+        queue_id: QueueId,
         buffer_size: wgt::BufferSize,
         id_in: Input&lt;G, id::StagingBufferId&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(id::StagingBufferId, <span class="kw-2">*mut </span>u8), QueueWriteError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Queue::create_staging_buffer&quot;</span>);
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>root_token = <span class="kw-2">&amp;mut </span>Token::root();
 
-        <span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw-2">ref mut </span>device_token) = hub.devices.write(root_token);
-        <span class="kw">let </span>device = device_guard
-            .get_mut(queue_id)
-            .map_err(|<span class="kw">_</span>| DeviceError::Invalid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>queue = hub
+            .queues
+            .get(queue_id)
+            .map_err(|<span class="kw">_</span>| DeviceError::InvalidQueueId)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>device = queue.device.as_ref().unwrap();
 
         <span class="kw">let </span>(staging_buffer, staging_buffer_ptr) =
-            prepare_staging_buffer(<span class="kw-2">&amp;mut </span>device.raw, buffer_size.get(), device.instance_flags)<span class="question-mark">?</span>;
+            prepare_staging_buffer(device, buffer_size.get(), device.instance_flags)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>fid = hub.staging_buffers.prepare(id_in);
-        <span class="kw">let </span>id = fid.assign(staging_buffer, device_token);
+        <span class="kw">let </span>fid = hub.staging_buffers.prepare::&lt;G&gt;(id_in);
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(staging_buffer);
+        <span class="macro">log::info!</span>(<span class="string">&quot;Created StagingBuffer {:?}&quot;</span>, id);
 
-        <span class="prelude-val">Ok</span>((id.<span class="number">0</span>, staging_buffer_ptr))
+        <span class="prelude-val">Ok</span>((id, staging_buffer_ptr))
     }
 
     <span class="kw">pub fn </span>queue_write_staging_buffer&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        queue_id: id::QueueId,
+        queue_id: QueueId,
         buffer_id: id::BufferId,
         buffer_offset: wgt::BufferAddress,
         staging_buffer_id: id::StagingBufferId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Queue::write_staging_buffer&quot;</span>);
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>root_token = <span class="kw-2">&amp;mut </span>Token::root();
 
-        <span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw-2">ref mut </span>device_token) = hub.devices.write(root_token);
-        <span class="kw">let </span>device = device_guard
-            .get_mut(queue_id)
-            .map_err(|<span class="kw">_</span>| DeviceError::Invalid)<span class="question-mark">?</span>;
+        <span class="kw">let </span>queue = hub
+            .queues
+            .get(queue_id)
+            .map_err(|<span class="kw">_</span>| DeviceError::InvalidQueueId)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>staging_buffer = hub
-            .staging_buffers
-            .unregister(staging_buffer_id, device_token)
-            .<span class="number">0
-            </span>.ok_or(TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?</span>;
+        <span class="kw">let </span>device = queue.device.as_ref().unwrap();
+
+        <span class="kw">let </span>staging_buffer = hub.staging_buffers.unregister(staging_buffer_id);
+        <span class="kw">if </span>staging_buffer.is_none() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(QueueWriteError::Transfer(TransferError::InvalidBuffer(
+                buffer_id,
+            )));
+        }
+        <span class="kw">let </span>staging_buffer = staging_buffer.unwrap();
+        <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
+        <span class="kw">let </span>pending_writes = pending_writes.as_mut().unwrap();
 
         <span class="comment">// At this point, we have taken ownership of the staging_buffer from the
         // user. Platform validation requires that the staging buffer always
         // be freed, even if an error occurs. All paths from here must call
         // `device.pending_writes.consume`.
-        </span><span class="kw">if let </span><span class="prelude-val">Err</span>(flush_error) = <span class="kw">unsafe </span>{ staging_buffer.flush(<span class="kw-2">&amp;</span>device.raw) } {
-            device.pending_writes.consume(staging_buffer);
+        </span><span class="kw">if let </span><span class="prelude-val">Err</span>(flush_error) = <span class="kw">unsafe </span>{ staging_buffer.flush(device.raw()) } {
+            pending_writes.consume(staging_buffer);
             <span class="kw">return </span><span class="prelude-val">Err</span>(flush_error.into());
         }
 
         <span class="kw">let </span>result = <span class="self">self</span>.queue_write_staging_buffer_impl(
-            queue_id,
             device,
-            device_token,
+            pending_writes,
             <span class="kw-2">&amp;</span>staging_buffer,
             buffer_id,
             buffer_offset,
         );
 
-        device.pending_writes.consume(staging_buffer);
+        pending_writes.consume(staging_buffer);
         result
     }
 
     <span class="kw">pub fn </span>queue_validate_write_buffer&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        _queue_id: id::QueueId,
+        _queue_id: QueueId,
         buffer_id: id::BufferId,
         buffer_offset: u64,
         buffer_size: u64,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Queue::validate_write_buffer&quot;</span>);
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span>root_token = <span class="kw-2">&amp;mut </span>Token::root();
 
-        <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">ref mut </span>device_token) = hub.devices.read(root_token);
-
-        <span class="kw">let </span>buffer_guard = hub.buffers.read(device_token).<span class="number">0</span>;
-        <span class="kw">let </span>buffer = buffer_guard
+        <span class="kw">let </span>buffer = hub
+            .buffers
             .get(buffer_id)
             .map_err(|<span class="kw">_</span>| TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.queue_validate_write_buffer_impl(buffer, buffer_id, buffer_offset, buffer_size)<span class="question-mark">?</span>;
+        <span class="self">self</span>.queue_validate_write_buffer_impl(<span class="kw-2">&amp;</span>buffer, buffer_id, buffer_offset, buffer_size)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>queue_validate_write_buffer_impl&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        buffer: <span class="kw-2">&amp;</span><span class="kw">crate</span>::resource::Buffer&lt;A&gt;,
+        buffer: <span class="kw-2">&amp;</span>Buffer&lt;A&gt;,
         buffer_id: id::BufferId,
         buffer_offset: u64,
         buffer_size: u64,
@@ -2017,62 +2114,68 @@
 
     <span class="kw">fn </span>queue_write_staging_buffer_impl&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        device_id: id::DeviceId,
-        device: <span class="kw-2">&amp;mut </span><span class="kw">super</span>::Device&lt;A&gt;,
-        device_token: <span class="kw-2">&amp;mut </span>Token&lt;<span class="kw">super</span>::Device&lt;A&gt;&gt;,
+        device: <span class="kw-2">&amp;</span>Device&lt;A&gt;,
+        pending_writes: <span class="kw-2">&amp;mut </span>PendingWrites&lt;A&gt;,
         staging_buffer: <span class="kw-2">&amp;</span>StagingBuffer&lt;A&gt;,
         buffer_id: id::BufferId,
         buffer_offset: u64,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), QueueWriteError&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="kw">let </span>buffer_guard = hub.buffers.read(device_token).<span class="number">0</span>;
-
-        <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
-        <span class="kw">let </span>(dst, transition) = trackers
-            .buffers
-            .set_single(<span class="kw-2">&amp;</span>buffer_guard, buffer_id, hal::BufferUses::COPY_DST)
-            .ok_or(TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?</span>;
+        <span class="kw">let </span>(dst, transition) = {
+            <span class="kw">let </span>buffer_guard = hub.buffers.read();
+            <span class="kw">let </span>dst = buffer_guard
+                .get(buffer_id)
+                .map_err(|<span class="kw">_</span>| TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
+            trackers
+                .buffers
+                .set_single(dst, hal::BufferUses::COPY_DST)
+                .ok_or(TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?
+        </span>};
         <span class="kw">let </span>dst_raw = dst
             .raw
             .as_ref()
             .ok_or(TransferError::InvalidBuffer(buffer_id))<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>dst.device_id.value.<span class="number">0 </span>!= device_id {
+        <span class="kw">if </span>dst.device.as_info().id() != device.as_info().id() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
         }
 
         <span class="kw">let </span>src_buffer_size = staging_buffer.size;
-        <span class="self">self</span>.queue_validate_write_buffer_impl(dst, buffer_id, buffer_offset, src_buffer_size)<span class="question-mark">?</span>;
+        <span class="self">self</span>.queue_validate_write_buffer_impl(<span class="kw-2">&amp;</span>dst, buffer_id, buffer_offset, src_buffer_size)<span class="question-mark">?</span>;
 
-        dst.life_guard.use_at(device.active_submission_index + <span class="number">1</span>);
+        dst.info
+            .use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
 
         <span class="kw">let </span>region = wgt::BufferSize::new(src_buffer_size).map(|size| hal::BufferCopy {
             src_offset: <span class="number">0</span>,
             dst_offset: buffer_offset,
             size,
         });
+        <span class="kw">let </span>inner_buffer = staging_buffer.raw.lock();
         <span class="kw">let </span>barriers = iter::once(hal::BufferBarrier {
-            buffer: <span class="kw-2">&amp;</span>staging_buffer.raw,
+            buffer: inner_buffer.as_ref().unwrap(),
             usage: hal::BufferUses::MAP_WRITE..hal::BufferUses::COPY_SRC,
         })
-        .chain(transition.map(|pending| pending.into_hal(dst)));
-        <span class="kw">let </span>encoder = device.pending_writes.activate();
+        .chain(transition.map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>dst)));
+        <span class="kw">let </span>encoder = pending_writes.activate();
         <span class="kw">unsafe </span>{
             encoder.transition_buffers(barriers);
-            encoder.copy_buffer_to_buffer(<span class="kw-2">&amp;</span>staging_buffer.raw, dst_raw, region.into_iter());
+            encoder.copy_buffer_to_buffer(
+                inner_buffer.as_ref().unwrap(),
+                dst_raw,
+                region.into_iter(),
+            );
         }
-
-        device.pending_writes.dst_buffers.insert(buffer_id);
+        <span class="kw">let </span>dst = hub.buffers.get(buffer_id).unwrap();
+        pending_writes.dst_buffers.insert(buffer_id, dst.clone());
 
         <span class="comment">// Ensure the overwritten bytes are marked as initialized so
         // they don&#39;t need to be nulled prior to mapping or binding.
         </span>{
-            drop(buffer_guard);
-            <span class="kw">let </span><span class="kw-2">mut </span>buffer_guard = hub.buffers.write(device_token).<span class="number">0</span>;
-
-            <span class="kw">let </span>dst = buffer_guard.get_mut(buffer_id).unwrap();
             dst.initialization_status
+                .write()
                 .drain(buffer_offset..(buffer_offset + src_buffer_size));
         }
 
@@ -2081,7 +2184,7 @@
 
     <span class="kw">pub fn </span>queue_write_texture&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        queue_id: id::QueueId,
+        queue_id: QueueId,
         destination: <span class="kw-2">&amp;</span>ImageCopyTexture,
         data: <span class="kw-2">&amp;</span>[u8],
         data_layout: <span class="kw-2">&amp;</span>wgt::ImageDataLayout,
@@ -2090,15 +2193,16 @@
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Queue::write_texture&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw-2">mut </span>token) = hub.devices.write(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>device = device_guard
-            .get_mut(queue_id)
-            .map_err(|<span class="kw">_</span>| DeviceError::Invalid)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>queue = hub
+            .queues
+            .get(queue_id)
+            .map_err(|<span class="kw">_</span>| DeviceError::InvalidQueueId)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>device = queue.device.as_ref().unwrap();
 
         <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
-        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
-            <span class="kw">let </span><span class="kw-2">mut </span>trace = trace.lock();
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
             <span class="kw">let </span>data_path = trace.make_binary(<span class="string">&quot;bin&quot;</span>, data);
             trace.add(Action::WriteTexture {
                 to: <span class="kw-2">*</span>destination,
@@ -2113,12 +2217,12 @@
             <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
 
-        <span class="kw">let </span>(<span class="kw-2">mut </span>texture_guard, <span class="kw">_</span>) = hub.textures.write(<span class="kw-2">&amp;mut </span>token); <span class="comment">// For clear we need write access to the texture. TODO: Can we acquire write lock later?
-        </span><span class="kw">let </span>dst = texture_guard
-            .get_mut(destination.texture)
+        <span class="kw">let </span>dst = hub
+            .textures
+            .get(destination.texture)
             .map_err(|<span class="kw">_</span>| TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
 
-        <span class="kw">if </span>dst.device_id.value.<span class="number">0 </span>!= queue_id {
+        <span class="kw">if </span>dst.device.as_info().id() != queue_id {
             <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
         }
 
@@ -2133,7 +2237,7 @@
         </span><span class="kw">let </span>(hal_copy_size, array_layer_count) =
             validate_texture_copy_range(destination, <span class="kw-2">&amp;</span>dst.desc, CopySide::Destination, size)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>(selector, dst_base) = extract_texture_selector(destination, size, dst)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(selector, dst_base) = extract_texture_selector(destination, size, <span class="kw-2">&amp;</span>dst)<span class="question-mark">?</span>;
 
         <span class="kw">if </span>!dst_base.aspect.is_one() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(TransferError::CopyAspectNotOne.into());
@@ -2190,8 +2294,9 @@
             (size.depth_or_array_layers - <span class="number">1</span>) * block_rows_per_image + height_blocks;
         <span class="kw">let </span>stage_size = stage_bytes_per_row <span class="kw">as </span>u64 * block_rows_in_copy <span class="kw">as </span>u64;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
-        <span class="kw">let </span>encoder = device.pending_writes.activate();
+        <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
+        <span class="kw">let </span>pending_writes = pending_writes.as_mut().unwrap();
+        <span class="kw">let </span>encoder = pending_writes.activate();
 
         <span class="comment">// If the copy does not fully cover the layers, we need to initialize to
         // zero *first* as we don&#39;t keep track of partial texture layer inits.
@@ -2204,18 +2309,19 @@
         </span>} <span class="kw">else </span>{
             destination.origin.z..destination.origin.z + size.depth_or_array_layers
         };
-        <span class="kw">if </span>dst.initialization_status.mips[destination.mip_level <span class="kw">as </span>usize]
+        <span class="kw">let </span><span class="kw-2">mut </span>dst_initialization_status = dst.initialization_status.write();
+        <span class="kw">if </span>dst_initialization_status.mips[destination.mip_level <span class="kw">as </span>usize]
             .check(init_layer_range.clone())
             .is_some()
         {
             <span class="kw">if </span>has_copy_partial_init_tracker_coverage(size, destination.mip_level, <span class="kw-2">&amp;</span>dst.desc) {
-                <span class="kw">for </span>layer_range <span class="kw">in </span>dst.initialization_status.mips[destination.mip_level <span class="kw">as </span>usize]
+                <span class="kw">for </span>layer_range <span class="kw">in </span>dst_initialization_status.mips[destination.mip_level <span class="kw">as </span>usize]
                     .drain(init_layer_range)
                     .collect::&lt;Vec&lt;std::ops::Range&lt;u32&gt;&gt;&gt;()
                 {
+                    <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
                     <span class="kw">crate</span>::command::clear_texture(
-                        <span class="kw-2">&amp;*</span>texture_guard,
-                        id::Valid(destination.texture),
+                        <span class="kw-2">&amp;</span>dst,
                         TextureInitRange {
                             mip_range: destination.mip_level..(destination.mip_level + <span class="number">1</span>),
                             layer_range,
@@ -2223,35 +2329,28 @@
                         encoder,
                         <span class="kw-2">&amp;mut </span>trackers.textures,
                         <span class="kw-2">&amp;</span>device.alignments,
-                        <span class="kw-2">&amp;</span>device.zero_buffer,
+                        device.zero_buffer.as_ref().unwrap(),
                     )
                     .map_err(QueueWriteError::from)<span class="question-mark">?</span>;
                 }
             } <span class="kw">else </span>{
-                dst.initialization_status.mips[destination.mip_level <span class="kw">as </span>usize]
+                dst_initialization_status.mips[destination.mip_level <span class="kw">as </span>usize]
                     .drain(init_layer_range);
             }
         }
 
         <span class="comment">// Re-get `dst` immutably here, so that the mutable borrow of the
-        // `texture_guard.get_mut` above ends in time for the `clear_texture`
+        // `texture_guard.get` above ends in time for the `clear_texture`
         // call above. Since we&#39;ve held `texture_guard` the whole time, we know
         // the texture hasn&#39;t gone away in the mean time, so we can unwrap.
-        </span><span class="kw">let </span>dst = texture_guard.get(destination.texture).unwrap();
-        <span class="kw">let </span>transition = trackers
-            .textures
-            .set_single(
-                dst,
-                destination.texture,
-                selector,
-                hal::TextureUses::COPY_DST,
-            )
-            .ok_or(TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
+        </span><span class="kw">let </span>dst = hub.textures.get(destination.texture).unwrap();
+        dst.info
+            .use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
 
-        dst.life_guard.use_at(device.active_submission_index + <span class="number">1</span>);
-
-        <span class="kw">let </span>dst_raw = dst
-            .inner
+        <span class="kw">let </span>dst_inner = dst.inner();
+        <span class="kw">let </span>dst_raw = dst_inner
+            .as_ref()
+            .unwrap()
             .as_raw()
             .ok_or(TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
 
@@ -2263,7 +2362,10 @@
         // freed, even if an error occurs. All paths from here must call
         // `device.pending_writes.consume`.
         </span><span class="kw">let </span>(staging_buffer, staging_buffer_ptr) =
-            prepare_staging_buffer(<span class="kw-2">&amp;mut </span>device.raw, stage_size, device.instance_flags)<span class="question-mark">?</span>;
+            prepare_staging_buffer(device, stage_size, device.instance_flags)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>stage_fid = hub.staging_buffers.request();
+        <span class="kw">let </span>staging_buffer = stage_fid.init(staging_buffer);
 
         <span class="kw">if </span>stage_bytes_per_row == bytes_per_row {
             <span class="macro">profiling::scope!</span>(<span class="string">&quot;copy aligned&quot;</span>);
@@ -2298,8 +2400,8 @@
             }
         }
 
-        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="kw">unsafe </span>{ staging_buffer.flush(<span class="kw-2">&amp;</span>device.raw) } {
-            device.pending_writes.consume(staging_buffer);
+        <span class="kw">if let </span><span class="prelude-val">Err</span>(e) = <span class="kw">unsafe </span>{ staging_buffer.flush(device.raw()) } {
+            pending_writes.consume(staging_buffer);
             <span class="kw">return </span><span class="prelude-val">Err</span>(e.into());
         }
 
@@ -2318,22 +2420,32 @@
                 size: hal_copy_size,
             }
         });
-        <span class="kw">let </span>barrier = hal::BufferBarrier {
-            buffer: <span class="kw-2">&amp;</span>staging_buffer.raw,
-            usage: hal::BufferUses::MAP_WRITE..hal::BufferUses::COPY_SRC,
-        };
 
-        <span class="kw">unsafe </span>{
-            encoder.transition_textures(transition.map(|pending| pending.into_hal(dst)));
-            encoder.transition_buffers(iter::once(barrier));
-            encoder.copy_buffer_to_texture(<span class="kw-2">&amp;</span>staging_buffer.raw, dst_raw, regions);
+        {
+            <span class="kw">let </span>inner_buffer = staging_buffer.raw.lock();
+            <span class="kw">let </span>barrier = hal::BufferBarrier {
+                buffer: inner_buffer.as_ref().unwrap(),
+                usage: hal::BufferUses::MAP_WRITE..hal::BufferUses::COPY_SRC,
+            };
+
+            <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
+            <span class="kw">let </span>transition = trackers
+                .textures
+                .set_single(<span class="kw-2">&amp;</span>dst, selector, hal::TextureUses::COPY_DST)
+                .ok_or(TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
+            <span class="kw">unsafe </span>{
+                encoder.transition_textures(
+                    transition.map(|pending| pending.into_hal(dst_inner.as_ref().unwrap())),
+                );
+                encoder.transition_buffers(iter::once(barrier));
+                encoder.copy_buffer_to_texture(inner_buffer.as_ref().unwrap(), dst_raw, regions);
+            }
         }
 
-        device.pending_writes.consume(staging_buffer);
-        device
-            .pending_writes
+        pending_writes.consume(staging_buffer);
+        pending_writes
             .dst_textures
-            .insert(destination.texture);
+            .insert(destination.texture, dst.clone());
 
         <span class="prelude-val">Ok</span>(())
     }
@@ -2341,7 +2453,7 @@
     <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;wasm32&quot;</span>, not(target_os = <span class="string">&quot;emscripten&quot;</span>)))]
     </span><span class="kw">pub fn </span>queue_copy_external_image_to_texture&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        queue_id: id::QueueId,
+        queue_id: QueueId,
         source: <span class="kw-2">&amp;</span>wgt::ImageCopyExternalImage,
         destination: <span class="kw">crate</span>::command::ImageCopyTextureTagged,
         size: wgt::Extent3d,
@@ -2349,11 +2461,13 @@
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Queue::copy_external_image_to_texture&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw-2">mut </span>token) = hub.devices.write(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>device = device_guard
-            .get_mut(queue_id)
-            .map_err(|<span class="kw">_</span>| DeviceError::Invalid)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>queue = hub
+            .queues
+            .get(queue_id)
+            .map_err(|<span class="kw">_</span>| DeviceError::InvalidQueueId)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>device = queue.device.as_ref().unwrap();
 
         <span class="kw">if </span>size.width == <span class="number">0 </span>|| size.height == <span class="number">0 </span>|| size.depth_or_array_layers == <span class="number">0 </span>{
             <span class="macro">log::trace!</span>(<span class="string">&quot;Ignoring write_texture of size 0&quot;</span>);
@@ -2379,8 +2493,7 @@
         <span class="kw">let </span>src_width = source.source.width();
         <span class="kw">let </span>src_height = source.source.height();
 
-        <span class="kw">let </span>(<span class="kw-2">mut </span>texture_guard, <span class="kw">_</span>) = hub.textures.write(<span class="kw-2">&amp;mut </span>token); <span class="comment">// For clear we need write access to the texture. TODO: Can we acquire write lock later?
-        </span><span class="kw">let </span>dst = texture_guard.get_mut(destination.texture).unwrap();
+        <span class="kw">let </span>dst = hub.textures.get(destination.texture).unwrap();
 
         <span class="kw">if </span>!conv::is_valid_external_image_copy_dst_texture_format(dst.desc.format) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(
@@ -2452,10 +2565,10 @@
         )<span class="question-mark">?</span>;
 
         <span class="kw">let </span>(selector, dst_base) =
-            extract_texture_selector(<span class="kw-2">&amp;</span>destination.to_untagged(), <span class="kw-2">&amp;</span>size, dst)<span class="question-mark">?</span>;
+            extract_texture_selector(<span class="kw-2">&amp;</span>destination.to_untagged(), <span class="kw-2">&amp;</span>size, <span class="kw-2">&amp;</span>dst)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
-        <span class="kw">let </span>encoder = device.pending_writes.activate();
+        <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
+        <span class="kw">let </span>encoder = pending_writes.as_mut().unwrap().activate();
 
         <span class="comment">// If the copy does not fully cover the layers, we need to initialize to
         // zero *first* as we don&#39;t keep track of partial texture layer inits.
@@ -2468,18 +2581,19 @@
         </span>} <span class="kw">else </span>{
             destination.origin.z..destination.origin.z + size.depth_or_array_layers
         };
-        <span class="kw">if </span>dst.initialization_status.mips[destination.mip_level <span class="kw">as </span>usize]
+        <span class="kw">let </span><span class="kw-2">mut </span>dst_initialization_status = dst.initialization_status.write();
+        <span class="kw">if </span>dst_initialization_status.mips[destination.mip_level <span class="kw">as </span>usize]
             .check(init_layer_range.clone())
             .is_some()
         {
             <span class="kw">if </span>has_copy_partial_init_tracker_coverage(<span class="kw-2">&amp;</span>size, destination.mip_level, <span class="kw-2">&amp;</span>dst.desc) {
-                <span class="kw">for </span>layer_range <span class="kw">in </span>dst.initialization_status.mips[destination.mip_level <span class="kw">as </span>usize]
+                <span class="kw">for </span>layer_range <span class="kw">in </span>dst_initialization_status.mips[destination.mip_level <span class="kw">as </span>usize]
                     .drain(init_layer_range)
                     .collect::&lt;Vec&lt;std::ops::Range&lt;u32&gt;&gt;&gt;()
                 {
+                    <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
                     <span class="kw">crate</span>::command::clear_texture(
-                        <span class="kw-2">&amp;*</span>texture_guard,
-                        id::Valid(destination.texture),
+                        <span class="kw-2">&amp;</span>dst,
                         TextureInitRange {
                             mip_range: destination.mip_level..(destination.mip_level + <span class="number">1</span>),
                             layer_range,
@@ -2487,32 +2601,22 @@
                         encoder,
                         <span class="kw-2">&amp;mut </span>trackers.textures,
                         <span class="kw-2">&amp;</span>device.alignments,
-                        <span class="kw-2">&amp;</span>device.zero_buffer,
+                        device.zero_buffer.as_ref().unwrap(),
                     )
                     .map_err(QueueWriteError::from)<span class="question-mark">?</span>;
                 }
             } <span class="kw">else </span>{
-                dst.initialization_status.mips[destination.mip_level <span class="kw">as </span>usize]
+                dst_initialization_status.mips[destination.mip_level <span class="kw">as </span>usize]
                     .drain(init_layer_range);
             }
         }
+        dst.info
+            .use_at(device.active_submission_index.load(Ordering::Relaxed) + <span class="number">1</span>);
 
-        <span class="kw">let </span>dst = texture_guard.get(destination.texture).unwrap();
-
-        <span class="kw">let </span>transitions = trackers
-            .textures
-            .set_single(
-                dst,
-                destination.texture,
-                selector,
-                hal::TextureUses::COPY_DST,
-            )
-            .ok_or(TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
-
-        dst.life_guard.use_at(device.active_submission_index + <span class="number">1</span>);
-
-        <span class="kw">let </span>dst_raw = dst
-            .inner
+        <span class="kw">let </span>dst_inner = dst.inner();
+        <span class="kw">let </span>dst_raw = dst_inner
+            .as_ref()
+            .unwrap()
             .as_raw()
             .ok_or(TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
 
@@ -2528,7 +2632,14 @@
         };
 
         <span class="kw">unsafe </span>{
-            encoder.transition_textures(transitions.map(|pending| pending.into_hal(dst)));
+            <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
+            <span class="kw">let </span>transitions = trackers
+                .textures
+                .set_single(<span class="kw-2">&amp;</span>dst, selector, hal::TextureUses::COPY_DST)
+                .ok_or(TransferError::InvalidTexture(destination.texture))<span class="question-mark">?</span>;
+            encoder.transition_textures(
+                transitions.map(|pending| pending.into_hal(dst_inner.as_ref().unwrap())),
+            );
             encoder.copy_external_image_to_texture(
                 source,
                 dst_raw,
@@ -2542,7 +2653,7 @@
 
     <span class="kw">pub fn </span>queue_submit&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        queue_id: id::QueueId,
+        queue_id: QueueId,
         command_buffer_ids: <span class="kw-2">&amp;</span>[id::CommandBufferId],
     ) -&gt; <span class="prelude-ty">Result</span>&lt;WrappedSubmissionIndex, QueueSubmitError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Queue::submit&quot;</span>);
@@ -2550,47 +2661,44 @@
 
         <span class="kw">let </span>(submit_index, callbacks) = {
             <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-            <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
 
-            <span class="kw">let </span>(<span class="kw-2">mut </span>device_guard, <span class="kw-2">mut </span>token) = hub.devices.write(<span class="kw-2">&amp;mut </span>token);
-            <span class="kw">let </span>device = device_guard
-                .get_mut(queue_id)
-                .map_err(|<span class="kw">_</span>| DeviceError::Invalid)<span class="question-mark">?</span>;
-            device.temp_suspected.clear();
-            device.active_submission_index += <span class="number">1</span>;
-            <span class="kw">let </span>submit_index = device.active_submission_index;
+            <span class="kw">let </span>queue = hub
+                .queues
+                .get(queue_id)
+                .map_err(|<span class="kw">_</span>| DeviceError::InvalidQueueId)<span class="question-mark">?</span>;
+
+            <span class="kw">let </span>device = queue.device.as_ref().unwrap();
+
+            <span class="kw">let </span><span class="kw-2">mut </span>fence = device.fence.write();
+            <span class="kw">let </span>fence = fence.as_mut().unwrap();
+            <span class="kw">let </span>submit_index = device
+                .active_submission_index
+                .fetch_add(<span class="number">1</span>, Ordering::Relaxed)
+                + <span class="number">1</span>;
             <span class="kw">let </span><span class="kw-2">mut </span>active_executions = Vec::new();
             <span class="kw">let </span><span class="kw-2">mut </span>used_surface_textures = track::TextureUsageScope::new();
 
             {
-                <span class="kw">let </span>(<span class="kw-2">mut </span>command_buffer_guard, <span class="kw-2">mut </span>token) = hub.command_buffers.write(<span class="kw-2">&amp;mut </span>token);
+                <span class="kw">let </span><span class="kw-2">mut </span>command_buffer_guard = hub.command_buffers.write();
 
                 <span class="kw">if </span>!command_buffer_ids.is_empty() {
                     <span class="macro">profiling::scope!</span>(<span class="string">&quot;prepare&quot;</span>);
 
-                    <span class="kw">let </span>(render_bundle_guard, <span class="kw-2">mut </span>token) = hub.render_bundles.read(<span class="kw-2">&amp;mut </span>token);
-                    <span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>token) = hub.pipeline_layouts.read(<span class="kw-2">&amp;mut </span>token);
-                    <span class="kw">let </span>(bind_group_guard, <span class="kw-2">mut </span>token) = hub.bind_groups.read(<span class="kw-2">&amp;mut </span>token);
-                    <span class="kw">let </span>(compute_pipe_guard, <span class="kw-2">mut </span>token) = hub.compute_pipelines.read(<span class="kw-2">&amp;mut </span>token);
-                    <span class="kw">let </span>(render_pipe_guard, <span class="kw-2">mut </span>token) = hub.render_pipelines.read(<span class="kw-2">&amp;mut </span>token);
-                    <span class="kw">let </span>(<span class="kw-2">mut </span>buffer_guard, <span class="kw-2">mut </span>token) = hub.buffers.write(<span class="kw-2">&amp;mut </span>token);
-                    <span class="kw">let </span>(<span class="kw-2">mut </span>texture_guard, <span class="kw-2">mut </span>token) = hub.textures.write(<span class="kw-2">&amp;mut </span>token);
-                    <span class="kw">let </span>(texture_view_guard, <span class="kw-2">mut </span>token) = hub.texture_views.read(<span class="kw-2">&amp;mut </span>token);
-                    <span class="kw">let </span>(sampler_guard, <span class="kw-2">mut </span>token) = hub.samplers.read(<span class="kw-2">&amp;mut </span>token);
-                    <span class="kw">let </span>(query_set_guard, <span class="kw">_</span>) = hub.query_sets.read(<span class="kw-2">&amp;mut </span>token);
-
-                    <span class="comment">//Note: locking the trackers has to be done after the storages
-                    </span><span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
-
                     <span class="comment">//TODO: if multiple command buffers are submitted, we can re-use the last
                     // native command buffer of the previous chain instead of always creating
                     // a temporary one, since the chains are not finished.
+                    </span><span class="kw">let </span><span class="kw-2">mut </span>temp_suspected = device.temp_suspected.lock();
+                    {
+                        <span class="kw">let </span><span class="kw-2">mut </span>suspected =
+                            temp_suspected.replace(ResourceMaps::new::&lt;A&gt;()).unwrap();
+                        suspected.clear();
+                    }
 
-                    // finish all the command buffers first
+                    <span class="comment">// finish all the command buffers first
                     </span><span class="kw">for </span><span class="kw-2">&amp;</span>cmb_id <span class="kw">in </span>command_buffer_ids {
                         <span class="comment">// we reset the used surface textures every time we use
                         // it, so make sure to set_size on it.
-                        </span>used_surface_textures.set_size(texture_guard.len());
+                        </span>used_surface_textures.set_size(hub.textures.read().len());
 
                         <span class="comment">// TODO: ideally we would use `get_and_mark_destroyed` but the code here
                         // wants to consume the command buffer.
@@ -2600,142 +2708,173 @@
                             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">continue</span>,
                         };
 
-                        <span class="kw">if </span>cmdbuf.device_id.value.<span class="number">0 </span>!= queue_id {
+                        <span class="kw">if </span>cmdbuf.device.as_info().id() != queue_id {
                             <span class="kw">return </span><span class="prelude-val">Err</span>(DeviceError::WrongDevice.into());
                         }
 
                         <span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
-                        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>trace) = device.trace {
-                            trace.lock().add(Action::Submit(
+                        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref mut </span>trace) = <span class="kw-2">*</span>device.trace.lock() {
+                            trace.add(Action::Submit(
                                 submit_index,
-                                cmdbuf.commands.take().unwrap(),
+                                cmdbuf
+                                    .data
+                                    .lock()
+                                    .as_mut()
+                                    .unwrap()
+                                    .commands
+                                    .take()
+                                    .unwrap(),
                             ));
                         }
                         <span class="kw">if </span>!cmdbuf.is_finished() {
-                            device.destroy_command_buffer(cmdbuf);
+                            <span class="kw">if let </span><span class="prelude-val">Ok</span>(cmdbuf) = Arc::try_unwrap(cmdbuf) {
+                                device.destroy_command_buffer(cmdbuf);
+                            } <span class="kw">else </span>{
+                                <span class="macro">panic!</span>(
+                                    <span class="string">&quot;Command buffer cannot be destroyed because is still in use&quot;
+                                </span>);
+                            }
                             <span class="kw">continue</span>;
                         }
 
                         <span class="comment">// optimize the tracked states
                         // cmdbuf.trackers.optimize();
+                        </span>{
+                            <span class="kw">let </span>cmd_buf_data = cmdbuf.data.lock();
+                            <span class="kw">let </span>cmd_buf_trackers = <span class="kw-2">&amp;</span>cmd_buf_data.as_ref().unwrap().trackers;
 
-                        // update submission IDs
-                        </span><span class="kw">for </span>id <span class="kw">in </span>cmdbuf.trackers.buffers.used() {
-                            <span class="kw">let </span>buffer = <span class="kw">match </span>buffer_guard.get(id.<span class="number">0</span>) {
-                                <span class="prelude-val">Ok</span>(buf) =&gt; buf,
-                                <span class="prelude-val">Err</span>(..) =&gt; {
-                                    <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedBuffer(id.<span class="number">0</span>));
-                                }
-                            };
-                            <span class="comment">// get fails if the buffer is invalid or destroyed so we can assume
-                            // the raw buffer is not None.
-                            </span><span class="kw">let </span>raw_buf = buffer.raw.as_ref().unwrap();
-
-                            <span class="kw">if </span>!buffer.life_guard.use_at(submit_index) {
-                                <span class="kw">if let </span>BufferMapState::Active { .. } = buffer.map_state {
-                                    <span class="macro">log::warn!</span>(<span class="string">&quot;Dropped buffer has a pending mapping.&quot;</span>);
-                                    <span class="kw">unsafe </span>{ device.raw.unmap_buffer(raw_buf) }
-                                        .map_err(DeviceError::from)<span class="question-mark">?</span>;
-                                }
-                                device.temp_suspected.buffers.push(id);
-                            } <span class="kw">else </span>{
-                                <span class="kw">match </span>buffer.map_state {
-                                    BufferMapState::Idle =&gt; (),
-                                    <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::BufferStillMapped(id.<span class="number">0</span>)),
-                                }
-                            }
-                        }
-                        <span class="kw">for </span>id <span class="kw">in </span>cmdbuf.trackers.textures.used() {
-                            <span class="kw">let </span>texture = <span class="kw">match </span>texture_guard.get_mut(id.<span class="number">0</span>) {
-                                <span class="prelude-val">Ok</span>(tex) =&gt; tex,
-                                <span class="prelude-val">Err</span>(..) =&gt; {
-                                    <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedTexture(id.<span class="number">0</span>));
-                                }
-                            };
-
-                            <span class="kw">let </span>should_extend = <span class="kw">match </span>texture.inner {
-                                TextureInner::Native { raw: <span class="prelude-val">None </span>} =&gt; {
-                                    <span class="macro">unreachable!</span>();
-                                }
-                                TextureInner::Native { raw: <span class="prelude-val">Some</span>(<span class="kw">_</span>) } =&gt; <span class="bool-val">false</span>,
-                                TextureInner::Surface {
-                                    <span class="kw-2">ref mut </span>has_work, ..
-                                } =&gt; {
-                                    <span class="kw-2">*</span>has_work = <span class="bool-val">true</span>;
-                                    <span class="bool-val">true
-                                </span>}
-                            };
-                            <span class="kw">if </span>!texture.life_guard.use_at(submit_index) {
-                                device.temp_suspected.textures.push(id);
-                            }
-                            <span class="kw">if </span>should_extend {
-                                <span class="kw">unsafe </span>{
-                                    <span class="kw">let </span>ref_count = cmdbuf.trackers.textures.get_ref_count(id);
-                                    used_surface_textures
-                                        .merge_single(
-                                            <span class="kw-2">&amp;*</span>texture_guard,
-                                            id,
-                                            <span class="prelude-val">None</span>,
-                                            ref_count,
-                                            hal::TextureUses::PRESENT,
-                                        )
-                                        .unwrap();
+                            <span class="comment">// update submission IDs
+                            </span><span class="kw">for </span>buffer <span class="kw">in </span>cmd_buf_trackers.buffers.used_resources() {
+                                <span class="kw">let </span>id = buffer.info.id();
+                                <span class="kw">let </span>raw_buf = <span class="kw">match </span>buffer.raw {
+                                    <span class="prelude-val">Some</span>(<span class="kw-2">ref </span>raw) =&gt; raw,
+                                    <span class="prelude-val">None </span>=&gt; {
+                                        <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedBuffer(id));
+                                    }
                                 };
+                                buffer.info.use_at(submit_index);
+                                <span class="kw">if </span>buffer.is_unique() {
+                                    <span class="kw">if let </span>BufferMapState::Active { .. } = <span class="kw-2">*</span>buffer.map_state.lock()
+                                    {
+                                        <span class="macro">log::warn!</span>(<span class="string">&quot;Dropped buffer has a pending mapping.&quot;</span>);
+                                        <span class="kw">unsafe </span>{ device.raw().unmap_buffer(raw_buf) }
+                                            .map_err(DeviceError::from)<span class="question-mark">?</span>;
+                                    }
+                                    temp_suspected.as_mut().unwrap().insert(id, buffer.clone());
+                                } <span class="kw">else </span>{
+                                    <span class="kw">match </span><span class="kw-2">*</span>buffer.map_state.lock() {
+                                        BufferMapState::Idle =&gt; (),
+                                        <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::BufferStillMapped(id)),
+                                    }
+                                }
+                            }
+                            <span class="kw">for </span>texture <span class="kw">in </span>cmd_buf_trackers.textures.used_resources() {
+                                <span class="kw">let </span>id = texture.info.id();
+                                <span class="kw">let </span>should_extend = <span class="kw">match </span><span class="kw-2">*</span>texture.inner().as_ref().unwrap() {
+                                    TextureInner::Native { raw: <span class="prelude-val">None </span>} =&gt; {
+                                        <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedTexture(id));
+                                    }
+                                    TextureInner::Native { raw: <span class="prelude-val">Some</span>(<span class="kw">_</span>) } =&gt; <span class="bool-val">false</span>,
+                                    TextureInner::Surface { <span class="kw-2">ref </span>has_work, .. } =&gt; {
+                                        has_work.store(<span class="bool-val">true</span>, Ordering::Relaxed);
+                                        <span class="bool-val">true
+                                    </span>}
+                                };
+                                texture.info.use_at(submit_index);
+                                <span class="kw">if </span>texture.is_unique() {
+                                    temp_suspected.as_mut().unwrap().insert(id, texture.clone());
+                                }
+                                <span class="kw">if </span>should_extend {
+                                    <span class="kw">unsafe </span>{
+                                        used_surface_textures
+                                            .merge_single(<span class="kw-2">&amp;</span>texture, <span class="prelude-val">None</span>, hal::TextureUses::PRESENT)
+                                            .unwrap();
+                                    };
+                                }
+                            }
+                            <span class="kw">for </span>texture_view <span class="kw">in </span>cmd_buf_trackers.views.used_resources() {
+                                texture_view.info.use_at(submit_index);
+                                <span class="kw">if </span>texture_view.is_unique() {
+                                    temp_suspected
+                                        .as_mut()
+                                        .unwrap()
+                                        .insert(texture_view.as_info().id(), texture_view.clone());
+                                }
+                            }
+                            {
+                                <span class="kw">for </span>bg <span class="kw">in </span>cmd_buf_trackers.bind_groups.used_resources() {
+                                    bg.info.use_at(submit_index);
+                                    <span class="comment">// We need to update the submission indices for the contained
+                                    // state-less (!) resources as well, so that they don&#39;t get
+                                    // deleted too early if the parent bind group goes out of scope.
+                                    </span><span class="kw">for </span>view <span class="kw">in </span>bg.used.views.used_resources() {
+                                        view.info.use_at(submit_index);
+                                    }
+                                    <span class="kw">for </span>sampler <span class="kw">in </span>bg.used.samplers.used_resources() {
+                                        sampler.info.use_at(submit_index);
+                                    }
+                                    <span class="kw">if </span>bg.is_unique() {
+                                        temp_suspected
+                                            .as_mut()
+                                            .unwrap()
+                                            .insert(bg.as_info().id(), bg.clone());
+                                    }
+                                }
+                            }
+                            <span class="comment">// assert!(cmd_buf_trackers.samplers.is_empty());
+                            </span><span class="kw">for </span>compute_pipeline <span class="kw">in
+                                </span>cmd_buf_trackers.compute_pipelines.used_resources()
+                            {
+                                compute_pipeline.info.use_at(submit_index);
+                                <span class="kw">if </span>compute_pipeline.is_unique() {
+                                    temp_suspected.as_mut().unwrap().insert(
+                                        compute_pipeline.as_info().id(),
+                                        compute_pipeline.clone(),
+                                    );
+                                }
+                            }
+                            <span class="kw">for </span>render_pipeline <span class="kw">in
+                                </span>cmd_buf_trackers.render_pipelines.used_resources()
+                            {
+                                render_pipeline.info.use_at(submit_index);
+                                <span class="kw">if </span>render_pipeline.is_unique() {
+                                    temp_suspected.as_mut().unwrap().insert(
+                                        render_pipeline.as_info().id(),
+                                        render_pipeline.clone(),
+                                    );
+                                }
+                            }
+                            <span class="kw">for </span>query_set <span class="kw">in </span>cmd_buf_trackers.query_sets.used_resources() {
+                                query_set.info.use_at(submit_index);
+                                <span class="kw">if </span>query_set.is_unique() {
+                                    temp_suspected
+                                        .as_mut()
+                                        .unwrap()
+                                        .insert(query_set.as_info().id(), query_set.clone());
+                                }
+                            }
+                            <span class="kw">for </span>bundle <span class="kw">in </span>cmd_buf_trackers.bundles.used_resources() {
+                                bundle.info.use_at(submit_index);
+                                <span class="comment">// We need to update the submission indices for the contained
+                                // state-less (!) resources as well, excluding the bind groups.
+                                // They don&#39;t get deleted too early if the bundle goes out of scope.
+                                </span><span class="kw">for </span>render_pipeline <span class="kw">in
+                                    </span>bundle.used.render_pipelines.read().used_resources()
+                                {
+                                    render_pipeline.info.use_at(submit_index);
+                                }
+                                <span class="kw">for </span>query_set <span class="kw">in </span>bundle.used.query_sets.read().used_resources() {
+                                    query_set.info.use_at(submit_index);
+                                }
+                                <span class="kw">if </span>bundle.is_unique() {
+                                    temp_suspected
+                                        .as_mut()
+                                        .unwrap()
+                                        .insert(bundle.as_info().id(), bundle.clone());
+                                }
                             }
                         }
-                        <span class="kw">for </span>id <span class="kw">in </span>cmdbuf.trackers.views.used() {
-                            <span class="kw">if </span>!texture_view_guard[id].life_guard.use_at(submit_index) {
-                                device.temp_suspected.texture_views.push(id);
-                            }
-                        }
-                        <span class="kw">for </span>id <span class="kw">in </span>cmdbuf.trackers.bind_groups.used() {
-                            <span class="kw">let </span>bg = <span class="kw-2">&amp;</span>bind_group_guard[id];
-                            <span class="kw">if </span>!bg.life_guard.use_at(submit_index) {
-                                device.temp_suspected.bind_groups.push(id);
-                            }
-                            <span class="comment">// We need to update the submission indices for the contained
-                            // state-less (!) resources as well, so that they don&#39;t get
-                            // deleted too early if the parent bind group goes out of scope.
-                            </span><span class="kw">for </span>sub_id <span class="kw">in </span>bg.used.views.used() {
-                                texture_view_guard[sub_id].life_guard.use_at(submit_index);
-                            }
-                            <span class="kw">for </span>sub_id <span class="kw">in </span>bg.used.samplers.used() {
-                                sampler_guard[sub_id].life_guard.use_at(submit_index);
-                            }
-                        }
-                        <span class="comment">// assert!(cmdbuf.trackers.samplers.is_empty());
-                        </span><span class="kw">for </span>id <span class="kw">in </span>cmdbuf.trackers.compute_pipelines.used() {
-                            <span class="kw">if </span>!compute_pipe_guard[id].life_guard.use_at(submit_index) {
-                                device.temp_suspected.compute_pipelines.push(id);
-                            }
-                        }
-                        <span class="kw">for </span>id <span class="kw">in </span>cmdbuf.trackers.render_pipelines.used() {
-                            <span class="kw">if </span>!render_pipe_guard[id].life_guard.use_at(submit_index) {
-                                device.temp_suspected.render_pipelines.push(id);
-                            }
-                        }
-                        <span class="kw">for </span>id <span class="kw">in </span>cmdbuf.trackers.query_sets.used() {
-                            <span class="kw">if </span>!query_set_guard[id].life_guard.use_at(submit_index) {
-                                device.temp_suspected.query_sets.push(id);
-                            }
-                        }
-                        <span class="kw">for </span>id <span class="kw">in </span>cmdbuf.trackers.bundles.used() {
-                            <span class="kw">let </span>bundle = <span class="kw-2">&amp;</span>render_bundle_guard[id];
-                            <span class="kw">if </span>!bundle.life_guard.use_at(submit_index) {
-                                device.temp_suspected.render_bundles.push(id);
-                            }
-                            <span class="comment">// We need to update the submission indices for the contained
-                            // state-less (!) resources as well, excluding the bind groups.
-                            // They don&#39;t get deleted too early if the bundle goes out of scope.
-                            </span><span class="kw">for </span>sub_id <span class="kw">in </span>bundle.used.render_pipelines.used() {
-                                render_pipe_guard[sub_id].life_guard.use_at(submit_index);
-                            }
-                            <span class="kw">for </span>sub_id <span class="kw">in </span>bundle.used.query_sets.used() {
-                                query_set_guard[sub_id].life_guard.use_at(submit_index);
-                            }
-                        }
-
-                        <span class="kw">let </span><span class="kw-2">mut </span>baked = cmdbuf.into_baked();
+                        <span class="kw">let </span><span class="kw-2">mut </span>baked = cmdbuf.from_arc_into_baked();
                         <span class="comment">// execute resource transitions
                         </span><span class="kw">unsafe </span>{
                             baked
@@ -2747,11 +2886,14 @@
                                 .map_err(DeviceError::from)<span class="question-mark">?
                         </span>};
                         <span class="macro">log::trace!</span>(<span class="string">&quot;Stitching command buffer {:?} before submission&quot;</span>, cmb_id);
+
+                        <span class="comment">//Note: locking the trackers has to be done after the storages
+                        </span><span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
                         baked
-                            .initialize_buffer_memory(<span class="kw-2">&amp;mut *</span>trackers, <span class="kw-2">&amp;mut *</span>buffer_guard)
+                            .initialize_buffer_memory(<span class="kw-2">&amp;mut *</span>trackers)
                             .map_err(|err| QueueSubmitError::DestroyedBuffer(err.<span class="number">0</span>))<span class="question-mark">?</span>;
                         baked
-                            .initialize_texture_memory(<span class="kw-2">&amp;mut *</span>trackers, <span class="kw-2">&amp;mut *</span>texture_guard, device)
+                            .initialize_texture_memory(<span class="kw-2">&amp;mut *</span>trackers, device)
                             .map_err(|err| QueueSubmitError::DestroyedTexture(err.<span class="number">0</span>))<span class="question-mark">?</span>;
                         <span class="comment">//Note: stateless trackers are not merged:
                         // device already knows these resources exist.
@@ -2759,8 +2901,6 @@
                             <span class="kw-2">&amp;mut </span>baked.encoder,
                             <span class="kw-2">&amp;mut *</span>trackers,
                             <span class="kw-2">&amp;</span>baked.trackers,
-                            <span class="kw-2">&amp;*</span>buffer_guard,
-                            <span class="kw-2">&amp;*</span>texture_guard,
                         );
 
                         <span class="kw">let </span>transit = <span class="kw">unsafe </span>{ baked.encoder.end_encoding().unwrap() };
@@ -2781,11 +2921,12 @@
                             </span>};
                             trackers
                                 .textures
-                                .set_from_usage_scope(<span class="kw-2">&amp;*</span>texture_guard, <span class="kw-2">&amp;</span>used_surface_textures);
-                            <span class="kw">let </span>texture_barriers = trackers.textures.drain().map(|pending| {
-                                <span class="kw">let </span>tex = <span class="kw">unsafe </span>{ texture_guard.get_unchecked(pending.id) };
-                                pending.into_hal(tex)
-                            });
+                                .set_from_usage_scope(<span class="kw-2">&amp;</span>used_surface_textures);
+                            <span class="kw">let </span>(transitions, textures) = trackers.textures.drain_transitions();
+                            <span class="kw">let </span>texture_barriers = transitions
+                                .into_iter()
+                                .enumerate()
+                                .map(|(i, p)| p.into_hal(textures[i].as_ref().unwrap()));
                             <span class="kw">let </span>present = <span class="kw">unsafe </span>{
                                 baked.encoder.transition_textures(texture_barriers);
                                 baked.encoder.end_encoding().unwrap()
@@ -2803,102 +2944,81 @@
 
                     <span class="macro">log::trace!</span>(<span class="string">&quot;Device after submission {}&quot;</span>, submit_index);
                 }
+            }
 
-                <span class="kw">let </span><span class="kw">super</span>::Device {
-                    <span class="kw-2">ref mut </span>pending_writes,
-                    <span class="kw-2">ref mut </span>queue,
-                    <span class="kw-2">ref mut </span>fence,
-                    ..
-                } = <span class="kw-2">*</span>device;
+            <span class="kw">let </span><span class="kw-2">mut </span>pending_writes = device.pending_writes.lock();
+            <span class="kw">let </span>pending_writes = pending_writes.as_mut().unwrap();
 
-                {
-                    <span class="comment">// TODO: These blocks have a few organizational issues, and
-                    // should be refactored.
-                    //
-                    // 1) It&#39;s similar to the code we have per-command-buffer
-                    //    (at the begin and end) Maybe we can merge some?
-                    //
-                    // 2) It&#39;s doing the extra locking unconditionally. Maybe we
-                    //    can only do so if any surfaces are being written to?
-                    </span><span class="kw">let </span>(<span class="kw">_</span>, <span class="kw-2">mut </span>token) = hub.buffers.read(<span class="kw-2">&amp;mut </span>token); <span class="comment">// skip token
-                    </span><span class="kw">let </span>(<span class="kw-2">mut </span>texture_guard, <span class="kw">_</span>) = hub.textures.write(<span class="kw-2">&amp;mut </span>token);
+            {
+                <span class="kw">let </span>texture_guard = hub.textures.read();
 
-                    used_surface_textures.set_size(texture_guard.len());
-
-                    <span class="kw">for </span><span class="kw-2">&amp;</span>id <span class="kw">in </span>pending_writes.dst_textures.iter() {
-                        <span class="kw">let </span>texture = texture_guard.get_mut(id).unwrap();
-                        <span class="kw">match </span>texture.inner {
-                            TextureInner::Native { raw: <span class="prelude-val">None </span>} =&gt; {
-                                <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedTexture(id));
-                            }
-                            TextureInner::Native { raw: <span class="prelude-val">Some</span>(<span class="kw">_</span>) } =&gt; {}
-                            TextureInner::Surface {
-                                <span class="kw-2">ref mut </span>has_work, ..
-                            } =&gt; {
-                                <span class="kw-2">*</span>has_work = <span class="bool-val">true</span>;
-                                <span class="kw">let </span>ref_count = texture.life_guard.add_ref();
-                                <span class="kw">unsafe </span>{
-                                    used_surface_textures
-                                        .merge_single(
-                                            <span class="kw-2">&amp;*</span>texture_guard,
-                                            id::Valid(id),
-                                            <span class="prelude-val">None</span>,
-                                            <span class="kw-2">&amp;</span>ref_count,
-                                            hal::TextureUses::PRESENT,
-                                        )
-                                        .unwrap()
-                                };
-                            }
+                used_surface_textures.set_size(texture_guard.len());
+                <span class="kw">for </span>(<span class="kw-2">&amp;</span>id, texture) <span class="kw">in </span>pending_writes.dst_textures.iter() {
+                    <span class="kw">match </span><span class="kw-2">*</span>texture.inner().as_ref().unwrap() {
+                        TextureInner::Native { raw: <span class="prelude-val">None </span>} =&gt; {
+                            <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::DestroyedTexture(id));
                         }
-                    }
-
-                    <span class="kw">if </span>!used_surface_textures.is_empty() {
-                        <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
-
-                        trackers
-                            .textures
-                            .set_from_usage_scope(<span class="kw-2">&amp;*</span>texture_guard, <span class="kw-2">&amp;</span>used_surface_textures);
-                        <span class="kw">let </span>texture_barriers = trackers.textures.drain().map(|pending| {
-                            <span class="kw">let </span>tex = <span class="kw">unsafe </span>{ texture_guard.get_unchecked(pending.id) };
-                            pending.into_hal(tex)
-                        });
-
-                        <span class="kw">unsafe </span>{
-                            pending_writes
-                                .command_encoder
-                                .transition_textures(texture_barriers);
-                        };
+                        TextureInner::Native { raw: <span class="prelude-val">Some</span>(<span class="kw">_</span>) } =&gt; {}
+                        TextureInner::Surface { <span class="kw-2">ref </span>has_work, .. } =&gt; {
+                            has_work.store(<span class="bool-val">true</span>, Ordering::Relaxed);
+                            <span class="kw">unsafe </span>{
+                                used_surface_textures
+                                    .merge_single(texture, <span class="prelude-val">None</span>, hal::TextureUses::PRESENT)
+                                    .unwrap()
+                            };
+                        }
                     }
                 }
 
-                <span class="kw">let </span>refs = pending_writes
-                    .pre_submit()
-                    .into_iter()
-                    .chain(
-                        active_executions
-                            .iter()
-                            .flat_map(|pool_execution| pool_execution.cmd_buffers.iter()),
-                    )
-                    .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
-                <span class="kw">unsafe </span>{
-                    queue
-                        .submit(<span class="kw-2">&amp;</span>refs, <span class="prelude-val">Some</span>((fence, submit_index)))
-                        .map_err(DeviceError::from)<span class="question-mark">?</span>;
+                <span class="kw">if </span>!used_surface_textures.is_empty() {
+                    <span class="kw">let </span><span class="kw-2">mut </span>trackers = device.trackers.lock();
+
+                    trackers
+                        .textures
+                        .set_from_usage_scope(<span class="kw-2">&amp;</span>used_surface_textures);
+                    <span class="kw">let </span>(transitions, textures) = trackers.textures.drain_transitions();
+                    <span class="kw">let </span>texture_barriers = transitions
+                        .into_iter()
+                        .enumerate()
+                        .map(|(i, p)| p.into_hal(textures[i].as_ref().unwrap()));
+                    <span class="kw">unsafe </span>{
+                        pending_writes
+                            .command_encoder
+                            .transition_textures(texture_barriers);
+                    };
                 }
             }
 
+            <span class="kw">let </span>refs = pending_writes
+                .pre_submit()
+                .into_iter()
+                .chain(
+                    active_executions
+                        .iter()
+                        .flat_map(|pool_execution| pool_execution.cmd_buffers.iter()),
+                )
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+            <span class="kw">unsafe </span>{
+                queue
+                    .raw
+                    .as_ref()
+                    .unwrap()
+                    .submit(<span class="kw-2">&amp;</span>refs, <span class="prelude-val">Some</span>((fence, submit_index)))
+                    .map_err(DeviceError::from)<span class="question-mark">?</span>;
+            }
+
             <span class="macro">profiling::scope!</span>(<span class="string">&quot;cleanup&quot;</span>);
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(pending_execution) = device.pending_writes.post_submit(
-                <span class="kw-2">&amp;</span>device.command_allocator,
-                <span class="kw-2">&amp;</span>device.raw,
-                <span class="kw-2">&amp;</span>device.queue,
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(pending_execution) = pending_writes.post_submit(
+                device.command_allocator.lock().as_mut().unwrap(),
+                device.raw(),
+                queue.raw.as_ref().unwrap(),
             ) {
                 active_executions.push(pending_execution);
             }
 
             <span class="comment">// this will register the new submission to the life time tracker
-            </span><span class="kw">let </span><span class="kw-2">mut </span>pending_write_resources = mem::take(<span class="kw-2">&amp;mut </span>device.pending_writes.temp_resources);
-            device.lock_life(<span class="kw-2">&amp;mut </span>token).track_submission(
+            </span><span class="kw">let </span><span class="kw-2">mut </span>pending_write_resources = mem::take(<span class="kw-2">&amp;mut </span>pending_writes.temp_resources);
+            device.lock_life().track_submission(
                 submit_index,
                 pending_write_resources.drain(..),
                 active_executions,
@@ -2906,7 +3026,7 @@
 
             <span class="comment">// This will schedule destruction of all resources that are no longer needed
             // by the user but used in the command stream, among other things.
-            </span><span class="kw">let </span>(closures, <span class="kw">_</span>) = <span class="kw">match </span>device.maintain(hub, wgt::Maintain::Poll, <span class="kw-2">&amp;mut </span>token) {
+            </span><span class="kw">let </span>(closures, <span class="kw">_</span>) = <span class="kw">match </span>device.maintain(hub, fence, wgt::Maintain::Poll) {
                 <span class="prelude-val">Ok</span>(closures) =&gt; closures,
                 <span class="prelude-val">Err</span>(WaitIdleError::Device(err)) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::Queue(err)),
                 <span class="prelude-val">Err</span>(WaitIdleError::StuckGpu) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(QueueSubmitError::StuckGpu),
@@ -2915,9 +3035,8 @@
 
             <span class="comment">// pending_write_resources has been drained, so it&#39;s empty, but we
             // want to retain its heap allocation.
-            </span>device.pending_writes.temp_resources = pending_write_resources;
-            device.temp_suspected.clear();
-            device.lock_life(<span class="kw-2">&amp;mut </span>token).post_submit();
+            </span>pending_writes.temp_resources = pending_write_resources;
+            device.lock_life().post_submit();
 
             (submit_index, closures)
         };
@@ -2933,30 +3052,31 @@
 
     <span class="kw">pub fn </span>queue_get_timestamp_period&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        queue_id: id::QueueId,
+        queue_id: QueueId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;f32, InvalidQueue&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(device_guard, <span class="kw">_</span>) = hub.devices.read(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">match </span>device_guard.get(queue_id) {
-            <span class="prelude-val">Ok</span>(device) =&gt; <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ device.queue.get_timestamp_period() }),
+        <span class="kw">match </span>hub.queues.get(queue_id) {
+            <span class="prelude-val">Ok</span>(queue) =&gt; <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ queue.raw.as_ref().unwrap().get_timestamp_period() }),
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(InvalidQueue),
         }
     }
 
     <span class="kw">pub fn </span>queue_on_submitted_work_done&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        queue_id: id::QueueId,
+        queue_id: QueueId,
         closure: SubmittedWorkDoneClosure,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), InvalidQueue&gt; {
         <span class="macro">log::trace!</span>(<span class="string">&quot;Queue::on_submitted_work_done {queue_id:?}&quot;</span>);
 
         <span class="comment">//TODO: flush pending writes
         </span><span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(device_guard, <span class="kw-2">mut </span>token) = hub.devices.read(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">match </span>device_guard.get(queue_id) {
-            <span class="prelude-val">Ok</span>(device) =&gt; device.lock_life(<span class="kw-2">&amp;mut </span>token).add_work_done_closure(closure),
+        <span class="kw">match </span>hub.queues.get(queue_id) {
+            <span class="prelude-val">Ok</span>(queue) =&gt; queue
+                .device
+                .as_ref()
+                .unwrap()
+                .lock_life()
+                .add_work_done_closure(closure),
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(InvalidQueue),
         }
         <span class="prelude-val">Ok</span>(())

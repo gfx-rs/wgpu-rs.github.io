@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/backend/direct.rs`."><title>direct.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png" alt="wgpu"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/backend/direct.rs`."><title>direct.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png" alt="wgpu"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -3197,6 +3197,15 @@
 <a href="#3197" id="3197">3197</a>
 <a href="#3198" id="3198">3198</a>
 <a href="#3199" id="3199">3199</a>
+<a href="#3200" id="3200">3200</a>
+<a href="#3201" id="3201">3201</a>
+<a href="#3202" id="3202">3202</a>
+<a href="#3203" id="3203">3203</a>
+<a href="#3204" id="3204">3204</a>
+<a href="#3205" id="3205">3205</a>
+<a href="#3206" id="3206">3206</a>
+<a href="#3207" id="3207">3207</a>
+<a href="#3208" id="3208">3208</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     context::{ObjectId, Unused},
     AdapterInfo, BindGroupDescriptor, BindGroupLayoutDescriptor, BindingResource, BufferBinding,
@@ -3304,12 +3313,13 @@
         trace_dir: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(Device, Queue), <span class="kw">crate</span>::RequestDeviceError&gt; {
         <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-        <span class="kw">let </span>(device_id, error) = <span class="kw">unsafe </span>{
+        <span class="kw">let </span>(device_id, queue_id, error) = <span class="kw">unsafe </span>{
             global.create_device_from_hal(
                 <span class="kw-2">*</span>adapter,
                 hal_device,
                 <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
                 trace_dir,
+                (),
                 (),
             )
         };
@@ -3323,7 +3333,7 @@
             features: desc.features,
         };
         <span class="kw">let </span>queue = Queue {
-            id: device_id,
+            id: queue_id,
             error_sink,
         };
         <span class="prelude-val">Ok</span>((device, queue))
@@ -3397,9 +3407,9 @@
         }
     }
 
-    <span class="kw">pub unsafe fn </span>surface_as_hal_mut&lt;
+    <span class="kw">pub unsafe fn </span>surface_as_hal&lt;
         A: wgc::hal_api::HalApi,
-        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>A::Surface&gt;) -&gt; R,
+        F: FnOnce(<span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Surface&gt;) -&gt; R,
         R,
     &gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -3408,7 +3418,7 @@
     ) -&gt; R {
         <span class="kw">unsafe </span>{
             <span class="self">self</span>.<span class="number">0
-                </span>.surface_as_hal_mut::&lt;A, F, R&gt;(surface.id, hal_surface_callback)
+                </span>.surface_as_hal::&lt;A, F, R&gt;(surface.id, hal_surface_callback)
         }
     }
 
@@ -3830,10 +3840,11 @@
         trace_dir: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
     ) -&gt; <span class="self">Self</span>::RequestDeviceFuture {
         <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-        <span class="kw">let </span>(device_id, error) = <span class="macro">wgc::gfx_select!</span>(<span class="kw-2">*</span>adapter =&gt; global.adapter_request_device(
+        <span class="kw">let </span>(device_id, queue_id, error) = <span class="macro">wgc::gfx_select!</span>(<span class="kw-2">*</span>adapter =&gt; global.adapter_request_device(
             <span class="kw-2">*</span>adapter,
             <span class="kw-2">&amp;</span>desc.map_label(|l| l.map(Borrowed)),
             trace_dir,
+            (),
             ()
         ));
         <span class="kw">if let </span><span class="prelude-val">Some</span>(err) = error {
@@ -3846,7 +3857,7 @@
             features: desc.features,
         };
         <span class="kw">let </span>queue = Queue {
-            id: device_id,
+            id: queue_id,
             error_sink,
         };
         ready(<span class="prelude-val">Ok</span>((device_id, device, device_id, queue)))
@@ -4643,17 +4654,20 @@
     }
     <span class="attr">#[cfg_attr(target_arch = <span class="string">&quot;wasm32&quot;</span>, allow(unused))]
     </span><span class="kw">fn </span>device_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId, _device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData) {
-        <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
-
         <span class="attr">#[cfg(any(not(target_arch = <span class="string">&quot;wasm32&quot;</span>), target_os = <span class="string">&quot;emscripten&quot;</span>))]
         </span>{
+            <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
             <span class="kw">match </span><span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_poll(<span class="kw-2">*</span>device, wgt::Maintain::Wait)) {
                 <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; (),
                 <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self</span>.handle_error_fatal(err, <span class="string">&quot;Device::drop&quot;</span>),
             }
+            <span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_drop(<span class="kw-2">*</span>device));
         }
-
-        <span class="macro">wgc::gfx_select!</span>(device =&gt; global.device_drop(<span class="kw-2">*</span>device));
+    }
+    <span class="attr">#[cfg_attr(target_arch = <span class="string">&quot;wasm32&quot;</span>, allow(unused))]
+    </span><span class="kw">fn </span>queue_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueId, _device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData) {
+        <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
+        <span class="macro">wgc::gfx_select!</span>(queue =&gt; global.queue_drop(<span class="kw-2">*</span>queue));
     }
     <span class="kw">fn </span>device_set_device_lost_callback(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -4740,10 +4754,12 @@
                 MapMode::Read =&gt; wgc::device::HostMap::Read,
                 MapMode::Write =&gt; wgc::device::HostMap::Write,
             },
-            callback: wgc::resource::BufferMapCallback::from_rust(Box::new(|status| {
-                <span class="kw">let </span>res = status.map_err(|<span class="kw">_</span>| <span class="kw">crate</span>::BufferAsyncError);
-                callback(res);
-            })),
+            callback: <span class="prelude-val">Some</span>(wgc::resource::BufferMapCallback::from_rust(Box::new(
+                |status| {
+                    <span class="kw">let </span>res = status.map_err(|<span class="kw">_</span>| <span class="kw">crate</span>::BufferAsyncError);
+                    callback(res);
+                },
+            ))),
         };
 
         <span class="kw">let </span>global = <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>;
@@ -5544,10 +5560,6 @@
             <span class="prelude-val">Err</span>(err) =&gt; <span class="self">self</span>.handle_error_fatal(err, <span class="string">&quot;Queue::submit&quot;</span>),
         };
 
-        <span class="kw">for </span>cmdbuf <span class="kw">in </span><span class="kw-2">&amp;</span>temp_command_buffers {
-            <span class="macro">wgc::gfx_select!</span>(<span class="kw-2">*</span>queue =&gt; global.command_buffer_drop(<span class="kw-2">*</span>cmdbuf));
-        }
-
         (Unused, index)
     }
 
@@ -6255,7 +6267,10 @@
     }
 }
 
-<span class="kw">impl</span>&lt;T&gt; From&lt;ObjectId&gt; <span class="kw">for </span>wgc::id::Id&lt;T&gt; {
+<span class="kw">impl</span>&lt;T&gt; From&lt;ObjectId&gt; <span class="kw">for </span>wgc::id::Id&lt;T&gt;
+<span class="kw">where
+    </span>T: <span class="lifetime">&#39;static </span>+ WasmNotSendSync,
+{
     <span class="kw">fn </span>from(id: ObjectId) -&gt; <span class="self">Self </span>{
         <span class="comment">// If the id32 feature is enabled in wgpu-core, this will make sure that the id fits in a NonZeroU32.
         </span><span class="attr">#[allow(clippy::useless_conversion)]
@@ -6265,7 +6280,10 @@
     }
 }
 
-<span class="kw">impl</span>&lt;T&gt; From&lt;wgc::id::Id&lt;T&gt;&gt; <span class="kw">for </span>ObjectId {
+<span class="kw">impl</span>&lt;T&gt; From&lt;wgc::id::Id&lt;T&gt;&gt; <span class="kw">for </span>ObjectId
+<span class="kw">where
+    </span>T: <span class="lifetime">&#39;static </span>+ WasmNotSendSync,
+{
     <span class="kw">fn </span>from(id: wgc::id::Id&lt;T&gt;) -&gt; <span class="self">Self </span>{
         <span class="comment">// If the id32 feature is enabled in wgpu-core, the conversion is not useless
         </span><span class="attr">#[allow(clippy::useless_conversion)]

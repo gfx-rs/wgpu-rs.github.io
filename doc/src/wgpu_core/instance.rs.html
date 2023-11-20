@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/instance.rs`."><title>instance.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/instance.rs`."><title>instance.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1235,29 +1235,107 @@
 <a href="#1235" id="1235">1235</a>
 <a href="#1236" id="1236">1236</a>
 <a href="#1237" id="1237">1237</a>
-</pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
-    device::{Device, DeviceDescriptor},
+<a href="#1238" id="1238">1238</a>
+<a href="#1239" id="1239">1239</a>
+<a href="#1240" id="1240">1240</a>
+<a href="#1241" id="1241">1241</a>
+<a href="#1242" id="1242">1242</a>
+<a href="#1243" id="1243">1243</a>
+<a href="#1244" id="1244">1244</a>
+<a href="#1245" id="1245">1245</a>
+<a href="#1246" id="1246">1246</a>
+<a href="#1247" id="1247">1247</a>
+<a href="#1248" id="1248">1248</a>
+<a href="#1249" id="1249">1249</a>
+<a href="#1250" id="1250">1250</a>
+<a href="#1251" id="1251">1251</a>
+<a href="#1252" id="1252">1252</a>
+<a href="#1253" id="1253">1253</a>
+<a href="#1254" id="1254">1254</a>
+<a href="#1255" id="1255">1255</a>
+<a href="#1256" id="1256">1256</a>
+<a href="#1257" id="1257">1257</a>
+<a href="#1258" id="1258">1258</a>
+<a href="#1259" id="1259">1259</a>
+<a href="#1260" id="1260">1260</a>
+<a href="#1261" id="1261">1261</a>
+<a href="#1262" id="1262">1262</a>
+<a href="#1263" id="1263">1263</a>
+<a href="#1264" id="1264">1264</a>
+<a href="#1265" id="1265">1265</a>
+<a href="#1266" id="1266">1266</a>
+<a href="#1267" id="1267">1267</a>
+<a href="#1268" id="1268">1268</a>
+<a href="#1269" id="1269">1269</a>
+<a href="#1270" id="1270">1270</a>
+<a href="#1271" id="1271">1271</a>
+<a href="#1272" id="1272">1272</a>
+<a href="#1273" id="1273">1273</a>
+<a href="#1274" id="1274">1274</a>
+<a href="#1275" id="1275">1275</a>
+<a href="#1276" id="1276">1276</a>
+<a href="#1277" id="1277">1277</a>
+<a href="#1278" id="1278">1278</a>
+<a href="#1279" id="1279">1279</a>
+<a href="#1280" id="1280">1280</a>
+<a href="#1281" id="1281">1281</a>
+<a href="#1282" id="1282">1282</a>
+<a href="#1283" id="1283">1283</a>
+<a href="#1284" id="1284">1284</a>
+<a href="#1285" id="1285">1285</a>
+<a href="#1286" id="1286">1286</a>
+<a href="#1287" id="1287">1287</a>
+<a href="#1288" id="1288">1288</a>
+<a href="#1289" id="1289">1289</a>
+<a href="#1290" id="1290">1290</a>
+<a href="#1291" id="1291">1291</a>
+<a href="#1292" id="1292">1292</a>
+<a href="#1293" id="1293">1293</a>
+<a href="#1294" id="1294">1294</a>
+<a href="#1295" id="1295">1295</a>
+<a href="#1296" id="1296">1296</a>
+<a href="#1297" id="1297">1297</a>
+<a href="#1298" id="1298">1298</a>
+<a href="#1299" id="1299">1299</a>
+<a href="#1300" id="1300">1300</a>
+<a href="#1301" id="1301">1301</a>
+<a href="#1302" id="1302">1302</a>
+<a href="#1303" id="1303">1303</a>
+<a href="#1304" id="1304">1304</a>
+<a href="#1305" id="1305">1305</a>
+<a href="#1306" id="1306">1306</a>
+<a href="#1307" id="1307">1307</a>
+<a href="#1308" id="1308">1308</a>
+<a href="#1309" id="1309">1309</a>
+<a href="#1310" id="1310">1310</a>
+<a href="#1311" id="1311">1311</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::sync::Arc;
+
+<span class="kw">use crate</span>::{
+    any_surface::AnySurface,
+    device::{queue::Queue, resource::Device, DeviceDescriptor},
     global::Global,
     hal_api::HalApi,
-    hub::Token,
-    id::{AdapterId, DeviceId, SurfaceId, Valid},
+    id::{AdapterId, DeviceId, QueueId, SurfaceId},
     identity::{GlobalIdentityHandlerFactory, Input},
     present::Presentation,
-    LabelHelpers, LifeGuard, Stored, DOWNLEVEL_WARNING_MESSAGE,
+    resource::{Resource, ResourceInfo, ResourceType},
+    LabelHelpers, DOWNLEVEL_WARNING_MESSAGE,
 };
 
+<span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>wgt::{Backend, Backends, PowerPreference};
 
-<span class="kw">use </span>hal::{Adapter <span class="kw">as _</span>, Instance <span class="kw">as _</span>};
+<span class="kw">use </span>hal::{Adapter <span class="kw">as _</span>, Instance <span class="kw">as _</span>, OpenDevice};
 <span class="kw">use </span>thiserror::Error;
 
 <span class="kw">pub type </span>RequestAdapterOptions = wgt::RequestAdapterOptions&lt;SurfaceId&gt;;
 <span class="kw">type </span>HalInstance&lt;A&gt; = &lt;A <span class="kw">as </span>hal::Api&gt;::Instance;
 <span class="comment">//TODO: remove this
-</span><span class="kw">pub struct </span>HalSurface&lt;A: hal::Api&gt; {
-    <span class="kw">pub </span>raw: A::Surface,
-    <span class="comment">//pub acquired_texture: Option&lt;A::SurfaceTexture&gt;,
-</span>}
+</span><span class="attr">#[derive(Clone)]
+</span><span class="kw">pub struct </span>HalSurface&lt;A: HalApi&gt; {
+    <span class="kw">pub </span>raw: Arc&lt;A::Surface&gt;,
+}
 
 <span class="attr">#[derive(Clone, Debug, Error)]
 #[error(<span class="string">&quot;Limit &#39;{name}&#39; value {requested} is better than allowed {allowed}&quot;</span>)]
@@ -1354,54 +1432,57 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>destroy_surface(<span class="kw-2">&amp;</span><span class="self">self</span>, surface: Surface) {
-        <span class="kw">fn </span>destroy&lt;A: HalApi&gt;(
-            <span class="kw">_</span>: A,
-            instance: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;A::Instance&gt;,
-            surface: <span class="prelude-ty">Option</span>&lt;HalSurface&lt;A&gt;&gt;,
-        ) {
+        <span class="kw">fn </span>destroy&lt;A: HalApi&gt;(<span class="kw">_</span>: A, instance: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;A::Instance&gt;, surface: AnySurface) {
             <span class="kw">unsafe </span>{
-                <span class="kw">if let </span><span class="prelude-val">Some</span>(suf) = surface {
-                    instance.as_ref().unwrap().destroy_surface(suf.raw);
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(surface) = surface.take::&lt;A&gt;() {
+                    <span class="kw">if let </span><span class="prelude-val">Ok</span>(suf) = Arc::try_unwrap(surface) {
+                        <span class="kw">if let </span><span class="prelude-val">Ok</span>(raw) = Arc::try_unwrap(suf.raw) {
+                            instance.as_ref().unwrap().destroy_surface(raw);
+                        } <span class="kw">else </span>{
+                            <span class="macro">panic!</span>(<span class="string">&quot;Surface cannot be destroyed because is still in use&quot;</span>);
+                        }
+                    } <span class="kw">else </span>{
+                        <span class="macro">panic!</span>(<span class="string">&quot;Surface cannot be destroyed because is still in use&quot;</span>);
+                    }
                 }
             }
         }
-        <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
-        </span>destroy(hal::api::Vulkan, <span class="kw-2">&amp;</span><span class="self">self</span>.vulkan, surface.vulkan);
-        <span class="attr">#[cfg(all(feature = <span class="string">&quot;metal&quot;</span>, any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>)))]
-        </span>destroy(hal::api::Metal, <span class="kw-2">&amp;</span><span class="self">self</span>.metal, surface.metal);
-        <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
-        </span>destroy(hal::api::Dx12, <span class="kw-2">&amp;</span><span class="self">self</span>.dx12, surface.dx12);
-        <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
-        </span>destroy(hal::api::Dx11, <span class="kw-2">&amp;</span><span class="self">self</span>.dx11, surface.dx11);
-        <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
-        </span>destroy(hal::api::Gles, <span class="kw-2">&amp;</span><span class="self">self</span>.gl, surface.gl);
+        <span class="kw">match </span>surface.raw.backend() {
+            <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
+            </span>Backend::Vulkan =&gt; destroy(hal::api::Vulkan, <span class="kw-2">&amp;</span><span class="self">self</span>.vulkan, surface.raw),
+            <span class="attr">#[cfg(all(feature = <span class="string">&quot;metal&quot;</span>, any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>)))]
+            </span>Backend::Metal =&gt; destroy(hal::api::Metal, <span class="kw-2">&amp;</span><span class="self">self</span>.metal, surface.raw),
+            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
+            </span>Backend::Dx12 =&gt; destroy(hal::api::Dx12, <span class="kw-2">&amp;</span><span class="self">self</span>.dx12, surface.raw),
+            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
+            </span>Backend::Dx11 =&gt; destroy(hal::api::Dx11, <span class="kw-2">&amp;</span><span class="self">self</span>.dx11, surface.raw),
+            <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
+            </span>Backend::Gl =&gt; destroy(hal::api::Gles, <span class="kw-2">&amp;</span><span class="self">self</span>.gl, surface.raw),
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+        }
     }
 }
 
 <span class="kw">pub struct </span>Surface {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) presentation: <span class="prelude-ty">Option</span>&lt;Presentation&gt;,
-    <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
-    </span><span class="kw">pub </span>vulkan: <span class="prelude-ty">Option</span>&lt;HalSurface&lt;hal::api::Vulkan&gt;&gt;,
-    <span class="attr">#[cfg(all(feature = <span class="string">&quot;metal&quot;</span>, any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>)))]
-    </span><span class="kw">pub </span>metal: <span class="prelude-ty">Option</span>&lt;HalSurface&lt;hal::api::Metal&gt;&gt;,
-    <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
-    </span><span class="kw">pub </span>dx12: <span class="prelude-ty">Option</span>&lt;HalSurface&lt;hal::api::Dx12&gt;&gt;,
-    <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
-    </span><span class="kw">pub </span>dx11: <span class="prelude-ty">Option</span>&lt;HalSurface&lt;hal::api::Dx11&gt;&gt;,
-    <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
-    </span><span class="kw">pub </span>gl: <span class="prelude-ty">Option</span>&lt;HalSurface&lt;hal::api::Gles&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) presentation: Mutex&lt;<span class="prelude-ty">Option</span>&lt;Presentation&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;SurfaceId&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) raw: AnySurface,
 }
 
-<span class="kw">impl </span><span class="kw">crate</span>::resource::Resource <span class="kw">for </span>Surface {
-    <span class="kw">const </span>TYPE: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;Surface&quot;</span>;
+<span class="kw">impl </span>Resource&lt;SurfaceId&gt; <span class="kw">for </span>Surface {
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;Surface&quot;</span>;
 
-    <span class="kw">fn </span>life_guard(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>LifeGuard {
-        <span class="macro">unreachable!</span>()
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;SurfaceId&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.info
     }
 
-    <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
-        <span class="string">&quot;&lt;Surface&gt;&quot;
-    </span>}
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;SurfaceId&gt; {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
+    }
+
+    <span class="kw">fn </span>label(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        String::from(<span class="string">&quot;&lt;Surface&gt;&quot;</span>)
+    }
 }
 
 <span class="kw">impl </span>Surface {
@@ -1423,9 +1504,9 @@
     }
 }
 
-<span class="kw">pub struct </span>Adapter&lt;A: hal::Api&gt; {
+<span class="kw">pub struct </span>Adapter&lt;A: HalApi&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) raw: hal::ExposedAdapter&lt;A&gt;,
-    life_guard: LifeGuard,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) info: ResourceInfo&lt;AdapterId&gt;,
 }
 
 <span class="kw">impl</span>&lt;A: HalApi&gt; Adapter&lt;A&gt; {
@@ -1444,7 +1525,7 @@
 
         <span class="self">Self </span>{
             raw,
-            life_guard: LifeGuard::new(<span class="string">&quot;&lt;Adapter&gt;&quot;</span>),
+            info: ResourceInfo::new(<span class="string">&quot;&lt;Adapter&gt;&quot;</span>),
         }
     }
 
@@ -1529,39 +1610,42 @@
         }
     }
 
-    <span class="kw">fn </span>create_device_from_hal(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        self_id: AdapterId,
-        open: hal::OpenDevice&lt;A&gt;,
+    <span class="kw">fn </span>create_device_and_queue_from_hal(
+        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
+        hal_device: OpenDevice&lt;A&gt;,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
         instance_flags: wgt::InstanceFlags,
         trace_path: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Device&lt;A&gt;, RequestDeviceError&gt; {
-        <span class="macro">log::trace!</span>(<span class="string">&quot;Adapter::create_device&quot;</span>);
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Device&lt;A&gt;, Queue&lt;A&gt;), RequestDeviceError&gt; {
+        <span class="macro">log::info!</span>(<span class="string">&quot;Adapter::create_device&quot;</span>);
 
         <span class="kw">let </span>caps = <span class="kw-2">&amp;</span><span class="self">self</span>.raw.capabilities;
-        Device::new(
-            open,
-            Stored {
-                value: Valid(self_id),
-                ref_count: <span class="self">self</span>.life_guard.add_ref(),
-            },
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(device) = Device::new(
+            hal_device.device,
+            <span class="kw-2">&amp;</span>hal_device.queue,
+            <span class="self">self</span>,
             caps.alignments.clone(),
             caps.downlevel.clone(),
             desc,
             trace_path,
             instance_flags,
-        )
-        .or(<span class="prelude-val">Err</span>(RequestDeviceError::OutOfMemory))
+        ) {
+            <span class="kw">let </span>queue = Queue {
+                device: <span class="prelude-val">None</span>,
+                raw: <span class="prelude-val">Some</span>(hal_device.queue),
+                info: ResourceInfo::new(<span class="string">&quot;&lt;Queue&gt;&quot;</span>),
+            };
+            <span class="kw">return </span><span class="prelude-val">Ok</span>((device, queue));
+        }
+        <span class="prelude-val">Err</span>(RequestDeviceError::OutOfMemory)
     }
 
-    <span class="kw">fn </span>create_device(
-        <span class="kw-2">&amp;</span><span class="self">self</span>,
-        self_id: AdapterId,
+    <span class="kw">fn </span>create_device_and_queue(
+        <span class="self">self</span>: <span class="kw-2">&amp;</span>Arc&lt;<span class="self">Self</span>&gt;,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
         instance_flags: wgt::InstanceFlags,
         trace_path: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Device&lt;A&gt;, RequestDeviceError&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(Device&lt;A&gt;, Queue&lt;A&gt;), RequestDeviceError&gt; {
         <span class="comment">// Verify all features were exposed by the adapter
         </span><span class="kw">if </span>!<span class="self">self</span>.raw.features.contains(desc.features) {
             <span class="kw">return </span><span class="prelude-val">Err</span>(RequestDeviceError::UnsupportedFeature(
@@ -1579,7 +1663,7 @@
                 missing_flags,
                 DOWNLEVEL_WARNING_MESSAGE
             );
-            <span class="macro">log::info!</span>(<span class="string">&quot;{:#?}&quot;</span>, caps.downlevel);
+            <span class="macro">log::warn!</span>(<span class="string">&quot;{:#?}&quot;</span>, caps.downlevel);
         }
 
         <span class="comment">// Verify feature preconditions
@@ -1610,15 +1694,19 @@
             },
         )<span class="question-mark">?</span>;
 
-        <span class="self">self</span>.create_device_from_hal(self_id, open, desc, instance_flags, trace_path)
+        <span class="self">self</span>.create_device_and_queue_from_hal(open, desc, instance_flags, trace_path)
     }
 }
 
-<span class="kw">impl</span>&lt;A: hal::Api&gt; <span class="kw">crate</span>::resource::Resource <span class="kw">for </span>Adapter&lt;A&gt; {
-    <span class="kw">const </span>TYPE: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;Adapter&quot;</span>;
+<span class="kw">impl</span>&lt;A: HalApi&gt; Resource&lt;AdapterId&gt; <span class="kw">for </span>Adapter&lt;A&gt; {
+    <span class="kw">const </span>TYPE: ResourceType = <span class="string">&quot;Adapter&quot;</span>;
 
-    <span class="kw">fn </span>life_guard(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>LifeGuard {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.life_guard
+    <span class="kw">fn </span>as_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ResourceInfo&lt;AdapterId&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.info
+    }
+
+    <span class="kw">fn </span>as_info_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ResourceInfo&lt;AdapterId&gt; {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.info
     }
 }
 
@@ -1656,7 +1744,7 @@
     </span>LimitsExceeded(<span class="attr">#[from] </span>FailedLimit),
     <span class="attr">#[error(<span class="string">&quot;Device has no queue supporting graphics&quot;</span>)]
     </span>NoGraphicsQueue,
-    <span class="attr">#[error(<span class="string">&quot;Not enough memory left&quot;</span>)]
+    <span class="attr">#[error(<span class="string">&quot;Not enough memory left to request device&quot;</span>)]
     </span>OutOfMemory,
     <span class="attr">#[error(<span class="string">&quot;Unsupported features were requested: {0:?}&quot;</span>)]
     </span>UnsupportedFeature(wgt::Features),
@@ -1667,10 +1755,10 @@
     Mask(Backends, <span class="kw">fn</span>(Backend) -&gt; I),
 }
 
-<span class="kw">impl</span>&lt;I: Clone&gt; AdapterInputs&lt;<span class="lifetime">&#39;_</span>, I&gt; {
+<span class="kw">impl</span>&lt;I: Copy&gt; AdapterInputs&lt;<span class="lifetime">&#39;_</span>, I&gt; {
     <span class="kw">fn </span>find(<span class="kw-2">&amp;</span><span class="self">self</span>, b: Backend) -&gt; <span class="prelude-ty">Option</span>&lt;I&gt; {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::IdSet(ids, <span class="kw-2">ref </span>fun) =&gt; ids.iter().find(|id| fun(id) == b).cloned(),
+            <span class="self">Self</span>::IdSet(ids, <span class="kw-2">ref </span>fun) =&gt; ids.iter().find(|id| fun(id) == b).copied(),
             <span class="self">Self</span>::Mask(bits, <span class="kw-2">ref </span>fun) =&gt; {
                 <span class="kw">if </span>bits.contains(b.into()) {
                     <span class="prelude-val">Some</span>(fun(b))
@@ -1710,43 +1798,73 @@
     ) -&gt; SurfaceId {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::create_surface&quot;</span>);
 
-        <span class="kw">fn </span>init&lt;A: hal::Api&gt;(
+        <span class="kw">fn </span>init&lt;A: HalApi&gt;(
+            any_surface: <span class="kw-2">&amp;mut </span><span class="prelude-ty">Option</span>&lt;AnySurface&gt;,
             inst: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;A::Instance&gt;,
             display_handle: raw_window_handle::RawDisplayHandle,
             window_handle: raw_window_handle::RawWindowHandle,
-        ) -&gt; <span class="prelude-ty">Option</span>&lt;HalSurface&lt;A&gt;&gt; {
-            inst.as_ref().and_then(|inst| <span class="kw">unsafe </span>{
-                <span class="kw">match </span>inst.create_surface(display_handle, window_handle) {
-                    <span class="prelude-val">Ok</span>(raw) =&gt; <span class="prelude-val">Some</span>(HalSurface {
-                        raw,
-                        <span class="comment">//acquired_texture: None,
-                    </span>}),
-                    <span class="prelude-val">Err</span>(e) =&gt; {
-                        <span class="macro">log::warn!</span>(<span class="string">&quot;Error: {:?}&quot;</span>, e);
-                        <span class="prelude-val">None
-                    </span>}
+        ) {
+            <span class="kw">if </span>any_surface.is_none() {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(surface) = inst.as_ref().and_then(|inst| <span class="kw">unsafe </span>{
+                    <span class="kw">match </span>inst.create_surface(display_handle, window_handle) {
+                        <span class="prelude-val">Ok</span>(raw) =&gt; <span class="prelude-val">Some</span>(HalSurface::&lt;A&gt; { raw: Arc::new(raw) }),
+                        <span class="prelude-val">Err</span>(e) =&gt; {
+                            <span class="macro">log::warn!</span>(<span class="string">&quot;Error: {:?}&quot;</span>, e);
+                            <span class="prelude-val">None
+                        </span>}
+                    }
+                }) {
+                    <span class="kw-2">*</span>any_surface = <span class="prelude-val">Some</span>(AnySurface::new(surface));
                 }
-            })
+            }
         }
 
+        <span class="kw">let </span><span class="kw-2">mut </span>hal_surface = <span class="prelude-val">None</span>;
+        <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
+        </span>init::&lt;hal::api::Vulkan&gt;(
+            <span class="kw-2">&amp;mut </span>hal_surface,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.instance.vulkan,
+            display_handle,
+            window_handle,
+        );
+        <span class="attr">#[cfg(all(feature = <span class="string">&quot;metal&quot;</span>, any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>)))]
+        </span>init::&lt;hal::api::Metal&gt;(
+            <span class="kw-2">&amp;mut </span>hal_surface,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.instance.metal,
+            display_handle,
+            window_handle,
+        );
+        <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
+        </span>init::&lt;hal::api::Dx12&gt;(
+            <span class="kw-2">&amp;mut </span>hal_surface,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.instance.dx12,
+            display_handle,
+            window_handle,
+        );
+        <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
+        </span>init::&lt;hal::api::Dx11&gt;(
+            <span class="kw-2">&amp;mut </span>hal_surface,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.instance.dx11,
+            display_handle,
+            window_handle,
+        );
+        <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
+        </span>init::&lt;hal::api::Gles&gt;(
+            <span class="kw-2">&amp;mut </span>hal_surface,
+            <span class="kw-2">&amp;</span><span class="self">self</span>.instance.gl,
+            display_handle,
+            window_handle,
+        );
+
         <span class="kw">let </span>surface = Surface {
-            presentation: <span class="prelude-val">None</span>,
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
-            </span>vulkan: init::&lt;hal::api::Vulkan&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.vulkan, display_handle, window_handle),
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;metal&quot;</span>, any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>)))]
-            </span>metal: init::&lt;hal::api::Metal&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.metal, display_handle, window_handle),
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
-            </span>dx12: init::&lt;hal::api::Dx12&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.dx12, display_handle, window_handle),
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
-            </span>dx11: init::&lt;hal::api::Dx11&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.dx11, display_handle, window_handle),
-            <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
-            </span>gl: init::&lt;hal::api::Gles&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>.instance.gl, display_handle, window_handle),
+            presentation: Mutex::new(<span class="prelude-val">None</span>),
+            info: ResourceInfo::new(<span class="string">&quot;&lt;Surface&gt;&quot;</span>),
+            raw: hal_surface.unwrap(),
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface, <span class="kw-2">&amp;mut </span>token);
-        id.<span class="number">0
-    </span>}
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare::&lt;G&gt;(id_in).assign(surface);
+        id
+    }
 
     <span class="doccomment">/// # Safety
     ///
@@ -1760,25 +1878,28 @@
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::create_surface_metal&quot;</span>);
 
         <span class="kw">let </span>surface = Surface {
-            presentation: <span class="prelude-val">None</span>,
-            metal: <span class="self">self</span>.instance.metal.as_ref().map(|inst| HalSurface {
-                raw: {
-                    <span class="comment">// we don&#39;t want to link to metal-rs for this
-                    </span><span class="attr">#[allow(clippy::transmute_ptr_to_ref)]
-                    </span>inst.create_surface_from_layer(<span class="kw">unsafe </span>{ std::mem::transmute(layer) })
-                },
-                <span class="comment">//acquired_texture: None,
-            </span>}),
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
-            </span>vulkan: <span class="prelude-val">None</span>,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
-            </span>gl: <span class="prelude-val">None</span>,
+            presentation: Mutex::new(<span class="prelude-val">None</span>),
+            info: ResourceInfo::new(<span class="string">&quot;&lt;Surface&gt;&quot;</span>),
+            raw: {
+                <span class="kw">let </span>hal_surface: HalSurface&lt;hal::api::Metal&gt; = <span class="self">self
+                    </span>.instance
+                    .metal
+                    .as_ref()
+                    .map(|inst| HalSurface {
+                        raw: Arc::new(
+                            <span class="comment">// we don&#39;t want to link to metal-rs for this
+                            </span><span class="attr">#[allow(clippy::transmute_ptr_to_ref)]
+                            </span>inst.create_surface_from_layer(<span class="kw">unsafe </span>{ std::mem::transmute(layer) }),
+                        ), <span class="comment">//acquired_texture: None,
+                    </span>})
+                    .unwrap();
+                AnySurface::new(hal_surface)
+            },
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface, <span class="kw-2">&amp;mut </span>token);
-        id.<span class="number">0
-    </span>}
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare::&lt;G&gt;(id_in).assign(surface);
+        id
+    }
 
     <span class="attr">#[cfg(all(
         target_arch = <span class="string">&quot;wasm32&quot;</span>,
@@ -1793,22 +1914,27 @@
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::create_surface_webgl_canvas&quot;</span>);
 
         <span class="kw">let </span>surface = Surface {
-            presentation: <span class="prelude-val">None</span>,
-            gl: <span class="self">self
-                </span>.instance
-                .gl
-                .as_ref()
-                .map(|inst| {
-                    <span class="prelude-val">Ok</span>(HalSurface {
-                        raw: inst.create_surface_from_canvas(canvas)<span class="question-mark">?</span>,
+            presentation: Mutex::new(<span class="prelude-val">None</span>),
+            info: ResourceInfo::new(<span class="string">&quot;&lt;Surface&gt;&quot;</span>),
+            raw: {
+                <span class="kw">let </span>hal_surface: HalSurface&lt;hal::api::Gles&gt; = <span class="self">self
+                    </span>.instance
+                    .gl
+                    .as_ref()
+                    .map(|inst| {
+                        <span class="kw">let </span>raw_surface = inst.create_surface_from_canvas(canvas)<span class="question-mark">?</span>;
+                        <span class="prelude-val">Ok</span>(HalSurface {
+                            raw: Arc::new(raw_surface),
+                        })
                     })
-                })
-                .transpose()<span class="question-mark">?</span>,
+                    .transpose()<span class="question-mark">?
+                    </span>.unwrap();
+                AnySurface::new(hal_surface)
+            },
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface, <span class="kw-2">&amp;mut </span>token);
-        <span class="prelude-val">Ok</span>(id.<span class="number">0</span>)
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare::&lt;G&gt;(id_in).assign(surface);
+        <span class="prelude-val">Ok</span>(id)
     }
 
     <span class="attr">#[cfg(all(
@@ -1824,22 +1950,27 @@
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::create_surface_webgl_offscreen_canvas&quot;</span>);
 
         <span class="kw">let </span>surface = Surface {
-            presentation: <span class="prelude-val">None</span>,
-            gl: <span class="self">self
-                </span>.instance
-                .gl
-                .as_ref()
-                .map(|inst| {
-                    <span class="prelude-val">Ok</span>(HalSurface {
-                        raw: inst.create_surface_from_offscreen_canvas(canvas)<span class="question-mark">?</span>,
+            presentation: Mutex::new(<span class="prelude-val">None</span>),
+            info: ResourceInfo::new(<span class="string">&quot;&lt;Surface&gt;&quot;</span>),
+            raw: {
+                <span class="kw">let </span>hal_surface: HalSurface&lt;hal::api::Gles&gt; = <span class="self">self
+                    </span>.instance
+                    .gl
+                    .as_ref()
+                    .map(|inst| {
+                        <span class="kw">let </span>raw_surface = inst.create_surface_from_offscreen_canvas(canvas)<span class="question-mark">?</span>;
+                        <span class="prelude-val">Ok</span>(HalSurface {
+                            raw: Arc::new(raw_surface),
+                        })
                     })
-                })
-                .transpose()<span class="question-mark">?</span>,
+                    .transpose()<span class="question-mark">?
+                    </span>.unwrap();
+                AnySurface::new(hal_surface)
+            },
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface, <span class="kw-2">&amp;mut </span>token);
-        <span class="prelude-val">Ok</span>(id.<span class="number">0</span>)
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare::&lt;G&gt;(id_in).assign(surface);
+        <span class="prelude-val">Ok</span>(id)
     }
 
     <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
@@ -1854,23 +1985,24 @@
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::instance_create_surface_from_visual&quot;</span>);
 
         <span class="kw">let </span>surface = Surface {
-            presentation: <span class="prelude-val">None</span>,
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
-            </span>vulkan: <span class="prelude-val">None</span>,
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
-            </span>dx12: <span class="self">self</span>.instance.dx12.as_ref().map(|inst| HalSurface {
-                raw: <span class="kw">unsafe </span>{ inst.create_surface_from_visual(visual <span class="kw">as _</span>) },
-            }),
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
-            </span>dx11: <span class="prelude-val">None</span>,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
-            </span>gl: <span class="prelude-val">None</span>,
+            presentation: Mutex::new(<span class="prelude-val">None</span>),
+            info: ResourceInfo::new(<span class="string">&quot;&lt;Surface&gt;&quot;</span>),
+            raw: {
+                <span class="kw">let </span>hal_surface: HalSurface&lt;hal::api::Dx12&gt; = <span class="self">self
+                    </span>.instance
+                    .dx12
+                    .as_ref()
+                    .map(|inst| HalSurface {
+                        raw: Arc::new(<span class="kw">unsafe </span>{ inst.create_surface_from_visual(visual <span class="kw">as _</span>) }),
+                    })
+                    .unwrap();
+                AnySurface::new(hal_surface)
+            },
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface, <span class="kw-2">&amp;mut </span>token);
-        id.<span class="number">0
-    </span>}
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare::&lt;G&gt;(id_in).assign(surface);
+        id
+    }
 
     <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
     </span><span class="doccomment">/// # Safety
@@ -1884,23 +2016,26 @@
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::instance_create_surface_from_surface_handle&quot;</span>);
 
         <span class="kw">let </span>surface = Surface {
-            presentation: <span class="prelude-val">None</span>,
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
-            </span>vulkan: <span class="prelude-val">None</span>,
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
-            </span>dx12: <span class="self">self</span>.instance.dx12.as_ref().map(|inst| HalSurface {
-                raw: <span class="kw">unsafe </span>{ inst.create_surface_from_surface_handle(surface_handle) },
-            }),
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
-            </span>dx11: <span class="prelude-val">None</span>,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
-            </span>gl: <span class="prelude-val">None</span>,
+            presentation: Mutex::new(<span class="prelude-val">None</span>),
+            info: ResourceInfo::new(<span class="string">&quot;&lt;Surface&gt;&quot;</span>),
+            raw: {
+                <span class="kw">let </span>hal_surface: HalSurface&lt;hal::api::Dx12&gt; = <span class="self">self
+                    </span>.instance
+                    .dx12
+                    .as_ref()
+                    .map(|inst| HalSurface {
+                        raw: Arc::new(<span class="kw">unsafe </span>{
+                            inst.create_surface_from_surface_handle(surface_handle)
+                        }),
+                    })
+                    .unwrap();
+                AnySurface::new(hal_surface)
+            },
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface, <span class="kw-2">&amp;mut </span>token);
-        id.<span class="number">0
-    </span>}
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare::&lt;G&gt;(id_in).assign(surface);
+        id
+    }
 
     <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
     </span><span class="doccomment">/// # Safety
@@ -1914,58 +2049,64 @@
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::instance_create_surface_from_swap_chain_panel&quot;</span>);
 
         <span class="kw">let </span>surface = Surface {
-            presentation: <span class="prelude-val">None</span>,
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
-            </span>vulkan: <span class="prelude-val">None</span>,
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
-            </span>dx12: <span class="self">self</span>.instance.dx12.as_ref().map(|inst| HalSurface {
-                raw: <span class="kw">unsafe </span>{ inst.create_surface_from_swap_chain_panel(swap_chain_panel <span class="kw">as _</span>) },
-            }),
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
-            </span>dx11: <span class="prelude-val">None</span>,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
-            </span>gl: <span class="prelude-val">None</span>,
+            presentation: Mutex::new(<span class="prelude-val">None</span>),
+            info: ResourceInfo::new(<span class="string">&quot;&lt;Surface&gt;&quot;</span>),
+            raw: {
+                <span class="kw">let </span>hal_surface: HalSurface&lt;hal::api::Dx12&gt; = <span class="self">self
+                    </span>.instance
+                    .dx12
+                    .as_ref()
+                    .map(|inst| HalSurface {
+                        raw: Arc::new(<span class="kw">unsafe </span>{
+                            inst.create_surface_from_swap_chain_panel(swap_chain_panel <span class="kw">as _</span>)
+                        }),
+                    })
+                    .unwrap();
+                AnySurface::new(hal_surface)
+            },
         };
 
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>id = <span class="self">self</span>.surfaces.prepare(id_in).assign(surface, <span class="kw-2">&amp;mut </span>token);
-        id.<span class="number">0
-    </span>}
+        <span class="kw">let </span>(id, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.prepare::&lt;G&gt;(id_in).assign(surface);
+        id
+    }
 
     <span class="kw">pub fn </span>surface_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, id: SurfaceId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Surface::drop&quot;</span>);
-        <span class="macro">log::trace!</span>(<span class="string">&quot;Surface::drop {id:?}&quot;</span>);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(surface, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.unregister(id, <span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span><span class="kw-2">mut </span>surface = surface.unwrap();
+        <span class="macro">log::info!</span>(<span class="string">&quot;Surface::drop {id:?}&quot;</span>);
 
         <span class="kw">fn </span>unconfigure&lt;G: GlobalIdentityHandlerFactory, A: HalApi&gt;(
             global: <span class="kw-2">&amp;</span>Global&lt;G&gt;,
-            surface: <span class="kw-2">&amp;mut </span>HalSurface&lt;A&gt;,
+            surface: <span class="kw-2">&amp;</span>AnySurface,
             present: <span class="kw-2">&amp;</span>Presentation,
         ) {
             <span class="kw">let </span>hub = HalApi::hub(global);
-            hub.surface_unconfigure(present.device_id.value, surface);
-        }
-
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.take() {
-            <span class="kw">match </span>present.backend() {
-                <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
-                </span>Backend::Vulkan =&gt; unconfigure(<span class="self">self</span>, surface.vulkan.as_mut().unwrap(), <span class="kw-2">&amp;</span>present),
-                <span class="attr">#[cfg(all(feature = <span class="string">&quot;metal&quot;</span>, any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>)))]
-                </span>Backend::Metal =&gt; unconfigure(<span class="self">self</span>, surface.metal.as_mut().unwrap(), <span class="kw-2">&amp;</span>present),
-                <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
-                </span>Backend::Dx12 =&gt; unconfigure(<span class="self">self</span>, surface.dx12.as_mut().unwrap(), <span class="kw-2">&amp;</span>present),
-                <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
-                </span>Backend::Dx11 =&gt; unconfigure(<span class="self">self</span>, surface.dx11.as_mut().unwrap(), <span class="kw-2">&amp;</span>present),
-                <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
-                </span>Backend::Gl =&gt; unconfigure(<span class="self">self</span>, surface.gl.as_mut().unwrap(), <span class="kw-2">&amp;</span>present),
-                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(hal_surface) = surface.downcast_ref::&lt;A&gt;() {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(device) = present.device.downcast_ref::&lt;A&gt;() {
+                    hub.surface_unconfigure(device, hal_surface);
+                }
             }
         }
 
-        <span class="self">self</span>.instance.destroy_surface(surface);
+        <span class="kw">let </span>surface = <span class="self">self</span>.surfaces.unregister(id);
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(surface) = Arc::try_unwrap(surface.unwrap()) {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(present) = surface.presentation.lock().take() {
+                <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
+                </span>unconfigure::&lt;<span class="kw">_</span>, hal::api::Vulkan&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+                <span class="attr">#[cfg(all(feature = <span class="string">&quot;metal&quot;</span>, any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>)))]
+                </span>unconfigure::&lt;<span class="kw">_</span>, hal::api::Metal&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+                <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
+                </span>unconfigure::&lt;<span class="kw">_</span>, hal::api::Dx12&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+                <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
+                </span>unconfigure::&lt;<span class="kw">_</span>, hal::api::Dx11&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+                <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
+                </span>unconfigure::&lt;<span class="kw">_</span>, hal::api::Gles&gt;(<span class="self">self</span>, <span class="kw-2">&amp;</span>surface.raw, <span class="kw-2">&amp;</span>present);
+            }
+
+            <span class="self">self</span>.instance.destroy_surface(surface);
+        } <span class="kw">else </span>{
+            <span class="macro">panic!</span>(<span class="string">&quot;Surface cannot be destroyed because is still in use&quot;</span>);
+        }
     }
 
     <span class="kw">fn </span>enumerate&lt;A: HalApi&gt;(
@@ -1986,17 +2127,13 @@
 
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;enumerating&quot;</span>, <span class="kw-2">&amp;*</span><span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, A::VARIANT));
         <span class="kw">let </span>hub = HalApi::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
 
         <span class="kw">let </span>hal_adapters = <span class="kw">unsafe </span>{ inst.enumerate_adapters() };
         <span class="kw">for </span>raw <span class="kw">in </span>hal_adapters {
             <span class="kw">let </span>adapter = Adapter::new(raw);
             <span class="macro">log::info!</span>(<span class="string">&quot;Adapter {:?} {:?}&quot;</span>, A::VARIANT, adapter.raw.info);
-            <span class="kw">let </span>id = hub
-                .adapters
-                .prepare(id_backend.clone())
-                .assign(adapter, <span class="kw-2">&amp;mut </span>token);
-            list.push(id.<span class="number">0</span>);
+            <span class="kw">let </span>(id, <span class="kw">_</span>) = hub.adapters.prepare::&lt;G&gt;(id_backend).assign(adapter);
+            list.push(id);
         }
     }
 
@@ -2042,14 +2179,13 @@
                 <span class="prelude-val">None
             </span>}
             <span class="prelude-val">None </span>=&gt; {
-                <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
                 <span class="kw">let </span>adapter = Adapter::new(list.swap_remove(<span class="kw-2">*</span>selected));
                 <span class="macro">log::info!</span>(<span class="string">&quot;Adapter {:?} {:?}&quot;</span>, A::VARIANT, adapter.raw.info);
-                <span class="kw">let </span>id = HalApi::hub(<span class="self">self</span>)
+                <span class="kw">let </span>(id, <span class="kw">_</span>) = HalApi::hub(<span class="self">self</span>)
                     .adapters
-                    .prepare(new_id.unwrap())
-                    .assign(adapter, <span class="kw-2">&amp;mut </span>token);
-                <span class="prelude-val">Some</span>(id.<span class="number">0</span>)
+                    .prepare::&lt;G&gt;(new_id.unwrap())
+                    .assign(adapter);
+                <span class="prelude-val">Some</span>(id)
             }
         }
     }
@@ -2062,7 +2198,7 @@
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::pick_adapter&quot;</span>);
         <span class="macro">log::trace!</span>(<span class="string">&quot;Instance::pick_adapter&quot;</span>);
 
-        <span class="kw">fn </span>gather&lt;A: HalApi, I: Clone&gt;(
+        <span class="kw">fn </span>gather&lt;A: HalApi, I: Copy&gt;(
             <span class="kw">_</span>: A,
             instance: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>A::Instance&gt;,
             inputs: <span class="kw-2">&amp;</span>AdapterInputs&lt;I&gt;,
@@ -2096,16 +2232,15 @@
             }
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(surface_guard, <span class="kw">_</span>) = <span class="self">self</span>.surfaces.read(<span class="kw-2">&amp;mut </span>token);
         <span class="kw">let </span>compatible_surface = desc
             .compatible_surface
             .map(|id| {
-                surface_guard
+                <span class="self">self</span>.surfaces
                     .get(id)
                     .map_err(|<span class="kw">_</span>| RequestAdapterError::InvalidSurface(id))
             })
             .transpose()<span class="question-mark">?</span>;
+        <span class="kw">let </span>compatible_surface = compatible_surface.as_ref().map(|surface| surface.as_ref());
         <span class="kw">let </span><span class="kw-2">mut </span>device_types = Vec::new();
 
         <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
@@ -2154,9 +2289,6 @@
             <span class="kw-2">&amp;mut </span>device_types,
         );
 
-        <span class="comment">// need to free the token to be used by `select`
-        </span>drop(surface_guard);
-        drop(token);
         <span class="kw">if </span>device_types.is_empty() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(RequestAdapterError::NotFound);
         }
@@ -2244,22 +2376,24 @@
     ) -&gt; AdapterId {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Instance::create_adapter_from_hal&quot;</span>);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>fid = A::hub(<span class="self">self</span>).adapters.prepare(input);
+        <span class="kw">let </span>fid = A::hub(<span class="self">self</span>).adapters.prepare::&lt;G&gt;(input);
 
-        <span class="kw">match </span>A::VARIANT {
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
-            </span>Backend::Vulkan =&gt; fid.assign(Adapter::new(hal_adapter), <span class="kw-2">&amp;mut </span>token).<span class="number">0</span>,
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;metal&quot;</span>, any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>)))]
-            </span>Backend::Metal =&gt; fid.assign(Adapter::new(hal_adapter), <span class="kw-2">&amp;mut </span>token).<span class="number">0</span>,
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
-            </span>Backend::Dx12 =&gt; fid.assign(Adapter::new(hal_adapter), <span class="kw-2">&amp;mut </span>token).<span class="number">0</span>,
-            <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
-            </span>Backend::Dx11 =&gt; fid.assign(Adapter::new(hal_adapter), <span class="kw-2">&amp;mut </span>token).<span class="number">0</span>,
-            <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
-            </span>Backend::Gl =&gt; fid.assign(Adapter::new(hal_adapter), <span class="kw-2">&amp;mut </span>token).<span class="number">0</span>,
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
-        }
+        <span class="kw">let </span>(id, _adapter): (<span class="kw">crate</span>::id::Id&lt;Adapter&lt;hal::empty::Api&gt;&gt;, Arc&lt;Adapter&lt;A&gt;&gt;) =
+            <span class="kw">match </span>A::VARIANT {
+                <span class="attr">#[cfg(all(feature = <span class="string">&quot;vulkan&quot;</span>, not(target_arch = <span class="string">&quot;wasm32&quot;</span>)))]
+                </span>Backend::Vulkan =&gt; fid.assign(Adapter::new(hal_adapter)),
+                <span class="attr">#[cfg(all(feature = <span class="string">&quot;metal&quot;</span>, any(target_os = <span class="string">&quot;macos&quot;</span>, target_os = <span class="string">&quot;ios&quot;</span>)))]
+                </span>Backend::Metal =&gt; fid.assign(Adapter::new(hal_adapter)),
+                <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx12&quot;</span>, windows))]
+                </span>Backend::Dx12 =&gt; fid.assign(Adapter::new(hal_adapter)),
+                <span class="attr">#[cfg(all(feature = <span class="string">&quot;dx11&quot;</span>, windows))]
+                </span>Backend::Dx11 =&gt; fid.assign(Adapter::new(hal_adapter)),
+                <span class="attr">#[cfg(feature = <span class="string">&quot;gles&quot;</span>)]
+                </span>Backend::Gl =&gt; fid.assign(Adapter::new(hal_adapter)),
+                <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+            };
+        <span class="macro">log::info!</span>(<span class="string">&quot;Created Adapter {:?}&quot;</span>, id);
+        id
     }
 
     <span class="kw">pub fn </span>adapter_get_info&lt;A: HalApi&gt;(
@@ -2267,9 +2401,8 @@
         adapter_id: AdapterId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;wgt::AdapterInfo, InvalidAdapter&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(adapter_guard, <span class="kw">_</span>) = hub.adapters.read(<span class="kw-2">&amp;mut </span>token);
-        adapter_guard
+
+        hub.adapters
             .get(adapter_id)
             .map(|adapter| adapter.raw.info.clone())
             .map_err(|<span class="kw">_</span>| InvalidAdapter)
@@ -2281,9 +2414,8 @@
         format: wgt::TextureFormat,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;wgt::TextureFormatFeatures, InvalidAdapter&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(adapter_guard, <span class="kw">_</span>) = hub.adapters.read(<span class="kw-2">&amp;mut </span>token);
-        adapter_guard
+
+        hub.adapters
             .get(adapter_id)
             .map(|adapter| adapter.get_texture_format_features(format))
             .map_err(|<span class="kw">_</span>| InvalidAdapter)
@@ -2294,9 +2426,8 @@
         adapter_id: AdapterId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;wgt::Features, InvalidAdapter&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(adapter_guard, <span class="kw">_</span>) = hub.adapters.read(<span class="kw-2">&amp;mut </span>token);
-        adapter_guard
+
+        hub.adapters
             .get(adapter_id)
             .map(|adapter| adapter.raw.features)
             .map_err(|<span class="kw">_</span>| InvalidAdapter)
@@ -2307,9 +2438,8 @@
         adapter_id: AdapterId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;wgt::Limits, InvalidAdapter&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(adapter_guard, <span class="kw">_</span>) = hub.adapters.read(<span class="kw-2">&amp;mut </span>token);
-        adapter_guard
+
+        hub.adapters
             .get(adapter_id)
             .map(|adapter| adapter.raw.capabilities.limits.clone())
             .map_err(|<span class="kw">_</span>| InvalidAdapter)
@@ -2320,9 +2450,8 @@
         adapter_id: AdapterId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;wgt::DownlevelCapabilities, InvalidAdapter&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(adapter_guard, <span class="kw">_</span>) = hub.adapters.read(<span class="kw-2">&amp;mut </span>token);
-        adapter_guard
+
+        hub.adapters
             .get(adapter_id)
             .map(|adapter| adapter.raw.capabilities.downlevel.clone())
             .map_err(|<span class="kw">_</span>| InvalidAdapter)
@@ -2333,9 +2462,8 @@
         adapter_id: AdapterId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;wgt::PresentationTimestamp, InvalidAdapter&gt; {
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(adapter_guard, <span class="kw">_</span>) = hub.adapters.read(<span class="kw-2">&amp;mut </span>token);
-        <span class="kw">let </span>adapter = adapter_guard.get(adapter_id).map_err(|<span class="kw">_</span>| InvalidAdapter)<span class="question-mark">?</span>;
+
+        <span class="kw">let </span>adapter = hub.adapters.get(adapter_id).map_err(|<span class="kw">_</span>| InvalidAdapter)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(<span class="kw">unsafe </span>{ adapter.raw.adapter.get_presentation_timestamp() })
     }
@@ -2345,16 +2473,15 @@
         <span class="macro">log::trace!</span>(<span class="string">&quot;Adapter::drop {adapter_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>(<span class="kw-2">mut </span>adapter_guard, <span class="kw">_</span>) = hub.adapters.write(<span class="kw-2">&amp;mut </span>token);
+        <span class="kw">let </span><span class="kw-2">mut </span>adapters_locked = hub.adapters.write();
 
-        <span class="kw">let </span>free = <span class="kw">match </span>adapter_guard.get_mut(adapter_id) {
-            <span class="prelude-val">Ok</span>(adapter) =&gt; adapter.life_guard.ref_count.take().unwrap().load() == <span class="number">1</span>,
+        <span class="kw">let </span>free = <span class="kw">match </span>adapters_locked.get(adapter_id) {
+            <span class="prelude-val">Ok</span>(adapter) =&gt; Arc::strong_count(adapter) == <span class="number">1</span>,
             <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
         };
         <span class="kw">if </span>free {
             hub.adapters
-                .unregister_locked(adapter_id, <span class="kw-2">&amp;mut *</span>adapter_guard);
+                .unregister_locked(adapter_id, <span class="kw-2">&amp;mut *</span>adapters_locked);
         }
     }
 }
@@ -2365,32 +2492,43 @@
         adapter_id: AdapterId,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
         trace_path: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
-        id_in: Input&lt;G, DeviceId&gt;,
-    ) -&gt; (DeviceId, <span class="prelude-ty">Option</span>&lt;RequestDeviceError&gt;) {
+        device_id_in: Input&lt;G, DeviceId&gt;,
+        queue_id_in: Input&lt;G, QueueId&gt;,
+    ) -&gt; (DeviceId, QueueId, <span class="prelude-ty">Option</span>&lt;RequestDeviceError&gt;) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Adapter::request_device&quot;</span>);
         <span class="macro">log::trace!</span>(<span class="string">&quot;Adapter::request_device&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>fid = hub.devices.prepare(id_in);
+        <span class="kw">let </span>device_fid = hub.devices.prepare::&lt;G&gt;(device_id_in);
+        <span class="kw">let </span>queue_fid = hub.queues.prepare::&lt;G&gt;(queue_id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
-            <span class="kw">let </span>(adapter_guard, <span class="kw-2">mut </span>token) = hub.adapters.read(<span class="kw-2">&amp;mut </span>token);
-            <span class="kw">let </span>adapter = <span class="kw">match </span>adapter_guard.get(adapter_id) {
+            <span class="kw">let </span>adapter = <span class="kw">match </span>hub.adapters.get(adapter_id) {
                 <span class="prelude-val">Ok</span>(adapter) =&gt; adapter,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>RequestDeviceError::InvalidAdapter,
             };
-            <span class="kw">let </span>device =
-                <span class="kw">match </span>adapter.create_device(adapter_id, desc, <span class="self">self</span>.instance.flags, trace_path) {
-                    <span class="prelude-val">Ok</span>(device) =&gt; device,
+            <span class="kw">let </span>(device, <span class="kw-2">mut </span>queue) =
+                <span class="kw">match </span>adapter.create_device_and_queue(desc, <span class="self">self</span>.instance.flags, trace_path) {
+                    <span class="prelude-val">Ok</span>((device, queue)) =&gt; (device, queue),
                     <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
                 };
-            <span class="kw">let </span>id = fid.assign(device, <span class="kw-2">&amp;mut </span>token);
-            <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
+            <span class="kw">let </span>(device_id, <span class="kw">_</span>) = device_fid.assign(device);
+            <span class="macro">log::info!</span>(<span class="string">&quot;Created Device {:?}&quot;</span>, device_id);
+
+            <span class="kw">let </span>device = hub.devices.get(device_id).unwrap();
+            queue.device = <span class="prelude-val">Some</span>(device.clone());
+
+            <span class="kw">let </span>(queue_id, <span class="kw">_</span>) = queue_fid.assign(queue);
+            <span class="macro">log::info!</span>(<span class="string">&quot;Created Queue {:?}&quot;</span>, queue_id);
+
+            device.queue_id.write().replace(queue_id);
+
+            <span class="kw">return </span>(device_id, queue_id, <span class="prelude-val">None</span>);
         };
 
-        <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default(), <span class="kw-2">&amp;mut </span>token);
-        (id, <span class="prelude-val">Some</span>(error))
+        <span class="kw">let </span>device_id = device_fid.assign_error(desc.label.borrow_or_default());
+        <span class="kw">let </span>queue_id = queue_fid.assign_error(desc.label.borrow_or_default());
+        (device_id, queue_id, <span class="prelude-val">Some</span>(error))
     }
 
     <span class="doccomment">/// # Safety
@@ -2400,25 +2538,24 @@
     </span><span class="kw">pub unsafe fn </span>create_device_from_hal&lt;A: HalApi&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         adapter_id: AdapterId,
-        hal_device: hal::OpenDevice&lt;A&gt;,
+        hal_device: OpenDevice&lt;A&gt;,
         desc: <span class="kw-2">&amp;</span>DeviceDescriptor,
         trace_path: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>std::path::Path&gt;,
-        id_in: Input&lt;G, DeviceId&gt;,
-    ) -&gt; (DeviceId, <span class="prelude-ty">Option</span>&lt;RequestDeviceError&gt;) {
-        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Adapter::create_device_from_hal&quot;</span>);
+        device_id_in: Input&lt;G, DeviceId&gt;,
+        queue_id_in: Input&lt;G, QueueId&gt;,
+    ) -&gt; (DeviceId, QueueId, <span class="prelude-ty">Option</span>&lt;RequestDeviceError&gt;) {
+        <span class="macro">profiling::scope!</span>(<span class="string">&quot;Global::create_device_from_hal&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
-        <span class="kw">let </span><span class="kw-2">mut </span>token = Token::root();
-        <span class="kw">let </span>fid = hub.devices.prepare(id_in);
+        <span class="kw">let </span>devices_fid = hub.devices.prepare::&lt;G&gt;(device_id_in);
+        <span class="kw">let </span>queues_fid = hub.queues.prepare::&lt;G&gt;(queue_id_in);
 
         <span class="kw">let </span>error = <span class="kw">loop </span>{
-            <span class="kw">let </span>(adapter_guard, <span class="kw-2">mut </span>token) = hub.adapters.read(<span class="kw-2">&amp;mut </span>token);
-            <span class="kw">let </span>adapter = <span class="kw">match </span>adapter_guard.get(adapter_id) {
+            <span class="kw">let </span>adapter = <span class="kw">match </span>hub.adapters.get(adapter_id) {
                 <span class="prelude-val">Ok</span>(adapter) =&gt; adapter,
                 <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">break </span>RequestDeviceError::InvalidAdapter,
             };
-            <span class="kw">let </span>device = <span class="kw">match </span>adapter.create_device_from_hal(
-                adapter_id,
+            <span class="kw">let </span>(device, <span class="kw-2">mut </span>queue) = <span class="kw">match </span>adapter.create_device_and_queue_from_hal(
                 hal_device,
                 desc,
                 <span class="self">self</span>.instance.flags,
@@ -2427,12 +2564,23 @@
                 <span class="prelude-val">Ok</span>(device) =&gt; device,
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
-            <span class="kw">let </span>id = fid.assign(device, <span class="kw-2">&amp;mut </span>token);
-            <span class="kw">return </span>(id.<span class="number">0</span>, <span class="prelude-val">None</span>);
+            <span class="kw">let </span>(device_id, <span class="kw">_</span>) = devices_fid.assign(device);
+            <span class="macro">log::info!</span>(<span class="string">&quot;Created Device {:?}&quot;</span>, device_id);
+
+            <span class="kw">let </span>device = hub.devices.get(device_id).unwrap();
+            queue.device = <span class="prelude-val">Some</span>(device.clone());
+
+            <span class="kw">let </span>(queue_id, <span class="kw">_</span>) = queues_fid.assign(queue);
+            <span class="macro">log::info!</span>(<span class="string">&quot;Created Queue {:?}&quot;</span>, queue_id);
+
+            device.queue_id.write().replace(queue_id);
+
+            <span class="kw">return </span>(device_id, queue_id, <span class="prelude-val">None</span>);
         };
 
-        <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default(), <span class="kw-2">&amp;mut </span>token);
-        (id, <span class="prelude-val">Some</span>(error))
+        <span class="kw">let </span>device_id = devices_fid.assign_error(desc.label.borrow_or_default());
+        <span class="kw">let </span>queue_id = queues_fid.assign_error(desc.label.borrow_or_default());
+        (device_id, queue_id, <span class="prelude-val">Some</span>(error))
     }
 }
 

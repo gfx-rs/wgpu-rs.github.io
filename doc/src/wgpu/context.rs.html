@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/context.rs`."><title>context.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png" alt="wgpu"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu/src/context.rs`."><title>context.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="wgpu" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../wgpu/index.html"><img src="https://raw.githubusercontent.com/gfx-rs/wgpu/trunk/logo.png" alt="wgpu"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -4112,6 +4112,14 @@
 <a href="#4112" id="4112">4112</a>
 <a href="#4113" id="4113">4113</a>
 <a href="#4114" id="4114">4114</a>
+<a href="#4115" id="4115">4115</a>
+<a href="#4116" id="4116">4116</a>
+<a href="#4117" id="4117">4117</a>
+<a href="#4118" id="4118">4118</a>
+<a href="#4119" id="4119">4119</a>
+<a href="#4120" id="4120">4120</a>
+<a href="#4121" id="4121">4121</a>
+<a href="#4122" id="4122">4122</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::{any::Any, fmt::Debug, future::Future, num::NonZeroU64, ops::Range, pin::Pin, sync::Arc};
 
 <span class="kw">use </span>wgt::{
@@ -4396,6 +4404,7 @@
         device_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceData,
         message: <span class="kw-2">&amp;</span>str,
     );
+    <span class="kw">fn </span>queue_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueId, queue_data: <span class="kw-2">&amp;</span><span class="self">Self</span>::QueueData);
     <span class="kw">fn </span>device_poll(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span><span class="self">Self</span>::DeviceId,
@@ -5512,6 +5521,7 @@
     );
     <span class="kw">fn </span>device_destroy(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data);
     <span class="kw">fn </span>device_mark_lost(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data, message: <span class="kw-2">&amp;</span>str);
+    <span class="kw">fn </span>queue_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>ObjectId, queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data);
     <span class="kw">fn </span>device_poll(<span class="kw-2">&amp;</span><span class="self">self</span>, device: <span class="kw-2">&amp;</span>ObjectId, device_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data, maintain: Maintain)
         -&gt; bool;
     <span class="kw">fn </span>device_on_uncaptured_error(
@@ -6594,6 +6604,12 @@
         <span class="kw">let </span>device = &lt;T::DeviceId&gt;::from(<span class="kw-2">*</span>device);
         <span class="kw">let </span>device_data = downcast_ref(device_data);
         Context::device_mark_lost(<span class="self">self</span>, <span class="kw-2">&amp;</span>device, device_data, message)
+    }
+
+    <span class="kw">fn </span>queue_drop(<span class="kw-2">&amp;</span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>ObjectId, queue_data: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Data) {
+        <span class="kw">let </span>queue = &lt;T::QueueId&gt;::from(<span class="kw-2">*</span>queue);
+        <span class="kw">let </span>queue_data = downcast_ref(queue_data);
+        Context::queue_drop(<span class="self">self</span>, <span class="kw-2">&amp;</span>queue, queue_data)
     }
 
     <span class="kw">fn </span>device_poll(

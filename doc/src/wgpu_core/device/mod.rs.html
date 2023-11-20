@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/device/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -446,11 +446,17 @@
 <a href="#446" id="446">446</a>
 <a href="#447" id="447">447</a>
 <a href="#448" id="448">448</a>
+<a href="#449" id="449">449</a>
+<a href="#450" id="450">450</a>
+<a href="#451" id="451">451</a>
+<a href="#452" id="452">452</a>
+<a href="#453" id="453">453</a>
+<a href="#454" id="454">454</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     binding_model,
     hal_api::HalApi,
     hub::Hub,
-    id,
+    id::{<span class="self">self</span>},
     identity::{GlobalIdentityHandlerFactory, Input},
     resource::{Buffer, BufferAccessResult},
     resource::{BufferAccessError, BufferMapOperation},
@@ -466,6 +472,7 @@
 
 <span class="kw">use </span>std::{iter, num::NonZeroU32, ptr};
 
+<span class="kw">pub mod </span>any_device;
 <span class="kw">pub mod </span>global;
 <span class="kw">mod </span>life;
 <span class="kw">pub mod </span>queue;
@@ -635,8 +642,10 @@
 
         // Mappings _must_ be fired before submissions, as the spec requires all mapping callbacks that are registered before
         // a on_submitted_work_done callback to be fired before the on_submitted_work_done callback.
-        </span><span class="kw">for </span>(operation, status) <span class="kw">in </span><span class="self">self</span>.mappings {
-            operation.callback.call(status);
+        </span><span class="kw">for </span>(<span class="kw-2">mut </span>operation, status) <span class="kw">in </span><span class="self">self</span>.mappings {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = operation.callback.take() {
+                callback.call(status);
+            }
         }
         <span class="kw">for </span>closure <span class="kw">in </span><span class="self">self</span>.submissions {
             closure.call();
@@ -736,24 +745,21 @@
     }
 }
 
-<span class="kw">fn </span>map_buffer&lt;A: hal::Api&gt;(
+<span class="kw">fn </span>map_buffer&lt;A: HalApi&gt;(
     raw: <span class="kw-2">&amp;</span>A::Device,
-    buffer: <span class="kw-2">&amp;mut </span>Buffer&lt;A&gt;,
+    buffer: <span class="kw-2">&amp;</span>Buffer&lt;A&gt;,
     offset: BufferAddress,
     size: BufferAddress,
     kind: HostMap,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;ptr::NonNull&lt;u8&gt;, BufferAccessError&gt; {
     <span class="kw">let </span>mapping = <span class="kw">unsafe </span>{
-        raw.map_buffer(buffer.raw.as_ref().unwrap(), offset..offset + size)
+        raw.map_buffer(buffer.raw(), offset..offset + size)
             .map_err(DeviceError::from)<span class="question-mark">?
     </span>};
 
-    buffer.sync_mapped_writes = <span class="kw">match </span>kind {
+    <span class="kw-2">*</span>buffer.sync_mapped_writes.lock() = <span class="kw">match </span>kind {
         HostMap::Read <span class="kw">if </span>!mapping.is_coherent =&gt; <span class="kw">unsafe </span>{
-            raw.invalidate_mapped_ranges(
-                buffer.raw.as_ref().unwrap(),
-                iter::once(offset..offset + size),
-            );
+            raw.invalidate_mapped_ranges(buffer.raw(), iter::once(offset..offset + size));
             <span class="prelude-val">None
         </span>},
         HostMap::Write <span class="kw">if </span>!mapping.is_coherent =&gt; <span class="prelude-val">Some</span>(offset..offset + size),
@@ -777,10 +783,15 @@
     // reasonable way as all data is pushed to GPU anyways.
 
     // No need to flush if it is flushed later anyways.
-    </span><span class="kw">let </span>zero_init_needs_flush_now = mapping.is_coherent &amp;&amp; buffer.sync_mapped_writes.is_none();
+    </span><span class="kw">let </span>zero_init_needs_flush_now =
+        mapping.is_coherent &amp;&amp; buffer.sync_mapped_writes.lock().is_none();
     <span class="kw">let </span>mapped = <span class="kw">unsafe </span>{ std::slice::from_raw_parts_mut(mapping.ptr.as_ptr(), size <span class="kw">as </span>usize) };
 
-    <span class="kw">for </span>uninitialized <span class="kw">in </span>buffer.initialization_status.drain(offset..(size + offset)) {
+    <span class="kw">for </span>uninitialized <span class="kw">in </span>buffer
+        .initialization_status
+        .write()
+        .drain(offset..(size + offset))
+    {
         <span class="comment">// The mapping&#39;s pointer is already offset, however we track the
         // uninitialized range relative to the buffer&#39;s start.
         </span><span class="kw">let </span>fill_range =
@@ -788,20 +799,18 @@
         mapped[fill_range].fill(<span class="number">0</span>);
 
         <span class="kw">if </span>zero_init_needs_flush_now {
-            <span class="kw">unsafe </span>{
-                raw.flush_mapped_ranges(buffer.raw.as_ref().unwrap(), iter::once(uninitialized))
-            };
+            <span class="kw">unsafe </span>{ raw.flush_mapped_ranges(buffer.raw(), iter::once(uninitialized)) };
         }
     }
 
     <span class="prelude-val">Ok</span>(mapping.ptr)
 }
 
-<span class="kw">struct </span>CommandAllocator&lt;A: hal::Api&gt; {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>CommandAllocator&lt;A: HalApi&gt; {
     free_encoders: Vec&lt;A::CommandEncoder&gt;,
 }
 
-<span class="kw">impl</span>&lt;A: hal::Api&gt; CommandAllocator&lt;A&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; CommandAllocator&lt;A&gt; {
     <span class="kw">fn </span>acquire_encoder(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         device: <span class="kw-2">&amp;</span>A::Device,
@@ -835,6 +844,7 @@
 </span><span class="kw">pub struct </span>InvalidDevice;
 
 <span class="attr">#[derive(Clone, Debug, Error)]
+#[non_exhaustive]
 </span><span class="kw">pub enum </span>DeviceError {
     <span class="attr">#[error(<span class="string">&quot;Parent device is invalid.&quot;</span>)]
     </span>Invalid,
@@ -844,6 +854,8 @@
     </span>OutOfMemory,
     <span class="attr">#[error(<span class="string">&quot;Creation of a resource failed for a reason other than running out of memory.&quot;</span>)]
     </span>ResourceCreationFailed,
+    <span class="attr">#[error(<span class="string">&quot;QueueId is invalid&quot;</span>)]
+    </span>InvalidQueueId,
     <span class="attr">#[error(<span class="string">&quot;Attempt to use a resource with a different device from the one that created it&quot;</span>)]
     </span>WrongDevice,
 }
@@ -883,13 +895,13 @@
 }
 
 <span class="kw">impl</span>&lt;G: GlobalIdentityHandlerFactory&gt; ImplicitPipelineIds&lt;<span class="lifetime">&#39;_</span>, G&gt; {
-    <span class="kw">fn </span>prepare&lt;A: HalApi&gt;(<span class="self">self</span>, hub: <span class="kw-2">&amp;</span>Hub&lt;A, G&gt;) -&gt; ImplicitPipelineContext {
+    <span class="kw">fn </span>prepare&lt;A: HalApi&gt;(<span class="self">self</span>, hub: <span class="kw-2">&amp;</span>Hub&lt;A&gt;) -&gt; ImplicitPipelineContext {
         ImplicitPipelineContext {
-            root_id: hub.pipeline_layouts.prepare(<span class="self">self</span>.root_id).into_id(),
+            root_id: hub.pipeline_layouts.prepare::&lt;G&gt;(<span class="self">self</span>.root_id).into_id(),
             group_ids: <span class="self">self
                 </span>.group_ids
                 .iter()
-                .map(|id_in| hub.bind_group_layouts.prepare(id_in.clone()).into_id())
+                .map(|id_in| hub.bind_group_layouts.prepare::&lt;G&gt;(<span class="kw-2">*</span>id_in).into_id())
                 .collect(),
         }
     }

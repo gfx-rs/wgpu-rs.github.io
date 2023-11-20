@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/memory_init.rs`."><title>memory_init.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (4cb3beec8 2023-11-18)" data-channel="nightly" data-search-js="search-83dad86cfc406332.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `wgpu-core/src/command/memory_init.rs`."><title>memory_init.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-9ee3a5e31a2afa3e.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="wgpu_core" data-themes="" data-resource-suffix="" data-rustdoc-version="1.76.0-nightly (9a66e4471 2023-11-19)" data-channel="nightly" data-search-js="search-d23a059ec093b287.js" data-settings-js="settings-74424d7eec62a23e.js" ><script src="../../../static.files/storage-fec3eaa3851e447d.js"></script><script defer src="../../../static.files/src-script-3280b574d94e47b4.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-f06f02fd918e3bb3.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-5d8b3c7633ad77ba.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -323,30 +323,15 @@
 <a href="#323" id="323">323</a>
 <a href="#324" id="324">324</a>
 <a href="#325" id="325">325</a>
-<a href="#326" id="326">326</a>
-<a href="#327" id="327">327</a>
-<a href="#328" id="328">328</a>
-<a href="#329" id="329">329</a>
-<a href="#330" id="330">330</a>
-<a href="#331" id="331">331</a>
-<a href="#332" id="332">332</a>
-<a href="#333" id="333">333</a>
-<a href="#334" id="334">334</a>
-<a href="#335" id="335">335</a>
-<a href="#336" id="336">336</a>
-<a href="#337" id="337">337</a>
-<a href="#338" id="338">338</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::hash_map::Entry, ops::Range, vec::Drain};
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::hash_map::Entry, ops::Range, sync::Arc, vec::Drain};
 
 <span class="kw">use </span>hal::CommandEncoder;
 
 <span class="kw">use crate</span>::{
     device::Device,
     hal_api::HalApi,
-    id::{<span class="self">self</span>, TextureId},
     init_tracker::<span class="kw-2">*</span>,
-    resource::{Buffer, Texture},
-    storage::Storage,
+    resource::{Resource, Texture},
     track::{TextureTracker, Tracker},
     FastHashMap,
 };
@@ -356,31 +341,39 @@
 <span class="doccomment">/// Surface that was discarded by `StoreOp::Discard` of a preceding renderpass.
 /// Any read access to this surface needs to be preceded by a texture initialization.
 </span><span class="attr">#[derive(Clone)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>TextureSurfaceDiscard {
-    <span class="kw">pub </span>texture: TextureId,
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>TextureSurfaceDiscard&lt;A: HalApi&gt; {
+    <span class="kw">pub </span>texture: Arc&lt;Texture&lt;A&gt;&gt;,
     <span class="kw">pub </span>mip_level: u32,
     <span class="kw">pub </span>layer: u32,
 }
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>SurfacesInDiscardState = Vec&lt;TextureSurfaceDiscard&gt;;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">type </span>SurfacesInDiscardState&lt;A&gt; = Vec&lt;TextureSurfaceDiscard&lt;A&gt;&gt;;
 
-<span class="attr">#[derive(Default)]
-</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>CommandBufferTextureMemoryActions {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>CommandBufferTextureMemoryActions&lt;A: HalApi&gt; {
     <span class="doccomment">/// The tracker actions that we need to be executed before the command
     /// buffer is executed.
-    </span>init_actions: Vec&lt;TextureInitTrackerAction&gt;,
+    </span>init_actions: Vec&lt;TextureInitTrackerAction&lt;A&gt;&gt;,
     <span class="doccomment">/// All the discards that haven&#39;t been followed by init again within the
     /// command buffer i.e. everything in this list resets the texture init
     /// state *after* the command buffer execution
-    </span>discards: Vec&lt;TextureSurfaceDiscard&gt;,
+    </span>discards: Vec&lt;TextureSurfaceDiscard&lt;A&gt;&gt;,
 }
 
-<span class="kw">impl </span>CommandBufferTextureMemoryActions {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>drain_init_actions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Drain&lt;TextureInitTrackerAction&gt; {
+<span class="kw">impl</span>&lt;A: HalApi&gt; Default <span class="kw">for </span>CommandBufferTextureMemoryActions&lt;A&gt; {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            init_actions: Default::default(),
+            discards: Default::default(),
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;A: HalApi&gt; CommandBufferTextureMemoryActions&lt;A&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>drain_init_actions(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; Drain&lt;TextureInitTrackerAction&lt;A&gt;&gt; {
         <span class="self">self</span>.init_actions.drain(..)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>discard(<span class="kw-2">&amp;mut </span><span class="self">self</span>, discard: TextureSurfaceDiscard) {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>discard(<span class="kw-2">&amp;mut </span><span class="self">self</span>, discard: TextureSurfaceDiscard&lt;A&gt;) {
         <span class="self">self</span>.discards.push(discard);
     }
 
@@ -388,11 +381,10 @@
     // Returns previously discarded surface that need to be initialized *immediately* now.
     // Only returns a non-empty list if action is MemoryInitKind::NeedsInitializedMemory.
     </span><span class="attr">#[must_use]
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>register_init_action&lt;A: hal::Api&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>register_init_action(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        action: <span class="kw-2">&amp;</span>TextureInitTrackerAction,
-        texture_guard: <span class="kw-2">&amp;</span>Storage&lt;Texture&lt;A&gt;, TextureId&gt;,
-    ) -&gt; SurfacesInDiscardState {
+        action: <span class="kw-2">&amp;</span>TextureInitTrackerAction&lt;A&gt;,
+    ) -&gt; SurfacesInDiscardState&lt;A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>immediately_necessary_clears = SurfacesInDiscardState::new();
 
         <span class="comment">// Note that within a command buffer we may stack arbitrary memory init
@@ -402,18 +394,20 @@
         // We don&#39;t need to add MemoryInitKind::NeedsInitializedMemory to
         // init_actions if a surface is part of the discard list. But that would
         // mean splitting up the action which is more than we&#39;d win here.
-        </span><span class="self">self</span>.init_actions
-            .extend(<span class="kw">match </span>texture_guard.get(action.id) {
-                <span class="prelude-val">Ok</span>(texture) =&gt; texture.initialization_status.check_action(action),
-                <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span>immediately_necessary_clears, <span class="comment">// texture no longer exists
-            </span>});
+        </span><span class="self">self</span>.init_actions.extend(
+            action
+                .texture
+                .initialization_status
+                .read()
+                .check_action(action),
+        );
 
         <span class="comment">// We expect very few discarded surfaces at any point in time which is
         // why a simple linear search is likely best. (i.e. most of the time
         // self.discards is empty!)
         </span><span class="kw">let </span>init_actions = <span class="kw-2">&amp;mut </span><span class="self">self</span>.init_actions;
         <span class="self">self</span>.discards.retain(|discarded_surface| {
-            <span class="kw">if </span>discarded_surface.texture == action.id
+            <span class="kw">if </span>discarded_surface.texture.as_info().id() == action.texture.as_info().id()
                 &amp;&amp; action.range.layer_range.contains(<span class="kw-2">&amp;</span>discarded_surface.layer)
                 &amp;&amp; action
                     .range
@@ -427,7 +421,7 @@
                     // because it might have been uninitialized prior to
                     // discarding
                     </span>init_actions.push(TextureInitTrackerAction {
-                        id: discarded_surface.texture,
+                        texture: discarded_surface.texture.clone(),
                         range: TextureInitRange {
                             mip_range: discarded_surface.mip_level
                                 ..(discarded_surface.mip_level + <span class="number">1</span>),
@@ -447,20 +441,16 @@
 
     <span class="comment">// Shortcut for register_init_action when it is known that the action is an
     // implicit init, not requiring any immediate resource init.
-    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>register_implicit_init&lt;A: hal::Api&gt;(
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>register_implicit_init(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        id: id::Valid&lt;TextureId&gt;,
+        texture: <span class="kw-2">&amp;</span>Arc&lt;Texture&lt;A&gt;&gt;,
         range: TextureInitRange,
-        texture_guard: <span class="kw-2">&amp;</span>Storage&lt;Texture&lt;A&gt;, TextureId&gt;,
     ) {
-        <span class="kw">let </span>must_be_empty = <span class="self">self</span>.register_init_action(
-            <span class="kw-2">&amp;</span>TextureInitTrackerAction {
-                id: id.<span class="number">0</span>,
-                range,
-                kind: MemoryInitKind::ImplicitlyInitialized,
-            },
-            texture_guard,
-        );
+        <span class="kw">let </span>must_be_empty = <span class="self">self</span>.register_init_action(<span class="kw-2">&amp;</span>TextureInitTrackerAction {
+            texture: texture.clone(),
+            range,
+            kind: MemoryInitKind::ImplicitlyInitialized,
+        });
         <span class="macro">assert!</span>(must_be_empty.is_empty());
     }
 }
@@ -471,18 +461,16 @@
 // Takes care of barriers as well!
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>fixup_discarded_surfaces&lt;
     A: HalApi,
-    InitIter: Iterator&lt;Item = TextureSurfaceDiscard&gt;,
+    InitIter: Iterator&lt;Item = TextureSurfaceDiscard&lt;A&gt;&gt;,
 &gt;(
     inits: InitIter,
     encoder: <span class="kw-2">&amp;mut </span>A::CommandEncoder,
-    texture_guard: <span class="kw-2">&amp;</span>Storage&lt;Texture&lt;A&gt;, TextureId&gt;,
     texture_tracker: <span class="kw-2">&amp;mut </span>TextureTracker&lt;A&gt;,
     device: <span class="kw-2">&amp;</span>Device&lt;A&gt;,
 ) {
     <span class="kw">for </span>init <span class="kw">in </span>inits {
         clear_texture(
-            texture_guard,
-            id::Valid(init.texture),
+            <span class="kw-2">&amp;</span>init.texture,
             TextureInitRange {
                 mip_range: init.mip_level..(init.mip_level + <span class="number">1</span>),
                 layer_range: init.layer..(init.layer + <span class="number">1</span>),
@@ -490,7 +478,7 @@
             encoder,
             texture_tracker,
             <span class="kw-2">&amp;</span>device.alignments,
-            <span class="kw-2">&amp;</span>device.zero_buffer,
+            device.zero_buffer.as_ref().unwrap(),
         )
         .unwrap();
     }
@@ -502,16 +490,13 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>initialize_buffer_memory(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         device_tracker: <span class="kw-2">&amp;mut </span>Tracker&lt;A&gt;,
-        buffer_guard: <span class="kw-2">&amp;mut </span>Storage&lt;Buffer&lt;A&gt;, id::BufferId&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DestroyedBufferError&gt; {
         <span class="comment">// Gather init ranges for each buffer so we can collapse them.
         // It is not possible to do this at an earlier point since previously
         // executed command buffer change the resource init state.
         </span><span class="kw">let </span><span class="kw-2">mut </span>uninitialized_ranges_per_buffer = FastHashMap::default();
         <span class="kw">for </span>buffer_use <span class="kw">in </span><span class="self">self</span>.buffer_memory_init_actions.drain(..) {
-            <span class="kw">let </span>buffer = buffer_guard
-                .get_mut(buffer_use.id)
-                .map_err(|<span class="kw">_</span>| DestroyedBufferError(buffer_use.id))<span class="question-mark">?</span>;
+            <span class="kw">let </span><span class="kw-2">mut </span>initialization_status = buffer_use.buffer.initialization_status.write();
 
             <span class="comment">// align the end to 4
             </span><span class="kw">let </span>end_remainder = buffer_use.range.end % wgt::COPY_BUFFER_ALIGNMENT;
@@ -520,28 +505,27 @@
             } <span class="kw">else </span>{
                 buffer_use.range.end + wgt::COPY_BUFFER_ALIGNMENT - end_remainder
             };
-            <span class="kw">let </span>uninitialized_ranges = buffer
-                .initialization_status
-                .drain(buffer_use.range.start..end);
+            <span class="kw">let </span>uninitialized_ranges = initialization_status.drain(buffer_use.range.start..end);
 
             <span class="kw">match </span>buffer_use.kind {
                 MemoryInitKind::ImplicitlyInitialized =&gt; {}
                 MemoryInitKind::NeedsInitializedMemory =&gt; {
-                    <span class="kw">match </span>uninitialized_ranges_per_buffer.entry(buffer_use.id) {
+                    <span class="kw">match </span>uninitialized_ranges_per_buffer.entry(buffer_use.buffer.as_info().id()) {
                         Entry::Vacant(e) =&gt; {
-                            e.insert(
+                            e.insert((
+                                buffer_use.buffer.clone(),
                                 uninitialized_ranges.collect::&lt;Vec&lt;Range&lt;wgt::BufferAddress&gt;&gt;&gt;(),
-                            );
+                            ));
                         }
                         Entry::Occupied(<span class="kw-2">mut </span>e) =&gt; {
-                            e.get_mut().extend(uninitialized_ranges);
+                            e.get_mut().<span class="number">1</span>.extend(uninitialized_ranges);
                         }
                     }
                 }
             }
         }
 
-        <span class="kw">for </span>(buffer_id, <span class="kw-2">mut </span>ranges) <span class="kw">in </span>uninitialized_ranges_per_buffer {
+        <span class="kw">for </span>(buffer_id, (buffer, <span class="kw-2">mut </span>ranges)) <span class="kw">in </span>uninitialized_ranges_per_buffer {
             <span class="comment">// Collapse touching ranges.
             </span>ranges.sort_by_key(|r| r.start);
             <span class="kw">for </span>i <span class="kw">in </span>(<span class="number">1</span>..ranges.len()).rev() {
@@ -560,19 +544,16 @@
             // must already know about it.
             </span><span class="kw">let </span>transition = device_tracker
                 .buffers
-                .set_single(buffer_guard, buffer_id, hal::BufferUses::COPY_DST)
+                .set_single(<span class="kw-2">&amp;</span>buffer, hal::BufferUses::COPY_DST)
                 .unwrap()
                 .<span class="number">1</span>;
 
-            <span class="kw">let </span>buffer = buffer_guard
-                .get_mut(buffer_id)
-                .map_err(|<span class="kw">_</span>| DestroyedBufferError(buffer_id))<span class="question-mark">?</span>;
             <span class="kw">let </span>raw_buf = buffer.raw.as_ref().ok_or(DestroyedBufferError(buffer_id))<span class="question-mark">?</span>;
 
             <span class="kw">unsafe </span>{
                 <span class="self">self</span>.encoder.transition_buffers(
                     transition
-                        .map(|pending| pending.into_hal(buffer))
+                        .map(|pending| pending.into_hal(<span class="kw-2">&amp;</span>buffer))
                         .into_iter(),
                 );
             }
@@ -608,18 +589,13 @@
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>initialize_texture_memory(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         device_tracker: <span class="kw-2">&amp;mut </span>Tracker&lt;A&gt;,
-        texture_guard: <span class="kw-2">&amp;mut </span>Storage&lt;Texture&lt;A&gt;, TextureId&gt;,
         device: <span class="kw-2">&amp;</span>Device&lt;A&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), DestroyedTextureError&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>ranges: Vec&lt;TextureInitRange&gt; = Vec::new();
         <span class="kw">for </span>texture_use <span class="kw">in </span><span class="self">self</span>.texture_memory_actions.drain_init_actions() {
-            <span class="kw">let </span>texture = texture_guard
-                .get_mut(texture_use.id)
-                .map_err(|<span class="kw">_</span>| DestroyedTextureError(texture_use.id))<span class="question-mark">?</span>;
-
+            <span class="kw">let </span><span class="kw-2">mut </span>initialization_status = texture_use.texture.initialization_status.write();
             <span class="kw">let </span>use_range = texture_use.range;
-            <span class="kw">let </span>affected_mip_trackers = texture
-                .initialization_status
+            <span class="kw">let </span>affected_mip_trackers = initialization_status
                 .mips
                 .iter_mut()
                 .enumerate()
@@ -647,13 +623,12 @@
             <span class="comment">// TODO: Could we attempt some range collapsing here?
             </span><span class="kw">for </span>range <span class="kw">in </span>ranges.drain(..) {
                 clear_texture(
-                    texture_guard,
-                    id::Valid(texture_use.id),
+                    <span class="kw-2">&amp;</span>texture_use.texture,
                     range,
                     <span class="kw-2">&amp;mut </span><span class="self">self</span>.encoder,
                     <span class="kw-2">&amp;mut </span>device_tracker.textures,
                     <span class="kw-2">&amp;</span>device.alignments,
-                    <span class="kw-2">&amp;</span>device.zero_buffer,
+                    device.zero_buffer.as_ref().unwrap(),
                 )
                 .unwrap();
             }
@@ -663,11 +638,10 @@
         // cmdbuf start, we discard init states for textures it left discarded
         // after its execution.
         </span><span class="kw">for </span>surface_discard <span class="kw">in </span><span class="self">self</span>.texture_memory_actions.discards.iter() {
-            <span class="kw">let </span>texture = texture_guard
-                .get_mut(surface_discard.texture)
-                .map_err(|<span class="kw">_</span>| DestroyedTextureError(surface_discard.texture))<span class="question-mark">?</span>;
-            texture
+            surface_discard
+                .texture
                 .initialization_status
+                .write()
                 .discard(surface_discard.mip_level, surface_discard.layer);
         }
 
