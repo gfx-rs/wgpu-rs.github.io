@@ -492,12 +492,6 @@
 <a href="#492" id="492">492</a>
 <a href="#493" id="493">493</a>
 <a href="#494" id="494">494</a>
-<a href="#495" id="495">495</a>
-<a href="#496" id="496">496</a>
-<a href="#497" id="497">497</a>
-<a href="#498" id="498">498</a>
-<a href="#499" id="499">499</a>
-<a href="#500" id="500">500</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Generating accesses to [`ByteAddressBuffer`] contents.
 
@@ -680,23 +674,20 @@ needed once HLSL for the access has been generated.
             <span class="kw">crate</span>::TypeInner::Matrix {
                 columns,
                 rows,
-                width,
+                scalar,
             } =&gt; {
                 <span class="macro">write!</span>(
                     <span class="self">self</span>.out,
                     <span class="string">&quot;{}{}x{}(&quot;</span>,
-                    <span class="kw">crate</span>::Scalar::float(width).to_hlsl_str()<span class="question-mark">?</span>,
+                    scalar.to_hlsl_str()<span class="question-mark">?</span>,
                     columns <span class="kw">as </span>u8,
                     rows <span class="kw">as </span>u8,
                 )<span class="question-mark">?</span>;
 
                 <span class="comment">// Note: Matrices containing vec3s, due to padding, act like they contain vec4s.
-                </span><span class="kw">let </span>row_stride = Alignment::from(rows) * width <span class="kw">as </span>u32;
+                </span><span class="kw">let </span>row_stride = Alignment::from(rows) * scalar.width <span class="kw">as </span>u32;
                 <span class="kw">let </span>iter = (<span class="number">0</span>..columns <span class="kw">as </span>u32).map(|i| {
-                    <span class="kw">let </span>ty_inner = <span class="kw">crate</span>::TypeInner::Vector {
-                        size: rows,
-                        scalar: <span class="kw">crate</span>::Scalar::float(width),
-                    };
+                    <span class="kw">let </span>ty_inner = <span class="kw">crate</span>::TypeInner::Vector { size: rows, scalar };
                     (TypeResolution::Value(ty_inner), i * row_stride)
                 });
                 <span class="self">self</span>.write_storage_load_sequence(module, var_handle, iter, func_ctx)<span class="question-mark">?</span>;
@@ -816,7 +807,7 @@ needed once HLSL for the access has been generated.
             <span class="kw">crate</span>::TypeInner::Matrix {
                 columns,
                 rows,
-                width,
+                scalar,
             } =&gt; {
                 <span class="comment">// first, assign the value to a temporary
                 </span><span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;{level}{{&quot;</span>)<span class="question-mark">?</span>;
@@ -825,7 +816,7 @@ needed once HLSL for the access has been generated.
                     <span class="self">self</span>.out,
                     <span class="string">&quot;{}{}{}x{} {}{} = &quot;</span>,
                     level.next(),
-                    <span class="kw">crate</span>::Scalar::float(width).to_hlsl_str()<span class="question-mark">?</span>,
+                    scalar.to_hlsl_str()<span class="question-mark">?</span>,
                     columns <span class="kw">as </span>u8,
                     rows <span class="kw">as </span>u8,
                     STORE_TEMP_NAME,
@@ -835,16 +826,13 @@ needed once HLSL for the access has been generated.
                 <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>;
 
                 <span class="comment">// Note: Matrices containing vec3s, due to padding, act like they contain vec4s.
-                </span><span class="kw">let </span>row_stride = Alignment::from(rows) * width <span class="kw">as </span>u32;
+                </span><span class="kw">let </span>row_stride = Alignment::from(rows) * scalar.width <span class="kw">as </span>u32;
 
                 <span class="comment">// then iterate the stores
                 </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..columns <span class="kw">as </span>u32 {
                     <span class="self">self</span>.temp_access_chain
                         .push(SubAccess::Offset(i * row_stride));
-                    <span class="kw">let </span>ty_inner = <span class="kw">crate</span>::TypeInner::Vector {
-                        size: rows,
-                        scalar: <span class="kw">crate</span>::Scalar::float(width),
-                    };
+                    <span class="kw">let </span>ty_inner = <span class="kw">crate</span>::TypeInner::Vector { size: rows, scalar };
                     <span class="kw">let </span>sv = StoreValue::TempIndex {
                         depth,
                         index: i,
@@ -967,10 +955,10 @@ needed once HLSL for the access has been generated.
                     <span class="kw">crate</span>::TypeInner::Vector { scalar, .. } =&gt; Parent::Array {
                         stride: scalar.width <span class="kw">as </span>u32,
                     },
-                    <span class="kw">crate</span>::TypeInner::Matrix { rows, width, .. } =&gt; Parent::Array {
+                    <span class="kw">crate</span>::TypeInner::Matrix { rows, scalar, .. } =&gt; Parent::Array {
                         <span class="comment">// The stride between matrices is the count of rows as this is how
                         // long each column is.
-                        </span>stride: Alignment::from(rows) * width <span class="kw">as </span>u32,
+                        </span>stride: Alignment::from(rows) * scalar.width <span class="kw">as </span>u32,
                     },
                     <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
                 },

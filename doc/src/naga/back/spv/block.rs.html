@@ -2372,8 +2372,6 @@
 <a href="#2372" id="2372">2372</a>
 <a href="#2373" id="2373">2373</a>
 <a href="#2374" id="2374">2374</a>
-<a href="#2375" id="2375">2375</a>
-<a href="#2376" id="2376">2376</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Implementations for `BlockContext` methods.
 */
@@ -2870,7 +2868,7 @@ Implementations for `BlockContext` methods.
                         <span class="kw">crate</span>::TypeInner::Matrix {
                             columns,
                             rows,
-                            width,
+                            scalar,
                         } =&gt; {
                             <span class="self">self</span>.write_matrix_matrix_column_op(
                                 block,
@@ -2880,7 +2878,7 @@ Implementations for `BlockContext` methods.
                                 right_id,
                                 columns,
                                 rows,
-                                width,
+                                scalar.width,
                                 spirv::Op::FAdd,
                             );
 
@@ -2898,7 +2896,7 @@ Implementations for `BlockContext` methods.
                         <span class="kw">crate</span>::TypeInner::Matrix {
                             columns,
                             rows,
-                            width,
+                            scalar,
                         } =&gt; {
                             <span class="self">self</span>.write_matrix_matrix_column_op(
                                 block,
@@ -2908,7 +2906,7 @@ Implementations for `BlockContext` methods.
                                 right_id,
                                 columns,
                                 rows,
-                                width,
+                                scalar.width,
                                 spirv::Op::FSub,
                             );
 
@@ -3517,9 +3515,7 @@ Implementations for `BlockContext` methods.
                     <span class="kw">match </span><span class="kw-2">*</span><span class="self">self</span>.fun_info[expr].ty.inner_with(<span class="kw-2">&amp;</span><span class="self">self</span>.ir_module.types) {
                         <span class="kw">crate</span>::TypeInner::Scalar(scalar) =&gt; (scalar, <span class="prelude-val">None</span>, <span class="bool-val">false</span>),
                         <span class="kw">crate</span>::TypeInner::Vector { scalar, size } =&gt; (scalar, <span class="prelude-val">Some</span>(size), <span class="bool-val">false</span>),
-                        <span class="kw">crate</span>::TypeInner::Matrix { width, .. } =&gt; {
-                            (<span class="kw">crate</span>::Scalar::float(width), <span class="prelude-val">None</span>, <span class="bool-val">true</span>)
-                        }
+                        <span class="kw">crate</span>::TypeInner::Matrix { scalar, .. } =&gt; (scalar, <span class="prelude-val">None</span>, <span class="bool-val">true</span>),
                         <span class="kw-2">ref </span>other =&gt; {
                             <span class="macro">log::error!</span>(<span class="string">&quot;As source {:?}&quot;</span>, other);
                             <span class="kw">return </span><span class="prelude-val">Err</span>(Error::Validation(<span class="string">&quot;Unexpected Expression::As source&quot;</span>));

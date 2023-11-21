@@ -514,8 +514,6 @@
 <a href="#514" id="514">514</a>
 <a href="#515" id="515">515</a>
 <a href="#516" id="516">516</a>
-<a href="#517" id="517">517</a>
-<a href="#518" id="518">518</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{BackendResult, Error, Version, Writer};
 <span class="kw">use crate</span>::{
     AddressSpace, Binding, Expression, Handle, ImageClass, ImageDimension, Interpolation, Sampling,
@@ -793,11 +791,9 @@
 
         <span class="kw">for </span>(ty_handle, ty) <span class="kw">in </span><span class="self">self</span>.module.types.iter() {
             <span class="kw">match </span>ty.inner {
-                TypeInner::Scalar(scalar) =&gt; <span class="self">self</span>.scalar_required_features(scalar),
-                TypeInner::Vector { scalar, .. } =&gt; <span class="self">self</span>.scalar_required_features(scalar),
-                TypeInner::Matrix { width, .. } =&gt; {
-                    <span class="self">self</span>.scalar_required_features(Scalar::float(width))
-                }
+                TypeInner::Scalar(scalar)
+                | TypeInner::Vector { scalar, .. }
+                | TypeInner::Matrix { scalar, .. } =&gt; <span class="self">self</span>.scalar_required_features(scalar),
                 TypeInner::Array { base, size, .. } =&gt; {
                     <span class="kw">if let </span>TypeInner::Array { .. } = <span class="self">self</span>.module.types[base].inner {
                         <span class="self">self</span>.features.request(Features::ARRAY_OF_ARRAYS)

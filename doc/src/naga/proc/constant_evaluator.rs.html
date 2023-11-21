@@ -1820,9 +1820,6 @@
 <a href="#1820" id="1820">1820</a>
 <a href="#1821" id="1821">1821</a>
 <a href="#1822" id="1822">1822</a>
-<a href="#1823" id="1823">1823</a>
-<a href="#1824" id="1824">1824</a>
-<a href="#1825" id="1825">1825</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{
     arena::{Arena, Handle, UniqueArena},
     ArraySize, BinaryOperator, Constant, Expression, Literal, ScalarKind, Span, Type, TypeInner,
@@ -2739,15 +2736,12 @@
             TypeInner::Matrix {
                 columns,
                 rows,
-                width,
+                scalar,
             } =&gt; {
                 <span class="kw">let </span>vec_ty = <span class="self">self</span>.types.insert(
                     Type {
                         name: <span class="prelude-val">None</span>,
-                        inner: TypeInner::Vector {
-                            size: rows,
-                            scalar: <span class="kw">crate</span>::Scalar::float(width),
-                        },
+                        inner: TypeInner::Vector { size: rows, scalar },
                     },
                     span,
                 );
@@ -2851,7 +2845,7 @@
                     TypeInner::Matrix { columns, rows, .. } =&gt; TypeInner::Matrix {
                         columns,
                         rows,
-                        width: target.width,
+                        scalar: target,
                     },
                     <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(ConstantEvaluatorError::InvalidCastArg),
                 };
@@ -3347,7 +3341,7 @@
                 inner: TypeInner::Matrix {
                     columns: VectorSize::Bi,
                     rows: VectorSize::Tri,
-                    width: <span class="number">4</span>,
+                    scalar: <span class="kw">crate</span>::Scalar::F32,
                 },
             },
             Default::default(),

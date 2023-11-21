@@ -1600,20 +1600,6 @@
 <a href="#1600" id="1600">1600</a>
 <a href="#1601" id="1601">1601</a>
 <a href="#1602" id="1602">1602</a>
-<a href="#1603" id="1603">1603</a>
-<a href="#1604" id="1604">1604</a>
-<a href="#1605" id="1605">1605</a>
-<a href="#1606" id="1606">1606</a>
-<a href="#1607" id="1607">1607</a>
-<a href="#1608" id="1608">1608</a>
-<a href="#1609" id="1609">1609</a>
-<a href="#1610" id="1610">1610</a>
-<a href="#1611" id="1611">1611</a>
-<a href="#1612" id="1612">1612</a>
-<a href="#1613" id="1613">1613</a>
-<a href="#1614" id="1614">1614</a>
-<a href="#1615" id="1615">1615</a>
-<a href="#1616" id="1616">1616</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     ast::<span class="kw-2">*</span>,
     builtins::{inject_builtin, sampled_to_depth},
@@ -1772,8 +1758,8 @@
             TypeInner::Matrix {
                 columns,
                 rows,
-                width,
-            } =&gt; <span class="self">self</span>.matrix_one_arg(ctx, ty, columns, rows, width, (value, expr_meta), meta)<span class="question-mark">?</span>,
+                scalar,
+            } =&gt; <span class="self">self</span>.matrix_one_arg(ctx, ty, columns, rows, scalar, (value, expr_meta), meta)<span class="question-mark">?</span>,
             TypeInner::Struct { <span class="kw-2">ref </span>members, .. } =&gt; {
                 <span class="kw">let </span>scalar_components = members
                     .get(<span class="number">0</span>)
@@ -1823,7 +1809,7 @@
         ty: Handle&lt;Type&gt;,
         columns: <span class="kw">crate</span>::VectorSize,
         rows: <span class="kw">crate</span>::VectorSize,
-        width: <span class="kw">crate</span>::Bytes,
+        element_scalar: Scalar,
         (<span class="kw-2">mut </span>value, expr_meta): (Handle&lt;Expression&gt;, Span),
         meta: Span,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;Expression&gt;&gt; {
@@ -1832,11 +1818,7 @@
         // `Expression::As` doesn&#39;t support matrix width
         // casts so we need to do some extra work for casts
 
-        </span><span class="kw">let </span>element_scalar = Scalar {
-            kind: ScalarKind::Float,
-            width,
-        };
-        ctx.forced_conversion(<span class="kw-2">&amp;mut </span>value, expr_meta, element_scalar)<span class="question-mark">?</span>;
+        </span>ctx.forced_conversion(<span class="kw-2">&amp;mut </span>value, expr_meta, element_scalar)<span class="question-mark">?</span>;
         <span class="kw">match </span><span class="kw-2">*</span>ctx.resolve_type(value, expr_meta)<span class="question-mark">? </span>{
             TypeInner::Scalar(<span class="kw">_</span>) =&gt; {
                 <span class="comment">// If a matrix is constructed with a single scalar value, then that
@@ -2038,14 +2020,10 @@
             TypeInner::Matrix {
                 columns,
                 rows,
-                width,
+                scalar: element_scalar,
             } =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>flattened = Vec::with_capacity(columns <span class="kw">as </span>usize * rows <span class="kw">as </span>usize);
 
-                <span class="kw">let </span>element_scalar = Scalar {
-                    kind: ScalarKind::Float,
-                    width,
-                };
                 <span class="kw">for </span>(<span class="kw-2">mut </span>arg, meta) <span class="kw">in </span>args.iter().copied() {
                     ctx.forced_conversion(<span class="kw-2">&amp;mut </span>arg, meta, element_scalar)<span class="question-mark">?</span>;
 
@@ -3148,16 +3126,14 @@
             <span class="kw-2">&amp;</span>TypeInner::Matrix {
                 rows: tgt_rows,
                 columns: tgt_cols,
-                width: tgt_width,
+                scalar: tgt_scalar,
             },
             <span class="kw-2">&amp;</span>TypeInner::Matrix {
                 rows: src_rows,
                 columns: src_cols,
-                width: src_width,
+                scalar: src_scalar,
             },
-        ) <span class="kw">if </span>tgt_cols == src_cols &amp;&amp; tgt_rows == src_rows =&gt; {
-            (Scalar::float(tgt_width), Scalar::float(src_width))
-        }
+        ) <span class="kw">if </span>tgt_cols == src_cols &amp;&amp; tgt_rows == src_rows =&gt; (tgt_scalar, src_scalar),
         <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">None</span>,
     };
 
@@ -3201,13 +3177,9 @@
         <span class="kw">match </span><span class="kw-2">*</span>ty {
             TypeInner::ValuePointer { scalar, .. }
             | TypeInner::Scalar(scalar)
-            | TypeInner::Vector { scalar, .. } =&gt; {
+            | TypeInner::Vector { scalar, .. }
+            | TypeInner::Matrix { scalar, .. } =&gt; {
                 <span class="kw">if </span>scalar == Scalar::F64 {
-                    variations |= BuiltinVariations::DOUBLE
-                }
-            }
-            TypeInner::Matrix { width, .. } =&gt; {
-                <span class="kw">if </span>width == <span class="number">8 </span>{
                     variations |= BuiltinVariations::DOUBLE
                 }
             }

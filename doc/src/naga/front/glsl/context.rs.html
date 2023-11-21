@@ -1500,14 +1500,6 @@
 <a href="#1500" id="1500">1500</a>
 <a href="#1501" id="1501">1501</a>
 <a href="#1502" id="1502">1502</a>
-<a href="#1503" id="1503">1503</a>
-<a href="#1504" id="1504">1504</a>
-<a href="#1505" id="1505">1505</a>
-<a href="#1506" id="1506">1506</a>
-<a href="#1507" id="1507">1507</a>
-<a href="#1508" id="1508">1508</a>
-<a href="#1509" id="1509">1509</a>
-<a href="#1510" id="1510">1510</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     ast::{
         GlobalLookup, GlobalLookupKind, HirExpr, HirExprKind, ParameterInfo, ParameterQualifier,
@@ -1520,7 +1512,7 @@
 <span class="kw">use crate</span>::{
     front::Typifier, proc::Emitter, AddressSpace, Arena, BinaryOperator, Block, Expression,
     FastHashMap, FunctionArgument, Handle, Literal, LocalVariable, RelationalFunction, Scalar,
-    ScalarKind, Span, Statement, Type, TypeInner, VectorSize,
+    Span, Statement, Type, TypeInner, VectorSize,
 };
 <span class="kw">use </span>std::ops::Index;
 
@@ -2129,12 +2121,12 @@
                         <span class="kw-2">&amp;</span>TypeInner::Matrix {
                             columns: left_columns,
                             rows: left_rows,
-                            width: left_width,
+                            scalar: left_scalar,
                         },
                         <span class="kw-2">&amp;</span>TypeInner::Matrix {
                             columns: right_columns,
                             rows: right_rows,
-                            width: right_width,
+                            scalar: right_scalar,
                         },
                     ) =&gt; {
                         <span class="kw">let </span>dimensions_ok = <span class="kw">if </span>op == BinaryOperator::Multiply {
@@ -2144,7 +2136,7 @@
                         };
 
                         <span class="comment">// Check that the two arguments have the same dimensions
-                        </span><span class="kw">if </span>!dimensions_ok || left_width != right_width {
+                        </span><span class="kw">if </span>!dimensions_ok || left_scalar != right_scalar {
                             frontend.errors.push(Error {
                                 kind: ErrorKind::SemanticError(
                                     <span class="macro">format!</span>(
@@ -2192,7 +2184,7 @@
                                         inner: TypeInner::Matrix {
                                             columns: left_columns,
                                             rows: left_rows,
-                                            width: left_width,
+                                            scalar: left_scalar,
                                         },
                                     },
                                     Span::default(),
@@ -2334,17 +2326,15 @@
                         <span class="kw">_ </span>=&gt; <span class="self">self</span>.add_expression(Expression::Binary { left, op, right }, meta)<span class="question-mark">?</span>,
                     },
                     (
-                        <span class="kw-2">&amp;</span>TypeInner::Scalar(Scalar {
-                            width: left_width, ..
-                        }),
+                        <span class="kw-2">&amp;</span>TypeInner::Scalar(left_scalar),
                         <span class="kw-2">&amp;</span>TypeInner::Matrix {
                             rows,
                             columns,
-                            width: right_width,
+                            scalar: right_scalar,
                         },
                     ) =&gt; {
-                        <span class="comment">// Check that the two arguments have the same width
-                        </span><span class="kw">if </span>left_width != right_width {
+                        <span class="comment">// Check that the two arguments have the same scalar type
+                        </span><span class="kw">if </span>left_scalar != right_scalar {
                             frontend.errors.push(Error {
                                 kind: ErrorKind::SemanticError(
                                     <span class="macro">format!</span>(
@@ -2401,7 +2391,7 @@
                                         inner: TypeInner::Matrix {
                                             columns,
                                             rows,
-                                            width: left_width,
+                                            scalar: left_scalar,
                                         },
                                     },
                                     Span::default(),
@@ -2419,14 +2409,12 @@
                         <span class="kw-2">&amp;</span>TypeInner::Matrix {
                             rows,
                             columns,
-                            width: left_width,
+                            scalar: left_scalar,
                         },
-                        <span class="kw-2">&amp;</span>TypeInner::Scalar(Scalar {
-                            width: right_width, ..
-                        }),
+                        <span class="kw-2">&amp;</span>TypeInner::Scalar(right_scalar),
                     ) =&gt; {
-                        <span class="comment">// Check that the two arguments have the same width
-                        </span><span class="kw">if </span>left_width != right_width {
+                        <span class="comment">// Check that the two arguments have the same scalar type
+                        </span><span class="kw">if </span>left_scalar != right_scalar {
                             frontend.errors.push(Error {
                                 kind: ErrorKind::SemanticError(
                                     <span class="macro">format!</span>(
@@ -2484,7 +2472,7 @@
                                         inner: TypeInner::Matrix {
                                             columns,
                                             rows,
-                                            width: left_width,
+                                            scalar: left_scalar,
                                         },
                                     },
                                     Span::default(),
@@ -2726,18 +2714,14 @@
                     TypeInner::Matrix {
                         columns,
                         rows,
-                        width,
+                        scalar,
                     } =&gt; {
                         <span class="kw">let </span>ty = TypeInner::Matrix {
                             columns,
                             rows,
-                            width,
+                            scalar,
                         };
-                        Literal::one(Scalar {
-                            kind: ScalarKind::Float,
-                            width,
-                        })
-                        .map(|i| (ty, i, <span class="prelude-val">Some</span>(rows), <span class="prelude-val">Some</span>(columns)))
+                        Literal::one(scalar).map(|i| (ty, i, <span class="prelude-val">Some</span>(rows), <span class="prelude-val">Some</span>(columns)))
                     }
                     <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
                 };

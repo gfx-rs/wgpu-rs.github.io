@@ -627,6 +627,11 @@
 <a href="#627" id="627">627</a>
 <a href="#628" id="628">628</a>
 <a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::Capabilities;
 <span class="kw">use crate</span>::{arena::Handle, proc::Alignment};
 
@@ -732,6 +737,8 @@
     </span>InvalidData(Handle&lt;<span class="kw">crate</span>::Type&gt;),
     <span class="attr">#[error(<span class="string">&quot;Base type {0:?} for the array is invalid&quot;</span>)]
     </span>InvalidArrayBaseType(Handle&lt;<span class="kw">crate</span>::Type&gt;),
+    <span class="attr">#[error(<span class="string">&quot;Matrix elements must always be floating-point types&quot;</span>)]
+    </span>MatrixElementNotFloat,
     <span class="attr">#[error(<span class="string">&quot;The constant {0:?} is specialized, and cannot be used as an array size&quot;</span>)]
     </span>UnsupportedSpecializedArrayLength(Handle&lt;<span class="kw">crate</span>::Constant&gt;),
     <span class="attr">#[error(<span class="string">&quot;Array stride {stride} does not match the expected {expected}&quot;</span>)]
@@ -934,9 +941,12 @@
             Ti::Matrix {
                 columns: <span class="kw">_</span>,
                 rows,
-                width,
+                scalar,
             } =&gt; {
-                <span class="self">self</span>.check_width(<span class="kw">crate</span>::Scalar::float(width))<span class="question-mark">?</span>;
+                <span class="kw">if </span>scalar.kind != <span class="kw">crate</span>::ScalarKind::Float {
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(TypeError::MatrixElementNotFloat);
+                }
+                <span class="self">self</span>.check_width(scalar)<span class="question-mark">?</span>;
                 TypeInfo::new(
                     TypeFlags::DATA
                         | TypeFlags::SIZED
@@ -944,7 +954,7 @@
                         | TypeFlags::HOST_SHAREABLE
                         | TypeFlags::ARGUMENT
                         | TypeFlags::CONSTRUCTIBLE,
-                    Alignment::from(rows) * Alignment::from_width(width),
+                    Alignment::from(rows) * Alignment::from_width(scalar.width),
                 )
             }
             Ti::Atomic(<span class="kw">crate</span>::Scalar { kind, width }) =&gt; {

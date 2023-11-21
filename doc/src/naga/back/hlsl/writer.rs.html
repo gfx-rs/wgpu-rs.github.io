@@ -3359,9 +3359,6 @@
 <a href="#3359" id="3359">3359</a>
 <a href="#3360" id="3360">3360</a>
 <a href="#3361" id="3361">3361</a>
-<a href="#3362" id="3362">3362</a>
-<a href="#3363" id="3363">3363</a>
-<a href="#3364" id="3364">3364</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{
     help::{WrappedArrayLength, WrappedConstructor, WrappedImageQuery, WrappedStructMatrixAccess},
     storage::StoreValue,
@@ -4272,12 +4269,9 @@
                 </span>TypeInner::Matrix {
                     rows,
                     columns,
-                    width,
+                    scalar,
                 } <span class="kw">if </span>member.binding.is_none() &amp;&amp; rows == <span class="kw">crate</span>::VectorSize::Bi =&gt; {
-                    <span class="kw">let </span>vec_ty = <span class="kw">crate</span>::TypeInner::Vector {
-                        size: rows,
-                        scalar: <span class="kw">crate</span>::Scalar::float(width),
-                    };
+                    <span class="kw">let </span>vec_ty = <span class="kw">crate</span>::TypeInner::Vector { size: rows, scalar };
                     <span class="kw">let </span>field_name_key = NameKey::StructMember(handle, index <span class="kw">as </span>u32);
 
                     <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..columns <span class="kw">as </span>u8 {
@@ -4401,7 +4395,7 @@
             TypeInner::Matrix {
                 columns,
                 rows,
-                width,
+                scalar,
             } =&gt; {
                 <span class="comment">// The IR supports only float matrix
                 // https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-matrix
@@ -4410,7 +4404,7 @@
                 </span><span class="macro">write!</span>(
                     <span class="self">self</span>.out,
                     <span class="string">&quot;{}{}x{}&quot;</span>,
-                    <span class="kw">crate</span>::Scalar::float(width).to_hlsl_str()<span class="question-mark">?</span>,
+                    scalar.to_hlsl_str()<span class="question-mark">?</span>,
                     back::vector_size_str(columns),
                     back::vector_size_str(rows),
                 )<span class="question-mark">?</span>;
@@ -6605,11 +6599,11 @@
         TypeInner::Matrix {
             columns,
             rows,
-            width,
+            scalar,
         } =&gt; <span class="prelude-val">Some</span>(MatrixType {
             columns,
             rows,
-            width,
+            width: scalar.width,
         }),
         TypeInner::Array { base, .. } =&gt; get_inner_matrix_data(module, base),
         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -6640,12 +6634,12 @@
             TypeInner::Matrix {
                 columns,
                 rows,
-                width,
+                scalar,
             } =&gt; {
                 mat_data = <span class="prelude-val">Some</span>(MatrixType {
                     columns,
                     rows,
-                    width,
+                    width: scalar.width,
                 })
             }
             TypeInner::Array { base, .. } =&gt; {
@@ -6697,12 +6691,12 @@
             TypeInner::Matrix {
                 columns,
                 rows,
-                width,
+                scalar,
             } =&gt; {
                 mat_data = <span class="prelude-val">Some</span>(MatrixType {
                     columns,
                     rows,
-                    width,
+                    width: scalar.width,
                 })
             }
             TypeInner::Array { base, .. } =&gt; {

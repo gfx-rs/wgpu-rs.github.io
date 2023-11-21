@@ -778,7 +778,6 @@
 <a href="#778" id="778">778</a>
 <a href="#779" id="779">779</a>
 <a href="#780" id="780">780</a>
-<a href="#781" id="781">781</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 [`Module`](super::Module) processing functionality.
 */
@@ -1007,7 +1006,7 @@
         <span class="kw">use </span><span class="kw">crate</span>::TypeInner <span class="kw">as </span>Ti;
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             Ti::Scalar(scalar) | Ti::Vector { scalar, .. } =&gt; <span class="prelude-val">Some</span>(scalar),
-            Ti::Matrix { width, .. } =&gt; <span class="prelude-val">Some</span>(<span class="kw">super</span>::Scalar::float(width)),
+            Ti::Matrix { scalar, .. } =&gt; <span class="prelude-val">Some</span>(scalar),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
         }
     }
@@ -1047,8 +1046,8 @@
             </span><span class="self">Self</span>::Matrix {
                 columns,
                 rows,
-                width,
-            } =&gt; Alignment::from(rows) * width <span class="kw">as </span>u32 * columns <span class="kw">as </span>u32,
+                scalar,
+            } =&gt; Alignment::from(rows) * scalar.width <span class="kw">as </span>u32 * columns <span class="kw">as </span>u32,
             <span class="self">Self</span>::Pointer { .. } | <span class="self">Self</span>::ValuePointer { .. } =&gt; POINTER_SPAN,
             <span class="self">Self</span>::Array {
                 base: <span class="kw">_</span>,
@@ -1148,10 +1147,9 @@
     <span class="kw">pub fn </span>component_type(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="prelude-ty">Option</span>&lt;TypeResolution&gt; {
         <span class="prelude-val">Some</span>(<span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
             <span class="self">Self</span>::Vector { scalar, .. } =&gt; TypeResolution::Value(<span class="kw">crate</span>::TypeInner::Scalar(scalar)),
-            <span class="self">Self</span>::Matrix { rows, width, .. } =&gt; TypeResolution::Value(<span class="kw">crate</span>::TypeInner::Vector {
-                size: rows,
-                scalar: <span class="kw">crate</span>::Scalar::float(width),
-            }),
+            <span class="self">Self</span>::Matrix { rows, scalar, .. } =&gt; {
+                TypeResolution::Value(<span class="kw">crate</span>::TypeInner::Vector { size: rows, scalar })
+            }
             <span class="self">Self</span>::Array {
                 base,
                 size: <span class="kw">crate</span>::ArraySize::Constant(<span class="kw">_</span>),
@@ -1554,8 +1552,8 @@
         <span class="kw">crate</span>::TypeInner::Matrix {
             columns: <span class="kw">crate</span>::VectorSize::Tri,
             rows: <span class="kw">crate</span>::VectorSize::Tri,
-            width: <span class="number">4
-        </span>}
+            scalar: <span class="kw">crate</span>::Scalar::F32,
+        }
         .size(module.to_ctx()),
         <span class="number">48</span>,
     );
