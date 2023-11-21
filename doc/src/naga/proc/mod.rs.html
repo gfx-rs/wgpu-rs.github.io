@@ -768,6 +768,17 @@
 <a href="#768" id="768">768</a>
 <a href="#769" id="769">769</a>
 <a href="#770" id="770">770</a>
+<a href="#771" id="771">771</a>
+<a href="#772" id="772">772</a>
+<a href="#773" id="773">773</a>
+<a href="#774" id="774">774</a>
+<a href="#775" id="775">775</a>
+<a href="#776" id="776">776</a>
+<a href="#777" id="777">777</a>
+<a href="#778" id="778">778</a>
+<a href="#779" id="779">779</a>
+<a href="#780" id="780">780</a>
+<a href="#781" id="781">781</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 [`Module`](super::Module) processing functionality.
 */
@@ -864,6 +875,10 @@
         kind: <span class="kw">crate</span>::ScalarKind::Float,
         width: <span class="number">8</span>,
     };
+    <span class="kw">pub const </span>I64: <span class="self">Self </span>= <span class="self">Self </span>{
+        kind: <span class="kw">crate</span>::ScalarKind::Sint,
+        width: <span class="number">8</span>,
+    };
     <span class="kw">pub const </span>BOOL: <span class="self">Self </span>= <span class="self">Self </span>{
         kind: <span class="kw">crate</span>::ScalarKind::Bool,
         width: <span class="kw">crate</span>::BOOL_WIDTH,
@@ -900,6 +915,7 @@
             (<span class="self">Self</span>::F32(a), <span class="self">Self</span>::F32(b)) =&gt; a.to_bits() == b.to_bits(),
             (<span class="self">Self</span>::U32(a), <span class="self">Self</span>::U32(b)) =&gt; a == b,
             (<span class="self">Self</span>::I32(a), <span class="self">Self</span>::I32(b)) =&gt; a == b,
+            (<span class="self">Self</span>::I64(a), <span class="self">Self</span>::I64(b)) =&gt; a == b,
             (<span class="self">Self</span>::Bool(a), <span class="self">Self</span>::Bool(b)) =&gt; a == b,
             <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         }
@@ -929,6 +945,10 @@
                 hasher.write_u8(<span class="number">4</span>);
                 v.hash(hasher);
             }
+            <span class="self">Self</span>::I64(v) =&gt; {
+                hasher.write_u8(<span class="number">5</span>);
+                v.hash(hasher);
+            }
         }
     }
 }
@@ -940,6 +960,7 @@
             (value, <span class="kw">crate</span>::ScalarKind::Float, <span class="number">4</span>) =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::F32(value <span class="kw">as _</span>)),
             (value, <span class="kw">crate</span>::ScalarKind::Uint, <span class="number">4</span>) =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::U32(value <span class="kw">as _</span>)),
             (value, <span class="kw">crate</span>::ScalarKind::Sint, <span class="number">4</span>) =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::I32(value <span class="kw">as _</span>)),
+            (value, <span class="kw">crate</span>::ScalarKind::Sint, <span class="number">8</span>) =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::I64(value <span class="kw">as _</span>)),
             (<span class="number">1</span>, <span class="kw">crate</span>::ScalarKind::Bool, <span class="number">4</span>) =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::Bool(<span class="bool-val">true</span>)),
             (<span class="number">0</span>, <span class="kw">crate</span>::ScalarKind::Bool, <span class="number">4</span>) =&gt; <span class="prelude-val">Some</span>(<span class="self">Self</span>::Bool(<span class="bool-val">false</span>)),
             <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
@@ -956,7 +977,7 @@
 
     <span class="kw">pub const fn </span>width(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">crate</span>::Bytes {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
-            <span class="self">Self</span>::F64(<span class="kw">_</span>) =&gt; <span class="number">8</span>,
+            <span class="self">Self</span>::F64(<span class="kw">_</span>) | <span class="self">Self</span>::I64(<span class="kw">_</span>) =&gt; <span class="number">8</span>,
             <span class="self">Self</span>::F32(<span class="kw">_</span>) | <span class="self">Self</span>::U32(<span class="kw">_</span>) | <span class="self">Self</span>::I32(<span class="kw">_</span>) =&gt; <span class="number">4</span>,
             <span class="self">Self</span>::Bool(<span class="kw">_</span>) =&gt; <span class="number">1</span>,
         }
@@ -967,6 +988,7 @@
             <span class="self">Self</span>::F32(<span class="kw">_</span>) =&gt; <span class="kw">crate</span>::Scalar::F32,
             <span class="self">Self</span>::U32(<span class="kw">_</span>) =&gt; <span class="kw">crate</span>::Scalar::U32,
             <span class="self">Self</span>::I32(<span class="kw">_</span>) =&gt; <span class="kw">crate</span>::Scalar::I32,
+            <span class="self">Self</span>::I64(<span class="kw">_</span>) =&gt; <span class="kw">crate</span>::Scalar::I64,
             <span class="self">Self</span>::Bool(<span class="kw">_</span>) =&gt; <span class="kw">crate</span>::Scalar::BOOL,
         }
     }
