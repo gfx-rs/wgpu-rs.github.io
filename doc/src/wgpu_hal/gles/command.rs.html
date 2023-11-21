@@ -1142,6 +1142,31 @@
 <a href="#1142" id="1142">1142</a>
 <a href="#1143" id="1143">1143</a>
 <a href="#1144" id="1144">1144</a>
+<a href="#1145" id="1145">1145</a>
+<a href="#1146" id="1146">1146</a>
+<a href="#1147" id="1147">1147</a>
+<a href="#1148" id="1148">1148</a>
+<a href="#1149" id="1149">1149</a>
+<a href="#1150" id="1150">1150</a>
+<a href="#1151" id="1151">1151</a>
+<a href="#1152" id="1152">1152</a>
+<a href="#1153" id="1153">1153</a>
+<a href="#1154" id="1154">1154</a>
+<a href="#1155" id="1155">1155</a>
+<a href="#1156" id="1156">1156</a>
+<a href="#1157" id="1157">1157</a>
+<a href="#1158" id="1158">1158</a>
+<a href="#1159" id="1159">1159</a>
+<a href="#1160" id="1160">1160</a>
+<a href="#1161" id="1161">1161</a>
+<a href="#1162" id="1162">1162</a>
+<a href="#1163" id="1163">1163</a>
+<a href="#1164" id="1164">1164</a>
+<a href="#1165" id="1165">1165</a>
+<a href="#1166" id="1166">1166</a>
+<a href="#1167" id="1167">1167</a>
+<a href="#1168" id="1168">1168</a>
+<a href="#1169" id="1169">1169</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, Command <span class="kw">as </span>C};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>std::{mem, ops::Range};
@@ -1173,6 +1198,7 @@
     instance_vbuf_mask: usize,
     dirty_vbuf_mask: usize,
     active_first_instance: u32,
+    first_instance_location: <span class="prelude-ty">Option</span>&lt;glow::UniformLocation&gt;,
     push_constant_descs: ArrayVec&lt;<span class="kw">super</span>::PushConstantDesc, { <span class="kw">super</span>::MAX_PUSH_CONSTANT_COMMANDS }&gt;,
     <span class="comment">// The current state of the push constant data block.
     </span>current_push_constant_data: [u32; <span class="kw">super</span>::MAX_PUSH_CONSTANTS],
@@ -1201,6 +1227,7 @@
             instance_vbuf_mask: Default::default(),
             dirty_vbuf_mask: Default::default(),
             active_first_instance: Default::default(),
+            first_instance_location: Default::default(),
             push_constant_descs: Default::default(),
             current_push_constant_data: [<span class="number">0</span>; <span class="kw">super</span>::MAX_PUSH_CONSTANTS],
             end_of_pass_timestamp: Default::default(),
@@ -1337,19 +1364,32 @@
     }
 
     <span class="kw">fn </span>prepare_draw(<span class="kw-2">&amp;mut </span><span class="self">self</span>, first_instance: u32) {
-        <span class="kw">if </span>first_instance != <span class="self">self</span>.state.active_first_instance {
+        <span class="comment">// If we support fully featured instancing, we want to bind everything as normal
+        // and let the draw call sort it out.
+        </span><span class="kw">let </span>emulated_first_instance_value = <span class="kw">if </span><span class="self">self
+            </span>.private_caps
+            .contains(<span class="kw">super</span>::PrivateCapabilities::FULLY_FEATURED_INSTANCING)
+        {
+            <span class="number">0
+        </span>} <span class="kw">else </span>{
+            first_instance
+        };
+
+        <span class="kw">if </span>emulated_first_instance_value != <span class="self">self</span>.state.active_first_instance {
             <span class="comment">// rebind all per-instance buffers on first-instance change
             </span><span class="self">self</span>.state.dirty_vbuf_mask |= <span class="self">self</span>.state.instance_vbuf_mask;
-            <span class="self">self</span>.state.active_first_instance = first_instance;
+            <span class="self">self</span>.state.active_first_instance = emulated_first_instance_value;
         }
         <span class="kw">if </span><span class="self">self</span>.state.dirty_vbuf_mask != <span class="number">0 </span>{
-            <span class="self">self</span>.rebind_vertex_data(first_instance);
+            <span class="self">self</span>.rebind_vertex_data(emulated_first_instance_value);
         }
     }
 
-    <span class="kw">fn </span>set_pipeline_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>, inner: <span class="kw-2">&amp;</span><span class="kw">super</span>::PipelineInner) {
+    <span class="attr">#[allow(clippy::clone_on_copy)] </span><span class="comment">// False positive when cloning glow::UniformLocation
+    </span><span class="kw">fn </span>set_pipeline_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>, inner: <span class="kw-2">&amp;</span><span class="kw">super</span>::PipelineInner) {
         <span class="self">self</span>.cmd_buffer.commands.push(C::SetProgram(inner.program));
 
+        <span class="self">self</span>.state.first_instance_location = inner.first_instance_location.clone();
         <span class="self">self</span>.state.push_constant_descs = inner.push_constant_descs.clone();
 
         <span class="comment">// rebind textures, if needed
@@ -2146,40 +2186,46 @@
 
     <span class="kw">unsafe fn </span>draw(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        start_vertex: u32,
+        first_vertex: u32,
         vertex_count: u32,
-        start_instance: u32,
+        first_instance: u32,
         instance_count: u32,
     ) {
-        <span class="self">self</span>.prepare_draw(start_instance);
-        <span class="self">self</span>.cmd_buffer.commands.push(C::Draw {
+        <span class="self">self</span>.prepare_draw(first_instance);
+        <span class="attr">#[allow(clippy::clone_on_copy)] </span><span class="comment">// False positive when cloning glow::UniformLocation
+        </span><span class="self">self</span>.cmd_buffer.commands.push(C::Draw {
             topology: <span class="self">self</span>.state.topology,
-            start_vertex,
+            first_vertex,
             vertex_count,
+            first_instance,
             instance_count,
+            first_instance_location: <span class="self">self</span>.state.first_instance_location.clone(),
         });
     }
     <span class="kw">unsafe fn </span>draw_indexed(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
-        start_index: u32,
+        first_index: u32,
         index_count: u32,
         base_vertex: i32,
-        start_instance: u32,
+        first_instance: u32,
         instance_count: u32,
     ) {
-        <span class="self">self</span>.prepare_draw(start_instance);
+        <span class="self">self</span>.prepare_draw(first_instance);
         <span class="kw">let </span>(index_size, index_type) = <span class="kw">match </span><span class="self">self</span>.state.index_format {
             wgt::IndexFormat::Uint16 =&gt; (<span class="number">2</span>, glow::UNSIGNED_SHORT),
             wgt::IndexFormat::Uint32 =&gt; (<span class="number">4</span>, glow::UNSIGNED_INT),
         };
-        <span class="kw">let </span>index_offset = <span class="self">self</span>.state.index_offset + index_size * start_index <span class="kw">as </span>wgt::BufferAddress;
-        <span class="self">self</span>.cmd_buffer.commands.push(C::DrawIndexed {
+        <span class="kw">let </span>index_offset = <span class="self">self</span>.state.index_offset + index_size * first_index <span class="kw">as </span>wgt::BufferAddress;
+        <span class="attr">#[allow(clippy::clone_on_copy)] </span><span class="comment">// False positive when cloning glow::UniformLocation
+        </span><span class="self">self</span>.cmd_buffer.commands.push(C::DrawIndexed {
             topology: <span class="self">self</span>.state.topology,
             index_type,
             index_offset,
             index_count,
             base_vertex,
+            first_instance,
             instance_count,
+            first_instance_location: <span class="self">self</span>.state.first_instance_location.clone(),
         });
     }
     <span class="kw">unsafe fn </span>draw_indirect(
@@ -2192,10 +2238,12 @@
         <span class="kw">for </span>draw <span class="kw">in </span><span class="number">0</span>..draw_count <span class="kw">as </span>wgt::BufferAddress {
             <span class="kw">let </span>indirect_offset =
                 offset + draw * mem::size_of::&lt;wgt::DrawIndirectArgs&gt;() <span class="kw">as </span>wgt::BufferAddress;
-            <span class="self">self</span>.cmd_buffer.commands.push(C::DrawIndirect {
+            <span class="attr">#[allow(clippy::clone_on_copy)] </span><span class="comment">// False positive when cloning glow::UniformLocation
+            </span><span class="self">self</span>.cmd_buffer.commands.push(C::DrawIndirect {
                 topology: <span class="self">self</span>.state.topology,
                 indirect_buf: buffer.raw.unwrap(),
                 indirect_offset,
+                first_instance_location: <span class="self">self</span>.state.first_instance_location.clone(),
             });
         }
     }
@@ -2213,11 +2261,13 @@
         <span class="kw">for </span>draw <span class="kw">in </span><span class="number">0</span>..draw_count <span class="kw">as </span>wgt::BufferAddress {
             <span class="kw">let </span>indirect_offset = offset
                 + draw * mem::size_of::&lt;wgt::DrawIndexedIndirectArgs&gt;() <span class="kw">as </span>wgt::BufferAddress;
-            <span class="self">self</span>.cmd_buffer.commands.push(C::DrawIndexedIndirect {
+            <span class="attr">#[allow(clippy::clone_on_copy)] </span><span class="comment">// False positive when cloning glow::UniformLocation
+            </span><span class="self">self</span>.cmd_buffer.commands.push(C::DrawIndexedIndirect {
                 topology: <span class="self">self</span>.state.topology,
                 index_type,
                 indirect_buf: buffer.raw.unwrap(),
                 indirect_offset,
+                first_instance_location: <span class="self">self</span>.state.first_instance_location.clone(),
             });
         }
     }

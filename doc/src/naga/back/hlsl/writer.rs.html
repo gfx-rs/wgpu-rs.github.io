@@ -3374,8 +3374,8 @@
 <span class="kw">const </span>LOCATION_SEMANTIC: <span class="kw-2">&amp;</span>str = <span class="string">&quot;LOC&quot;</span>;
 <span class="kw">const </span>SPECIAL_CBUF_TYPE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;NagaConstants&quot;</span>;
 <span class="kw">const </span>SPECIAL_CBUF_VAR: <span class="kw-2">&amp;</span>str = <span class="string">&quot;_NagaConstants&quot;</span>;
-<span class="kw">const </span>SPECIAL_BASE_VERTEX: <span class="kw-2">&amp;</span>str = <span class="string">&quot;base_vertex&quot;</span>;
-<span class="kw">const </span>SPECIAL_BASE_INSTANCE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;base_instance&quot;</span>;
+<span class="kw">const </span>SPECIAL_FIRST_VERTEX: <span class="kw-2">&amp;</span>str = <span class="string">&quot;first_vertex&quot;</span>;
+<span class="kw">const </span>SPECIAL_FIRST_INSTANCE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;first_instance&quot;</span>;
 <span class="kw">const </span>SPECIAL_OTHER: <span class="kw-2">&amp;</span>str = <span class="string">&quot;other&quot;</span>;
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>MODF_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">&quot;naga_modf&quot;</span>;
@@ -3550,8 +3550,8 @@
         <span class="comment">// Write special constants, if needed
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw-2">ref </span>bt) = <span class="self">self</span>.options.special_constants_binding {
             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;struct {SPECIAL_CBUF_TYPE} {{&quot;</span>)<span class="question-mark">?</span>;
-            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;{}int {};&quot;</span>, back::INDENT, SPECIAL_BASE_VERTEX)<span class="question-mark">?</span>;
-            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;{}int {};&quot;</span>, back::INDENT, SPECIAL_BASE_INSTANCE)<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;{}int {};&quot;</span>, back::INDENT, SPECIAL_FIRST_VERTEX)<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;{}int {};&quot;</span>, back::INDENT, SPECIAL_FIRST_INSTANCE)<span class="question-mark">?</span>;
             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;{}uint {};&quot;</span>, back::INDENT, SPECIAL_OTHER)<span class="question-mark">?</span>;
             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;}};&quot;</span>)<span class="question-mark">?</span>;
             <span class="macro">write!</span>(
@@ -5463,7 +5463,7 @@
     ) -&gt; BackendResult {
         <span class="kw">use </span><span class="kw">crate</span>::Expression;
 
-        <span class="comment">// Handle the special semantics for base vertex/instance
+        <span class="comment">// Handle the special semantics of vertex_index/instance_index
         </span><span class="kw">let </span>ff_input = <span class="kw">if </span><span class="self">self</span>.options.special_constants_binding.is_some() {
             func_ctx.is_fixed_function_input(expr, module)
         } <span class="kw">else </span>{
@@ -5471,20 +5471,20 @@
         </span>};
         <span class="kw">let </span>closing_bracket = <span class="kw">match </span>ff_input {
             <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BuiltIn::VertexIndex) =&gt; {
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;({SPECIAL_CBUF_VAR}.{SPECIAL_BASE_VERTEX} + &quot;</span>)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;({SPECIAL_CBUF_VAR}.{SPECIAL_FIRST_VERTEX} + &quot;</span>)<span class="question-mark">?</span>;
                 <span class="string">&quot;)&quot;
             </span>}
             <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BuiltIn::InstanceIndex) =&gt; {
-                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;({SPECIAL_CBUF_VAR}.{SPECIAL_BASE_INSTANCE} + &quot;</span>,)<span class="question-mark">?</span>;
+                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;({SPECIAL_CBUF_VAR}.{SPECIAL_FIRST_INSTANCE} + &quot;</span>,)<span class="question-mark">?</span>;
                 <span class="string">&quot;)&quot;
             </span>}
             <span class="prelude-val">Some</span>(<span class="kw">crate</span>::BuiltIn::NumWorkGroups) =&gt; {
-                <span class="comment">//Note: despite their names (`BASE_VERTEX` and `BASE_INSTANCE`),
+                <span class="comment">// Note: despite their names (`FIRST_VERTEX` and `FIRST_INSTANCE`),
                 // in compute shaders the special constants contain the number
                 // of workgroups, which we are using here.
                 </span><span class="macro">write!</span>(
                     <span class="self">self</span>.out,
-                    <span class="string">&quot;uint3({SPECIAL_CBUF_VAR}.{SPECIAL_BASE_VERTEX}, {SPECIAL_CBUF_VAR}.{SPECIAL_BASE_INSTANCE}, {SPECIAL_CBUF_VAR}.{SPECIAL_OTHER})&quot;</span>,
+                    <span class="string">&quot;uint3({SPECIAL_CBUF_VAR}.{SPECIAL_FIRST_VERTEX}, {SPECIAL_CBUF_VAR}.{SPECIAL_FIRST_INSTANCE}, {SPECIAL_CBUF_VAR}.{SPECIAL_OTHER})&quot;</span>,
                 )<span class="question-mark">?</span>;
                 <span class="kw">return </span><span class="prelude-val">Ok</span>(());
             }

@@ -1222,6 +1222,20 @@
 <a href="#1222" id="1222">1222</a>
 <a href="#1223" id="1223">1223</a>
 <a href="#1224" id="1224">1224</a>
+<a href="#1225" id="1225">1225</a>
+<a href="#1226" id="1226">1226</a>
+<a href="#1227" id="1227">1227</a>
+<a href="#1228" id="1228">1228</a>
+<a href="#1229" id="1229">1229</a>
+<a href="#1230" id="1230">1230</a>
+<a href="#1231" id="1231">1231</a>
+<a href="#1232" id="1232">1232</a>
+<a href="#1233" id="1233">1233</a>
+<a href="#1234" id="1234">1234</a>
+<a href="#1235" id="1235">1235</a>
+<a href="#1236" id="1236">1236</a>
+<a href="#1237" id="1237">1237</a>
+<a href="#1238" id="1238">1238</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>glow::HasContext;
 <span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>std::sync::{atomic::AtomicU8, Arc};
@@ -1603,7 +1617,8 @@
         <span class="kw">let </span><span class="kw-2">mut </span>downlevel_flags = wgt::DownlevelFlags::empty()
             | wgt::DownlevelFlags::NON_POWER_OF_TWO_MIPMAPPED_TEXTURES
             | wgt::DownlevelFlags::CUBE_ARRAY_TEXTURES
-            | wgt::DownlevelFlags::COMPARISON_SAMPLERS;
+            | wgt::DownlevelFlags::COMPARISON_SAMPLERS
+            | wgt::DownlevelFlags::VERTEX_AND_INSTANCE_INDEX_RESPECTS_RESPECTIVE_FIRST_VALUE_IN_INDIRECT_DRAW;
         downlevel_flags.set(wgt::DownlevelFlags::COMPUTE_SHADERS, supports_compute);
         downlevel_flags.set(
             wgt::DownlevelFlags::FRAGMENT_WRITABLE_STORAGE,
@@ -1613,9 +1628,7 @@
             wgt::DownlevelFlags::INDIRECT_EXECUTION,
             supported((<span class="number">3</span>, <span class="number">1</span>), (<span class="number">4</span>, <span class="number">3</span>)) || extensions.contains(<span class="string">&quot;GL_ARB_multi_draw_indirect&quot;</span>),
         );
-        <span class="comment">//TODO: we can actually support positive `base_vertex` in the same way
-        // as we emulate the `start_instance`. But we can&#39;t deal with negatives...
-        </span>downlevel_flags.set(wgt::DownlevelFlags::BASE_VERTEX, supported((<span class="number">3</span>, <span class="number">2</span>), (<span class="number">3</span>, <span class="number">2</span>)));
+        downlevel_flags.set(wgt::DownlevelFlags::BASE_VERTEX, supported((<span class="number">3</span>, <span class="number">2</span>), (<span class="number">3</span>, <span class="number">2</span>)));
         downlevel_flags.set(
             wgt::DownlevelFlags::INDEPENDENT_BLEND,
             supported((<span class="number">3</span>, <span class="number">2</span>), (<span class="number">4</span>, <span class="number">0</span>)) || extensions.contains(<span class="string">&quot;GL_EXT_draw_buffers_indexed&quot;</span>),
@@ -1840,6 +1853,21 @@
             <span class="kw">super</span>::PrivateCapabilities::INVALIDATE_FRAMEBUFFER,
             supported((<span class="number">3</span>, <span class="number">0</span>), (<span class="number">4</span>, <span class="number">3</span>)),
         );
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(full_ver) = full_ver {
+            <span class="kw">let </span>supported =
+                full_ver &gt;= (<span class="number">4</span>, <span class="number">2</span>) &amp;&amp; extensions.contains(<span class="string">&quot;GL_ARB_shader_draw_parameters&quot;</span>);
+            private_caps.set(
+                <span class="kw">super</span>::PrivateCapabilities::FULLY_FEATURED_INSTANCING,
+                supported,
+            );
+            <span class="comment">// Desktop 4.2 and greater specify the first instance parameter.
+            //
+            // For all other versions, the behavior is undefined.
+            //
+            // We only support indirect first instance when we also have ARB_shader_draw_parameters as
+            // that&#39;s the only way to get gl_InstanceID to work correctly.
+            </span>features.set(wgt::Features::INDIRECT_FIRST_INSTANCE, supported);
+        }
 
         <span class="kw">let </span>max_texture_size = <span class="kw">unsafe </span>{ gl.get_parameter_i32(glow::MAX_TEXTURE_SIZE) } <span class="kw">as </span>u32;
         <span class="kw">let </span>max_texture_3d_size = <span class="kw">unsafe </span>{ gl.get_parameter_i32(glow::MAX_3D_TEXTURE_SIZE) } <span class="kw">as </span>u32;

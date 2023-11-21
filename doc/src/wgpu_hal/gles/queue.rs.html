@@ -1741,6 +1741,69 @@
 <a href="#1741" id="1741">1741</a>
 <a href="#1742" id="1742">1742</a>
 <a href="#1743" id="1743">1743</a>
+<a href="#1744" id="1744">1744</a>
+<a href="#1745" id="1745">1745</a>
+<a href="#1746" id="1746">1746</a>
+<a href="#1747" id="1747">1747</a>
+<a href="#1748" id="1748">1748</a>
+<a href="#1749" id="1749">1749</a>
+<a href="#1750" id="1750">1750</a>
+<a href="#1751" id="1751">1751</a>
+<a href="#1752" id="1752">1752</a>
+<a href="#1753" id="1753">1753</a>
+<a href="#1754" id="1754">1754</a>
+<a href="#1755" id="1755">1755</a>
+<a href="#1756" id="1756">1756</a>
+<a href="#1757" id="1757">1757</a>
+<a href="#1758" id="1758">1758</a>
+<a href="#1759" id="1759">1759</a>
+<a href="#1760" id="1760">1760</a>
+<a href="#1761" id="1761">1761</a>
+<a href="#1762" id="1762">1762</a>
+<a href="#1763" id="1763">1763</a>
+<a href="#1764" id="1764">1764</a>
+<a href="#1765" id="1765">1765</a>
+<a href="#1766" id="1766">1766</a>
+<a href="#1767" id="1767">1767</a>
+<a href="#1768" id="1768">1768</a>
+<a href="#1769" id="1769">1769</a>
+<a href="#1770" id="1770">1770</a>
+<a href="#1771" id="1771">1771</a>
+<a href="#1772" id="1772">1772</a>
+<a href="#1773" id="1773">1773</a>
+<a href="#1774" id="1774">1774</a>
+<a href="#1775" id="1775">1775</a>
+<a href="#1776" id="1776">1776</a>
+<a href="#1777" id="1777">1777</a>
+<a href="#1778" id="1778">1778</a>
+<a href="#1779" id="1779">1779</a>
+<a href="#1780" id="1780">1780</a>
+<a href="#1781" id="1781">1781</a>
+<a href="#1782" id="1782">1782</a>
+<a href="#1783" id="1783">1783</a>
+<a href="#1784" id="1784">1784</a>
+<a href="#1785" id="1785">1785</a>
+<a href="#1786" id="1786">1786</a>
+<a href="#1787" id="1787">1787</a>
+<a href="#1788" id="1788">1788</a>
+<a href="#1789" id="1789">1789</a>
+<a href="#1790" id="1790">1790</a>
+<a href="#1791" id="1791">1791</a>
+<a href="#1792" id="1792">1792</a>
+<a href="#1793" id="1793">1793</a>
+<a href="#1794" id="1794">1794</a>
+<a href="#1795" id="1795">1795</a>
+<a href="#1796" id="1796">1796</a>
+<a href="#1797" id="1797">1797</a>
+<a href="#1798" id="1798">1798</a>
+<a href="#1799" id="1799">1799</a>
+<a href="#1800" id="1800">1800</a>
+<a href="#1801" id="1801">1801</a>
+<a href="#1802" id="1802">1802</a>
+<a href="#1803" id="1803">1803</a>
+<a href="#1804" id="1804">1804</a>
+<a href="#1805" id="1805">1805</a>
+<a href="#1806" id="1806">1806</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv::is_layered_target, Command <span class="kw">as </span>C, PrivateCapabilities};
 <span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>glow::HasContext;
@@ -1903,20 +1966,43 @@
         <span class="kw">match </span><span class="kw-2">*</span>command {
             C::Draw {
                 topology,
-                start_vertex,
+                first_vertex,
                 vertex_count,
                 instance_count,
+                first_instance,
+                <span class="kw-2">ref </span>first_instance_location,
             } =&gt; {
-                <span class="comment">// Don&#39;t use `gl.draw_arrays` for `instance_count == 1`.
-                // Angle has a bug where it doesn&#39;t consider the instance divisor when `DYNAMIC_DRAW` is used in `draw_arrays`.
-                // See https://github.com/gfx-rs/wgpu/issues/3578
-                </span><span class="kw">unsafe </span>{
-                    gl.draw_arrays_instanced(
-                        topology,
-                        start_vertex <span class="kw">as </span>i32,
-                        vertex_count <span class="kw">as </span>i32,
-                        instance_count <span class="kw">as </span>i32,
-                    )
+                <span class="kw">let </span>supports_full_instancing = <span class="self">self
+                    </span>.shared
+                    .private_caps
+                    .contains(PrivateCapabilities::FULLY_FEATURED_INSTANCING);
+
+                <span class="kw">if </span>supports_full_instancing {
+                    <span class="kw">unsafe </span>{
+                        gl.draw_arrays_instanced_base_instance(
+                            topology,
+                            first_vertex <span class="kw">as </span>i32,
+                            vertex_count <span class="kw">as </span>i32,
+                            instance_count <span class="kw">as </span>i32,
+                            first_instance,
+                        )
+                    }
+                } <span class="kw">else </span>{
+                    <span class="kw">unsafe </span>{
+                        gl.uniform_1_u32(first_instance_location.as_ref(), first_instance);
+                    }
+
+                    <span class="comment">// Don&#39;t use `gl.draw_arrays` for `instance_count == 1`.
+                    // Angle has a bug where it doesn&#39;t consider the instance divisor when `DYNAMIC_DRAW` is used in `draw_arrays`.
+                    // See https://github.com/gfx-rs/wgpu/issues/3578
+                    </span><span class="kw">unsafe </span>{
+                        gl.draw_arrays_instanced(
+                            topology,
+                            first_vertex <span class="kw">as </span>i32,
+                            vertex_count <span class="kw">as </span>i32,
+                            instance_count <span class="kw">as </span>i32,
+                        )
+                    }
                 };
             }
             C::DrawIndexed {
@@ -1925,38 +2011,75 @@
                 index_count,
                 index_offset,
                 base_vertex,
+                first_instance,
                 instance_count,
+                <span class="kw-2">ref </span>first_instance_location,
             } =&gt; {
                 <span class="kw">match </span>base_vertex {
-                    <span class="comment">// Don&#39;t use `gl.draw_elements`/`gl.draw_elements_base_vertex` for `instance_count == 1`.
-                    // Angle has a bug where it doesn&#39;t consider the instance divisor when `DYNAMIC_DRAW` is used in `gl.draw_elements`/`gl.draw_elements_base_vertex`.
-                    // See https://github.com/gfx-rs/wgpu/issues/3578
-                    </span><span class="number">0 </span>=&gt; <span class="kw">unsafe </span>{
-                        gl.draw_elements_instanced(
-                            topology,
-                            index_count <span class="kw">as </span>i32,
-                            index_type,
-                            index_offset <span class="kw">as </span>i32,
-                            instance_count <span class="kw">as </span>i32,
-                        )
-                    },
-                    <span class="kw">_ </span>=&gt; <span class="kw">unsafe </span>{
-                        gl.draw_elements_instanced_base_vertex(
-                            topology,
-                            index_count <span class="kw">as _</span>,
-                            index_type,
-                            index_offset <span class="kw">as </span>i32,
-                            instance_count <span class="kw">as </span>i32,
-                            base_vertex,
-                        )
-                    },
+                    <span class="number">0 </span>=&gt; {
+                        <span class="kw">unsafe </span>{
+                            gl.uniform_1_u32(first_instance_location.as_ref(), first_instance)
+                        };
+
+                        <span class="kw">unsafe </span>{
+                            <span class="comment">// Don&#39;t use `gl.draw_elements`/`gl.draw_elements_base_vertex` for `instance_count == 1`.
+                            // Angle has a bug where it doesn&#39;t consider the instance divisor when `DYNAMIC_DRAW` is used in `gl.draw_elements`/`gl.draw_elements_base_vertex`.
+                            // See https://github.com/gfx-rs/wgpu/issues/3578
+                            </span>gl.draw_elements_instanced(
+                                topology,
+                                index_count <span class="kw">as </span>i32,
+                                index_type,
+                                index_offset <span class="kw">as </span>i32,
+                                instance_count <span class="kw">as </span>i32,
+                            )
+                        }
+                    }
+                    <span class="kw">_ </span>=&gt; {
+                        <span class="kw">let </span>supports_full_instancing = <span class="self">self
+                            </span>.shared
+                            .private_caps
+                            .contains(PrivateCapabilities::FULLY_FEATURED_INSTANCING);
+
+                        <span class="kw">if </span>supports_full_instancing {
+                            <span class="kw">unsafe </span>{
+                                gl.draw_elements_instanced_base_vertex_base_instance(
+                                    topology,
+                                    index_count <span class="kw">as </span>i32,
+                                    index_type,
+                                    index_offset <span class="kw">as </span>i32,
+                                    instance_count <span class="kw">as </span>i32,
+                                    base_vertex,
+                                    first_instance,
+                                )
+                            }
+                        } <span class="kw">else </span>{
+                            <span class="kw">unsafe </span>{
+                                gl.uniform_1_u32(first_instance_location.as_ref(), first_instance)
+                            };
+
+                            <span class="comment">// If we&#39;ve gotten here, wgpu-core has already validated that this function exists via the DownlevelFlags::BASE_VERTEX feature.
+                            </span><span class="kw">unsafe </span>{
+                                gl.draw_elements_instanced_base_vertex(
+                                    topology,
+                                    index_count <span class="kw">as _</span>,
+                                    index_type,
+                                    index_offset <span class="kw">as </span>i32,
+                                    instance_count <span class="kw">as </span>i32,
+                                    base_vertex,
+                                )
+                            }
+                        }
+                    }
                 }
             }
             C::DrawIndirect {
                 topology,
                 indirect_buf,
                 indirect_offset,
+                <span class="kw-2">ref </span>first_instance_location,
             } =&gt; {
+                <span class="kw">unsafe </span>{ gl.uniform_1_u32(first_instance_location.as_ref(), <span class="number">0</span>) };
+
                 <span class="kw">unsafe </span>{ gl.bind_buffer(glow::DRAW_INDIRECT_BUFFER, <span class="prelude-val">Some</span>(indirect_buf)) };
                 <span class="kw">unsafe </span>{ gl.draw_arrays_indirect_offset(topology, indirect_offset <span class="kw">as </span>i32) };
             }
@@ -1965,7 +2088,10 @@
                 index_type,
                 indirect_buf,
                 indirect_offset,
+                <span class="kw-2">ref </span>first_instance_location,
             } =&gt; {
+                <span class="kw">unsafe </span>{ gl.uniform_1_u32(first_instance_location.as_ref(), <span class="number">0</span>) };
+
                 <span class="kw">unsafe </span>{ gl.bind_buffer(glow::DRAW_INDIRECT_BUFFER, <span class="prelude-val">Some</span>(indirect_buf)) };
                 <span class="kw">unsafe </span>{
                     gl.draw_elements_indirect_offset(topology, index_type, indirect_offset <span class="kw">as </span>i32)

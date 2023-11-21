@@ -5496,6 +5496,15 @@
 <a href="#5496" id="5496">5496</a>
 <a href="#5497" id="5497">5497</a>
 <a href="#5498" id="5498">5498</a>
+<a href="#5499" id="5499">5499</a>
+<a href="#5500" id="5500">5500</a>
+<a href="#5501" id="5501">5501</a>
+<a href="#5502" id="5502">5502</a>
+<a href="#5503" id="5503">5503</a>
+<a href="#5504" id="5504">5504</a>
+<a href="#5505" id="5505">5505</a>
+<a href="#5506" id="5506">5506</a>
+<a href="#5507" id="5507">5507</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! A cross-platform graphics and compute library based on [WebGPU](https://gpuweb.github.io/gpuweb/).
 //!
 //! To start using the API, create an [`Instance`].
@@ -9373,6 +9382,35 @@
         );
     }
 
+    <span class="doccomment">/// Inserts debug marker.
+    </span><span class="kw">pub fn </span>insert_debug_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
+        DynContext::render_pass_insert_debug_marker(
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
+            <span class="self">self</span>.data.as_mut(),
+            label,
+        );
+    }
+
+    <span class="doccomment">/// Start record commands and group it into debug marker group.
+    </span><span class="kw">pub fn </span>push_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
+        DynContext::render_pass_push_debug_group(
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
+            <span class="self">self</span>.data.as_mut(),
+            label,
+        );
+    }
+
+    <span class="doccomment">/// Stops command recording and creates debug group.
+    </span><span class="kw">pub fn </span>pop_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        DynContext::render_pass_pop_debug_group(
+            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
+            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
+            <span class="self">self</span>.data.as_mut(),
+        );
+    }
+
     <span class="doccomment">/// Draws primitives from the active vertex buffer(s).
     ///
     /// The active vertex buffer(s) can be set with [`RenderPass::set_vertex_buffer`].
@@ -9402,35 +9440,6 @@
             vertices,
             instances,
         )
-    }
-
-    <span class="doccomment">/// Inserts debug marker.
-    </span><span class="kw">pub fn </span>insert_debug_marker(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
-        DynContext::render_pass_insert_debug_marker(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
-            label,
-        );
-    }
-
-    <span class="doccomment">/// Start record commands and group it into debug marker group.
-    </span><span class="kw">pub fn </span>push_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>, label: <span class="kw-2">&amp;</span>str) {
-        DynContext::render_pass_push_debug_group(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
-            label,
-        );
-    }
-
-    <span class="doccomment">/// Stops command recording and creates debug group.
-    </span><span class="kw">pub fn </span>pop_debug_group(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        DynContext::render_pass_pop_debug_group(
-            <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
-            <span class="kw-2">&amp;mut </span><span class="self">self</span>.id,
-            <span class="self">self</span>.data.as_mut(),
-        );
     }
 
     <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffers.
@@ -9470,12 +9479,17 @@
 
     <span class="doccomment">/// Draws primitives from the active vertex buffer(s) based on the contents of the `indirect_buffer`.
     ///
-    /// The active vertex buffers can be set with [`RenderPass::set_vertex_buffer`].
+    /// This is like calling [`RenderPass::draw`] but the contents of the call are specified in the `indirect_buffer`.
+    /// The structure expected in `indirect_buffer` must conform to [`DrawIndirectArgs`](crate::util::DrawIndirectArgs).
     ///
-    /// The structure expected in `indirect_buffer` must conform to [`DrawIndirect`](crate::util::DrawIndirect).
+    /// Indirect drawing has some caviats depending on the features available. We are not currently able to validate
+    /// these and issue an error.
+    /// - If [`Features::INDIRECT_FIRST_INSTANCE`] is not present on the adapter,
+    ///   [`DrawIndirect::first_instance`](crate::util::DrawIndirectArgs::first_instance) will be ignored.
+    /// - If [`DownlevelFlags::VERTEX_AND_INSTANCE_INDEX_RESPECTS_RESPECTIVE_FIRST_VALUE_IN_INDIRECT_DRAW`] is not present on the adapter,
+    ///   any use of `@builtin(vertex_index)` or `@builtin(instance_index)` in the vertex shader will have different values.
     ///
-    /// This drawing command uses the current render state, as set by preceding `set_*()` methods.
-    /// It is not affected by changes to the state that are performed after it is called.
+    /// See details on the individual flags for more information.
     </span><span class="kw">pub fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Buffer, indirect_offset: BufferAddress) {
         DynContext::render_pass_draw_indirect(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
@@ -9490,13 +9504,17 @@
     <span class="doccomment">/// Draws indexed primitives using the active index buffer and the active vertex buffers,
     /// based on the contents of the `indirect_buffer`.
     ///
-    /// The active index buffer can be set with [`RenderPass::set_index_buffer`], while the active
-    /// vertex buffers can be set with [`RenderPass::set_vertex_buffer`].
+    /// This is like calling [`RenderPass::draw_indexed`] but the contents of the call are specified in the `indirect_buffer`.
+    /// The structure expected in `indirect_buffer` must conform to [`DrawIndexedIndirectArgs`](crate::util::DrawIndexedIndirectArgs).
     ///
-    /// The structure expected in `indirect_buffer` must conform to [`DrawIndexedIndirect`](crate::util::DrawIndexedIndirect).
+    /// Indirect drawing has some caviats depending on the features available. We are not currently able to validate
+    /// these and issue an error.
+    /// - If [`Features::INDIRECT_FIRST_INSTANCE`] is not present on the adapter,
+    ///   [`DrawIndexedIndirect::first_instance`](crate::util::DrawIndexedIndirectArgs::first_instance) will be ignored.
+    /// - If [`DownlevelFlags::VERTEX_AND_INSTANCE_INDEX_RESPECTS_RESPECTIVE_FIRST_VALUE_IN_INDIRECT_DRAW`] is not present on the adapter,
+    ///   any use of `@builtin(vertex_index)` or `@builtin(instance_index)` in the vertex shader will have different values.
     ///
-    /// This drawing command uses the current render state, as set by preceding `set_*()` methods.
-    /// It is not affected by changes to the state that are performed after it is called.
+    /// See details on the individual flags for more information.
     </span><span class="kw">pub fn </span>draw_indexed_indirect(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Buffer,
@@ -9541,7 +9559,7 @@
     ///
     /// The active vertex buffers can be set with [`RenderPass::set_vertex_buffer`].
     ///
-    /// The structure expected in `indirect_buffer` must conform to [`DrawIndirect`](crate::util::DrawIndirect).
+    /// The structure expected in `indirect_buffer` must conform to [`DrawIndirectArgs`](crate::util::DrawIndirectArgs).
     /// These draw structures are expected to be tightly packed.
     ///
     /// This drawing command uses the current render state, as set by preceding `set_*()` methods.
@@ -9569,7 +9587,7 @@
     /// The active index buffer can be set with [`RenderPass::set_index_buffer`], while the active
     /// vertex buffers can be set with [`RenderPass::set_vertex_buffer`].
     ///
-    /// The structure expected in `indirect_buffer` must conform to [`DrawIndexedIndirect`](crate::util::DrawIndexedIndirect).
+    /// The structure expected in `indirect_buffer` must conform to [`DrawIndexedIndirectArgs`](crate::util::DrawIndexedIndirectArgs).
     /// These draw structures are expected to be tightly packed.
     ///
     /// This drawing command uses the current render state, as set by preceding `set_*()` methods.
@@ -9602,7 +9620,7 @@
     ///
     /// The active vertex buffers can be set with [`RenderPass::set_vertex_buffer`].
     ///
-    /// The structure expected in `indirect_buffer` must conform to [`DrawIndirect`](crate::util::DrawIndirect).
+    /// The structure expected in `indirect_buffer` must conform to [`DrawIndirectArgs`](crate::util::DrawIndirectArgs).
     /// These draw structures are expected to be tightly packed.
     ///
     /// The structure expected in `count_buffer` is the following:
@@ -9648,7 +9666,7 @@
     /// vertex buffers can be set with [`RenderPass::set_vertex_buffer`].
     ///
     ///
-    /// The structure expected in `indirect_buffer` must conform to [`DrawIndexedIndirect`](crate::util::DrawIndexedIndirect).
+    /// The structure expected in `indirect_buffer` must conform to [`DrawIndexedIndirectArgs`](crate::util::DrawIndexedIndirectArgs).
     ///
     /// These draw structures are expected to be tightly packed.
     ///
@@ -9904,7 +9922,7 @@
 
     <span class="doccomment">/// Dispatches compute work operations, based on the contents of the `indirect_buffer`.
     ///
-    /// The structure expected in `indirect_buffer` must conform to [`DispatchIndirect`](crate::util::DispatchIndirect).
+    /// The structure expected in `indirect_buffer` must conform to [`DispatchIndirectArgs`](crate::util::DispatchIndirectArgs).
     </span><span class="kw">pub fn </span>dispatch_workgroups_indirect(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Buffer,
@@ -10152,7 +10170,7 @@
     ///
     /// The active vertex buffers can be set with [`RenderBundleEncoder::set_vertex_buffer`].
     ///
-    /// The structure expected in `indirect_buffer` must conform to [`DrawIndirect`](crate::util::DrawIndirect).
+    /// The structure expected in `indirect_buffer` must conform to [`DrawIndirectArgs`](crate::util::DrawIndirectArgs).
     </span><span class="kw">pub fn </span>draw_indirect(<span class="kw-2">&amp;mut </span><span class="self">self</span>, indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Buffer, indirect_offset: BufferAddress) {
         DynContext::render_bundle_encoder_draw_indirect(
             <span class="kw-2">&amp;*</span><span class="self">self</span>.parent.context,
@@ -10170,7 +10188,7 @@
     /// The active index buffer can be set with [`RenderBundleEncoder::set_index_buffer`], while the active
     /// vertex buffers can be set with [`RenderBundleEncoder::set_vertex_buffer`].
     ///
-    /// The structure expected in `indirect_buffer` must conform to [`DrawIndexedIndirect`](crate::util::DrawIndexedIndirect).
+    /// The structure expected in `indirect_buffer` must conform to [`DrawIndexedIndirectArgs`](crate::util::DrawIndexedIndirectArgs).
     </span><span class="kw">pub fn </span>draw_indexed_indirect(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         indirect_buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Buffer,

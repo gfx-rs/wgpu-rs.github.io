@@ -514,8 +514,29 @@
 <a href="#514" id="514">514</a>
 <a href="#515" id="515">515</a>
 <a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{BackendResult, Error, Version, Writer};
 <span class="kw">use crate</span>::{
+    back::glsl::{Options, WriterFlags},
     AddressSpace, Binding, Expression, Handle, ImageClass, ImageDimension, Interpolation, Sampling,
     Scalar, ScalarKind, ShaderStage, StorageFormat, Type, TypeInner,
 };
@@ -559,6 +580,10 @@
         </span><span class="kw">const </span>IMAGE_SIZE = <span class="number">1 </span>&lt;&lt; <span class="number">20</span>;
         <span class="doccomment">/// Dual source blending
         </span><span class="kw">const </span>DUAL_SOURCE_BLENDING = <span class="number">1 </span>&lt;&lt; <span class="number">21</span>;
+        <span class="doccomment">/// Instance index
+        ///
+        /// We can always support this, either through the language or a polyfill
+        </span><span class="kw">const </span>INSTANCE_INDEX = <span class="number">1 </span>&lt;&lt; <span class="number">22</span>;
     }
 }
 
@@ -577,6 +602,11 @@
     <span class="doccomment">/// Adds to the list of required [`Features`]
     </span><span class="kw">pub fn </span>request(<span class="kw-2">&amp;mut </span><span class="self">self</span>, features: Features) {
         <span class="self">self</span>.<span class="number">0 </span>|= features
+    }
+
+    <span class="doccomment">/// Checks if the list of features [`Features`] contains the specified [`Features`]
+    </span><span class="kw">pub fn </span>contains(<span class="kw-2">&amp;mut </span><span class="self">self</span>, features: Features) -&gt; bool {
+        <span class="self">self</span>.<span class="number">0</span>.contains(features)
     }
 
     <span class="doccomment">/// Checks that all required [`Features`] are available for the specified
@@ -645,13 +675,13 @@
     /// # Notes
     /// This won&#39;t check for feature availability so it might output extensions that aren&#39;t even
     /// supported.[`check_availability`](Self::check_availability) will check feature availability
-    </span><span class="kw">pub fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, version: Version, <span class="kw-2">mut </span>out: <span class="kw">impl </span>Write) -&gt; BackendResult {
-        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::COMPUTE_SHADER) &amp;&amp; !version.is_es() {
+    </span><span class="kw">pub fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, options: <span class="kw-2">&amp;</span>Options, <span class="kw-2">mut </span>out: <span class="kw">impl </span>Write) -&gt; BackendResult {
+        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::COMPUTE_SHADER) &amp;&amp; !options.version.is_es() {
             <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_compute_shader.txt
             </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension GL_ARB_compute_shader : require&quot;</span>)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::BUFFER_STORAGE) &amp;&amp; !version.is_es() {
+        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::BUFFER_STORAGE) &amp;&amp; !options.version.is_es() {
             <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_shader_storage_buffer_object.txt
             </span><span class="macro">writeln!</span>(
                 out,
@@ -659,22 +689,22 @@
             </span>)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::DOUBLE_TYPE) &amp;&amp; version &lt; Version::Desktop(<span class="number">400</span>) {
+        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::DOUBLE_TYPE) &amp;&amp; options.version &lt; Version::Desktop(<span class="number">400</span>) {
             <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_gpu_shader_fp64.txt
             </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension GL_ARB_gpu_shader_fp64 : require&quot;</span>)<span class="question-mark">?</span>;
         }
 
         <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::CUBE_TEXTURES_ARRAY) {
-            <span class="kw">if </span>version.is_es() {
+            <span class="kw">if </span>options.version.is_es() {
                 <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_texture_cube_map_array.txt
                 </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension GL_EXT_texture_cube_map_array : require&quot;</span>)<span class="question-mark">?</span>;
-            } <span class="kw">else if </span>version &lt; Version::Desktop(<span class="number">400</span>) {
+            } <span class="kw">else if </span>options.version &lt; Version::Desktop(<span class="number">400</span>) {
                 <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_texture_cube_map_array.txt
                 </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension GL_ARB_texture_cube_map_array : require&quot;</span>)<span class="question-mark">?</span>;
             }
         }
 
-        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::MULTISAMPLED_TEXTURE_ARRAYS) &amp;&amp; version.is_es() {
+        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::MULTISAMPLED_TEXTURE_ARRAYS) &amp;&amp; options.version.is_es() {
             <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/OES/OES_texture_storage_multisample_2d_array.txt
             </span><span class="macro">writeln!</span>(
                 out,
@@ -682,49 +712,49 @@
             </span>)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::ARRAY_OF_ARRAYS) &amp;&amp; version &lt; Version::Desktop(<span class="number">430</span>) {
+        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::ARRAY_OF_ARRAYS) &amp;&amp; options.version &lt; Version::Desktop(<span class="number">430</span>) {
             <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_arrays_of_arrays.txt
             </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension ARB_arrays_of_arrays : require&quot;</span>)<span class="question-mark">?</span>;
         }
 
         <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::IMAGE_LOAD_STORE) {
-            <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::FULL_IMAGE_FORMATS) &amp;&amp; version.is_es() {
+            <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::FULL_IMAGE_FORMATS) &amp;&amp; options.version.is_es() {
                 <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/NV/NV_image_formats.txt
                 </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension GL_NV_image_formats : require&quot;</span>)<span class="question-mark">?</span>;
             }
 
-            <span class="kw">if </span>version &lt; Version::Desktop(<span class="number">420</span>) {
+            <span class="kw">if </span>options.version &lt; Version::Desktop(<span class="number">420</span>) {
                 <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_shader_image_load_store.txt
                 </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension GL_ARB_shader_image_load_store : require&quot;</span>)<span class="question-mark">?</span>;
             }
         }
 
         <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::CONSERVATIVE_DEPTH) {
-            <span class="kw">if </span>version.is_es() {
+            <span class="kw">if </span>options.version.is_es() {
                 <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_conservative_depth.txt
                 </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension GL_EXT_conservative_depth : require&quot;</span>)<span class="question-mark">?</span>;
             }
 
-            <span class="kw">if </span>version &lt; Version::Desktop(<span class="number">420</span>) {
+            <span class="kw">if </span>options.version &lt; Version::Desktop(<span class="number">420</span>) {
                 <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_conservative_depth.txt
                 </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension GL_ARB_conservative_depth : require&quot;</span>)<span class="question-mark">?</span>;
             }
         }
 
         <span class="kw">if </span>(<span class="self">self</span>.<span class="number">0</span>.contains(Features::CLIP_DISTANCE) || <span class="self">self</span>.<span class="number">0</span>.contains(Features::CULL_DISTANCE))
-            &amp;&amp; version.is_es()
+            &amp;&amp; options.version.is_es()
         {
             <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/EXT/EXT_clip_cull_distance.txt
             </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension GL_EXT_clip_cull_distance : require&quot;</span>)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::SAMPLE_VARIABLES) &amp;&amp; version.is_es() {
+        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::SAMPLE_VARIABLES) &amp;&amp; options.version.is_es() {
             <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/OES/OES_sample_variables.txt
             </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension GL_OES_sample_variables : require&quot;</span>)<span class="question-mark">?</span>;
         }
 
         <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::MULTI_VIEW) {
-            <span class="kw">if let </span>Version::Embedded { is_webgl: <span class="bool-val">true</span>, .. } = version {
+            <span class="kw">if let </span>Version::Embedded { is_webgl: <span class="bool-val">true</span>, .. } = options.version {
                 <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/OVR/OVR_multiview2.txt
                 </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension GL_OVR_multiview2 : require&quot;</span>)<span class="question-mark">?</span>;
             } <span class="kw">else </span>{
@@ -741,13 +771,20 @@
             </span>)<span class="question-mark">?</span>;
         }
 
-        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::TEXTURE_LEVELS) &amp;&amp; version &lt; Version::Desktop(<span class="number">430</span>) {
+        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::TEXTURE_LEVELS) &amp;&amp; options.version &lt; Version::Desktop(<span class="number">430</span>) {
             <span class="comment">// https://www.khronos.org/registry/OpenGL/extensions/ARB/ARB_texture_query_levels.txt
             </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension GL_ARB_texture_query_levels : require&quot;</span>)<span class="question-mark">?</span>;
         }
-        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::DUAL_SOURCE_BLENDING) &amp;&amp; version.is_es() {
+        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::DUAL_SOURCE_BLENDING) &amp;&amp; options.version.is_es() {
             <span class="comment">// https://registry.khronos.org/OpenGL/extensions/EXT/EXT_blend_func_extended.txt
             </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension GL_EXT_blend_func_extended : require&quot;</span>)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">if </span><span class="self">self</span>.<span class="number">0</span>.contains(Features::INSTANCE_INDEX) {
+            <span class="kw">if </span>options.writer_flags.contains(WriterFlags::DRAW_PARAMETERS) {
+                <span class="comment">// https://registry.khronos.org/OpenGL/extensions/ARB/ARB_shader_draw_parameters.txt
+                </span><span class="macro">writeln!</span>(out, <span class="string">&quot;#extension GL_ARB_shader_draw_parameters : require&quot;</span>)<span class="question-mark">?</span>;
+            }
         }
 
         <span class="prelude-val">Ok</span>(())
@@ -1005,6 +1042,9 @@
                             }
                             <span class="kw">crate</span>::BuiltIn::ViewIndex =&gt; {
                                 <span class="self">self</span>.features.request(Features::MULTI_VIEW)
+                            }
+                            <span class="kw">crate</span>::BuiltIn::InstanceIndex =&gt; {
+                                <span class="self">self</span>.features.request(Features::INSTANCE_INDEX)
                             }
                             <span class="kw">_ </span>=&gt; {}
                         },

@@ -1791,6 +1791,11 @@
 <a href="#1791" id="1791">1791</a>
 <a href="#1792" id="1792">1792</a>
 <a href="#1793" id="1793">1793</a>
+<a href="#1794" id="1794">1794</a>
+<a href="#1795" id="1795">1795</a>
+<a href="#1796" id="1796">1796</a>
+<a href="#1797" id="1797">1797</a>
+<a href="#1798" id="1798">1798</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::conv;
 
 <span class="kw">use </span>ash::{extensions::khr, vk};
@@ -2124,7 +2129,8 @@
             | Df::INDIRECT_EXECUTION
             | Df::VIEW_FORMATS
             | Df::UNRESTRICTED_EXTERNAL_TEXTURE_COPIES
-            | Df::NONBLOCKING_QUERY_RESOLVE;
+            | Df::NONBLOCKING_QUERY_RESOLVE
+            | Df::VERTEX_AND_INSTANCE_INDEX_RESPECTS_RESPECTIVE_FIRST_VALUE_IN_INDIRECT_DRAW;
 
         dl_flags.set(
             Df::SURFACE_VIEW_FORMATS,
@@ -2785,11 +2791,15 @@
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(driver) = phd_capabilities.driver {
             <span class="kw">if </span>driver.conformance_version.major == <span class="number">0 </span>{
-                <span class="macro">log::warn!</span>(
-                    <span class="string">&quot;Adapter is not Vulkan compliant, hiding adapter: {}&quot;</span>,
-                    info.name
-                );
-                <span class="kw">return </span><span class="prelude-val">None</span>;
+                <span class="kw">if </span>driver.driver_id == ash::vk::DriverId::MOLTENVK {
+                    <span class="macro">log::debug!</span>(<span class="string">&quot;Adapter is not Vulkan compliant, but is MoltenVK, continuing&quot;</span>);
+                } <span class="kw">else </span>{
+                    <span class="macro">log::warn!</span>(
+                        <span class="string">&quot;Adapter is not Vulkan compliant, hiding adapter: {}&quot;</span>,
+                        info.name
+                    );
+                    <span class="kw">return </span><span class="prelude-val">None</span>;
+                }
             }
         }
         <span class="kw">if </span>phd_capabilities.device_api_version == vk::API_VERSION_1_0

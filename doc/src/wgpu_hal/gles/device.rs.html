@@ -1471,6 +1471,20 @@
 <a href="#1471" id="1471">1471</a>
 <a href="#1472" id="1472">1472</a>
 <a href="#1473" id="1473">1473</a>
+<a href="#1474" id="1474">1474</a>
+<a href="#1475" id="1475">1475</a>
+<a href="#1476" id="1476">1476</a>
+<a href="#1477" id="1477">1477</a>
+<a href="#1478" id="1478">1478</a>
+<a href="#1479" id="1479">1479</a>
+<a href="#1480" id="1480">1480</a>
+<a href="#1481" id="1481">1481</a>
+<a href="#1482" id="1482">1482</a>
+<a href="#1483" id="1483">1483</a>
+<a href="#1484" id="1484">1484</a>
+<a href="#1485" id="1485">1485</a>
+<a href="#1486" id="1486">1486</a>
+<a href="#1487" id="1487">1487</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{conv, PrivateCapabilities};
 <span class="kw">use </span><span class="kw">crate</span>::auxil::map_naga_stage;
 <span class="kw">use </span>glow::HasContext;
@@ -1940,9 +1954,17 @@
             }
         }
 
+        <span class="kw">let </span>first_instance_location = <span class="kw">if </span>has_stages.contains(wgt::ShaderStages::VERTEX) {
+            <span class="comment">// If this returns none (the uniform isn&#39;t active), that&#39;s fine, we just won&#39;t set it.
+            </span><span class="kw">unsafe </span>{ gl.get_uniform_location(program, naga::back::glsl::FIRST_INSTANCE_BINDING) }
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>};
+
         <span class="prelude-val">Ok</span>(Arc::new(<span class="kw">super</span>::PipelineInner {
             program,
             sampler_map,
+            first_instance_location,
             push_constant_descs: uniforms,
         }))
     }
@@ -2554,6 +2576,12 @@
             <span class="self">self</span>.shared
                 .private_caps
                 .contains(<span class="kw">super</span>::PrivateCapabilities::SHADER_TEXTURE_SHADOW_LOD),
+        );
+        writer_flags.set(
+            glsl::WriterFlags::DRAW_PARAMETERS,
+            <span class="self">self</span>.shared
+                .private_caps
+                .contains(<span class="kw">super</span>::PrivateCapabilities::FULLY_FEATURED_INSTANCING),
         );
         <span class="comment">// We always force point size to be written and it will be ignored by the driver if it&#39;s not a point list primitive.
         // https://github.com/gfx-rs/wgpu/pull/3440/files#r1095726950

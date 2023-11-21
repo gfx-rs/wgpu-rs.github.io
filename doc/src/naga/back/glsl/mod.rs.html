@@ -4473,6 +4473,47 @@
 <a href="#4473" id="4473">4473</a>
 <a href="#4474" id="4474">4474</a>
 <a href="#4475" id="4475">4475</a>
+<a href="#4476" id="4476">4476</a>
+<a href="#4477" id="4477">4477</a>
+<a href="#4478" id="4478">4478</a>
+<a href="#4479" id="4479">4479</a>
+<a href="#4480" id="4480">4480</a>
+<a href="#4481" id="4481">4481</a>
+<a href="#4482" id="4482">4482</a>
+<a href="#4483" id="4483">4483</a>
+<a href="#4484" id="4484">4484</a>
+<a href="#4485" id="4485">4485</a>
+<a href="#4486" id="4486">4486</a>
+<a href="#4487" id="4487">4487</a>
+<a href="#4488" id="4488">4488</a>
+<a href="#4489" id="4489">4489</a>
+<a href="#4490" id="4490">4490</a>
+<a href="#4491" id="4491">4491</a>
+<a href="#4492" id="4492">4492</a>
+<a href="#4493" id="4493">4493</a>
+<a href="#4494" id="4494">4494</a>
+<a href="#4495" id="4495">4495</a>
+<a href="#4496" id="4496">4496</a>
+<a href="#4497" id="4497">4497</a>
+<a href="#4498" id="4498">4498</a>
+<a href="#4499" id="4499">4499</a>
+<a href="#4500" id="4500">4500</a>
+<a href="#4501" id="4501">4501</a>
+<a href="#4502" id="4502">4502</a>
+<a href="#4503" id="4503">4503</a>
+<a href="#4504" id="4504">4504</a>
+<a href="#4505" id="4505">4505</a>
+<a href="#4506" id="4506">4506</a>
+<a href="#4507" id="4507">4507</a>
+<a href="#4508" id="4508">4508</a>
+<a href="#4509" id="4509">4509</a>
+<a href="#4510" id="4510">4510</a>
+<a href="#4511" id="4511">4511</a>
+<a href="#4512" id="4512">4512</a>
+<a href="#4513" id="4513">4513</a>
+<a href="#4514" id="4514">4514</a>
+<a href="#4515" id="4515">4515</a>
+<a href="#4516" id="4516">4516</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*!
 Backend for [GLSL][glsl] (OpenGL Shading Language).
 
@@ -4550,6 +4591,9 @@ to output a [`Module`](crate::Module) into glsl
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>MODF_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">&quot;naga_modf&quot;</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>FREXP_FUNCTION: <span class="kw-2">&amp;</span>str = <span class="string">&quot;naga_frexp&quot;</span>;
+
+<span class="comment">// Must match code in glsl_built_in
+</span><span class="kw">pub const </span>FIRST_INSTANCE_BINDING: <span class="kw-2">&amp;</span>str = <span class="string">&quot;naga_vs_first_instance&quot;</span>;
 
 <span class="doccomment">/// Mapping between resources and bindings.
 </span><span class="kw">pub type </span>BindingMap = std::collections::BTreeMap&lt;<span class="kw">crate</span>::ResourceBinding, u8&gt;;
@@ -4710,17 +4754,20 @@ to output a [`Module`](crate::Module) into glsl
         <span class="doccomment">/// Supports GL_EXT_texture_shadow_lod on the host, which provides
         /// additional functions on shadows and arrays of shadows.
         </span><span class="kw">const </span>TEXTURE_SHADOW_LOD = <span class="number">0x2</span>;
+        <span class="doccomment">/// Supports ARB_shader_draw_parameters on the host, which provides
+        /// support for `gl_BaseInstanceARB`, `gl_BaseVertexARB`, and `gl_DrawIDARB`.
+        </span><span class="kw">const </span>DRAW_PARAMETERS = <span class="number">0x4</span>;
         <span class="doccomment">/// Include unused global variables, constants and functions. By default the output will exclude
         /// global variables that are not used in the specified entrypoint (including indirect use),
         /// all constant declarations, and functions that use excluded global variables.
-        </span><span class="kw">const </span>INCLUDE_UNUSED_ITEMS = <span class="number">0x4</span>;
+        </span><span class="kw">const </span>INCLUDE_UNUSED_ITEMS = <span class="number">0x10</span>;
         <span class="doccomment">/// Emit `PointSize` output builtin to vertex shaders, which is
         /// required for drawing with `PointList` topology.
         ///
         /// https://registry.khronos.org/OpenGL/specs/es/3.2/GLSL_ES_Specification_3.20.html#built-in-language-variables
         /// The variable gl_PointSize is intended for a shader to write the size of the point to be rasterized. It is measured in pixels.
         /// If gl_PointSize is not written to, its value is undefined in subsequent pipe stages.
-        </span><span class="kw">const </span>FORCE_POINT_SIZE = <span class="number">0x10</span>;
+        </span><span class="kw">const </span>FORCE_POINT_SIZE = <span class="number">0x20</span>;
     }
 }
 
@@ -4863,6 +4910,24 @@ to output a [`Module`](crate::Module) into glsl
     }
 }
 
+<span class="doccomment">/// Assorted options needed for generting varyings.
+</span><span class="attr">#[derive(Clone, Copy)]
+</span><span class="kw">struct </span>VaryingOptions {
+    output: bool,
+    targetting_webgl: bool,
+    draw_parameters: bool,
+}
+
+<span class="kw">impl </span>VaryingOptions {
+    <span class="kw">const fn </span>from_writer_options(options: <span class="kw-2">&amp;</span>Options, output: bool) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            output,
+            targetting_webgl: options.version.is_webgl(),
+            draw_parameters: options.writer_flags.contains(WriterFlags::DRAW_PARAMETERS),
+        }
+    }
+}
+
 <span class="doccomment">/// Helper wrapper used to get a name for a varying
 ///
 /// Varying have different naming schemes depending on their binding:
@@ -4873,8 +4938,7 @@ to output a [`Module`](crate::Module) into glsl
 </span><span class="kw">struct </span>VaryingName&lt;<span class="lifetime">&#39;a</span>&gt; {
     binding: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw">crate</span>::Binding,
     stage: ShaderStage,
-    output: bool,
-    targetting_webgl: bool,
+    options: VaryingOptions,
 }
 <span class="kw">impl </span>fmt::Display <span class="kw">for </span>VaryingName&lt;<span class="lifetime">&#39;_</span>&gt; {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
@@ -4886,7 +4950,7 @@ to output a [`Module`](crate::Module) into glsl
                 <span class="macro">write!</span>(f, <span class="string">&quot;_fs2p_location1&quot;</span>,)
             }
             <span class="kw">crate</span>::Binding::Location { location, .. } =&gt; {
-                <span class="kw">let </span>prefix = <span class="kw">match </span>(<span class="self">self</span>.stage, <span class="self">self</span>.output) {
+                <span class="kw">let </span>prefix = <span class="kw">match </span>(<span class="self">self</span>.stage, <span class="self">self</span>.options.output) {
                     (ShaderStage::Compute, <span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
                     <span class="comment">// pipeline to vertex
                     </span>(ShaderStage::Vertex, <span class="bool-val">false</span>) =&gt; <span class="string">&quot;p2vs&quot;</span>,
@@ -4898,11 +4962,7 @@ to output a [`Module`](crate::Module) into glsl
                 <span class="macro">write!</span>(f, <span class="string">&quot;_{prefix}_location{location}&quot;</span>,)
             }
             <span class="kw">crate</span>::Binding::BuiltIn(built_in) =&gt; {
-                <span class="macro">write!</span>(
-                    f,
-                    <span class="string">&quot;{}&quot;</span>,
-                    glsl_built_in(built_in, <span class="self">self</span>.output, <span class="self">self</span>.targetting_webgl)
-                )
+                <span class="macro">write!</span>(f, <span class="string">&quot;{}&quot;</span>, glsl_built_in(built_in, <span class="self">self</span>.options))
             }
         }
     }
@@ -5044,7 +5104,11 @@ to output a [`Module`](crate::Module) into glsl
             keywords::RESERVED_KEYWORDS,
             <span class="kw-2">&amp;</span>[],
             <span class="kw-2">&amp;</span>[],
-            <span class="kw-2">&amp;</span>[<span class="string">&quot;gl_&quot;</span>],
+            <span class="kw-2">&amp;</span>[
+                <span class="string">&quot;gl_&quot;</span>,                     <span class="comment">// all GL built-in variables
+                </span><span class="string">&quot;_group&quot;</span>,                  <span class="comment">// all normal bindings
+                </span><span class="string">&quot;_push_constant_binding_&quot;</span>, <span class="comment">// all push constant bindings
+            </span>],
             <span class="kw-2">&amp;mut </span>names,
         );
 
@@ -5096,7 +5160,7 @@ to output a [`Module`](crate::Module) into glsl
         // writing the module saving some loops but some older versions (420 or less) required the
         // extensions to appear before being used, even though extensions are part of the
         // preprocessor not the processor ¯\_(ツ)_/¯
-        </span><span class="self">self</span>.features.write(<span class="self">self</span>.options.version, <span class="kw-2">&amp;mut </span><span class="self">self</span>.out)<span class="question-mark">?</span>;
+        </span><span class="self">self</span>.features.write(<span class="self">self</span>.options, <span class="kw-2">&amp;mut </span><span class="self">self</span>.out)<span class="question-mark">?</span>;
 
         <span class="comment">// Write the additional extensions
         </span><span class="kw">if </span><span class="self">self
@@ -5124,6 +5188,17 @@ to output a [`Module`](crate::Module) into glsl
                 <span class="string">&quot;layout(local_size_x = {}, local_size_y = {}, local_size_z = {}) in;&quot;</span>,
                 workgroup_size[<span class="number">0</span>], workgroup_size[<span class="number">1</span>], workgroup_size[<span class="number">2</span>]
             )<span class="question-mark">?</span>;
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
+        }
+
+        <span class="kw">if </span><span class="self">self</span>.entry_point.stage == ShaderStage::Vertex
+            &amp;&amp; !<span class="self">self
+                </span>.options
+                .writer_flags
+                .contains(WriterFlags::DRAW_PARAMETERS)
+            &amp;&amp; <span class="self">self</span>.features.contains(Features::INSTANCE_INDEX)
+        {
+            <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;uniform uint {FIRST_INSTANCE_BINDING};&quot;</span>)<span class="question-mark">?</span>;
             <span class="macro">writeln!</span>(<span class="self">self</span>.out)<span class="question-mark">?</span>;
         }
 
@@ -5897,7 +5972,10 @@ to output a [`Module`](crate::Module) into glsl
                             <span class="macro">writeln!</span>(
                                 <span class="self">self</span>.out,
                                 <span class="string">&quot;invariant {};&quot;</span>,
-                                glsl_built_in(built_in, output, <span class="self">self</span>.options.version.is_webgl())
+                                glsl_built_in(
+                                    built_in,
+                                    VaryingOptions::from_writer_options(<span class="self">self</span>.options, output)
+                                )
                             )<span class="question-mark">?</span>;
                         }
                     }
@@ -5974,8 +6052,7 @@ to output a [`Module`](crate::Module) into glsl
                 second_blend_source,
             },
             stage: <span class="self">self</span>.entry_point.stage,
-            output,
-            targetting_webgl: <span class="self">self</span>.options.version.is_webgl(),
+            options: VaryingOptions::from_writer_options(<span class="self">self</span>.options, output),
         };
         <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot; {vname};&quot;</span>)<span class="question-mark">?</span>;
 
@@ -6136,8 +6213,7 @@ to output a [`Module`](crate::Module) into glsl
                             <span class="kw">let </span>varying_name = VaryingName {
                                 binding: member.binding.as_ref().unwrap(),
                                 stage,
-                                output: <span class="bool-val">false</span>,
-                                targetting_webgl: <span class="self">self</span>.options.version.is_webgl(),
+                                options: VaryingOptions::from_writer_options(<span class="self">self</span>.options, <span class="bool-val">false</span>),
                             };
                             <span class="kw">if </span>index != <span class="number">0 </span>{
                                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
@@ -6150,8 +6226,7 @@ to output a [`Module`](crate::Module) into glsl
                         <span class="kw">let </span>varying_name = VaryingName {
                             binding: arg.binding.as_ref().unwrap(),
                             stage,
-                            output: <span class="bool-val">false</span>,
-                            targetting_webgl: <span class="self">self</span>.options.version.is_webgl(),
+                            options: VaryingOptions::from_writer_options(<span class="self">self</span>.options, <span class="bool-val">false</span>),
                         };
                         <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;{varying_name};&quot;</span>)<span class="question-mark">?</span>;
                     }
@@ -6645,8 +6720,10 @@ to output a [`Module`](crate::Module) into glsl
                                         <span class="kw">let </span>varying_name = VaryingName {
                                             binding: member.binding.as_ref().unwrap(),
                                             stage: ep.stage,
-                                            output: <span class="bool-val">true</span>,
-                                            targetting_webgl: <span class="self">self</span>.options.version.is_webgl(),
+                                            options: VaryingOptions::from_writer_options(
+                                                <span class="self">self</span>.options,
+                                                <span class="bool-val">true</span>,
+                                            ),
                                         };
                                         <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{varying_name} = &quot;</span>)<span class="question-mark">?</span>;
 
@@ -6670,8 +6747,10 @@ to output a [`Module`](crate::Module) into glsl
                                     <span class="kw">let </span>name = VaryingName {
                                         binding: result.binding.as_ref().unwrap(),
                                         stage: ep.stage,
-                                        output: <span class="bool-val">true</span>,
-                                        targetting_webgl: <span class="self">self</span>.options.version.is_webgl(),
+                                        options: VaryingOptions::from_writer_options(
+                                            <span class="self">self</span>.options,
+                                            <span class="bool-val">true</span>,
+                                        ),
                                     };
                                     <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{name} = &quot;</span>)<span class="question-mark">?</span>;
                                     <span class="self">self</span>.write_expr(value, ctx)<span class="question-mark">?</span>;
@@ -8786,29 +8865,32 @@ to output a [`Module`](crate::Module) into glsl
 }
 
 <span class="doccomment">/// Helper function that returns the glsl variable name for a builtin
-</span><span class="kw">const fn </span>glsl_built_in(
-    built_in: <span class="kw">crate</span>::BuiltIn,
-    output: bool,
-    targetting_webgl: bool,
-) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+</span><span class="kw">const fn </span>glsl_built_in(built_in: <span class="kw">crate</span>::BuiltIn, options: VaryingOptions) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
     <span class="kw">use </span><span class="kw">crate</span>::BuiltIn <span class="kw">as </span>Bi;
 
     <span class="kw">match </span>built_in {
         Bi::Position { .. } =&gt; {
-            <span class="kw">if </span>output {
+            <span class="kw">if </span>options.output {
                 <span class="string">&quot;gl_Position&quot;
             </span>} <span class="kw">else </span>{
                 <span class="string">&quot;gl_FragCoord&quot;
             </span>}
         }
-        Bi::ViewIndex <span class="kw">if </span>targetting_webgl =&gt; <span class="string">&quot;int(gl_ViewID_OVR)&quot;</span>,
+        Bi::ViewIndex <span class="kw">if </span>options.targetting_webgl =&gt; <span class="string">&quot;int(gl_ViewID_OVR)&quot;</span>,
         Bi::ViewIndex =&gt; <span class="string">&quot;gl_ViewIndex&quot;</span>,
         <span class="comment">// vertex
         </span>Bi::BaseInstance =&gt; <span class="string">&quot;uint(gl_BaseInstance)&quot;</span>,
         Bi::BaseVertex =&gt; <span class="string">&quot;uint(gl_BaseVertex)&quot;</span>,
         Bi::ClipDistance =&gt; <span class="string">&quot;gl_ClipDistance&quot;</span>,
         Bi::CullDistance =&gt; <span class="string">&quot;gl_CullDistance&quot;</span>,
-        Bi::InstanceIndex =&gt; <span class="string">&quot;uint(gl_InstanceID)&quot;</span>,
+        Bi::InstanceIndex =&gt; {
+            <span class="kw">if </span>options.draw_parameters {
+                <span class="string">&quot;(uint(gl_InstanceID) + uint(gl_BaseInstanceARB))&quot;
+            </span>} <span class="kw">else </span>{
+                <span class="comment">// Must match FISRT_INSTANCE_BINDING
+                </span><span class="string">&quot;(uint(gl_InstanceID) + naga_vs_first_instance)&quot;
+            </span>}
+        }
         Bi::PointSize =&gt; <span class="string">&quot;gl_PointSize&quot;</span>,
         Bi::VertexIndex =&gt; <span class="string">&quot;uint(gl_VertexID)&quot;</span>,
         <span class="comment">// fragment
@@ -8818,7 +8900,7 @@ to output a [`Module`](crate::Module) into glsl
         Bi::PrimitiveIndex =&gt; <span class="string">&quot;uint(gl_PrimitiveID)&quot;</span>,
         Bi::SampleIndex =&gt; <span class="string">&quot;gl_SampleID&quot;</span>,
         Bi::SampleMask =&gt; {
-            <span class="kw">if </span>output {
+            <span class="kw">if </span>options.output {
                 <span class="string">&quot;gl_SampleMask&quot;
             </span>} <span class="kw">else </span>{
                 <span class="string">&quot;gl_SampleMaskIn&quot;
