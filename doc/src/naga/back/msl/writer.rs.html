@@ -4649,6 +4649,7 @@
 <a href="#4649" id="4649">4649</a>
 <a href="#4650" id="4650">4650</a>
 <a href="#4651" id="4651">4651</a>
+<a href="#4652" id="4652">4652</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{sampler <span class="kw">as </span>sm, Error, LocationMode, Options, PipelineOptions, TranslationInfo};
 <span class="kw">use crate</span>::{
     arena::Handle,
@@ -5008,11 +5009,6 @@
     module: <span class="kw-2">&amp;</span><span class="kw">crate</span>::Module,
 ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">crate</span>::Scalar&gt; {
     <span class="kw">let </span>member = <span class="kw-2">&amp;</span>members[index];
-    <span class="comment">//Note: this is imperfect - the same structure can be used for host-shared
-    // things, where packed float would matter.
-    </span><span class="kw">if </span>member.binding.is_some() {
-        <span class="kw">return </span><span class="prelude-val">None</span>;
-    }
 
     <span class="kw">let </span>ty_inner = <span class="kw-2">&amp;</span>module.types[member.ty].inner;
     <span class="kw">let </span>last_offset = member.offset + ty_inner.size(module.to_ctx());
@@ -5026,7 +5022,7 @@
         <span class="kw">crate</span>::TypeInner::Vector {
             size: <span class="kw">crate</span>::VectorSize::Tri,
             scalar: scalar @ <span class="kw">crate</span>::Scalar { width: <span class="number">4</span>, .. },
-        } <span class="kw">if </span>member.offset &amp; <span class="number">0xF </span>!= <span class="number">0 </span>|| is_tight =&gt; <span class="prelude-val">Some</span>(scalar),
+        } <span class="kw">if </span>is_tight =&gt; <span class="prelude-val">Some</span>(scalar),
         <span class="kw">_ </span>=&gt; <span class="prelude-val">None</span>,
     }
 }
@@ -7958,8 +7954,7 @@
                     <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;struct {name} {{&quot;</span>)<span class="question-mark">?</span>;
                     <span class="kw">let </span><span class="kw-2">mut </span>last_offset = <span class="number">0</span>;
                     <span class="kw">for </span>(index, member) <span class="kw">in </span>members.iter().enumerate() {
-                        <span class="comment">// quick and dirty way to figure out if we need this...
-                        </span><span class="kw">if </span>member.binding.is_none() &amp;&amp; member.offset &gt; last_offset {
+                        <span class="kw">if </span>member.offset &gt; last_offset {
                             <span class="self">self</span>.struct_member_pads.insert((handle, index <span class="kw">as </span>u32));
                             <span class="kw">let </span>pad = member.offset - last_offset;
                             <span class="macro">writeln!</span>(<span class="self">self</span>.out, <span class="string">&quot;{}char _pad{}[{}];&quot;</span>, back::INDENT, index, pad)<span class="question-mark">?</span>;
@@ -8925,6 +8920,13 @@
                             <span class="kw">let </span>name = <span class="kw-2">&amp;</span>flattened_member_names[<span class="kw-2">&amp;</span>key];
                             <span class="kw">if </span>member_index != <span class="number">0 </span>{
                                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;, &quot;</span>)<span class="question-mark">?</span>;
+                            }
+                            <span class="comment">// insert padding initialization, if needed
+                            </span><span class="kw">if </span><span class="self">self
+                                </span>.struct_member_pads
+                                .contains(<span class="kw-2">&amp;</span>(arg.ty, member_index <span class="kw">as </span>u32))
+                            {
+                                <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{{}}, &quot;</span>)<span class="question-mark">?</span>;
                             }
                             <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">crate</span>::Binding::Location { .. }) = member.binding {
                                 <span class="macro">write!</span>(<span class="self">self</span>.out, <span class="string">&quot;{varyings_member_name}.&quot;</span>)<span class="question-mark">?</span>;
