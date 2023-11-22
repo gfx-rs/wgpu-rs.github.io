@@ -718,6 +718,23 @@
 <a href="#718" id="718">718</a>
 <a href="#719" id="719">719</a>
 <a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
+<a href="#725" id="725">725</a>
+<a href="#726" id="726">726</a>
+<a href="#727" id="727">727</a>
+<a href="#728" id="728">728</a>
+<a href="#729" id="729">729</a>
+<a href="#730" id="730">730</a>
+<a href="#731" id="731">731</a>
+<a href="#732" id="732">732</a>
+<a href="#733" id="733">733</a>
+<a href="#734" id="734">734</a>
+<a href="#735" id="735">735</a>
+<a href="#736" id="736">736</a>
+<a href="#737" id="737">737</a>
 </pre></div><pre class="rust"><code><span class="kw">use super</span>::{number::consume_number, Error, ExpectedToken};
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::NumberError;
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::parse::{conv, Number};
@@ -1168,6 +1185,7 @@
 }
 
 <span class="attr">#[cfg(test)]
+#[track_caller]
 </span><span class="kw">fn </span>sub_test(source: <span class="kw-2">&amp;</span>str, expected_tokens: <span class="kw-2">&amp;</span>[Token]) {
     <span class="kw">let </span><span class="kw-2">mut </span>lex = Lexer::new(source);
     <span class="kw">for </span><span class="kw-2">&amp;</span>token <span class="kw">in </span>expected_tokens {
@@ -1394,6 +1412,22 @@
             Token::Operation(<span class="string">&#39;/&#39;</span>),
         ],
     );
+
+    <span class="comment">// Type suffixes are only allowed on hex float literals
+    // if you provided an exponent.
+    </span>sub_test(
+        <span class="string">&quot;0x1.2f 0x1.2f 0x1.2h 0x1.2H&quot;</span>,
+        <span class="kw-2">&amp;</span>[
+            <span class="comment">// The &#39;f&#39; suffixes are taken as a hex digit:
+            // the fractional part is 0x2f / 256.
+            </span>Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">1.0 </span>+ <span class="number">0x2f </span><span class="kw">as </span>f32 / <span class="number">256.0</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">1.0 </span>+ <span class="number">0x2f </span><span class="kw">as </span>f32 / <span class="number">256.0</span>))),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">1.125</span>))),
+            Token::Word(<span class="string">&quot;h&quot;</span>),
+            Token::Number(<span class="prelude-val">Ok</span>(Number::F32(<span class="number">1.125</span>))),
+            Token::Word(<span class="string">&quot;H&quot;</span>),
+        ],
+    )
 }
 
 <span class="attr">#[test]
