@@ -2630,6 +2630,32 @@
 <a href="#2630" id="2630">2630</a>
 <a href="#2631" id="2631">2631</a>
 <a href="#2632" id="2632">2632</a>
+<a href="#2633" id="2633">2633</a>
+<a href="#2634" id="2634">2634</a>
+<a href="#2635" id="2635">2635</a>
+<a href="#2636" id="2636">2636</a>
+<a href="#2637" id="2637">2637</a>
+<a href="#2638" id="2638">2638</a>
+<a href="#2639" id="2639">2639</a>
+<a href="#2640" id="2640">2640</a>
+<a href="#2641" id="2641">2641</a>
+<a href="#2642" id="2642">2642</a>
+<a href="#2643" id="2643">2643</a>
+<a href="#2644" id="2644">2644</a>
+<a href="#2645" id="2645">2645</a>
+<a href="#2646" id="2646">2646</a>
+<a href="#2647" id="2647">2647</a>
+<a href="#2648" id="2648">2648</a>
+<a href="#2649" id="2649">2649</a>
+<a href="#2650" id="2650">2650</a>
+<a href="#2651" id="2651">2651</a>
+<a href="#2652" id="2652">2652</a>
+<a href="#2653" id="2653">2653</a>
+<a href="#2654" id="2654">2654</a>
+<a href="#2655" id="2655">2655</a>
+<a href="#2656" id="2656">2656</a>
+<a href="#2657" id="2657">2657</a>
+<a href="#2658" id="2658">2658</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::num::NonZeroU32;
 
 <span class="kw">use </span><span class="kw">crate</span>::front::wgsl::error::{Error, ExpectedToken, InvalidAssignmentType};
@@ -2730,10 +2756,14 @@
         }
     }
 
-    <span class="kw">fn </span>ensure_type_exists(<span class="kw-2">&amp;mut </span><span class="self">self</span>, inner: <span class="kw">crate</span>::TypeInner) -&gt; Handle&lt;<span class="kw">crate</span>::Type&gt; {
+    <span class="kw">fn </span>ensure_type_exists(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        name: <span class="prelude-ty">Option</span>&lt;String&gt;,
+        inner: <span class="kw">crate</span>::TypeInner,
+    ) -&gt; Handle&lt;<span class="kw">crate</span>::Type&gt; {
         <span class="self">self</span>.module
             .types
-            .insert(<span class="kw">crate</span>::Type { inner, name: <span class="prelude-val">None </span>}, Span::UNDEFINED)
+            .insert(<span class="kw">crate</span>::Type { inner, name }, Span::UNDEFINED)
     }
 }
 
@@ -3267,7 +3297,7 @@
     }
 
     <span class="kw">fn </span>ensure_type_exists(<span class="kw-2">&amp;mut </span><span class="self">self</span>, inner: <span class="kw">crate</span>::TypeInner) -&gt; Handle&lt;<span class="kw">crate</span>::Type&gt; {
-        <span class="self">self</span>.as_global().ensure_type_exists(inner)
+        <span class="self">self</span>.as_global().ensure_type_exists(<span class="prelude-val">None</span>, inner)
     }
 }
 
@@ -3568,7 +3598,11 @@
                         .insert(s.name.name, LoweredGlobalDecl::Type(handle));
                 }
                 ast::GlobalDeclKind::Type(<span class="kw-2">ref </span>alias) =&gt; {
-                    <span class="kw">let </span>ty = <span class="self">self</span>.resolve_ast_type(alias.ty, <span class="kw-2">&amp;mut </span>ctx)<span class="question-mark">?</span>;
+                    <span class="kw">let </span>ty = <span class="self">self</span>.resolve_named_ast_type(
+                        alias.ty,
+                        <span class="prelude-val">Some</span>(alias.name.name.to_string()),
+                        <span class="kw-2">&amp;mut </span>ctx,
+                    )<span class="question-mark">?</span>;
                     ctx.globals
                         .insert(alias.name.name, LoweredGlobalDecl::Type(ty));
                 }
@@ -5145,10 +5179,19 @@
         })
     }
 
-    <span class="doccomment">/// Return a Naga `Handle&lt;Type&gt;` representing the front-end type `handle`.
-    </span><span class="kw">fn </span>resolve_ast_type(
+    <span class="doccomment">/// Build the Naga equivalent of a named AST type.
+    ///
+    /// Return a Naga `Handle&lt;Type&gt;` representing the front-end type
+    /// `handle`, which should be named `name`, if given.
+    ///
+    /// If `handle` refers to a type cached in [`SpecialTypes`],
+    /// `name` may be ignored.
+    ///
+    /// [`SpecialTypes`]: crate::SpecialTypes
+    </span><span class="kw">fn </span>resolve_named_ast_type(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         handle: Handle&lt;ast::Type&lt;<span class="lifetime">&#39;source</span>&gt;&gt;,
+        name: <span class="prelude-ty">Option</span>&lt;String&gt;,
         ctx: <span class="kw-2">&amp;mut </span>GlobalContext&lt;<span class="lifetime">&#39;source</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;, Error&lt;<span class="lifetime">&#39;source</span>&gt;&gt; {
         <span class="kw">let </span>inner = <span class="kw">match </span>ctx.types[handle] {
@@ -5209,7 +5252,16 @@
             }
         };
 
-        <span class="prelude-val">Ok</span>(ctx.ensure_type_exists(inner))
+        <span class="prelude-val">Ok</span>(ctx.ensure_type_exists(name, inner))
+    }
+
+    <span class="doccomment">/// Return a Naga `Handle&lt;Type&gt;` representing the front-end type `handle`.
+    </span><span class="kw">fn </span>resolve_ast_type(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        handle: Handle&lt;ast::Type&lt;<span class="lifetime">&#39;source</span>&gt;&gt;,
+        ctx: <span class="kw-2">&amp;mut </span>GlobalContext&lt;<span class="lifetime">&#39;source</span>, <span class="lifetime">&#39;_</span>, <span class="lifetime">&#39;_</span>&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Handle&lt;<span class="kw">crate</span>::Type&gt;, Error&lt;<span class="lifetime">&#39;source</span>&gt;&gt; {
+        <span class="self">self</span>.resolve_named_ast_type(handle, <span class="prelude-val">None</span>, ctx)
     }
 
     <span class="kw">fn </span>binding(
