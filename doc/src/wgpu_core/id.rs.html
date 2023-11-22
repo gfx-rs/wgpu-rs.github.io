@@ -310,6 +310,11 @@
 <a href="#310" id="310">310</a>
 <a href="#311" id="311">311</a>
 <a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
 </pre></div><pre class="rust"><code><span class="kw">use crate</span>::{Epoch, Index};
 <span class="kw">use </span>std::{
     any::Any,
@@ -467,12 +472,17 @@
 {
     <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         <span class="kw">let </span>(index, epoch, backend) = <span class="self">self</span>.unzip();
-        formatter
-            .debug_struct(<span class="string">&quot;Id&quot;</span>)
-            .field(<span class="string">&quot;index&quot;</span>, <span class="kw-2">&amp;</span>index)
-            .field(<span class="string">&quot;epoch&quot;</span>, <span class="kw-2">&amp;</span>epoch)
-            .field(<span class="string">&quot;backend&quot;</span>, <span class="kw-2">&amp;</span>backend)
-            .finish()
+        <span class="kw">let </span>backend = <span class="kw">match </span>backend {
+            Backend::Vulkan =&gt; <span class="string">&quot;vk&quot;</span>,
+            Backend::Metal =&gt; <span class="string">&quot;mtl&quot;</span>,
+            Backend::Dx12 =&gt; <span class="string">&quot;d3d12&quot;</span>,
+            Backend::Dx11 =&gt; <span class="string">&quot;d3d11&quot;</span>,
+            Backend::Gl =&gt; <span class="string">&quot;gl&quot;</span>,
+            Backend::BrowserWebGpu =&gt; <span class="string">&quot;webgpu&quot;</span>,
+            Backend::Empty =&gt; <span class="string">&quot;_&quot;</span>,
+        };
+        <span class="macro">write!</span>(formatter, <span class="string">&quot;Id({index},{epoch},{backend})&quot;</span>)<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(())
     }
 }
 

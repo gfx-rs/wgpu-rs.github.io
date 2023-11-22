@@ -2518,25 +2518,6 @@
 <a href="#2518" id="2518">2518</a>
 <a href="#2519" id="2519">2519</a>
 <a href="#2520" id="2520">2520</a>
-<a href="#2521" id="2521">2521</a>
-<a href="#2522" id="2522">2522</a>
-<a href="#2523" id="2523">2523</a>
-<a href="#2524" id="2524">2524</a>
-<a href="#2525" id="2525">2525</a>
-<a href="#2526" id="2526">2526</a>
-<a href="#2527" id="2527">2527</a>
-<a href="#2528" id="2528">2528</a>
-<a href="#2529" id="2529">2529</a>
-<a href="#2530" id="2530">2530</a>
-<a href="#2531" id="2531">2531</a>
-<a href="#2532" id="2532">2532</a>
-<a href="#2533" id="2533">2533</a>
-<a href="#2534" id="2534">2534</a>
-<a href="#2535" id="2535">2535</a>
-<a href="#2536" id="2536">2536</a>
-<a href="#2537" id="2537">2537</a>
-<a href="#2538" id="2538">2538</a>
-<a href="#2539" id="2539">2539</a>
 </pre></div><pre class="rust"><code><span class="attr">#[cfg(feature = <span class="string">&quot;trace&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::device::trace;
 <span class="kw">use crate</span>::{
@@ -2724,7 +2705,7 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(buffer);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created Buffer {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_buffer({desc:?}) -&gt; {id:?}&quot;</span>);
 
             <span class="kw">let </span>buffer_use = <span class="kw">if </span>!desc.mapped_at_creation {
                 hal::BufferUses::empty()
@@ -3020,10 +3001,10 @@
         buffer_id: id::BufferId,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), resource::DestroyError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Buffer::destroy&quot;</span>);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Buffer::destroy {buffer_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Buffer {:?} is asked to be dropped&quot;</span>, buffer_id);
         <span class="kw">let </span><span class="kw-2">mut </span>buffer_guard = hub.buffers.write();
         <span class="kw">let </span>buffer = buffer_guard
             .get_and_mark_destroyed(buffer_id)
@@ -3033,8 +3014,7 @@
 
     <span class="kw">pub fn </span>buffer_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer_id: id::BufferId, wait: bool) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Buffer::drop&quot;</span>);
-
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Buffer {:?} is asked to be dropped&quot;</span>, buffer_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Buffer::drop {buffer_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3103,7 +3083,7 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(texture);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created Texture {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_texture({desc:?}) -&gt; {id:?}&quot;</span>);
 
             device.trackers.lock().textures.insert_single(
                 id,
@@ -3113,6 +3093,8 @@
 
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
+
+        <span class="macro">log::error!</span>(<span class="string">&quot;Device::create_texture error {error:?}&quot;</span>);
 
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
         (id, <span class="prelude-val">Some</span>(error))
@@ -3175,7 +3157,7 @@
                 RwLock::new(TextureInitTracker::new(desc.mip_level_count, <span class="number">0</span>));
 
             <span class="kw">let </span>(id, resource) = fid.assign(texture);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created Texture {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_texture -&gt; {id:?}&quot;</span>);
 
             device.trackers.lock().textures.insert_single(
                 id,
@@ -3185,6 +3167,8 @@
 
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
+
+        <span class="macro">log::error!</span>(<span class="string">&quot;Device::create_texture error {error:?}&quot;</span>);
 
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
         (id, <span class="prelude-val">Some</span>(error))
@@ -3227,7 +3211,7 @@
             <span class="kw">let </span>buffer = device.create_buffer_from_hal(hal_buffer, desc);
 
             <span class="kw">let </span>(id, buffer) = fid.assign(buffer);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created buffer {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_buffer -&gt; {id:?}&quot;</span>);
 
             device
                 .trackers
@@ -3237,6 +3221,8 @@
 
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
+
+        <span class="macro">log::error!</span>(<span class="string">&quot;Device::create_buffer error {error:?}&quot;</span>);
 
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
         (id, <span class="prelude-val">Some</span>(error))
@@ -3255,7 +3241,6 @@
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Texture {:?} is destroyed&quot;</span>, texture_id);
         <span class="kw">let </span><span class="kw-2">mut </span>texture_guard = hub.textures.write();
         <span class="kw">let </span>texture = texture_guard
             .get_and_mark_destroyed(texture_id)
@@ -3293,8 +3278,7 @@
 
     <span class="kw">pub fn </span>texture_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, texture_id: id::TextureId, wait: bool) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Texture::drop&quot;</span>);
-
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Texture {:?} is asked to be dropped&quot;</span>, texture_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Texture::drop {texture_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3366,12 +3350,12 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(view);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created TextureView {:?}&quot;</span>, id);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Texture::create_view({texture_id:?}) -&gt; {id:?}&quot;</span>);
             device.trackers.lock().views.insert_single(id, resource);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
-        <span class="macro">log::error!</span>(<span class="string">&quot;Texture::create_view {:?} error {:?}&quot;</span>, texture_id, error);
+        <span class="macro">log::error!</span>(<span class="string">&quot;Texture::create_view({texture_id:?}) error {error:?}&quot;</span>);
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
         (id, <span class="prelude-val">Some</span>(error))
     }
@@ -3386,8 +3370,7 @@
         wait: bool,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;(), resource::TextureViewDestroyError&gt; {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;TextureView::drop&quot;</span>);
-
-        <span class="macro">log::debug!</span>(<span class="string">&quot;TextureView {:?} is asked to be dropped&quot;</span>, texture_view_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;TextureView::drop {texture_view_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3444,7 +3427,7 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(sampler);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created Sampler {:?}&quot;</span>, id);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_sampler -&gt; {id:?}&quot;</span>);
             device.trackers.lock().samplers.insert_single(id, resource);
 
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
@@ -3460,7 +3443,7 @@
 
     <span class="kw">pub fn </span>sampler_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, sampler_id: id::SamplerId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Sampler::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Sampler {:?} is asked to be dropped&quot;</span>, sampler_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Sampler::drop {sampler_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3531,7 +3514,7 @@
             };
 
             <span class="kw">let </span>(id, _layout) = fid.assign(layout);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created BindGroupLayout {:?}&quot;</span>, id);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_bind_group_layout -&gt; {id:?}&quot;</span>);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
@@ -3546,11 +3529,7 @@
 
     <span class="kw">pub fn </span>bind_group_layout_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, bind_group_layout_id: id::BindGroupLayoutId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;BindGroupLayout::drop&quot;</span>);
-
-        <span class="macro">log::debug!</span>(
-            <span class="string">&quot;BindGroupLayout {:?} is asked to be dropped&quot;</span>,
-            bind_group_layout_id
-        );
+        <span class="macro">log::trace!</span>(<span class="string">&quot;BindGroupLayout::drop {bind_group_layout_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3600,7 +3579,7 @@
             };
 
             <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(layout);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created PipelineLayout {:?}&quot;</span>, id);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_pipeline_layout -&gt; {id:?}&quot;</span>);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
@@ -3614,11 +3593,7 @@
 
     <span class="kw">pub fn </span>pipeline_layout_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, pipeline_layout_id: id::PipelineLayoutId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;PipelineLayout::drop&quot;</span>);
-
-        <span class="macro">log::debug!</span>(
-            <span class="string">&quot;PipelineLayout {:?} is asked to be dropped&quot;</span>,
-            pipeline_layout_id
-        );
+        <span class="macro">log::trace!</span>(<span class="string">&quot;PipelineLayout::drop {pipeline_layout_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(layout) = hub.pipeline_layouts.unregister(pipeline_layout_id) {
@@ -3671,7 +3646,7 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(bind_group);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created BindGroup {:?}&quot;</span>, id,);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_bind_group -&gt; {id:?}&quot;</span>);
 
             device
                 .trackers
@@ -3691,8 +3666,7 @@
 
     <span class="kw">pub fn </span>bind_group_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, bind_group_id: id::BindGroupId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;BindGroup::drop&quot;</span>);
-
-        <span class="macro">log::debug!</span>(<span class="string">&quot;BindGroup {:?} is asked to be dropped&quot;</span>, bind_group_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;BindGroup::drop {bind_group_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3759,9 +3733,11 @@
             };
 
             <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(shader);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created ShaderModule {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_shader_module -&gt; {id:?}&quot;</span>);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
+
+        <span class="macro">log::error!</span>(<span class="string">&quot;Device::create_shader_module error: {error:?}&quot;</span>);
 
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
         (id, <span class="prelude-val">Some</span>(error))
@@ -3814,9 +3790,11 @@
                 <span class="prelude-val">Err</span>(e) =&gt; <span class="kw">break </span>e,
             };
             <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(shader);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created ShaderModule {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_shader_module_spirv -&gt; {id:?}&quot;</span>);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
+
+        <span class="macro">log::error!</span>(<span class="string">&quot;Device::create_shader_module_spirv error: {error:?}&quot;</span>);
 
         <span class="kw">let </span>id = fid.assign_error(desc.label.borrow_or_default());
         (id, <span class="prelude-val">Some</span>(error))
@@ -3828,8 +3806,7 @@
 
     <span class="kw">pub fn </span>shader_module_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, shader_module_id: id::ShaderModuleId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;ShaderModule::drop&quot;</span>);
-
-        <span class="macro">log::debug!</span>(<span class="string">&quot;ShaderModule {:?} is asked to be dropped&quot;</span>, shader_module_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;ShaderModule::drop {shader_module_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         hub.shader_modules.unregister(shader_module_id);
@@ -3879,7 +3856,7 @@
             );
 
             <span class="kw">let </span>(id, <span class="kw">_</span>) = fid.assign(command_buffer);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created CommandBuffer {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_command_encoder -&gt; {id:?}&quot;</span>);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
 
@@ -3893,11 +3870,7 @@
 
     <span class="kw">pub fn </span>command_encoder_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, command_encoder_id: id::CommandEncoderId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandEncoder::drop&quot;</span>);
-
-        <span class="macro">log::debug!</span>(
-            <span class="string">&quot;CommandEncoder {:?} is asked to be dropped&quot;</span>,
-            command_encoder_id
-        );
+        <span class="macro">log::trace!</span>(<span class="string">&quot;CommandEncoder::drop {command_encoder_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -3910,11 +3883,7 @@
 
     <span class="kw">pub fn </span>command_buffer_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, command_buffer_id: id::CommandBufferId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;CommandBuffer::drop&quot;</span>);
-
-        <span class="macro">log::debug!</span>(
-            <span class="string">&quot;CommandBuffer {:?} is asked to be dropped&quot;</span>,
-            command_buffer_id
-        );
+        <span class="macro">log::trace!</span>(<span class="string">&quot;CommandBuffer::drop {command_buffer_id:?}&quot;</span>);
         <span class="self">self</span>.command_encoder_drop::&lt;A&gt;(command_buffer_id)
     }
 
@@ -3976,7 +3945,7 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(render_bundle);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created RenderBundle {:?}&quot;</span>, id);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;RenderBundleEncoder::finish -&gt; {id:?}&quot;</span>);
             device.trackers.lock().bundles.insert_single(id, resource);
             <span class="kw">return </span>(id, <span class="prelude-val">None</span>);
         };
@@ -3991,8 +3960,7 @@
 
     <span class="kw">pub fn </span>render_bundle_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, render_bundle_id: id::RenderBundleId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;RenderBundle::drop&quot;</span>);
-
-        <span class="macro">log::debug!</span>(<span class="string">&quot;RenderBundle {:?} is asked to be dropped&quot;</span>, render_bundle_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderBundle::drop {render_bundle_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -4039,7 +4007,7 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(query_set);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created QuerySet {:?}&quot;</span>, id);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_query_set -&gt; {id:?}&quot;</span>);
             device
                 .trackers
                 .lock()
@@ -4055,8 +4023,7 @@
 
     <span class="kw">pub fn </span>query_set_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, query_set_id: id::QuerySetId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;QuerySet::drop&quot;</span>);
-
-        <span class="macro">log::debug!</span>(<span class="string">&quot;QuerySet {:?} is asked to be dropped&quot;</span>, query_set_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;QuerySet::drop {query_set_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -4121,7 +4088,7 @@
                 };
 
             <span class="kw">let </span>(id, resource) = fid.assign(pipeline);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created RenderPipeline {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_render_pipeline -&gt; {id:?}&quot;</span>);
 
             device
                 .trackers
@@ -4150,6 +4117,8 @@
                 bgl_guard.insert_error(bgl_id, IMPLICIT_FAILURE);
             }
         }
+
+        <span class="macro">log::error!</span>(<span class="string">&quot;Device::create_render_pipeline error {error:?}&quot;</span>);
 
         (id, <span class="prelude-val">Some</span>(error))
     }
@@ -4195,11 +4164,7 @@
 
     <span class="kw">pub fn </span>render_pipeline_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, render_pipeline_id: id::RenderPipelineId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;RenderPipeline::drop&quot;</span>);
-
-        <span class="macro">log::debug!</span>(
-            <span class="string">&quot;RenderPipeline {:?} is asked to be dropped&quot;</span>,
-            render_pipeline_id
-        );
+        <span class="macro">log::trace!</span>(<span class="string">&quot;RenderPipeline::drop {render_pipeline_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -4258,7 +4223,7 @@
             };
 
             <span class="kw">let </span>(id, resource) = fid.assign(pipeline);
-            <span class="macro">log::info!</span>(<span class="string">&quot;Created ComputePipeline {:?} with {:?}&quot;</span>, id, desc);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;Device::create_compute_pipeline -&gt; {id:?}&quot;</span>);
 
             device
                 .trackers
@@ -4334,11 +4299,7 @@
 
     <span class="kw">pub fn </span>compute_pipeline_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, compute_pipeline_id: id::ComputePipelineId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;ComputePipeline::drop&quot;</span>);
-
-        <span class="macro">log::debug!</span>(
-            <span class="string">&quot;ComputePipeline {:?} is asked to be dropped&quot;</span>,
-            compute_pipeline_id
-        );
+        <span class="macro">log::trace!</span>(<span class="string">&quot;ComputePipeline::drop {compute_pipeline_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
 
@@ -4719,6 +4680,7 @@
     /// Return `all_queue_empty` indicating whether there are more queue
     /// submissions still in flight.
     </span><span class="kw">pub fn </span>poll_all_devices(<span class="kw-2">&amp;</span><span class="self">self</span>, force_wait: bool) -&gt; <span class="prelude-ty">Result</span>&lt;bool, WaitIdleError&gt; {
+        <span class="macro">log::trace!</span>(<span class="string">&quot;poll_all_devices&quot;</span>);
         <span class="kw">let </span><span class="kw-2">mut </span>closures = UserClosures::default();
         <span class="kw">let </span><span class="kw-2">mut </span>all_queue_empty = <span class="bool-val">true</span>;
 
@@ -4785,7 +4747,7 @@
 
     <span class="kw">pub fn </span>device_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, device_id: DeviceId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Device::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Device {:?} is asked to be dropped&quot;</span>, device_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Device::drop {device_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(device) = hub.devices.unregister(device_id) {
@@ -4855,7 +4817,7 @@
 
     <span class="kw">pub fn </span>queue_drop&lt;A: HalApi&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, queue_id: QueueId) {
         <span class="macro">profiling::scope!</span>(<span class="string">&quot;Queue::drop&quot;</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;Queue {:?} is asked to be dropped&quot;</span>, queue_id);
+        <span class="macro">log::trace!</span>(<span class="string">&quot;Queue::drop {queue_id:?}&quot;</span>);
 
         <span class="kw">let </span>hub = A::hub(<span class="self">self</span>);
         <span class="kw">if let </span><span class="prelude-val">Some</span>(queue) = hub.queues.unregister(queue_id) {
@@ -4878,6 +4840,7 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>(callback) = operation.callback.take() {
                 callback.call(<span class="prelude-val">Err</span>(err.clone()));
             }
+            <span class="macro">log::error!</span>(<span class="string">&quot;Buffer::map_async error {err:?}&quot;</span>);
             <span class="kw">return </span><span class="prelude-val">Err</span>(err);
         }
 
@@ -4964,7 +4927,6 @@
                     }
                 };
             }
-            <span class="macro">log::debug!</span>(<span class="string">&quot;Buffer {:?} map state -&gt; Waiting&quot;</span>, buffer_id);
 
             {
                 <span class="kw">let </span><span class="kw-2">mut </span>trackers = buffer.device.as_ref().trackers.lock();
