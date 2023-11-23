@@ -8,7 +8,7 @@ var srcIndex = JSON.parse('{\
 "wgpu_example":["",[],["framework.rs","lib.rs","utils.rs"]],\
 "wgpu_hal":["",[["auxil",[],["mod.rs","renderdoc.rs"]],["gles",[],["adapter.rs","command.rs","conv.rs","device.rs","egl.rs","mod.rs","queue.rs"]],["vulkan",[],["adapter.rs","command.rs","conv.rs","device.rs","instance.rs","mod.rs"]]],["empty.rs","lib.rs"]],\
 "wgpu_macros":["",[],["lib.rs"]],\
-"wgpu_test":["",[],["config.rs","image.rs","init.rs","isolation.rs","lib.rs","native.rs","params.rs","report.rs","run.rs"]],\
+"wgpu_test":["",[],["config.rs","expectations.rs","image.rs","init.rs","isolation.rs","lib.rs","native.rs","params.rs","report.rs","run.rs"]],\
 "wgpu_types":["",[],["assertions.rs","lib.rs","math.rs"]]\
 }');
 createSrcSidebar();

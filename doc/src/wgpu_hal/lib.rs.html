@@ -1422,6 +1422,10 @@
 <a href="#1422" id="1422">1422</a>
 <a href="#1423" id="1423">1423</a>
 <a href="#1424" id="1424">1424</a>
+<a href="#1425" id="1425">1425</a>
+<a href="#1426" id="1426">1426</a>
+<a href="#1427" id="1427">1427</a>
+<a href="#1428" id="1428">1428</a>
 </pre></div><pre class="rust"><code><span class="doccomment">/*! This library describes the internal unsafe graphics abstraction API.
  *  It follows WebGPU for the most part, re-using wgpu-types,
  *  with the following deviations:
@@ -1514,10 +1518,11 @@
     num::NonZeroU32,
     ops::{Range, RangeInclusive},
     ptr::NonNull,
-    sync::{atomic::AtomicBool, Arc},
+    sync::Arc,
 };
 
 <span class="kw">use </span>bitflags::bitflags;
+<span class="kw">use </span>parking_lot::Mutex;
 <span class="kw">use </span>thiserror::Error;
 <span class="kw">use </span>wgt::WasmNotSendSync;
 
@@ -2808,8 +2813,11 @@
     <span class="kw">pub </span>timestamp_writes: <span class="prelude-ty">Option</span>&lt;ComputePassTimestampWrites&lt;<span class="lifetime">&#39;a</span>, A&gt;&gt;,
 }
 
-<span class="doccomment">/// Stores if any API validation error has occurred in this process
-/// since it was last reset.
+<span class="doccomment">/// Stores the text of any validation errors that have occurred since
+/// the last call to `get_and_reset`.
+///
+/// Each value is a validation error and a message associated with it,
+/// or `None` if the error has no message from the api.
 ///
 /// This is used for internal wgpu testing only and _must not_ be used
 /// as a way to check for errors.
@@ -2820,24 +2828,24 @@
 /// This prevents the issue of one validation error terminating the
 /// entire process.
 </span><span class="kw">pub static </span>VALIDATION_CANARY: ValidationCanary = ValidationCanary {
-    inner: AtomicBool::new(<span class="bool-val">false</span>),
+    inner: Mutex::new(Vec::new()),
 };
 
 <span class="doccomment">/// Flag for internal testing.
 </span><span class="kw">pub struct </span>ValidationCanary {
-    inner: AtomicBool,
+    inner: Mutex&lt;Vec&lt;String&gt;&gt;,
 }
 
 <span class="kw">impl </span>ValidationCanary {
     <span class="attr">#[allow(dead_code)] </span><span class="comment">// in some configurations this function is dead
-    </span><span class="kw">fn </span>set(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.inner.store(<span class="bool-val">true</span>, std::sync::atomic::Ordering::SeqCst);
+    </span><span class="kw">fn </span>add(<span class="kw-2">&amp;</span><span class="self">self</span>, msg: String) {
+        <span class="self">self</span>.inner.lock().push(msg);
     }
 
-    <span class="doccomment">/// Returns true if any API validation error has occurred in this process
+    <span class="doccomment">/// Returns any API validation errors that hav occurred in this process
     /// since the last call to this function.
-    </span><span class="kw">pub fn </span>get_and_reset(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="self">self</span>.inner.swap(<span class="bool-val">false</span>, std::sync::atomic::Ordering::SeqCst)
+    </span><span class="kw">pub fn </span>get_and_reset(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Vec&lt;String&gt; {
+        <span class="self">self</span>.inner.lock().drain(..).collect()
     }
 }
 
