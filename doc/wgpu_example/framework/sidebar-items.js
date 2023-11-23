@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["ComparisonType"],"fn":["run"],"struct":["ExampleTestParams"],"trait":["Example"]};
